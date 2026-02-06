@@ -7,7 +7,7 @@
  */
 
 import { createGridCellEntity } from "../ecs/archetypes";
-import { world } from "../ecs/world";
+import { gridCellsQuery, world } from "../ecs/world";
 import type { Entity } from "../ecs/world";
 import type { ZoneDefinition, GroundMaterial } from "./types";
 
@@ -28,6 +28,15 @@ function materialToCellType(material: GroundMaterial): "soil" | "water" | "rock"
 export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
   const entities: Entity[] = [];
 
+  // Build set of existing cell positions to avoid duplicates
+  // (e.g. when restoring a saved game that already has starting-grove cells)
+  const existing = new Set<string>();
+  for (const cell of gridCellsQuery) {
+    if (cell.gridCell) {
+      existing.add(`${cell.gridCell.gridX},${cell.gridCell.gridZ}`);
+    }
+  }
+
   // Build tile override map for O(1) lookup
   const overrides = new Map<string, "water" | "rock" | "path" | "soil">();
   if (zone.tiles) {
@@ -42,6 +51,10 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
     for (let x = 0; x < zone.size.width; x++) {
       const worldX = zone.origin.x + x;
       const worldZ = zone.origin.z + z;
+
+      // Skip if cell already exists at this position (idempotent loading)
+      if (existing.has(`${worldX},${worldZ}`)) continue;
+
       const cellType = overrides.get(`${x},${z}`) ?? defaultType;
 
       const entity = createGridCellEntity(worldX, worldZ, cellType);

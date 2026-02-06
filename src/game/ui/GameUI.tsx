@@ -50,7 +50,7 @@ export const GameUI = ({
   onMainMenu,
   gameTime,
 }: GameUIProps) => {
-  const { activeQuests, addCoins, addXp, completeQuest, activeBorderCosmetic, prestigeCount } = useGameStore();
+  const { activeQuests, addCoins, addXp, completeQuest, activeBorderCosmetic } = useGameStore();
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
 
   const handleClaimReward = (questId: string) => {
@@ -62,41 +62,26 @@ export const GameUI = ({
     }
   };
 
-  // Prestige cosmetic border styling
+  // Prestige cosmetic border — applied as subtle screen vignette
   const cosmetic = activeBorderCosmetic ? getCosmeticById(activeBorderCosmetic) : null;
-  const frameBaseBackground = `linear-gradient(90deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`;
-  const frameBaseShadow = "inset -2px 0 4px rgba(0,0,0,0.3)";
-
-  const leftFrameStyle = cosmetic
-    ? {
-        background: frameBaseBackground,
-        border: cosmetic.borderStyle,
-        borderColor: cosmetic.borderColor,
-        boxShadow: cosmetic.glowColor
-          ? `${frameBaseShadow}, 0 0 12px ${cosmetic.glowColor}`
-          : frameBaseShadow,
-      }
-    : {
-        background: frameBaseBackground,
-        boxShadow: frameBaseShadow,
-      };
-
-  const rightFrameStyle = cosmetic
-    ? {
-        background: `linear-gradient(270deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`,
-        border: cosmetic.borderStyle,
-        borderColor: cosmetic.borderColor,
-        boxShadow: cosmetic.glowColor
-          ? `inset 2px 0 4px rgba(0,0,0,0.3), 0 0 12px ${cosmetic.glowColor}`
-          : "inset 2px 0 4px rgba(0,0,0,0.3)",
-      }
-    : {
-        background: `linear-gradient(270deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`,
-        boxShadow: "inset 2px 0 4px rgba(0,0,0,0.3)",
-      };
 
   return (
     <div className="absolute inset-0 pointer-events-none">
+      {/* Prestige cosmetic vignette border */}
+      {cosmetic && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            border: cosmetic.borderStyle,
+            borderColor: cosmetic.borderColor,
+            boxShadow: cosmetic.glowColor
+              ? `inset 0 0 20px ${cosmetic.glowColor}`
+              : undefined,
+            zIndex: 50,
+          }}
+        />
+      )}
+
       {/* Weather visual overlay (rain, drought, windstorm) */}
       <WeatherOverlay />
 
@@ -116,39 +101,6 @@ export const GameUI = ({
             onOpenBuild={() => setBuildPanelOpen(true)}
             gameTime={gameTime}
           />
-        </div>
-      </div>
-
-      {/* Left wood frame */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-3 sm:w-4 lg:w-6"
-        style={leftFrameStyle}
-      >
-        {/* Wood grain lines */}
-        <div className="h-full flex flex-col justify-around py-8">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="h-px mx-1"
-              style={{ background: `${COLORS.soilDark}80` }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Right wood frame */}
-      <div
-        className="absolute right-0 top-0 bottom-0 w-3 sm:w-4 lg:w-6"
-        style={rightFrameStyle}
-      >
-        <div className="h-full flex flex-col justify-around py-8">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="h-px mx-1"
-              style={{ background: `${COLORS.soilDark}80` }}
-            />
-          ))}
         </div>
       </div>
 

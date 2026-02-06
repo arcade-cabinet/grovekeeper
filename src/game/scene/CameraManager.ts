@@ -8,7 +8,6 @@
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { Scene } from "@babylonjs/core/scene";
-import { GRID_SIZE } from "../constants/config";
 
 const CAMERA_RADIUS = 18;
 const CAMERA_ALPHA = -Math.PI / 4;     // 45 degree rotation
@@ -18,14 +17,16 @@ const LERP_SPEED = 3;
 export class CameraManager {
   camera: ArcRotateCamera | null = null;
 
-  init(scene: Scene): ArcRotateCamera {
-    const gridCenter = new Vector3(GRID_SIZE / 2 - 0.5, 0, GRID_SIZE / 2 - 0.5);
+  init(scene: Scene, initialTarget?: { x: number; z: number }): ArcRotateCamera {
+    const target = initialTarget
+      ? new Vector3(initialTarget.x, 0, initialTarget.z)
+      : new Vector3(5.5, 0, 5.5);
     const camera = new ArcRotateCamera(
       "camera",
       CAMERA_ALPHA,
       CAMERA_BETA,
       CAMERA_RADIUS,
-      gridCenter,
+      target,
       scene,
     );
 

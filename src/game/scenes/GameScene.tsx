@@ -11,7 +11,7 @@ import { GRID_SIZE } from "../constants/config";
 import { getSpeciesById } from "../constants/trees";
 import { TOOLS, getToolById } from "../constants/tools";
 import type { ResourceType } from "../constants/resources";
-import { createGridCellEntity, createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
+import { createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
 import { gridCellsQuery, playerQuery, treesQuery, structuresQuery, world } from "../ecs/world";
 import type { GridCellComponent } from "../ecs/world";
 import { createRNG, hashString } from "../utils/seedRNG";
@@ -21,11 +21,10 @@ import { growthSystem, getStageScale } from "../systems/growth";
 import { staminaSystem } from "../systems/stamina";
 import { harvestSystem, initHarvestable, collectHarvest } from "../systems/harvest";
 import { movementSystem, setMovementBounds } from "../systems/movement";
-import { generateGrid } from "../systems/gridGeneration";
 import { saveGroveToStorage, loadGroveFromStorage, deserializeGrove } from "../systems/saveLoad";
 import { useKeyboardInput } from "../hooks/useKeyboardInput";
 import {
-  initializeTime, updateTime, getGameTime,
+  initializeTime, updateTime,
   type GameTime, type Season,
 } from "../systems/time";
 import { hapticMedium, hapticLight, hapticSuccess } from "../systems/platform";
@@ -47,7 +46,7 @@ import { getStaminaMultiplier as getStructureStaminaMult } from "../structures/S
 import {
   SceneManager, CameraManager, LightingManager,
   GroundBuilder, SkyManager, PlayerMeshManager,
-  TreeMeshManager, BorderTreeManager,
+  TreeMeshManager,
 } from "../scene";
 
 // World system
@@ -72,7 +71,6 @@ export const GameScene = () => {
   const skyManagerRef = useRef(new SkyManager());
   const playerMeshRef = useRef(new PlayerMeshManager());
   const treeMeshRef = useRef(new TreeMeshManager());
-  const borderTreeRef = useRef(new BorderTreeManager());
   const worldManagerRef = useRef(new WorldManager());
 
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
@@ -147,15 +145,9 @@ export const GameScene = () => {
           if (tree.tree && tree.tree.stage >= 3) initHarvestable(tree);
         }
       } else {
-        const groveSeed = `grove-${Date.now()}`;
-        groveSeedRef.current = groveSeed;
-        const tiles = generateGrid(GRID_SIZE, groveSeed);
-        for (const tile of tiles) {
-          const cellType = tile.type === "empty" ? "soil"
-            : tile.type === "blocked" ? "rock"
-            : tile.type as "water" | "path";
-          world.add(createGridCellEntity(tile.col, tile.row, cellType));
-        }
+        // New game: only create player here; grid cells come from
+        // WorldManager.loadAllZones() during BabylonJS init
+        groveSeedRef.current = `grove-${Date.now()}`;
         world.add(createPlayerEntity());
       }
     }
@@ -185,27 +177,37 @@ export const GameScene = () => {
     const sky = skyManagerRef.current;
     const playerMesh = playerMeshRef.current;
     const treeMesh = treeMeshRef.current;
-    const borderTree = borderTreeRef.current;
     const worldMgr = worldManagerRef.current;
 
     const initBabylon = async () => {
       const { scene } = await sm.init(canvasRef.current!);
 
-      cam.init(scene);
-      lights.init(scene);
-      ground.init(scene);
-      sky.init(scene);
-      playerMesh.init(scene);
-
-      // Initialize world manager and load zones
-      worldMgr.init(startingWorldData as WorldDefinition, scene);
+      // Initialize world first so we know the bounds
+      const worldDef = startingWorldData as WorldDefinition;
+      worldMgr.init(worldDef, scene);
       worldMgr.loadAllZones();
       const bounds = worldMgr.getWorldBounds();
       setMovementBounds(bounds);
 
-      const initTime = getGameTime();
-      const initIsNight = isNight(initTime);
-      borderTree.init(scene, initTime.season, initIsNight);
+      // Scene managers use world bounds
+      const spawnPos = worldMgr.getSpawnPosition() ?? { x: 5.5, z: 5.5 };
+      cam.init(scene, spawnPos);
+      lights.init(scene);
+      ground.init(scene, bounds);
+      sky.init(scene);
+      playerMesh.init(scene);
+
+      // Create per-zone ground overlays
+      for (const zone of worldDef.zones) {
+        ground.addZoneGround(
+          scene,
+          zone.id,
+          zone.origin,
+          zone.size,
+          zone.groundMaterial,
+          zone.plantable,
+        );
+      }
 
       // --- Game loop ---
       let lastTime = performance.now();
@@ -274,7 +276,6 @@ export const GameScene = () => {
           useGameStore.getState().trackSeason(currentTime.season);
 
           treeMesh.rebuildAll(scene, currentTime.season, currentIsNight);
-          borderTree.rebuild(scene, currentTime.season, currentIsNight);
         }
 
         // Periodic updates (every 5s)
@@ -299,7 +300,6 @@ export const GameScene = () => {
     return () => {
       worldMgr.dispose();
       treeMesh.dispose();
-      borderTree.dispose();
       playerMesh.dispose();
       sky.dispose();
       ground.dispose();

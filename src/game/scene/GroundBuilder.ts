@@ -38,52 +38,94 @@ const GROUND_TEXTURES = {
   },
 } as const;
 
+export interface WorldBounds {
+  minX: number;
+  minZ: number;
+  maxX: number;
+  maxZ: number;
+}
+
 export class GroundBuilder {
   private groundMesh: Mesh | null = null;
-  private soilMesh: Mesh | null = null;
-  private gridOverlay: Mesh | null = null;
+  private zoneMeshes: Mesh[] = [];
+  private gridOverlays: Mesh[] = [];
   private grassMat: PBRMaterial | null = null;
   private soilMat: PBRMaterial | null = null;
+  private stoneMat: PBRMaterial | null = null;
 
-  init(scene: Scene): void {
-    const groundSize = GRID_SIZE + 4;
-    const gridCenter = GRID_SIZE / 2 - 0.5;
+  init(scene: Scene, worldBounds?: WorldBounds): void {
+    const bounds = worldBounds ?? {
+      minX: 0, minZ: 0, maxX: GRID_SIZE, maxZ: GRID_SIZE,
+    };
+    const worldW = bounds.maxX - bounds.minX;
+    const worldH = bounds.maxZ - bounds.minZ;
+    const centerX = bounds.minX + worldW / 2 - 0.5;
+    const centerZ = bounds.minZ + worldH / 2 - 0.5;
 
-    // --- Outer ground (forest floor) using PBR grass ---
+    // --- Base ground (grass) covering the full world + padding ---
+    const groundSize = Math.max(worldW, worldH) + 8;
     this.groundMesh = CreateGround("ground", {
       width: groundSize,
       height: groundSize,
       subdivisions: 32,
     }, scene);
-    this.groundMesh.position = new Vector3(gridCenter, -0.05, gridCenter);
+    this.groundMesh.position = new Vector3(centerX, -0.05, centerZ);
 
     this.grassMat = this.createGroundPBR(scene, "grassMat", GROUND_TEXTURES.grass);
     this.groundMesh.material = this.grassMat;
 
-    // --- Planting area soil ---
-    this.soilMesh = CreateGround("soilBase", {
-      width: GRID_SIZE,
-      height: GRID_SIZE,
-    }, scene);
-    this.soilMesh.position = new Vector3(gridCenter, 0.005, gridCenter);
-
+    // Pre-create shared PBR materials for zone overlays
     this.soilMat = this.createGroundPBR(scene, "soilMat", GROUND_TEXTURES.soil);
-    this.soilMesh.material = this.soilMat;
+    this.stoneMat = this.createGroundPBR(scene, "stoneMat", GROUND_TEXTURES.stone);
+  }
 
-    // --- Grid overlay (wireframe) ---
-    this.gridOverlay = CreateGround("gridOverlay", {
-      width: GRID_SIZE,
-      height: GRID_SIZE,
-      subdivisions: GRID_SIZE,
-    }, scene);
-    this.gridOverlay.position = new Vector3(gridCenter, 0.01, gridCenter);
+  /**
+   * Add a zone ground overlay (soil/stone/dirt) with an optional wireframe grid.
+   * Call after init() for each zone that needs a non-grass ground material.
+   */
+  addZoneGround(
+    scene: Scene,
+    zoneId: string,
+    origin: { x: number; z: number },
+    size: { width: number; height: number },
+    material: "grass" | "soil" | "dirt" | "stone",
+    showGrid: boolean,
+  ): void {
+    const centerX = origin.x + size.width / 2 - 0.5;
+    const centerZ = origin.z + size.height / 2 - 0.5;
 
-    const gridMat = new StandardMaterial("gridMat", scene);
-    gridMat.diffuseColor = new Color3(0.35, 0.28, 0.18);
-    gridMat.specularColor = new Color3(0, 0, 0);
-    gridMat.alpha = 0.3;
-    gridMat.wireframe = true;
-    this.gridOverlay.material = gridMat;
+    // Select material (grass zones skip overlay — base ground covers them)
+    let mat: PBRMaterial | null = null;
+    if (material === "soil" || material === "dirt") mat = this.soilMat;
+    else if (material === "stone") mat = this.stoneMat;
+
+    if (mat) {
+      const mesh = CreateGround(`zone_ground_${zoneId}`, {
+        width: size.width,
+        height: size.height,
+      }, scene);
+      mesh.position = new Vector3(centerX, 0.005, centerZ);
+      mesh.material = mat;
+      this.zoneMeshes.push(mesh);
+    }
+
+    if (showGrid) {
+      const gridSize = Math.max(size.width, size.height);
+      const overlay = CreateGround(`zone_grid_${zoneId}`, {
+        width: size.width,
+        height: size.height,
+        subdivisionsX: size.width,
+        subdivisionsY: size.height,
+      }, scene);
+      overlay.position = new Vector3(centerX, 0.01, centerZ);
+      const gridMat = new StandardMaterial(`gridMat_${zoneId}`, scene);
+      gridMat.diffuseColor = new Color3(0.35, 0.28, 0.18);
+      gridMat.specularColor = new Color3(0, 0, 0);
+      gridMat.alpha = 0.25;
+      gridMat.wireframe = true;
+      overlay.material = gridMat;
+      this.gridOverlays.push(overlay);
+    }
   }
 
   /** Update ground visuals when the season changes. */
@@ -117,15 +159,17 @@ export class GroundBuilder {
 
   dispose(): void {
     this.groundMesh?.dispose();
-    this.soilMesh?.dispose();
-    this.gridOverlay?.dispose();
+    for (const m of this.zoneMeshes) m.dispose();
+    for (const m of this.gridOverlays) m.dispose();
     this.grassMat?.dispose();
     this.soilMat?.dispose();
+    this.stoneMat?.dispose();
     this.groundMesh = null;
-    this.soilMesh = null;
-    this.gridOverlay = null;
+    this.zoneMeshes = [];
+    this.gridOverlays = [];
     this.grassMat = null;
     this.soilMat = null;
+    this.stoneMat = null;
   }
 }
 
