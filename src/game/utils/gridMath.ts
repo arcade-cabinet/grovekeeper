@@ -21,7 +21,7 @@ export function worldToGrid(
   z: number,
   tileSize = 1,
 ): GridPosition {
-  return { col: Math.round(x / tileSize), row: Math.round(z / tileSize) };
+  return { col: Math.floor(x / tileSize), row: Math.floor(z / tileSize) };
 }
 
 export function isInBounds(pos: GridPosition, gridSize: number): boolean {

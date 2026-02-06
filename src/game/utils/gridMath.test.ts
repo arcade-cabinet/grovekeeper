@@ -22,12 +22,18 @@ describe("gridMath", () => {
   });
 
   describe("worldToGrid", () => {
-    it("converts world coords to grid coords", () => {
-      expect(worldToGrid(3.2, 5.7)).toEqual({ col: 3, row: 6 });
+    it("converts world coords to grid coords using floor", () => {
+      expect(worldToGrid(3.2, 5.7)).toEqual({ col: 3, row: 5 });
     });
 
-    it("rounds to nearest grid cell", () => {
-      expect(worldToGrid(2.4, 3.6)).toEqual({ col: 2, row: 4 });
+    it("floors to containing grid cell", () => {
+      expect(worldToGrid(2.4, 3.6)).toEqual({ col: 2, row: 3 });
+    });
+
+    it("tile center round-trips correctly", () => {
+      // tileCenterWorld(3,4) = { x: 3.5, z: 4.5 }
+      // worldToGrid(3.5, 4.5) should map back to (3,4)
+      expect(worldToGrid(3.5, 4.5)).toEqual({ col: 3, row: 4 });
     });
   });
 

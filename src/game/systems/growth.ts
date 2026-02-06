@@ -13,10 +13,11 @@ import { treesQuery } from "../ecs/world";
  * Smoothly interpolates toward the next stage using progress * 0.3 as partial preview.
  */
 export function getStageScale(stage: number, progress: number): number {
-  const baseScale = STAGE_VISUALS[stage].scale;
-  if (stage >= MAX_STAGE) return baseScale;
+  const clampedStage = Math.max(0, Math.min(Math.floor(stage), MAX_STAGE));
+  const baseScale = STAGE_VISUALS[clampedStage].scale;
+  if (clampedStage >= MAX_STAGE) return baseScale;
 
-  const nextScale = STAGE_VISUALS[stage + 1].scale;
+  const nextScale = STAGE_VISUALS[clampedStage + 1].scale;
   const partialPreview = progress * 0.3;
   return baseScale + (nextScale - baseScale) * partialPreview;
 }
@@ -61,6 +62,9 @@ export function calcGrowthRate(params: GrowthRateParams): number {
   // Water bonus
   const waterMult = watered ? WATER_BONUS : 1.0;
 
+  // Guard against invalid baseTime
+  if (baseTime <= 0) return 0;
+
   // progressPerSecond = seasonBonus * waterBonus / (baseTime * difficultyMultiplier)
   return (seasonMult * waterMult) / (baseTime * diffMult);
 }
@@ -85,6 +89,7 @@ export function growthSystem(deltaTime: number, currentSeason: string): void {
     if (!species) continue;
 
     const baseTime = species.baseGrowthTimes[tree.stage];
+    if (baseTime === undefined || baseTime <= 0) continue;
 
     const rate = calcGrowthRate({
       baseTime,
