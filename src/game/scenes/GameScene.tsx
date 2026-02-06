@@ -16,8 +16,10 @@ import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { COLORS, GRID_SIZE } from "../constants/config";
 import { getSpeciesById } from "../constants/trees";
-import { createGridCellEntity, createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
+import { createGridCellEntity, createPlayerEntity, createTreeEntity, restoreTreeEntity } from "../ecs/archetypes";
 import { gridCellsQuery, playerQuery, treesQuery, world } from "../ecs/world";
+import { createRNG, hashString } from "../utils/seedRNG";
+import type { SerializedTree } from "../stores/gameStore";
 import { growthSystem, getStageScale } from "../systems/growth";
 import { staminaSystem } from "../systems/stamina";
 import { movementSystem } from "../systems/movement";
@@ -68,6 +70,30 @@ export const GameScene = () => {
     hapticsEnabled,
   } = useGameStore();
 
+  // Helper to serialize all tree entities for persistence
+  const saveCurrentGrove = useCallback(() => {
+    const trees: SerializedTree[] = [];
+    for (const entity of treesQuery) {
+      if (!entity.tree || !entity.position) continue;
+      trees.push({
+        speciesId: entity.tree.speciesId,
+        gridX: entity.position.x,
+        gridZ: entity.position.z,
+        stage: entity.tree.stage,
+        progress: entity.tree.progress,
+        watered: entity.tree.watered,
+        totalGrowthTime: entity.tree.totalGrowthTime,
+        plantedAt: entity.tree.plantedAt,
+        meshSeed: entity.tree.meshSeed,
+      });
+    }
+    const player = playerQuery.first;
+    const playerPos = player?.position
+      ? { x: player.position.x, z: player.position.z }
+      : { x: 6, z: 6 };
+    useGameStore.getState().saveGrove(trees, playerPos);
+  }, []);
+
   // Initialize ECS entities and time on first load
   useEffect(() => {
     if (playerQuery.first === undefined) {
@@ -77,10 +103,44 @@ export const GameScene = () => {
           world.add(createGridCellEntity(x, z, "soil"));
         }
       }
+
+      // Restore saved grove data
+      const groveData = useGameStore.getState().groveData;
+      if (groveData) {
+        for (const savedTree of groveData.trees) {
+          const entity = restoreTreeEntity(savedTree);
+          world.add(entity);
+          // Mark grid cell as occupied
+          for (const cell of gridCellsQuery) {
+            if (cell.gridCell?.gridX === savedTree.gridX && cell.gridCell?.gridZ === savedTree.gridZ) {
+              cell.gridCell.occupied = true;
+              cell.gridCell.treeEntityId = entity.id;
+              break;
+            }
+          }
+        }
+        // Restore player position
+        const player = playerQuery.first;
+        if (player?.position) {
+          player.position.x = groveData.playerPosition.x;
+          player.position.z = groveData.playerPosition.z;
+        }
+      }
     }
     // Initialize time system
     initializeTime(gameTimeMicroseconds);
   }, [gameTimeMicroseconds]);
+
+  // Auto-save grove when tab loses focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        saveCurrentGrove();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [saveCurrentGrove]);
 
   // Initialize BabylonJS
   useEffect(() => {
@@ -290,7 +350,7 @@ export const GameScene = () => {
 
           let mesh = treeMeshesRef.current.get(treeEntity.id);
           if (!mesh) {
-            mesh = createTreeMesh(scene, treeEntity.id, treeEntity.tree.speciesId, currentTime.season);
+            mesh = createTreeMesh(scene, treeEntity.id, treeEntity.tree.speciesId, currentTime.season, treeEntity.tree.meshSeed);
             treeMeshesRef.current.set(treeEntity.id, mesh);
           }
 
@@ -298,7 +358,7 @@ export const GameScene = () => {
           mesh.position.z = treeEntity.position.z;
 
           const scale = treeEntity.renderable.scale;
-          mesh.scaling.setAll(Math.max(scale, 0.05)); // min scale so seeds are visible
+          mesh.scaling.setAll(scale);
           mesh.position.y = scale * 0.4;
         }
 
@@ -336,9 +396,10 @@ export const GameScene = () => {
     ];
 
     const meshes: Mesh[] = [];
+    const rng = createRNG(hashString("border-trees"));
 
     positions.forEach((pos, i) => {
-      const scale = 0.8 + Math.random() * 0.5;
+      const scale = 0.8 + rng() * 0.5;
       const trunk = CreateCylinder(`borderTrunk${i}`, {
         height: 1.5 * scale,
         diameterTop: 0.15 * scale,
@@ -443,9 +504,10 @@ export const GameScene = () => {
     } : { r: 128, g: 128, b: 128 };
   };
 
-  const createTreeMesh = (scene: Scene, id: string, speciesId: string, season?: Season): Mesh => {
+  const createTreeMesh = (scene: Scene, id: string, speciesId: string, season?: Season, meshSeed?: number): Mesh => {
     const species = getSpeciesById(speciesId);
     const colors = species?.meshParams.color;
+    const rng = createRNG(meshSeed ?? hashString(id));
 
     const trunk = CreateCylinder(`trunk_${id}`, {
       height: species?.meshParams.trunkHeight ?? 0.8,
@@ -470,7 +532,7 @@ export const GameScene = () => {
     let leafColor = colors?.canopy || COLORS.forestGreen;
     if (season === "autumn" && !species?.evergreen) {
       const autumnColors = ["#FF6347", "#FF4500", "#FFD700", "#FFA500"];
-      leafColor = autumnColors[Math.floor(Math.random() * autumnColors.length)];
+      leafColor = autumnColors[Math.floor(rng() * autumnColors.length)];
     } else if (season === "winter" && !species?.evergreen) {
       leafColor = "#4a5a4a";
     }
@@ -539,6 +601,7 @@ export const GameScene = () => {
                   cell.gridCell.occupied = false;
                   cell.gridCell.treeEntityId = null;
 
+                  saveCurrentGrove();
                   if (hapticsEnabled) await hapticSuccess();
                 }
               }
@@ -579,7 +642,8 @@ export const GameScene = () => {
 
         incrementTreesPlanted();
         addXp(10);
-        
+
+        saveCurrentGrove();
         if (hapticsEnabled) await hapticMedium();
         break;
       }

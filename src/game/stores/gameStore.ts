@@ -6,6 +6,23 @@ import { type ResourceType, emptyResources } from "../constants/resources";
 
 export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";
 
+export interface SerializedTree {
+  speciesId: string;
+  gridX: number;
+  gridZ: number;
+  stage: 0 | 1 | 2 | 3 | 4;
+  progress: number;
+  watered: boolean;
+  totalGrowthTime: number;
+  plantedAt: number;
+  meshSeed: number;
+}
+
+export interface GroveData {
+  trees: SerializedTree[];
+  playerPosition: { x: number; z: number };
+}
+
 interface GameState {
   screen: GameScreen;
   selectedTool: string;
@@ -39,12 +56,16 @@ interface GameState {
   stamina: number;
   maxStamina: number;
 
+  // Grove serialization (ECS → localStorage)
+  groveData: GroveData | null;
+
   // Settings
   hasSeenRules: boolean;
   hapticsEnabled: boolean;
   soundEnabled: boolean;
 
   // Actions
+  saveGrove: (trees: SerializedTree[], playerPos: { x: number; z: number }) => void;
   setScreen: (screen: GameScreen) => void;
   setSelectedTool: (tool: string) => void;
   setSelectedSpecies: (species: string) => void;
@@ -126,6 +147,9 @@ const initialState = {
   stamina: 100,
   maxStamina: 100,
 
+  // Grove serialization
+  groveData: null as GroveData | null,
+
   // Time state
   gameTimeMicroseconds: INITIAL_GAME_TIME,
   currentSeason: "spring" as Season,
@@ -147,6 +171,9 @@ export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
       ...initialState,
+
+      saveGrove: (trees, playerPos) =>
+        set({ groveData: { trees, playerPosition: playerPos } }),
 
       setScreen: (screen) => set({ screen }),
       setSelectedTool: (selectedTool) => set({ selectedTool }),

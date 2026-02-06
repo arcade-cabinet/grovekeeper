@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useGameStore } from "./gameStore";
+import type { SerializedTree } from "./gameStore";
 
 describe("Game Store", () => {
   beforeEach(() => {
@@ -141,6 +142,62 @@ describe("Game Store", () => {
       useGameStore.getState().setStamina(0);
       useGameStore.getState().resetGame();
       expect(useGameStore.getState().stamina).toBe(100);
+    });
+  });
+
+  describe("Grove serialization", () => {
+    const mockTree: SerializedTree = {
+      speciesId: "white-oak",
+      gridX: 3,
+      gridZ: 5,
+      stage: 2,
+      progress: 0.4,
+      watered: true,
+      totalGrowthTime: 60,
+      plantedAt: Date.now(),
+      meshSeed: 12345,
+    };
+
+    it("starts with null groveData", () => {
+      expect(useGameStore.getState().groveData).toBeNull();
+    });
+
+    it("saveGrove stores trees and player position", () => {
+      useGameStore.getState().saveGrove([mockTree], { x: 4, z: 7 });
+      const grove = useGameStore.getState().groveData;
+      expect(grove).not.toBeNull();
+      expect(grove!.trees).toHaveLength(1);
+      expect(grove!.trees[0].speciesId).toBe("white-oak");
+      expect(grove!.trees[0].stage).toBe(2);
+      expect(grove!.playerPosition).toEqual({ x: 4, z: 7 });
+    });
+
+    it("saveGrove round-trips all tree fields", () => {
+      useGameStore.getState().saveGrove([mockTree], { x: 0, z: 0 });
+      const saved = useGameStore.getState().groveData!.trees[0];
+      expect(saved.speciesId).toBe(mockTree.speciesId);
+      expect(saved.gridX).toBe(mockTree.gridX);
+      expect(saved.gridZ).toBe(mockTree.gridZ);
+      expect(saved.stage).toBe(mockTree.stage);
+      expect(saved.progress).toBe(mockTree.progress);
+      expect(saved.watered).toBe(mockTree.watered);
+      expect(saved.totalGrowthTime).toBe(mockTree.totalGrowthTime);
+      expect(saved.plantedAt).toBe(mockTree.plantedAt);
+      expect(saved.meshSeed).toBe(mockTree.meshSeed);
+    });
+
+    it("saveGrove overwrites previous grove data", () => {
+      useGameStore.getState().saveGrove([mockTree], { x: 0, z: 0 });
+      useGameStore.getState().saveGrove([], { x: 1, z: 1 });
+      const grove = useGameStore.getState().groveData;
+      expect(grove!.trees).toHaveLength(0);
+      expect(grove!.playerPosition).toEqual({ x: 1, z: 1 });
+    });
+
+    it("resetGame clears groveData", () => {
+      useGameStore.getState().saveGrove([mockTree], { x: 0, z: 0 });
+      useGameStore.getState().resetGame();
+      expect(useGameStore.getState().groveData).toBeNull();
     });
   });
 

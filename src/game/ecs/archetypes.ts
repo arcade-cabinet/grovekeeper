@@ -1,6 +1,7 @@
 import type { Entity } from "./world";
 import { generateEntityId } from "./world";
 import { hashString } from "../utils/seedRNG";
+import type { SerializedTree } from "../stores/gameStore";
 
 export const createTreeEntity = (
   gridX: number,
@@ -17,6 +18,21 @@ export const createTreeEntity = (
     totalGrowthTime: 0,
     plantedAt: Date.now(),
     meshSeed: hashString(`${speciesId}-${gridX}-${gridZ}`),
+  },
+  renderable: { meshId: null, visible: true, scale: 0.0 },
+});
+
+export const restoreTreeEntity = (data: SerializedTree): Entity => ({
+  id: generateEntityId(),
+  position: { x: data.gridX, y: 0, z: data.gridZ },
+  tree: {
+    speciesId: data.speciesId,
+    stage: data.stage,
+    progress: data.progress,
+    watered: data.watered,
+    totalGrowthTime: data.totalGrowthTime,
+    plantedAt: data.plantedAt,
+    meshSeed: data.meshSeed,
   },
   renderable: { meshId: null, visible: true, scale: 0.0 },
 });
