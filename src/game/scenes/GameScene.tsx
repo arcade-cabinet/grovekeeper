@@ -63,7 +63,6 @@ export const GameScene = () => {
     incrementTreesPlanted,
     incrementTreesHarvested,
     incrementTreesWatered,
-    gameTimeMicroseconds,
     setGameTime: storeSetGameTime,
     setCurrentSeason,
     setCurrentDay,
@@ -558,6 +557,62 @@ export const GameScene = () => {
     movementRef.current = { x: 0, z: 0 };
   }, []);
 
+  // Find the tree entity occupying a grid cell
+  const findTreeOnCell = (treeEntityId: string) => {
+    for (const tree of treesQuery) {
+      if (tree.id === treeEntityId && tree.tree) return tree;
+    }
+    return null;
+  };
+
+  const handleToolOnCell = async (cell: { gridCell?: import("../ecs/world").GridCellComponent; }) => {
+    const gc = cell.gridCell!;
+
+    if (selectedTool === "trowel") {
+      if (gc.occupied) return;
+      if (hapticsEnabled) await hapticLight();
+      setSeedSelectOpen(true);
+      return;
+    }
+
+    // All remaining tools require an occupied cell with a tree
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree) return;
+
+    if (selectedTool === "watering-can") {
+      tree.tree.watered = true;
+      addXp(5);
+      incrementTreesWatered();
+      if (hapticsEnabled) await hapticLight();
+    } else if (selectedTool === "axe") {
+      if (tree.tree.stage < 3) return;
+      const species = getSpeciesById(tree.tree.speciesId);
+      if (species) {
+        for (const y of species.yield) {
+          useGameStore.getState().addResource(y.resource, y.amount);
+        }
+      }
+      addCoins(50);
+      addXp(50);
+      incrementTreesHarvested();
+      const mesh = treeMeshesRef.current.get(tree.id);
+      if (mesh) {
+        mesh.dispose();
+        treeMeshesRef.current.delete(tree.id);
+      }
+      world.remove(tree);
+      gc.occupied = false;
+      gc.treeEntityId = null;
+      debouncedSaveGrove();
+      if (hapticsEnabled) await hapticSuccess();
+    } else if (selectedTool === "compost-bin") {
+      tree.tree.progress += 0.1;
+      addXp(5);
+      if (hapticsEnabled) await hapticLight();
+    }
+  };
+
   const handleAction = async () => {
     const player = playerQuery.first;
     if (!player?.position) return;
@@ -567,64 +622,7 @@ export const GameScene = () => {
 
     for (const cell of gridCellsQuery) {
       if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
-        if (selectedTool === "trowel") {
-          if (cell.gridCell.occupied) return;
-          if (hapticsEnabled) await hapticLight();
-          setSeedSelectOpen(true);
-        } else if (selectedTool === "watering-can") {
-          if (cell.gridCell.occupied && cell.gridCell.treeEntityId) {
-            for (const tree of treesQuery) {
-              if (tree.id === cell.gridCell.treeEntityId && tree.tree) {
-                tree.tree.watered = true;
-                addXp(5);
-                incrementTreesWatered();
-                if (hapticsEnabled) await hapticLight();
-              }
-            }
-          }
-        } else if (selectedTool === "axe") {
-          if (cell.gridCell.occupied && cell.gridCell.treeEntityId) {
-            for (const tree of treesQuery) {
-              if (tree.id === cell.gridCell.treeEntityId && tree.tree) {
-                if (tree.tree.stage >= 3) {
-                  const species = getSpeciesById(tree.tree.speciesId);
-                  // Award resources from species yield
-                  if (species) {
-                    for (const y of species.yield) {
-                      useGameStore.getState().addResource(y.resource, y.amount);
-                    }
-                  }
-                  addCoins(50);
-                  addXp(50);
-                  incrementTreesHarvested();
-
-                  const mesh = treeMeshesRef.current.get(tree.id);
-                  if (mesh) {
-                    mesh.dispose();
-                    treeMeshesRef.current.delete(tree.id);
-                  }
-
-                  world.remove(tree);
-                  cell.gridCell.occupied = false;
-                  cell.gridCell.treeEntityId = null;
-
-                  debouncedSaveGrove();
-                  if (hapticsEnabled) await hapticSuccess();
-                }
-              }
-            }
-          }
-        } else if (selectedTool === "compost-bin") {
-          if (cell.gridCell.occupied && cell.gridCell.treeEntityId) {
-            for (const tree of treesQuery) {
-              if (tree.id === cell.gridCell.treeEntityId && tree.tree) {
-                tree.tree.progress += 0.1;
-                addXp(5);
-                if (hapticsEnabled) await hapticLight();
-              }
-            }
-          }
-        }
+        await handleToolOnCell(cell);
         break;
       }
     }
