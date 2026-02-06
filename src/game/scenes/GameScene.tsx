@@ -565,67 +565,82 @@ export const GameScene = () => {
     return null;
   };
 
-  const handleToolOnCell = async (cell: { gridCell?: import("../ecs/world").GridCellComponent; }) => {
-    const gc = cell.gridCell!;
-
-    if (selectedTool === "trowel") {
-      if (gc.occupied) return;
-      if (hapticsEnabled) await hapticLight();
-      setSeedSelectOpen(true);
-      return;
+  // Find the grid cell at the player's position
+  const findCellAtPlayer = () => {
+    const player = playerQuery.first;
+    if (!player?.position) return null;
+    const gridX = Math.round(player.position.x);
+    const gridZ = Math.round(player.position.z);
+    for (const cell of gridCellsQuery) {
+      if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
+        return cell.gridCell;
+      }
     }
+    return null;
+  };
 
-    // All remaining tools require an occupied cell with a tree
+  const useTrowel = async (gc: import("../ecs/world").GridCellComponent) => {
+    if (gc.occupied) return;
+    if (hapticsEnabled) await hapticLight();
+    setSeedSelectOpen(true);
+  };
+
+  const useWateringCan = async (gc: import("../ecs/world").GridCellComponent) => {
     if (!gc.occupied || !gc.treeEntityId) return;
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree) return;
+    tree.tree.watered = true;
+    addXp(5);
+    incrementTreesWatered();
+    if (hapticsEnabled) await hapticLight();
+  };
 
-    if (selectedTool === "watering-can") {
-      tree.tree.watered = true;
-      addXp(5);
-      incrementTreesWatered();
-      if (hapticsEnabled) await hapticLight();
-    } else if (selectedTool === "axe") {
-      if (tree.tree.stage < 3) return;
-      const species = getSpeciesById(tree.tree.speciesId);
-      if (species) {
-        for (const y of species.yield) {
-          useGameStore.getState().addResource(y.resource, y.amount);
-        }
+  const useAxe = async (gc: import("../ecs/world").GridCellComponent) => {
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree || tree.tree.stage < 3) return;
+    const species = getSpeciesById(tree.tree.speciesId);
+    if (species) {
+      for (const y of species.yield) {
+        useGameStore.getState().addResource(y.resource, y.amount);
       }
-      addCoins(50);
-      addXp(50);
-      incrementTreesHarvested();
-      const mesh = treeMeshesRef.current.get(tree.id);
-      if (mesh) {
-        mesh.dispose();
-        treeMeshesRef.current.delete(tree.id);
-      }
-      world.remove(tree);
-      gc.occupied = false;
-      gc.treeEntityId = null;
-      debouncedSaveGrove();
-      if (hapticsEnabled) await hapticSuccess();
-    } else if (selectedTool === "compost-bin") {
-      tree.tree.progress += 0.1;
-      addXp(5);
-      if (hapticsEnabled) await hapticLight();
     }
+    addCoins(50);
+    addXp(50);
+    incrementTreesHarvested();
+    const mesh = treeMeshesRef.current.get(tree.id);
+    if (mesh) {
+      mesh.dispose();
+      treeMeshesRef.current.delete(tree.id);
+    }
+    world.remove(tree);
+    gc.occupied = false;
+    gc.treeEntityId = null;
+    debouncedSaveGrove();
+    if (hapticsEnabled) await hapticSuccess();
+  };
+
+  const useCompostBin = async (gc: import("../ecs/world").GridCellComponent) => {
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree) return;
+    tree.tree.progress += 0.1;
+    addXp(5);
+    if (hapticsEnabled) await hapticLight();
+  };
+
+  const toolActions: Record<string, (gc: import("../ecs/world").GridCellComponent) => Promise<void>> = {
+    "trowel": useTrowel,
+    "watering-can": useWateringCan,
+    "axe": useAxe,
+    "compost-bin": useCompostBin,
   };
 
   const handleAction = async () => {
-    const player = playerQuery.first;
-    if (!player?.position) return;
-
-    const gridX = Math.round(player.position.x);
-    const gridZ = Math.round(player.position.z);
-
-    for (const cell of gridCellsQuery) {
-      if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
-        await handleToolOnCell(cell);
-        break;
-      }
-    }
+    const gc = findCellAtPlayer();
+    if (!gc) return;
+    const action = toolActions[selectedTool];
+    if (action) await action(gc);
   };
 
   const handlePlant = async () => {
