@@ -1,75 +1,82 @@
 # Active Context — Grovekeeper
 
-## Current State (2025-02-06)
+## Current State (2026-02-06)
 
-The project has a **working prototype** with a playable core loop but is far from the production-complete state described in `GROVEKEEPER_BUILD_PROMPT.md`. The gap between current code and spec needs systematic closing.
+**Phase A: Foundation** is complete and merged to main (PR #1). The project now has spec-aligned core systems: 5-stage growth, 8 tree species, 8 tools, 4 resource types, stamina, seeded RNG, and grid math utilities. 102 unit tests passing.
 
 ## Last Session
 
 ### Completed
-- Comprehensive codebase audit comparing current state vs canonical spec
-- Created `CLAUDE.md` — project-specific development guidance for Claude Code
-- Created `AGENTS.md` — multi-agent orchestration guide with memory bank protocol
-- Initialized memory bank with all 6 core files
-- Identified all gaps between current implementation and spec
+- Executed full Phase A Foundation plan (8 tasks)
+- Seeded RNG utility (`seedRNG.ts`) with 7 tests
+- Grid math utilities (`gridMath.ts`) with 16 tests
+- Resource type definitions (`resources.ts`)
+- Tree catalog aligned to spec: 8 base species with full data
+- Tool system: 8 tools with stamina costs, unlock levels, keybinds
+- Growth system refactored: 5-stage model with season/difficulty/water multipliers
+- Stamina system: drain on tool use, regen over time, exhaustion at 0
+- Integration: all new systems wired into GameScene + gameStore
+- CodeRabbit review fixes: Math.floor for grid, bounds checks in growth
+- Browser play-tested via Chrome MCP: confirmed rendering, planting, HUD
+- PR #1 merged to main via squash merge
 
-### Decisions Made
-- **Keep Tailwind + shadcn/ui** — better DX than spec's CSS Modules, already integrated
-- **Keep BabylonJS 8.x** — newer than spec's 7.x, no downgrade needed
-- **Keep Capacitor** — additive to spec's PWA approach, enables native haptics
-- **Keep enhanced time system** — richer than spec's simple 4-day seasons
-- **Keep quest system** — complements spec's daily challenges
-- **Prioritize foundation alignment** over new features — growth system, resource economy, and stamina are the critical gaps
+### Bug Fixes Applied
+- `worldToGrid` used `Math.round` (wrong for tile centers) → `Math.floor`
+- `getStageScale` had no bounds validation → clamped to [0, MAX_STAGE]
+- `calcGrowthRate` could divide by zero with invalid baseTime → guard added
+- `getActionButtonStyle` used old tool IDs → updated to new 8-tool set
+- RulesModal tutorial text referenced "shovel" → updated to "trowel"
+
+### Known Issues from Play-Testing
+- Stage 0 (Seed) has scale 0.0, min clamped to 0.05 — planted trees are nearly invisible behind player (spec intends ground decal for seed stage)
+- Border trees still use `Math.random()` for colors (not seeded RNG yet)
+- Player tree meshes still use `Math.random()` for slight variation (not seeded RNG yet)
 
 ## What's Working Right Now
 - BabylonJS scene with isometric camera, lighting, ground plane
-- Farmer character (low-poly primitives) with joystick movement
+- Farmer character with joystick + WASD movement
 - Grid initialization (12x12 soil tiles)
-- Tree planting (shovel → seed select → plant on tile)
-- Tree growth (time-based, affected by watering)
-- Harvesting via axe (mature trees → coins)
-- Day/night cycle with dynamic sky and lighting
-- Season cycle with visual changes (ground, canopy colors)
-- Quest/goal system with daily generation
-- Main menu with continue/new game
-- HUD with stats, tools, time display
+- Tree planting (trowel → seed select → plant on tile)
+- 5-stage tree growth with spec-aligned formula
+- Season/difficulty/water growth multipliers
+- Stamina system (drain + regen)
+- 4 resource types (Timber/Sap/Fruit/Acorns) in store
+- 8 tree species with full catalog data
+- 8 tools with stamina costs and unlock levels
+- Harvesting via axe (mature trees → coins + resources)
+- Day/night cycle with dynamic sky colors
+- Season cycle with visual changes
+- Quest/goal system
+- Main menu, HUD, tool selection
 - Zustand persistence to localStorage
 - Haptic feedback via Capacitor
+- 102 unit tests passing
 
-## Current Focus: Foundation Alignment
+## Current Focus: Phase B — Systems & Persistence
 
-The next work should focus on aligning the game systems with the canonical spec before adding new features.
+### Priority 1: Save/Load with ECS Serialization
+- Trees are lost on page refresh (ECS entities not persisted)
+- Need `saveGrove()` / `loadGrove()` that serialize tree entities
+- Auto-save on visibility change
+- Offline growth calculation on resume
 
-### Priority 1: Growth System Alignment
-- Current: 7 stages (seed/sprout/seedling/sapling/young/mature/ancient), progress 0→1.5
-- Spec: 5 stages (Seed 0 / Sprout 1 / Sapling 2 / Mature 3 / Old Growth 4), progress 0→1 per stage
-- Need: Refactor to spec's model with difficulty multipliers, season/water bonuses
+### Priority 2: Stamina HUD Integration
+- Stamina system exists but no visual gauge in HUD
+- Spec calls for vertical bar on right side
 
-### Priority 2: Resource Economy
-- Current: Simple coins
-- Spec: Timber, Sap, Fruit, Acorns — each earned from specific species
-- Need: New resource types, species yields, seed costs, grid expansion costs
+### Priority 3: Resource HUD Integration
+- Resources tracked in store but not displayed
+- Spec calls for 2x2 resource grid in HUD
 
-### Priority 3: Stamina System
-- Current: Not implemented
-- Spec: 100 max stamina, drain per tool action, regen 2/sec
-- Need: New ECS component + system + HUD gauge
+### Priority 4: Seed Costs & Resource Spending
+- Currently free planting
+- Need to deduct seed costs (Acorns) from resources
 
-### Priority 4: Tree Catalog Alignment
-- Current: 6 species (oak, birch, pine, maple, cherry, redwood) with simple data
-- Spec: 8 base + 3 prestige species with complex data (biomes, yields, harvest cycles, specials)
-- Need: Major data restructure
+### Priority 5: Species-specific Harvesting
+- Harvest yields defined in tree catalog but not connected
+- Need to award correct resource types per species
 
 ## Open Questions
-- Should we migrate colors to spec's design token system or keep current approach?
-- Should we introduce Fredoka + Nunito fonts now or defer to polish phase?
-- What's the minimum viable save system for ECS entity serialization?
-
-## Next Steps (Priority Order)
-1. Refactor growth system to spec's 5-stage model
-2. Add resource types (Timber/Sap/Fruit/Acorns) to store and HUD
-3. Implement stamina system (component, system, HUD gauge)
-4. Add seeded RNG utility (`seedRNG.ts`)
-5. Add grid math utilities (`gridMath.ts`)
-6. Update tree species data to match spec's catalog
-7. Update tool definitions with stamina costs and unlock levels
+- Should we implement grid expansion (16→20→24→32) in Phase B or defer?
+- What's the UX for the seed stage visibility problem (ground decal vs larger mesh)?
+- Should offline growth use simplified calculation or full simulation?
