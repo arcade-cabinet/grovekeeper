@@ -1,26 +1,43 @@
 /**
- * CameraManager — Isometric ArcRotateCamera setup and player tracking.
+ * CameraManager — Top-down orthographic camera that scales with viewport.
  *
- * Camera is locked to a fixed isometric angle. Each frame, the camera target
- * lerps toward the player position for smooth following.
+ * Uses ArcRotateCamera in orthographic mode. The view always centers on
+ * the player and scales out to show surrounding biomes on larger screens.
+ * A slight tilt angle (~15°) reveals building faces and terrain depth
+ * without the "tilted diorama" effect of isometric views.
  */
 
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { Camera } from "@babylonjs/core/Cameras/camera";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import type { Engine } from "@babylonjs/core/Engines/engine";
 import type { Scene } from "@babylonjs/core/scene";
 
-const CAMERA_RADIUS = 18;
-const CAMERA_ALPHA = -Math.PI / 4;     // 45 degree rotation
-const CAMERA_BETA = Math.PI / 3.5;     // ~51 degree tilt
+/** Minimum vertical view in world tiles — guarantees immediate area visible. */
+const MIN_VIEW = 14;
+/** Maximum vertical view in world tiles — prevents zooming out too far. */
+const MAX_VIEW = 40;
+/** Target pixels per world tile. Smaller = more tiles visible. */
+const PIXELS_PER_TILE = 45;
+
+/** Camera tilt from vertical (radians). 30° — diorama top-down with depth. */
+const CAMERA_BETA = Math.PI / 6;
+/** Camera rotation (radians). -PI/2 = camera from south looking north. */
+const CAMERA_ALPHA = -Math.PI / 2;
+/** Orthographic distance — just needs to clear all scene geometry. */
+const CAMERA_RADIUS = 80;
+/** Smooth camera tracking speed. */
 const LERP_SPEED = 3;
 
 export class CameraManager {
   camera: ArcRotateCamera | null = null;
+  private engine: Engine | null = null;
 
   init(scene: Scene, initialTarget?: { x: number; z: number }): ArcRotateCamera {
     const target = initialTarget
       ? new Vector3(initialTarget.x, 0, initialTarget.z)
       : new Vector3(5.5, 0, 5.5);
+
     const camera = new ArcRotateCamera(
       "camera",
       CAMERA_ALPHA,
@@ -37,8 +54,39 @@ export class CameraManager {
     camera.lowerBetaLimit = CAMERA_BETA;
     camera.upperBetaLimit = CAMERA_BETA;
 
+    // Switch to orthographic — scales cleanly with viewport
+    camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
+
     this.camera = camera;
+    this.engine = scene.getEngine() as Engine;
+
+    // Set initial viewport bounds
+    this.updateViewport();
+
     return camera;
+  }
+
+  /**
+   * Recalculate orthographic bounds from current viewport dimensions.
+   * Called on resize and each frame (trivially cheap).
+   *
+   * On mobile (small canvas): shows ~14 tiles — your immediate grove.
+   * On desktop (large canvas): shows 24-40 tiles — surrounding biomes visible.
+   */
+  updateViewport(): void {
+    if (!this.camera || !this.engine) return;
+
+    const canvasHeight = this.engine.getRenderHeight();
+    const aspect = this.engine.getAspectRatio(this.camera);
+
+    // Determine vertical view size based on screen real estate
+    const idealView = canvasHeight / PIXELS_PER_TILE;
+    const viewSize = Math.max(MIN_VIEW, Math.min(MAX_VIEW, idealView));
+
+    this.camera.orthoTop = viewSize / 2;
+    this.camera.orthoBottom = -viewSize / 2;
+    this.camera.orthoLeft = -(viewSize * aspect) / 2;
+    this.camera.orthoRight = (viewSize * aspect) / 2;
   }
 
   /** Smoothly track a world position (e.g. the player). */
@@ -52,5 +100,6 @@ export class CameraManager {
   dispose(): void {
     this.camera?.dispose();
     this.camera = null;
+    this.engine = null;
   }
 }

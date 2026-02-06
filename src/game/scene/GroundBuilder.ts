@@ -1,42 +1,42 @@
 /**
- * GroundBuilder — PBR ground mesh + material management.
+ * GroundBuilder — Unified terrain with smooth ecological biome blending.
  *
- * Replaces the old GrassProceduralTexture + StandardMaterial approach with
- * PBR materials using ambientCG texture sets (grass, soil, stone).
+ * Creates a single ground mesh with a DynamicTexture whose pixels are
+ * painted using distance-field blending from zone boundaries. Zone
+ * transitions are smooth gradients — no hard edges.
  */
 
-import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
+import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import { GRID_SIZE } from "../constants/config";
 import type { Season } from "../systems/time";
-import { getSeasonalColors } from "../systems/time";
+import type { ZoneDefinition } from "../world/types";
 
-/** PBR texture paths for ground materials. */
-const GROUND_TEXTURES = {
-  grass: {
-    color: "/textures/ground/grass/color.jpg",
-    normal: "/textures/ground/grass/normal.jpg",
-    roughness: "/textures/ground/grass/roughness.jpg",
-    ao: "/textures/ground/grass/ao.jpg",
-  },
-  soil: {
-    color: "/textures/ground/soil/color.jpg",
-    normal: "/textures/ground/soil/normal.jpg",
-    roughness: "/textures/ground/soil/roughness.jpg",
-    ao: "/textures/ground/soil/ao.jpg",
-  },
-  stone: {
-    color: "/textures/ground/stone/color.jpg",
-    normal: "/textures/ground/stone/normal.jpg",
-    roughness: "/textures/ground/stone/roughness.jpg",
-  },
-} as const;
+/** Biome base colors (R, G, B in 0-1 range). */
+const BIOME_COLORS: Record<string, { r: number; g: number; b: number }> = {
+  grass: { r: 0.35, g: 0.52, b: 0.22 },
+  soil:  { r: 0.45, g: 0.35, b: 0.20 },
+  dirt:  { r: 0.40, g: 0.30, b: 0.16 },
+  stone: { r: 0.52, g: 0.50, b: 0.46 },
+};
+
+/** Wilderness color (areas outside all zones). */
+const WILDERNESS_COLOR = { r: 0.28, g: 0.45, b: 0.18 };
+
+/** Width of ecological transition zone (world tiles). */
+const TRANSITION_WIDTH = 3;
+
+/** DynamicTexture resolution. 512 is ample for a terrain colormap. */
+const TEX_RESOLUTION = 512;
+
+/** Padding around world bounds for the ground mesh.
+ * Must be large enough to cover viewport corners when camera is rotated 45°.
+ * For an ortho view of ~24 tiles at 45° rotation, corners extend ~17 tiles from center. */
+const WORLD_PADDING = 24;
 
 export interface WorldBounds {
   minX: number;
@@ -47,139 +47,209 @@ export interface WorldBounds {
 
 export class GroundBuilder {
   private groundMesh: Mesh | null = null;
-  private zoneMeshes: Mesh[] = [];
   private gridOverlays: Mesh[] = [];
-  private grassMat: PBRMaterial | null = null;
-  private soilMat: PBRMaterial | null = null;
-  private stoneMat: PBRMaterial | null = null;
+  private groundMat: StandardMaterial | null = null;
+  private biomeTexture: DynamicTexture | null = null;
+  private zones: ZoneDefinition[] = [];
 
-  init(scene: Scene, worldBounds?: WorldBounds): void {
-    const bounds = worldBounds ?? {
-      minX: 0, minZ: 0, maxX: GRID_SIZE, maxZ: GRID_SIZE,
-    };
-    const worldW = bounds.maxX - bounds.minX;
-    const worldH = bounds.maxZ - bounds.minZ;
-    const centerX = bounds.minX + worldW / 2 - 0.5;
-    const centerZ = bounds.minZ + worldH / 2 - 0.5;
+  /**
+   * Initialize the ground with smooth biome blending.
+   * @param zones — All zone definitions (needed to paint the biome map).
+   */
+  init(scene: Scene, worldBounds: WorldBounds, zones: ZoneDefinition[]): void {
+    this.zones = zones;
 
-    // --- Base ground (grass) covering the full world + padding ---
-    const groundSize = Math.max(worldW, worldH) + 8;
+    const padMinX = worldBounds.minX - WORLD_PADDING;
+    const padMinZ = worldBounds.minZ - WORLD_PADDING;
+    const padMaxX = worldBounds.maxX + WORLD_PADDING;
+    const padMaxZ = worldBounds.maxZ + WORLD_PADDING;
+    const worldW = padMaxX - padMinX;
+    const worldH = padMaxZ - padMinZ;
+    const groundSize = Math.max(worldW, worldH);
+    const centerX = (padMinX + padMaxX) / 2 - 0.5;
+    const centerZ = (padMinZ + padMaxZ) / 2 - 0.5;
+
+    // Single ground mesh — no per-zone overlays
     this.groundMesh = CreateGround("ground", {
       width: groundSize,
       height: groundSize,
-      subdivisions: 32,
+      subdivisions: 1,
     }, scene);
     this.groundMesh.position = new Vector3(centerX, -0.05, centerZ);
 
-    this.grassMat = this.createGroundPBR(scene, "grassMat", GROUND_TEXTURES.grass);
-    this.groundMesh.material = this.grassMat;
+    // Standard material — biome blend DynamicTexture as diffuse
+    this.groundMat = new StandardMaterial("groundMat", scene);
+    this.groundMat.specularColor = new Color3(0, 0, 0);
 
-    // Pre-create shared PBR materials for zone overlays
-    this.soilMat = this.createGroundPBR(scene, "soilMat", GROUND_TEXTURES.soil);
-    this.stoneMat = this.createGroundPBR(scene, "stoneMat", GROUND_TEXTURES.stone);
+    // Paint biome blend texture
+    this.biomeTexture = new DynamicTexture("biomeTex", TEX_RESOLUTION, scene, false);
+    this.paintBiomeTexture(padMinX, padMinZ, padMaxX, padMaxZ);
+    this.groundMat.diffuseTexture = this.biomeTexture;
+
+    this.groundMesh.material = this.groundMat;
   }
 
   /**
-   * Add a zone ground overlay (soil/stone/dirt) with an optional wireframe grid.
-   * Call after init() for each zone that needs a non-grass ground material.
+   * Add a subtle wireframe grid overlay for plantable zones.
+   * Call after init() for zones where players can plant trees.
    */
-  addZoneGround(
+  addPlantableGrid(
     scene: Scene,
     zoneId: string,
     origin: { x: number; z: number },
     size: { width: number; height: number },
-    material: "grass" | "soil" | "dirt" | "stone",
-    showGrid: boolean,
   ): void {
     const centerX = origin.x + size.width / 2 - 0.5;
     const centerZ = origin.z + size.height / 2 - 0.5;
 
-    // Select material (grass zones skip overlay — base ground covers them)
-    let mat: PBRMaterial | null = null;
-    if (material === "soil" || material === "dirt") mat = this.soilMat;
-    else if (material === "stone") mat = this.stoneMat;
+    const overlay = CreateGround(`zone_grid_${zoneId}`, {
+      width: size.width,
+      height: size.height,
+      subdivisionsX: size.width,
+      subdivisionsY: size.height,
+    }, scene);
+    overlay.position = new Vector3(centerX, 0.01, centerZ);
 
-    if (mat) {
-      const mesh = CreateGround(`zone_ground_${zoneId}`, {
-        width: size.width,
-        height: size.height,
-      }, scene);
-      mesh.position = new Vector3(centerX, 0.005, centerZ);
-      mesh.material = mat;
-      this.zoneMeshes.push(mesh);
-    }
+    const gridMat = new StandardMaterial(`gridMat_${zoneId}`, scene);
+    gridMat.diffuseColor = new Color3(0.35, 0.28, 0.18);
+    gridMat.specularColor = new Color3(0, 0, 0);
+    gridMat.alpha = 0.15;
+    gridMat.wireframe = true;
+    overlay.material = gridMat;
 
-    if (showGrid) {
-      const gridSize = Math.max(size.width, size.height);
-      const overlay = CreateGround(`zone_grid_${zoneId}`, {
-        width: size.width,
-        height: size.height,
-        subdivisionsX: size.width,
-        subdivisionsY: size.height,
-      }, scene);
-      overlay.position = new Vector3(centerX, 0.01, centerZ);
-      const gridMat = new StandardMaterial(`gridMat_${zoneId}`, scene);
-      gridMat.diffuseColor = new Color3(0.35, 0.28, 0.18);
-      gridMat.specularColor = new Color3(0, 0, 0);
-      gridMat.alpha = 0.25;
-      gridMat.wireframe = true;
-      overlay.material = gridMat;
-      this.gridOverlays.push(overlay);
-    }
+    this.gridOverlays.push(overlay);
   }
 
   /** Update ground visuals when the season changes. */
-  updateSeason(season: Season, seasonProgress: number): void {
-    const seasonalColors = getSeasonalColors(season, seasonProgress);
+  updateSeason(season: Season, _seasonProgress: number): void {
+    if (!this.groundMat) return;
 
-    if (this.grassMat) {
-      const rgb = hexToRgb(seasonalColors.groundColor);
-      this.grassMat.albedoColor = new Color3(rgb.r / 255, rgb.g / 255, rgb.b / 255);
-    }
+    // Gentle seasonal color tint on the entire terrain
+    const seasonTints: Record<string, { r: number; g: number; b: number }> = {
+      spring: { r: 1.0, g: 1.05, b: 0.95 },
+      summer: { r: 1.05, g: 1.0, b: 0.9 },
+      autumn: { r: 1.1, g: 0.95, b: 0.8 },
+      winter: { r: 0.9, g: 0.95, b: 1.05 },
+    };
+    const tint = seasonTints[season] ?? { r: 1, g: 1, b: 1 };
+    this.groundMat.diffuseColor = new Color3(tint.r, tint.g, tint.b);
   }
 
-  private createGroundPBR(
-    scene: Scene,
-    name: string,
-    textures: { color: string; normal: string; roughness: string; ao?: string },
-  ): PBRMaterial {
-    const mat = new PBRMaterial(name, scene);
-    mat.albedoTexture = new Texture(textures.color, scene);
-    mat.bumpTexture = new Texture(textures.normal, scene);
-    mat.metallicTexture = new Texture(textures.roughness, scene);
-    mat.useRoughnessFromMetallicTextureAlpha = false;
-    mat.useRoughnessFromMetallicTextureGreen = true;
-    if (textures.ao) {
-      mat.ambientTexture = new Texture(textures.ao, scene);
+  // ---------------------------------------------------------------------------
+  // Biome texture painting
+  // ---------------------------------------------------------------------------
+
+  /** Paint the DynamicTexture with smooth ecological biome blending. */
+  private paintBiomeTexture(
+    worldMinX: number, worldMinZ: number,
+    worldMaxX: number, worldMaxZ: number,
+  ): void {
+    if (!this.biomeTexture) return;
+
+    const ctx = this.biomeTexture.getContext();
+    const size = TEX_RESOLUTION;
+    const worldW = worldMaxX - worldMinX;
+    const worldH = worldMaxZ - worldMinZ;
+
+    for (let py = 0; py < size; py++) {
+      for (let px = 0; px < size; px++) {
+        const worldX = worldMinX + (px / size) * worldW;
+        const worldZ = worldMinZ + (py / size) * worldH;
+
+        const color = this.sampleBiomeColor(worldX, worldZ);
+        const r = Math.round(color.r * 255);
+        const g = Math.round(color.g * 255);
+        const b = Math.round(color.b * 255);
+
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(px, py, 1, 1);
+      }
     }
-    mat.metallic = 0;
-    mat.roughness = 1;
-    return mat;
+
+    this.biomeTexture.update();
+  }
+
+  /** Sample blended biome color at a world position using distance-field weights. */
+  private sampleBiomeColor(worldX: number, worldZ: number): { r: number; g: number; b: number } {
+    let totalWeight = 0;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+
+    for (const zone of this.zones) {
+      const dist = this.distanceToZone(worldX, worldZ, zone);
+      const weight = this.smoothWeight(dist);
+      if (weight <= 0) continue;
+
+      const biomeColor = BIOME_COLORS[zone.groundMaterial] ?? WILDERNESS_COLOR;
+      r += biomeColor.r * weight;
+      g += biomeColor.g * weight;
+      b += biomeColor.b * weight;
+      totalWeight += weight;
+    }
+
+    if (totalWeight > 0) {
+      // Blend zone colors with wilderness for the remainder
+      const wildWeight = Math.max(0, 1 - totalWeight);
+      const denom = totalWeight + wildWeight;
+      r = (r + WILDERNESS_COLOR.r * wildWeight) / denom;
+      g = (g + WILDERNESS_COLOR.g * wildWeight) / denom;
+      b = (b + WILDERNESS_COLOR.b * wildWeight) / denom;
+    } else {
+      r = WILDERNESS_COLOR.r;
+      g = WILDERNESS_COLOR.g;
+      b = WILDERNESS_COLOR.b;
+    }
+
+    return { r, g, b };
+  }
+
+  /**
+   * Compute signed distance from a point to a zone boundary.
+   * Returns negative if inside the zone, positive if outside.
+   */
+  private distanceToZone(worldX: number, worldZ: number, zone: ZoneDefinition): number {
+    const ox = zone.origin.x;
+    const oz = zone.origin.z;
+    const w = zone.size.width;
+    const h = zone.size.height;
+
+    const dLeft   = ox - worldX;
+    const dRight  = worldX - (ox + w);
+    const dTop    = oz - worldZ;
+    const dBottom = worldZ - (oz + h);
+
+    // Inside: all four are negative; distance is the max (closest to edge)
+    if (dLeft <= 0 && dRight <= 0 && dTop <= 0 && dBottom <= 0) {
+      return Math.max(dLeft, dRight, dTop, dBottom);
+    }
+
+    // Outside: Euclidean distance to the nearest point on the zone rect
+    const dx = Math.max(dLeft, 0, dRight);
+    const dz = Math.max(dTop, 0, dBottom);
+    return Math.sqrt(dx * dx + dz * dz);
+  }
+
+  /**
+   * Weight function: 1 inside zone, smooth falloff to 0 at TRANSITION_WIDTH.
+   * Uses inverse smoothstep for natural ecological gradient.
+   */
+  private smoothWeight(dist: number): number {
+    if (dist <= 0) return 1;
+    if (dist >= TRANSITION_WIDTH) return 0;
+    const t = dist / TRANSITION_WIDTH;
+    // Inverse smoothstep: 1 at t=0, 0 at t=1
+    return 1 - t * t * (3 - 2 * t);
   }
 
   dispose(): void {
     this.groundMesh?.dispose();
-    for (const m of this.zoneMeshes) m.dispose();
     for (const m of this.gridOverlays) m.dispose();
-    this.grassMat?.dispose();
-    this.soilMat?.dispose();
-    this.stoneMat?.dispose();
+    this.groundMat?.dispose();
+    this.biomeTexture?.dispose();
     this.groundMesh = null;
-    this.zoneMeshes = [];
     this.gridOverlays = [];
-    this.grassMat = null;
-    this.soilMat = null;
-    this.stoneMat = null;
+    this.groundMat = null;
+    this.biomeTexture = null;
   }
-}
-
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: Number.parseInt(result[1], 16),
-        g: Number.parseInt(result[2], 16),
-        b: Number.parseInt(result[3], 16),
-      }
-    : { r: 128, g: 128, b: 128 };
 }

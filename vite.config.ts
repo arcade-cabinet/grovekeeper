@@ -21,6 +21,7 @@ export default defineConfig({
           babylon: [
             "@babylonjs/core/Engines/engine",
             "@babylonjs/core/scene",
+            "@babylonjs/core/Cameras/camera",
             "@babylonjs/core/Cameras/arcRotateCamera",
             "@babylonjs/core/Lights/hemisphericLight",
             "@babylonjs/core/Lights/directionalLight",
@@ -37,6 +38,7 @@ export default defineConfig({
             "@babylonjs/core/Materials/PBR/pbrMaterial",
             "@babylonjs/core/Materials/Textures/texture",
             "@babylonjs/core/Materials/Textures/cubeTexture",
+            "@babylonjs/core/Materials/Textures/dynamicTexture",
             "@babylonjs/core/Materials/Textures/hdrCubeTexture",
             "@babylonjs/core/Particles/solidParticleSystem",
           ],

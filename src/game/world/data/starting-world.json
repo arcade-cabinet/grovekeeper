@@ -21,6 +21,10 @@
         { "x": 1, "z": 6, "type": "path" },
         { "x": 2, "z": 6, "type": "path" }
       ],
+      "structures": [
+        { "templateId": "bench", "localX": 10, "localZ": 10, "rotation": 0 },
+        { "templateId": "well", "localX": 5, "localZ": 8, "rotation": 0 }
+      ],
       "plantable": true,
       "connections": [
         {
@@ -83,6 +87,9 @@
         { "x": 4, "z": 4, "type": "water" },
         { "x": 5, "z": 4, "type": "water" },
         { "x": 4, "z": 5, "type": "water" }
+      ],
+      "structures": [
+        { "templateId": "bench", "localX": 1, "localZ": 1, "rotation": 90 }
       ],
       "plantable": true,
       "connections": [

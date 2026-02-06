@@ -11,11 +11,14 @@ import type { Entity } from "../ecs/world";
 import type { WorldDefinition, ZoneDefinition } from "./types";
 import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";
 import { createPropMesh, disposePropMeshes } from "./PropFactory";
+import { createStructureMesh, disposeStructureMesh } from "../structures/BlockMeshFactory";
+import { getTemplate } from "../structures/StructureManager";
 
 interface LoadedZone {
   definition: ZoneDefinition;
   entities: Entity[];
   propMeshes: Mesh[];
+  structMeshes: Mesh[];
 }
 
 export class WorldManager {
@@ -58,7 +61,25 @@ export class WorldManager {
       }
     }
 
-    this.loadedZones.set(zoneId, { definition: zoneDef, entities, propMeshes });
+    // Create structure meshes (Daggerfall-style snapping from block definitions)
+    const structMeshes: Mesh[] = [];
+    if (zoneDef.structures) {
+      for (const struct of zoneDef.structures) {
+        const template = getTemplate(struct.templateId);
+        if (!template) continue;
+        const worldX = zoneDef.origin.x + struct.localX;
+        const worldZ = zoneDef.origin.z + struct.localZ;
+        const mesh = createStructureMesh(this.scene, template, worldX, worldZ);
+        if (mesh) {
+          mesh.rotation.y = (struct.rotation * Math.PI) / 180;
+          mesh.freezeWorldMatrix();
+          mesh.isPickable = false;
+          structMeshes.push(mesh);
+        }
+      }
+    }
+
+    this.loadedZones.set(zoneId, { definition: zoneDef, entities, propMeshes, structMeshes });
   }
 
   /** Unload a zone — removes ECS entities and disposes meshes. */
@@ -68,6 +89,7 @@ export class WorldManager {
 
     unloadZoneEntities(loaded.entities);
     disposePropMeshes(loaded.propMeshes);
+    for (const mesh of loaded.structMeshes) disposeStructureMesh(mesh);
     this.loadedZones.delete(zoneId);
   }
 

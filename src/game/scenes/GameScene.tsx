@@ -193,20 +193,15 @@ export const GameScene = () => {
       const spawnPos = worldMgr.getSpawnPosition() ?? { x: 5.5, z: 5.5 };
       cam.init(scene, spawnPos);
       lights.init(scene);
-      ground.init(scene, bounds);
+      ground.init(scene, bounds, worldDef.zones);
       sky.init(scene);
       playerMesh.init(scene);
 
-      // Create per-zone ground overlays
+      // Add plantable grid overlays for zones where players can plant
       for (const zone of worldDef.zones) {
-        ground.addZoneGround(
-          scene,
-          zone.id,
-          zone.origin,
-          zone.size,
-          zone.groundMaterial,
-          zone.plantable,
-        );
+        if (zone.plantable) {
+          ground.addPlantableGrid(scene, zone.id, zone.origin, zone.size);
+        }
       }
 
       // --- Game loop ---
@@ -256,6 +251,7 @@ export const GameScene = () => {
         harvestSystem(dt);
 
         // Scene managers update
+        cam.updateViewport();
         lights.update(scene, currentTime);
         sky.update(scene, currentTime.sunIntensity);
         playerMesh.update();
