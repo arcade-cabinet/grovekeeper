@@ -54,6 +54,12 @@ export interface Entity {
   player?: PlayerComponent;
   gridCell?: GridCellComponent;
   farmerState?: FarmerState;
+  harvestable?: {
+    resources: { type: string; amount: number }[];
+    cooldownElapsed: number;
+    cooldownTotal: number;
+    ready: boolean;
+  };
 }
 
 // Create the ECS world
@@ -72,3 +78,4 @@ export const treesQuery = world.with("tree", "position", "renderable");
 export const playerQuery = world.with("player", "position");
 export const farmerQuery = world.with("farmerState", "position");
 export const gridCellsQuery = world.with("gridCell", "position");
+export const harvestableQuery = world.with("tree", "harvestable");
