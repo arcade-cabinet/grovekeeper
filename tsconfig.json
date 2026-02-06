@@ -28,11 +28,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "next": ["src/components/next"],
       "next-themes": ["src/next-themes.tsx"]
     }
   },
   "include": ["src"],
-  "exclude": ["src/components/next/*.jsx", "src/components/next/*.js"],
+  "exclude": ["node_modules"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

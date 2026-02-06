@@ -5,8 +5,6 @@
 
 // Import all module declarations
 import './modules';
-import './next';
-import './styled-jsx';
 
 // Global augmentation for better TypeScript support
 declare global {

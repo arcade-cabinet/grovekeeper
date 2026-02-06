@@ -11,8 +11,8 @@ describe("Growth System (5-Stage)", () => {
   });
 
   describe("getStageScale", () => {
-    it("returns 0.0 for Seed (stage 0)", () => {
-      expect(getStageScale(0, 0)).toBe(0.0);
+    it("returns 0.08 for Seed (stage 0)", () => {
+      expect(getStageScale(0, 0)).toBe(0.08);
     });
 
     it("returns 0.15 for Sprout (stage 1) at 0 progress", () => {

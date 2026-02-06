@@ -16,8 +16,10 @@ import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { COLORS, GRID_SIZE } from "../constants/config";
 import { getSpeciesById } from "../constants/trees";
-import { createGridCellEntity, createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
+import { createGridCellEntity, createPlayerEntity, createTreeEntity, restoreTreeEntity } from "../ecs/archetypes";
 import { gridCellsQuery, playerQuery, treesQuery, world } from "../ecs/world";
+import { createRNG, hashString } from "../utils/seedRNG";
+import type { SerializedTree } from "../stores/gameStore";
 import { growthSystem, getStageScale } from "../systems/growth";
 import { staminaSystem } from "../systems/stamina";
 import { movementSystem } from "../systems/movement";
@@ -61,14 +63,69 @@ export const GameScene = () => {
     incrementTreesPlanted,
     incrementTreesHarvested,
     incrementTreesWatered,
-    gameTimeMicroseconds,
     setGameTime: storeSetGameTime,
     setCurrentSeason,
     setCurrentDay,
     hapticsEnabled,
   } = useGameStore();
 
-  // Initialize ECS entities and time on first load
+  // Serialize all tree entities for persistence
+  const saveCurrentGrove = useCallback(() => {
+    const trees: SerializedTree[] = [];
+    for (const entity of treesQuery) {
+      if (!entity.tree || !entity.position) continue;
+      trees.push({
+        speciesId: entity.tree.speciesId,
+        gridX: entity.position.x,
+        gridZ: entity.position.z,
+        stage: entity.tree.stage,
+        progress: entity.tree.progress,
+        watered: entity.tree.watered,
+        totalGrowthTime: entity.tree.totalGrowthTime,
+        plantedAt: entity.tree.plantedAt,
+        meshSeed: entity.tree.meshSeed,
+      });
+    }
+    const player = playerQuery.first;
+    const playerPos = player?.position
+      ? { x: player.position.x, z: player.position.z }
+      : { x: 6, z: 6 };
+    useGameStore.getState().saveGrove(trees, playerPos);
+  }, []);
+
+  // Debounced save — coalesces rapid plant/harvest actions into one write
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedSaveGrove = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(saveCurrentGrove, 1000);
+  }, [saveCurrentGrove]);
+
+  // Restore saved trees from Zustand into the ECS world
+  const restoreGroveFromStore = () => {
+    const groveData = useGameStore.getState().groveData;
+    if (!groveData) return;
+
+    for (const savedTree of groveData.trees) {
+      const entity = restoreTreeEntity(savedTree);
+      world.add(entity);
+      // Mark grid cell as occupied
+      for (const cell of gridCellsQuery) {
+        if (cell.gridCell?.gridX === savedTree.gridX && cell.gridCell?.gridZ === savedTree.gridZ) {
+          cell.gridCell.occupied = true;
+          cell.gridCell.treeEntityId = entity.id;
+          break;
+        }
+      }
+    }
+
+    const player = playerQuery.first;
+    if (player?.position) {
+      player.position.x = groveData.playerPosition.x;
+      player.position.z = groveData.playerPosition.z;
+    }
+  };
+
+  // Initialize ECS entities and time — runs once on mount
   useEffect(() => {
     if (playerQuery.first === undefined) {
       world.add(createPlayerEntity());
@@ -77,10 +134,21 @@ export const GameScene = () => {
           world.add(createGridCellEntity(x, z, "soil"));
         }
       }
+      restoreGroveFromStore();
     }
-    // Initialize time system
-    initializeTime(gameTimeMicroseconds);
-  }, [gameTimeMicroseconds]);
+    initializeTime(useGameStore.getState().gameTimeMicroseconds);
+  }, []);
+
+  // Auto-save grove when tab loses focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        saveCurrentGrove();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [saveCurrentGrove]);
 
   // Initialize BabylonJS
   useEffect(() => {
@@ -290,7 +358,7 @@ export const GameScene = () => {
 
           let mesh = treeMeshesRef.current.get(treeEntity.id);
           if (!mesh) {
-            mesh = createTreeMesh(scene, treeEntity.id, treeEntity.tree.speciesId, currentTime.season);
+            mesh = createTreeMesh(scene, treeEntity.id, treeEntity.tree.speciesId, currentTime.season, treeEntity.tree.meshSeed);
             treeMeshesRef.current.set(treeEntity.id, mesh);
           }
 
@@ -298,7 +366,7 @@ export const GameScene = () => {
           mesh.position.z = treeEntity.position.z;
 
           const scale = treeEntity.renderable.scale;
-          mesh.scaling.setAll(Math.max(scale, 0.05)); // min scale so seeds are visible
+          mesh.scaling.setAll(scale);
           mesh.position.y = scale * 0.4;
         }
 
@@ -336,9 +404,10 @@ export const GameScene = () => {
     ];
 
     const meshes: Mesh[] = [];
+    const rng = createRNG(hashString("border-trees"));
 
     positions.forEach((pos, i) => {
-      const scale = 0.8 + Math.random() * 0.5;
+      const scale = 0.8 + rng() * 0.5;
       const trunk = CreateCylinder(`borderTrunk${i}`, {
         height: 1.5 * scale,
         diameterTop: 0.15 * scale,
@@ -443,9 +512,10 @@ export const GameScene = () => {
     } : { r: 128, g: 128, b: 128 };
   };
 
-  const createTreeMesh = (scene: Scene, id: string, speciesId: string, season?: Season): Mesh => {
+  const createTreeMesh = (scene: Scene, id: string, speciesId: string, season?: Season, meshSeed?: number): Mesh => {
     const species = getSpeciesById(speciesId);
     const colors = species?.meshParams.color;
+    const rng = createRNG(meshSeed ?? hashString(id));
 
     const trunk = CreateCylinder(`trunk_${id}`, {
       height: species?.meshParams.trunkHeight ?? 0.8,
@@ -470,7 +540,7 @@ export const GameScene = () => {
     let leafColor = colors?.canopy || COLORS.forestGreen;
     if (season === "autumn" && !species?.evergreen) {
       const autumnColors = ["#FF6347", "#FF4500", "#FFD700", "#FFA500"];
-      leafColor = autumnColors[Math.floor(Math.random() * autumnColors.length)];
+      leafColor = autumnColors[Math.floor(rng() * autumnColors.length)];
     } else if (season === "winter" && !species?.evergreen) {
       leafColor = "#4a5a4a";
     }
@@ -489,75 +559,90 @@ export const GameScene = () => {
     movementRef.current = { x: 0, z: 0 };
   }, []);
 
-  const handleAction = async () => {
-    const player = playerQuery.first;
-    if (!player?.position) return;
+  // Find the tree entity occupying a grid cell
+  const findTreeOnCell = (treeEntityId: string) => {
+    for (const tree of treesQuery) {
+      if (tree.id === treeEntityId && tree.tree) return tree;
+    }
+    return null;
+  };
 
+  // Find the grid cell at the player's position
+  const findCellAtPlayer = () => {
+    const player = playerQuery.first;
+    if (!player?.position) return null;
     const gridX = Math.round(player.position.x);
     const gridZ = Math.round(player.position.z);
-
     for (const cell of gridCellsQuery) {
       if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
-        if (selectedTool === "trowel") {
-          if (cell.gridCell.occupied) return;
-          if (hapticsEnabled) await hapticLight();
-          setSeedSelectOpen(true);
-        } else if (selectedTool === "watering-can") {
-          if (cell.gridCell.occupied && cell.gridCell.treeEntityId) {
-            for (const tree of treesQuery) {
-              if (tree.id === cell.gridCell.treeEntityId && tree.tree) {
-                tree.tree.watered = true;
-                addXp(5);
-                incrementTreesWatered();
-                if (hapticsEnabled) await hapticLight();
-              }
-            }
-          }
-        } else if (selectedTool === "axe") {
-          if (cell.gridCell.occupied && cell.gridCell.treeEntityId) {
-            for (const tree of treesQuery) {
-              if (tree.id === cell.gridCell.treeEntityId && tree.tree) {
-                if (tree.tree.stage >= 3) {
-                  const species = getSpeciesById(tree.tree.speciesId);
-                  // Award resources from species yield
-                  if (species) {
-                    for (const y of species.yield) {
-                      useGameStore.getState().addResource(y.resource, y.amount);
-                    }
-                  }
-                  addCoins(50);
-                  addXp(50);
-                  incrementTreesHarvested();
-
-                  const mesh = treeMeshesRef.current.get(tree.id);
-                  if (mesh) {
-                    mesh.dispose();
-                    treeMeshesRef.current.delete(tree.id);
-                  }
-
-                  world.remove(tree);
-                  cell.gridCell.occupied = false;
-                  cell.gridCell.treeEntityId = null;
-
-                  if (hapticsEnabled) await hapticSuccess();
-                }
-              }
-            }
-          }
-        } else if (selectedTool === "compost-bin") {
-          if (cell.gridCell.occupied && cell.gridCell.treeEntityId) {
-            for (const tree of treesQuery) {
-              if (tree.id === cell.gridCell.treeEntityId && tree.tree) {
-                tree.tree.progress += 0.1;
-                addXp(5);
-                if (hapticsEnabled) await hapticLight();
-              }
-            }
-          }
-        }
-        break;
+        return cell.gridCell;
       }
     }
+    return null;
+  };
+
+  const useTrowel = async (gc: import("../ecs/world").GridCellComponent) => {
+    if (gc.occupied) return;
+    if (hapticsEnabled) await hapticLight();
+    setSeedSelectOpen(true);
+  };
+
+  const useWateringCan = async (gc: import("../ecs/world").GridCellComponent) => {
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree) return;
+    tree.tree.watered = true;
+    addXp(5);
+    incrementTreesWatered();
+    if (hapticsEnabled) await hapticLight();
+  };
+
+  const useAxe = async (gc: import("../ecs/world").GridCellComponent) => {
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree || tree.tree.stage < 3) return;
+    const species = getSpeciesById(tree.tree.speciesId);
+    if (species) {
+      for (const y of species.yield) {
+        useGameStore.getState().addResource(y.resource, y.amount);
+      }
+    }
+    addCoins(50);
+    addXp(50);
+    incrementTreesHarvested();
+    const mesh = treeMeshesRef.current.get(tree.id);
+    if (mesh) {
+      mesh.dispose();
+      treeMeshesRef.current.delete(tree.id);
+    }
+    world.remove(tree);
+    gc.occupied = false;
+    gc.treeEntityId = null;
+    debouncedSaveGrove();
+    if (hapticsEnabled) await hapticSuccess();
+  };
+
+  const useCompostBin = async (gc: import("../ecs/world").GridCellComponent) => {
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree) return;
+    tree.tree.progress += 0.1;
+    addXp(5);
+    if (hapticsEnabled) await hapticLight();
+  };
+
+  const toolActions: Record<string, (gc: import("../ecs/world").GridCellComponent) => Promise<void>> = {
+    "trowel": useTrowel,
+    "watering-can": useWateringCan,
+    "axe": useAxe,
+    "compost-bin": useCompostBin,
+  };
+
+  const handleAction = async () => {
+    const gc = findCellAtPlayer();
+    if (!gc) return;
+    const action = toolActions[selectedTool];
+    if (action) await action(gc);
   };
 
   const handlePlant = async () => {
@@ -579,7 +664,8 @@ export const GameScene = () => {
 
         incrementTreesPlanted();
         addXp(10);
-        
+
+        debouncedSaveGrove();
         if (hapticsEnabled) await hapticMedium();
         break;
       }

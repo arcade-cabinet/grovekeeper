@@ -35,7 +35,7 @@ export const STAGE_NAMES = [
 export type StageName = (typeof STAGE_NAMES)[number];
 
 export const STAGE_VISUALS = [
-  { name: "Seed", scale: 0.0 }, // stage 0: ground decal only
+  { name: "Seed", scale: 0.08 }, // stage 0: tiny visible seed
   { name: "Sprout", scale: 0.15 }, // stage 1: tiny shoot
   { name: "Sapling", scale: 0.4 }, // stage 2: small trunk + 1 canopy
   { name: "Mature", scale: 0.8 }, // stage 3: full trunk + 2-3 canopy
