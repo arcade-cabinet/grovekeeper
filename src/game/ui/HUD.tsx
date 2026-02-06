@@ -1,26 +1,24 @@
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { RiMenuLine, RiToolsLine } from "@remixicon/react";
+import { RiMenuLine, RiToolsLine, RiBuilding2Line } from "@remixicon/react";
 import { COLORS } from "../constants/config";
 import { useGameStore } from "../stores/gameStore";
 import { TimeDisplay, TimeDisplayCompact } from "./TimeDisplay";
 import { QuestPanel } from "./QuestPanel";
 import { ResourceBar } from "./ResourceBar";
+import { XPBar } from "./XPBar";
 import type { GameTime } from "../systems/time";
 
 interface HUDProps {
   onPlant: () => void;
   onOpenMenu: () => void;
   onOpenTools: () => void;
+  onOpenBuild?: () => void;
   gameTime: GameTime | null;
 }
 
-export const HUD = ({ onOpenMenu, onOpenTools, gameTime }: HUDProps) => {
-  const { xp, level, selectedTool, activeQuests, addCoins, addXp, completeQuest } = useGameStore();
+export const HUD = ({ onOpenMenu, onOpenTools, onOpenBuild, gameTime }: HUDProps) => {
+  const { selectedTool, activeQuests, addCoins, addXp, completeQuest, level } = useGameStore();
 
-  const xpForNextLevel = level * 500;
-  const xpProgress = ((xp % 500) / 500) * 100;
-  
   const handleClaimReward = (questId: string) => {
     const quest = activeQuests.find(q => q.id === questId);
     if (quest?.completed) {
@@ -37,23 +35,9 @@ export const HUD = ({ onOpenMenu, onOpenTools, gameTime }: HUDProps) => {
         {/* Resources */}
         <ResourceBar />
 
-        {/* Level & XP */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          <span
-            className="text-xs font-bold px-2 py-0.5 rounded-full"
-            style={{ background: COLORS.forestGreen, color: "white" }}
-          >
-            Lv.{level}
-          </span>
-          <div className="w-12 sm:w-16 lg:w-20 hidden sm:block">
-            <Progress
-              value={xpProgress}
-              className="h-1.5 sm:h-2"
-              style={{ background: "rgba(0,0,0,0.3)" }}
-            />
-          </div>
-        </div>
-        
+        {/* Level & XP bar */}
+        <XPBar />
+
         {/* Time display - compact on mobile */}
         {gameTime && (
           <>
@@ -72,6 +56,22 @@ export const HUD = ({ onOpenMenu, onOpenTools, gameTime }: HUDProps) => {
         {/* Quest panel */}
         <QuestPanel quests={activeQuests} onClaimReward={handleClaimReward} />
         
+        {/* Build button (unlocked at level 3) */}
+        {level >= 3 && onOpenBuild && (
+          <Button
+            size="sm"
+            className="h-8 px-2 sm:h-9 sm:px-3 rounded-full"
+            style={{
+              background: COLORS.barkBrown,
+              color: "white",
+            }}
+            onClick={onOpenBuild}
+          >
+            <RiBuilding2Line className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline text-xs">Build</span>
+          </Button>
+        )}
+
         {/* Tool selector button */}
         <Button
           size="sm"

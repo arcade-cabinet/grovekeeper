@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { useGameStore } from "./gameStore";
+import { useGameStore, xpToNext, totalXpForLevel, levelFromXp } from "./gameStore";
 import type { SerializedTree } from "./gameStore";
 
 describe("Game Store", () => {
@@ -41,8 +41,8 @@ describe("Game Store", () => {
     });
 
     it("addXp increases XP and can level up", () => {
-      useGameStore.getState().addXp(500);
-      expect(useGameStore.getState().xp).toBe(500);
+      useGameStore.getState().addXp(100);
+      expect(useGameStore.getState().xp).toBe(100);
       expect(useGameStore.getState().level).toBe(2);
     });
 
@@ -201,18 +201,89 @@ describe("Game Store", () => {
     });
   });
 
-  describe("Level progression", () => {
-    it("level increases at 500 XP intervals", () => {
-      useGameStore.getState().addXp(499);
+  describe("Level progression (spec formula)", () => {
+    it("xpToNext returns 100 for level 1", () => {
+      expect(xpToNext(1)).toBe(100);
+    });
+
+    it("xpToNext returns 100 for level 2", () => {
+      expect(xpToNext(2)).toBe(100);
+    });
+
+    it("xpToNext returns 150 for level 3", () => {
+      expect(xpToNext(3)).toBe(150);
+    });
+
+    it("xpToNext includes milestone bonus at level 6", () => {
+      // level 6: 100 + (6-2)*50 + floor(5/5)*200 = 100 + 200 + 200 = 500
+      expect(xpToNext(6)).toBe(500);
+    });
+
+    it("levels up at 100 XP (level 1 → 2)", () => {
+      useGameStore.getState().addXp(99);
       expect(useGameStore.getState().level).toBe(1);
 
       useGameStore.getState().addXp(1);
       expect(useGameStore.getState().level).toBe(2);
     });
 
-    it("calculates correct level for large XP values", () => {
-      useGameStore.getState().addXp(2500);
-      expect(useGameStore.getState().level).toBe(6);
+    it("levelFromXp matches totalXpForLevel", () => {
+      // To reach level 4: xpToNext(1) + xpToNext(2) + xpToNext(3) = 100 + 100 + 150 = 350
+      expect(totalXpForLevel(4)).toBe(350);
+      expect(levelFromXp(350)).toBe(4);
+      expect(levelFromXp(349)).toBe(3);
+    });
+  });
+
+  describe("Stamina spending", () => {
+    it("spendStamina reduces stamina and returns true", () => {
+      const result = useGameStore.getState().spendStamina(10);
+      expect(result).toBe(true);
+      expect(useGameStore.getState().stamina).toBe(90);
+    });
+
+    it("spendStamina returns false if insufficient", () => {
+      useGameStore.getState().setStamina(5);
+      const result = useGameStore.getState().spendStamina(10);
+      expect(result).toBe(false);
+      expect(useGameStore.getState().stamina).toBe(5);
+    });
+  });
+
+  describe("Achievement tracking", () => {
+    it("unlockAchievement adds to achievements array", () => {
+      useGameStore.getState().unlockAchievement("first-seed");
+      expect(useGameStore.getState().achievements).toContain("first-seed");
+    });
+
+    it("unlockAchievement does not duplicate", () => {
+      useGameStore.getState().unlockAchievement("first-seed");
+      useGameStore.getState().unlockAchievement("first-seed");
+      expect(useGameStore.getState().achievements.filter(a => a === "first-seed")).toHaveLength(1);
+    });
+  });
+
+  describe("Species and season tracking", () => {
+    it("trackSpeciesPlanted adds species without duplicates", () => {
+      useGameStore.getState().trackSpeciesPlanted("white-oak");
+      useGameStore.getState().trackSpeciesPlanted("white-oak");
+      useGameStore.getState().trackSpeciesPlanted("elder-pine");
+      expect(useGameStore.getState().speciesPlanted).toEqual(["white-oak", "elder-pine"]);
+    });
+
+    it("trackSeason adds seasons without duplicates", () => {
+      useGameStore.getState().trackSeason("spring");
+      useGameStore.getState().trackSeason("spring");
+      useGameStore.getState().trackSeason("summer");
+      expect(useGameStore.getState().seasonsExperienced).toEqual(["spring", "summer"]);
+    });
+  });
+
+  describe("Lifetime resource tracking", () => {
+    it("addResource increments lifetime totals", () => {
+      useGameStore.getState().addResource("timber", 50);
+      useGameStore.getState().addResource("timber", 30);
+      expect(useGameStore.getState().lifetimeResources.timber).toBe(80);
     });
   });
 });

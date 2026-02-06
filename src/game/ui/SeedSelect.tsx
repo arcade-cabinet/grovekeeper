@@ -1,3 +1,4 @@
+import { RiLock2Line } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -6,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RiLock2Line } from "@remixicon/react";
 import { COLORS } from "../constants/config";
 import { TREE_SPECIES, type TreeSpeciesData } from "../constants/trees";
 import { useGameStore } from "../stores/gameStore";
@@ -25,11 +25,31 @@ const difficultyColors: Record<number, string> = {
   5: COLORS.earthRed,
 };
 
+/**
+ * Format a seed cost record as a compact display string.
+ * e.g. { sap: 5 } -> "5 Sap"
+ * e.g. { timber: 10, sap: 10, fruit: 10 } -> "10 Timber, 10 Sap, 10 Fruit"
+ * Returns null for free seeds (empty cost).
+ */
+function formatSeedCost(cost: Record<string, number>): string | null {
+  const entries = Object.entries(cost).filter(([, amount]) => amount > 0);
+  if (entries.length === 0) return null;
+  return entries
+    .map(
+      ([resource, amount]) =>
+        `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`,
+    )
+    .join(", ");
+}
+
 export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
-  const { unlockedSpecies, selectedSpecies, setSelectedSpecies } = useGameStore();
+  const { unlockedSpecies, selectedSpecies, setSelectedSpecies, seeds } =
+    useGameStore();
 
   const handleSelect = (species: TreeSpeciesData) => {
     if (!unlockedSpecies.includes(species.id)) return;
+    const seedCount = seeds[species.id] ?? 0;
+    if (seedCount <= 0) return;
     setSelectedSpecies(species.id);
     onSelect(species.id);
     onClose();
@@ -51,22 +71,27 @@ export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
           {TREE_SPECIES.map((species) => {
             const isUnlocked = unlockedSpecies.includes(species.id);
             const isSelected = selectedSpecies === species.id;
+            const seedCount = seeds[species.id] ?? 0;
+            const hasSeeds = seedCount > 0;
+            const isDisabled = !isUnlocked || !hasSeeds;
+            const costStr = formatSeedCost(species.seedCost);
 
             return (
               <Card
                 key={species.id}
                 className={`p-3 cursor-pointer transition-all ${
                   isSelected ? "ring-2 ring-offset-2" : ""
-                } ${!isUnlocked ? "opacity-50" : ""}`}
+                } ${isDisabled ? "opacity-50" : ""}`}
                 style={{
                   background: isSelected ? `${COLORS.leafLight}30` : "white",
                   borderColor: isSelected ? COLORS.forestGreen : "transparent",
+                  cursor: isDisabled ? "default" : "pointer",
                 }}
                 onClick={() => handleSelect(species)}
               >
                 {/* Tree preview */}
                 <div
-                  className="w-full h-16 rounded flex items-end justify-center mb-2"
+                  className="relative w-full h-16 rounded flex items-end justify-center mb-2"
                   style={{ background: `${COLORS.soilDark}20` }}
                 >
                   {isUnlocked ? (
@@ -83,6 +108,23 @@ export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
                   ) : (
                     <RiLock2Line className="w-8 h-8 mb-2 text-gray-400" />
                   )}
+
+                  {/* Seed count badge — top-right corner */}
+                  {isUnlocked && (
+                    <div
+                      className="absolute top-1 right-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                      style={{
+                        background: hasSeeds
+                          ? COLORS.forestGreen
+                          : COLORS.earthRed,
+                        color: "white",
+                        minWidth: 20,
+                        textAlign: "center",
+                      }}
+                    >
+                      x{seedCount}
+                    </div>
+                  )}
                 </div>
 
                 <h3
@@ -97,15 +139,34 @@ export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
                     className="text-xs px-1.5 py-0.5 rounded"
                     style={{
                       background: difficultyColors[species.difficulty],
-                      color: species.difficulty <= 2 ? COLORS.soilDark : "white",
+                      color:
+                        species.difficulty <= 2 ? COLORS.soilDark : "white",
                     }}
                   >
-                    {"★".repeat(species.difficulty)}
+                    {"*".repeat(species.difficulty)}
                   </span>
                   <span className="text-xs text-gray-500">
                     Lv.{species.unlockLevel}
                   </span>
                 </div>
+
+                {/* Seed cost */}
+                {isUnlocked && costStr && (
+                  <p
+                    className="text-[10px] mt-1"
+                    style={{ color: COLORS.earthRed }}
+                  >
+                    Cost: {costStr}
+                  </p>
+                )}
+                {isUnlocked && !costStr && (
+                  <p
+                    className="text-[10px] mt-1"
+                    style={{ color: COLORS.leafLight }}
+                  >
+                    Free
+                  </p>
+                )}
 
                 {isUnlocked && (
                   <p className="text-xs text-gray-500 mt-1 line-clamp-2">
@@ -121,7 +182,10 @@ export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
           variant="outline"
           className="mt-4 w-full"
           onClick={onClose}
-          style={{ borderColor: COLORS.forestGreen, color: COLORS.forestGreen }}
+          style={{
+            borderColor: COLORS.forestGreen,
+            color: COLORS.forestGreen,
+          }}
         >
           Cancel
         </Button>

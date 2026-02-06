@@ -1,98 +1,99 @@
-import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
-import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
-import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
-import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
-import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
-import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { GrassProceduralTexture } from "@babylonjs/procedural-textures/grass/grassProceduralTexture";
-import { Texture } from "@babylonjs/core/Materials/Textures/texture";
-import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
-import type { Scene } from "@babylonjs/core/scene";
-import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+/**
+ * GameScene — Orchestrator component for the BabylonJS game scene.
+ *
+ * Initializes ECS entities, creates scene managers, runs the game loop,
+ * and handles player actions. All BabylonJS concerns are delegated to
+ * managers in src/game/scene/.
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react";
-import { COLORS, GRID_SIZE } from "../constants/config";
+import { GRID_SIZE } from "../constants/config";
 import { getSpeciesById } from "../constants/trees";
-import { createGridCellEntity, createPlayerEntity, createTreeEntity, restoreTreeEntity } from "../ecs/archetypes";
-import { gridCellsQuery, playerQuery, treesQuery, world } from "../ecs/world";
+import { TOOLS, getToolById } from "../constants/tools";
+import type { ResourceType } from "../constants/resources";
+import { createGridCellEntity, createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
+import { gridCellsQuery, playerQuery, treesQuery, structuresQuery, world } from "../ecs/world";
+import type { GridCellComponent } from "../ecs/world";
 import { createRNG, hashString } from "../utils/seedRNG";
 import type { SerializedTree } from "../stores/gameStore";
+import { useGameStore } from "../stores/gameStore";
 import { growthSystem, getStageScale } from "../systems/growth";
 import { staminaSystem } from "../systems/stamina";
 import { harvestSystem, initHarvestable, collectHarvest } from "../systems/harvest";
-import { movementSystem } from "../systems/movement";
+import { movementSystem, setMovementBounds } from "../systems/movement";
 import { generateGrid } from "../systems/gridGeneration";
 import { saveGroveToStorage, loadGroveFromStorage, deserializeGrove } from "../systems/saveLoad";
 import { useKeyboardInput } from "../hooks/useKeyboardInput";
-import { useGameStore } from "../stores/gameStore";
-import { TOOLS } from "../constants/tools";
-import type { ResourceType } from "../constants/resources";
-import { GameUI } from "../ui/GameUI";
-import { 
-  initializeTime, 
-  updateTime, 
-  getSkyColors, 
-  getSeasonalColors,
-  type GameTime,
-  type Season 
+import {
+  initializeTime, updateTime, getGameTime,
+  type GameTime, type Season,
 } from "../systems/time";
 import { hapticMedium, hapticLight, hapticSuccess } from "../systems/platform";
+import { checkAchievements, ACHIEVEMENT_DEFS } from "../systems/achievements";
+import { calculateAllOfflineGrowth } from "../systems/offlineGrowth";
+import { showToast } from "../ui/Toast";
+import { showParticle } from "../ui/FloatingParticles";
+import { showAchievement } from "../ui/AchievementPopup";
+import {
+  initializeWeather, updateWeather, getWeatherGrowthMultiplier,
+  getWeatherStaminaMultiplier, rollWindstormDamage,
+  type WeatherState, type WeatherType,
+} from "../systems/weather";
+import { setWeatherVisual, setShowPetals } from "../ui/WeatherOverlay";
+import { GameUI } from "../ui/GameUI";
+import { getStaminaMultiplier as getStructureStaminaMult } from "../structures/StructureManager";
+
+// Scene managers
+import {
+  SceneManager, CameraManager, LightingManager,
+  GroundBuilder, SkyManager, PlayerMeshManager,
+  TreeMeshManager, BorderTreeManager,
+} from "../scene";
+
+// World system
+import { WorldManager } from "../world";
+import type { WorldDefinition } from "../world";
+import startingWorldData from "../world/data/starting-world.json";
 
 export const GameScene = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<Scene | null>(null);
-  const engineRef = useRef<import("@babylonjs/core/Engines/engine").Engine | null>(null);
-  const playerMeshRef = useRef<Mesh | null>(null);
-  const treeMeshesRef = useRef<Map<string, Mesh>>(new Map());
-  const borderTreeMeshesRef = useRef<Mesh[]>([]);
   const movementRef = useRef({ x: 0, z: 0 });
-  const cameraRef = useRef<ArcRotateCamera | null>(null);
-  const lightsRef = useRef<{ hemi: HemisphericLight | null; sun: DirectionalLight | null }>({ hemi: null, sun: null });
-  const groundMatRef = useRef<StandardMaterial | null>(null);
-  const soilMatRef = useRef<StandardMaterial | null>(null);
   const groveSeedRef = useRef<string>("");
+  const weatherRef = useRef<WeatherState | null>(null);
+  const lastWeatherTypeRef = useRef<WeatherType>("clear");
+  const milestoneXpRef = useRef<Set<string>>(new Set());
+
+  // Managers (instantiated once, persist across renders via refs)
+  const sceneManagerRef = useRef(new SceneManager());
+  const cameraManagerRef = useRef(new CameraManager());
+  const lightingManagerRef = useRef(new LightingManager());
+  const groundBuilderRef = useRef(new GroundBuilder());
+  const skyManagerRef = useRef(new SkyManager());
+  const playerMeshRef = useRef(new PlayerMeshManager());
+  const treeMeshRef = useRef(new TreeMeshManager());
+  const borderTreeRef = useRef(new BorderTreeManager());
+  const worldManagerRef = useRef(new WorldManager());
 
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
   const [toolWheelOpen, setToolWheelOpen] = useState(false);
   const [pauseMenuOpen, setPauseMenuOpen] = useState(false);
   const [gameTime, setGameTime] = useState<GameTime | null>(null);
-  
-  const { 
-    setScreen, 
-    selectedSpecies, 
-    selectedTool, 
-    addXp,
-    incrementTreesPlanted,
-    incrementTreesHarvested,
-    incrementTreesWatered,
-    setGameTime: storeSetGameTime,
-    setCurrentSeason,
-    setCurrentDay,
-    hapticsEnabled,
-    addResource,
+
+  const {
+    setScreen, selectedSpecies, selectedTool,
+    addXp, incrementTreesPlanted, incrementTreesHarvested,
+    incrementTreesWatered, setGameTime: storeSetGameTime,
+    setCurrentSeason, setCurrentDay, hapticsEnabled, addResource,
   } = useGameStore();
 
-  // Desktop keyboard controls — callbacksRef in the hook keeps these fresh
+  // --- Keyboard controls ---
   useKeyboardInput({
-    onMove: (x: number, z: number) => {
-      movementRef.current = { x, z };
-    },
-    onMoveEnd: () => {
-      movementRef.current = { x: 0, z: 0 };
-    },
-    onAction: () => {
-      handleAction();
-    },
-    onOpenSeeds: () => {
-      setSeedSelectOpen(true);
-    },
-    onPause: () => {
-      setPauseMenuOpen((prev) => !prev);
-    },
+    onMove: (x: number, z: number) => { movementRef.current = { x, z }; },
+    onMoveEnd: () => { movementRef.current = { x: 0, z: 0 }; },
+    onAction: () => { handleAction(); },
+    onOpenSeeds: () => { setSeedSelectOpen(true); },
+    onPause: () => { setPauseMenuOpen((prev) => !prev); },
     onSelectTool: (index: number) => {
       const tool = TOOLS[index];
       if (tool && useGameStore.getState().unlockedTools.includes(tool.id)) {
@@ -102,7 +103,7 @@ export const GameScene = () => {
     disabled: seedSelectOpen || toolWheelOpen || pauseMenuOpen,
   });
 
-  // Serialize all tree entities for persistence
+  // --- Save/restore ---
   const saveCurrentGrove = useCallback(() => {
     const trees: SerializedTree[] = [];
     for (const entity of treesQuery) {
@@ -126,65 +127,26 @@ export const GameScene = () => {
     useGameStore.getState().saveGrove(trees, playerPos);
   }, []);
 
-  // Debounced save — coalesces rapid plant/harvest actions into one write
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debouncedSaveGrove = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(saveCurrentGrove, 1000);
   }, [saveCurrentGrove]);
 
-  // Restore saved trees from Zustand into the ECS world
-  const restoreGroveFromStore = () => {
-    const groveData = useGameStore.getState().groveData;
-    if (!groveData) return;
-
-    for (const savedTree of groveData.trees) {
-      const entity = restoreTreeEntity(savedTree);
-      world.add(entity);
-      // Mark grid cell as occupied
-      for (const cell of gridCellsQuery) {
-        if (cell.gridCell?.gridX === savedTree.gridX && cell.gridCell?.gridZ === savedTree.gridZ) {
-          cell.gridCell.occupied = true;
-          cell.gridCell.treeEntityId = entity.id;
-          break;
-        }
-      }
-    }
-
-    const player = playerQuery.first;
-    if (player?.position) {
-      player.position.x = groveData.playerPosition.x;
-      player.position.z = groveData.playerPosition.z;
-    }
-  };
-
-  // Initialize ECS entities and time — runs once on mount
+  // --- ECS initialization ---
   useEffect(() => {
     if (playerQuery.first === undefined) {
-      // Try to load saved grove data first
       const savedGrove = loadGroveFromStorage();
       if (savedGrove) {
-        // Restore from save (clears world, then recreates grid + trees)
         deserializeGrove(savedGrove);
         groveSeedRef.current = savedGrove.seed;
-        // Restore player position from Zustand fallback
+        applyOfflineGrowth(savedGrove.timestamp);
         world.add(createPlayerEntity());
-        const groveData = useGameStore.getState().groveData;
-        if (groveData) {
-          const player = playerQuery.first;
-          if (player?.position) {
-            player.position.x = groveData.playerPosition.x;
-            player.position.z = groveData.playerPosition.z;
-          }
-        }
-        // Initialize harvestable on mature/old growth trees
+        restorePlayerPosition();
         for (const tree of treesQuery) {
-          if (tree.tree && tree.tree.stage >= 3) {
-            initHarvestable(tree);
-          }
+          if (tree.tree && tree.tree.stage >= 3) initHarvestable(tree);
         }
       } else {
-        // New game: generate grid with seeded RNG
         const groveSeed = `grove-${Date.now()}`;
         groveSeedRef.current = groveSeed;
         const tiles = generateGrid(GRID_SIZE, groveSeed);
@@ -200,445 +162,274 @@ export const GameScene = () => {
     initializeTime(useGameStore.getState().gameTimeMicroseconds);
   }, []);
 
-  // Auto-save grove when tab loses focus
+  // Auto-save on tab hide
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
         saveCurrentGrove();
         saveGroveToStorage(GRID_SIZE, groveSeedRef.current);
       }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, [saveCurrentGrove]);
 
-  // Initialize BabylonJS
+  // --- BabylonJS initialization ---
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    const sm = sceneManagerRef.current;
+    const cam = cameraManagerRef.current;
+    const lights = lightingManagerRef.current;
+    const ground = groundBuilderRef.current;
+    const sky = skyManagerRef.current;
+    const playerMesh = playerMeshRef.current;
+    const treeMesh = treeMeshRef.current;
+    const borderTree = borderTreeRef.current;
+    const worldMgr = worldManagerRef.current;
+
     const initBabylon = async () => {
-      const { Engine } = await import("@babylonjs/core/Engines/engine");
-      const { Scene } = await import("@babylonjs/core/scene");
+      const { scene } = await sm.init(canvasRef.current!);
 
-      const engine = new Engine(canvasRef.current, true, {
-        preserveDrawingBuffer: true,
-        stencil: true,
-        antialias: true,
-      });
-      engineRef.current = engine;
+      cam.init(scene);
+      lights.init(scene);
+      ground.init(scene);
+      sky.init(scene);
+      playerMesh.init(scene);
 
-      const scene = new Scene(engine);
-      sceneRef.current = scene;
+      // Initialize world manager and load zones
+      worldMgr.init(startingWorldData as WorldDefinition, scene);
+      worldMgr.loadAllZones();
+      const bounds = worldMgr.getWorldBounds();
+      setMovementBounds(bounds);
 
-      // Sky gradient - soft morning sky
-      scene.clearColor = new Color4(0.53, 0.72, 0.82, 1);
+      const initTime = getGameTime();
+      const initIsNight = isNight(initTime);
+      borderTree.init(scene, initTime.season, initIsNight);
 
-      // Create gradient sky with hemisphere
-      scene.ambientColor = new Color3(0.3, 0.3, 0.35);
-
-      // Fixed isometric diorama camera - no user control
-      const gridCenter = new Vector3(GRID_SIZE / 2 - 0.5, 0, GRID_SIZE / 2 - 0.5);
-      const camera = new ArcRotateCamera(
-        "camera",
-        -Math.PI / 4,     // 45 degree rotation
-        Math.PI / 3.5,    // ~51 degree tilt for nice diorama view
-        18,               // Fixed distance
-        gridCenter,
-        scene
-      );
-      
-      // Lock camera - no user interaction
-      camera.inputs.clear();
-      camera.lowerRadiusLimit = 18;
-      camera.upperRadiusLimit = 18;
-      camera.lowerBetaLimit = Math.PI / 3.5;
-      camera.upperBetaLimit = Math.PI / 3.5;
-      cameraRef.current = camera;
-
-      // Soft ambient light
-      const hemiLight = new HemisphericLight("hemi", new Vector3(0, 1, 0), scene);
-      hemiLight.intensity = 0.6;
-      hemiLight.groundColor = new Color3(0.4, 0.35, 0.3);
-      hemiLight.diffuse = new Color3(1, 0.95, 0.85);
-      lightsRef.current.hemi = hemiLight;
-
-      // Directional sun light with soft shadows
-      const sunLight = new DirectionalLight("sun", new Vector3(-0.5, -1, -0.3), scene);
-      sunLight.intensity = 0.8;
-      sunLight.diffuse = new Color3(1, 0.95, 0.8);
-      lightsRef.current.sun = sunLight;
-
-      // Forest floor ground
-      const groundSize = GRID_SIZE + 4;
-      const ground = CreateGround("ground", {
-        width: groundSize,
-        height: groundSize,
-        subdivisions: 32,
-      }, scene);
-      ground.position = new Vector3(GRID_SIZE / 2 - 0.5, -0.05, GRID_SIZE / 2 - 0.5);
-
-      // Procedural grass/soil texture
-      const grassTexture = new GrassProceduralTexture("grassTex", 512, scene);
-      grassTexture.grassColors = [
-        new Color3(0.25, 0.18, 0.12),  // Dark soil
-        new Color3(0.35, 0.25, 0.15),  // Medium soil
-        new Color3(0.28, 0.22, 0.14),  // Brown soil
-      ];
-      grassTexture.groundColor = new Color3(0.22, 0.16, 0.1);
-
-      const groundMat = new StandardMaterial("groundMat", scene);
-      groundMat.diffuseTexture = grassTexture;
-      groundMat.specularColor = new Color3(0.05, 0.05, 0.05);
-      ground.material = groundMat;
-      groundMatRef.current = groundMat;
-
-      // Grid overlay on planting area
-      const gridOverlay = CreateGround("gridOverlay", {
-        width: GRID_SIZE,
-        height: GRID_SIZE,
-        subdivisions: GRID_SIZE,
-      }, scene);
-      gridOverlay.position = new Vector3(GRID_SIZE / 2 - 0.5, 0.01, GRID_SIZE / 2 - 0.5);
-
-      const gridMat = new StandardMaterial("gridMat", scene);
-      gridMat.diffuseColor = new Color3(0.35, 0.28, 0.18);
-      gridMat.specularColor = new Color3(0, 0, 0);
-      gridMat.alpha = 0.3;
-      gridMat.wireframe = true;
-      gridOverlay.material = gridMat;
-
-      // Soil tiles for planting area
-      const soilTile = CreateGround("soilBase", {
-        width: GRID_SIZE,
-        height: GRID_SIZE,
-      }, scene);
-      soilTile.position = new Vector3(GRID_SIZE / 2 - 0.5, 0.005, GRID_SIZE / 2 - 0.5);
-      
-      const soilMat = new StandardMaterial("soilMat", scene);
-      soilMat.diffuseColor = Color3.FromHexString("#3d2817");
-      soilMat.specularColor = new Color3(0.02, 0.02, 0.02);
-      soilTile.material = soilMat;
-      soilMatRef.current = soilMat;
-
-      // Create player mesh (cute farmer)
-      const playerBody = CreateCylinder("playerBody", {
-        height: 0.6,
-        diameterTop: 0.25,
-        diameterBottom: 0.35,
-      }, scene);
-      
-      const playerHead = CreateSphere("playerHead", { diameter: 0.3 }, scene);
-      playerHead.position.y = 0.45;
-      playerHead.parent = playerBody;
-
-      const hat = CreateCylinder("hat", {
-        height: 0.12,
-        diameterTop: 0.4,
-        diameterBottom: 0.35,
-      }, scene);
-      hat.position.y = 0.58;
-      hat.parent = playerBody;
-
-      const hatTop = CreateCylinder("hatTop", {
-        height: 0.15,
-        diameterTop: 0.2,
-        diameterBottom: 0.25,
-      }, scene);
-      hatTop.position.y = 0.7;
-      hatTop.parent = playerBody;
-
-      // Player materials
-      const bodyMat = new StandardMaterial("bodyMat", scene);
-      bodyMat.diffuseColor = Color3.FromHexString(COLORS.forestGreen);
-      playerBody.material = bodyMat;
-
-      const headMat = new StandardMaterial("headMat", scene);
-      headMat.diffuseColor = Color3.FromHexString("#FFCCBC");
-      playerHead.material = headMat;
-
-      const hatMat = new StandardMaterial("hatMat", scene);
-      hatMat.diffuseColor = Color3.FromHexString(COLORS.autumnGold);
-      hat.material = hatMat;
-      hatTop.material = hatMat;
-
-      playerBody.position.y = 0.3;
-      playerMeshRef.current = playerBody;
-
-      // Decorative trees around the border
-      borderTreeMeshesRef.current = createBorderTrees(scene);
-
-      // Game loop
+      // --- Game loop ---
       let lastTime = performance.now();
       let lastSeasonUpdate: Season | null = null;
-      
-      engine.runRenderLoop(() => {
+
+      sm.startRenderLoop(() => {
         const now = performance.now();
-        const deltaTime = (now - lastTime) / 1000;
         const deltaMs = now - lastTime;
+        const dt = deltaMs / 1000;
         lastTime = now;
 
-        // Update time system first so season is available for growth
+        // Time system
         const currentTime = updateTime(deltaMs);
         setGameTime(currentTime);
 
-        movementSystem(movementRef.current, deltaTime);
-        growthSystem(deltaTime, currentTime.season);
-        staminaSystem(deltaTime);
-        harvestSystem(deltaTime);
-        
-        // Update sky and lighting based on time
-        updateSceneForTime(scene, currentTime, lightsRef.current, lastSeasonUpdate);
-        
-        // Update seasonal visuals when season changes
+        // Weather system
+        if (!weatherRef.current) {
+          weatherRef.current = initializeWeather(currentTime.microseconds / 1_000_000);
+        }
+        const gameTimeSec = currentTime.microseconds / 1_000_000;
+        weatherRef.current = updateWeather(
+          weatherRef.current, gameTimeSec,
+          currentTime.season, hashString(groveSeedRef.current || "default"),
+        );
+        const weatherType = weatherRef.current.current.type;
+        if (weatherType !== lastWeatherTypeRef.current) {
+          lastWeatherTypeRef.current = weatherType;
+          setWeatherVisual(weatherType);
+          if (weatherType !== "clear") {
+            const labels: Record<string, string> = { rain: "It's raining!", drought: "Drought!", windstorm: "Windstorm!" };
+            showToast(labels[weatherType] ?? weatherType, weatherType === "rain" ? "success" : "warning");
+          }
+        }
+
+        // Cherry blossom petals
+        setShowPetals(treesQuery.entities.some(
+          (t) => t.tree?.speciesId === "cherry-blossom" && t.tree.stage >= 3,
+        ));
+
+        const weatherGrowthMult = getWeatherGrowthMultiplier(weatherType);
+
+        // ECS systems
+        movementSystem(movementRef.current, dt);
+        growthSystem(dt, currentTime.season, weatherGrowthMult);
+        staminaSystem(dt);
+        harvestSystem(dt);
+
+        // Scene managers update
+        lights.update(scene, currentTime);
+        sky.update(scene, currentTime.sunIntensity);
+        playerMesh.update();
+        cam.trackTarget(
+          playerMesh.mesh?.position.x ?? 0,
+          playerMesh.mesh?.position.z ?? 0,
+          dt,
+        );
+
+        const currentIsNight = isNight(currentTime);
+        treeMesh.update(scene, dt, currentTime.season, currentIsNight);
+
+        // Season change
         if (lastSeasonUpdate !== currentTime.season) {
           lastSeasonUpdate = currentTime.season;
-          updateSeasonalVisuals(
-            currentTime.season,
-            currentTime.seasonProgress,
-            groundMatRef.current,
-            soilMatRef.current,
-            borderTreeMeshesRef.current
-          );
+          ground.updateSeason(currentTime.season, currentTime.seasonProgress);
           setCurrentSeason(currentTime.season);
+          useGameStore.getState().trackSeason(currentTime.season);
+
+          treeMesh.rebuildAll(scene, currentTime.season, currentIsNight);
+          borderTree.rebuild(scene, currentTime.season, currentIsNight);
         }
-        
-        // Store time periodically (every 5 seconds)
+
+        // Periodic updates (every 5s)
         if (Math.floor(now / 5000) !== Math.floor((now - deltaMs) / 5000)) {
           storeSetGameTime(currentTime.microseconds);
           setCurrentDay(currentTime.day);
+          checkAndAwardAchievements();
         }
 
-        // Auto-save grove every 30 seconds
+        // Auto-save every 30s
         if (Math.floor(now / 30000) !== Math.floor((now - deltaMs) / 30000)) {
           saveGroveToStorage(GRID_SIZE, groveSeedRef.current);
         }
 
-        // Check for trees reaching Mature stage and initialize harvestable
-        for (const treeEntity of treesQuery) {
-          if (
-            treeEntity.tree &&
-            treeEntity.tree.stage >= 3 &&
-            !treeEntity.harvestable
-          ) {
-            initHarvestable(treeEntity);
-          }
-        }
-
-        // Sync player mesh
-        const playerEntity = playerQuery.first;
-        if (playerEntity?.position && playerMeshRef.current) {
-          playerMeshRef.current.position.x = playerEntity.position.x;
-          playerMeshRef.current.position.z = playerEntity.position.z;
-        }
-
-        // Sync tree meshes
-        for (const treeEntity of treesQuery) {
-          if (!treeEntity.position || !treeEntity.tree || !treeEntity.renderable) continue;
-
-          let mesh = treeMeshesRef.current.get(treeEntity.id);
-          if (!mesh) {
-            mesh = createTreeMesh(scene, treeEntity.id, treeEntity.tree.speciesId, currentTime.season, treeEntity.tree.meshSeed);
-            treeMeshesRef.current.set(treeEntity.id, mesh);
-          }
-
-          mesh.position.x = treeEntity.position.x;
-          mesh.position.z = treeEntity.position.z;
-
-          const scale = treeEntity.renderable.scale;
-          mesh.scaling.setAll(scale);
-          mesh.position.y = scale * 0.4;
-        }
-
-        scene.render();
+        // Tree milestone XP and weather damage
+        processTreeUpdates(weatherType, gameTimeSec);
       });
-
-      // Handle resize
-      const handleResize = () => {
-        engine.resize();
-      };
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
     };
 
     initBabylon();
 
     return () => {
-      engineRef.current?.dispose();
+      worldMgr.dispose();
+      treeMesh.dispose();
+      borderTree.dispose();
+      playerMesh.dispose();
+      sky.dispose();
+      ground.dispose();
+      lights.dispose();
+      cam.dispose();
+      sm.dispose();
     };
   }, []);
 
-  const createBorderTrees = (scene: Scene): Mesh[] => {
-    const positions = [
-      // Left side
-      { x: -2, z: 2 }, { x: -2.5, z: 5 }, { x: -1.8, z: 8 }, { x: -2.2, z: 11 },
-      // Right side
-      { x: GRID_SIZE + 1, z: 1 }, { x: GRID_SIZE + 1.5, z: 4 }, { x: GRID_SIZE + 1.2, z: 7 }, { x: GRID_SIZE + 2, z: 10 },
-      // Back
-      { x: 2, z: GRID_SIZE + 1.5 }, { x: 5, z: GRID_SIZE + 2 }, { x: 8, z: GRID_SIZE + 1.8 }, { x: 11, z: GRID_SIZE + 1.5 },
-      // Front corners
-      { x: -1.5, z: -1 }, { x: GRID_SIZE + 1, z: -0.5 },
-    ];
+  // --- Helper functions ---
 
-    const meshes: Mesh[] = [];
-    const rng = createRNG(hashString("border-trees"));
+  function isNight(time: GameTime): boolean {
+    return time.timeOfDay === "night" || time.timeOfDay === "midnight" || time.timeOfDay === "evening";
+  }
 
-    positions.forEach((pos, i) => {
-      const scale = 0.8 + rng() * 0.5;
-      const trunk = CreateCylinder(`borderTrunk${i}`, {
-        height: 1.5 * scale,
-        diameterTop: 0.15 * scale,
-        diameterBottom: 0.25 * scale,
-      }, scene);
-      trunk.position = new Vector3(pos.x, 0.75 * scale, pos.z);
+  function applyOfflineGrowth(savedTimestamp: number): void {
+    const elapsedSeconds = (Date.now() - savedTimestamp) / 1000;
+    if (elapsedSeconds <= 60) return;
 
-      const trunkMat = new StandardMaterial(`borderTrunkMat${i}`, scene);
-      trunkMat.diffuseColor = Color3.FromHexString("#4a3728");
-      trunk.material = trunkMat;
-
-      const canopy = CreateSphere(`borderCanopy${i}`, { diameter: 1.2 * scale }, scene);
-      canopy.position.y = 0.9 * scale;
-      canopy.parent = trunk;
-
-      const canopyMat = new StandardMaterial(`borderCanopyMat${i}`, scene);
-      const greens = ["#2d5a27", "#3d6b35", "#1e4620", "#4a7c42"];
-      canopyMat.diffuseColor = Color3.FromHexString(greens[i % greens.length]);
-      canopy.material = canopyMat;
-      
-      meshes.push(trunk);
+    const offlineTrees = Array.from(treesQuery).map((e) => ({
+      speciesId: e.tree!.speciesId,
+      stage: e.tree!.stage,
+      progress: e.tree!.progress,
+      watered: e.tree!.watered,
+    }));
+    const results = calculateAllOfflineGrowth(offlineTrees, elapsedSeconds, (id) => {
+      const species = getSpeciesById(id);
+      if (!species) return undefined;
+      return { difficulty: species.difficulty, baseGrowthTimes: [...species.baseGrowthTimes], evergreen: species.evergreen };
     });
-    
-    return meshes;
-  };
-  
-  // Update scene lighting and sky based on time
-  const updateSceneForTime = (
-    scene: Scene,
-    time: GameTime,
-    lights: { hemi: HemisphericLight | null; sun: DirectionalLight | null },
-    lastSeason: Season | null
-  ) => {
-    const skyColors = getSkyColors(time);
-    
-    // Update clear color (sky)
-    const zenithRgb = hexToRgb(skyColors.zenith);
-    scene.clearColor = new Color4(zenithRgb.r / 255, zenithRgb.g / 255, zenithRgb.b / 255, 1);
-    
-    // Update ambient color
-    const ambientRgb = hexToRgb(skyColors.ambient);
-    scene.ambientColor = new Color3(ambientRgb.r / 255, ambientRgb.g / 255, ambientRgb.b / 255);
-    
-    // Update hemisphere light
-    if (lights.hemi) {
-      lights.hemi.intensity = time.ambientIntensity;
-      const horizonRgb = hexToRgb(skyColors.horizon);
-      lights.hemi.groundColor = new Color3(horizonRgb.r / 255 * 0.5, horizonRgb.g / 255 * 0.5, horizonRgb.b / 255 * 0.5);
-    }
-    
-    // Update sun light
-    if (lights.sun) {
-      lights.sun.intensity = time.sunIntensity;
-      const sunRgb = hexToRgb(skyColors.sun);
-      lights.sun.diffuse = new Color3(sunRgb.r / 255, sunRgb.g / 255, sunRgb.b / 255);
-      
-      // Rotate sun direction based on time of day
-      const sunAngle = (time.hours / 24) * Math.PI * 2 - Math.PI / 2;
-      lights.sun.direction = new Vector3(
-        Math.cos(sunAngle) * 0.5,
-        -1,
-        Math.sin(sunAngle) * 0.3
-      );
-    }
-  };
-  
-  // Update seasonal visuals (ground, trees)
-  const updateSeasonalVisuals = (
-    season: Season,
-    seasonProgress: number,
-    groundMat: StandardMaterial | null,
-    soilMat: StandardMaterial | null,
-    borderTrees: Mesh[]
-  ) => {
-    const seasonalColors = getSeasonalColors(season, seasonProgress);
-    
-    // Update ground color
-    if (groundMat) {
-      const groundRgb = hexToRgb(seasonalColors.groundColor);
-      groundMat.diffuseColor = new Color3(groundRgb.r / 255, groundRgb.g / 255, groundRgb.b / 255);
-    }
-    
-    // Update border tree canopy colors
-    borderTrees.forEach((trunk, i) => {
-      const canopy = trunk.getChildren()[0] as Mesh;
-      if (canopy && canopy.material) {
-        const mat = canopy.material as StandardMaterial;
-        const colorIndex = i % seasonalColors.leafColors.length;
-        const leafRgb = hexToRgb(seasonalColors.leafColors[colorIndex]);
-        mat.diffuseColor = new Color3(leafRgb.r / 255, leafRgb.g / 255, leafRgb.b / 255);
+    let stagesAdvanced = 0;
+    const treeEntities = Array.from(treesQuery);
+    for (let i = 0; i < treeEntities.length; i++) {
+      const entity = treeEntities[i];
+      const result = results[i];
+      if (entity.tree && result) {
+        if (result.stage > entity.tree.stage) stagesAdvanced++;
+        entity.tree.stage = result.stage as 0 | 1 | 2 | 3 | 4;
+        entity.tree.progress = result.progress;
+        entity.tree.watered = result.watered;
+        entity.renderable!.scale = getStageScale(result.stage, result.progress);
       }
-    });
-  };
-  
-  // Helper to convert hex to RGB
-  const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16),
-    } : { r: 128, g: 128, b: 128 };
-  };
-
-  const createTreeMesh = (scene: Scene, id: string, speciesId: string, season?: Season, meshSeed?: number): Mesh => {
-    const species = getSpeciesById(speciesId);
-    const colors = species?.meshParams.color;
-    const rng = createRNG(meshSeed ?? hashString(id));
-
-    const trunk = CreateCylinder(`trunk_${id}`, {
-      height: species?.meshParams.trunkHeight ?? 0.8,
-      diameterTop: (species?.meshParams.trunkRadius ?? 0.1) * 0.7,
-      diameterBottom: (species?.meshParams.trunkRadius ?? 0.18) * 1.2,
-    }, scene);
-
-    const trunkMat = new StandardMaterial(`trunkMat_${id}`, scene);
-    trunkMat.diffuseColor = Color3.FromHexString(colors?.trunk || COLORS.barkBrown);
-    trunk.material = trunkMat;
-
-    const canopy = CreateSphere(`canopy_${id}`, {
-      diameter: (species?.meshParams.canopyRadius ?? 0.4) * 2,
-      segments: species?.meshParams.canopySegments ?? 8,
-    }, scene);
-    canopy.position.y = (species?.meshParams.trunkHeight ?? 0.8) * 0.7;
-    canopy.parent = trunk;
-
-    const canopyMat = new StandardMaterial(`canopyMat_${id}`, scene);
-
-    // Apply seasonal color variation
-    let leafColor = colors?.canopy || COLORS.forestGreen;
-    if (season === "autumn" && !species?.evergreen) {
-      const autumnColors = ["#FF6347", "#FF4500", "#FFD700", "#FFA500"];
-      leafColor = autumnColors[Math.floor(rng() * autumnColors.length)];
-    } else if (season === "winter" && !species?.evergreen) {
-      leafColor = "#4a5a4a";
     }
+    if (stagesAdvanced > 0) {
+      queueMicrotask(() => {
+        showToast(`Trees grew while you were away! (${stagesAdvanced} advanced)`, "success");
+      });
+    }
+  }
 
-    canopyMat.diffuseColor = Color3.FromHexString(leafColor);
-    canopy.material = canopyMat;
+  function restorePlayerPosition(): void {
+    const groveData = useGameStore.getState().groveData;
+    if (groveData) {
+      const player = playerQuery.first;
+      if (player?.position) {
+        player.position.x = groveData.playerPosition.x;
+        player.position.z = groveData.playerPosition.z;
+      }
+    }
+  }
 
-    return trunk;
-  };
+  function processTreeUpdates(weatherType: WeatherType, gameTimeSec: number): void {
+    for (const entity of treesQuery) {
+      if (!entity.tree) continue;
+      const tree = entity.tree;
 
-  const handleMove = useCallback((x: number, z: number) => {
-    movementRef.current = { x, z };
-  }, []);
+      if (tree.stage >= 3 && !entity.harvestable) {
+        initHarvestable(entity);
+        useGameStore.getState().incrementTreesMatured();
+      }
 
-  const handleMoveEnd = useCallback(() => {
-    movementRef.current = { x: 0, z: 0 };
-  }, []);
+      // Growth milestone XP
+      const species = getSpeciesById(tree.speciesId);
+      const diffBonus = species ? (species.difficulty - 1) : 0;
+      for (const [stage, baseXp] of [[2, 15], [3, 25], [4, 50]] as const) {
+        if (tree.stage >= stage) {
+          const key = `${entity.id}:${stage}`;
+          if (!milestoneXpRef.current.has(key)) {
+            milestoneXpRef.current.add(key);
+            const xpAmount = stage === 2 ? baseXp : baseXp + diffBonus * (stage === 3 ? 10 : 25);
+            useGameStore.getState().addXp(xpAmount);
+            showParticle(`+${xpAmount} XP`);
+          }
+        }
+      }
 
-  // Find the tree entity occupying a grid cell
+      // Windstorm damage
+      if (weatherType === "windstorm" && tree.stage <= 1) {
+        const windRng = createRNG(hashString(`wind-${entity.id}-${Math.floor(gameTimeSec / 30)}`));
+        if (rollWindstormDamage(windRng())) {
+          tree.progress = 0;
+          showToast("A young tree was damaged by wind!", "warning");
+        }
+      }
+    }
+  }
+
+  function checkAndAwardAchievements(): void {
+    const store = useGameStore.getState();
+    const currentTreeData = Array.from(treesQuery)
+      .filter((e) => e.tree && e.position)
+      .map((e) => ({
+        speciesId: e.tree!.speciesId,
+        stage: e.tree!.stage,
+        gridX: Math.round(e.position!.x),
+        gridZ: Math.round(e.position!.z),
+      }));
+
+    const newAchievements = checkAchievements({
+      treesPlanted: store.treesPlanted,
+      treesMatured: store.treesMatured,
+      treesHarvested: store.treesHarvested,
+      lifetimeResources: store.lifetimeResources,
+      speciesPlanted: store.speciesPlanted,
+      seasonsExperienced: store.seasonsExperienced,
+      currentTreeData,
+      gridSize: GRID_SIZE,
+      unlockedAchievements: store.achievements,
+    });
+
+    for (const id of newAchievements) {
+      store.unlockAchievement(id);
+      showAchievement(id);
+      const def = ACHIEVEMENT_DEFS.find((a) => a.id === id);
+      showToast(def ? def.name : id, "achievement");
+    }
+  }
+
+  // --- Tool actions ---
+
   const findTreeOnCell = (treeEntityId: string) => {
     for (const tree of treesQuery) {
       if (tree.id === treeEntityId && tree.tree) return tree;
@@ -646,7 +437,6 @@ export const GameScene = () => {
     return null;
   };
 
-  // Find the grid cell at the player's position
   const findCellAtPlayer = () => {
     const player = playerQuery.first;
     if (!player?.position) return null;
@@ -660,50 +450,55 @@ export const GameScene = () => {
     return null;
   };
 
-  const useTrowel = async (gc: import("../ecs/world").GridCellComponent) => {
+  const useTrowel = async (gc: GridCellComponent) => {
     if (gc.occupied) return;
     if (hapticsEnabled) await hapticLight();
     setSeedSelectOpen(true);
   };
 
-  const useWateringCan = async (gc: import("../ecs/world").GridCellComponent) => {
+  const useWateringCan = async (gc: GridCellComponent) => {
     if (!gc.occupied || !gc.treeEntityId) return;
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree) return;
     tree.tree.watered = true;
     addXp(5);
     incrementTreesWatered();
+    showParticle("+5 XP");
     if (hapticsEnabled) await hapticLight();
   };
 
-  const useAxe = async (gc: import("../ecs/world").GridCellComponent) => {
+  const useAxe = async (gc: GridCellComponent) => {
     if (!gc.occupied || !gc.treeEntityId) return;
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree || tree.tree.stage < 3) return;
 
-    // If tree has a harvestable component and is ready, collect resources;
-    // otherwise fall back to base species yields for chopping
     const harvestResources = collectHarvest(tree);
     if (harvestResources) {
-      for (const r of harvestResources) {
-        addResource(r.type as ResourceType, r.amount);
-      }
+      for (const r of harvestResources) addResource(r.type as ResourceType, r.amount);
     } else {
       const species = getSpeciesById(tree.tree.speciesId);
-      if (species) {
-        for (const y of species.yield) {
-          addResource(y.resource, y.amount);
-        }
-      }
+      if (species) for (const y of species.yield) addResource(y.resource, y.amount);
     }
 
     addXp(50);
     incrementTreesHarvested();
-    const mesh = treeMeshesRef.current.get(tree.id);
-    if (mesh) {
-      mesh.dispose();
-      treeMeshesRef.current.delete(tree.id);
+    showParticle("+50 XP");
+
+    const harvestSpecies = getSpeciesById(tree.tree.speciesId);
+    const gains = harvestResources ?? harvestSpecies?.yield ?? [];
+    for (const g of gains) {
+      const name = (g as { type?: string; resource?: string }).type
+        ?? (g as { resource?: string }).resource ?? "";
+      showParticle(`+${g.amount} ${name.charAt(0).toUpperCase() + name.slice(1)}`);
     }
+    if (gains.length > 0) {
+      const summary = gains.map((g: { type?: string; resource?: string; amount: number }) =>
+        `+${g.amount} ${(g.type ?? g.resource ?? "").charAt(0).toUpperCase() + (g.type ?? g.resource ?? "").slice(1)}`,
+      ).join(", ");
+      showToast(`${summary}, +50 XP`, "success");
+    }
+
+    treeMeshRef.current.removeMesh(tree.id);
     world.remove(tree);
     gc.occupied = false;
     gc.treeEntityId = null;
@@ -711,25 +506,83 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticSuccess();
   };
 
-  const useCompostBin = async (gc: import("../ecs/world").GridCellComponent) => {
+  const useCompostBin = async (gc: GridCellComponent) => {
     if (!gc.occupied || !gc.treeEntityId) return;
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree) return;
     tree.tree.progress += 0.1;
     addXp(5);
+    showParticle("+5 XP");
     if (hapticsEnabled) await hapticLight();
   };
 
-  const toolActions: Record<string, (gc: import("../ecs/world").GridCellComponent) => Promise<void>> = {
+  const usePruningShears = async (gc: GridCellComponent) => {
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree || tree.tree.stage < 3) return;
+    if (tree.harvestable) {
+      tree.harvestable.cooldownElapsed += tree.harvestable.cooldownTotal * 0.3;
+    }
+    addXp(5);
+    showParticle("+5 XP");
+    showToast("Pruned! Harvest sooner.", "success");
+    if (hapticsEnabled) await hapticLight();
+  };
+
+  const useShovel = async (gc: GridCellComponent) => {
+    if (gc.type !== "rock") return;
+    gc.type = "soil";
+    gc.occupied = false;
+    addXp(12);
+    showParticle("+12 XP");
+    showToast("Cleared rocks!", "success");
+    debouncedSaveGrove();
+    if (hapticsEnabled) await hapticMedium();
+  };
+
+  const useAlmanac = async (gc: GridCellComponent) => {
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree) return;
+    const species = getSpeciesById(tree.tree.speciesId);
+    const stageName = ["Seed", "Sprout", "Sapling", "Mature", "Old Growth"][tree.tree.stage];
+    showToast(
+      `${species?.name ?? tree.tree.speciesId} — ${stageName} (${Math.round(tree.tree.progress * 100)}%)`,
+      "info",
+    );
+  };
+
+  const useSeedPouch = async (_gc: GridCellComponent) => {
+    setSeedSelectOpen(true);
+  };
+
+  const toolActions: Record<string, (gc: GridCellComponent) => Promise<void>> = {
     "trowel": useTrowel,
     "watering-can": useWateringCan,
     "axe": useAxe,
     "compost-bin": useCompostBin,
+    "pruning-shears": usePruningShears,
+    "shovel": useShovel,
+    "almanac": useAlmanac,
+    "seed-pouch": useSeedPouch,
   };
 
   const handleAction = async () => {
     const gc = findCellAtPlayer();
     if (!gc) return;
+    const tool = getToolById(selectedTool);
+    if (tool && tool.staminaCost > 0) {
+      const weatherStaminaMult = weatherRef.current
+        ? getWeatherStaminaMultiplier(weatherRef.current.current.type)
+        : 1.0;
+      // Structure stamina reduction
+      const player = playerQuery.first;
+      const structStaminaMult = player?.position
+        ? getStructureStaminaMult(player.position.x, player.position.z, structuresQuery)
+        : 1.0;
+      const adjustedCost = Math.ceil(tool.staminaCost * weatherStaminaMult * structStaminaMult);
+      if (!useGameStore.getState().spendStamina(adjustedCost)) return;
+    }
     const action = toolActions[selectedTool];
     if (action) await action(gc);
   };
@@ -737,22 +590,43 @@ export const GameScene = () => {
   const handlePlant = async () => {
     const player = playerQuery.first;
     if (!player?.position) return;
-
     const gridX = Math.round(player.position.x);
     const gridZ = Math.round(player.position.z);
 
+    const species = getSpeciesById(selectedSpecies);
+    if (!useGameStore.getState().spendSeed(selectedSpecies, 1)) return;
+
+    if (species?.seedCost) {
+      for (const [resource, amount] of Object.entries(species.seedCost)) {
+        if (!useGameStore.getState().spendResource(resource as ResourceType, amount)) {
+          useGameStore.getState().addSeed(selectedSpecies, 1);
+          return;
+        }
+      }
+    }
+
     for (const cell of gridCellsQuery) {
       if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
-        if (cell.gridCell.occupied) return;
+        if (cell.gridCell.occupied) {
+          useGameStore.getState().addSeed(selectedSpecies, 1);
+          if (species?.seedCost) {
+            for (const [resource, amount] of Object.entries(species.seedCost)) {
+              useGameStore.getState().addResource(resource as ResourceType, amount);
+            }
+          }
+          return;
+        }
 
         const tree = createTreeEntity(gridX, gridZ, selectedSpecies);
         world.add(tree);
-
         cell.gridCell.occupied = true;
         cell.gridCell.treeEntityId = tree.id;
 
         incrementTreesPlanted();
-        addXp(10);
+        useGameStore.getState().trackSpeciesPlanted(selectedSpecies);
+        const plantXp = 10 + (species ? (species.difficulty - 1) * 5 : 0);
+        addXp(plantXp);
+        showParticle(`+${plantXp} XP`);
 
         debouncedSaveGrove();
         if (hapticsEnabled) await hapticMedium();
@@ -760,6 +634,14 @@ export const GameScene = () => {
       }
     }
   };
+
+  const handleMove = useCallback((x: number, z: number) => {
+    movementRef.current = { x, z };
+  }, []);
+
+  const handleMoveEnd = useCallback(() => {
+    movementRef.current = { x: 0, z: 0 };
+  }, []);
 
   return (
     <div ref={containerRef} className="relative w-full h-full">

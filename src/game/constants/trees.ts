@@ -194,8 +194,83 @@ export const TREE_SPECIES: TreeSpeciesData[] = [
   },
 ];
 
+// Prestige-only species (unlocked via prestige system)
+export const PRESTIGE_TREE_SPECIES: TreeSpeciesData[] = [
+  {
+    id: "crystal-oak",
+    name: "Crystalline Oak",
+    difficulty: 5,
+    unlockLevel: 25,
+    biome: "Enchanted",
+    baseGrowthTimes: [20, 30, 45, 60, 80],
+    yield: [{ resource: "acorns", amount: 5 }],
+    harvestCycleSec: 100,
+    seedCost: { acorns: 20 },
+    special: "Prismatic glow; Acorns ×5",
+    evergreen: true,
+    meshParams: {
+      trunkHeight: 2.2,
+      trunkRadius: 0.18,
+      canopyRadius: 1.0,
+      canopySegments: 10,
+      color: { trunk: "#B0BEC5", canopy: "#80CBC4" },
+    },
+  },
+  {
+    id: "moonwood-ash",
+    name: "Moonwood Ash",
+    difficulty: 4,
+    unlockLevel: 25,
+    biome: "Enchanted",
+    baseGrowthTimes: [18, 28, 40, 55, 70],
+    yield: [
+      { resource: "sap", amount: 3 },
+      { resource: "acorns", amount: 2 },
+    ],
+    harvestCycleSec: 90,
+    seedCost: { sap: 15, acorns: 10 },
+    special: "Grows only at night; silver shimmer",
+    evergreen: false,
+    meshParams: {
+      trunkHeight: 2.4,
+      trunkRadius: 0.14,
+      canopyRadius: 1.1,
+      canopySegments: 10,
+      color: { trunk: "#CFD8DC", canopy: "#B39DDB" },
+    },
+  },
+  {
+    id: "worldtree",
+    name: "Worldtree",
+    difficulty: 5,
+    unlockLevel: 25,
+    biome: "Enchanted",
+    baseGrowthTimes: [30, 45, 65, 90, 120],
+    yield: [
+      { resource: "timber", amount: 4 },
+      { resource: "sap", amount: 3 },
+      { resource: "fruit", amount: 3 },
+      { resource: "acorns", amount: 3 },
+    ],
+    harvestCycleSec: 180,
+    seedCost: { timber: 20, sap: 20, fruit: 20, acorns: 20 },
+    special: "2×2 footprint; boosts entire grove",
+    evergreen: true,
+    meshParams: {
+      trunkHeight: 3.5,
+      trunkRadius: 0.35,
+      canopyRadius: 1.5,
+      canopySegments: 12,
+      color: { trunk: "#4E342E", canopy: "#1B5E20" },
+    },
+  },
+];
+
+// Combined lookup includes both base and prestige species
+const ALL_SPECIES = [...TREE_SPECIES, ...PRESTIGE_TREE_SPECIES];
+
 export const getSpeciesById = (id: string): TreeSpeciesData | undefined =>
-  TREE_SPECIES.find((s) => s.id === id);
+  ALL_SPECIES.find((s) => s.id === id);
 
 // Backwards-compatible alias for existing code that uses getTreeById
 export const getTreeById = getSpeciesById;

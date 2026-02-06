@@ -1,0 +1,98 @@
+{
+  "id": "starting-world",
+  "name": "Grovekeeper Valley",
+  "version": 1,
+  "zones": [
+    {
+      "id": "starting-grove",
+      "name": "Starting Grove",
+      "type": "grove",
+      "origin": { "x": 0, "z": 0 },
+      "size": { "width": 12, "height": 12 },
+      "groundMaterial": "soil",
+      "tiles": [
+        { "x": 3, "z": 4, "type": "water" },
+        { "x": 4, "z": 4, "type": "water" },
+        { "x": 3, "z": 5, "type": "water" },
+        { "x": 8, "z": 2, "type": "rock" },
+        { "x": 9, "z": 2, "type": "rock" },
+        { "x": 8, "z": 3, "type": "rock" },
+        { "x": 0, "z": 6, "type": "path" },
+        { "x": 1, "z": 6, "type": "path" },
+        { "x": 2, "z": 6, "type": "path" }
+      ],
+      "plantable": true,
+      "connections": [
+        {
+          "direction": "east",
+          "targetZoneId": "forest-trail",
+          "localEntry": { "x": 11, "z": 6 }
+        }
+      ]
+    },
+    {
+      "id": "forest-trail",
+      "name": "Forest Trail",
+      "type": "path",
+      "origin": { "x": 13, "z": 2 },
+      "size": { "width": 4, "height": 8 },
+      "groundMaterial": "dirt",
+      "tiles": [
+        { "x": 1, "z": 0, "type": "path" },
+        { "x": 1, "z": 1, "type": "path" },
+        { "x": 1, "z": 2, "type": "path" },
+        { "x": 1, "z": 3, "type": "path" },
+        { "x": 2, "z": 3, "type": "path" },
+        { "x": 2, "z": 4, "type": "path" },
+        { "x": 2, "z": 5, "type": "path" },
+        { "x": 2, "z": 6, "type": "path" },
+        { "x": 2, "z": 7, "type": "path" },
+        { "x": 0, "z": 2, "type": "rock" },
+        { "x": 3, "z": 5, "type": "rock" }
+      ],
+      "props": [
+        { "propId": "fallen-log", "localX": 0, "localZ": 0, "scale": 0.8 },
+        { "propId": "mushroom-cluster", "localX": 3, "localZ": 1 },
+        { "propId": "wild-flowers", "localX": 0, "localZ": 6 }
+      ],
+      "plantable": false,
+      "connections": [
+        {
+          "direction": "west",
+          "targetZoneId": "starting-grove",
+          "localEntry": { "x": 0, "z": 4 }
+        },
+        {
+          "direction": "east",
+          "targetZoneId": "sunlit-clearing",
+          "localEntry": { "x": 3, "z": 4 }
+        }
+      ]
+    },
+    {
+      "id": "sunlit-clearing",
+      "name": "Sunlit Clearing",
+      "type": "clearing",
+      "origin": { "x": 18, "z": 0 },
+      "size": { "width": 8, "height": 8 },
+      "groundMaterial": "grass",
+      "tiles": [
+        { "x": 3, "z": 3, "type": "water" },
+        { "x": 4, "z": 3, "type": "water" },
+        { "x": 3, "z": 4, "type": "water" },
+        { "x": 4, "z": 4, "type": "water" },
+        { "x": 5, "z": 4, "type": "water" },
+        { "x": 4, "z": 5, "type": "water" }
+      ],
+      "plantable": true,
+      "connections": [
+        {
+          "direction": "west",
+          "targetZoneId": "forest-trail",
+          "localEntry": { "x": 0, "z": 4 }
+        }
+      ]
+    }
+  ],
+  "playerSpawn": { "zoneId": "starting-grove", "localX": 6, "localZ": 6 }
+}

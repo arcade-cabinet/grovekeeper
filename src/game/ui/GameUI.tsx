@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { COLORS } from "../constants/config";
 import { useGameStore } from "../stores/gameStore";
 import { HUD } from "./HUD";
@@ -7,7 +8,12 @@ import { SeedSelect } from "./SeedSelect";
 import { ToolWheel } from "./ToolWheel";
 import { StaminaGauge } from "./StaminaGauge";
 import { ToolBelt } from "./ToolBelt";
+import { WeatherOverlay } from "./WeatherOverlay";
+import { MiniMap } from "./MiniMap";
+import { BuildPanel } from "./BuildPanel";
 import type { GameTime } from "../systems/time";
+import { getCosmeticById } from "../systems/prestige";
+import type { StructureTemplate } from "../structures/types";
 
 interface GameUIProps {
   onMove: (x: number, z: number) => void;
@@ -16,6 +22,7 @@ interface GameUIProps {
   onPlant: () => void;
   onOpenMenu: () => void;
   onOpenTools: () => void;
+  onPlaceStructure?: (template: StructureTemplate, worldX: number, worldZ: number) => void;
   seedSelectOpen: boolean;
   setSeedSelectOpen: (open: boolean) => void;
   toolWheelOpen: boolean;
@@ -33,6 +40,7 @@ export const GameUI = ({
   onPlant,
   onOpenMenu,
   onOpenTools,
+  onPlaceStructure,
   seedSelectOpen,
   setSeedSelectOpen,
   toolWheelOpen,
@@ -42,8 +50,9 @@ export const GameUI = ({
   onMainMenu,
   gameTime,
 }: GameUIProps) => {
-  const { activeQuests, addCoins, addXp, completeQuest } = useGameStore();
-  
+  const { activeQuests, addCoins, addXp, completeQuest, activeBorderCosmetic, prestigeCount } = useGameStore();
+  const [buildPanelOpen, setBuildPanelOpen] = useState(false);
+
   const handleClaimReward = (questId: string) => {
     const quest = activeQuests.find(q => q.id === questId);
     if (quest?.completed) {
@@ -52,11 +61,47 @@ export const GameUI = ({
       completeQuest(questId);
     }
   };
-  
+
+  // Prestige cosmetic border styling
+  const cosmetic = activeBorderCosmetic ? getCosmeticById(activeBorderCosmetic) : null;
+  const frameBaseBackground = `linear-gradient(90deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`;
+  const frameBaseShadow = "inset -2px 0 4px rgba(0,0,0,0.3)";
+
+  const leftFrameStyle = cosmetic
+    ? {
+        background: frameBaseBackground,
+        border: cosmetic.borderStyle,
+        borderColor: cosmetic.borderColor,
+        boxShadow: cosmetic.glowColor
+          ? `${frameBaseShadow}, 0 0 12px ${cosmetic.glowColor}`
+          : frameBaseShadow,
+      }
+    : {
+        background: frameBaseBackground,
+        boxShadow: frameBaseShadow,
+      };
+
+  const rightFrameStyle = cosmetic
+    ? {
+        background: `linear-gradient(270deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`,
+        border: cosmetic.borderStyle,
+        borderColor: cosmetic.borderColor,
+        boxShadow: cosmetic.glowColor
+          ? `inset 2px 0 4px rgba(0,0,0,0.3), 0 0 12px ${cosmetic.glowColor}`
+          : "inset 2px 0 4px rgba(0,0,0,0.3)",
+      }
+    : {
+        background: `linear-gradient(270deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`,
+        boxShadow: "inset 2px 0 4px rgba(0,0,0,0.3)",
+      };
+
   return (
     <div className="absolute inset-0 pointer-events-none">
+      {/* Weather visual overlay (rain, drought, windstorm) */}
+      <WeatherOverlay />
+
       {/* Top HUD bar */}
-      <div 
+      <div
         className="absolute top-0 left-0 right-0 pointer-events-auto"
         style={{
           background: `linear-gradient(180deg, ${COLORS.soilDark} 0%, ${COLORS.soilDark}ee 70%, transparent 100%)`,
@@ -68,6 +113,7 @@ export const GameUI = ({
             onPlant={onAction}
             onOpenMenu={onOpenMenu}
             onOpenTools={onOpenTools}
+            onOpenBuild={() => setBuildPanelOpen(true)}
             gameTime={gameTime}
           />
         </div>
@@ -76,10 +122,7 @@ export const GameUI = ({
       {/* Left wood frame */}
       <div
         className="absolute left-0 top-0 bottom-0 w-3 sm:w-4 lg:w-6"
-        style={{
-          background: `linear-gradient(90deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`,
-          boxShadow: "inset -2px 0 4px rgba(0,0,0,0.3)",
-        }}
+        style={leftFrameStyle}
       >
         {/* Wood grain lines */}
         <div className="h-full flex flex-col justify-around py-8">
@@ -96,10 +139,7 @@ export const GameUI = ({
       {/* Right wood frame */}
       <div
         className="absolute right-0 top-0 bottom-0 w-3 sm:w-4 lg:w-6"
-        style={{
-          background: `linear-gradient(270deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`,
-          boxShadow: "inset 2px 0 4px rgba(0,0,0,0.3)",
-        }}
+        style={rightFrameStyle}
       >
         <div className="h-full flex flex-col justify-around py-8">
           {[...Array(8)].map((_, i) => (
@@ -137,6 +177,9 @@ export const GameUI = ({
         />
       </div>
 
+      {/* Mini-map - desktop only, bottom-left */}
+      <MiniMap />
+
       {/* Modals */}
       <div className="pointer-events-auto">
         <SeedSelect
@@ -147,6 +190,16 @@ export const GameUI = ({
         <ToolWheel
           open={toolWheelOpen}
           onClose={() => setToolWheelOpen(false)}
+        />
+        <BuildPanel
+          open={buildPanelOpen}
+          onClose={() => setBuildPanelOpen(false)}
+          onSelectStructure={(template) => {
+            // For now, place at player position; full PlacementGhost integration is future work
+            if (onPlaceStructure) {
+              onPlaceStructure(template, 0, 0);
+            }
+          }}
         />
         <PauseMenu
           open={pauseMenuOpen}

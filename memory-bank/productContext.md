@@ -1,4 +1,4 @@
-# Product Context — Grovekeeper
+# Product Context -- Grovekeeper
 
 ## Why This Exists
 
@@ -21,57 +21,60 @@ Grovekeeper is the antithesis: patient, warm, and designed for the rhythm of dai
 
 **Cozy, grounded, and quietly magical.**
 
-Like tending a tiny world in a glass terrarium — warm light through leaves, rich soil, the slow satisfaction of watching something grow.
+Like tending a tiny world in a glass terrarium -- warm light through leaves, rich soil, the slow satisfaction of watching something grow.
 
 ### Brand Pillars
-- **Warmth** — Earth tones, rounded shapes, soft shadows
-- **Growth** — Everything evolves; nothing stays static
-- **Wonder** — Small magical moments hidden in the ordinary
-- **Patience** — Good things take time (anti-hustle energy)
+- **Warmth** -- Earth tones, rounded shapes, soft shadows, PBR-lit bark and leaves
+- **Growth** -- Everything evolves; nothing stays static; smooth lerp animations show progress
+- **Wonder** -- Small magical moments hidden in the ordinary (Ghost Birch night glow, Crystal Oak prismatic tints, cherry blossom petals drifting in spring)
+- **Patience** -- Good things take time (anti-hustle energy)
 
 ## User Experience Goals
 
 ### Emotional Journey
-1. **First open:** "Oh, this is charming" — warm colors, cute farmer mascot, inviting
-2. **First plant:** "That was easy" — clear flow, satisfying feedback
-3. **First growth:** "I can't wait to see it bigger" — anticipation hook
-4. **First harvest:** "I earned this" — tangible reward
-5. **Session end:** "I'll check on my grove later" — retention pull
-6. **Return visit:** "My trees grew!" — offline progress creates delight
+1. **First open:** "Oh, this is charming" -- warm colors, cute farmer mascot, inviting
+2. **First plant:** "That was easy" -- clear flow, satisfying feedback
+3. **First growth:** "I can't wait to see it bigger" -- anticipation hook, smooth growth animations
+4. **First harvest:** "I earned this" -- tangible reward with floating resource particles
+5. **Session end:** "I'll check on my grove later" -- retention pull
+6. **Return visit:** "My trees grew!" -- offline growth calculation creates delight
+7. **Achievement unlock:** "I did something special" -- gold-border modal with sparkle effect
+8. **Prestige reset:** "Starting fresh with new powers" -- cosmetic border themes as lasting reward
 
 ### Session Design (Mobile-First)
 
 A typical 5-minute session:
-1. Load save (instant — auto on mount)
-2. See what grew while away (offline growth calculation)
-3. Harvest any ready trees (quick taps)
+1. Load save (instant -- auto on mount, offline growth calculated)
+2. See what grew while away (growth animations catch up)
+3. Harvest any ready trees (quick taps, floating resource particles)
 4. Plant new seeds in empty tiles
 5. Water any thirsty saplings
-6. Check daily challenge progress
+6. Check quest progress
 7. Auto-save on exit (visibility change)
 
-Everything must work with one hand (thumb on joystick, index finger tapping).
+Everything works with one hand (thumb on joystick, index finger tapping).
 
 ### Core Game Loop
 
 ```
-EXPLORE → PLANT → TEND → HARVEST → EXPAND & UNLOCK (repeat)
+EXPLORE -> PLANT -> TEND -> HARVEST -> EXPAND & UNLOCK (repeat)
 ```
 
-The loop should feel like a garden — not a factory. No urgency. No punishment for not playing. Trees grow while you're away. The game rewards patience, not grinding.
+The loop feels like a garden -- not a factory. No urgency. No punishment for not playing. Trees grow while you're away. The game rewards patience, not grinding.
 
-## How It Should Feel
+## How It Feels
 
-- **Visual:** Like looking into a tiny terrarium on a desk — warm light, rich earth, small things growing
+- **Visual:** Like looking into a tiny terrarium on a desk -- warm PBR-lit bark, rich earth, small things growing with smooth animations
 - **Audio (future):** Gentle ambient nature sounds, soft "pop" when trees grow, rustling leaves
-- **Interaction:** Smooth, responsive, forgiving — tapping near a tile selects it, not pixel-precision required
-- **Pacing:** Calm, but not boring — there's always something to do, but never pressure to do it NOW
-- **Progression:** Steady and visible — new species, new tools, bigger grove, all unlocked by just... playing
+- **Interaction:** Smooth, responsive, forgiving -- tapping near a tile selects it, not pixel-precision required
+- **Pacing:** Calm, but not boring -- there's always something to do, but never pressure to do it NOW
+- **Progression:** Steady and visible -- new species, new tools, bigger grove, prestige borders, all unlocked by just... playing
+- **Weather:** Rain enhances growth, drought slows it, windstorms add tension -- but nothing punishes the player
 
 ## What It's NOT
 
 - Not a clicker/idle game with exponential numbers
-- Not a competitive game with leaderboards (at launch)
+- Not a competitive game with leaderboards
 - Not a game that punishes you for not playing
 - Not a game that tries to sell you anything
-- Not a desktop game crammed onto mobile — it's mobile-first, desktop-enhanced
+- Not a desktop game crammed onto mobile -- it's mobile-first, desktop-enhanced

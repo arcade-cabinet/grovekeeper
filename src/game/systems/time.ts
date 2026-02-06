@@ -1,10 +1,10 @@
 /**
  * Time System - Day/Night cycle with seasons and microsecond precision
- * 
+ *
  * Time scales:
- * - 1 real second = 1 game minute
- * - 1 real minute = 1 game hour  
- * - 24 real minutes = 1 game day
+ * - 1 real second = 12 game seconds
+ * - 5 real seconds = 1 game minute
+ * - 2 real hours = 1 game day
  * - 30 game days = 1 game month
  * - 3 game months = 1 season
  * - 12 game months = 1 game year
@@ -40,7 +40,7 @@ export interface GameTime {
 // Time configuration
 export const TIME_CONFIG = {
   // How fast game time passes relative to real time
-  timeScale: 60, // 1 real second = 60 game seconds (1 game minute)
+  timeScale: 12, // 1 real second = 12 game seconds (1 game minute per 5 real seconds)
   
   // Day structure (in game hours, 0-24)
   dawn: 5,

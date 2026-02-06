@@ -1,0 +1,132 @@
+[
+	{
+		"id": "wooden-fence",
+		"name": "Wooden Fence",
+		"description": "A simple timber fence to mark boundaries.",
+		"icon": "\ud83e\udeb5",
+		"blocks": [
+			{ "blockId": "wooden-fence", "localX": 0, "localY": 0, "localZ": 0, "rotation": 0 }
+		],
+		"footprint": { "width": 1, "depth": 1 },
+		"cost": { "timber": 5 },
+		"requiredLevel": 3
+	},
+	{
+		"id": "tool-shed",
+		"name": "Tool Shed",
+		"description": "A sturdy shed that reduces stamina cost for nearby actions.",
+		"icon": "\ud83c\udfda\ufe0f",
+		"blocks": [
+			{ "blockId": "timber-floor", "localX": 0, "localY": 0, "localZ": 0, "rotation": 0 },
+			{ "blockId": "timber-floor", "localX": 1, "localY": 0, "localZ": 0, "rotation": 0 },
+			{ "blockId": "timber-wall", "localX": 0, "localY": 0.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "timber-wall", "localX": 1, "localY": 0.1, "localZ": 0, "rotation": 180 },
+			{ "blockId": "timber-wall", "localX": 0, "localY": 0.1, "localZ": 0, "rotation": 90 },
+			{ "blockId": "wooden-door", "localX": 1, "localY": 0.1, "localZ": 0, "rotation": 270 },
+			{ "blockId": "thatch-roof", "localX": 0, "localY": 1.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "thatch-roof", "localX": 1, "localY": 1.1, "localZ": 0, "rotation": 0 }
+		],
+		"footprint": { "width": 2, "depth": 1 },
+		"cost": { "timber": 50, "sap": 20 },
+		"requiredLevel": 5,
+		"effect": {
+			"type": "stamina_regen",
+			"radius": 3,
+			"magnitude": 0.2
+		}
+	},
+	{
+		"id": "greenhouse",
+		"name": "Greenhouse",
+		"description": "A glass-walled structure that boosts tree growth nearby.",
+		"icon": "\ud83c\udfe1",
+		"blocks": [
+			{ "blockId": "timber-floor", "localX": 0, "localY": 0, "localZ": 0, "rotation": 0 },
+			{ "blockId": "timber-floor", "localX": 1, "localY": 0, "localZ": 0, "rotation": 0 },
+			{ "blockId": "timber-floor", "localX": 0, "localY": 0, "localZ": 1, "rotation": 0 },
+			{ "blockId": "timber-floor", "localX": 1, "localY": 0, "localZ": 1, "rotation": 0 },
+			{ "blockId": "wooden-post", "localX": 0, "localY": 0.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "wooden-post", "localX": 1, "localY": 0.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "wooden-post", "localX": 0, "localY": 0.1, "localZ": 1, "rotation": 0 },
+			{ "blockId": "wooden-post", "localX": 1, "localY": 0.1, "localZ": 1, "rotation": 0 },
+			{ "blockId": "glass-panel", "localX": 0, "localY": 0.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "glass-panel", "localX": 1, "localY": 0.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "glass-panel", "localX": 0, "localY": 0.1, "localZ": 1, "rotation": 90 },
+			{ "blockId": "glass-panel", "localX": 1, "localY": 0.1, "localZ": 1, "rotation": 90 },
+			{ "blockId": "glass-panel", "localX": 0, "localY": 0.6, "localZ": 0, "rotation": 0 },
+			{ "blockId": "glass-panel", "localX": 1, "localY": 0.6, "localZ": 0, "rotation": 0 },
+			{ "blockId": "glass-panel", "localX": 0, "localY": 0.6, "localZ": 1, "rotation": 90 },
+			{ "blockId": "glass-panel", "localX": 1, "localY": 0.6, "localZ": 1, "rotation": 90 },
+			{ "blockId": "thatch-roof", "localX": 0, "localY": 1.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "thatch-roof", "localX": 1, "localY": 1.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "thatch-roof", "localX": 0, "localY": 1.1, "localZ": 1, "rotation": 0 },
+			{ "blockId": "thatch-roof", "localX": 1, "localY": 1.1, "localZ": 1, "rotation": 0 }
+		],
+		"footprint": { "width": 2, "depth": 2 },
+		"cost": { "timber": 100, "sap": 50, "fruit": 30 },
+		"requiredLevel": 10,
+		"effect": {
+			"type": "growth_boost",
+			"radius": 4,
+			"magnitude": 0.2
+		}
+	},
+	{
+		"id": "market-stall",
+		"name": "Market Stall",
+		"description": "A covered stall that improves harvest yields nearby.",
+		"icon": "\ud83c\udfea",
+		"blocks": [
+			{ "blockId": "timber-floor", "localX": 0, "localY": 0, "localZ": 0, "rotation": 0 },
+			{ "blockId": "timber-floor", "localX": 1, "localY": 0, "localZ": 0, "rotation": 0 },
+			{ "blockId": "wooden-post", "localX": 0, "localY": 0.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "wooden-post", "localX": 1, "localY": 0.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "timber-wall", "localX": 0, "localY": 0.1, "localZ": 0, "rotation": 180 },
+			{ "blockId": "timber-wall", "localX": 1, "localY": 0.1, "localZ": 0, "rotation": 180 },
+			{ "blockId": "thatch-roof", "localX": 0, "localY": 1.1, "localZ": 0, "rotation": 0 },
+			{ "blockId": "thatch-roof", "localX": 1, "localY": 1.1, "localZ": 0, "rotation": 0 }
+		],
+		"footprint": { "width": 2, "depth": 1 },
+		"cost": { "timber": 40, "acorns": 15 },
+		"requiredLevel": 8,
+		"effect": {
+			"type": "harvest_boost",
+			"radius": 3,
+			"magnitude": 0.3
+		}
+	},
+	{
+		"id": "well",
+		"name": "Well",
+		"description": "A stone well that auto-waters nearby trees, boosting growth.",
+		"icon": "\ud83e\udea3",
+		"blocks": [
+			{ "blockId": "stone-base", "localX": -0.25, "localY": 0, "localZ": -0.25, "rotation": 0 },
+			{ "blockId": "stone-base", "localX": 0.25, "localY": 0, "localZ": -0.25, "rotation": 90 },
+			{ "blockId": "stone-base", "localX": 0.25, "localY": 0, "localZ": 0.25, "rotation": 180 },
+			{ "blockId": "stone-base", "localX": -0.25, "localY": 0, "localZ": 0.25, "rotation": 270 }
+		],
+		"footprint": { "width": 1, "depth": 1 },
+		"cost": { "timber": 30, "sap": 20 },
+		"requiredLevel": 6,
+		"effect": {
+			"type": "growth_boost",
+			"radius": 2,
+			"magnitude": 0.15
+		}
+	},
+	{
+		"id": "bench",
+		"name": "Bench",
+		"description": "A cozy wooden bench. Purely decorative.",
+		"icon": "\ud83e\ude91",
+		"blocks": [
+			{ "blockId": "wooden-post", "localX": -0.3, "localY": 0, "localZ": 0, "rotation": 0 },
+			{ "blockId": "wooden-post", "localX": 0.3, "localY": 0, "localZ": 0, "rotation": 0 },
+			{ "blockId": "timber-floor", "localX": 0, "localY": 0.4, "localZ": 0, "rotation": 0 }
+		],
+		"footprint": { "width": 1, "depth": 1 },
+		"cost": { "timber": 15 },
+		"requiredLevel": 4
+	}
+]

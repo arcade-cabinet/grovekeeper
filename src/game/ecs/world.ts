@@ -45,6 +45,24 @@ export interface FarmerState {
   maxStamina: number;
 }
 
+export interface ZoneComponent {
+  zoneId: string;
+  localX: number;
+  localZ: number;
+}
+
+export interface PropComponent {
+  propId: string;
+  meshId: string;
+}
+
+export interface StructureComponent {
+  templateId: string;
+  effectType?: "growth_boost" | "harvest_boost" | "stamina_regen" | "storage";
+  effectRadius?: number;
+  effectMagnitude?: number;
+}
+
 // Entity definition
 export interface Entity {
   id: string;
@@ -60,6 +78,10 @@ export interface Entity {
     cooldownTotal: number;
     ready: boolean;
   };
+  zone?: ZoneComponent;
+  prop?: PropComponent;
+  structure?: StructureComponent;
+  zoneId?: string;
 }
 
 // Create the ECS world
@@ -79,3 +101,5 @@ export const playerQuery = world.with("player", "position");
 export const farmerQuery = world.with("farmerState", "position");
 export const gridCellsQuery = world.with("gridCell", "position");
 export const harvestableQuery = world.with("tree", "harvestable");
+export const structuresQuery = world.with("structure", "position");
+export const propsQuery = world.with("prop", "position");

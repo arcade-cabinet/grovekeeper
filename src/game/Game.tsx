@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useGameStore } from "./stores/gameStore";
 import { MainMenu } from "./ui/MainMenu";
-import { GameScene } from "./scenes/GameScene";
 import { GameErrorBoundary } from "./ui/ErrorBoundary";
 import { RulesModal } from "./ui/RulesModal";
 import { initializePlatform } from "./systems/platform";
 import { generateDailyQuests } from "./systems/quests";
+
+const GameScene = lazy(() =>
+  import("./scenes/GameScene").then((m) => ({ default: m.GameScene })),
+);
 
 export const Game = () => {
   const { 
@@ -71,7 +74,9 @@ export const Game = () => {
         <MainMenu onStartGame={handleStartGame} />
       ) : (
         <GameErrorBoundary onReset={() => setScreen("menu")}>
-          <GameScene />
+          <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-green-900 text-white">Loading grove...</div>}>
+            <GameScene />
+          </Suspense>
         </GameErrorBoundary>
       )}
       

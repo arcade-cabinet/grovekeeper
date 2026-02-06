@@ -1,19 +1,20 @@
 import { useGameStore } from "../stores/gameStore";
 
+/**
+ * Vertical stamina bar positioned on the right side of the screen.
+ *
+ * Fills bottom-to-top. Color shifts from green (full) through orange (50%)
+ * to red (25%). Pulses when stamina is critically low (<25%).
+ * Shows "current/max" text below the bar.
+ */
 export const StaminaGauge = () => {
   const stamina = useGameStore((s) => s.stamina);
   const maxStamina = useGameStore((s) => s.maxStamina);
 
-  const pct = Math.round((stamina / maxStamina) * 100);
+  const pct = maxStamina > 0 ? Math.round((stamina / maxStamina) * 100) : 0;
 
-  // Color gradient: green > 50%, yellow 25-50%, red < 25%
-  let fillColor = "#4CAF50";
-  if (pct < 25) {
-    fillColor = "#F44336";
-  } else if (pct < 50) {
-    fillColor = "#FFC107";
-  }
-
+  // Color gradient: green > 50%, orange 25-50%, red < 25%
+  const fillColor = pct < 25 ? "#E76F51" : pct < 50 ? "#F4A261" : "#52B788";
   const isLow = pct < 25;
 
   return (
@@ -39,15 +40,15 @@ export const StaminaGauge = () => {
         />
       </div>
 
-      {/* Label */}
+      {/* Label: current/max */}
       <span
-        className="text-[10px] font-bold"
+        className="text-[10px] font-bold whitespace-nowrap"
         style={{
           color: "rgba(245, 240, 227, 0.9)",
           textShadow: "0 1px 2px rgba(0,0,0,0.5)",
         }}
       >
-        {Math.round(stamina)}
+        {Math.round(stamina)}/{maxStamina}
       </span>
     </div>
   );

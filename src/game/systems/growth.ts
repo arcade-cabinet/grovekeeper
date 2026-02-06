@@ -6,7 +6,8 @@ import {
   WATER_BONUS,
 } from "../constants/config";
 import { getSpeciesById } from "../constants/trees";
-import { treesQuery } from "../ecs/world";
+import { treesQuery, structuresQuery } from "../ecs/world";
+import { getGrowthMultiplier as getStructureGrowthMult } from "../structures/StructureManager";
 
 /**
  * Calculate the visual scale for a tree at a given stage + progress.
@@ -73,7 +74,7 @@ export function calcGrowthRate(params: GrowthRateParams): number {
  * Growth system — runs every frame. Advances tree growth based on species,
  * difficulty, season, and watered state. Handles stage transitions.
  */
-export function growthSystem(deltaTime: number, currentSeason: string): void {
+export function growthSystem(deltaTime: number, currentSeason: string, weatherMultiplier = 1.0): void {
   for (const entity of treesQuery) {
     if (!entity.tree || !entity.renderable) continue;
 
@@ -105,8 +106,13 @@ export function growthSystem(deltaTime: number, currentSeason: string): void {
       continue;
     }
 
-    // Advance progress
-    tree.progress += rate * deltaTime;
+    // Structure growth boost
+    const structureMult = entity.position
+      ? getStructureGrowthMult(entity.position.x, entity.position.z, structuresQuery)
+      : 1.0;
+
+    // Advance progress (weather + structure multipliers applied externally)
+    tree.progress += rate * weatherMultiplier * structureMult * deltaTime;
     tree.totalGrowthTime += deltaTime;
 
     // Handle stage transition

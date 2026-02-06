@@ -1,7 +1,8 @@
 // src/game/systems/harvest.ts
 import { getSpeciesById } from "../constants/trees";
 import type { Entity } from "../ecs/world";
-import { harvestableQuery, world } from "../ecs/world";
+import { harvestableQuery, structuresQuery, world } from "../ecs/world";
+import { getHarvestMultiplier } from "../structures/StructureManager";
 
 /**
  * Initialize the harvestable component on a tree entity.
@@ -14,7 +15,11 @@ export function initHarvestable(entity: Entity): void {
   const species = getSpeciesById(entity.tree.speciesId);
   if (!species) return;
 
-  const yieldMultiplier = entity.tree.stage >= 4 ? 1.5 : 1.0;
+  const stageMultiplier = entity.tree.stage >= 4 ? 1.5 : 1.0;
+  const structureMult = entity.position
+    ? getHarvestMultiplier(entity.position.x, entity.position.z, structuresQuery)
+    : 1.0;
+  const yieldMultiplier = stageMultiplier * structureMult;
 
   world.addComponent(entity, "harvestable", {
     resources: species.yield.map((y) => ({
