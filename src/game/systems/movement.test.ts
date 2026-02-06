@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { movementSystem, getPlayerPosition, setMovementBounds } from "./movement";
-import { world, playerQuery } from "../ecs/world";
+import { world, } from "../ecs/world";
 import { createPlayerEntity } from "../ecs/archetypes";
 import { GRID_SIZE, PLAYER_SPEED } from "../constants/config";
 
@@ -92,10 +92,10 @@ describe("Movement System", () => {
 
       const startX = player.position!.x;
       const startZ = player.position!.z;
-      movementSystem({ x: 0.707, z: 0.707 }, 1);
+      movementSystem({ x: Math.SQRT1_2, z: Math.SQRT1_2 }, 1);
 
-      expect(player.position!.x).toBeCloseTo(startX + PLAYER_SPEED * 0.707, 2);
-      expect(player.position!.z).toBeCloseTo(startZ + PLAYER_SPEED * 0.707, 2);
+      expect(player.position!.x).toBeCloseTo(startX + PLAYER_SPEED * Math.SQRT1_2, 2);
+      expect(player.position!.z).toBeCloseTo(startZ + PLAYER_SPEED * Math.SQRT1_2, 2);
     });
 
     it("respects custom world bounds from setMovementBounds", () => {

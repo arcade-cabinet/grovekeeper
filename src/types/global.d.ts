@@ -39,6 +39,3 @@ export type PropsWithChildren<P = any> = P & {
 };
 
 export type ComponentWithProps<P = any> = React.ComponentType<P & Record<string, any>>;
-
-// Export everything to make it available globally
-export {}; 

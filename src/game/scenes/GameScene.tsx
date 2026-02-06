@@ -152,7 +152,7 @@ export const GameScene = () => {
       }
     }
     initializeTime(useGameStore.getState().gameTimeMicroseconds);
-  }, []);
+  }, [applyOfflineGrowth, restorePlayerPosition]);
 
   // Auto-save on tab hide
   useEffect(() => {
@@ -303,7 +303,8 @@ export const GameScene = () => {
       cam.dispose();
       sm.dispose();
     };
-  }, []);
+  }, [checkAndAwardAchievements, isNight, // Tree milestone XP and weather damage
+        processTreeUpdates, setCurrentDay, setCurrentSeason, storeSetGameTime]);
 
   // --- Helper functions ---
 
@@ -316,10 +317,10 @@ export const GameScene = () => {
     if (elapsedSeconds <= 60) return;
 
     const offlineTrees = Array.from(treesQuery).map((e) => ({
-      speciesId: e.tree!.speciesId,
-      stage: e.tree!.stage,
-      progress: e.tree!.progress,
-      watered: e.tree!.watered,
+      speciesId: e.tree?.speciesId,
+      stage: e.tree?.stage,
+      progress: e.tree?.progress,
+      watered: e.tree?.watered,
     }));
     const results = calculateAllOfflineGrowth(offlineTrees, elapsedSeconds, (id) => {
       const species = getSpeciesById(id);
@@ -398,10 +399,10 @@ export const GameScene = () => {
     const currentTreeData = Array.from(treesQuery)
       .filter((e) => e.tree && e.position)
       .map((e) => ({
-        speciesId: e.tree!.speciesId,
-        stage: e.tree!.stage,
-        gridX: Math.round(e.position!.x),
-        gridZ: Math.round(e.position!.z),
+        speciesId: e.tree?.speciesId,
+        stage: e.tree?.stage,
+        gridX: Math.round(e.position?.x),
+        gridZ: Math.round(e.position?.z),
       }));
 
     const newAchievements = checkAchievements({

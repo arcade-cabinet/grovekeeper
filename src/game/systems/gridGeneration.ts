@@ -73,7 +73,7 @@ function growPond(
   placed.push([startCol, startRow]);
 
   // Frontier: cells adjacent to already-placed water that could expand
-  let frontier = getNeighbours(startCol, startRow, size).filter(
+  const frontier = getNeighbours(startCol, startRow, size).filter(
     ([c, r]) => grid[r][c] === "empty",
   );
 

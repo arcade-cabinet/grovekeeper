@@ -26,7 +26,7 @@ export const Game = () => {
   } = useGameStore();
   
   const [showRules, setShowRules] = useState(false);
-  const [platformInitialized, setPlatformInitialized] = useState(false);
+  const [, setPlatformInitialized] = useState(false);
   
   // Initialize platform on mount
   useEffect(() => {

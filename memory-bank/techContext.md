@@ -5,8 +5,9 @@
 | Layer | Technology | Version | Notes |
 |-------|-----------|---------|-------|
 | Runtime | React | 19.x | UI layer |
-| 3D Engine | BabylonJS | 8.x | `@babylonjs/core`, `/materials`, `/procedural-textures` |
-| ECS | Miniplex | 2.x | Entity-component-system with `miniplex-react` |
+| 3D Engine | BabylonJS | 8.x | `@babylonjs/core`, `/materials`, `/loaders` |
+| ECS | Miniplex | 2.x | Entity-component-system |
+| ECS + React | miniplex-react | latest | createReactAPI for reactive UI |
 | State | Zustand | 5.x | `persist` middleware for localStorage |
 | Input | nipplejs | 0.10.x | Virtual joystick for mobile |
 | Styling | Tailwind CSS | 4.x | With `@tailwindcss/vite` plugin |
@@ -18,7 +19,7 @@
 | Bundler | Vite | 6.x | `@vitejs/plugin-react`, manual chunks config |
 | Language | TypeScript | 5.7+ | Strict mode, clean (zero errors) |
 | Lint/Fmt | Biome | 2.3 | Single tool for lint + format |
-| Testing | Vitest | 4.x | `happy-dom` environment, 410 tests, 21 files |
+| Testing | Vitest | 4.x | `happy-dom` environment, 516 tests, 25 files |
 | Testing Lib | @testing-library/react | 16.x | Component testing |
 | Package Mgr | pnpm | 9.x | Lockfile: `pnpm-lock.yaml` |
 
@@ -67,7 +68,7 @@ Game load: ~500 KB total (gzipped)
   - BabylonJS core (manual chunk)
   - GameScene (lazy imported on game start)
   - SPS Tree Generator
-  - PBR textures loaded at runtime
+  - HDRI skybox loaded at runtime
 ```
 
 ### TypeScript (`tsconfig.json`)
@@ -82,6 +83,11 @@ Game load: ~500 KB total (gzipped)
 - Organize imports via `assist.actions.source.organizeImports` (Biome 2.3 syntax)
 - Indent: 2 spaces
 - Linter: recommended rules
+- Overrides configured for:
+  - Tests (`**/*.test.{ts,tsx}`): allow console.log
+  - Type declarations (`**/*.d.ts`): less strict rules
+  - shadcn UI components (`src/components/ui/**`): allow default exports
+  - Game UI components (`src/game/ui/**`): allow default exports
 - Files ignored: `dist/**`, `node_modules/**`, `coverage/**`
 
 ### Vitest (`vitest.config.ts`)
@@ -91,12 +97,13 @@ Game load: ~500 KB total (gzipped)
 
 ## Test Infrastructure
 
-- **410 tests** across **21 test files**, all passing
+- **516 tests** across **25 test files**, all passing
 - Test files live adjacent to source: `*.test.ts(x)`
-- Key test locations: `src/game/stores/`, `src/game/systems/`, `src/game/utils/`
+- Key test locations: `src/game/stores/`, `src/game/systems/`, `src/game/utils/`, `src/game/world/`
 - Systems tested: growth, movement, weather, achievements, prestige, gridExpansion, offlineGrowth, levelUnlocks
 - Store tested: gameStore (comprehensive state transitions)
 - Utils tested: treeMeshBuilder, gridMath, seedRNG, tools, trees, world
+- World tested: WorldManager (zone loading, structure rendering), WorldGenerator (procedural world)
 
 ### Testing Gotchas
 - `vi.mock` hoisting: factory functions cannot reference outer `const`; use inline classes
@@ -123,6 +130,7 @@ Manual chunks in Vite config separate BabylonJS into its own chunk so it does no
 - CSS weather overlays instead of BabylonJS ParticleSystem (avoids bundle bloat)
 - Max 50 draw calls for smooth frame rate
 - Shadow maps: 512px mobile, 1024px desktop
+- HDRI skybox provides IBL lighting without runtime cost
 
 ### localStorage Limits
 - ~5MB limit in most browsers
@@ -136,11 +144,39 @@ Manual chunks in Vite config separate BabylonJS into its own chunk so it does no
 - Haptics and Device plugins configured
 - **Not yet built** -- no `ios/` or `android/` directories exist
 
+## Scene Architecture
+
+GameScene.tsx has been decomposed from ~1050 lines to ~400 lines. Scene management is modular:
+
+### Scene Modules (`src/game/scene/`)
+- **SceneManager.ts** -- Engine + Scene creation/disposal
+- **CameraManager.ts** -- Orthographic ArcRotateCamera (NOT isometric), viewport-adaptive scaling (14-40 tiles visible based on screen size)
+- **LightingManager.ts** -- Hemisphere + directional light, day/night sync
+- **GroundBuilder.ts** -- DynamicTexture biome blending (distance-field weights, inverse smoothstep)
+- **SkyManager.ts** -- HDRI skybox (HDRCubeTexture) + IBL environment
+- **PlayerMeshManager.ts** -- Player mesh lifecycle
+- **TreeMeshManager.ts** -- Template cache, clone, growth animation lerp, matrix freezing
+- **BorderTreeManager.ts** -- Decorative border tree placement
+
+### World System (`src/game/world/`)
+- **types.ts** -- ZoneDefinition, WorldDefinition interfaces
+- **WorldManager.ts** -- Zone loading/unloading, structure mesh rendering, tile management
+- **WorldGenerator.ts** -- Procedural world generation from seed + player level
+- **archetypes.ts** -- Zone archetype definitions (starting, water-zone, meadow-grove, rocky-ridge, dense-forest)
+- **data/starting-world.json** -- 3 zones: Starting Grove (12x12), Forest Trail (4x8), Sunlit Clearing (8x8)
+
+### Structure System (`src/game/structures/`)
+- **types.ts** -- BlockDefinition, StructureTemplate interfaces
+- **StructureManager.ts** -- Placement validation, effect queries
+- **BlockMeshFactory.ts** -- Procedural mesh generation from block definitions
+- **data/blocks.json** -- Block catalog
+- **data/structures.json** -- 6 structures: Wooden Fence, Tool Shed, Greenhouse, Market Stall, Well, Bench
+
 ## Dependencies Worth Noting
 
 ### Active and Essential
 - `@babylonjs/*` -- 3D rendering engine (core dependency)
-- `miniplex` -- ECS for game entities
+- `miniplex` + `miniplex-react` -- ECS for game entities + React integration
 - `zustand` -- State management with persistence
 - `nipplejs` -- Virtual joystick
 - `react`, `react-dom` -- UI framework
@@ -151,12 +187,12 @@ Manual chunks in Vite config separate BabylonJS into its own chunk so it does no
 - `recharts` -- Chart library, not yet used in game
 - `react-hook-form` + `zod` -- Form validation, overkill for current needs
 
-## PBR Texture Assets
+## Texture and Asset Loading
 
-Located in `public/textures/`:
-- 5 bark texture sets (diffuse, normal, roughness)
-- 2 leaf texture sets
-- Used by `treeMeshBuilder.ts` for species-specific PBR materials
+Located in `public/`:
+- `textures/` -- 5 bark texture sets (diffuse, normal, roughness), 2 leaf textures
+- HDRI skybox loaded via HDRCubeTexture at runtime
+- Used by `treeMeshBuilder.ts` for species-specific materials (StandardMaterial, NOT PBR)
 
 ## Tool Usage
 

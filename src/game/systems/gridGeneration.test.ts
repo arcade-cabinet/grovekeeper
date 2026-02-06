@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateGrid, type TileType, type GridTile } from "./gridGeneration";
+import { generateGrid, type TileType, } from "./gridGeneration";
 
 describe("Grid Generation (Seeded)", () => {
   it("generates correct number of tiles (size * size)", () => {

@@ -29,7 +29,7 @@ export class TreeMeshManager {
     entityId: string,
     speciesId: string,
     season: Season | undefined,
-    meshSeed: number | undefined,
+    _meshSeed: number | undefined,
     nightTime: boolean,
   ): Mesh {
     const nightSuffix = speciesId === "ghost-birch" && nightTime ? "_night" : "";
@@ -43,14 +43,13 @@ export class TreeMeshManager {
       this.templates.set(cacheKey, template);
     }
 
-    const mesh = template.clone(`tree_${entityId}`, null);
-    if (mesh) {
-      mesh.isVisible = true;
-      mesh.setEnabled(true);
-    }
+    // biome-ignore lint/style/noNonNullAssertion: clone of a valid template always succeeds
+    const mesh = template.clone(`tree_${entityId}`, null)!;
+    mesh.isVisible = true;
+    mesh.setEnabled(true);
 
-    this.meshes.set(entityId, mesh!);
-    return mesh!;
+    this.meshes.set(entityId, mesh);
+    return mesh;
   }
 
   /** Sync all tree meshes: position, lerp scale, and freeze stage 4 matrices. */

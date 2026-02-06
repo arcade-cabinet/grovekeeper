@@ -29,6 +29,7 @@ Every decision -- from UI layout to performance budgets to touch targets -- must
 | Runtime | React 19 | UI layer, component model |
 | 3D Engine | BabylonJS 8.x | Scene rendering, procedural meshes |
 | ECS | Miniplex 2.x | Entity-component-system |
+| ECS React | miniplex-react | React hooks for ECS queries |
 | State | Zustand 5.x | Persistent game state via localStorage |
 | Input | nipplejs 0.10.x | Mobile virtual joystick |
 | Styling | Tailwind CSS 4.x + shadcn/ui | UI component library |
@@ -108,12 +109,37 @@ grovekeeper/
 │   ├── game/
 │   │   ├── Game.tsx                  # Screen router (menu | playing)
 │   │   ├── scenes/
-│   │   │   └── GameScene.tsx         # BabylonJS canvas + game loop
+│   │   │   └── GameScene.tsx         # BabylonJS canvas + game loop orchestrator
+│   │   ├── scene/                    # Scene manager modules
+│   │   │   ├── SceneManager.ts       # Coordinates all scene managers
+│   │   │   ├── CameraManager.ts      # Orthographic diorama camera
+│   │   │   ├── GroundBuilder.ts      # DynamicTexture biome blending
+│   │   │   ├── LightingManager.ts    # Hemisphere + directional lights
+│   │   │   ├── SkyManager.ts         # HDRI skybox
+│   │   │   ├── PlayerMeshManager.ts  # Player mesh lifecycle
+│   │   │   ├── TreeMeshManager.ts    # Tree mesh lifecycle + template cache
+│   │   │   └── BorderTreeManager.ts  # Decorative border trees
 │   │   ├── ecs/
 │   │   │   ├── world.ts              # Miniplex World + queries
 │   │   │   ├── world.test.ts
+│   │   │   ├── react.ts              # miniplex-react hooks API
 │   │   │   ├── archetypes.ts         # Entity factory functions
 │   │   │   └── archetypes.test.ts
+│   │   ├── world/                    # World data layer
+│   │   │   ├── WorldManager.ts       # Zone loading, world state
+│   │   │   ├── WorldGenerator.ts     # Procedural world generation
+│   │   │   ├── ZoneLoader.ts         # JSON zone hydration
+│   │   │   ├── types.ts              # World/zone type definitions
+│   │   │   ├── archetypes.ts         # Tile entity factories
+│   │   │   └── data/
+│   │   │       └── starting-world.json  # Level 1-5 zone definitions
+│   │   ├── structures/               # Structure system
+│   │   │   ├── StructureManager.ts   # Structure placement + effects
+│   │   │   ├── BlockMeshFactory.ts   # Daggerfall-style block meshes
+│   │   │   ├── types.ts              # Structure type definitions
+│   │   │   └── data/
+│   │   │       ├── blocks.json       # Block catalog
+│   │   │       └── structures.json   # Structure recipes
 │   │   ├── systems/
 │   │   │   ├── growth.ts             # Tree growth (5-stage, spec formula)
 │   │   │   ├── movement.ts           # Player movement
@@ -213,17 +239,30 @@ Systems are pure functions: `(world, deltaTime, ...context) => void`. They run e
 
 ### BabylonJS Scene Management
 
-The 3D scene is imperative (not declarative React). `GameScene.tsx` manages:
-- Engine + Scene initialization
-- Camera (locked isometric ArcRotateCamera)
-- Lighting (hemisphere + directional)
-- Ground (procedural grass texture + grid overlay)
-- Player mesh (composed from BabylonJS primitives)
-- Tree meshes (SPS-generated, species-specific PBR materials, cloned from template cache)
-- Weather overlay integration
-- Game loop (`engine.runRenderLoop`)
+The 3D scene is imperative (not declarative React). `GameScene.tsx` (~400 lines) orchestrates scene setup and game loop, delegating subsystem management to specialized scene managers:
+
+- **SceneManager**: Coordinates all subsystem managers
+- **CameraManager**: Orthographic diorama camera (NOT isometric)
+- **GroundBuilder**: DynamicTexture biome blending, grid overlay
+- **LightingManager**: Hemisphere + directional lights, day/night sync
+- **SkyManager**: HDRI skybox with seasonal rotation
+- **PlayerMeshManager**: Player mesh lifecycle (create, update, dispose)
+- **TreeMeshManager**: Tree mesh lifecycle (template cache, clone, lerp growth, freeze)
+- **BorderTreeManager**: Decorative border trees outside playable grid
+- **StructureManager**: Structure placement and rendering via BlockMeshFactory
 
 All mesh references are stored in React refs, not state. BabylonJS operates outside React's render cycle.
+
+### World System
+
+The world is data-driven, composed of **zones** loaded from JSON:
+
+- **WorldManager**: Zone loading/unloading, world state, zone transitions
+- **WorldGenerator**: Procedural world generation (level-based biomes, prestige resets)
+- **ZoneLoader**: Hydrates JSON zone definitions into ECS entities (tiles, trees, structures)
+- **Data files**: `src/game/world/data/*.json` define zone templates (starting-world.json for levels 1-5)
+
+Each zone is a 16x16 tile grid with trees, water tiles, rock tiles, and structures pre-placed. Players move between zones seamlessly. On prestige, WorldGenerator creates a new procedurally-generated world.
 
 ### Component Conventions
 
@@ -258,7 +297,7 @@ All mesh references are stored in React refs, not state. BabylonJS operates outs
 
 ## Testing
 
-410 tests across 21 test files. TypeScript clean (no type errors).
+516 tests across 25 test files. TypeScript clean (no type errors).
 
 Write tests first for:
 - Pure utility functions (grid math, RNG, growth calculations)
@@ -290,6 +329,9 @@ All game systems from the original design are implemented. Phase D (Polish and S
 - **Achievements:** 15 achievements with gold border + sparkle popup
 - **Prestige:** Level 25+ prestige reset with 5 cosmetic border themes (Stone Wall through Ancient Runes)
 - **Grid Expansion:** Progressive grid sizes (12/16/20/24/32) unlocked by level
+- **World:** Multi-zone world with data-driven zones, procedural generation, zone transitions
+- **Structures:** 6 structure types with grid-snap placement, effect radii (growth boost, harvest boost, stamina regen)
+- **World Generator:** Level-based procedural world generation, prestige world resets
 - **Offline Growth:** Background growth calculation on app resume
 - **Save/Load:** Serialization with auto-save on `document.visibilitychange`
 - **Stamina:** Drain on tool actions, time-based regeneration
@@ -328,10 +370,14 @@ When starting any work session, read these files in order:
 2. `memory-bank/activeContext.md` -- Current work focus
 3. `memory-bank/progress.md` -- What's done, what's next
 4. `src/game/Game.tsx` -- Screen routing
-5. `src/game/scenes/GameScene.tsx` -- The game loop + 3D scene
-6. `src/game/stores/gameStore.ts` -- All persistent state
-7. `src/game/utils/treeMeshBuilder.ts` -- Species-specific mesh generation
-8. `src/game/systems/weather.ts` -- Weather event system
+5. `src/game/scenes/GameScene.tsx` -- The game loop + 3D scene orchestrator
+6. `src/game/scene/SceneManager.ts` -- Scene subsystem coordination
+7. `src/game/world/WorldManager.ts` -- World data layer, zone loading
+8. `src/game/world/data/starting-world.json` -- Zone definitions for levels 1-5
+9. `src/game/structures/StructureManager.ts` -- Structure placement + effects
+10. `src/game/stores/gameStore.ts` -- All persistent state
+11. `src/game/utils/treeMeshBuilder.ts` -- Species-specific mesh generation
+12. `src/game/systems/weather.ts` -- Weather event system
 
 ## Mobile-First Development Checklist
 

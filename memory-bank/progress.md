@@ -2,7 +2,7 @@
 
 ## Implementation Status
 
-All 32 spec sections are implemented. Phase D is complete.
+All 32 spec sections are implemented. Phase D is complete. World Architecture Overhaul is complete.
 
 ## Spec Section Compliance
 
@@ -10,7 +10,7 @@ All 32 spec sections are implemented. Phase D is complete.
 - [x] Tech stack configured (React 19, BabylonJS 8, Miniplex 2, Zustand 5, Vite 6, TypeScript 5.7, Biome 2.3)
 - [x] Project structure organized under `src/game/`
 - [x] pnpm + Vite build pipeline with code splitting
-- [x] Biome config with assist.actions.source.organizeImports
+- [x] Biome config with assist.actions.source.organizeImports + overrides for tests, .d.ts, shadcn, game UI
 
 ### Brand and Visual (Spec Sections 3-8)
 - [x] Design tokens CSS -- all spec section 5 CSS custom properties
@@ -21,34 +21,37 @@ All 32 spec sections are implemented. Phase D is complete.
 - [x] Main menu with continue/new game
 
 ### Core Game Loop (Spec Section 9)
-- [x] Explore: farmer walks grid
+- [x] Explore: farmer walks grid across multiple zones
 - [x] Plant: select seed, select tile, plant
 - [x] Tend: watering, pruning, fertilizing
 - [x] Harvest: species-specific resource yields
 - [x] Expand and Unlock: grid expansion + level-gated species/tools
 
 ### Grid System (Spec Section 10)
-- [x] Grid initialized (default 12x12)
+- [x] Grid initialized (default 12x12 per zone)
 - [x] Grid math utilities (gridToWorld, worldToGrid, tilesInRadius, gridDistance)
 - [x] Grid expansion (12, 16, 20, 24, 32) with resource costs
 - [x] Tile types
+- [x] Multi-zone support with per-zone grid sizes
 
 ### 3D Scene (Spec Section 11)
-- [x] Isometric ArcRotateCamera (locked)
-- [x] Ground plane with procedural grass texture
+- [x] Orthographic ArcRotateCamera (viewport-adaptive scaling, 14-40 tiles visible)
+- [x] Ground plane with DynamicTexture biome blending
 - [x] Grid overlay
 - [x] Hemisphere + directional lighting
+- [x] HDRI skybox with IBL environment
 - [x] Dynamic sky colors based on time of day
-- [x] PBR materials (5 bark + 2 leaf texture sets)
+- [x] StandardMaterial (NOT PBR) for structures and trees
 
 ### Farmer Character (Spec Section 12)
 - [x] Low-poly mesh from primitives (body, head, hat)
 - [x] Movement via joystick input + WASD
-- [x] Isometric input conversion
+- [x] Orthographic input conversion
+- [x] Camera follows player across zones
 
 ### Controls (Spec Section 13)
 - [x] Mobile joystick (nipplejs)
-- [x] Isometric input conversion (45deg rotation)
+- [x] Orthographic input conversion
 - [x] Desktop WASD/arrow keys
 - [x] Tile selection via raycast (tap)
 - [x] Context-sensitive action button
@@ -121,6 +124,8 @@ All 32 spec sections are implemented. Phase D is complete.
 - [x] XP bar
 - [x] Toast notification system
 - [x] Pause menu with grid expansion and prestige
+- [x] Build mode UI with structure catalog
+- [x] SVG minimap with zone/structure/tree overlay
 
 ### Progression (Spec Section 21)
 - [x] XP earned from actions
@@ -141,20 +146,23 @@ All 32 spec sections are implemented. Phase D is complete.
 - [x] Cumulative growth/XP bonuses
 - [x] 5 cosmetic border themes (Stone Wall, Iron Fence, Hedge Row, Crystal Border, Ancient Runes)
 - [x] Prestige UI in Pause Menu
+- [x] Prestige resets generate fresh procedural worlds
 
 ### ECS Architecture (Spec Section 25)
 - [x] Miniplex world with pre-defined queries
-- [x] Entity types: tree, player, gridCell, harvestable, farmerState
-- [x] Entity factories (archetypes.ts)
+- [x] Entity types: tree, player, gridCell, harvestable, farmerState, zone, structure
+- [x] Entity factories (archetypes.ts + world/archetypes.ts)
+- [x] miniplex-react integration for reactive UI rendering
 
 ### State Management (Spec Section 26)
 - [x] Zustand gameStore with persist middleware
 - [x] Resources, stamina, achievements, prestige in store
-- [x] Grove serialization (saveGrove/loadGrove)
+- [x] Grove serialization (saveGrove/loadGrove) with per-zone trees
+- [x] Current zone tracking
 
 ### Save System (Spec Section 27)
 - [x] Zustand persist for player state
-- [x] ECS entity serialization (trees with positions, stages)
+- [x] ECS entity serialization (trees with positions, stages, zones)
 - [x] Auto-save on visibility change
 - [x] Offline growth calculation on resume
 
@@ -167,17 +175,60 @@ All 32 spec sections are implemented. Phase D is complete.
 
 ### Testing (Spec Section 29)
 - [x] Vitest configured with happy-dom
-- [x] 410 tests across 21 test files, all passing
+- [x] 516 tests across 25 test files, all passing
 
 ### PWA (Spec Section 30-32)
 - [x] PWA manifest (public/manifest.json)
 - [x] Service worker (public/sw.js)
 - [x] Capacitor configured (native builds not yet created)
-- [x] Desktop adaptations (mini-map, keyboard badges, resource labels)
+- [x] Desktop adaptations (SVG minimap, keyboard badges, resource labels)
+
+## World Architecture Phases
+
+### Phase 1: Scene Decomposition
+- [x] Refactor GameScene.tsx from ~1050-line monolith to ~400-line orchestrator
+- [x] Extract SceneManager (Engine + Scene creation)
+- [x] Extract CameraManager (orthographic, viewport-adaptive)
+- [x] Extract LightingManager (day/night sync)
+- [x] Extract GroundBuilder (DynamicTexture biome blending)
+- [x] Extract SkyManager (HDRI skybox + IBL)
+- [x] Extract PlayerMeshManager
+- [x] Extract TreeMeshManager (template cache, growth animations)
+- [x] Extract BorderTreeManager
+
+### Phase 2: World Data Layer + Zones
+- [x] Define ZoneDefinition and WorldDefinition interfaces
+- [x] Implement WorldManager for zone loading/unloading
+- [x] Create starting-world.json with 3 zones
+- [x] Add structure mesh rendering to WorldManager
+- [x] Update save format for per-zone trees
+- [x] Implement player zone transitions
+- [x] Write WorldManager tests (18 tests)
+
+### Phase 3: Structure System
+- [x] Define BlockDefinition and StructureTemplate interfaces
+- [x] Create blocks.json catalog
+- [x] Create structures.json with 6 structures
+- [x] Implement StructureManager (placement validation, effect queries)
+- [x] Implement BlockMeshFactory (procedural mesh generation)
+- [x] Create BuildPanel UI
+- [x] Create PlacementGhost component
+
+### Phase 4: Minimap + miniplex-react
+- [x] Create miniplex-react ECS integration (src/game/ecs/react.ts)
+- [x] Rewrite MiniMap.tsx as SVG-based with ECS.Entities
+- [x] Create MiniMapOverlay.tsx for mobile fullscreen
+
+### Phase 5: World Generator
+- [x] Define zone archetypes (starting, water-zone, meadow-grove, rocky-ridge, dense-forest)
+- [x] Implement WorldGenerator (procedural world from seed + level)
+- [x] Level-based world complexity (1-4: starting grove; 20+: 8-12 zones)
+- [x] Write WorldGenerator tests (32 tests)
+- [x] Integrate with prestige reset
 
 ## Test Coverage Summary
 
-**410 tests** across **21 test files**, all passing. TypeScript clean.
+**516 tests** across **25 test files**, all passing. TypeScript clean.
 
 Test files cover:
 - gameStore (state transitions)
@@ -195,6 +246,8 @@ Test files cover:
 - tool catalog
 - tree catalog
 - ECS world
+- WorldManager (zone loading, structure rendering)
+- WorldGenerator (procedural world generation)
 
 ## Known Issues
 
@@ -212,3 +265,4 @@ Minimal remaining issues:
 - **v0.3.0** -- Phase B: Systems and Persistence. Save/load with ECS serialization, offline growth, stamina gauge, resource bar, seed costs, species-specific harvesting. PR #4 merged.
 - **v0.3.5** -- Phase C: Visual Polish. SPS Tree Generator ported, PBR materials, weather overlays, growth animations, floating particles, design tokens, typography, code splitting. Achievement system, grid expansion, prestige system.
 - **v0.4.0** -- Phase D: Feature Complete. All 32 spec sections implemented. 11 species (8 base + 3 prestige). 15 achievements. 5 prestige border tiers. Desktop adaptations. PWA manifest + service worker. 410 tests across 21 files. TypeScript clean.
+- **v0.5.0** -- World Architecture Overhaul: Multi-zone world system, structure placement, procedural world generation, scene decomposition, miniplex-react integration, SVG minimap. GameScene.tsx refactored from ~1050 to ~400 lines. 516 tests across 25 files. Camera changed to orthographic diorama (NOT isometric). Biome 2.3 with configured overrides.

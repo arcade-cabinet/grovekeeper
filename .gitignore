@@ -30,3 +30,9 @@ coverage/
 
 # Vite generated types
 vite.config.d.ts
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Screenshots from visual testing
+*.png

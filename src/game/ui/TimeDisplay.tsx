@@ -1,4 +1,4 @@
-import { COLORS } from "../constants/config";
+
 import type { GameTime, Season } from "../systems/time";
 
 interface TimeDisplayProps {

@@ -110,11 +110,20 @@ When explicitly asked, review EVERY memory bank file -- even those that seem unc
 
 ### 3D Scene Engineer
 
-**Scope:** BabylonJS rendering, procedural meshes, camera, lighting, shadows, performance.
+**Scope:** BabylonJS rendering, procedural meshes, camera, lighting, shadows, performance, scene modules.
 
 **Key Files:**
-- `src/game/scenes/GameScene.tsx` -- Scene initialization + render loop
-- `src/game/utils/treeMeshBuilder.ts` -- Species-specific PBR mesh generation
+- `src/game/scenes/GameScene.tsx` -- ~400-line orchestrator (delegates to scene managers)
+- `src/game/scene/SceneManager.ts` -- Engine + Scene creation/disposal
+- `src/game/scene/CameraManager.ts` -- Orthographic diorama camera (viewport-adaptive 14-40 tiles)
+- `src/game/scene/LightingManager.ts` -- Hemisphere + directional light, day/night sync
+- `src/game/scene/GroundBuilder.ts` -- DynamicTexture biome blending (distance fields)
+- `src/game/scene/SkyManager.ts` -- HDRI skybox + IBL environment
+- `src/game/scene/PlayerMeshManager.ts` -- Player mesh lifecycle
+- `src/game/scene/TreeMeshManager.ts` -- Template cache, clone, growth lerp, matrix freezing
+- `src/game/scene/BorderTreeManager.ts` -- Decorative border tree placement
+- `src/game/structures/BlockMeshFactory.ts` -- Procedural structure mesh generation
+- `src/game/utils/treeMeshBuilder.ts` -- Species-specific mesh generation
 - `src/game/utils/spsTreeGenerator.ts` -- Ported SPS Tree Generator
 - `src/game/utils/seedRNG.ts` -- Seeded RNG for deterministic meshes
 - `src/game/utils/gridMath.ts` -- Grid coordinate math
@@ -177,11 +186,36 @@ When explicitly asked, review EVERY memory bank file -- even those that seem unc
 - Joystick hidden on desktop (>768px), show WASD hints instead
 - Tool belt layout: bottom-right on mobile, right sidebar on desktop
 
+### World and Structure Architect
+
+**Scope:** Zone system, world generation, structure placement, multi-zone world data.
+
+**Key Files:**
+- `src/game/world/types.ts` -- ZoneDefinition, WorldDefinition interfaces
+- `src/game/world/WorldManager.ts` -- Zone loading/unloading, tile management, structure rendering
+- `src/game/world/WorldGenerator.ts` -- Procedural world generation from seed + player level
+- `src/game/world/archetypes.ts` -- Zone archetype definitions
+- `src/game/world/data/starting-world.json` -- Starting world (3 zones)
+- `src/game/structures/types.ts` -- BlockDefinition, StructureTemplate interfaces
+- `src/game/structures/StructureManager.ts` -- Placement validation, effect radius queries
+- `src/game/structures/BlockMeshFactory.ts` -- Procedural mesh generation from block definitions
+- `src/game/structures/data/blocks.json` -- Block catalog
+- `src/game/structures/data/structures.json` -- 6 structure templates
+- `src/game/ui/BuildPanel.tsx` -- Build mode UI
+- `src/game/ui/PlacementGhost.tsx` -- Placement preview overlay
+
+**Rules:**
+- Zones defined in JSON (data-driven, not hardcoded)
+- WorldGenerator must be deterministic (seeded RNG from world seed)
+- Zone complexity scales with player level (1-4: grove only; 20+: 8-12 zones)
+- Structure effects must compose (growth_boost + harvest_boost stack)
+- Prestige resets generate fresh worlds from new seeds
+
 ### Testing and Quality Agent
 
 **Scope:** Unit tests, integration tests, type checking, linting, performance audits.
 
-**Current Status:** 410 tests across 21 test files. TypeScript clean.
+**Current Status:** 516 tests across 25 test files. TypeScript clean. Zero lint errors.
 
 **Test Files:**
 - `src/game/systems/growth.test.ts`
@@ -204,6 +238,9 @@ When explicitly asked, review EVERY memory bank file -- even those that seem unc
 - `src/game/utils/seedRNG.test.ts`
 - `src/game/constants/trees.test.ts`
 - `src/game/constants/tools.test.ts`
+- `src/game/hooks/useKeyboardInput.test.ts`
+- `src/game/world/WorldManager.test.ts`
+- `src/game/world/WorldGenerator.test.ts`
 - `vitest.config.ts` -- Test configuration
 - `biome.json` -- Lint/format rules
 - `tsconfig.json` -- Type checking config
@@ -259,7 +296,9 @@ Agents can work in parallel on these independent domains:
 | ECS Systems | `src/game/ecs/`, `src/game/systems/` | UI, Tests |
 | UI Components | `src/game/ui/` | Systems, Tests |
 | Store Logic | `src/game/stores/` | 3D Scene |
-| 3D Scene | `src/game/scenes/` | Store, UI |
+| 3D Scene | `src/game/scenes/`, `src/game/scene/` | Store, UI |
+| World System | `src/game/world/` | UI, Tests |
+| Structures | `src/game/structures/` | UI, Tests |
 | Tests | `*.test.ts(x)` | Everything |
 | Constants/Data | `src/game/constants/` | Nothing (shared dependency) |
 
@@ -294,6 +333,15 @@ Documentation lives in `docs/`. Track implementation status in `memory-bank/prog
 
 **Phase D: Polish and Ship** -- COMPLETE
 - Design tokens CSS, Fredoka + Nunito typography, toast notifications, floating particles, growth animations, weather overlays (rain/drought/windstorm/cherry petals), PWA manifest + service worker, save system with offline growth, code splitting (~107 KB initial), desktop adaptations (mini-map, keyboard badges)
+
+**World Architecture Overhaul** -- COMPLETE
+- Scene decomposition (1050-line monolith -> ~400-line orchestrator + 8 scene managers)
+- Multi-zone world system with data-driven zones from JSON
+- Procedural world generation (level-based complexity, prestige resets)
+- Structure system (6 types with grid-snap placement + effect radii)
+- Orthographic diorama camera (replaced isometric), DynamicTexture biome blending
+- HDRI skybox, SVG minimap with miniplex-react, build mode UI
+- 516 tests across 25 files. Zero lint errors.
 
 ### Phase E: Native and Distribution (TODO)
 

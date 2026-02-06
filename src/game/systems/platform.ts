@@ -145,7 +145,7 @@ export const hapticLight = async (): Promise<void> => {
     } else if ('vibrate' in navigator) {
       navigator.vibrate(10);
     }
-  } catch (error) {
+  } catch (_error) {
     // Haptics not supported, silently fail
   }
 };
@@ -162,7 +162,7 @@ export const hapticMedium = async (): Promise<void> => {
     } else if ('vibrate' in navigator) {
       navigator.vibrate(20);
     }
-  } catch (error) {
+  } catch (_error) {
     // Haptics not supported, silently fail
   }
 };
@@ -179,7 +179,7 @@ export const hapticHeavy = async (): Promise<void> => {
     } else if ('vibrate' in navigator) {
       navigator.vibrate(30);
     }
-  } catch (error) {
+  } catch (_error) {
     // Haptics not supported, silently fail
   }
 };
@@ -198,7 +198,7 @@ export const hapticSelection = async (): Promise<void> => {
     } else if ('vibrate' in navigator) {
       navigator.vibrate(5);
     }
-  } catch (error) {
+  } catch (_error) {
     // Haptics not supported, silently fail
   }
 };
@@ -215,7 +215,7 @@ export const hapticSuccess = async (): Promise<void> => {
     } else if ('vibrate' in navigator) {
       navigator.vibrate([20, 50, 20]);
     }
-  } catch (error) {
+  } catch (_error) {
     // Haptics not supported, silently fail
   }
 };
@@ -232,7 +232,7 @@ export const hapticWarning = async (): Promise<void> => {
     } else if ('vibrate' in navigator) {
       navigator.vibrate([30, 30, 30]);
     }
-  } catch (error) {
+  } catch (_error) {
     // Haptics not supported, silently fail
   }
 };
@@ -249,7 +249,7 @@ export const hapticError = async (): Promise<void> => {
     } else if ('vibrate' in navigator) {
       navigator.vibrate([50, 30, 50, 30, 50]);
     }
-  } catch (error) {
+  } catch (_error) {
     // Haptics not supported, silently fail
   }
 };

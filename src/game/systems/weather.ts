@@ -75,16 +75,9 @@ const WINDSTORM_DAMAGE_CHANCE = 0.10;
  * 1.0 = normal. Values > 1 speed up growth; < 1 slow it down.
  */
 export function getWeatherGrowthMultiplier(weather: WeatherType): number {
-  switch (weather) {
-    case "rain":
-      return 1.3;
-    case "drought":
-      return 0.5;
-    case "windstorm":
-    case "clear":
-    default:
-      return 1.0;
-  }
+  if (weather === "rain") return 1.3;
+  if (weather === "drought") return 0.5;
+  return 1.0;
 }
 
 /**
@@ -92,15 +85,8 @@ export function getWeatherGrowthMultiplier(weather: WeatherType): number {
  * 1.0 = normal. Values > 1 make actions more expensive.
  */
 export function getWeatherStaminaMultiplier(weather: WeatherType): number {
-  switch (weather) {
-    case "drought":
-      return 1.5;
-    case "rain":
-    case "windstorm":
-    case "clear":
-    default:
-      return 1.0;
-  }
+  if (weather === "drought") return 1.5;
+  return 1.0;
 }
 
 // ============================================

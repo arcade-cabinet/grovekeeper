@@ -13,7 +13,7 @@
  * License: Apache-2.0 (same as BabylonJS)
  */
 
-import { Vector3, Quaternion, TmpVectors } from "@babylonjs/core/Maths/math.vector";
+import { Vector3, Quaternion, } from "@babylonjs/core/Maths/math.vector";
 import { Axis } from "@babylonjs/core/Maths/math.axis";
 import { CreateRibbon } from "@babylonjs/core/Meshes/Builders/ribbonBuilder";
 import { CreateDisc } from "@babylonjs/core/Meshes/Builders/discBuilder";
@@ -286,9 +286,9 @@ export function createSPSTree(
   base.tree.material = trunkMaterial;
 
   // --- 2. Create leaf disc ---
-  const branchLength = trunkHeight * Math.pow(forkRatio, clampedBoughs);
+  const branchLength = trunkHeight * forkRatio ** clampedBoughs;
   const leafGap = branchLength / (2 * leavesOnBranch);
-  const leafWidth = 1.5 * Math.pow(trunkTaper, clampedBoughs - 1);
+  const leafWidth = 1.5 * trunkTaper ** (clampedBoughs - 1);
 
   const leaf = CreateDisc("leaf", {
     radius: leafWidth / 2,
@@ -331,7 +331,7 @@ export function createSPSTree(
     particle.scale.y = 1 / leafWHRatio;
   };
 
-  leavesSPS.addShape(leaf, 2 * leavesOnBranch * Math.pow(forks, clampedBoughs), {
+  leavesSPS.addShape(leaf, 2 * leavesOnBranch * forks ** clampedBoughs, {
     positionFunction: setLeaves,
   });
   const leavesMesh = leavesSPS.buildMesh();
@@ -344,13 +344,13 @@ export function createSPSTree(
   // Pre-computed random turns for fork-end mini-trees
   const turns: number[] = [];
   const forkTurn = (2 * Math.PI) / forks;
-  for (let f = 0; f < Math.pow(forks, clampedBoughs + 1); f++) {
-    turns.push(randPct(Math.floor(f / Math.pow(forks, clampedBoughs)) * forkTurn, 0.2, rng));
+  for (let f = 0; f < forks ** (clampedBoughs + 1); f++) {
+    turns.push(randPct(Math.floor(f / forks ** clampedBoughs) * forkTurn, 0.2, rng));
   }
 
   const setMiniTrees = (particle: { position: Vector3; quaternion: Quaternion; scale: Vector3 }, _i: number, s: number) => {
     let a: number;
-    const idx = s % Math.pow(forks, clampedBoughs);
+    const idx = s % forks ** clampedBoughs;
     if (clampedBoughs === 1) {
       a = idx + 1;
     } else {
@@ -367,7 +367,7 @@ export function createSPSTree(
       .add(miniSys.z.scale(Math.sin(fa2) * Math.cos(turn)));
     const axis = Vector3.Cross(Axis.Y, miniDir);
     const theta = Math.acos(Vector3.Dot(miniDir, Axis.Y) / miniDir.length());
-    const sc = Math.pow(trunkTaper, clampedBoughs + 1);
+    const sc = trunkTaper ** (clampedBoughs + 1);
 
     particle.scale = new Vector3(sc, sc, sc);
     particle.quaternion = Quaternion.RotationAxis(axis, theta);
@@ -402,7 +402,7 @@ export function createSPSTree(
       .add(miniSys.z.scale(Math.sin(ba2) * Math.cos(turn)));
     const axis = Vector3.Cross(Axis.Y, miniDir);
     const theta = Math.acos(Vector3.Dot(miniDir, Axis.Y) / miniDir.length());
-    const sc = Math.pow(trunkTaper, clampedBoughs + 1);
+    const sc = trunkTaper ** (clampedBoughs + 1);
 
     particle.scale = new Vector3(sc, sc, sc);
     particle.quaternion = Quaternion.RotationAxis(axis, theta);
@@ -410,7 +410,7 @@ export function createSPSTree(
   };
 
   // Add fork-end mini-trees
-  miniTreesSPS.addShape(base.tree, Math.pow(forks, clampedBoughs + 1), {
+  miniTreesSPS.addShape(base.tree, forks ** (clampedBoughs + 1), {
     positionFunction: setMiniTrees,
   });
   // Add random branch mini-trees
@@ -421,7 +421,7 @@ export function createSPSTree(
   treeCrown.material = trunkMaterial;
 
   // Add fork-end mini-leaves
-  miniLeavesSPS.addShape(leavesMesh, Math.pow(forks, clampedBoughs + 1), {
+  miniLeavesSPS.addShape(leavesMesh, forks ** (clampedBoughs + 1), {
     positionFunction: setMiniTrees,
   });
   // Add random branch mini-leaves

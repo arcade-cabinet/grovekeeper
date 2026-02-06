@@ -12,8 +12,8 @@
 
 ### Must Have (MVP) -- ALL IMPLEMENTED
 
-1. **Isometric 3D scene** -- BabylonJS diorama view of a tile grid
-2. **Farmer character** -- walks the grid via virtual joystick (mobile) / WASD (desktop)
+1. **Orthographic 3D scene** -- BabylonJS diorama view of multi-zone world
+2. **Farmer character** -- walks across zones via virtual joystick (mobile) / WASD (desktop)
 3. **Planting flow** -- select seed, select tile, plant tree
 4. **Growth system** -- trees progress through 5 stages over time
 5. **Harvesting** -- collect resources from mature trees
@@ -21,14 +21,17 @@
 7. **Tool system** -- 8 tools with stamina costs
 8. **Season cycle** -- Spring/Summer/Autumn/Winter affecting growth
 9. **Progression** -- XP, levels, unlock species and tools
-10. **Persistence** -- auto-save to localStorage with ECS serialization, resume on return
+10. **Persistence** -- auto-save to localStorage with ECS serialization (per-zone trees), resume on return
 11. **Mobile-first HUD** -- joystick, tool belt, resource display, all touch-friendly
+12. **Multi-zone world** -- player walks between zones, camera follows smoothly
+13. **Procedural world generation** -- worlds generated from seed + player level
+14. **Structure system** -- 6 structures with placement validation and effects
 
 ### Should Have (Polish) -- ALL IMPLEMENTED
 
 - Achievement system (15 achievements)
 - Daily challenges / quest system
-- Prestige system (level 25+ reset with bonuses, 5 cosmetic border themes)
+- Prestige system (level 25+ reset with bonuses, 5 cosmetic border themes, fresh world generation)
 - Grid expansion (12 to 16 to 20 to 24 to 32)
 - Weather events (rain, drought, windstorm)
 - Species-specific tree meshes via SPS Tree Generator (willow strands, pine cones, etc.)
@@ -37,10 +40,13 @@
 - PWA service worker for offline play
 - CSS weather overlays (rain, drought, windstorm, cherry petals)
 - Growth animations (lerp-based smooth scaling)
-- Desktop adaptations (mini-map, keyboard badges, resource labels)
+- Desktop adaptations (SVG minimap, keyboard badges, resource labels)
 - Design tokens (all spec CSS custom properties)
 - Typography (Fredoka headings, Nunito body)
 - Code splitting (107 KB initial, ~500 KB total game load)
+- Modular scene architecture (GameScene.tsx 1050 lines → 400 lines)
+- HDRI skybox with IBL environment
+- DynamicTexture ground with biome blending
 
 ### Nice to Have (Future)
 
@@ -48,20 +54,22 @@
 - Sound effects and ambient audio
 - Social features (compare groves)
 - Additional prestige species beyond current 3
+- Additional zone types and biomes
+- Structure upgrade tiers (basic → enhanced → advanced)
 - Tutorial improvements
 
 ## Success Criteria -- ACHIEVED
 
-1. **Playable loop:** Plant, Grow, Harvest, Expand runs smoothly -- DONE
+1. **Playable loop:** Plant, Grow, Harvest, Expand runs smoothly across zones -- DONE
 2. **Mobile performance:** 55+ FPS on mid-range phones -- DONE (code-split, matrix freezing, template caching)
 3. **Session design:** Satisfying 5-minute play session -- DONE (offline growth, quick harvest, auto-save)
-4. **Retention hooks:** Quests + achievements + prestige create "one more session" feeling -- DONE
-5. **Visual charm:** Cozy, warm, organic feel -- DONE (SPS trees, PBR materials, weather overlays, seasonal tints)
-6. **Test coverage:** 410 tests across 21 files, all passing, TypeScript clean -- DONE
+4. **Retention hooks:** Quests + achievements + prestige + zone exploration create "one more session" feeling -- DONE
+5. **Visual charm:** Cozy, warm, organic feel -- DONE (SPS trees, StandardMaterial, weather overlays, seasonal tints, HDRI skybox)
+6. **Test coverage:** 516 tests across 25 files, all passing, TypeScript clean -- DONE
 
 ## Canonical Specification
 
-The complete game design specification is archived in the `docs/` directory. It covers all 32 sections of the original design. All 32 sections have been implemented.
+The complete game design specification is archived in the `docs/` directory. It covers all 32 sections of the original design. All 32 sections have been implemented, plus the World Architecture Overhaul.
 
 ## Scope Boundaries
 

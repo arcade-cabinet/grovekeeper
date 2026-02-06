@@ -139,7 +139,7 @@ interface QuestCardProps {
 }
 
 const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
-  const totalProgress =
+  const _totalProgress =
     quest.goals.reduce((sum, g) => sum + g.currentProgress, 0) /
     quest.goals.reduce((sum, g) => sum + g.targetAmount, 0);
 
@@ -148,7 +148,7 @@ const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
       className="p-3 rounded-xl space-y-2"
       style={{
         background: quest.completed ? `${COLORS.forestGreen}10` : "white",
-        border: `1px solid ${quest.completed ? COLORS.forestGreen : COLORS.forestGreen + "30"}`,
+        border: `1px solid ${quest.completed ? COLORS.forestGreen : `${COLORS.forestGreen}30`}`,
       }}
     >
       {/* Header */}

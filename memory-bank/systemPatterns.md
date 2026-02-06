@@ -10,36 +10,55 @@
        |
        | refs + callbacks
        v
-+----------------+     +----------------+
-|   BabylonJS    |---->|   Miniplex     |
-|   (3D Scene)   |<----|   (ECS World)  |
-+----------------+     +----------------+
-       |
-       | runRenderLoop
-       v
-+------------------------------------------------------+
-|                    Systems (per-frame)                |
-| growth, movement, time, harvest, stamina, weather    |
-+------------------------------------------------------+
-       |
-       | on resume
-       v
-+------------------------------------------------------+
-|              Offline Systems (on load)               |
-| offlineGrowth, achievement checking                  |
-+------------------------------------------------------+
++----------------+     +----------------+     +-----------------+
+|   GameScene    |---->|   Miniplex     |---->| miniplex-react  |
+| (~400 lines)   |<----|   (ECS World)  |<----|   (ECS.Entities)|
++-------+--------+     +----------------+     +-----------------+
+        |
+        | orchestrates
+        v
++--------------------------------------------------------------+
+|                    Scene Modules                              |
+| SceneManager, CameraManager, LightingManager, GroundBuilder  |
+| SkyManager, PlayerMeshManager, TreeMeshManager, BorderTrees  |
++--------------------------------------------------------------+
+        |
+        | renders
+        v
++--------------------------------------------------------------+
+|                    World + Structures                         |
+| WorldManager (zone loading, structure meshes)                |
+| WorldGenerator (procedural world from seed + level)          |
+| StructureManager (placement validation, effect queries)      |
++--------------------------------------------------------------+
+        |
+        | runRenderLoop
+        v
++--------------------------------------------------------------+
+|                    Systems (per-frame)                        |
+| growth, movement, time, harvest, stamina, weather            |
++--------------------------------------------------------------+
+        |
+        | on resume
+        v
++--------------------------------------------------------------+
+|              Offline Systems (on load)                       |
+| offlineGrowth, achievement checking                          |
++--------------------------------------------------------------+
 ```
 
 ## State Management Split
 
 ### ECS (Miniplex) -- Runtime State
-- Entity positions (farmer, trees)
+- Entity positions (farmer, trees, zones, structures)
 - Growth progress per tree
 - Tile states (empty, planted, blocked)
 - Harvest cooldown timers
 - Per-frame velocity
 - Harvestable flag (ready for harvest)
 - Farmer state (idle, moving, acting)
+- Zone boundaries and biomes
+- Structure positions and types
 
 **Characteristic:** Changes every frame or every few seconds. Lives in memory. Serialized for saves via `saveGrove()` / `loadGrove()`.
 
@@ -55,7 +74,8 @@
 - Grid expansion tier
 - Settings (haptics, sound)
 - Game time (microseconds)
-- Grove data (serialized ECS trees)
+- Grove data (serialized ECS trees, per-zone)
+- Current zone ID
 
 **Characteristic:** Changes on player actions. Persisted to localStorage via `persist` middleware. Survives browser refresh.
 
@@ -70,12 +90,14 @@ interface Entity {
   position?: { x: number; y: number; z: number };
   renderable?: { meshId: string | null; visible: boolean; scale: number };
   tree?: { speciesId: string; growthProgress: number; health: number;
-           wateredAt: number | null; plantedAt: number };
+           wateredAt: number | null; plantedAt: number; zoneId: string };
   player?: { coins: number; xp: number; level: number; currentTool: string };
   gridCell?: { gridX: number; gridZ: number; type: string; occupied: boolean;
-               treeEntityId: string | null };
+               treeEntityId: string | null; zoneId: string };
   harvestable?: boolean;
   farmerState?: string;
+  zone?: { id: string; name: string; sizeX: number; sizeZ: number; biome: string };
+  structure?: { templateId: string; zoneId: string; gridPositions: Array<{x: number, z: number}> };
 }
 ```
 
@@ -86,32 +108,156 @@ playerQuery      = world.with('player', 'position')
 gridCellsQuery   = world.with('gridCell', 'position')
 farmerQuery      = world.with('farmerState', 'position')
 harvestableQuery = world.with('tree', 'harvestable')
+zonesQuery       = world.with('zone')
+structuresQuery  = world.with('structure', 'position')
 ```
 
-### Entity Factories (archetypes.ts)
-- `createTreeEntity(gridX, gridZ, speciesId)` -- new tree at grid position
-- `createPlayerEntity()` -- farmer at grid center
-- `createGridCellEntity(gridX, gridZ, type)` -- tile
+### Entity Factories
+- **archetypes.ts** -- `createTreeEntity(gridX, gridZ, speciesId, zoneId)`, `createPlayerEntity()`, `createGridCellEntity(gridX, gridZ, type, zoneId)`
+- **world/archetypes.ts** -- Zone archetype definitions for world generation
 
 ## BabylonJS Scene Pattern
 
 The 3D scene is **imperative, not declarative**. React does NOT manage BabylonJS objects.
 
 ```
-GameScene.tsx (~1050 lines)
-+-- useEffect[mount] -> Initialize Engine, Scene, Camera, Lights, Ground
-+-- useEffect[mount] -> Initialize ECS entities, load saved grove
+GameScene.tsx (~400 lines, down from ~1050)
++-- useEffect[mount] -> SceneManager.initialize()
+|   +-- Create Engine, Scene
+|   +-- CameraManager.setupCamera() -- orthographic, viewport-adaptive
+|   +-- LightingManager.setupLighting() -- hemisphere + directional
+|   +-- GroundBuilder.createGround() -- DynamicTexture biome blend
+|   +-- SkyManager.setupSky() -- HDRI skybox + IBL
+|   +-- PlayerMeshManager.createPlayerMesh()
+|   +-- BorderTreeManager.placeDecorativeTrees()
++-- useEffect[mount] -> WorldManager.initialize()
+|   +-- Load starting world or generate procedural world
+|   +-- Spawn zone entities
+|   +-- Load saved grove per zone
 +-- engine.runRenderLoop -> Game loop
 |   +-- movementSystem(world, dt)
+|   +-- Check zone transitions (WorldManager.checkZoneTransition)
 |   +-- growthSystem(dt, weatherMultiplier)
-|   +-- updateTime(dt) -> sky, lighting, season
+|   +-- updateTime(dt) -> LightingManager, SkyManager
 |   +-- weatherSystem check
-|   +-- Sync player mesh position from ECS
-|   +-- Sync tree meshes from ECS (create/update/delete)
+|   +-- PlayerMeshManager.syncPosition()
+|   +-- TreeMeshManager.syncTrees()
+|   +-- CameraManager.followPlayer()
 |   +-- Growth animation lerp (smooth scale transitions)
-+-- Refs for all BabylonJS objects (meshes, materials, camera)
++-- Refs for all BabylonJS managers and objects
 +-- React overlay (GameUI) positioned absolutely over canvas
 ```
+
+## Scene Module Pattern
+
+Each scene module is a class with lifecycle methods:
+
+```typescript
+class SceneManager {
+  initialize(): { engine: Engine; scene: Scene }
+  dispose(): void
+}
+
+class CameraManager {
+  setupCamera(scene: Scene, canvas: HTMLCanvasElement): Camera
+  followPlayer(playerPos: Vector3): void
+  getVisibleTileCount(): number  // 14-40 based on viewport
+}
+
+class TreeMeshManager {
+  syncTrees(trees: Entity[], nightTime: boolean): void
+  animateGrowth(deltaTime: number): void
+  private getOrCreateTemplate(key: string): Mesh
+  private cloneTemplate(template: Mesh): Mesh
+}
+```
+
+Managers are instantiated in GameScene and called from the game loop or lifecycle hooks.
+
+## World System Pattern
+
+### Multi-Zone World
+```
+World contains multiple Zones
+Zone defines:
+  - size (sizeX, sizeZ)
+  - biome (grassland, forest, rocky, water)
+  - connections to other zones (cardinal directions)
+  - tiles (soil, water, rock, path)
+
+Player walks between zones
+Camera follows smoothly
+Save format stores per-zone trees
+```
+
+### WorldManager Pattern
+```typescript
+class WorldManager {
+  initialize(scene: Scene, world: World): void
+  loadZone(zoneId: string): void
+  unloadZone(zoneId: string): void
+  checkZoneTransition(playerPos: Vector3): string | null
+  renderStructures(structures: Entity[]): void
+  private createTileGrid(zone: ZoneDefinition): void
+  private updateGroundTexture(zone: ZoneDefinition): void
+}
+```
+
+### WorldGenerator Pattern
+```typescript
+class WorldGenerator {
+  generate(seed: number, playerLevel: number): WorldDefinition
+  private selectArchetypes(level: number): ZoneArchetype[]
+  private generateZone(archetype: ZoneArchetype, seed: number): ZoneDefinition
+  private connectZones(zones: ZoneDefinition[]): void
+}
+```
+
+Level-based complexity:
+- Level 1-4: Starting grove only
+- Level 5-9: 2-3 zones
+- Level 10-14: 4-6 zones
+- Level 15-19: 6-8 zones
+- Level 20+: 8-12 zones
+
+Prestige resets generate fresh worlds.
+
+## Structure System Pattern
+
+### Structure Placement
+```
+Structure = collection of blocks on grid tiles
+Validation checks:
+  - All tiles must be empty
+  - Tiles must be contiguous
+  - Cost must be affordable
+Effects:
+  - Growth boost (Greenhouse)
+  - Stamina regen (Bench)
+  - Decorative (Fence)
+```
+
+### StructureManager Pattern
+```typescript
+class StructureManager {
+  canPlace(template: StructureTemplate, gridX: number, gridZ: number): boolean
+  place(template: StructureTemplate, gridX: number, gridZ: number): Entity
+  getEffectsAt(gridX: number, gridZ: number): StructureEffect[]
+  private checkTilesAvailable(positions: GridPosition[]): boolean
+}
+```
+
+### BlockMeshFactory Pattern
+```typescript
+class BlockMeshFactory {
+  createBlockMesh(block: BlockDefinition, scene: Scene): Mesh
+  private createBoxMesh(): Mesh
+  private createCylinderMesh(): Mesh
+  private applyMaterial(mesh: Mesh, color: string): void
+}
+```
+
+Structures are composed from block primitives defined in `blocks.json`.
 
 ## Template Mesh Caching Pattern
 
@@ -151,7 +297,7 @@ spsTreeGenerator.ts
   - Returns BabylonJS Mesh ready for material assignment
 
 treeMeshBuilder.ts
-  - Assigns PBR materials (5 bark + 2 leaf texture sets)
+  - Assigns StandardMaterial (NOT PBR)
   - Species-specific mesh details:
     - Willow: drooping bow branches
     - Pine: conical fork shape
@@ -224,7 +370,7 @@ calculatePrestigeBonus(count) -> Bonuses // cumulative growth/XP multipliers
 getPrestigeTier(count) -> CosmeticTier   // 5 tiers: Stone Wall -> Ancient Runes
 ```
 
-On prestige: reset level/XP/grove, keep achievements, apply cumulative bonuses, unlock cosmetic border theme.
+On prestige: reset level/XP/grove, keep achievements, apply cumulative bonuses, unlock cosmetic border theme, generate fresh procedural world.
 
 ## Grid Expansion Pattern
 
@@ -260,12 +406,14 @@ Avoids full simulation. Uses last-known season for multiplier.
 ```
 Save (auto on visibility change + every 30s):
   1. Zustand persist -> localStorage (player state)
-  2. saveGrove() -> serialize ECS tree entities to store
+  2. saveGrove() -> serialize ECS tree entities per zone to store
+  3. Save current zone ID
 
 Load (on mount):
   1. Zustand rehydrates from localStorage
-  2. loadGrove() -> deserialize tree entities into ECS world
+  2. loadGrove() -> deserialize tree entities into ECS world per zone
   3. offlineGrowth() -> advance trees by elapsed time
+  4. WorldManager.loadZone(currentZoneId)
 ```
 
 ## Toast Notification Pattern
@@ -275,6 +423,32 @@ Load (on mount):
 - Achievement unlocks
 - Level-up notifications
 - Weather event announcements
+- Zone transition messages
+
+## Minimap Pattern
+
+Rewritten to use miniplex-react for reactive rendering:
+
+```typescript
+// src/game/ecs/react.ts
+export const ECS = createReactAPI(world);
+
+// MiniMap.tsx
+<svg>
+  <ECS.Entities in={zonesQuery}>
+    {(entity) => <rect {...zoneRect(entity)} />}
+  </ECS.Entities>
+  <ECS.Entities in={structuresQuery}>
+    {(entity) => <rect {...structureRect(entity)} />}
+  </ECS.Entities>
+  <ECS.Entities in={treesQuery}>
+    {(entity) => <circle {...treeCircle(entity)} />}
+  </ECS.Entities>
+</svg>
+```
+
+Desktop: Fixed bottom-right overlay.
+Mobile: Fullscreen MiniMapOverlay.
 
 ## Input Flow
 
@@ -282,21 +456,21 @@ Load (on mount):
 ```
 nipplejs joystick
   -> onMove(x, z) callback
-  -> Rotate to isometric axes (45deg)
+  -> Convert to orthographic movement vector
   -> movementRef.current = { x, z }
   -> movementSystem reads ref each frame
   -> Updates ECS entity position
+  -> WorldManager.checkZoneTransition()
+  -> CameraManager.followPlayer()
   -> Render loop syncs mesh position
 ```
-
-Isometric WASD conversion: `worldX = inputX - inputY; worldZ = -(inputX + inputY)`
 
 ### Desktop (Secondary)
 ```
 Keyboard (WASD/arrows)
   -> useKeyboard hook
   -> Same movementRef path
-  -> Desktop adaptations: mini-map, keyboard badges on tools, resource labels
+  -> Desktop adaptations: SVG minimap, keyboard badges on tools, resource labels
 ```
 
 ### Tile Interaction
@@ -316,7 +490,7 @@ Full year = ~96 real minutes
 
 Seasons affect:
 - Growth multipliers (Spring: 1.3x, Summer: 1.0x, Autumn: 0.7x, Winter: 0.0x)
-- Sky colors (time.ts -> getSkyColors)
+- Sky colors (LightingManager -> getSkyColors)
 - Ground/canopy colors (time.ts -> getSeasonalColors)
 - Tree mesh rebuild (seasonal canopy tints, Crystal Oak prismatic shifts)
 - Cherry blossom petal overlay (Spring, stage 3+)
@@ -325,7 +499,7 @@ Seasons affect:
 ## Component Conventions
 
 ### UI Components
-- Named exports only (no `export default`)
+- Named exports only (no `export default`) unless shadcn/ui or game UI (biome override)
 - Props typed with `interface Props`
 - shadcn/ui for Dialog, Button, Card, Progress, etc.
 - Tailwind for layout (`flex`, `grid`, responsive breakpoints)
@@ -350,3 +524,7 @@ Seasons affect:
 | Mobile | Capacitor bridge | PWA + native haptics/device APIs |
 | Persistence | localStorage only | No backend, offline-first |
 | Code splitting | Lazy GameScene import | 107 KB initial, ~500 KB total game load |
+| Camera | Orthographic diorama | Better for multi-zone world than isometric lock |
+| Scene architecture | Modular managers | GameScene.tsx 1050 lines → 400 lines |
+| World generation | Procedural from seed | Prestige resets create fresh worlds |
+| Minimap | SVG + miniplex-react | Reactive, no canvas overhead, ECS-driven |

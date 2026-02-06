@@ -73,7 +73,7 @@ export const TIME_CONFIG = {
 
 // Game time state
 let gameTimeMicroseconds = 0;
-let lastRealTime = 0;
+let _lastRealTime = 0;
 let isPaused = false;
 
 // Start at spring, day 1, 8:00 AM
@@ -96,7 +96,7 @@ const INITIAL_GAME_TIME = (() => {
 
 export const initializeTime = (savedMicroseconds?: number) => {
   gameTimeMicroseconds = savedMicroseconds ?? INITIAL_GAME_TIME;
-  lastRealTime = performance.now();
+  _lastRealTime = performance.now();
   isPaused = false;
 };
 
@@ -105,7 +105,7 @@ export const pauseTime = () => {
 };
 
 export const resumeTime = () => {
-  lastRealTime = performance.now();
+  _lastRealTime = performance.now();
   isPaused = false;
 };
 
@@ -192,7 +192,7 @@ const getSeasonProgress = (month: number, day: number): number => {
   };
   
   const season = getSeasonFromMonth(month);
-  let startMonth = seasonStartMonths[season];
+  const startMonth = seasonStartMonths[season];
   
   // Handle winter wrapping
   if (season === 'winter' && month <= 2) {
@@ -263,7 +263,7 @@ export interface SkyColors {
 }
 
 export const getSkyColors = (time: GameTime): SkyColors => {
-  const { hours, minutes, season } = time;
+  const { hours, minutes } = time;
   const hourFraction = hours + minutes / 60;
   
   // Base colors for different times
@@ -279,7 +279,7 @@ export const getSkyColors = (time: GameTime): SkyColors => {
   };
   
   // Season modifiers
-  const seasonMods: Record<Season, { saturation: number; warmth: number }> = {
+  const _seasonMods: Record<Season, { saturation: number; warmth: number }> = {
     spring: { saturation: 1.1, warmth: 0.05 },
     summer: { saturation: 1.2, warmth: 0.1 },
     autumn: { saturation: 0.9, warmth: 0.15 },
@@ -344,10 +344,10 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
 };
 
 const rgbToHex = (r: number, g: number, b: number): string => {
-  return '#' + [r, g, b].map(x => {
+  return `#${[r, g, b].map(x => {
     const hex = x.toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  }).join('');
+    return hex.length === 1 ? `0${hex}` : hex;
+  }).join('')}`;
 };
 
 // Get seasonal colors for trees and ground
@@ -357,7 +357,7 @@ export interface SeasonalColors {
   grassColor: string;
 }
 
-export const getSeasonalColors = (season: Season, seasonProgress: number): SeasonalColors => {
+export const getSeasonalColors = (season: Season, _seasonProgress: number): SeasonalColors => {
   const colors: Record<Season, SeasonalColors> = {
     spring: {
       leafColors: ['#90EE90', '#7CFC00', '#98FB98', '#00FA9A', '#66CDAA'],

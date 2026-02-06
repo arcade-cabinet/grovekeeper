@@ -53,7 +53,7 @@ export const GameUI = ({
   const { activeQuests, addCoins, addXp, completeQuest, activeBorderCosmetic } = useGameStore();
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
 
-  const handleClaimReward = (questId: string) => {
+  const _handleClaimReward = (questId: string) => {
     const quest = activeQuests.find(q => q.id === questId);
     if (quest?.completed) {
       addCoins(quest.rewards.coins);

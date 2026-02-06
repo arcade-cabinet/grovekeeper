@@ -111,7 +111,7 @@ export function useKeyboardInput(callbacks: KeyboardInputCallbacks): void {
       }
 
       // Tool selection: 1-8
-      const num = Number.parseInt(key);
+      const num = Number.parseInt(key, 10);
       if (num >= 1 && num <= 8) {
         e.preventDefault();
         callbacksRef.current.onSelectTool(num - 1);
