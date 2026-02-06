@@ -40,6 +40,8 @@ interface KeyboardInputCallbacks {
   onOpenSeeds: () => void;
   onPause: () => void;
   onSelectTool: (index: number) => void;
+  /** When true, all keyboard input is ignored (e.g. during dialogs/pause). */
+  disabled?: boolean;
 }
 
 /**
@@ -71,6 +73,11 @@ export function useKeyboardInput(callbacks: KeyboardInputCallbacks): void {
       }
 
       const key = e.key.toLowerCase();
+
+      // Allow Escape/P through even when disabled (to unpause)
+      if (callbacksRef.current.disabled && key !== "escape" && key !== "p") {
+        return;
+      }
 
       // Movement keys
       if (

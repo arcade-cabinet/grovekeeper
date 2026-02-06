@@ -1,5 +1,6 @@
 import { createGridCellEntity, createTreeEntity } from "../ecs/archetypes";
 import { gridCellsQuery, treesQuery, world } from "../ecs/world";
+import { getStageScale } from "./growth";
 
 export interface TreeSave {
   col: number;
@@ -10,6 +11,9 @@ export interface TreeSave {
   progress: number;
   watered: boolean;
   totalGrowthTime: number;
+  plantedAt: number;
+  harvestCooldownElapsed?: number;
+  harvestReady?: boolean;
 }
 
 export interface TileSave {
@@ -48,6 +52,9 @@ export function serializeGrove(
       progress: entity.tree.progress,
       watered: entity.tree.watered,
       totalGrowthTime: entity.tree.totalGrowthTime,
+      plantedAt: entity.tree.plantedAt,
+      harvestCooldownElapsed: entity.harvestable?.cooldownElapsed,
+      harvestReady: entity.harvestable?.ready,
     });
   }
 
@@ -114,6 +121,9 @@ export function deserializeGrove(data: GroveSaveData): void {
     tree.tree!.watered = treeSave.watered;
     tree.tree!.totalGrowthTime = treeSave.totalGrowthTime;
     tree.tree!.meshSeed = treeSave.meshSeed;
+    tree.tree!.plantedAt = treeSave.plantedAt ?? Date.now();
+    // Restore correct visual scale for the tree's growth stage
+    tree.renderable!.scale = getStageScale(treeSave.stage, treeSave.progress);
     world.add(tree);
 
     // Mark cell as occupied

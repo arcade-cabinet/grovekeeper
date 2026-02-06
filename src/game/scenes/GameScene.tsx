@@ -54,6 +54,7 @@ export const GameScene = () => {
   const lightsRef = useRef<{ hemi: HemisphericLight | null; sun: DirectionalLight | null }>({ hemi: null, sun: null });
   const groundMatRef = useRef<StandardMaterial | null>(null);
   const soilMatRef = useRef<StandardMaterial | null>(null);
+  const groveSeedRef = useRef<string>("");
 
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
   const [toolWheelOpen, setToolWheelOpen] = useState(false);
@@ -75,29 +76,30 @@ export const GameScene = () => {
     addResource,
   } = useGameStore();
 
-  // Desktop keyboard controls
+  // Desktop keyboard controls — callbacksRef in the hook keeps these fresh
   useKeyboardInput({
-    onMove: useCallback((x: number, z: number) => {
+    onMove: (x: number, z: number) => {
       movementRef.current = { x, z };
-    }, []),
-    onMoveEnd: useCallback(() => {
+    },
+    onMoveEnd: () => {
       movementRef.current = { x: 0, z: 0 };
-    }, []),
-    onAction: useCallback(() => {
+    },
+    onAction: () => {
       handleAction();
-    }, []),
-    onOpenSeeds: useCallback(() => {
+    },
+    onOpenSeeds: () => {
       setSeedSelectOpen(true);
-    }, []),
-    onPause: useCallback(() => {
+    },
+    onPause: () => {
       setPauseMenuOpen((prev) => !prev);
-    }, []),
-    onSelectTool: useCallback((index: number) => {
+    },
+    onSelectTool: (index: number) => {
       const tool = TOOLS[index];
       if (tool && useGameStore.getState().unlockedTools.includes(tool.id)) {
         useGameStore.getState().setSelectedTool(tool.id);
       }
-    }, []),
+    },
+    disabled: seedSelectOpen || toolWheelOpen || pauseMenuOpen,
   });
 
   // Serialize all tree entities for persistence
@@ -159,17 +161,14 @@ export const GameScene = () => {
   // Initialize ECS entities and time — runs once on mount
   useEffect(() => {
     if (playerQuery.first === undefined) {
-      world.add(createPlayerEntity());
-
       // Try to load saved grove data first
       const savedGrove = loadGroveFromStorage();
       if (savedGrove) {
-        // Restore from save (clears world first, so re-add player)
+        // Restore from save (clears world, then recreates grid + trees)
         deserializeGrove(savedGrove);
-        if (!playerQuery.first) {
-          world.add(createPlayerEntity());
-        }
+        groveSeedRef.current = savedGrove.seed;
         // Restore player position from Zustand fallback
+        world.add(createPlayerEntity());
         const groveData = useGameStore.getState().groveData;
         if (groveData) {
           const player = playerQuery.first;
@@ -187,16 +186,15 @@ export const GameScene = () => {
       } else {
         // New game: generate grid with seeded RNG
         const groveSeed = `grove-${Date.now()}`;
+        groveSeedRef.current = groveSeed;
         const tiles = generateGrid(GRID_SIZE, groveSeed);
         for (const tile of tiles) {
-          world.add(
-            createGridCellEntity(
-              tile.col,
-              tile.row,
-              tile.type === "empty" ? "soil" : tile.type as "water" | "rock" | "path",
-            ),
-          );
+          const cellType = tile.type === "empty" ? "soil"
+            : tile.type === "blocked" ? "rock"
+            : tile.type as "water" | "path";
+          world.add(createGridCellEntity(tile.col, tile.row, cellType));
         }
+        world.add(createPlayerEntity());
       }
     }
     initializeTime(useGameStore.getState().gameTimeMicroseconds);
@@ -207,7 +205,7 @@ export const GameScene = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         saveCurrentGrove();
-        saveGroveToStorage(GRID_SIZE, `grove-${Date.now()}`);
+        saveGroveToStorage(GRID_SIZE, groveSeedRef.current);
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -412,7 +410,7 @@ export const GameScene = () => {
 
         // Auto-save grove every 30 seconds
         if (Math.floor(now / 30000) !== Math.floor((now - deltaMs) / 30000)) {
-          saveGroveToStorage(GRID_SIZE, `grove-${Date.now()}`);
+          saveGroveToStorage(GRID_SIZE, groveSeedRef.current);
         }
 
         // Check for trees reaching Mature stage and initialize harvestable
@@ -683,19 +681,19 @@ export const GameScene = () => {
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree || tree.tree.stage < 3) return;
 
-    // If tree has a harvestable component and is ready, collect resources
+    // If tree has a harvestable component and is ready, collect resources;
+    // otherwise fall back to base species yields for chopping
     const harvestResources = collectHarvest(tree);
     if (harvestResources) {
       for (const r of harvestResources) {
         addResource(r.type as ResourceType, r.amount);
       }
-    }
-
-    // Also award species base yields for chopping
-    const species = getSpeciesById(tree.tree.speciesId);
-    if (species) {
-      for (const y of species.yield) {
-        addResource(y.resource, y.amount);
+    } else {
+      const species = getSpeciesById(tree.tree.speciesId);
+      if (species) {
+        for (const y of species.yield) {
+          addResource(y.resource, y.amount);
+        }
       }
     }
 

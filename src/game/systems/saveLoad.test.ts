@@ -69,6 +69,7 @@ describe("Save/Load System", () => {
             progress: 0.4,
             watered: false,
             totalGrowthTime: 200,
+            plantedAt: 1000000,
           },
         ],
       };
@@ -123,6 +124,7 @@ describe("Save/Load System", () => {
             progress: 0.2,
             watered: false,
             totalGrowthTime: 30,
+            plantedAt: 1000000,
           },
         ],
       };
@@ -177,6 +179,7 @@ describe("Save/Load System", () => {
             progress: 0.5,
             watered: false,
             totalGrowthTime: 100,
+            plantedAt: 1000000,
           },
         ],
       };
