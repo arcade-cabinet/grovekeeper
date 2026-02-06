@@ -5,8 +5,8 @@ import { Joystick } from "./Joystick";
 import { PauseMenu } from "./PauseMenu";
 import { SeedSelect } from "./SeedSelect";
 import { ToolWheel } from "./ToolWheel";
-import { TimeDisplay } from "./TimeDisplay";
-import { QuestPanel, QuestIndicator } from "./QuestPanel";
+import { StaminaGauge } from "./StaminaGauge";
+import { ToolBelt } from "./ToolBelt";
 import type { GameTime } from "../systems/time";
 
 interface GameUIProps {
@@ -110,6 +110,16 @@ export const GameUI = ({
             />
           ))}
         </div>
+      </div>
+
+      {/* Stamina gauge - right side */}
+      <div className="absolute pointer-events-none" style={{ bottom: 180, right: 20 }}>
+        <StaminaGauge />
+      </div>
+
+      {/* Tool belt - bottom right */}
+      <div className="absolute pointer-events-auto" style={{ bottom: 140, right: 12 }}>
+        <ToolBelt onSelectTool={(id) => useGameStore.getState().setSelectedTool(id)} />
       </div>
 
       {/* Bottom control area */}

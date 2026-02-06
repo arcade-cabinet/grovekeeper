@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { RiCoinLine, RiMenuLine, RiToolsLine, RiTrophyLine } from "@remixicon/react";
+import { RiMenuLine, RiToolsLine } from "@remixicon/react";
 import { COLORS } from "../constants/config";
 import { useGameStore } from "../stores/gameStore";
 import { TimeDisplay, TimeDisplayCompact } from "./TimeDisplay";
 import { QuestPanel } from "./QuestPanel";
+import { ResourceBar } from "./ResourceBar";
 import type { GameTime } from "../systems/time";
 
 interface HUDProps {
@@ -15,7 +16,7 @@ interface HUDProps {
 }
 
 export const HUD = ({ onOpenMenu, onOpenTools, gameTime }: HUDProps) => {
-  const { coins, xp, level, selectedTool, activeQuests, addCoins, addXp, completeQuest } = useGameStore();
+  const { xp, level, selectedTool, activeQuests, addCoins, addXp, completeQuest } = useGameStore();
 
   const xpForNextLevel = level * 500;
   const xpProgress = ((xp % 500) / 500) * 100;
@@ -33,11 +34,8 @@ export const HUD = ({ onOpenMenu, onOpenTools, gameTime }: HUDProps) => {
     <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
       {/* Left side - Stats */}
       <div className="flex items-center gap-1.5 sm:gap-3">
-        {/* Coins */}
-        <div className="flex items-center gap-1 bg-black/20 rounded-full px-2 py-1 sm:px-3">
-          <RiCoinLine className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
-          <span className="text-white font-bold text-sm sm:text-base">{coins}</span>
-        </div>
+        {/* Resources */}
+        <ResourceBar />
 
         {/* Level & XP */}
         <div className="flex items-center gap-1 sm:gap-2">
