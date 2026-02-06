@@ -100,6 +100,31 @@ export const GameScene = () => {
     saveTimerRef.current = setTimeout(saveCurrentGrove, 1000);
   }, [saveCurrentGrove]);
 
+  // Restore saved trees from Zustand into the ECS world
+  const restoreGroveFromStore = () => {
+    const groveData = useGameStore.getState().groveData;
+    if (!groveData) return;
+
+    for (const savedTree of groveData.trees) {
+      const entity = restoreTreeEntity(savedTree);
+      world.add(entity);
+      // Mark grid cell as occupied
+      for (const cell of gridCellsQuery) {
+        if (cell.gridCell?.gridX === savedTree.gridX && cell.gridCell?.gridZ === savedTree.gridZ) {
+          cell.gridCell.occupied = true;
+          cell.gridCell.treeEntityId = entity.id;
+          break;
+        }
+      }
+    }
+
+    const player = playerQuery.first;
+    if (player?.position) {
+      player.position.x = groveData.playerPosition.x;
+      player.position.z = groveData.playerPosition.z;
+    }
+  };
+
   // Initialize ECS entities and time — runs once on mount
   useEffect(() => {
     if (playerQuery.first === undefined) {
@@ -109,31 +134,8 @@ export const GameScene = () => {
           world.add(createGridCellEntity(x, z, "soil"));
         }
       }
-
-      // Restore saved grove data
-      const groveData = useGameStore.getState().groveData;
-      if (groveData) {
-        for (const savedTree of groveData.trees) {
-          const entity = restoreTreeEntity(savedTree);
-          world.add(entity);
-          // Mark grid cell as occupied
-          for (const cell of gridCellsQuery) {
-            if (cell.gridCell?.gridX === savedTree.gridX && cell.gridCell?.gridZ === savedTree.gridZ) {
-              cell.gridCell.occupied = true;
-              cell.gridCell.treeEntityId = entity.id;
-              break;
-            }
-          }
-        }
-        // Restore player position
-        const player = playerQuery.first;
-        if (player?.position) {
-          player.position.x = groveData.playerPosition.x;
-          player.position.z = groveData.playerPosition.z;
-        }
-      }
+      restoreGroveFromStore();
     }
-    // Initialize time system from persisted value
     initializeTime(useGameStore.getState().gameTimeMicroseconds);
   }, []);
 
