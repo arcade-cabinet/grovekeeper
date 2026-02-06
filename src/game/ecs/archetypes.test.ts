@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { createTreeEntity, restoreTreeEntity, createGridCellEntity, createPlayerEntity } from "./archetypes";
+import { getStageScale } from "../systems/growth";
 import type { SerializedTree } from "../stores/gameStore";
 
 describe("archetypes", () => {
@@ -56,10 +57,11 @@ describe("archetypes", () => {
       expect(entity.position).toEqual({ x: 7, y: 0, z: 4 });
     });
 
-    it("creates a renderable component", () => {
+    it("creates a renderable with correct scale for the stage", () => {
       const entity = restoreTreeEntity(savedTree);
       expect(entity.renderable).toBeDefined();
       expect(entity.renderable?.visible).toBe(true);
+      expect(entity.renderable?.scale).toBe(getStageScale(savedTree.stage, savedTree.progress));
     });
 
     it("generates a unique entity ID", () => {

@@ -1,6 +1,7 @@
 import type { Entity } from "./world";
 import { generateEntityId } from "./world";
 import { hashString } from "../utils/seedRNG";
+import { getStageScale } from "../systems/growth";
 import type { SerializedTree } from "../stores/gameStore";
 
 export const createTreeEntity = (
@@ -34,7 +35,7 @@ export const restoreTreeEntity = (data: SerializedTree): Entity => ({
     plantedAt: data.plantedAt,
     meshSeed: data.meshSeed,
   },
-  renderable: { meshId: null, visible: true, scale: 0.0 },
+  renderable: { meshId: null, visible: true, scale: getStageScale(data.stage, data.progress) },
 });
 
 export const createPlayerEntity = (): Entity => ({

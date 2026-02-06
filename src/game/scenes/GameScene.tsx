@@ -70,7 +70,7 @@ export const GameScene = () => {
     hapticsEnabled,
   } = useGameStore();
 
-  // Helper to serialize all tree entities for persistence
+  // Serialize all tree entities for persistence
   const saveCurrentGrove = useCallback(() => {
     const trees: SerializedTree[] = [];
     for (const entity of treesQuery) {
@@ -94,7 +94,14 @@ export const GameScene = () => {
     useGameStore.getState().saveGrove(trees, playerPos);
   }, []);
 
-  // Initialize ECS entities and time on first load
+  // Debounced save — coalesces rapid plant/harvest actions into one write
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedSaveGrove = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(saveCurrentGrove, 1000);
+  }, [saveCurrentGrove]);
+
+  // Initialize ECS entities and time — runs once on mount
   useEffect(() => {
     if (playerQuery.first === undefined) {
       world.add(createPlayerEntity());
@@ -127,9 +134,9 @@ export const GameScene = () => {
         }
       }
     }
-    // Initialize time system
-    initializeTime(gameTimeMicroseconds);
-  }, [gameTimeMicroseconds]);
+    // Initialize time system from persisted value
+    initializeTime(useGameStore.getState().gameTimeMicroseconds);
+  }, []);
 
   // Auto-save grove when tab loses focus
   useEffect(() => {
@@ -601,7 +608,7 @@ export const GameScene = () => {
                   cell.gridCell.occupied = false;
                   cell.gridCell.treeEntityId = null;
 
-                  saveCurrentGrove();
+                  debouncedSaveGrove();
                   if (hapticsEnabled) await hapticSuccess();
                 }
               }
@@ -643,7 +650,7 @@ export const GameScene = () => {
         incrementTreesPlanted();
         addXp(10);
 
-        saveCurrentGrove();
+        debouncedSaveGrove();
         if (hapticsEnabled) await hapticMedium();
         break;
       }
