@@ -10,6 +10,8 @@ import { HDRCubeTexture } from "@babylonjs/core/Materials/Textures/hdrCubeTextur
 import type { BaseTexture } from "@babylonjs/core/Materials/Textures/baseTexture";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+// Side-effect import: adds createDefaultSkybox to Scene prototype
+import "@babylonjs/core/Helpers/sceneHelpers";
 
 const HDRI_PATH = "/textures/sky/environment.hdr";
 const HDRI_RESOLUTION = 256; // cubemap face resolution for IBL
