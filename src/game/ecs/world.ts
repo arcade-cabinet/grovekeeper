@@ -59,11 +59,12 @@ export interface Entity {
 // Create the ECS world
 export const world = new World<Entity>();
 
-// Helper to generate unique IDs
+// Helper to generate unique IDs — uses timestamp prefix to avoid collisions
+// after page reload (restored entities get new IDs from this counter)
 let entityIdCounter = 0;
 export const generateEntityId = (): string => {
   entityIdCounter += 1;
-  return `entity_${entityIdCounter}`;
+  return `entity_${Date.now()}_${entityIdCounter}`;
 };
 
 // Query helpers

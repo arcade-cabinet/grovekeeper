@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useGameStore } from "./stores/gameStore";
 import { MainMenu } from "./ui/MainMenu";
 import { GameScene } from "./scenes/GameScene";
+import { GameErrorBoundary } from "./ui/ErrorBoundary";
 import { RulesModal } from "./ui/RulesModal";
 import { initializePlatform } from "./systems/platform";
 import { generateDailyQuests } from "./systems/quests";
@@ -69,7 +70,9 @@ export const Game = () => {
       {screen === "menu" ? (
         <MainMenu onStartGame={handleStartGame} />
       ) : (
-        <GameScene />
+        <GameErrorBoundary onReset={() => setScreen("menu")}>
+          <GameScene />
+        </GameErrorBoundary>
       )}
       
       {/* Rules modal */}

@@ -10,11 +10,7 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 export default defineConfig({
   cacheDir: ".vite",
   plugins: [
-    react({
-      babel: {
-        plugins: ["styled-jsx/babel"],
-      },
-    }),
+    react(),
     tailwindcss(),
     // vitePluginErrorOverlay(),
     // checker({
@@ -36,7 +32,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      next: path.resolve(__dirname, "./src/components/next"),
       "next-themes": path.resolve(__dirname, "./src/next-themes.tsx"),
     },
   },
