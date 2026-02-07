@@ -14,6 +14,7 @@
  */
 
 import { createRNG, hashString } from "../utils/seedRNG";
+import { getActiveDifficulty } from "../constants/difficulty";
 
 // ============================================
 // Public Types
@@ -63,8 +64,7 @@ const SEASON_PROBABILITIES: Record<string, { rain: number; drought: number; wind
   winter:  { rain: 0.05, drought: 0.15, windstorm: 0.15 },
 };
 
-/** Windstorm damage probability for stage 0-1 trees per check */
-const WINDSTORM_DAMAGE_CHANCE = 0.10;
+// Windstorm damage chance is now driven by difficulty config (windstormDamageChance)
 
 // ============================================
 // Growth & Stamina Multipliers
@@ -73,10 +73,12 @@ const WINDSTORM_DAMAGE_CHANCE = 0.10;
 /**
  * Returns the growth-rate multiplier for the given weather.
  * 1.0 = normal. Values > 1 speed up growth; < 1 slow it down.
+ * Difficulty tunes rain bonus and drought penalty via config.
  */
 export function getWeatherGrowthMultiplier(weather: WeatherType): number {
-  if (weather === "rain") return 1.3;
-  if (weather === "drought") return 0.5;
+  const diff = getActiveDifficulty();
+  if (weather === "rain") return diff.rainGrowthBonus;
+  if (weather === "drought") return diff.droughtGrowthPenalty;
   return 1.0;
 }
 
@@ -154,7 +156,10 @@ export function updateWeather(
     };
   }
 
-  // Time to roll for new weather
+  // Time to roll for new weather (difficulty scales check frequency and duration)
+  const diff = getActiveDifficulty();
+  const scaledInterval = WEATHER_CHECK_INTERVAL / diff.weatherFrequencyMult;
+
   const combinedSeed = hashString(`weather-${rngSeed}-${state.nextCheckTime}`);
   const rng = createRNG(combinedSeed);
 
@@ -162,7 +167,8 @@ export function updateWeather(
   const durationRoll = rng();
 
   const newType = rollWeatherType(weatherRoll, season);
-  const newDuration = rollDuration(newType, durationRoll);
+  const baseDuration = rollDuration(newType, durationRoll);
+  const newDuration = baseDuration * diff.weatherDurationMult;
 
   return {
     current: {
@@ -170,7 +176,7 @@ export function updateWeather(
       startTime: state.nextCheckTime,
       duration: newDuration,
     },
-    nextCheckTime: state.nextCheckTime + WEATHER_CHECK_INTERVAL,
+    nextCheckTime: state.nextCheckTime + scaledInterval,
   };
 }
 
@@ -187,7 +193,8 @@ export function updateWeather(
  * @returns true if the tree takes damage (progress resets within current stage)
  */
 export function rollWindstormDamage(rngValue: number): boolean {
-  return rngValue < WINDSTORM_DAMAGE_CHANCE;
+  const chance = getActiveDifficulty().windstormDamageChance;
+  return rngValue < chance;
 }
 
 // ============================================

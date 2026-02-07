@@ -1,13 +1,15 @@
 import type { Entity } from "../ecs/world";
 import { farmerQuery } from "../ecs/world";
+import { getActiveDifficulty } from "../constants/difficulty";
 
-const STAMINA_REGEN_PER_SEC = 2;
+const BASE_STAMINA_REGEN_PER_SEC = 2;
 
 /**
- * Regenerates farmer stamina at 2/sec up to maxStamina.
+ * Regenerates farmer stamina at 2/sec (scaled by difficulty) up to maxStamina.
  * Called every frame from the game loop.
  */
 export function staminaSystem(deltaTime: number): void {
+  const regenMult = getActiveDifficulty().staminaRegenMult;
   for (const entity of farmerQuery) {
     if (!entity.farmerState) continue;
 
@@ -15,7 +17,7 @@ export function staminaSystem(deltaTime: number): void {
     if (fs.stamina < fs.maxStamina) {
       fs.stamina = Math.min(
         fs.maxStamina,
-        fs.stamina + STAMINA_REGEN_PER_SEC * deltaTime,
+        fs.stamina + BASE_STAMINA_REGEN_PER_SEC * regenMult * deltaTime,
       );
     }
   }

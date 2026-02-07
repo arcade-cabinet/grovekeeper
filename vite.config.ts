@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 import path from "path";
 import { defineConfig } from "vite";
 
@@ -9,6 +10,14 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    viteStaticCopy({
+      targets: [
+        {
+          src: "node_modules/sql.js/dist/sql-wasm.wasm",
+          dest: "sql-wasm",
+        },
+      ],
+    }),
   ],
   resolve: {
     alias: {
@@ -19,6 +28,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          sqljs: ["sql.js"],
           babylon: [
             "@babylonjs/core/Engines/engine",
             "@babylonjs/core/scene",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -22,8 +22,12 @@ import {
   getUnlockedCosmetics,
   PRESTIGE_COSMETICS,
 } from "../systems/prestige";
+import { getDifficultyById } from "../constants/difficulty";
+import { exportSaveFile, importSaveFile } from "@/db/export";
+import { isDbInitialized } from "@/db/client";
 import { FarmerMascot } from "./FarmerMascot";
 import { StatsDashboard } from "./StatsDashboard";
+import { showToast } from "./Toast";
 
 interface PauseMenuProps {
   open: boolean;
@@ -59,6 +63,7 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
     resources,
     achievements,
     activeBorderCosmetic,
+    difficulty,
     expandGrid,
     performPrestige,
     setActiveBorderCosmetic,
@@ -66,6 +71,8 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
 
   const [confirmingPrestige, setConfirmingPrestige] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const importRef = useRef<HTMLInputElement>(null);
+  const diffTier = getDifficultyById(difficulty);
 
   // Grid expansion
   const nextTier = getNextExpansionTier(gridSize);
@@ -185,6 +192,17 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
             {prestigeCount > 0 && (
               <p style={{ color: COLORS.autumnGold }}>
                 Prestige: {prestigeCount}
+              </p>
+            )}
+            {diffTier && (
+              <p className="flex items-center gap-1.5 mt-1">
+                <span
+                  className="inline-block px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                  style={{ background: diffTier.color }}
+                >
+                  {diffTier.name}
+                </span>
+                <span className="text-xs text-gray-400">difficulty (locked)</span>
               </p>
             )}
           </div>
@@ -480,6 +498,66 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
               </p>
             )}
           </Card>
+
+          <Separator />
+
+          {/* Save management */}
+          {isDbInitialized() && (
+            <Card className="p-3" style={{ background: "white" }}>
+              <h4
+                className="text-sm font-bold mb-2"
+                style={{ color: COLORS.soilDark }}
+              >
+                Save Management
+              </h4>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 text-xs min-h-[44px]"
+                  style={{ borderColor: COLORS.barkBrown, color: COLORS.soilDark }}
+                  onClick={() => {
+                    try {
+                      exportSaveFile();
+                      showToast("Save exported!", "success");
+                    } catch (err) {
+                      console.error("Export failed:", err);
+                      showToast("Export failed", "warning");
+                    }
+                  }}
+                >
+                  Export Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 text-xs min-h-[44px]"
+                  style={{ borderColor: COLORS.barkBrown, color: COLORS.soilDark }}
+                  onClick={() => importRef.current?.click()}
+                >
+                  Import Save
+                </Button>
+                <input
+                  ref={importRef}
+                  type="file"
+                  accept=".sqlite,.db"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    try {
+                      await importSaveFile(file);
+                    } catch {
+                      showToast("Invalid save file", "warning");
+                    } finally {
+                      // Reset input so re-selecting the same file triggers onChange
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+              </div>
+            </Card>
+          )}
 
           <Separator />
 

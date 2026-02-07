@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { ActiveQuest } from "../systems/quests";
 import type { Season } from "../systems/time";
 import { type ResourceType, emptyResources } from "../constants/resources";
@@ -32,6 +31,8 @@ export interface GroveData {
 
 interface GameState {
   screen: GameScreen;
+  difficulty: string;
+  permadeath: boolean;
   selectedTool: string;
   selectedSpecies: string;
   coins: number;
@@ -177,6 +178,9 @@ interface GameState {
   setHasSeenRules: (seen: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
   setSoundEnabled: (enabled: boolean) => void;
+
+  // Database hydration
+  hydrateFromDb: (state: Partial<GameState>) => void;
 }
 
 /**
@@ -237,6 +241,8 @@ const INITIAL_GAME_TIME = (() => {
 
 const initialState = {
   screen: "menu" as GameScreen,
+  difficulty: "normal",
+  permadeath: false,
   selectedTool: "trowel",
   selectedSpecies: "white-oak",
   coins: 100,
@@ -319,7 +325,6 @@ const initialState = {
 };
 
 export const useGameStore = create<GameState>()(
-  persist(
     (set, get) => ({
       ...initialState,
 
@@ -652,7 +657,8 @@ export const useGameStore = create<GameState>()(
       setHasSeenRules: (seen) => set({ hasSeenRules: seen }),
       setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
       setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
+
+      // Database hydration — bulk-set state from SQLite
+      hydrateFromDb: (dbState) => set(dbState),
     }),
-    { name: "grove-keeper-save" }
-  )
 );

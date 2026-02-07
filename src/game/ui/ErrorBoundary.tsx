@@ -1,5 +1,4 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { useGameStore } from "../stores/gameStore";
 
 interface Props {
   children: ReactNode;
@@ -20,16 +19,7 @@ export class GameErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[Grovekeeper] Game error:", error, errorInfo.componentStack);
-    // Attempt to save grove state before showing fallback
-    try {
-      const state = useGameStore.getState();
-      if (state.groveData) {
-        // State already persisted via Zustand — force a flush
-        useGameStore.persist.rehydrate();
-      }
-    } catch {
-      // Best-effort save — don't throw in error handler
-    }
+    // No explicit save here; rely on existing autosave to avoid cascading errors
   }
 
   handleReset = () => {
@@ -43,7 +33,7 @@ export class GameErrorBoundary extends Component<Props, State> {
         <div className="flex flex-col items-center justify-center h-full bg-[#1a0e0a] text-white p-8">
           <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
           <p className="text-gray-400 mb-6 text-center max-w-md">
-            The game encountered an error. Your progress has been saved.
+            The game encountered an error. Your latest progress may not be saved.
           </p>
           <button
             type="button"

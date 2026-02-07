@@ -348,7 +348,6 @@ export const MiniMapOverlay = ({ open, onClose }: MiniMapOverlayProps) => {
       </div>
 
       {/* Map container */}
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: stopPropagation prevents backdrop close; no independent keyboard action needed */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only stops event propagation from backdrop */}
       <div
         className="rounded-xl overflow-hidden"
