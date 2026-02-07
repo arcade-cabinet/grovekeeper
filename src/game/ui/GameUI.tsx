@@ -1,21 +1,32 @@
+import { useState } from "react";
 import { COLORS } from "../constants/config";
 import { useGameStore } from "../stores/gameStore";
 import { HUD } from "./HUD";
-import { Joystick } from "./Joystick";
 import { PauseMenu } from "./PauseMenu";
 import { SeedSelect } from "./SeedSelect";
 import { ToolWheel } from "./ToolWheel";
 import { StaminaGauge } from "./StaminaGauge";
 import { ToolBelt } from "./ToolBelt";
+import { WeatherOverlay } from "./WeatherOverlay";
+import { MiniMap } from "./MiniMap";
+import { BuildPanel } from "./BuildPanel";
+import { TradeDialog } from "./TradeDialog";
 import type { GameTime } from "../systems/time";
+import { getCosmeticById } from "../systems/prestige";
+import type { StructureTemplate } from "../structures/types";
+import type { WeatherType } from "../systems/weather";
+import { WeatherForecast } from "./WeatherForecast";
+import { BatchHarvestButton } from "./BatchHarvestButton";
 
 interface GameUIProps {
-  onMove: (x: number, z: number) => void;
-  onMoveEnd: () => void;
   onAction: () => void;
   onPlant: () => void;
   onOpenMenu: () => void;
   onOpenTools: () => void;
+  onPlaceStructure?: (template: StructureTemplate, worldX: number, worldZ: number) => void;
+  onBatchHarvest?: () => void;
+  currentWeather?: WeatherType;
+  weatherTimeRemaining?: number;
   seedSelectOpen: boolean;
   setSeedSelectOpen: (open: boolean) => void;
   toolWheelOpen: boolean;
@@ -27,12 +38,13 @@ interface GameUIProps {
 }
 
 export const GameUI = ({
-  onMove,
-  onMoveEnd,
   onAction,
   onPlant,
   onOpenMenu,
   onOpenTools,
+  onBatchHarvest,
+  currentWeather,
+  weatherTimeRemaining,
   seedSelectOpen,
   setSeedSelectOpen,
   toolWheelOpen,
@@ -42,21 +54,35 @@ export const GameUI = ({
   onMainMenu,
   gameTime,
 }: GameUIProps) => {
-  const { activeQuests, addCoins, addXp, completeQuest } = useGameStore();
-  
-  const handleClaimReward = (questId: string) => {
-    const quest = activeQuests.find(q => q.id === questId);
-    if (quest?.completed) {
-      addCoins(quest.rewards.coins);
-      addXp(quest.rewards.xp);
-      completeQuest(questId);
-    }
-  };
-  
+  const { activeBorderCosmetic } = useGameStore();
+  const [buildPanelOpen, setBuildPanelOpen] = useState(false);
+  const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
+
+  // Prestige cosmetic border — applied as subtle screen vignette
+  const cosmetic = activeBorderCosmetic ? getCosmeticById(activeBorderCosmetic) : null;
+
   return (
     <div className="absolute inset-0 pointer-events-none">
+      {/* Prestige cosmetic vignette border */}
+      {cosmetic && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            border: cosmetic.borderStyle,
+            borderColor: cosmetic.borderColor,
+            boxShadow: cosmetic.glowColor
+              ? `inset 0 0 20px ${cosmetic.glowColor}`
+              : undefined,
+            zIndex: 50,
+          }}
+        />
+      )}
+
+      {/* Weather visual overlay (rain, drought, windstorm) */}
+      <WeatherOverlay />
+
       {/* Top HUD bar */}
-      <div 
+      <div
         className="absolute top-0 left-0 right-0 pointer-events-auto"
         style={{
           background: `linear-gradient(180deg, ${COLORS.soilDark} 0%, ${COLORS.soilDark}ee 70%, transparent 100%)`,
@@ -68,49 +94,29 @@ export const GameUI = ({
             onPlant={onAction}
             onOpenMenu={onOpenMenu}
             onOpenTools={onOpenTools}
+            onOpenBuild={() => setBuildPanelOpen(true)}
             gameTime={gameTime}
           />
         </div>
       </div>
 
-      {/* Left wood frame */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-3 sm:w-4 lg:w-6"
-        style={{
-          background: `linear-gradient(90deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`,
-          boxShadow: "inset -2px 0 4px rgba(0,0,0,0.3)",
-        }}
-      >
-        {/* Wood grain lines */}
-        <div className="h-full flex flex-col justify-around py-8">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="h-px mx-1"
-              style={{ background: `${COLORS.soilDark}80` }}
-            />
-          ))}
+      {/* Weather forecast widget - below top HUD */}
+      {currentWeather && gameTime && (
+        <div className="absolute pointer-events-auto" style={{ top: 64, right: 12 }}>
+          <WeatherForecast
+            currentWeather={currentWeather}
+            weatherTimeRemaining={weatherTimeRemaining ?? 0}
+            currentSeason={gameTime.season}
+          />
         </div>
-      </div>
+      )}
 
-      {/* Right wood frame */}
-      <div
-        className="absolute right-0 top-0 bottom-0 w-3 sm:w-4 lg:w-6"
-        style={{
-          background: `linear-gradient(270deg, ${COLORS.barkBrown} 0%, ${COLORS.soilDark} 100%)`,
-          boxShadow: "inset 2px 0 4px rgba(0,0,0,0.3)",
-        }}
-      >
-        <div className="h-full flex flex-col justify-around py-8">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="h-px mx-1"
-              style={{ background: `${COLORS.soilDark}80` }}
-            />
-          ))}
+      {/* Batch harvest button - above action button */}
+      {onBatchHarvest && (
+        <div className="absolute pointer-events-auto" style={{ bottom: 180, right: 60 }}>
+          <BatchHarvestButton onBatchHarvest={onBatchHarvest} />
         </div>
-      </div>
+      )}
 
       {/* Stamina gauge - right side */}
       <div className="absolute pointer-events-none" style={{ bottom: 180, right: 20 }}>
@@ -130,12 +136,11 @@ export const GameUI = ({
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
-        <BottomControls
-          onMove={onMove}
-          onMoveEnd={onMoveEnd}
-          onAction={onAction}
-        />
+        <BottomControls onAction={onAction} />
       </div>
+
+      {/* Mini-map - desktop only, bottom-left */}
+      <MiniMap />
 
       {/* Modals */}
       <div className="pointer-events-auto">
@@ -148,6 +153,18 @@ export const GameUI = ({
           open={toolWheelOpen}
           onClose={() => setToolWheelOpen(false)}
         />
+        <BuildPanel
+          open={buildPanelOpen}
+          onClose={() => setBuildPanelOpen(false)}
+          onSelectStructure={(template) => {
+            useGameStore.getState().setBuildMode(true, template.id);
+            setBuildPanelOpen(false);
+          }}
+        />
+        <TradeDialog
+          open={tradeDialogOpen}
+          onClose={() => setTradeDialogOpen(false)}
+        />
         <PauseMenu
           open={pauseMenuOpen}
           onClose={() => setPauseMenuOpen(false)}
@@ -158,53 +175,55 @@ export const GameUI = ({
   );
 };
 
-// Bottom controls component with responsive joystick
+// Bottom controls — action button + tool label (joystick removed)
 const BottomControls = ({
-  onMove,
-  onMoveEnd,
   onAction,
 }: {
-  onMove: (x: number, z: number) => void;
-  onMoveEnd: () => void;
   onAction: () => void;
 }) => {
-  const { selectedTool } = useGameStore();
+  const { selectedTool, buildMode } = useGameStore();
 
   // Tool-specific action button appearance
   const getActionButtonStyle = () => {
+    if (buildMode) {
+      return { bg: COLORS.barkBrown, icon: "\u{1F3D7}\uFE0F", label: "Build" };
+    }
     switch (selectedTool) {
       case "trowel":
-        return { bg: COLORS.leafLight, icon: "🌱", label: "Plant" };
+        return { bg: COLORS.leafLight, icon: "\u{1F331}", label: "Plant" };
       case "watering-can":
-        return { bg: "#64B5F6", icon: "💧", label: "Water" };
+        return { bg: "#64B5F6", icon: "\u{1F4A7}", label: "Water" };
       case "axe":
-        return { bg: COLORS.earthRed, icon: "🪓", label: "Harvest" };
+        return { bg: COLORS.earthRed, icon: "\u{1FA93}", label: "Harvest" };
       case "compost-bin":
-        return { bg: COLORS.autumnGold, icon: "✨", label: "Fertilize" };
+        return { bg: COLORS.autumnGold, icon: "\u2728", label: "Fertilize" };
       case "pruning-shears":
-        return { bg: COLORS.barkBrown, icon: "✂️", label: "Prune" };
+        return { bg: COLORS.barkBrown, icon: "\u2702\uFE0F", label: "Prune" };
       case "seed-pouch":
-        return { bg: COLORS.forestGreen, icon: "🌰", label: "Seeds" };
+        return { bg: COLORS.forestGreen, icon: "\u{1F330}", label: "Seeds" };
       case "shovel":
-        return { bg: COLORS.soilDark, icon: "⛏️", label: "Dig" };
+        return { bg: COLORS.soilDark, icon: "\u26CF\uFE0F", label: "Dig" };
       case "almanac":
-        return { bg: COLORS.skyMist, icon: "📖", label: "Info" };
+        return { bg: COLORS.skyMist, icon: "\u{1F4D6}", label: "Info" };
+      case "rain-catcher":
+        return { bg: "#64B5F6", icon: "\u{1F327}\uFE0F", label: "Catch" };
+      case "fertilizer-spreader":
+        return { bg: COLORS.autumnGold, icon: "\u{1F33E}", label: "Spread" };
+      case "scarecrow":
+        return { bg: COLORS.barkBrown, icon: "\u{1F383}", label: "Guard" };
+      case "grafting-tool":
+        return { bg: COLORS.forestGreen, icon: "\u{1F500}", label: "Graft" };
       default:
-        return { bg: COLORS.leafLight, icon: "👆", label: "Action" };
+        return { bg: COLORS.leafLight, icon: "\u{1F446}", label: "Action" };
     }
   };
 
   const actionStyle = getActionButtonStyle();
 
   return (
-    <div className="relative h-32 sm:h-36 md:h-40 lg:h-44 flex items-center justify-between px-4 sm:px-6 md:px-8 lg:px-12">
-      {/* Joystick area - left side */}
-      <div className="relative flex-shrink-0">
-        <Joystick onMove={onMove} onEnd={onMoveEnd} />
-      </div>
-
+    <div className="relative h-24 sm:h-28 md:h-32 lg:h-36 flex items-center justify-end px-4 sm:px-6 md:px-8 lg:px-12">
       {/* Status text - center (hidden on mobile) */}
-      <div className="hidden md:flex flex-col items-center gap-1">
+      <div className="hidden md:flex flex-col items-center gap-1 flex-1 justify-center">
         <span
           className="text-xs font-medium px-3 py-1 rounded-full capitalize"
           style={{
@@ -219,7 +238,7 @@ const BottomControls = ({
       {/* Action button - right side */}
       <div className="flex flex-col items-center gap-1 flex-shrink-0">
         <button
-          className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl shadow-lg active:scale-95 transition-transform touch-manipulation"
+          className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl shadow-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
           style={{
             background: `linear-gradient(135deg, ${actionStyle.bg} 0%, ${actionStyle.bg}cc 100%)`,
             border: `3px solid ${COLORS.soilDark}`,
@@ -230,7 +249,7 @@ const BottomControls = ({
           {actionStyle.icon}
         </button>
         {/* Action label on mobile */}
-        <span 
+        <span
           className="text-[10px] font-medium md:hidden"
           style={{ color: "white" }}
         >

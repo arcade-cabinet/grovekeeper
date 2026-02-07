@@ -1,0 +1,74 @@
+[
+	{
+		"id": "timber-wall",
+		"name": "Timber Wall",
+		"category": "wall",
+		"footprint": { "width": 1, "depth": 1, "height": 1 },
+		"meshSource": "procedural",
+		"materialKey": "wood",
+		"passable": false
+	},
+	{
+		"id": "timber-floor",
+		"name": "Timber Floor",
+		"category": "floor",
+		"footprint": { "width": 1, "depth": 0.1, "height": 1 },
+		"meshSource": "procedural",
+		"materialKey": "wood",
+		"passable": false
+	},
+	{
+		"id": "thatch-roof",
+		"name": "Thatch Roof",
+		"category": "roof",
+		"footprint": { "width": 1, "depth": 0.3, "height": 1 },
+		"meshSource": "procedural",
+		"materialKey": "straw",
+		"passable": false
+	},
+	{
+		"id": "wooden-door",
+		"name": "Wooden Door",
+		"category": "door",
+		"footprint": { "width": 1, "depth": 1, "height": 0.2 },
+		"meshSource": "procedural",
+		"materialKey": "wood",
+		"passable": true
+	},
+	{
+		"id": "wooden-fence",
+		"name": "Wooden Fence",
+		"category": "fence",
+		"footprint": { "width": 1, "depth": 0.6, "height": 0.1 },
+		"meshSource": "procedural",
+		"materialKey": "wood",
+		"passable": false
+	},
+	{
+		"id": "wooden-post",
+		"name": "Wooden Post",
+		"category": "post",
+		"footprint": { "width": 0.2, "depth": 1, "height": 0.2 },
+		"meshSource": "procedural",
+		"materialKey": "wood",
+		"passable": false
+	},
+	{
+		"id": "glass-panel",
+		"name": "Glass Panel",
+		"category": "special",
+		"footprint": { "width": 1, "depth": 1, "height": 0.05 },
+		"meshSource": "procedural",
+		"materialKey": "glass",
+		"passable": true
+	},
+	{
+		"id": "stone-base",
+		"name": "Stone Base",
+		"category": "wall",
+		"footprint": { "width": 1, "depth": 0.5, "height": 1 },
+		"meshSource": "procedural",
+		"materialKey": "stone",
+		"passable": false
+	}
+]

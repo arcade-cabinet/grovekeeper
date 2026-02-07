@@ -15,6 +15,9 @@ export interface TreeComponent {
   totalGrowthTime: number; // cumulative seconds grown
   plantedAt: number;
   meshSeed: number; // for deterministic procedural generation
+  wild?: boolean; // true for trees spawned naturally in wild zones
+  pruned?: boolean; // pruned for harvest yield bonus
+  fertilized?: boolean; // fertilized for 2x growth for 1 stage cycle
 }
 
 export interface PlayerComponent {
@@ -45,6 +48,32 @@ export interface FarmerState {
   maxStamina: number;
 }
 
+export interface ZoneComponent {
+  zoneId: string;
+  localX: number;
+  localZ: number;
+}
+
+export interface PropComponent {
+  propId: string;
+  meshId: string;
+}
+
+export interface StructureComponent {
+  templateId: string;
+  effectType?: "growth_boost" | "harvest_boost" | "stamina_regen" | "storage";
+  effectRadius?: number;
+  effectMagnitude?: number;
+}
+
+export interface RainCatcherComponent {
+  radius: number;
+}
+
+export interface ScarecrowComponent {
+  radius: number;
+}
+
 // Entity definition
 export interface Entity {
   id: string;
@@ -60,6 +89,12 @@ export interface Entity {
     cooldownTotal: number;
     ready: boolean;
   };
+  zone?: ZoneComponent;
+  prop?: PropComponent;
+  structure?: StructureComponent;
+  rainCatcher?: RainCatcherComponent;
+  scarecrow?: ScarecrowComponent;
+  zoneId?: string;
 }
 
 // Create the ECS world
@@ -79,3 +114,7 @@ export const playerQuery = world.with("player", "position");
 export const farmerQuery = world.with("farmerState", "position");
 export const gridCellsQuery = world.with("gridCell", "position");
 export const harvestableQuery = world.with("tree", "harvestable");
+export const structuresQuery = world.with("structure", "position");
+export const propsQuery = world.with("prop", "position");
+export const rainCatchersQuery = world.with("rainCatcher", "position");
+export const scarecrowsQuery = world.with("scarecrow", "position");

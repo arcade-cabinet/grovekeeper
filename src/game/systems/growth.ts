@@ -6,7 +6,8 @@ import {
   WATER_BONUS,
 } from "../constants/config";
 import { getSpeciesById } from "../constants/trees";
-import { treesQuery } from "../ecs/world";
+import { treesQuery, structuresQuery, gridCellsQuery } from "../ecs/world";
+import { getGrowthMultiplier as getStructureGrowthMult } from "../structures/StructureManager";
 
 /**
  * Calculate the visual scale for a tree at a given stage + progress.
@@ -73,7 +74,7 @@ export function calcGrowthRate(params: GrowthRateParams): number {
  * Growth system — runs every frame. Advances tree growth based on species,
  * difficulty, season, and watered state. Handles stage transitions.
  */
-export function growthSystem(deltaTime: number, currentSeason: string): void {
+export function growthSystem(deltaTime: number, currentSeason: string, weatherMultiplier = 1.0): void {
   for (const entity of treesQuery) {
     if (!entity.tree || !entity.renderable) continue;
 
@@ -105,8 +106,51 @@ export function growthSystem(deltaTime: number, currentSeason: string): void {
       continue;
     }
 
-    // Advance progress
-    tree.progress += rate * deltaTime;
+    // Structure growth boost
+    const structureMult = entity.position
+      ? getStructureGrowthMult(entity.position.x, entity.position.z, structuresQuery)
+      : 1.0;
+
+    // Fertilized bonus (2x growth for the current stage cycle)
+    const fertilizedMult = tree.fertilized ? 2.0 : 1.0;
+
+    // Species-specific bonuses
+    let speciesBonus = 1.0;
+
+    // Silver Birch: +20% growth near water tiles
+    if (tree.speciesId === "silver-birch" && entity.position) {
+      const px = entity.position.x;
+      const pz = entity.position.z;
+      for (const cell of gridCellsQuery) {
+        if (cell.gridCell?.type === "water") {
+          const dx = cell.gridCell.gridX - px;
+          const dz = cell.gridCell.gridZ - pz;
+          if (Math.abs(dx) <= 1 && Math.abs(dz) <= 1 && (dx !== 0 || dz !== 0)) {
+            speciesBonus = 1.2;
+            break;
+          }
+        }
+      }
+    }
+
+    // Mystic Fern: +15% per adjacent tree (max +60%)
+    if (tree.speciesId === "mystic-fern" && entity.position) {
+      const px = entity.position.x;
+      const pz = entity.position.z;
+      let adjacentCount = 0;
+      for (const other of treesQuery) {
+        if (other === entity || !other.position) continue;
+        const dx = Math.abs(other.position.x - px);
+        const dz = Math.abs(other.position.z - pz);
+        if (dx <= 1 && dz <= 1) {
+          adjacentCount++;
+        }
+      }
+      speciesBonus = 1 + Math.min(adjacentCount * 0.15, 0.6);
+    }
+
+    // Advance progress (weather + structure + fertilized + species multipliers)
+    tree.progress += rate * weatherMultiplier * structureMult * fertilizedMult * speciesBonus * deltaTime;
     tree.totalGrowthTime += deltaTime;
 
     // Handle stage transition
@@ -114,6 +158,10 @@ export function growthSystem(deltaTime: number, currentSeason: string): void {
       tree.progress -= 1;
       tree.stage = (tree.stage + 1) as 0 | 1 | 2 | 3 | 4;
       tree.watered = false;
+      // Fertilized bonus expires after one stage cycle
+      if (tree.fertilized) {
+        tree.fertilized = false;
+      }
     }
 
     // Clamp progress at max stage

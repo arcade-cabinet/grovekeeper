@@ -34,16 +34,17 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
     >
       {/* 2x4 grid of tools */}
       <div className="grid grid-cols-4 gap-1">
-        {TOOLS.map((tool) => {
+        {TOOLS.map((tool, index) => {
           const isUnlocked = unlockedTools.includes(tool.id);
           const isActive = selectedTool === tool.id;
           const canUnlock = level >= tool.unlockLevel;
+          const keyNumber = index + 1;
 
           return (
             <button
               key={tool.id}
               type="button"
-              className="flex items-center justify-center rounded-lg transition-transform active:scale-95 touch-manipulation"
+              className="relative flex items-center justify-center rounded-lg transition-transform active:scale-95 touch-manipulation"
               style={{
                 width: 44,
                 height: 44,
@@ -63,6 +64,19 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
               title={`${tool.name}${!isUnlocked ? ` (Lv.${tool.unlockLevel})` : ""}`}
             >
               {TOOL_EMOJIS[tool.id] ?? "\u{1F527}"}
+              {/* Keyboard shortcut badge - desktop only */}
+              <span
+                className="hidden md:flex absolute top-0 right-0 items-center justify-center text-[8px] font-bold rounded-full"
+                style={{
+                  width: 14,
+                  height: 14,
+                  background: "#5D4037",
+                  color: "white",
+                  transform: "translate(25%, -25%)",
+                }}
+              >
+                {keyNumber}
+              </span>
             </button>
           );
         })}

@@ -10,7 +10,7 @@ interface MainMenuProps {
 }
 
 export const MainMenu = ({ onStartGame }: MainMenuProps) => {
-  const { setScreen, treesPlanted, resetGame, hasSeenRules } = useGameStore();
+  const { setScreen, treesPlanted, resetGame } = useGameStore();
   const hasSave = treesPlanted > 0;
   
   const handleStart = () => {

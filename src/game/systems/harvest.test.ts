@@ -35,6 +35,24 @@ describe("Harvest System", () => {
       expect(tree.harvestable).toBeUndefined();
     });
 
+    it("pruned tree gets 1.5x yield bonus", () => {
+      const normalTree = createTreeEntity(0, 0, "white-oak");
+      normalTree.tree!.stage = 3;
+      world.add(normalTree);
+      initHarvestable(normalTree);
+
+      const prunedTree = createTreeEntity(1, 0, "white-oak");
+      prunedTree.tree!.stage = 3;
+      prunedTree.tree!.pruned = true;
+      world.add(prunedTree);
+      initHarvestable(prunedTree);
+
+      const normalAmount = normalTree.harvestable!.resources[0].amount;
+      const prunedAmount = prunedTree.harvestable!.resources[0].amount;
+      // Pruned should be ceil(2 * 1.5) = 3 vs normal 2
+      expect(prunedAmount).toBeGreaterThan(normalAmount);
+    });
+
     it("old growth (stage 4) gets 1.5x yield", () => {
       const matureTree = createTreeEntity(0, 0, "white-oak");
       matureTree.tree!.stage = 3;
@@ -113,6 +131,19 @@ describe("Harvest System", () => {
       const result = collectHarvest(tree);
 
       expect(result).toBeNull();
+    });
+
+    it("clears pruned flag after harvest", () => {
+      const tree = createTreeEntity(0, 0, "white-oak");
+      tree.tree!.stage = 3;
+      tree.tree!.pruned = true;
+      world.add(tree);
+      initHarvestable(tree);
+      tree.harvestable!.ready = true;
+
+      collectHarvest(tree);
+
+      expect(tree.tree!.pruned).toBe(false);
     });
   });
 });

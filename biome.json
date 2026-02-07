@@ -1,13 +1,76 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.0/schema.json",
-  "organizeImports": { "enabled": true },
+  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "files": {
+    "includes": ["src/**", "*.ts", "*.tsx", "*.json"]
+  },
   "linter": {
     "enabled": true,
     "rules": { "recommended": true }
+  },
+  "css": {
+    "parser": { "tailwindDirectives": true }
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "style": { "noNonNullAssertion": "off" },
+          "suspicious": { "noNonNullAssertedOptionalChain": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.d.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noExplicitAny": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noDocumentCookie": "off", "noArrayIndexKey": "off" },
+          "a11y": {
+            "noRedundantRoles": "off",
+            "useSemanticElements": "off",
+            "useFocusableInteractive": "off",
+            "useAriaPropsForRole": "off"
+          },
+          "security": { "noDangerouslySetInnerHtml": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["src/game/ui/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useButtonType": "off",
+            "noSvgWithoutTitle": "off",
+            "useKeyWithClickEvents": "off",
+            "useSemanticElements": "off"
+          },
+          "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["src/game/scenes/**"],
+      "linter": {
+        "rules": {
+          "style": { "noNonNullAssertion": "off" },
+          "correctness": { "useExhaustiveDependencies": "off" }
+        }
+      }
+    }
+  ]
 }

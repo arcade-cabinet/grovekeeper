@@ -41,7 +41,7 @@ export const QuestPanel = ({ quests, onClaimReward }: QuestPanelProps) => {
       <SheetTrigger asChild>
         <Button
           size="sm"
-          className="h-8 px-2 sm:h-9 sm:px-3 rounded-full relative"
+          className="h-11 px-3 sm:h-11 sm:px-3 rounded-full relative"
           style={{
             background: COLORS.autumnGold,
             color: COLORS.soilDark,
@@ -139,7 +139,7 @@ interface QuestCardProps {
 }
 
 const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
-  const totalProgress =
+  const _totalProgress =
     quest.goals.reduce((sum, g) => sum + g.currentProgress, 0) /
     quest.goals.reduce((sum, g) => sum + g.targetAmount, 0);
 
@@ -148,7 +148,7 @@ const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
       className="p-3 rounded-xl space-y-2"
       style={{
         background: quest.completed ? `${COLORS.forestGreen}10` : "white",
-        border: `1px solid ${quest.completed ? COLORS.forestGreen : COLORS.forestGreen + "30"}`,
+        border: `1px solid ${quest.completed ? COLORS.forestGreen : `${COLORS.forestGreen}30`}`,
       }}
     >
       {/* Header */}
@@ -200,18 +200,25 @@ const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
 
       {/* Rewards */}
       <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: `${COLORS.forestGreen}20` }}>
-        <div className="flex items-center gap-3 text-xs">
-          <span style={{ color: COLORS.autumnGold }}>
-            +{quest.rewards.coins} coins
-          </span>
+        <div className="flex items-center gap-2 text-xs flex-wrap">
           <span style={{ color: COLORS.forestGreen }}>
             +{quest.rewards.xp} XP
           </span>
+          {quest.rewards.resources?.map((r) => (
+            <span key={r.type} style={{ color: COLORS.autumnGold }}>
+              +{r.amount} {r.type}
+            </span>
+          ))}
+          {quest.rewards.seeds?.map((s) => (
+            <span key={s.speciesId} style={{ color: COLORS.leafLight }}>
+              +{s.amount} {s.speciesId} seeds
+            </span>
+          ))}
         </div>
         {quest.completed && onClaim && (
           <Button
             size="sm"
-            className="h-7 px-3 text-xs rounded-full"
+            className="h-11 px-4 text-xs rounded-full"
             style={{
               background: COLORS.forestGreen,
               color: "white",

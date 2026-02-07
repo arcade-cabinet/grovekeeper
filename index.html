@@ -6,10 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#2D5A27" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.json" />
     <title>Grovekeeper</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function() {
+          // Derive base path from document so it works on both localhost and GitHub Pages
+          var base = document.querySelector('base')?.href || document.baseURI;
+          var swUrl = new URL('sw.js', base).href;
+          navigator.serviceWorker.register(swUrl).catch(function() {});
+        });
+      }
+    </script>
   </body>
 </html>

@@ -1,10 +1,10 @@
 /**
  * Time System - Day/Night cycle with seasons and microsecond precision
- * 
+ *
  * Time scales:
- * - 1 real second = 1 game minute
- * - 1 real minute = 1 game hour  
- * - 24 real minutes = 1 game day
+ * - 1 real second = 12 game seconds
+ * - 5 real seconds = 1 game minute
+ * - 2 real hours = 1 game day
  * - 30 game days = 1 game month
  * - 3 game months = 1 season
  * - 12 game months = 1 game year
@@ -40,7 +40,7 @@ export interface GameTime {
 // Time configuration
 export const TIME_CONFIG = {
   // How fast game time passes relative to real time
-  timeScale: 60, // 1 real second = 60 game seconds (1 game minute)
+  timeScale: 12, // 1 real second = 12 game seconds (1 game minute per 5 real seconds)
   
   // Day structure (in game hours, 0-24)
   dawn: 5,
@@ -73,7 +73,6 @@ export const TIME_CONFIG = {
 
 // Game time state
 let gameTimeMicroseconds = 0;
-let lastRealTime = 0;
 let isPaused = false;
 
 // Start at spring, day 1, 8:00 AM
@@ -96,7 +95,6 @@ const INITIAL_GAME_TIME = (() => {
 
 export const initializeTime = (savedMicroseconds?: number) => {
   gameTimeMicroseconds = savedMicroseconds ?? INITIAL_GAME_TIME;
-  lastRealTime = performance.now();
   isPaused = false;
 };
 
@@ -105,7 +103,6 @@ export const pauseTime = () => {
 };
 
 export const resumeTime = () => {
-  lastRealTime = performance.now();
   isPaused = false;
 };
 
@@ -116,11 +113,13 @@ export const setTimeScale = (scale: number) => {
 // Main update function - call every frame
 export const updateTime = (realDeltaMs: number): GameTime => {
   if (!isPaused) {
+    // Cap deltaTime to prevent death spirals on mobile tab switches
+    const clampedDelta = Math.min(realDeltaMs, 100);
     // Convert real milliseconds to game microseconds
-    const gameDeltaMicroseconds = realDeltaMs * 1000 * TIME_CONFIG.timeScale;
+    const gameDeltaMicroseconds = clampedDelta * 1000 * TIME_CONFIG.timeScale;
     gameTimeMicroseconds += gameDeltaMicroseconds;
   }
-  
+
   return getGameTime();
 };
 
@@ -192,7 +191,7 @@ const getSeasonProgress = (month: number, day: number): number => {
   };
   
   const season = getSeasonFromMonth(month);
-  let startMonth = seasonStartMonths[season];
+  const startMonth = seasonStartMonths[season];
   
   // Handle winter wrapping
   if (season === 'winter' && month <= 2) {
@@ -215,7 +214,7 @@ const getTimeOfDay = (hours: number): TimeOfDay => {
   if (hours >= 14 && hours < 18) return 'afternoon';
   if (hours >= 18 && hours < 20) return 'dusk';
   if (hours >= 20 && hours < 22) return 'evening';
-  if (hours >= 22 || hours < 0) return 'night';
+  if (hours >= 22) return 'night';
   return 'midnight';
 };
 
@@ -263,7 +262,7 @@ export interface SkyColors {
 }
 
 export const getSkyColors = (time: GameTime): SkyColors => {
-  const { hours, minutes, season } = time;
+  const { hours, minutes } = time;
   const hourFraction = hours + minutes / 60;
   
   // Base colors for different times
@@ -276,14 +275,6 @@ export const getSkyColors = (time: GameTime): SkyColors => {
     dusk: { zenith: '#5a4a7a', horizon: '#ff7744', sun: '#ff9900', ambient: '#6a5a70' },
     evening: { zenith: '#2a2a4a', horizon: '#4a3a5a', sun: '#ff6644', ambient: '#3a3a50' },
     night: { zenith: '#0a1628', horizon: '#1a2a4a', sun: '#3a4a6a', ambient: '#1a2030' },
-  };
-  
-  // Season modifiers
-  const seasonMods: Record<Season, { saturation: number; warmth: number }> = {
-    spring: { saturation: 1.1, warmth: 0.05 },
-    summer: { saturation: 1.2, warmth: 0.1 },
-    autumn: { saturation: 0.9, warmth: 0.15 },
-    winter: { saturation: 0.8, warmth: -0.1 },
   };
   
   // Get time-based colors
@@ -344,10 +335,10 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
 };
 
 const rgbToHex = (r: number, g: number, b: number): string => {
-  return '#' + [r, g, b].map(x => {
+  return `#${[r, g, b].map(x => {
     const hex = x.toString(16);
-    return hex.length === 1 ? '0' + hex : hex;
-  }).join('');
+    return hex.length === 1 ? `0${hex}` : hex;
+  }).join('')}`;
 };
 
 // Get seasonal colors for trees and ground
@@ -357,7 +348,7 @@ export interface SeasonalColors {
   grassColor: string;
 }
 
-export const getSeasonalColors = (season: Season, seasonProgress: number): SeasonalColors => {
+export const getSeasonalColors = (season: Season, _seasonProgress: number): SeasonalColors => {
   const colors: Record<Season, SeasonalColors> = {
     spring: {
       leafColors: ['#90EE90', '#7CFC00', '#98FB98', '#00FA9A', '#66CDAA'],

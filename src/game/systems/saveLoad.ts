@@ -116,14 +116,17 @@ export function deserializeGrove(data: GroveSaveData): void {
       treeSave.row,
       treeSave.speciesId,
     );
-    tree.tree!.stage = treeSave.stage as 0 | 1 | 2 | 3 | 4;
-    tree.tree!.progress = treeSave.progress;
-    tree.tree!.watered = treeSave.watered;
-    tree.tree!.totalGrowthTime = treeSave.totalGrowthTime;
-    tree.tree!.meshSeed = treeSave.meshSeed;
-    tree.tree!.plantedAt = treeSave.plantedAt ?? Date.now();
+    const treeComp = tree.tree;
+    const renderComp = tree.renderable;
+    if (!treeComp || !renderComp) continue;
+    treeComp.stage = treeSave.stage as 0 | 1 | 2 | 3 | 4;
+    treeComp.progress = treeSave.progress;
+    treeComp.watered = treeSave.watered;
+    treeComp.totalGrowthTime = treeSave.totalGrowthTime;
+    treeComp.meshSeed = treeSave.meshSeed;
+    treeComp.plantedAt = treeSave.plantedAt ?? Date.now();
     // Restore correct visual scale for the tree's growth stage
-    tree.renderable!.scale = getStageScale(treeSave.stage, treeSave.progress);
+    renderComp.scale = getStageScale(treeSave.stage, treeSave.progress);
     world.add(tree);
 
     // Mark cell as occupied

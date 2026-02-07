@@ -192,10 +192,171 @@ export const TREE_SPECIES: TreeSpeciesData[] = [
       color: { trunk: "#795548", canopy: "#558B2F" },
     },
   },
+  {
+    id: "silver-birch",
+    name: "Silver Birch",
+    difficulty: 2,
+    unlockLevel: 9,
+    biome: "Temperate",
+    baseGrowthTimes: [10, 14, 18, 24, 30],
+    yield: [
+      { resource: "sap", amount: 2 },
+      { resource: "timber", amount: 1 },
+    ],
+    harvestCycleSec: 45,
+    seedCost: { sap: 4 },
+    special: "+20% growth near water tiles",
+    evergreen: false,
+    meshParams: {
+      trunkHeight: 2.0,
+      trunkRadius: 0.1,
+      canopyRadius: 0.85,
+      canopySegments: 8,
+      color: { trunk: "#E8E8E8", canopy: "#A5D6A7" },
+    },
+  },
+  {
+    id: "ironbark",
+    name: "Ironbark",
+    difficulty: 4,
+    unlockLevel: 14,
+    biome: "Mountain",
+    baseGrowthTimes: [20, 30, 42, 56, 70],
+    yield: [{ resource: "timber", amount: 4 }],
+    harvestCycleSec: 100,
+    seedCost: { timber: 12 },
+    special: "Storm immune; 3x timber at Old Growth",
+    evergreen: true,
+    meshParams: {
+      trunkHeight: 2.4,
+      trunkRadius: 0.22,
+      canopyRadius: 0.9,
+      canopySegments: 6,
+      color: { trunk: "#37474F", canopy: "#1B5E20" },
+    },
+  },
+  {
+    id: "golden-apple",
+    name: "Golden Apple",
+    difficulty: 3,
+    unlockLevel: 18,
+    biome: "Orchard",
+    baseGrowthTimes: [14, 20, 28, 38, 48],
+    yield: [{ resource: "fruit", amount: 3 }],
+    harvestCycleSec: 70,
+    seedCost: { fruit: 10 },
+    special: "3x fruit yield in Autumn",
+    evergreen: false,
+    meshParams: {
+      trunkHeight: 1.6,
+      trunkRadius: 0.12,
+      canopyRadius: 1.0,
+      canopySegments: 10,
+      color: { trunk: "#5D4037", canopy: "#FFD54F" },
+    },
+  },
+  {
+    id: "mystic-fern",
+    name: "Mystic Fern",
+    difficulty: 3,
+    unlockLevel: 22,
+    biome: "Enchanted",
+    baseGrowthTimes: [12, 18, 26, 36, 44],
+    yield: [
+      { resource: "sap", amount: 2 },
+      { resource: "fruit", amount: 1 },
+    ],
+    harvestCycleSec: 55,
+    seedCost: { sap: 8, fruit: 4 },
+    special: "+15% growth per adjacent tree (max +60%)",
+    evergreen: false,
+    meshParams: {
+      trunkHeight: 0.8,
+      trunkRadius: 0.08,
+      canopyRadius: 1.2,
+      canopySegments: 12,
+      color: { trunk: "#4E342E", canopy: "#69F0AE" },
+    },
+  },
 ];
 
+// Prestige-only species (unlocked via prestige system)
+export const PRESTIGE_TREE_SPECIES: TreeSpeciesData[] = [
+  {
+    id: "crystal-oak",
+    name: "Crystalline Oak",
+    difficulty: 5,
+    unlockLevel: 25,
+    biome: "Enchanted",
+    baseGrowthTimes: [20, 30, 45, 60, 80],
+    yield: [{ resource: "acorns", amount: 5 }],
+    harvestCycleSec: 100,
+    seedCost: { acorns: 20 },
+    special: "Prismatic glow; Acorns ×5",
+    evergreen: true,
+    meshParams: {
+      trunkHeight: 2.2,
+      trunkRadius: 0.18,
+      canopyRadius: 1.0,
+      canopySegments: 10,
+      color: { trunk: "#B0BEC5", canopy: "#80CBC4" },
+    },
+  },
+  {
+    id: "moonwood-ash",
+    name: "Moonwood Ash",
+    difficulty: 4,
+    unlockLevel: 25,
+    biome: "Enchanted",
+    baseGrowthTimes: [18, 28, 40, 55, 70],
+    yield: [
+      { resource: "sap", amount: 3 },
+      { resource: "acorns", amount: 2 },
+    ],
+    harvestCycleSec: 90,
+    seedCost: { sap: 15, acorns: 10 },
+    special: "Grows only at night; silver shimmer",
+    evergreen: false,
+    meshParams: {
+      trunkHeight: 2.4,
+      trunkRadius: 0.14,
+      canopyRadius: 1.1,
+      canopySegments: 10,
+      color: { trunk: "#CFD8DC", canopy: "#B39DDB" },
+    },
+  },
+  {
+    id: "worldtree",
+    name: "Worldtree",
+    difficulty: 5,
+    unlockLevel: 25,
+    biome: "Enchanted",
+    baseGrowthTimes: [30, 45, 65, 90, 120],
+    yield: [
+      { resource: "timber", amount: 4 },
+      { resource: "sap", amount: 3 },
+      { resource: "fruit", amount: 3 },
+      { resource: "acorns", amount: 3 },
+    ],
+    harvestCycleSec: 180,
+    seedCost: { timber: 20, sap: 20, fruit: 20, acorns: 20 },
+    special: "2×2 footprint; boosts entire grove",
+    evergreen: true,
+    meshParams: {
+      trunkHeight: 3.5,
+      trunkRadius: 0.35,
+      canopyRadius: 1.5,
+      canopySegments: 12,
+      color: { trunk: "#4E342E", canopy: "#1B5E20" },
+    },
+  },
+];
+
+// Combined lookup includes both base and prestige species
+const ALL_SPECIES = [...TREE_SPECIES, ...PRESTIGE_TREE_SPECIES];
+
 export const getSpeciesById = (id: string): TreeSpeciesData | undefined =>
-  TREE_SPECIES.find((s) => s.id === id);
+  ALL_SPECIES.find((s) => s.id === id);
 
 // Backwards-compatible alias for existing code that uses getTreeById
 export const getTreeById = getSpeciesById;

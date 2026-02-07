@@ -49,6 +49,86 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Grovekeeper Design Tokens (§5) */
+:root {
+  /* Primary — "Forest Floor" */
+  --gk-deep-canopy: #1A3A2A;
+  --gk-grove-green: #2D6A4F;
+  --gk-moss: #4A7C59;
+  --gk-sage-mist: #7FB285;
+  --gk-morning-dew: #C8E6C9;
+  --gk-parchment: #F5F0E3;
+
+  /* Earth — "Rich Soil" */
+  --gk-heartwood: #5C3D2E;
+  --gk-bark-brown: #8B6F47;
+  --gk-warm-clay: #C49A6C;
+  --gk-dry-straw: #D4C5A0;
+
+  /* Seasonal */
+  --gk-spring-bloom: #E8A0BF;
+  --gk-summer-gold: #E9C46A;
+  --gk-autumn-ember: #E76F51;
+  --gk-winter-frost: #A8DADC;
+
+  /* Functional */
+  --gk-success: #52B788;
+  --gk-warning: #F4A261;
+  --gk-danger: #E76F51;
+  --gk-info: #6AADCF;
+
+  /* Typography */
+  --gk-font-display: 'Fredoka', 'Nunito', sans-serif;
+  --gk-font-body: 'Nunito', 'Segoe UI', sans-serif;
+
+  /* Type Scale */
+  --gk-text-xs: 0.75rem;
+  --gk-text-sm: 0.875rem;
+  --gk-text-base: 1rem;
+  --gk-text-lg: 1.25rem;
+  --gk-text-xl: 1.5rem;
+  --gk-text-2xl: 2rem;
+  --gk-text-3xl: 2.75rem;
+
+  /* Radii */
+  --gk-radius-sm: 6px;
+  --gk-radius-md: 12px;
+  --gk-radius-lg: 20px;
+  --gk-radius-full: 9999px;
+
+  /* Spacing */
+  --gk-space-1: 4px;
+  --gk-space-2: 8px;
+  --gk-space-3: 12px;
+  --gk-space-4: 16px;
+  --gk-space-5: 24px;
+  --gk-space-6: 32px;
+  --gk-space-7: 48px;
+  --gk-space-8: 64px;
+
+  /* Shadows */
+  --gk-shadow-sm: 0 2px 6px rgba(26, 58, 42, 0.1);
+  --gk-shadow-md: 0 4px 12px rgba(26, 58, 42, 0.15);
+  --gk-shadow-lg: 0 8px 24px rgba(26, 58, 42, 0.2);
+  --gk-shadow-glow: 0 0 16px rgba(82, 183, 136, 0.3);
+
+  /* Transitions */
+  --gk-transition-fast: 150ms ease-out;
+  --gk-transition-base: 250ms ease-out;
+  --gk-transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gk-transition-grow: 600ms ease-in-out;
+
+  /* Z-Index Layers */
+  --gk-z-ground: 0;
+  --gk-z-decals: 10;
+  --gk-z-entities: 20;
+  --gk-z-effects: 30;
+  --gk-z-hud: 100;
+  --gk-z-modal: 200;
+  --gk-z-toast: 300;
+  --gk-z-joystick: 400;
+}
+
 /* Light theme variables */
 :root {
   --radius: 0.625rem;
@@ -127,6 +207,16 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--gk-font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--gk-font-display);
+    letter-spacing: -0.02em;
+  }
+
+  button {
+    font-family: var(--gk-font-display);
   }
   
   /* Prevent pull-to-refresh and bounce on mobile */

@@ -8,12 +8,19 @@ const RESOURCE_EMOJIS: Record<ResourceType, string> = {
   acorns: "\u{1F330}",
 };
 
+const RESOURCE_LABELS: Record<ResourceType, string> = {
+  timber: "Timber",
+  sap: "Sap",
+  fruit: "Fruit",
+  acorns: "Acorns",
+};
+
 export const ResourceBar = () => {
   const resources = useGameStore((s) => s.resources);
 
   return (
     <div
-      className="grid grid-cols-2 gap-x-2 gap-y-0.5 px-2 py-1 rounded-xl text-xs font-bold"
+      className="grid grid-cols-2 gap-x-2 gap-y-0.5 px-2 py-1 rounded-xl text-sm font-bold"
       style={{
         background: "rgba(245, 240, 227, 0.90)",
         border: "2px solid #5D4037",
@@ -24,7 +31,10 @@ export const ResourceBar = () => {
       {(["timber", "sap", "fruit", "acorns"] as ResourceType[]).map((type) => (
         <div key={type} className="flex items-center gap-1">
           <span>{RESOURCE_EMOJIS[type]}</span>
-          <span style={{ color: "#3E2723" }}>{resources[type]}</span>
+          <span style={{ color: "#3E2723" }}>
+            {resources[type]}
+            <span className="hidden md:inline"> {RESOURCE_LABELS[type]}</span>
+          </span>
         </div>
       ))}
     </div>
