@@ -13,7 +13,7 @@ import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 // Side-effect import: adds createDefaultSkybox to Scene prototype
 import "@babylonjs/core/Helpers/sceneHelpers";
 
-const HDRI_PATH = "/textures/sky/environment.hdr";
+const HDRI_PATH = `${import.meta.env.BASE_URL ?? "/"}textures/sky/environment.hdr`;
 const HDRI_RESOLUTION = 256; // cubemap face resolution for IBL
 
 /** Intensity range for day/night cycle. */

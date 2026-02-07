@@ -71,4 +71,14 @@ describe("NewGameModal", () => {
     render(<NewGameModal open={true} onClose={onClose} onStart={onStart} />);
     expect(screen.getByText("Permadeath")).toBeDefined();
   });
+
+  it("resets permadeath when switching from forced-on to optional difficulty", () => {
+    render(<NewGameModal open={true} onClose={onClose} onStart={onStart} />);
+    // Select Ultra Brutal (permadeath forced ON)
+    fireEvent.click(screen.getByText("Ultra Brutal"));
+    // Switch back to Normal (permadeath optional, should reset to off)
+    fireEvent.click(screen.getAllByText("Normal")[0]);
+    fireEvent.click(screen.getByText("Begin Your Grove"));
+    expect(onStart).toHaveBeenCalledWith("normal", false);
+  });
 });

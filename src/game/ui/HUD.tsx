@@ -40,7 +40,7 @@ export const HUD = ({ onOpenMenu, onOpenTools, onOpenBuild, gameTime }: HUDProps
   return (
     <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
       {/* Left side - Stats */}
-      <div className="flex items-center gap-1.5 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 overflow-hidden">
         {/* Resources */}
         <ResourceBar />
 

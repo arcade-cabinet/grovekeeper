@@ -60,6 +60,7 @@ export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
       <DialogContent
         className="max-w-sm max-h-[80vh] overflow-y-auto"
         style={{ background: COLORS.skyMist }}
+        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.soilDark }}>

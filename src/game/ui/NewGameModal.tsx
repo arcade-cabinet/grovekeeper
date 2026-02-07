@@ -39,9 +39,9 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
 
   const handleSelect = (tier: DifficultyTier) => {
     setSelected(tier);
-    // Reset permadeath based on forced state
+    // Reset permadeath based on forced state (including optional → default off)
     if (tier.permadeathForced === "on") setPermadeath(true);
-    else if (tier.permadeathForced === "off") setPermadeath(false);
+    else setPermadeath(false);
   };
 
   const handleStart = () => {
@@ -57,6 +57,7 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
       <DialogContent
         className="max-w-sm max-h-[90vh] overflow-y-auto"
         style={{ background: COLORS.skyMist }}
+        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.soilDark }}>

@@ -111,21 +111,21 @@ export const GameUI = ({
         </div>
       )}
 
-      {/* Batch harvest button - above action button */}
+      {/* Tool belt - bottom right */}
+      <div className="absolute pointer-events-auto" style={{ bottom: 140, right: 12 }}>
+        <ToolBelt onSelectTool={(id) => useGameStore.getState().setSelectedTool(id)} />
+      </div>
+
+      {/* Batch harvest button - above tool belt, higher z-index */}
       {onBatchHarvest && (
-        <div className="absolute pointer-events-auto" style={{ bottom: 180, right: 60 }}>
+        <div className="absolute pointer-events-auto" style={{ bottom: 240, right: 16, zIndex: 10 }}>
           <BatchHarvestButton onBatchHarvest={onBatchHarvest} />
         </div>
       )}
 
       {/* Stamina gauge - right side */}
-      <div className="absolute pointer-events-none" style={{ bottom: 180, right: 20 }}>
+      <div className="absolute pointer-events-none" style={{ bottom: 240, right: 20 }}>
         <StaminaGauge />
-      </div>
-
-      {/* Tool belt - bottom right */}
-      <div className="absolute pointer-events-auto" style={{ bottom: 140, right: 12 }}>
-        <ToolBelt onSelectTool={(id) => useGameStore.getState().setSelectedTool(id)} />
       </div>
 
       {/* Bottom control area */}

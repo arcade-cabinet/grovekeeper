@@ -114,6 +114,7 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
       <DialogContent
         className="max-w-sm max-h-[85vh] overflow-y-auto"
         style={{ background: COLORS.skyMist }}
+        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle

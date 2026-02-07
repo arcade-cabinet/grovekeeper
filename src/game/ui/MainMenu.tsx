@@ -130,7 +130,7 @@ export const MainMenu = ({ onStartGame, onNewGame }: MainMenuProps) => {
             style={{ color: COLORS.barkBrown }}
           >
             <span className="font-medium">{treesPlanted}</span>
-            <span>trees planted so far</span>
+            <span>{treesPlanted === 1 ? "tree" : "trees"} planted so far</span>
           </div>
         )}
       </Card>

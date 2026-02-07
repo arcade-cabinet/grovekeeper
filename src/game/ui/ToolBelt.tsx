@@ -44,7 +44,7 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
             <button
               key={tool.id}
               type="button"
-              className="relative flex items-center justify-center rounded-lg transition-transform active:scale-95 touch-manipulation"
+              className="relative flex items-center justify-center rounded-lg motion-safe:transition-transform motion-safe:active:scale-95 touch-manipulation"
               style={{
                 width: 44,
                 height: 44,
@@ -58,8 +58,9 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
                 opacity: isUnlocked ? 1 : canUnlock ? 0.6 : 0.3,
                 transform: isActive ? "scale(1.08)" : "scale(1)",
                 filter: isUnlocked ? "none" : "grayscale(100%)",
+                pointerEvents: isUnlocked ? "auto" : "none",
               }}
-              onClick={() => isUnlocked && onSelectTool(tool.id)}
+              onClick={() => onSelectTool(tool.id)}
               disabled={!isUnlocked}
               title={`${tool.name}${!isUnlocked ? ` (Lv.${tool.unlockLevel})` : ""}`}
             >
