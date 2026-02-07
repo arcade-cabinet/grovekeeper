@@ -31,7 +31,7 @@ export const StaminaGauge = () => {
       >
         {/* Fill grows from bottom */}
         <div
-          className={`absolute bottom-0 left-0 right-0 transition-all duration-300 ${isLow ? "animate-pulse" : ""}`}
+          className={`absolute bottom-0 left-0 right-0 transition-all duration-300 ${isLow ? "motion-safe:animate-pulse" : ""}`}
           style={{
             height: `${pct}%`,
             background: fillColor,
@@ -42,7 +42,7 @@ export const StaminaGauge = () => {
 
       {/* Label: current/max */}
       <span
-        className="text-[10px] font-bold whitespace-nowrap"
+        className="text-xs font-bold whitespace-nowrap"
         style={{
           color: "rgba(245, 240, 227, 0.9)",
           textShadow: "0 1px 2px rgba(0,0,0,0.5)",

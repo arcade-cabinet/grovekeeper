@@ -20,7 +20,7 @@ export const ResourceBar = () => {
 
   return (
     <div
-      className="grid grid-cols-2 gap-x-2 gap-y-0.5 px-2 py-1 rounded-xl text-xs font-bold"
+      className="grid grid-cols-2 gap-x-2 gap-y-0.5 px-2 py-1 rounded-xl text-sm font-bold"
       style={{
         background: "rgba(245, 240, 227, 0.90)",
         border: "2px solid #5D4037",

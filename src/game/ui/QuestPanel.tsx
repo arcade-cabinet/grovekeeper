@@ -41,7 +41,7 @@ export const QuestPanel = ({ quests, onClaimReward }: QuestPanelProps) => {
       <SheetTrigger asChild>
         <Button
           size="sm"
-          className="h-8 px-2 sm:h-9 sm:px-3 rounded-full relative"
+          className="h-11 px-3 sm:h-11 sm:px-3 rounded-full relative"
           style={{
             background: COLORS.autumnGold,
             color: COLORS.soilDark,
@@ -218,7 +218,7 @@ const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
         {quest.completed && onClaim && (
           <Button
             size="sm"
-            className="h-7 px-3 text-xs rounded-full"
+            className="h-11 px-4 text-xs rounded-full"
             style={{
               background: COLORS.forestGreen,
               color: "white",

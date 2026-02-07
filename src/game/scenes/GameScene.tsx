@@ -401,7 +401,9 @@ export const GameScene = () => {
         entity.tree.stage = result.stage as 0 | 1 | 2 | 3 | 4;
         entity.tree.progress = result.progress;
         entity.tree.watered = result.watered;
-        entity.renderable!.scale = getStageScale(result.stage, result.progress);
+        if (entity.renderable) {
+          entity.renderable.scale = getStageScale(result.stage, result.progress);
+        }
       }
     }
     if (stagesAdvanced > 0) {

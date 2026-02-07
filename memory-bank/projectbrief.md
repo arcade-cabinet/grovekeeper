@@ -4,7 +4,7 @@
 
 **Name:** Grovekeeper
 **Tagline:** *"Every forest begins with a single seed."*
-**Genre:** Cozy 2.5D isometric tree-planting simulation / idle tending game
+**Genre:** Cozy 2.5D orthographic tree-planting simulation / idle tending game
 **Platform:** Mobile-first PWA (portrait), desktop secondary
 **Target Session:** 3-15 minutes (commute-friendly)
 

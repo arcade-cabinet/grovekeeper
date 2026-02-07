@@ -1,7 +1,7 @@
 /**
  * CameraManager — Orthographic diorama camera with atmospheric fog.
  *
- * Uses ArcRotateCamera in orthographic mode at a deliberate 36° diorama
+ * Uses ArcRotateCamera in orthographic mode at a deliberate 30° diorama
  * angle — like looking at a tabletop miniature. Building faces and tree
  * trunks are clearly visible. Scene fog blends the horizon into the sky.
  */
@@ -19,8 +19,8 @@ const MAX_VIEW = 40;
 /** Target pixels per world tile. Smaller = more tiles visible. */
 const PIXELS_PER_TILE = 45;
 
-/** Camera tilt from vertical (radians). ~36° — deliberate diorama viewing angle. */
-const CAMERA_BETA = Math.PI / 5;
+/** Camera tilt from vertical (radians). 30° — deliberate diorama viewing angle. */
+const CAMERA_BETA = Math.PI / 6;
 /** Camera rotation (radians). -PI/2 = camera from south looking north. */
 const CAMERA_ALPHA = -Math.PI / 2;
 /** Orthographic distance — just needs to clear all scene geometry. */

@@ -73,7 +73,6 @@ export const TIME_CONFIG = {
 
 // Game time state
 let gameTimeMicroseconds = 0;
-let _lastRealTime = 0;
 let isPaused = false;
 
 // Start at spring, day 1, 8:00 AM
@@ -96,7 +95,6 @@ const INITIAL_GAME_TIME = (() => {
 
 export const initializeTime = (savedMicroseconds?: number) => {
   gameTimeMicroseconds = savedMicroseconds ?? INITIAL_GAME_TIME;
-  _lastRealTime = performance.now();
   isPaused = false;
 };
 
@@ -105,7 +103,6 @@ export const pauseTime = () => {
 };
 
 export const resumeTime = () => {
-  _lastRealTime = performance.now();
   isPaused = false;
 };
 
@@ -116,11 +113,13 @@ export const setTimeScale = (scale: number) => {
 // Main update function - call every frame
 export const updateTime = (realDeltaMs: number): GameTime => {
   if (!isPaused) {
+    // Cap deltaTime to prevent death spirals on mobile tab switches
+    const clampedDelta = Math.min(realDeltaMs, 100);
     // Convert real milliseconds to game microseconds
-    const gameDeltaMicroseconds = realDeltaMs * 1000 * TIME_CONFIG.timeScale;
+    const gameDeltaMicroseconds = clampedDelta * 1000 * TIME_CONFIG.timeScale;
     gameTimeMicroseconds += gameDeltaMicroseconds;
   }
-  
+
   return getGameTime();
 };
 
@@ -215,7 +214,7 @@ const getTimeOfDay = (hours: number): TimeOfDay => {
   if (hours >= 14 && hours < 18) return 'afternoon';
   if (hours >= 18 && hours < 20) return 'dusk';
   if (hours >= 20 && hours < 22) return 'evening';
-  if (hours >= 22 || hours < 0) return 'night';
+  if (hours >= 22) return 'night';
   return 'midnight';
 };
 
@@ -276,14 +275,6 @@ export const getSkyColors = (time: GameTime): SkyColors => {
     dusk: { zenith: '#5a4a7a', horizon: '#ff7744', sun: '#ff9900', ambient: '#6a5a70' },
     evening: { zenith: '#2a2a4a', horizon: '#4a3a5a', sun: '#ff6644', ambient: '#3a3a50' },
     night: { zenith: '#0a1628', horizon: '#1a2a4a', sun: '#3a4a6a', ambient: '#1a2030' },
-  };
-  
-  // Season modifiers
-  const _seasonMods: Record<Season, { saturation: number; warmth: number }> = {
-    spring: { saturation: 1.1, warmth: 0.05 },
-    summer: { saturation: 1.2, warmth: 0.1 },
-    autumn: { saturation: 0.9, warmth: 0.15 },
-    winter: { saturation: 0.8, warmth: -0.1 },
   };
   
   // Get time-based colors

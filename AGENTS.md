@@ -368,7 +368,7 @@ Documentation lives in `docs/`. Track implementation status in `memory-bank/prog
 |------|-----------|---------|
 | Components | PascalCase.tsx | `ToolBelt.tsx` |
 | Hooks | useCamelCase.ts | `useGameLoop.ts` |
-| Systems | camelCase.ts | `growthSystem.ts` |
+| Systems | camelCase.ts | `growth.ts` |
 | Tests | *.test.ts(x) | `growth.test.ts` |
 | Stores | camelCaseStore.ts | `gameStore.ts` |
 | Constants | camelCase.ts | `trees.ts` |
