@@ -3,7 +3,6 @@ import {
   RESOURCE_TYPES,
   RESOURCE_INFO,
   emptyResources,
-  type ResourceType,
 } from "./resources";
 
 describe("resources", () => {

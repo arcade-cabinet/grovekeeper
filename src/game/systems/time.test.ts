@@ -158,10 +158,7 @@ describe("Time System", () => {
 
   describe("time of day", () => {
     it("returns midnight for hours 0-4", () => {
-      // Set time to midnight (hour 0)
-      const hourInMicroseconds = 60 * 60 * 1_000_000;
-      // Go to hour 0 of the current day by adjusting time
-      loadTime(0); // This is the epoch, hour 0
+      loadTime(0); // epoch = hour 0
       const time = getGameTime();
       expect(time.timeOfDay).toBe("midnight");
     });

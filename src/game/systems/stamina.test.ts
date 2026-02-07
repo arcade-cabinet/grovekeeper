@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { staminaSystem, drainStamina } from "./stamina";
-import { world } from "../ecs/world";
+import { world, type Entity } from "../ecs/world";
 import { createPlayerEntity } from "../ecs/archetypes";
 import { useGameStore } from "../stores/gameStore";
 
@@ -79,8 +79,8 @@ describe("Stamina System", () => {
     });
 
     it("returns false for entity without farmerState", () => {
-      const entity = { position: { x: 0, z: 0 } };
-      const success = drainStamina(entity as any, 10);
+      const entity = { position: { x: 0, z: 0 } } as Entity;
+      const success = drainStamina(entity, 10);
       expect(success).toBe(false);
     });
 
