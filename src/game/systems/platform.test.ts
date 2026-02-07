@@ -112,13 +112,12 @@ describe("platform", () => {
 
     it("hapticLight does nothing when disabled", async () => {
       setHapticsEnabled(false);
-      // Should not throw
-      await hapticLight();
+      await expect(hapticLight()).resolves.toBeUndefined();
     });
 
     it("hapticMedium does nothing when disabled", async () => {
       setHapticsEnabled(false);
-      await hapticMedium();
+      await expect(hapticMedium()).resolves.toBeUndefined();
     });
   });
 

@@ -684,7 +684,7 @@ describe("Game Store", () => {
     it("upgradeToolTier fails with insufficient resources", () => {
       const result = useGameStore.getState().upgradeToolTier("trowel");
       expect(result).toBe(false);
-      expect(useGameStore.getState().toolUpgrades["trowel"]).toBeUndefined();
+      expect(useGameStore.getState().toolUpgrades.trowel).toBeUndefined();
     });
 
     it("upgradeToolTier succeeds with sufficient resources", () => {
@@ -693,7 +693,7 @@ describe("Game Store", () => {
       });
       const result = useGameStore.getState().upgradeToolTier("trowel");
       expect(result).toBe(true);
-      expect(useGameStore.getState().toolUpgrades["trowel"]).toBe(1);
+      expect(useGameStore.getState().toolUpgrades.trowel).toBe(1);
     });
 
     it("upgradeToolTier deducts resources", () => {

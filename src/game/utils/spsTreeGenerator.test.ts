@@ -95,23 +95,24 @@ describe("spsTreeGenerator", () => {
     const tree1 = createSPSTree(makeParams(), scene, createRNG(1));
     const tree2 = createSPSTree(makeParams(), scene, createRNG(999));
 
-    // With different seeds, vertex positions will differ
-    // (vertex counts may be the same since structure is the same)
-    const pos1 = tree1.getChildMeshes(true)[0].getVerticesData("position");
-    const pos2 = tree2.getChildMeshes(true)[0].getVerticesData("position");
+    // Scan all children — the first child (trunk) may be invariant across seeds,
+    // so check every child mesh for vertex position differences
+    const children1 = tree1.getChildMeshes(true);
+    const children2 = tree2.getChildMeshes(true);
 
-    expect(pos1).not.toBeNull();
-    expect(pos2).not.toBeNull();
-
-    // At least some vertices should differ
     let hasDifference = false;
-    if (pos1 && pos2) {
-      for (let i = 0; i < Math.min(pos1.length, pos2.length); i++) {
-        if (Math.abs(pos1[i] - pos2[i]) > 0.001) {
-          hasDifference = true;
-          break;
+    for (let c = 0; c < Math.min(children1.length, children2.length); c++) {
+      const pos1 = children1[c].getVerticesData("position");
+      const pos2 = children2[c].getVerticesData("position");
+      if (pos1 && pos2) {
+        for (let i = 0; i < Math.min(pos1.length, pos2.length); i++) {
+          if (Math.abs(pos1[i] - pos2[i]) > 0.001) {
+            hasDifference = true;
+            break;
+          }
         }
       }
+      if (hasDifference) break;
     }
     expect(hasDifference).toBe(true);
   });
