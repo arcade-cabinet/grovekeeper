@@ -51,6 +51,7 @@ export const ToolWheel = ({ open, onClose }: ToolWheelProps) => {
       <DialogContent
         className="max-w-xs"
         style={{ background: COLORS.skyMist }}
+        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.soilDark }}>Tools</DialogTitle>

@@ -58,6 +58,7 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
                 opacity: isUnlocked ? 1 : canUnlock ? 0.6 : 0.3,
                 transform: isActive ? "scale(1.08)" : "scale(1)",
                 filter: isUnlocked ? "none" : "grayscale(100%)",
+                pointerEvents: isUnlocked ? "auto" : "none",
               }}
               onClick={() => isUnlocked && onSelectTool(tool.id)}
               disabled={!isUnlocked}
