@@ -447,7 +447,7 @@ describe("Cross-System Integration Tests", () => {
       expect(bonus.harvestYieldMultiplier).toBe(1.05);
     });
 
-    it("prestige count 4+ extends linearly", () => {
+    it("prestige bonuses scale with prestige count", () => {
       const bonus4 = calculatePrestigeBonus(4);
       expect(bonus4.growthSpeedMultiplier).toBeCloseTo(1.4);
       expect(bonus4.xpMultiplier).toBeCloseTo(1.35);

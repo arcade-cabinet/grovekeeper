@@ -249,8 +249,10 @@ describe("Growth System (5-Stage)", () => {
 
     it("progress clamps at 0.99 for max stage", () => {
       const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 4;
-      tree.tree!.progress = 0.5;
+      // Start at stage 3 with near-complete progress so growthSystem
+      // transitions to stage 4 and exercises the clamp path
+      tree.tree!.stage = 3;
+      tree.tree!.progress = 0.99;
       world.add(tree);
 
       growthSystem(1000, "spring");
