@@ -39,6 +39,9 @@ export function createPathFollow(path: TileCoord[]): PathFollowState {
  *
  * Does NOT move the player directly — the returned vector is written to
  * `movementRef` and consumed by `movementSystem`.
+ *
+ * Uses iterative loop (not recursion) to skip past multiple consecutive
+ * waypoints within WAYPOINT_THRESHOLD, preventing stack overflow.
  */
 export function advancePathFollow(
   state: PathFollowState,
@@ -49,22 +52,20 @@ export function advancePathFollow(
     return { x: 0, z: 0 };
   }
 
-  const target = state.waypoints[state.currentIndex];
-  const dx = target.x - playerWorldPos.x;
-  const dz = target.z - playerWorldPos.z;
-  const dist = Math.sqrt(dx * dx + dz * dz);
+  // Skip past any waypoints we're already close to
+  while (state.currentIndex < state.waypoints.length) {
+    const target = state.waypoints[state.currentIndex];
+    const dx = target.x - playerWorldPos.x;
+    const dz = target.z - playerWorldPos.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
 
-  // Close enough — advance to next waypoint
-  if (dist < WAYPOINT_THRESHOLD) {
-    state.currentIndex++;
-    if (state.currentIndex >= state.waypoints.length) {
-      state.done = true;
-      return { x: 0, z: 0 };
+    if (dist >= WAYPOINT_THRESHOLD) {
+      return { x: dx / dist, z: dz / dist };
     }
-    // Recurse with new target
-    return advancePathFollow(state, playerWorldPos);
+
+    state.currentIndex++;
   }
 
-  // Normalize direction
-  return { x: dx / dist, z: dz / dist };
+  state.done = true;
+  return { x: 0, z: 0 };
 }

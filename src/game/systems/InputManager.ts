@@ -99,10 +99,10 @@ export class InputManager {
     this.boundKeyUp = this.onKeyUp.bind(this);
     this.boundBlur = this.onBlur.bind(this);
 
-    config.canvas.addEventListener("pointerdown", this.boundPointerDown);
-    config.canvas.addEventListener("pointermove", this.boundPointerMove);
-    config.canvas.addEventListener("pointerup", this.boundPointerUp);
-    config.canvas.addEventListener("pointercancel", this.boundPointerUp);
+    config.canvas.addEventListener("pointerdown", this.boundPointerDown, { passive: true });
+    config.canvas.addEventListener("pointermove", this.boundPointerMove, { passive: true });
+    config.canvas.addEventListener("pointerup", this.boundPointerUp, { passive: true });
+    config.canvas.addEventListener("pointercancel", this.boundPointerUp, { passive: true });
 
     window.addEventListener("keydown", this.boundKeyDown);
     window.addEventListener("keyup", this.boundKeyUp);

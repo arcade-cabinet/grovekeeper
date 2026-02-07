@@ -84,14 +84,17 @@ describe("InputManager", () => {
     expect(config.canvas.addEventListener).toHaveBeenCalledWith(
       "pointerdown",
       expect.any(Function),
+      { passive: true },
     );
     expect(config.canvas.addEventListener).toHaveBeenCalledWith(
       "pointermove",
       expect.any(Function),
+      { passive: true },
     );
     expect(config.canvas.addEventListener).toHaveBeenCalledWith(
       "pointerup",
       expect.any(Function),
+      { passive: true },
     );
   });
 

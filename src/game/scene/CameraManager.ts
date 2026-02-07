@@ -28,6 +28,11 @@ const CAMERA_RADIUS = 80;
 /** Smooth camera tracking speed. */
 const LERP_SPEED = 3;
 
+/** Cache reduced-motion preference (checked once at construction). */
+const prefersReducedMotion =
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+
 export class CameraManager {
   camera: ArcRotateCamera | null = null;
   private engine: Engine | null = null;
@@ -98,8 +103,12 @@ export class CameraManager {
   trackTarget(worldX: number, worldZ: number, dt: number): void {
     if (!this.camera) return;
     const target = new Vector3(worldX, 0, worldZ);
-    const factor = Math.min(1, dt * LERP_SPEED);
-    this.camera.target = Vector3.Lerp(this.camera.target, target, factor);
+    if (prefersReducedMotion) {
+      this.camera.target = target;
+    } else {
+      const factor = Math.min(1, dt * LERP_SPEED);
+      this.camera.target = Vector3.Lerp(this.camera.target, target, factor);
+    }
   }
 
   dispose(): void {

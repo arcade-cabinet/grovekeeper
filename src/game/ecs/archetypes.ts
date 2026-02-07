@@ -61,21 +61,26 @@ export const createWildTreeEntity = (
   gridZ: number,
   speciesId: string,
   stage: 0 | 1 | 2 | 3 | 4,
-): Entity => ({
-  id: generateEntityId(),
-  position: { x: gridX, y: 0, z: gridZ },
-  tree: {
-    speciesId,
-    stage,
-    progress: Math.random() * 0.5, // partial progress within stage
-    watered: false,
-    totalGrowthTime: 0,
-    plantedAt: Date.now(),
-    meshSeed: hashString(`wild-${speciesId}-${gridX}-${gridZ}`),
-    wild: true,
-  },
-  renderable: { meshId: null, visible: true, scale: getStageScale(stage, 0) },
-});
+): Entity => {
+  const seed = hashString(`wild-${speciesId}-${gridX}-${gridZ}`);
+  // Deterministic progress derived from seed (0..0.5 range)
+  const progress = ((seed >>> 0) % 1000) / 2000;
+  return {
+    id: generateEntityId(),
+    position: { x: gridX, y: 0, z: gridZ },
+    tree: {
+      speciesId,
+      stage,
+      progress,
+      watered: false,
+      totalGrowthTime: 0,
+      plantedAt: Date.now(),
+      meshSeed: seed,
+      wild: true,
+    },
+    renderable: { meshId: null, visible: true, scale: getStageScale(stage, progress) },
+  };
+};
 
 export const createGridCellEntity = (
   gridX: number,
