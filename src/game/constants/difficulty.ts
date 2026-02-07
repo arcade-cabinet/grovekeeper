@@ -66,7 +66,7 @@ export function getDifficultyById(id: string): DifficultyTier | undefined {
 /**
  * The default fallback tier (Normal).
  */
-const NORMAL_TIER = DIFFICULTY_TIERS.find((t) => t.id === "normal") ?? DIFFICULTY_TIERS[1];
+const NORMAL_TIER = DIFFICULTY_TIERS.find((t) => t.id === "normal") ?? DIFFICULTY_TIERS[0];
 
 /**
  * Get the active difficulty tier based on the current game store state.

@@ -1,10 +1,15 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { NewGameModal } from "./NewGameModal";
 
 describe("NewGameModal", () => {
   const onClose = vi.fn();
   const onStart = vi.fn();
+
+  beforeEach(() => {
+    onClose.mockClear();
+    onStart.mockClear();
+  });
 
   it("renders all 5 difficulty tiers", () => {
     render(<NewGameModal open={true} onClose={onClose} onStart={onStart} />);

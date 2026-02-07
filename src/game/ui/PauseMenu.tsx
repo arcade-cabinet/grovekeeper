@@ -514,11 +514,16 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 text-xs"
+                  className="flex-1 text-xs min-h-[44px]"
                   style={{ borderColor: COLORS.barkBrown, color: COLORS.soilDark }}
                   onClick={() => {
-                    exportSaveFile();
-                    showToast("Save exported!", "success");
+                    try {
+                      exportSaveFile();
+                      showToast("Save exported!", "success");
+                    } catch (err) {
+                      console.error("Export failed:", err);
+                      showToast("Export failed", "warning");
+                    }
                   }}
                 >
                   Export Save
@@ -526,7 +531,7 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 text-xs"
+                  className="flex-1 text-xs min-h-[44px]"
                   style={{ borderColor: COLORS.barkBrown, color: COLORS.soilDark }}
                   onClick={() => importRef.current?.click()}
                 >
@@ -544,6 +549,9 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                       await importSaveFile(file);
                     } catch {
                       showToast("Invalid save file", "warning");
+                    } finally {
+                      // Reset input so re-selecting the same file triggers onChange
+                      e.currentTarget.value = "";
                     }
                   }}
                 />

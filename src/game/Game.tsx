@@ -97,32 +97,41 @@ export const Game = () => {
     const tier = getDifficultyById(difficulty);
     if (!tier) return;
 
-    // Reset Zustand to initial state first
-    useGameStore.getState().resetGame();
+    try {
+      // Reset Zustand to initial state first
+      useGameStore.getState().resetGame();
 
-    // Set up the new game in the database
-    setupNewGame(
-      difficulty,
-      permadeath,
-      tier.startingResources,
-      tier.startingSeeds,
-    );
+      // Set up the new game in the database
+      setupNewGame(
+        difficulty,
+        permadeath,
+        tier.startingResources,
+        tier.startingSeeds,
+      );
 
-    // Hydrate the store from the fresh database
-    const state = hydrateGameStore();
-    hydrateFromDb(state);
+      // Hydrate the store from the fresh database
+      const state = hydrateGameStore();
+      hydrateFromDb(state);
 
-    // Persist to IndexedDB
-    if (isDbInitialized()) {
-      const { sqlDb } = getDb();
-      const data = sqlDb.export();
-      await saveDatabaseToIndexedDB(data);
+      // Persist to IndexedDB
+      if (isDbInitialized()) {
+        const { sqlDb } = getDb();
+        const data = sqlDb.export();
+        await saveDatabaseToIndexedDB(data);
+      }
+
+      setShowNewGame(false);
+      // Inline handleStartGame logic to avoid stale closure over hasSeenRules
+      if (!useGameStore.getState().hasSeenRules) {
+        setShowRules(true);
+      } else {
+        setScreen("playing");
+      }
+    } catch (error) {
+      console.error("Failed to create new game:", error);
+      setShowNewGame(false);
     }
-
-    setShowNewGame(false);
-    handleStartGame();
-  // biome-ignore lint/correctness/useExhaustiveDependencies: handleStartGame is stable, depends on external state via getState()
-  }, [hydrateFromDb, handleStartGame]);
+  }, [hydrateFromDb, setScreen]);
 
   const handleRulesClose = () => {
     setShowRules(false);
@@ -142,7 +151,7 @@ export const Game = () => {
         style={{ background: `linear-gradient(180deg, ${COLORS.skyMist} 0%, ${COLORS.leafLight}40 100%)` }}
       >
         <div
-          className="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin"
+          className="w-8 h-8 border-3 border-t-transparent rounded-full motion-safe:animate-spin motion-reduce:animate-pulse"
           style={{ borderColor: `${COLORS.forestGreen} transparent ${COLORS.forestGreen} ${COLORS.forestGreen}` }}
         />
         <p className="text-sm" style={{ color: COLORS.barkBrown }}>Loading grove...</p>

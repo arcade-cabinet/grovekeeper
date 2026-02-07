@@ -214,10 +214,12 @@ export const GameScene = () => {
             if (groveData) {
               saveGroveToDb(groveData.trees, groveData.playerPosition);
             }
-            // Flush to IndexedDB
+            // Flush to IndexedDB (fire-and-forget with error logging)
             const { sqlDb } = getDb();
             const data = sqlDb.export();
-            saveDatabaseToIndexedDB(data);
+            saveDatabaseToIndexedDB(data).catch((err) => {
+              console.warn("IndexedDB flush failed on visibilitychange:", err);
+            });
           } catch (e) {
             console.error("SQLite save failed:", e);
           }
@@ -533,8 +535,12 @@ export const GameScene = () => {
             try {
               persistGameStore(useGameStore.getState());
               const { sqlDb } = getDb();
-              saveDatabaseToIndexedDB(sqlDb.export());
-            } catch { /* non-critical */ }
+              saveDatabaseToIndexedDB(sqlDb.export()).catch((err) => {
+                console.warn("Auto-save IndexedDB flush failed:", err);
+              });
+            } catch (e) {
+              console.warn("Auto-save SQLite persist failed:", e);
+            }
           }
         }
 

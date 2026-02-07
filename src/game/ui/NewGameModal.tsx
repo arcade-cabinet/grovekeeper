@@ -33,7 +33,7 @@ const ICONS: Record<string, string> = {
 
 export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
   const [selected, setSelected] = useState<DifficultyTier>(
-    DIFFICULTY_TIERS.find((t) => t.id === "normal") ?? DIFFICULTY_TIERS[1],
+    DIFFICULTY_TIERS.find((t) => t.id === "normal") ?? DIFFICULTY_TIERS[0],
   );
   const [permadeath, setPermadeath] = useState(false);
 
@@ -199,7 +199,8 @@ function DifficultyTile({
 }>) {
   return (
     <button
-      className="flex flex-col items-center justify-center p-2 rounded-lg transition-all min-h-[72px]"
+      aria-label={`${tier.name} difficulty: ${tier.tagline}`}
+      className="flex flex-col items-center justify-center p-2 rounded-lg transition-all motion-reduce:transition-none min-h-[72px]"
       style={{
         background: isSelected ? `${tier.color}15` : "white",
         border: `2px solid ${isSelected ? tier.color : "#E0E0E0"}`,

@@ -152,7 +152,7 @@ export function hydrateGameStore(): HydratedGameState {
           gridZ: t.gridZ,
           stage: t.stage as 0 | 1 | 2 | 3 | 4,
           progress: t.progress,
-          watered: t.watered,
+          watered: Boolean(t.watered),
           totalGrowthTime: t.totalGrowthTime,
           plantedAt: t.plantedAt,
           meshSeed: t.meshSeed,
@@ -163,7 +163,7 @@ export function hydrateGameStore(): HydratedGameState {
 
   return {
     difficulty: config?.difficulty ?? "normal",
-    permadeath: config?.permadeath ?? false,
+    permadeath: Boolean(config?.permadeath ?? false),
     level: p?.level ?? 1,
     xp: p?.xp ?? 0,
     coins: p?.coins ?? 100,
@@ -202,9 +202,9 @@ export function hydrateGameStore(): HydratedGameState {
     worldSeed: ws?.worldSeed ?? "",
     discoveredZones: parseJson(ws?.discoveredZonesJson, ["starting-grove"]),
     currentZoneId: ws?.currentZoneId ?? "starting-grove",
-    hasSeenRules: st?.hasSeenRules ?? false,
-    hapticsEnabled: st?.hapticsEnabled ?? true,
-    soundEnabled: st?.soundEnabled ?? true,
+    hasSeenRules: Boolean(st?.hasSeenRules ?? false),
+    hapticsEnabled: st ? Boolean(st.hapticsEnabled) : true,
+    soundEnabled: st ? Boolean(st.soundEnabled) : true,
     toolUpgrades,
     placedStructures,
     groveData,
@@ -443,7 +443,7 @@ export function loadGroveFromDb(): { trees: SerializedTreeDb[]; playerPosition: 
       gridZ: t.gridZ,
       stage: t.stage as 0 | 1 | 2 | 3 | 4,
       progress: t.progress,
-      watered: t.watered,
+      watered: Boolean(t.watered),
       totalGrowthTime: t.totalGrowthTime,
       plantedAt: t.plantedAt,
       meshSeed: t.meshSeed,
@@ -470,15 +470,23 @@ export function setupNewGame(
 
   sqlDb.run("BEGIN TRANSACTION");
   try {
-    // Clear all existing data
-    for (const table of [
-      "save_config", "player", "resources", "seeds", "unlocks",
-      "achievements", "trees", "grid_cells", "structures", "quests",
-      "quest_goals", "world_state", "time_state", "tracking",
-      "settings", "tool_upgrades",
-    ]) {
-      sqlDb.run(`DELETE FROM ${table}`);
-    }
+    // Clear all existing data (hardcoded table names — not user input)
+    sqlDb.run("DELETE FROM save_config");
+    sqlDb.run("DELETE FROM player");
+    sqlDb.run("DELETE FROM resources");
+    sqlDb.run("DELETE FROM seeds");
+    sqlDb.run("DELETE FROM unlocks");
+    sqlDb.run("DELETE FROM achievements");
+    sqlDb.run("DELETE FROM trees");
+    sqlDb.run("DELETE FROM grid_cells");
+    sqlDb.run("DELETE FROM structures");
+    sqlDb.run("DELETE FROM quests");
+    sqlDb.run("DELETE FROM quest_goals");
+    sqlDb.run("DELETE FROM world_state");
+    sqlDb.run("DELETE FROM time_state");
+    sqlDb.run("DELETE FROM tracking");
+    sqlDb.run("DELETE FROM settings");
+    sqlDb.run("DELETE FROM tool_upgrades");
 
     // save_config (immutable after creation)
     db.insert(schema.saveConfig).values({
