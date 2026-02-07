@@ -140,11 +140,7 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
                 Permadeath
               </p>
               <p className="text-[11px] text-gray-500">
-                {selected.permadeathForced === "on"
-                  ? "Always on for this difficulty"
-                  : selected.permadeathForced === "off"
-                    ? "Disabled for this difficulty"
-                    : "Optional — death is permanent"}
+                {permadeathLabel(selected.permadeathForced)}
               </p>
             </div>
             <Switch
@@ -182,17 +178,25 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
   );
 };
 
+// ─── Helpers ─────────────────────────────────────────────────
+
+function permadeathLabel(forced: string): string {
+  if (forced === "on") return "Always on for this difficulty";
+  if (forced === "off") return "Disabled for this difficulty";
+  return "Optional \u2014 death is permanent";
+}
+
 // ─── Sub-components ──────────────────────────────────────────
 
 function DifficultyTile({
   tier,
   isSelected,
   onSelect,
-}: {
+}: Readonly<{
   tier: DifficultyTier;
   isSelected: boolean;
   onSelect: () => void;
-}) {
+}>) {
   return (
     <button
       className="flex flex-col items-center justify-center p-2 rounded-lg transition-all min-h-[72px]"
@@ -214,7 +218,7 @@ function DifficultyTile({
   );
 }
 
-function FeatureRow({ label, value }: { label: string; value: string }) {
+function FeatureRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex justify-between">
       <span className="text-gray-500">{label}</span>

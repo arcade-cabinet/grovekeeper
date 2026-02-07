@@ -27,15 +27,31 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
   const s: Record<string, unknown> = (parsed.state as Record<string, unknown>) ?? parsed;
   if (!s || typeof s !== "object") return false;
 
-  // ─── save_config ────────────────────────────────
+  migrateSaveConfig(db);
+  migratePlayer(db, s);
+  migrateResources(db, s);
+  migrateUnlocks(db, s);
+  migrateWorldAndTime(db, s);
+  migrateTracking(db, s);
+  migrateSettingsAndUpgrades(db, s);
+  migrateStructures(db, s);
+  archiveLocalStorage(zustandRaw);
+
+  return true;
+}
+
+// ─── Migration helpers ─────────────────────────
+
+function migrateSaveConfig(db: AppDatabase): void {
   db.insert(schema.saveConfig).values({
     difficulty: "normal",
     permadeath: false,
     version: 1,
     createdAt: Date.now(),
   }).run();
+}
 
-  // ─── player ─────────────────────────────────────
+function migratePlayer(db: AppDatabase, s: Record<string, unknown>): void {
   db.insert(schema.player).values({
     level: num(s, "level", 1),
     xp: num(s, "xp", 0),
@@ -48,8 +64,9 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
     prestigeCount: num(s, "prestigeCount", 0),
     activeBorderCosmetic: str(s, "activeBorderCosmetic", null),
   }).run();
+}
 
-  // ─── resources ──────────────────────────────────
+function migrateResources(db: AppDatabase, s: Record<string, unknown>): void {
   const resources = obj(s, "resources") as Record<string, number> | null;
   const lifetimeResources = obj(s, "lifetimeResources") as Record<string, number> | null;
   for (const type of ["timber", "sap", "fruit", "acorns"]) {
@@ -60,7 +77,6 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
     }).run();
   }
 
-  // ─── seeds ──────────────────────────────────────
   const seedsData = obj(s, "seeds") as Record<string, number> | null;
   if (seedsData) {
     for (const [speciesId, amount] of Object.entries(seedsData)) {
@@ -69,8 +85,9 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
       }
     }
   }
+}
 
-  // ─── unlocks ────────────────────────────────────
+function migrateUnlocks(db: AppDatabase, s: Record<string, unknown>): void {
   const unlockedTools = arr(s, "unlockedTools") as string[];
   for (const toolId of unlockedTools) {
     db.insert(schema.unlocks).values({ type: "tool", itemId: toolId }).run();
@@ -80,13 +97,13 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
     db.insert(schema.unlocks).values({ type: "species", itemId: speciesId }).run();
   }
 
-  // ─── achievements ──────────────────────────────
   const achievementsData = arr(s, "achievements") as string[];
   for (const id of achievementsData) {
     db.insert(schema.achievements).values({ achievementId: id }).run();
   }
+}
 
-  // ─── world_state ───────────────────────────────
+function migrateWorldAndTime(db: AppDatabase, s: Record<string, unknown>): void {
   const groveData = obj(s, "groveData") as { playerPosition?: { x: number; z: number } } | null;
   db.insert(schema.worldState).values({
     worldSeed: str(s, "worldSeed", ""),
@@ -96,14 +113,14 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
     playerPosZ: groveData?.playerPosition?.z ?? 6,
   }).run();
 
-  // ─── time_state ────────────────────────────────
   db.insert(schema.timeState).values({
     gameTimeMicroseconds: num(s, "gameTimeMicroseconds", 0),
     season: str(s, "currentSeason", "spring"),
     day: num(s, "currentDay", 1),
   }).run();
+}
 
-  // ─── tracking ──────────────────────────────────
+function migrateTracking(db: AppDatabase, s: Record<string, unknown>): void {
   db.insert(schema.tracking).values({
     treesPlanted: num(s, "treesPlanted", 0),
     treesMatured: num(s, "treesMatured", 0),
@@ -122,15 +139,15 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
     completedGoalIdsJson: JSON.stringify(arr(s, "completedGoalIds")),
     lastQuestRefresh: num(s, "lastQuestRefresh", 0),
   }).run();
+}
 
-  // ─── settings ──────────────────────────────────
+function migrateSettingsAndUpgrades(db: AppDatabase, s: Record<string, unknown>): void {
   db.insert(schema.settings).values({
     hasSeenRules: bool(s, "hasSeenRules", false),
     hapticsEnabled: bool(s, "hapticsEnabled", true),
     soundEnabled: bool(s, "soundEnabled", true),
   }).run();
 
-  // ─── tool_upgrades ─────────────────────────────
   const toolUpgradesData = obj(s, "toolUpgrades") as Record<string, number> | null;
   if (toolUpgradesData) {
     for (const [toolId, tier] of Object.entries(toolUpgradesData)) {
@@ -139,8 +156,9 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
       }
     }
   }
+}
 
-  // ─── structures ────────────────────────────────
+function migrateStructures(db: AppDatabase, s: Record<string, unknown>): void {
   const placedStructures = arr(s, "placedStructures") as { templateId: string; worldX: number; worldZ: number }[];
   for (const struct of placedStructures) {
     db.insert(schema.structures).values({
@@ -149,8 +167,9 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
       worldZ: struct.worldZ,
     }).run();
   }
+}
 
-  // Archive original localStorage keys (don't delete — safety net)
+function archiveLocalStorage(zustandRaw: string): void {
   try {
     localStorage.setItem(`${ZUSTAND_KEY}-archived`, zustandRaw);
     localStorage.removeItem(ZUSTAND_KEY);
@@ -162,8 +181,6 @@ export function migrateFromLocalStorage(db: AppDatabase): boolean {
   } catch {
     // Non-critical — ignore storage errors during archival
   }
-
-  return true;
 }
 
 // ─── Helpers ──────────────────────────────────

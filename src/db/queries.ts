@@ -225,144 +225,162 @@ export function persistGameStore(state: Record<string, any>): void {
   // Use a transaction for atomicity
   sqlDb.run("BEGIN TRANSACTION");
   try {
-    // player (upsert — delete + insert for singleton)
-    sqlDb.run("DELETE FROM player");
-    db.insert(schema.player).values({
-      level: state.level as number,
-      xp: state.xp as number,
-      coins: state.coins as number,
-      stamina: state.stamina as number,
-      maxStamina: state.maxStamina as number,
-      selectedTool: state.selectedTool as string,
-      selectedSpecies: state.selectedSpecies as string,
-      gridSize: state.gridSize as number,
-      prestigeCount: state.prestigeCount as number,
-      activeBorderCosmetic: (state.activeBorderCosmetic as string | null) ?? null,
-    }).run();
-
-    // resources
-    sqlDb.run("DELETE FROM resources");
-    const resources = state.resources as Record<string, number>;
-    const lifetimeResources = state.lifetimeResources as Record<string, number>;
-    for (const type of ["timber", "sap", "fruit", "acorns"]) {
-      db.insert(schema.resources).values({
-        type,
-        current: resources?.[type] ?? 0,
-        lifetime: lifetimeResources?.[type] ?? 0,
-      }).run();
-    }
-
-    // seeds
-    sqlDb.run("DELETE FROM seeds");
-    const seeds = state.seeds as Record<string, number>;
-    if (seeds) {
-      for (const [speciesId, amount] of Object.entries(seeds)) {
-        if (amount > 0) {
-          db.insert(schema.seeds).values({ speciesId, amount }).run();
-        }
-      }
-    }
-
-    // unlocks
-    sqlDb.run("DELETE FROM unlocks");
-    const unlockedTools = state.unlockedTools as string[];
-    if (unlockedTools) {
-      for (const toolId of unlockedTools) {
-        db.insert(schema.unlocks).values({ type: "tool", itemId: toolId }).run();
-      }
-    }
-    const unlockedSpecies = state.unlockedSpecies as string[];
-    if (unlockedSpecies) {
-      for (const speciesId of unlockedSpecies) {
-        db.insert(schema.unlocks).values({ type: "species", itemId: speciesId }).run();
-      }
-    }
-
-    // achievements
-    sqlDb.run("DELETE FROM achievements");
-    const achievements = state.achievements as string[];
-    if (achievements) {
-      for (const id of achievements) {
-        db.insert(schema.achievements).values({ achievementId: id }).run();
-      }
-    }
-
-    // world_state
-    sqlDb.run("DELETE FROM world_state");
-    const groveData = state.groveData as { playerPosition?: { x: number; z: number } } | null;
-    db.insert(schema.worldState).values({
-      worldSeed: (state.worldSeed as string) ?? "",
-      discoveredZonesJson: JSON.stringify(state.discoveredZones ?? ["starting-grove"]),
-      currentZoneId: (state.currentZoneId as string) ?? "starting-grove",
-      playerPosX: groveData?.playerPosition?.x ?? 6,
-      playerPosZ: groveData?.playerPosition?.z ?? 6,
-    }).run();
-
-    // time_state
-    sqlDb.run("DELETE FROM time_state");
-    db.insert(schema.timeState).values({
-      gameTimeMicroseconds: (state.gameTimeMicroseconds as number) ?? 0,
-      season: (state.currentSeason as string) ?? "spring",
-      day: (state.currentDay as number) ?? 1,
-    }).run();
-
-    // tracking
-    sqlDb.run("DELETE FROM tracking");
-    db.insert(schema.tracking).values({
-      treesPlanted: (state.treesPlanted as number) ?? 0,
-      treesMatured: (state.treesMatured as number) ?? 0,
-      treesHarvested: (state.treesHarvested as number) ?? 0,
-      treesWatered: (state.treesWatered as number) ?? 0,
-      seasonsExperiencedJson: JSON.stringify(state.seasonsExperienced ?? []),
-      speciesPlantedJson: JSON.stringify(state.speciesPlanted ?? []),
-      toolUseCountsJson: JSON.stringify(state.toolUseCounts ?? {}),
-      wildTreesHarvested: (state.wildTreesHarvested as number) ?? 0,
-      wildTreesRegrown: (state.wildTreesRegrown as number) ?? 0,
-      visitedZoneTypesJson: JSON.stringify(state.visitedZoneTypes ?? []),
-      treesPlantedInSpring: (state.treesPlantedInSpring as number) ?? 0,
-      treesHarvestedInAutumn: (state.treesHarvestedInAutumn as number) ?? 0,
-      wildSpeciesHarvestedJson: JSON.stringify(state.wildSpeciesHarvested ?? []),
-      completedQuestIdsJson: JSON.stringify(state.completedQuestIds ?? []),
-      completedGoalIdsJson: JSON.stringify(state.completedGoalIds ?? []),
-      lastQuestRefresh: (state.lastQuestRefresh as number) ?? 0,
-    }).run();
-
-    // settings
-    sqlDb.run("DELETE FROM settings");
-    db.insert(schema.settings).values({
-      hasSeenRules: (state.hasSeenRules as boolean) ?? false,
-      hapticsEnabled: (state.hapticsEnabled as boolean) ?? true,
-      soundEnabled: (state.soundEnabled as boolean) ?? true,
-    }).run();
-
-    // tool_upgrades
-    sqlDb.run("DELETE FROM tool_upgrades");
-    const toolUpgrades = state.toolUpgrades as Record<string, number>;
-    if (toolUpgrades) {
-      for (const [toolId, tier] of Object.entries(toolUpgrades)) {
-        if (tier > 0) {
-          db.insert(schema.toolUpgrades).values({ toolId, tier }).run();
-        }
-      }
-    }
-
-    // structures
-    sqlDb.run("DELETE FROM structures");
-    const placedStructures = state.placedStructures as { templateId: string; worldX: number; worldZ: number }[];
-    if (placedStructures) {
-      for (const struct of placedStructures) {
-        db.insert(schema.structures).values({
-          templateId: struct.templateId,
-          worldX: struct.worldX,
-          worldZ: struct.worldZ,
-        }).run();
-      }
-    }
+    persistPlayer(db, sqlDb, state);
+    persistResources(db, sqlDb, state);
+    persistUnlocks(db, sqlDb, state);
+    persistWorldAndTime(db, sqlDb, state);
+    persistTracking(db, sqlDb, state);
+    persistSettingsAndUpgrades(db, sqlDb, state);
+    persistStructures(db, sqlDb, state);
 
     sqlDb.run("COMMIT");
   } catch (e) {
     sqlDb.run("ROLLBACK");
     throw e;
+  }
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
+function persistPlayer(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+  sqlDb.run("DELETE FROM player");
+  db.insert(schema.player).values({
+    level: state.level as number,
+    xp: state.xp as number,
+    coins: state.coins as number,
+    stamina: state.stamina as number,
+    maxStamina: state.maxStamina as number,
+    selectedTool: state.selectedTool as string,
+    selectedSpecies: state.selectedSpecies as string,
+    gridSize: state.gridSize as number,
+    prestigeCount: state.prestigeCount as number,
+    activeBorderCosmetic: (state.activeBorderCosmetic as string | null) ?? null,
+  }).run();
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
+function persistResources(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+  sqlDb.run("DELETE FROM resources");
+  const resources = state.resources as Record<string, number>;
+  const lifetimeResources = state.lifetimeResources as Record<string, number>;
+  for (const type of ["timber", "sap", "fruit", "acorns"]) {
+    db.insert(schema.resources).values({
+      type,
+      current: resources?.[type] ?? 0,
+      lifetime: lifetimeResources?.[type] ?? 0,
+    }).run();
+  }
+
+  sqlDb.run("DELETE FROM seeds");
+  const seeds = state.seeds as Record<string, number>;
+  if (seeds) {
+    for (const [speciesId, amount] of Object.entries(seeds)) {
+      if (amount > 0) {
+        db.insert(schema.seeds).values({ speciesId, amount }).run();
+      }
+    }
+  }
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
+function persistUnlocks(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+  sqlDb.run("DELETE FROM unlocks");
+  const unlockedTools = state.unlockedTools as string[];
+  if (unlockedTools) {
+    for (const toolId of unlockedTools) {
+      db.insert(schema.unlocks).values({ type: "tool", itemId: toolId }).run();
+    }
+  }
+  const unlockedSpecies = state.unlockedSpecies as string[];
+  if (unlockedSpecies) {
+    for (const speciesId of unlockedSpecies) {
+      db.insert(schema.unlocks).values({ type: "species", itemId: speciesId }).run();
+    }
+  }
+
+  sqlDb.run("DELETE FROM achievements");
+  const achievements = state.achievements as string[];
+  if (achievements) {
+    for (const id of achievements) {
+      db.insert(schema.achievements).values({ achievementId: id }).run();
+    }
+  }
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
+function persistWorldAndTime(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+  sqlDb.run("DELETE FROM world_state");
+  const groveData = state.groveData as { playerPosition?: { x: number; z: number } } | null;
+  db.insert(schema.worldState).values({
+    worldSeed: (state.worldSeed as string) ?? "",
+    discoveredZonesJson: JSON.stringify(state.discoveredZones ?? ["starting-grove"]),
+    currentZoneId: (state.currentZoneId as string) ?? "starting-grove",
+    playerPosX: groveData?.playerPosition?.x ?? 6,
+    playerPosZ: groveData?.playerPosition?.z ?? 6,
+  }).run();
+
+  sqlDb.run("DELETE FROM time_state");
+  db.insert(schema.timeState).values({
+    gameTimeMicroseconds: (state.gameTimeMicroseconds as number) ?? 0,
+    season: (state.currentSeason as string) ?? "spring",
+    day: (state.currentDay as number) ?? 1,
+  }).run();
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
+function persistTracking(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+  sqlDb.run("DELETE FROM tracking");
+  db.insert(schema.tracking).values({
+    treesPlanted: (state.treesPlanted as number) ?? 0,
+    treesMatured: (state.treesMatured as number) ?? 0,
+    treesHarvested: (state.treesHarvested as number) ?? 0,
+    treesWatered: (state.treesWatered as number) ?? 0,
+    seasonsExperiencedJson: JSON.stringify(state.seasonsExperienced ?? []),
+    speciesPlantedJson: JSON.stringify(state.speciesPlanted ?? []),
+    toolUseCountsJson: JSON.stringify(state.toolUseCounts ?? {}),
+    wildTreesHarvested: (state.wildTreesHarvested as number) ?? 0,
+    wildTreesRegrown: (state.wildTreesRegrown as number) ?? 0,
+    visitedZoneTypesJson: JSON.stringify(state.visitedZoneTypes ?? []),
+    treesPlantedInSpring: (state.treesPlantedInSpring as number) ?? 0,
+    treesHarvestedInAutumn: (state.treesHarvestedInAutumn as number) ?? 0,
+    wildSpeciesHarvestedJson: JSON.stringify(state.wildSpeciesHarvested ?? []),
+    completedQuestIdsJson: JSON.stringify(state.completedQuestIds ?? []),
+    completedGoalIdsJson: JSON.stringify(state.completedGoalIds ?? []),
+    lastQuestRefresh: (state.lastQuestRefresh as number) ?? 0,
+  }).run();
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
+function persistSettingsAndUpgrades(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+  sqlDb.run("DELETE FROM settings");
+  db.insert(schema.settings).values({
+    hasSeenRules: (state.hasSeenRules as boolean) ?? false,
+    hapticsEnabled: (state.hapticsEnabled as boolean) ?? true,
+    soundEnabled: (state.soundEnabled as boolean) ?? true,
+  }).run();
+
+  sqlDb.run("DELETE FROM tool_upgrades");
+  const toolUpgrades = state.toolUpgrades as Record<string, number>;
+  if (toolUpgrades) {
+    for (const [toolId, tier] of Object.entries(toolUpgrades)) {
+      if (tier > 0) {
+        db.insert(schema.toolUpgrades).values({ toolId, tier }).run();
+      }
+    }
+  }
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
+function persistStructures(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+  sqlDb.run("DELETE FROM structures");
+  const placedStructures = state.placedStructures as { templateId: string; worldX: number; worldZ: number }[];
+  if (placedStructures) {
+    for (const struct of placedStructures) {
+      db.insert(schema.structures).values({
+        templateId: struct.templateId,
+        worldX: struct.worldX,
+        worldZ: struct.worldZ,
+      }).run();
+    }
   }
 }
 

@@ -21,7 +21,7 @@ export function exportSaveFile(): void {
   a.download = `grovekeeper-save-${new Date().toISOString().slice(0, 10)}.sqlite`;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 }
 
@@ -41,5 +41,5 @@ export async function importSaveFile(file: File): Promise<void> {
 
   // Write to IndexedDB and reload
   await saveDatabaseToIndexedDB(data);
-  window.location.reload();
+  globalThis.location.reload();
 }

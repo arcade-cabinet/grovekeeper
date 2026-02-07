@@ -32,7 +32,7 @@ export const player = sqliteTable("player", {
   prestigeCount: integer("prestige_count").notNull().default(0),
   activeBorderCosmetic: text("active_border_cosmetic"),
   // Forward-compatible: PR 2 exposure system
-  bodyTemp: real("body_temp").notNull().default(37.0),
+  bodyTemp: real("body_temp").notNull().default(37),
 });
 
 // ─── resources ───────────────────────────────────────────────
