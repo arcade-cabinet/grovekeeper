@@ -19,8 +19,11 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        window.addEventListener("load", function() {
+          // Derive base path from document so it works on both localhost and GitHub Pages
+          var base = document.querySelector('base')?.href || document.baseURI;
+          var swUrl = new URL('sw.js', base).href;
+          navigator.serviceWorker.register(swUrl).catch(function() {});
         });
       }
     </script>

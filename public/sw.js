@@ -1,5 +1,9 @@
 const CACHE_NAME = "grovekeeper-v1";
-const PRECACHE_URLS = ["/", "/index.html"];
+
+// Derive the base path from the service worker's own URL
+// e.g. https://user.github.io/grovekeeper/sw.js → /grovekeeper/
+const SW_SCOPE = new URL(".", self.location).pathname;
+const PRECACHE_URLS = [SW_SCOPE, SW_SCOPE + "index.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
