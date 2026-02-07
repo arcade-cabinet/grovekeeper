@@ -574,7 +574,7 @@ export const GameScene = () => {
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree || tree.tree.stage < 3) return;
 
-    const harvestResources = collectHarvest(tree);
+    const harvestResources = collectHarvest(tree, useGameStore.getState().currentSeason);
     if (harvestResources) {
       for (const r of harvestResources) addResource(r.type as ResourceType, r.amount);
     } else {
@@ -970,7 +970,7 @@ export const GameScene = () => {
       if (!entity.harvestable?.ready || !entity.tree) continue;
       // Cost 5 stamina per tree (bulk discount)
       if (!useGameStore.getState().spendStamina(5)) break;
-      const harvestResources = collectHarvest(entity);
+      const harvestResources = collectHarvest(entity, useGameStore.getState().currentSeason);
       if (harvestResources) {
         for (const r of harvestResources) {
           addResource(r.type as ResourceType, r.amount);

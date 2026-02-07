@@ -182,6 +182,15 @@ describe("findPath", () => {
     expect(path).toEqual([{ x: 0, z: 0 }]);
   });
 
+  it("returns null when start is blocked", () => {
+    const grid = gridFrom2D([
+      [1, 0],
+      [0, 0],
+    ]);
+    const path = findPath(grid, { x: 0, z: 0 }, { x: 1, z: 0 });
+    expect(path).toBeNull();
+  });
+
   it("returns null when goal is blocked", () => {
     const grid = gridFrom2D([
       [0, 1],

@@ -96,7 +96,8 @@ export function findPath(
   if (sx < 0 || sx >= width || sz < 0 || sz >= height) return null;
   if (gx < 0 || gx >= width || gz < 0 || gz >= height) return null;
 
-  // Goal is blocked — can't reach it
+  // Start or goal is blocked — can't pathfind
+  if (data[sz * width + sx] !== 0) return null;
   if (data[gz * width + gx] !== 0) return null;
 
   // Same tile — trivial path

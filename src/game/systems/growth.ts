@@ -73,8 +73,27 @@ export function calcGrowthRate(params: GrowthRateParams): number {
 /**
  * Growth system — runs every frame. Advances tree growth based on species,
  * difficulty, season, and watered state. Handles stage transitions.
+ *
+ * Builds spatial lookup maps once per frame for O(1) neighbor queries,
+ * avoiding O(n^2) per-tree iteration over grid cells and other trees.
  */
 export function growthSystem(deltaTime: number, currentSeason: string, weatherMultiplier = 1.0): void {
+  // Build per-frame spatial lookups for species bonuses
+  const waterTiles = new Set<string>();
+  const treeCounts = new Map<string, number>();
+
+  for (const cell of gridCellsQuery) {
+    if (cell.gridCell?.type === "water") {
+      waterTiles.add(`${cell.gridCell.gridX},${cell.gridCell.gridZ}`);
+    }
+  }
+
+  for (const entity of treesQuery) {
+    if (!entity.position) continue;
+    const key = `${entity.position.x},${entity.position.z}`;
+    treeCounts.set(key, (treeCounts.get(key) ?? 0) + 1);
+  }
+
   for (const entity of treesQuery) {
     if (!entity.tree || !entity.renderable) continue;
 
@@ -114,19 +133,19 @@ export function growthSystem(deltaTime: number, currentSeason: string, weatherMu
     // Fertilized bonus (2x growth for the current stage cycle)
     const fertilizedMult = tree.fertilized ? 2.0 : 1.0;
 
-    // Species-specific bonuses
+    // Species-specific bonuses (O(1) via spatial lookups)
     let speciesBonus = 1.0;
 
     // Silver Birch: +20% growth near water tiles
     if (tree.speciesId === "silver-birch" && entity.position) {
       const px = entity.position.x;
       const pz = entity.position.z;
-      for (const cell of gridCellsQuery) {
-        if (cell.gridCell?.type === "water") {
-          const dx = cell.gridCell.gridX - px;
-          const dz = cell.gridCell.gridZ - pz;
-          if (Math.abs(dx) <= 1 && Math.abs(dz) <= 1 && (dx !== 0 || dz !== 0)) {
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          if (dx === 0 && dz === 0) continue;
+          if (waterTiles.has(`${px + dx},${pz + dz}`)) {
             speciesBonus = 1.2;
+            dx = 2; // break outer
             break;
           }
         }
@@ -138,12 +157,10 @@ export function growthSystem(deltaTime: number, currentSeason: string, weatherMu
       const px = entity.position.x;
       const pz = entity.position.z;
       let adjacentCount = 0;
-      for (const other of treesQuery) {
-        if (other === entity || !other.position) continue;
-        const dx = Math.abs(other.position.x - px);
-        const dz = Math.abs(other.position.z - pz);
-        if (dx <= 1 && dz <= 1) {
-          adjacentCount++;
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          if (dx === 0 && dz === 0) continue;
+          adjacentCount += treeCounts.get(`${px + dx},${pz + dz}`) ?? 0;
         }
       }
       speciesBonus = 1 + Math.min(adjacentCount * 0.15, 0.6);
