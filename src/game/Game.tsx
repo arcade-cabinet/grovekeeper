@@ -1,20 +1,27 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useGameStore } from "./stores/gameStore";
 import { MainMenu } from "./ui/MainMenu";
 import { GameErrorBoundary } from "./ui/ErrorBoundary";
 import { RulesModal } from "./ui/RulesModal";
+import { NewGameModal } from "./ui/NewGameModal";
 import { initializePlatform } from "./systems/platform";
 import { generateDailyQuests } from "./systems/quests";
+import { initDatabase } from "@/db/init";
+import { hydrateGameStore, setupNewGame } from "@/db/queries";
+import { saveDatabaseToIndexedDB } from "@/db/persist";
+import { getDb, isDbInitialized } from "@/db/client";
+import { getDifficultyById } from "./constants/difficulty";
+import { COLORS } from "./constants/config";
 
 const GameScene = lazy(() =>
   import("./scenes/GameScene").then((m) => ({ default: m.GameScene })),
 );
 
 export const Game = () => {
-  const { 
-    screen, 
-    setScreen, 
-    hasSeenRules, 
+  const {
+    screen,
+    setScreen,
+    hasSeenRules,
     setHasSeenRules,
     currentSeason,
     level,
@@ -23,23 +30,45 @@ export const Game = () => {
     setActiveQuests,
     lastQuestRefresh,
     setLastQuestRefresh,
+    hydrateFromDb,
   } = useGameStore();
-  
+
+  const [dbLoading, setDbLoading] = useState(true);
+  const [showNewGame, setShowNewGame] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [, setPlatformInitialized] = useState(false);
-  
+
   // Initialize platform on mount
   useEffect(() => {
     initializePlatform().then(() => {
       setPlatformInitialized(true);
     });
   }, []);
-  
+
+  // Initialize database on mount
+  useEffect(() => {
+    let cancelled = false;
+    initDatabase().then((result) => {
+      if (cancelled) return;
+      if (!result.isNewGame) {
+        // Hydrate game store from SQLite
+        const state = hydrateGameStore();
+        hydrateFromDb(state);
+      }
+      setDbLoading(false);
+    }).catch((err) => {
+      console.error("Database init failed:", err);
+      if (!cancelled) setDbLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [hydrateFromDb]);
+
   // Generate daily quests if needed
   useEffect(() => {
+    if (dbLoading) return;
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
-    
+
     // Refresh quests once per day or if none exist
     if (activeQuests.length === 0 || (now - lastQuestRefresh) > oneDayMs) {
       const completedSet = new Set(completedGoalIds);
@@ -47,8 +76,8 @@ export const Game = () => {
       setActiveQuests(newQuests);
       setLastQuestRefresh(now);
     }
-  }, [currentSeason, level, completedGoalIds, activeQuests.length, lastQuestRefresh, setActiveQuests, setLastQuestRefresh]);
-  
+  }, [dbLoading, currentSeason, level, completedGoalIds, activeQuests.length, lastQuestRefresh, setActiveQuests, setLastQuestRefresh]);
+
   // Show rules when starting game for first time
   const handleStartGame = () => {
     if (!hasSeenRules) {
@@ -57,21 +86,74 @@ export const Game = () => {
       setScreen("playing");
     }
   };
-  
+
+  // Handle "New Grove" button — show difficulty selection
+  const handleNewGame = () => {
+    setShowNewGame(true);
+  };
+
+  // Handle difficulty selection → create new game in DB
+  const handleDifficultySelected = useCallback(async (difficulty: string, permadeath: boolean) => {
+    const tier = getDifficultyById(difficulty);
+    if (!tier) return;
+
+    // Reset Zustand to initial state first
+    useGameStore.getState().resetGame();
+
+    // Set up the new game in the database
+    setupNewGame(
+      difficulty,
+      permadeath,
+      tier.startingResources,
+      tier.startingSeeds,
+    );
+
+    // Hydrate the store from the fresh database
+    const state = hydrateGameStore();
+    hydrateFromDb(state);
+
+    // Persist to IndexedDB
+    if (isDbInitialized()) {
+      const { sqlDb } = getDb();
+      const data = sqlDb.export();
+      await saveDatabaseToIndexedDB(data);
+    }
+
+    setShowNewGame(false);
+    handleStartGame();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handleStartGame is stable, depends on external state via getState()
+  }, [hydrateFromDb, handleStartGame]);
+
   const handleRulesClose = () => {
     setShowRules(false);
   };
-  
+
   const handleRulesStart = () => {
     setHasSeenRules(true);
     setShowRules(false);
     setScreen("playing");
   };
 
+  // Loading state while database initializes
+  if (dbLoading) {
+    return (
+      <div
+        className="w-full h-full flex flex-col items-center justify-center gap-3"
+        style={{ background: `linear-gradient(180deg, ${COLORS.skyMist} 0%, ${COLORS.leafLight}40 100%)` }}
+      >
+        <div
+          className="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: `${COLORS.forestGreen} transparent ${COLORS.forestGreen} ${COLORS.forestGreen}` }}
+        />
+        <p className="text-sm" style={{ color: COLORS.barkBrown }}>Loading grove...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full">
       {screen === "menu" ? (
-        <MainMenu onStartGame={handleStartGame} />
+        <MainMenu onStartGame={handleStartGame} onNewGame={handleNewGame} />
       ) : (
         <GameErrorBoundary onReset={() => setScreen("menu")}>
           <Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-green-900 text-white">Loading grove...</div>}>
@@ -79,12 +161,19 @@ export const Game = () => {
           </Suspense>
         </GameErrorBoundary>
       )}
-      
+
       {/* Rules modal */}
-      <RulesModal 
-        open={showRules} 
-        onClose={handleRulesClose} 
-        onStart={handleRulesStart} 
+      <RulesModal
+        open={showRules}
+        onClose={handleRulesClose}
+        onStart={handleRulesStart}
+      />
+
+      {/* New game difficulty selection */}
+      <NewGameModal
+        open={showNewGame}
+        onClose={() => setShowNewGame(false)}
+        onStart={handleDifficultySelected}
       />
     </div>
   );

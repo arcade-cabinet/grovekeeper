@@ -3,6 +3,7 @@ import { getSpeciesById } from "../constants/trees";
 import type { Entity } from "../ecs/world";
 import { harvestableQuery, structuresQuery, world } from "../ecs/world";
 import { getHarvestMultiplier } from "../structures/StructureManager";
+import { getActiveDifficulty } from "../constants/difficulty";
 
 /**
  * Initialize the harvestable component on a tree entity.
@@ -63,7 +64,8 @@ function computeYieldMultiplier(entity: Entity, currentSeason?: string): number 
   // Golden Apple: 3x fruit yield in Autumn
   const goldenAppleMult = (entity.tree.speciesId === "golden-apple" && currentSeason === "autumn") ? 3.0 : 1.0;
 
-  return stageMultiplier * prunedMultiplier * structureMult * ironbarkMult * goldenAppleMult;
+  const difficultyYieldMult = getActiveDifficulty().resourceYieldMult;
+  return stageMultiplier * prunedMultiplier * structureMult * ironbarkMult * goldenAppleMult * difficultyYieldMult;
 }
 
 /**

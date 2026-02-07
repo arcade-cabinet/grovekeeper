@@ -22,6 +22,9 @@ import { staminaSystem } from "../systems/stamina";
 import { harvestSystem, initHarvestable, collectHarvest } from "../systems/harvest";
 import { movementSystem, setMovementBounds } from "../systems/movement";
 import { saveGroveToStorage, loadGroveFromStorage, deserializeGrove } from "../systems/saveLoad";
+import { persistGameStore, saveGroveToDb } from "@/db/queries";
+import { saveDatabaseToIndexedDB } from "@/db/persist";
+import { getDb, isDbInitialized } from "@/db/client";
 import { InputManager } from "../systems/InputManager";
 import {
   initializeTime, updateTime,
@@ -41,6 +44,7 @@ import {
 import { setWeatherVisual, setShowPetals } from "../ui/WeatherOverlay";
 import { GameUI } from "../ui/GameUI";
 import { getStaminaMultiplier as getStructureStaminaMult } from "../structures/StructureManager";
+import { getActiveDifficulty } from "../constants/difficulty";
 
 // Scene managers
 import {
@@ -193,14 +197,32 @@ export const GameScene = () => {
       }
     }
     initializeTime(useGameStore.getState().gameTimeMicroseconds);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: ECS init must run exactly once on mount.
   }, []);
 
-  // Auto-save on tab hide
+  // Auto-save on tab hide — persist to SQLite + IndexedDB
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
         saveCurrentGrove();
+        // SQLite persist
+        if (isDbInitialized()) {
+          try {
+            const state = useGameStore.getState();
+            persistGameStore(state);
+            // Save grove trees to DB
+            const groveData = state.groveData;
+            if (groveData) {
+              saveGroveToDb(groveData.trees, groveData.playerPosition);
+            }
+            // Flush to IndexedDB
+            const { sqlDb } = getDb();
+            const data = sqlDb.export();
+            saveDatabaseToIndexedDB(data);
+          } catch (e) {
+            console.error("SQLite save failed:", e);
+          }
+        }
+        // Fallback: also save to localStorage for backwards compat
         saveGroveToStorage(GRID_SIZE, groveSeedRef.current);
       }
     };
@@ -506,6 +528,14 @@ export const GameScene = () => {
         // Auto-save every 30s
         if (Math.floor(now / 30000) !== Math.floor((now - deltaMs) / 30000)) {
           saveGroveToStorage(GRID_SIZE, groveSeedRef.current);
+          // SQLite auto-save
+          if (isDbInitialized()) {
+            try {
+              persistGameStore(useGameStore.getState());
+              const { sqlDb } = getDb();
+              saveDatabaseToIndexedDB(sqlDb.export());
+            } catch { /* non-critical */ }
+          }
         }
 
         // Tree milestone XP and weather damage
@@ -527,7 +557,6 @@ export const GameScene = () => {
       cam.dispose();
       sm.dispose();
     };
-  // biome-ignore lint/correctness/useExhaustiveDependencies: BabylonJS engine/scene must initialize exactly once. The render loop accesses current state via useGameStore.getState() and stable refs.
   }, []);
 
   // --- Tool actions ---
@@ -895,7 +924,8 @@ export const GameScene = () => {
       const structStaminaMult = player?.position
         ? getStructureStaminaMult(player.position.x, player.position.z, structuresQuery)
         : 1.0;
-      const adjustedCost = Math.ceil(tool.staminaCost * weatherStaminaMult * structStaminaMult);
+      const difficultyStaminaMult = getActiveDifficulty().staminaDrainMult;
+      const adjustedCost = Math.ceil(tool.staminaCost * weatherStaminaMult * structStaminaMult * difficultyStaminaMult);
       if (!useGameStore.getState().spendStamina(adjustedCost)) return;
     }
     const action = toolActions[selectedTool];

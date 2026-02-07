@@ -7,17 +7,26 @@ import { Logo } from "./Logo";
 
 interface MainMenuProps {
   onStartGame?: () => void;
+  onNewGame?: () => void;
 }
 
-export const MainMenu = ({ onStartGame }: MainMenuProps) => {
-  const { setScreen, treesPlanted, resetGame } = useGameStore();
+export const MainMenu = ({ onStartGame, onNewGame }: MainMenuProps) => {
+  const { setScreen, treesPlanted } = useGameStore();
   const hasSave = treesPlanted > 0;
-  
+
   const handleStart = () => {
     if (onStartGame) {
       onStartGame();
     } else {
       setScreen("playing");
+    }
+  };
+
+  const handleNewGrove = () => {
+    if (onNewGame) {
+      onNewGame();
+    } else {
+      handleStart();
     }
   };
 
@@ -96,24 +105,19 @@ export const MainMenu = ({ onStartGame }: MainMenuProps) => {
             variant={hasSave ? "outline" : "default"}
             style={
               hasSave
-                ? { 
-                    borderColor: COLORS.forestGreen, 
+                ? {
+                    borderColor: COLORS.forestGreen,
                     borderWidth: 2,
                     color: COLORS.forestGreen,
                     background: "white",
                   }
-                : { 
+                : {
                     background: `linear-gradient(135deg, ${COLORS.forestGreen} 0%, ${COLORS.forestGreen}dd 100%)`,
                     color: "white",
                     boxShadow: `0 4px 12px ${COLORS.forestGreen}40`,
                   }
             }
-            onClick={() => {
-              if (hasSave) {
-                resetGame();
-              }
-              handleStart();
-            }}
+            onClick={handleNewGrove}
           >
             {hasSave ? "New Grove" : "Start Growing"}
           </Button>

@@ -1,10 +1,10 @@
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const CACHE_NAME = `grovekeeper-v${CACHE_VERSION}`;
 
 // Derive the base path from the service worker's own URL
 // e.g. https://user.github.io/grovekeeper/sw.js → /grovekeeper/
 const SW_SCOPE = new URL(".", self.location).pathname;
-const PRECACHE_URLS = [SW_SCOPE, SW_SCOPE + "index.html"];
+const PRECACHE_URLS = [SW_SCOPE, SW_SCOPE + "index.html", SW_SCOPE + "sql-wasm/sql-wasm.wasm"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

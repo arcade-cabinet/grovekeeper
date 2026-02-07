@@ -8,6 +8,7 @@ import {
 import { getSpeciesById } from "../constants/trees";
 import { treesQuery, structuresQuery, gridCellsQuery } from "../ecs/world";
 import { getGrowthMultiplier as getStructureGrowthMult } from "../structures/StructureManager";
+import { getActiveDifficulty } from "../constants/difficulty";
 
 /**
  * Calculate the visual scale for a tree at a given stage + progress.
@@ -166,8 +167,9 @@ export function growthSystem(deltaTime: number, currentSeason: string, weatherMu
       speciesBonus = 1 + Math.min(adjacentCount * 0.15, 0.6);
     }
 
-    // Advance progress (weather + structure + fertilized + species multipliers)
-    tree.progress += rate * weatherMultiplier * structureMult * fertilizedMult * speciesBonus * deltaTime;
+    // Advance progress (weather + structure + fertilized + species + difficulty multipliers)
+    const difficultyGrowthMult = getActiveDifficulty().growthSpeedMult;
+    tree.progress += rate * weatherMultiplier * structureMult * fertilizedMult * speciesBonus * difficultyGrowthMult * deltaTime;
     tree.totalGrowthTime += deltaTime;
 
     // Handle stage transition

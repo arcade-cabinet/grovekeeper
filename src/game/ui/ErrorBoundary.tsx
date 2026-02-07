@@ -1,5 +1,4 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { useGameStore } from "../stores/gameStore";
 
 interface Props {
   children: ReactNode;
@@ -20,16 +19,7 @@ export class GameErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[Grovekeeper] Game error:", error, errorInfo.componentStack);
-    // Attempt to save grove state before showing fallback
-    try {
-      const state = useGameStore.getState();
-      if (state.groveData) {
-        // State already persisted via Zustand — force a flush
-        useGameStore.persist.rehydrate();
-      }
-    } catch {
-      // Best-effort save — don't throw in error handler
-    }
+    // Best-effort save — don't throw in error handler
   }
 
   handleReset = () => {

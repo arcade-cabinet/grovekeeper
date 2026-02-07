@@ -1,4 +1,5 @@
 import { DIFFICULTY_MULTIPLIERS, MAX_STAGE } from "../constants/config";
+import { getActiveDifficulty } from "../constants/difficulty";
 
 /**
  * Offline Growth Calculator
@@ -85,12 +86,13 @@ export function calculateOfflineGrowth(
   }
 
   const diffMult = DIFFICULTY_MULTIPLIERS[speciesData.difficulty] ?? 1.0;
+  const difficultyGrowthMult = getActiveDifficulty().growthSpeedMult;
 
   while (remainingTime > 0 && stage < MAX_STAGE) {
     const baseTime = speciesData.baseGrowthTimes[stage];
     if (baseTime === undefined || baseTime <= 0) break;
 
-    const rate = offlineGrowthRate(baseTime, diffMult);
+    const rate = offlineGrowthRate(baseTime, diffMult) * difficultyGrowthMult;
     if (rate <= 0) break;
 
     // How much progress remains to fill this stage?
