@@ -205,7 +205,7 @@ describe("Harvest System", () => {
       matureTree.harvestable!.ready = true;
       const matureResult = collectHarvest(matureTree)!;
 
-      for (const entity of [...world]) world.remove(entity);
+      for (const e of [...world]) world.remove(e);
       const oldTree = createTreeEntity(0, 0, "ironbark");
       oldTree.tree!.stage = 4;
       world.add(oldTree);
@@ -229,7 +229,7 @@ describe("Harvest System", () => {
       const result = collectHarvest(tree)!;
 
       // Compare with white-oak at stage 3 (same base yield for timber)
-      for (const entity of [...world]) world.remove(entity);
+      for (const e of [...world]) world.remove(e);
       const oakTree = createTreeEntity(0, 0, "white-oak");
       oakTree.tree!.stage = 3;
       world.add(oakTree);
@@ -264,7 +264,7 @@ describe("Harvest System", () => {
       const result = collectHarvest(tree)!;
 
       // Base tree at stage 3 no pruning normal difficulty
-      for (const entity of [...world]) world.remove(entity);
+      for (const e of [...world]) world.remove(e);
       useGameStore.setState({ difficulty: "normal" });
       const baseTree = createTreeEntity(0, 0, "white-oak");
       baseTree.tree!.stage = 3;

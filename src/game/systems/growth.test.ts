@@ -221,7 +221,7 @@ describe("Growth System (5-Stage)", () => {
       world.add(tree);
 
       // Use small deltaTime to avoid stage wrapping
-      growthSystem(0.5, "summer", 1.0);
+      growthSystem(0.5, "summer", 1);
       const clearProgress = tree.tree!.progress;
 
       tree.tree!.progress = 0;
@@ -236,7 +236,7 @@ describe("Growth System (5-Stage)", () => {
       const tree = createTreeEntity(0, 0, "white-oak");
       world.add(tree);
 
-      growthSystem(0.5, "summer", 1.0);
+      growthSystem(0.5, "summer", 1);
       const clearProgress = tree.tree!.progress;
 
       tree.tree!.progress = 0;
@@ -389,10 +389,10 @@ describe("Growth System (5-Stage)", () => {
       expect(getStageScale(10, 0)).toBe(1.2);
     });
 
-    it("progress at 1.0 interpolates 30% toward next stage", () => {
-      // At stage 0, progress 1.0: base=0.08, next=0.15
-      // result = 0.08 + (0.15-0.08) * 1.0 * 0.3 = 0.08 + 0.021 = 0.101
-      const scale = getStageScale(0, 1.0);
+    it("progress at 1 interpolates 30% toward next stage", () => {
+      // At stage 0, progress 1: base=0.08, next=0.15
+      // result = 0.08 + (0.15-0.08) * 1 * 0.3 = 0.08 + 0.021 = 0.101
+      const scale = getStageScale(0, 1);
       expect(scale).toBeCloseTo(0.08 + 0.07 * 0.3, 3);
     });
 
