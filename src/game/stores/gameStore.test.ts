@@ -635,7 +635,7 @@ describe("Game Store", () => {
       useGameStore.getState().incrementToolUse("axe");
       const counts = useGameStore.getState().toolUseCounts;
       expect(counts["watering-can"]).toBe(2);
-      expect(counts["axe"]).toBe(1);
+      expect(counts.axe).toBe(1);
     });
 
     it("incrementWildTreesHarvested increments count", () => {
