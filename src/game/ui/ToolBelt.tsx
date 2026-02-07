@@ -60,7 +60,7 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
                 filter: isUnlocked ? "none" : "grayscale(100%)",
                 pointerEvents: isUnlocked ? "auto" : "none",
               }}
-              onClick={() => isUnlocked && onSelectTool(tool.id)}
+              onClick={() => onSelectTool(tool.id)}
               disabled={!isUnlocked}
               title={`${tool.name}${!isUnlocked ? ` (Lv.${tool.unlockLevel})` : ""}`}
             >

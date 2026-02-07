@@ -221,27 +221,28 @@ describe("Harvest System", () => {
     });
 
     it("ironbark 3x bonus does not apply at stage 3", () => {
-      const tree = createTreeEntity(0, 0, "ironbark");
-      tree.tree!.stage = 3;
-      world.add(tree);
-      initHarvestable(tree);
-      tree.harvestable!.ready = true;
-      const result = collectHarvest(tree)!;
+      // Compare ironbark at stage 3 vs stage 4 to isolate the 3x bonus
+      const matureTree = createTreeEntity(0, 0, "ironbark");
+      matureTree.tree!.stage = 3;
+      world.add(matureTree);
+      initHarvestable(matureTree);
+      matureTree.harvestable!.ready = true;
+      const matureResult = collectHarvest(matureTree)!;
 
-      // Compare with white-oak at stage 3 (same base yield for timber)
       for (const e of [...world]) world.remove(e);
-      const oakTree = createTreeEntity(0, 0, "white-oak");
-      oakTree.tree!.stage = 3;
-      world.add(oakTree);
-      initHarvestable(oakTree);
-      oakTree.harvestable!.ready = true;
-      const oakResult = collectHarvest(oakTree)!;
+      const oldTree = createTreeEntity(0, 0, "ironbark");
+      oldTree.tree!.stage = 4;
+      world.add(oldTree);
+      initHarvestable(oldTree);
+      oldTree.harvestable!.ready = true;
+      const oldResult = collectHarvest(oldTree)!;
 
-      // At stage 3, ironbark should not have the 3x bonus
-      const ironTimber = result.find((r) => r.type === "timber")?.amount ?? 0;
-      const oakTimber = oakResult.find((r) => r.type === "timber")?.amount ?? 0;
-      // They may differ by species base yield, but ironbark won't be 3x oak
-      expect(ironTimber).toBeLessThan(oakTimber * 3);
+      const matureTimber = matureResult.find((r) => r.type === "timber")?.amount ?? 0;
+      const oldTimber = oldResult.find((r) => r.type === "timber")?.amount ?? 0;
+
+      // Stage 3 should NOT have the 3x bonus — old growth should be significantly higher
+      // Old growth = stage(1.5x) * ironbark(3.0x) = 4.5x vs stage 3 = 1x
+      expect(oldTimber / matureTimber).toBeGreaterThanOrEqual(4);
     });
 
     it("collectHarvest returns null for entity without harvestable component", () => {

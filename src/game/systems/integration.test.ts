@@ -39,7 +39,7 @@ function difficulty(id: string) {
 }
 
 /** Helper: create a harvestable tree at given stage, added to world. */
-function makeHarvestableTree(speciesId: string, stage: 0 | 1 | 2 | 3 | 4 = 3) {
+function makeHarvestableTree(speciesId: string, stage: 3 | 4 = 3) {
   const tree = createTreeEntity(0, 0, speciesId);
   tree.tree!.stage = stage;
   world.add(tree);
