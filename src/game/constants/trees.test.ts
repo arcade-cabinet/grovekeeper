@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { TREE_SPECIES, getSpeciesById, } from "./trees";
 
 describe("Tree Species Catalog", () => {
-  it("has exactly 8 base species", () => {
-    expect(TREE_SPECIES).toHaveLength(8);
+  it("has exactly 12 base species", () => {
+    expect(TREE_SPECIES).toHaveLength(12);
   });
 
   it("every species has required fields", () => {
@@ -29,7 +29,7 @@ describe("Tree Species Catalog", () => {
     expect(oak!.unlockLevel).toBe(1);
   });
 
-  it("includes all 8 spec species", () => {
+  it("includes all 12 spec species", () => {
     const ids = TREE_SPECIES.map((s) => s.id);
     expect(ids).toContain("white-oak");
     expect(ids).toContain("weeping-willow");
@@ -39,6 +39,10 @@ describe("Tree Species Catalog", () => {
     expect(ids).toContain("redwood");
     expect(ids).toContain("flame-maple");
     expect(ids).toContain("baobab");
+    expect(ids).toContain("silver-birch");
+    expect(ids).toContain("ironbark");
+    expect(ids).toContain("golden-apple");
+    expect(ids).toContain("mystic-fern");
   });
 
   it("elder-pine and redwood are evergreen", () => {

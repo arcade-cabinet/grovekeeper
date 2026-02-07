@@ -15,6 +15,9 @@ export interface TreeComponent {
   totalGrowthTime: number; // cumulative seconds grown
   plantedAt: number;
   meshSeed: number; // for deterministic procedural generation
+  wild?: boolean; // true for trees spawned naturally in wild zones
+  pruned?: boolean; // pruned for harvest yield bonus
+  fertilized?: boolean; // fertilized for 2x growth for 1 stage cycle
 }
 
 export interface PlayerComponent {
@@ -63,6 +66,14 @@ export interface StructureComponent {
   effectMagnitude?: number;
 }
 
+export interface RainCatcherComponent {
+  radius: number;
+}
+
+export interface ScarecrowComponent {
+  radius: number;
+}
+
 // Entity definition
 export interface Entity {
   id: string;
@@ -81,6 +92,8 @@ export interface Entity {
   zone?: ZoneComponent;
   prop?: PropComponent;
   structure?: StructureComponent;
+  rainCatcher?: RainCatcherComponent;
+  scarecrow?: ScarecrowComponent;
   zoneId?: string;
 }
 
@@ -103,3 +116,5 @@ export const gridCellsQuery = world.with("gridCell", "position");
 export const harvestableQuery = world.with("tree", "harvestable");
 export const structuresQuery = world.with("structure", "position");
 export const propsQuery = world.with("prop", "position");
+export const rainCatchersQuery = world.with("rainCatcher", "position");
+export const scarecrowsQuery = world.with("scarecrow", "position");

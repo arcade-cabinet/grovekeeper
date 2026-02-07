@@ -388,15 +388,11 @@ function createZoneFromArchetype(
     occupiedTiles,
   );
 
-  // Build the zone name, noting wild trees in the name for downstream loaders
   const hasWildTrees = archetype.wildTrees && archetype.wildTrees.length > 0;
-  const name = hasWildTrees
-    ? `${archetype.name} (wild trees)`
-    : archetype.name;
 
   return {
     id: zoneId,
-    name,
+    name: archetype.name,
     type: archetype.type,
     origin,
     size,
@@ -405,5 +401,7 @@ function createZoneFromArchetype(
     props: props.length > 0 ? props : undefined,
     plantable: archetype.plantable,
     connections: [],
+    wildTrees: hasWildTrees ? archetype.wildTrees : undefined,
+    wildTreeDensity: hasWildTrees ? (archetype.wildTreeDensity ?? 0) : undefined,
   };
 }

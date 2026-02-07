@@ -185,5 +185,35 @@ describe("Growth System (5-Stage)", () => {
 
       expect(tree.tree!.totalGrowthTime).toBe(5);
     });
+
+    it("fertilized tree grows at 2x speed", () => {
+      const normalTree = createTreeEntity(0, 0, "white-oak");
+      world.add(normalTree);
+
+      const fertilizedTree = createTreeEntity(1, 0, "white-oak");
+      fertilizedTree.tree!.fertilized = true;
+      world.add(fertilizedTree);
+
+      growthSystem(10, "summer");
+
+      // Fertilized tree should have roughly 2x the progress
+      expect(fertilizedTree.tree!.progress).toBeCloseTo(
+        normalTree.tree!.progress * 2,
+        1,
+      );
+    });
+
+    it("fertilized flag clears on stage advance", () => {
+      const tree = createTreeEntity(0, 0, "white-oak");
+      tree.tree!.stage = 1;
+      tree.tree!.progress = 0.99;
+      tree.tree!.fertilized = true;
+      world.add(tree);
+
+      growthSystem(100, "spring");
+
+      expect(tree.tree!.stage).toBeGreaterThan(1);
+      expect(tree.tree!.fertilized).toBe(false);
+    });
   });
 });

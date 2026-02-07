@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { TOOLS, getToolById, } from "./tools";
 
 describe("Tool Definitions", () => {
-  it("has exactly 8 tools", () => {
-    expect(TOOLS).toHaveLength(8);
+  it("has exactly 12 tools", () => {
+    expect(TOOLS).toHaveLength(12);
   });
 
   it("every tool has required fields", () => {
@@ -16,7 +16,7 @@ describe("Tool Definitions", () => {
     }
   });
 
-  it("includes all 8 spec tools", () => {
+  it("includes all 12 spec tools", () => {
     const ids = TOOLS.map((t) => t.id);
     expect(ids).toContain("trowel");
     expect(ids).toContain("watering-can");
@@ -26,6 +26,10 @@ describe("Tool Definitions", () => {
     expect(ids).toContain("shovel");
     expect(ids).toContain("axe");
     expect(ids).toContain("compost-bin");
+    expect(ids).toContain("rain-catcher");
+    expect(ids).toContain("fertilizer-spreader");
+    expect(ids).toContain("scarecrow");
+    expect(ids).toContain("grafting-tool");
   });
 
   it("trowel and watering-can unlock at level 1", () => {
@@ -41,8 +45,8 @@ describe("Tool Definitions", () => {
     expect(getToolById("seed-pouch")!.staminaCost).toBe(0);
   });
 
-  it("axe is most expensive (10 stamina)", () => {
-    expect(getToolById("axe")!.staminaCost).toBe(10);
+  it("grafting-tool is most expensive (15 stamina)", () => {
+    expect(getToolById("grafting-tool")!.staminaCost).toBe(15);
   });
 
   it("getToolById returns undefined for unknown id", () => {

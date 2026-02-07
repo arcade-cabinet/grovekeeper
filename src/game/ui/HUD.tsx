@@ -17,13 +17,22 @@ interface HUDProps {
 }
 
 export const HUD = ({ onOpenMenu, onOpenTools, onOpenBuild, gameTime }: HUDProps) => {
-  const { selectedTool, activeQuests, addCoins, addXp, completeQuest, level } = useGameStore();
+  const { selectedTool, activeQuests, addXp, addResource, addSeed, completeQuest, level } = useGameStore();
 
   const handleClaimReward = (questId: string) => {
     const quest = activeQuests.find(q => q.id === questId);
     if (quest?.completed) {
-      addCoins(quest.rewards.coins);
       addXp(quest.rewards.xp);
+      if (quest.rewards.resources) {
+        for (const r of quest.rewards.resources) {
+          addResource(r.type, r.amount);
+        }
+      }
+      if (quest.rewards.seeds) {
+        for (const s of quest.rewards.seeds) {
+          addSeed(s.speciesId, s.amount);
+        }
+      }
       completeQuest(questId);
     }
   };

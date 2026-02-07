@@ -200,13 +200,20 @@ const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
 
       {/* Rewards */}
       <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: `${COLORS.forestGreen}20` }}>
-        <div className="flex items-center gap-3 text-xs">
-          <span style={{ color: COLORS.autumnGold }}>
-            +{quest.rewards.coins} coins
-          </span>
+        <div className="flex items-center gap-2 text-xs flex-wrap">
           <span style={{ color: COLORS.forestGreen }}>
             +{quest.rewards.xp} XP
           </span>
+          {quest.rewards.resources?.map((r) => (
+            <span key={r.type} style={{ color: COLORS.autumnGold }}>
+              +{r.amount} {r.type}
+            </span>
+          ))}
+          {quest.rewards.seeds?.map((s) => (
+            <span key={s.speciesId} style={{ color: COLORS.leafLight }}>
+              +{s.amount} {s.speciesId} seeds
+            </span>
+          ))}
         </div>
         {quest.completed && onClaim && (
           <Button

@@ -34,8 +34,8 @@ function makeCtx(
 // ---------------------------------------------------------------------------
 
 describe("ACHIEVEMENT_DEFS", () => {
-  it("contains exactly 15 achievements", () => {
-    expect(ACHIEVEMENT_DEFS).toHaveLength(15);
+  it("contains exactly 35 achievements", () => {
+    expect(ACHIEVEMENT_DEFS).toHaveLength(35);
   });
 
   it("has unique IDs", () => {
@@ -94,16 +94,16 @@ describe("Planting achievements", () => {
 // ---------------------------------------------------------------------------
 
 describe("one-of-each", () => {
-  it("requires all 8 species in speciesPlanted", () => {
+  it("requires all 12 species in speciesPlanted", () => {
     const result = checkAchievements(
       makeCtx({ speciesPlanted: [...ALL_BASE_SPECIES] }),
     );
     expect(result).toContain("one-of-each");
   });
 
-  it("does not trigger with only 7 species", () => {
+  it("does not trigger with only 11 species", () => {
     const result = checkAchievements(
-      makeCtx({ speciesPlanted: ALL_BASE_SPECIES.slice(0, 7) }),
+      makeCtx({ speciesPlanted: ALL_BASE_SPECIES.slice(0, 11) }),
     );
     expect(result).not.toContain("one-of-each");
   });
@@ -435,6 +435,340 @@ describe("new-beginnings", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Exploration achievements (Phase 5 expansion)
+// ---------------------------------------------------------------------------
+
+describe("zone-hopper", () => {
+  it("triggers at 5 visited zone types", () => {
+    const result = checkAchievements(
+      makeCtx({
+        visitedZoneTypes: ["forest", "meadow", "swamp", "mountain", "desert"],
+      }),
+    );
+    expect(result).toContain("zone-hopper");
+  });
+
+  it("does not trigger with only 4 zone types", () => {
+    const result = checkAchievements(
+      makeCtx({
+        visitedZoneTypes: ["forest", "meadow", "swamp", "mountain"],
+      }),
+    );
+    expect(result).not.toContain("zone-hopper");
+  });
+});
+
+describe("cartographer", () => {
+  it("triggers at 10 zones discovered", () => {
+    const result = checkAchievements(makeCtx({ zonesDiscovered: 10 }));
+    expect(result).toContain("cartographer");
+  });
+
+  it("does not trigger at 9 zones discovered", () => {
+    const result = checkAchievements(makeCtx({ zonesDiscovered: 9 }));
+    expect(result).not.toContain("cartographer");
+  });
+});
+
+describe("wild-harvester", () => {
+  it("triggers at 10 wild trees harvested", () => {
+    const result = checkAchievements(makeCtx({ wildTreesHarvested: 10 }));
+    expect(result).toContain("wild-harvester");
+  });
+
+  it("does not trigger at 9 wild trees harvested", () => {
+    const result = checkAchievements(makeCtx({ wildTreesHarvested: 9 }));
+    expect(result).not.toContain("wild-harvester");
+  });
+});
+
+describe("forest-keeper", () => {
+  it("triggers at 10 wild trees regrown", () => {
+    const result = checkAchievements(makeCtx({ wildTreesRegrown: 10 }));
+    expect(result).toContain("forest-keeper");
+  });
+
+  it("does not trigger at 9 wild trees regrown", () => {
+    const result = checkAchievements(makeCtx({ wildTreesRegrown: 9 }));
+    expect(result).not.toContain("forest-keeper");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tool Mastery achievements (Phase 5 expansion)
+// ---------------------------------------------------------------------------
+
+describe("hydration-hero", () => {
+  it("triggers at 100 watering-can uses", () => {
+    const result = checkAchievements(
+      makeCtx({ toolUseCounts: { "watering-can": 100 } }),
+    );
+    expect(result).toContain("hydration-hero");
+  });
+
+  it("does not trigger at 99 watering-can uses", () => {
+    const result = checkAchievements(
+      makeCtx({ toolUseCounts: { "watering-can": 99 } }),
+    );
+    expect(result).not.toContain("hydration-hero");
+  });
+});
+
+describe("master-pruner", () => {
+  it("triggers at 50 pruning-shears uses", () => {
+    const result = checkAchievements(
+      makeCtx({ toolUseCounts: { "pruning-shears": 50 } }),
+    );
+    expect(result).toContain("master-pruner");
+  });
+
+  it("does not trigger at 49 pruning-shears uses", () => {
+    const result = checkAchievements(
+      makeCtx({ toolUseCounts: { "pruning-shears": 49 } }),
+    );
+    expect(result).not.toContain("master-pruner");
+  });
+});
+
+describe("rock-breaker", () => {
+  it("triggers at 25 shovel uses", () => {
+    const result = checkAchievements(
+      makeCtx({ toolUseCounts: { shovel: 25 } }),
+    );
+    expect(result).toContain("rock-breaker");
+  });
+
+  it("does not trigger at 24 shovel uses", () => {
+    const result = checkAchievements(
+      makeCtx({ toolUseCounts: { shovel: 24 } }),
+    );
+    expect(result).not.toContain("rock-breaker");
+  });
+});
+
+describe("tool-collector", () => {
+  it("triggers at 12 unlocked tools", () => {
+    const result = checkAchievements(makeCtx({ unlockedToolCount: 12 }));
+    expect(result).toContain("tool-collector");
+  });
+
+  it("does not trigger at 11 unlocked tools", () => {
+    const result = checkAchievements(makeCtx({ unlockedToolCount: 11 }));
+    expect(result).not.toContain("tool-collector");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Seasonal achievements (Phase 5 expansion)
+// ---------------------------------------------------------------------------
+
+describe("spring-planter", () => {
+  it("triggers at 20 trees planted in spring", () => {
+    const result = checkAchievements(makeCtx({ treesPlantedInSpring: 20 }));
+    expect(result).toContain("spring-planter");
+  });
+
+  it("does not trigger at 19 spring plantings", () => {
+    const result = checkAchievements(makeCtx({ treesPlantedInSpring: 19 }));
+    expect(result).not.toContain("spring-planter");
+  });
+});
+
+describe("autumn-harvester", () => {
+  it("triggers at 30 autumn harvests", () => {
+    const result = checkAchievements(makeCtx({ treesHarvestedInAutumn: 30 }));
+    expect(result).toContain("autumn-harvester");
+  });
+
+  it("does not trigger at 29 autumn harvests", () => {
+    const result = checkAchievements(makeCtx({ treesHarvestedInAutumn: 29 }));
+    expect(result).not.toContain("autumn-harvester");
+  });
+});
+
+describe("winter-survivor", () => {
+  it("triggers at 20 trees survived winter", () => {
+    const result = checkAchievements(makeCtx({ treesSurvivedWinter: 20 }));
+    expect(result).toContain("winter-survivor");
+  });
+
+  it("does not trigger at 19 trees survived winter", () => {
+    const result = checkAchievements(makeCtx({ treesSurvivedWinter: 19 }));
+    expect(result).not.toContain("winter-survivor");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Structure achievements (Phase 5 expansion)
+// ---------------------------------------------------------------------------
+
+describe("first-builder", () => {
+  it("triggers at 1 structure built", () => {
+    const result = checkAchievements(makeCtx({ structuresBuilt: 1 }));
+    expect(result).toContain("first-builder");
+  });
+
+  it("does not trigger at 0 structures built", () => {
+    const result = checkAchievements(makeCtx({ structuresBuilt: 0 }));
+    expect(result).not.toContain("first-builder");
+  });
+});
+
+describe("architect", () => {
+  it("triggers at 4 distinct structure types built", () => {
+    const result = checkAchievements(
+      makeCtx({ distinctStructureTypesBuilt: 4 }),
+    );
+    expect(result).toContain("architect");
+  });
+
+  it("does not trigger at 3 distinct structure types", () => {
+    const result = checkAchievements(
+      makeCtx({ distinctStructureTypesBuilt: 3 }),
+    );
+    expect(result).not.toContain("architect");
+  });
+});
+
+describe("master-builder", () => {
+  it("triggers when hasMaxTierStructure is true", () => {
+    const result = checkAchievements(makeCtx({ hasMaxTierStructure: true }));
+    expect(result).toContain("master-builder");
+  });
+
+  it("does not trigger when hasMaxTierStructure is false", () => {
+    const result = checkAchievements(makeCtx({ hasMaxTierStructure: false }));
+    expect(result).not.toContain("master-builder");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Collector achievements (Phase 5 expansion)
+// ---------------------------------------------------------------------------
+
+describe("lumber-lord", () => {
+  it("triggers at 5000 lifetime timber", () => {
+    const result = checkAchievements(
+      makeCtx({
+        lifetimeResources: { timber: 5000, sap: 0, fruit: 0, acorns: 0 },
+      }),
+    );
+    expect(result).toContain("lumber-lord");
+  });
+
+  it("does not trigger at 4999 lifetime timber", () => {
+    const result = checkAchievements(
+      makeCtx({
+        lifetimeResources: { timber: 4999, sap: 0, fruit: 0, acorns: 0 },
+      }),
+    );
+    expect(result).not.toContain("lumber-lord");
+  });
+});
+
+describe("resource-mogul", () => {
+  it("triggers at 1000 of each resource", () => {
+    const result = checkAchievements(
+      makeCtx({
+        lifetimeResources: { timber: 1000, sap: 1000, fruit: 1000, acorns: 1000 },
+      }),
+    );
+    expect(result).toContain("resource-mogul");
+  });
+
+  it("does not trigger if any resource is below 1000", () => {
+    const result = checkAchievements(
+      makeCtx({
+        lifetimeResources: { timber: 1000, sap: 999, fruit: 1000, acorns: 1000 },
+      }),
+    );
+    expect(result).not.toContain("resource-mogul");
+  });
+});
+
+describe("seed-hoarder", () => {
+  it("triggers at 50 seeds of one species", () => {
+    const result = checkAchievements(makeCtx({ maxSeedsOfOneSpecies: 50 }));
+    expect(result).toContain("seed-hoarder");
+  });
+
+  it("does not trigger at 49 seeds", () => {
+    const result = checkAchievements(makeCtx({ maxSeedsOfOneSpecies: 49 }));
+    expect(result).not.toContain("seed-hoarder");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Wild Forest achievements (Phase 5 expansion)
+// ---------------------------------------------------------------------------
+
+describe("forager", () => {
+  it("triggers at 50 wild trees harvested", () => {
+    const result = checkAchievements(makeCtx({ wildTreesHarvested: 50 }));
+    expect(result).toContain("forager");
+  });
+
+  it("does not trigger at 49 wild trees harvested", () => {
+    const result = checkAchievements(makeCtx({ wildTreesHarvested: 49 }));
+    expect(result).not.toContain("forager");
+  });
+});
+
+describe("reforestation", () => {
+  it("triggers at 10 wild trees regrown", () => {
+    const result = checkAchievements(makeCtx({ wildTreesRegrown: 10 }));
+    expect(result).toContain("reforestation");
+  });
+
+  it("does not trigger at 9 wild trees regrown", () => {
+    const result = checkAchievements(makeCtx({ wildTreesRegrown: 9 }));
+    expect(result).not.toContain("reforestation");
+  });
+});
+
+describe("wild-collector", () => {
+  it("triggers when all base species harvested from wild", () => {
+    const result = checkAchievements(
+      makeCtx({ wildSpeciesHarvested: [...ALL_BASE_SPECIES] }),
+    );
+    expect(result).toContain("wild-collector");
+  });
+
+  it("does not trigger with only 11 wild species harvested", () => {
+    const result = checkAchievements(
+      makeCtx({ wildSpeciesHarvested: ALL_BASE_SPECIES.slice(0, 11) }),
+    );
+    expect(result).not.toContain("wild-collector");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Expansion: already-unlocked filtering for new achievements
+// ---------------------------------------------------------------------------
+
+describe("expansion achievements are not re-awarded when already unlocked", () => {
+  it("skips hydration-hero when already unlocked", () => {
+    const result = checkAchievements(
+      makeCtx({
+        toolUseCounts: { "watering-can": 200 },
+        unlockedAchievements: ["hydration-hero"],
+      }),
+    );
+    expect(result).not.toContain("hydration-hero");
+  });
+
+  it("skips first-builder when already unlocked", () => {
+    const result = checkAchievements(
+      makeCtx({
+        structuresBuilt: 5,
+        unlockedAchievements: ["first-builder"],
+      }),
+    );
+    expect(result).not.toContain("first-builder");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Already-unlocked filtering
 // ---------------------------------------------------------------------------
 
@@ -471,6 +805,21 @@ describe("does not re-award already unlocked achievements", () => {
         seasonsExperienced: [...ALL_SEASONS],
         speciesPlanted: [...ALL_BASE_SPECIES],
         lifetimeResources: { timber: 9999, sap: 9999, fruit: 9999, acorns: 9999 },
+        // Expansion fields fully satisfied
+        visitedZoneTypes: ["forest", "meadow", "swamp", "mountain", "desert"],
+        zonesDiscovered: 20,
+        wildTreesHarvested: 100,
+        wildTreesRegrown: 50,
+        toolUseCounts: { "watering-can": 200, "pruning-shears": 100, "shovel": 50 },
+        unlockedToolCount: 12,
+        treesPlantedInSpring: 50,
+        treesHarvestedInAutumn: 50,
+        treesSurvivedWinter: 50,
+        structuresBuilt: 10,
+        distinctStructureTypesBuilt: 4,
+        hasMaxTierStructure: true,
+        maxSeedsOfOneSpecies: 100,
+        wildSpeciesHarvested: [...ALL_BASE_SPECIES],
       }),
     );
     expect(result).toEqual([]);

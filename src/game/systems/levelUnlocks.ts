@@ -29,8 +29,16 @@ export const LEVEL_UNLOCKS: readonly LevelUnlockEntry[] = [
   { level: 6, species: ["ghost-birch"] },
   { level: 7, tools: ["axe"] },
   { level: 8, species: ["redwood"] },
+  { level: 9, species: ["silver-birch"] },
   { level: 10, species: ["flame-maple"], tools: ["compost-bin"] },
+  { level: 11, tools: ["rain-catcher"] },
   { level: 12, species: ["baobab"] },
+  { level: 13, tools: ["fertilizer-spreader"] },
+  { level: 14, species: ["ironbark"] },
+  { level: 16, tools: ["scarecrow"] },
+  { level: 18, species: ["golden-apple"] },
+  { level: 20, tools: ["grafting-tool"] },
+  { level: 22, species: ["mystic-fern"] },
 ] as const;
 
 /**

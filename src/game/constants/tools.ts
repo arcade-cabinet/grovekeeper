@@ -81,6 +81,42 @@ export const TOOLS: ToolData[] = [
     staminaCost: 6,
     action: "COMPOST",
   },
+  {
+    id: "rain-catcher",
+    name: "Rain Catcher",
+    description: "Place on tile: auto-waters trees in 2-tile radius during rain",
+    icon: "cloud-rain",
+    unlockLevel: 11,
+    staminaCost: 4,
+    action: "RAIN_CATCH",
+  },
+  {
+    id: "fertilizer-spreader",
+    name: "Fertilizer Spreader",
+    description: "Area fertilize: 2x growth for all trees in 2-tile radius (costs 3 acorns)",
+    icon: "sparkles",
+    unlockLevel: 13,
+    staminaCost: 8,
+    action: "AREA_FERTILIZE",
+  },
+  {
+    id: "scarecrow",
+    name: "Scarecrow",
+    description: "Place on tile: protects trees in 3-tile radius from windstorm damage",
+    icon: "shield",
+    unlockLevel: 16,
+    staminaCost: 6,
+    action: "SCARECROW",
+  },
+  {
+    id: "grafting-tool",
+    name: "Grafting Tool",
+    description: "Graft a Mature+ tree to combine yields from 2 nearest species",
+    icon: "git-merge",
+    unlockLevel: 20,
+    staminaCost: 15,
+    action: "GRAFT",
+  },
 ];
 
 export const getToolById = (id: string): ToolData | undefined =>

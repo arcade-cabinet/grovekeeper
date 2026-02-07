@@ -196,6 +196,34 @@ export function getHarvestMultiplier(
 }
 
 /**
+ * Check whether a structure template has an upgrade path.
+ */
+export function canUpgrade(templateId: string): boolean {
+  const template = getTemplate(templateId);
+  return template?.upgradeTo != null;
+}
+
+/**
+ * Get the resource cost to upgrade from a given template to its next tier.
+ * Returns null if no upgrade path exists.
+ */
+export function getUpgradeCost(templateId: string): Record<string, number> | null {
+  const template = getTemplate(templateId);
+  if (!template?.upgradeTo) return null;
+  const upgradeTemplate = getTemplate(template.upgradeTo);
+  return upgradeTemplate?.cost ?? null;
+}
+
+/**
+ * Get the upgrade target template ID for a given structure.
+ * Returns null if no upgrade path exists.
+ */
+export function getUpgradeTarget(templateId: string): string | null {
+  const template = getTemplate(templateId);
+  return template?.upgradeTo ?? null;
+}
+
+/**
  * Calculate the stamina cost multiplier at a position.
  * Returns `1 - sum(stamina_regen magnitudes)`, capped at a minimum of 0.5.
  * With no nearby stamina structures, returns 1.0 (full stamina cost).

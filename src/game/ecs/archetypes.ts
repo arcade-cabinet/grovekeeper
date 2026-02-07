@@ -56,6 +56,27 @@ export const createPlayerEntity = (): Entity => ({
   renderable: { meshId: null, visible: true, scale: 1 },
 });
 
+export const createWildTreeEntity = (
+  gridX: number,
+  gridZ: number,
+  speciesId: string,
+  stage: 0 | 1 | 2 | 3 | 4,
+): Entity => ({
+  id: generateEntityId(),
+  position: { x: gridX, y: 0, z: gridZ },
+  tree: {
+    speciesId,
+    stage,
+    progress: Math.random() * 0.5, // partial progress within stage
+    watered: false,
+    totalGrowthTime: 0,
+    plantedAt: Date.now(),
+    meshSeed: hashString(`wild-${speciesId}-${gridX}-${gridZ}`),
+    wild: true,
+  },
+  renderable: { meshId: null, visible: true, scale: getStageScale(stage, 0) },
+});
+
 export const createGridCellEntity = (
   gridX: number,
   gridZ: number,

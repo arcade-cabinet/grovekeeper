@@ -23,6 +23,7 @@ import {
   PRESTIGE_COSMETICS,
 } from "../systems/prestige";
 import { FarmerMascot } from "./FarmerMascot";
+import { StatsDashboard } from "./StatsDashboard";
 
 interface PauseMenuProps {
   open: boolean;
@@ -64,6 +65,7 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
   } = useGameStore();
 
   const [confirmingPrestige, setConfirmingPrestige] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   // Grid expansion
   const nextTier = getNextExpansionTier(gridSize);
@@ -484,6 +486,17 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
           <div className="flex flex-col gap-2">
             <Button
               className="w-full"
+              variant="outline"
+              style={{
+                borderColor: COLORS.barkBrown,
+                color: COLORS.soilDark,
+              }}
+              onClick={() => setStatsOpen(true)}
+            >
+              Stats
+            </Button>
+            <Button
+              className="w-full"
               style={{ background: COLORS.forestGreen, color: "white" }}
               onClick={onClose}
             >
@@ -502,6 +515,8 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
             </Button>
           </div>
         </div>
+
+        <StatsDashboard open={statsOpen} onClose={() => setStatsOpen(false)} />
       </DialogContent>
     </Dialog>
   );

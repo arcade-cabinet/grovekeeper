@@ -9,6 +9,7 @@ import { getSpeciesById } from "../constants/trees";
 import { getToolById } from "../constants/tools";
 import { getNextExpansionTier, canAffordExpansion } from "../systems/gridExpansion";
 import { canPrestige, getPrestigeResetState, calculatePrestigeBonus, getUnlockedPrestigeSpecies } from "../systems/prestige";
+import { getToolUpgradeTier, canAffordToolUpgrade } from "../systems/toolUpgrades";
 
 export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";
 
@@ -84,13 +85,29 @@ interface GameState {
   prestigeCount: number;
   activeBorderCosmetic: string | null;
 
+  // Discovery (fog-of-war)
+  discoveredZones: string[];
+
   // World/zone state
   currentZoneId: string;
   worldSeed: string;
 
   // Build mode
   buildMode: boolean;
+  buildTemplateId: string | null;
   placedStructures: { templateId: string; worldX: number; worldZ: number }[];
+
+  // Tool upgrades
+  toolUpgrades: Record<string, number>;
+
+  // Achievement expansion tracking
+  toolUseCounts: Record<string, number>;
+  wildTreesHarvested: number;
+  wildTreesRegrown: number;
+  visitedZoneTypes: string[];
+  treesPlantedInSpring: number;
+  treesHarvestedInAutumn: number;
+  wildSpeciesHarvested: string[];
 
   // Settings
   hasSeenRules: boolean;
@@ -122,7 +139,7 @@ interface GameState {
   expandGrid: () => boolean;
   performPrestige: () => boolean;
   setActiveBorderCosmetic: (id: string | null) => void;
-  setBuildMode: (enabled: boolean) => void;
+  setBuildMode: (enabled: boolean, templateId?: string) => void;
   addPlacedStructure: (templateId: string, worldX: number, worldZ: number) => void;
   removePlacedStructure: (worldX: number, worldZ: number) => void;
   resetGame: () => void;
@@ -138,9 +155,23 @@ interface GameState {
   completeQuest: (questId: string) => void;
   setLastQuestRefresh: (time: number) => void;
 
+  // Discovery actions
+  discoverZone: (zoneId: string) => boolean;
+
   // World/zone actions
   setCurrentZoneId: (zoneId: string) => void;
   setWorldSeed: (seed: string) => void;
+
+  // Achievement expansion tracking actions
+  incrementToolUse: (toolId: string) => void;
+  incrementWildTreesHarvested: (speciesId?: string) => void;
+  incrementWildTreesRegrown: () => void;
+  trackVisitedZoneType: (zoneType: string) => void;
+  incrementSeasonalPlanting: (season: string) => void;
+  incrementSeasonalHarvest: (season: string) => void;
+
+  // Tool upgrade actions
+  upgradeToolTier: (toolId: string) => boolean;
 
   // Settings actions
   setHasSeenRules: (seen: boolean) => void;
@@ -241,6 +272,7 @@ const initialState = {
 
   // Build mode
   buildMode: false,
+  buildTemplateId: null as string | null,
   placedStructures: [] as { templateId: string; worldX: number; worldZ: number }[],
 
   // Prestige
@@ -261,9 +293,24 @@ const initialState = {
   completedGoalIds: [] as string[],
   lastQuestRefresh: 0,
   
+  // Discovery
+  discoveredZones: ["starting-grove"] as string[],
+
   // World/zone state
   currentZoneId: "starting-grove",
   worldSeed: "",
+
+  // Tool upgrades
+  toolUpgrades: {} as Record<string, number>,
+
+  // Achievement expansion tracking
+  toolUseCounts: {} as Record<string, number>,
+  wildTreesHarvested: 0,
+  wildTreesRegrown: 0,
+  visitedZoneTypes: [] as string[],
+  treesPlantedInSpring: 0,
+  treesHarvestedInAutumn: 0,
+  wildSpeciesHarvested: [] as string[],
 
   // Settings
   hasSeenRules: false,
@@ -471,7 +518,10 @@ export const useGameStore = create<GameState>()(
 
       setActiveBorderCosmetic: (id) => set({ activeBorderCosmetic: id }),
 
-      setBuildMode: (enabled) => set({ buildMode: enabled }),
+      setBuildMode: (enabled, templateId) => set({
+        buildMode: enabled,
+        buildTemplateId: enabled ? (templateId ?? null) : null,
+      }),
 
       addPlacedStructure: (templateId, worldX, worldZ) =>
         set((state) => ({
@@ -507,9 +557,92 @@ export const useGameStore = create<GameState>()(
         })),
       setLastQuestRefresh: (time) => set({ lastQuestRefresh: time }),
       
+      // Discovery actions
+      discoverZone: (zoneId) => {
+        const state = get();
+        if (state.discoveredZones.includes(zoneId)) return false;
+        set({ discoveredZones: [...state.discoveredZones, zoneId] });
+        queueMicrotask(() => {
+          showToast(`Discovered new area!`, "success");
+        });
+        // Award discovery XP
+        get().addXp(50);
+        return true;
+      },
+
       // World/zone actions
       setCurrentZoneId: (zoneId) => set({ currentZoneId: zoneId }),
       setWorldSeed: (seed) => set({ worldSeed: seed }),
+
+      // Achievement expansion tracking actions
+      incrementToolUse: (toolId) =>
+        set((state) => ({
+          toolUseCounts: {
+            ...state.toolUseCounts,
+            [toolId]: (state.toolUseCounts[toolId] ?? 0) + 1,
+          },
+        })),
+
+      incrementWildTreesHarvested: (speciesId) =>
+        set((state) => ({
+          wildTreesHarvested: state.wildTreesHarvested + 1,
+          wildSpeciesHarvested:
+            speciesId && !state.wildSpeciesHarvested.includes(speciesId)
+              ? [...state.wildSpeciesHarvested, speciesId]
+              : state.wildSpeciesHarvested,
+        })),
+
+      incrementWildTreesRegrown: () =>
+        set((state) => ({ wildTreesRegrown: state.wildTreesRegrown + 1 })),
+
+      trackVisitedZoneType: (zoneType) =>
+        set((state) =>
+          state.visitedZoneTypes.includes(zoneType)
+            ? state
+            : { visitedZoneTypes: [...state.visitedZoneTypes, zoneType] },
+        ),
+
+      incrementSeasonalPlanting: (season) =>
+        set((state) => ({
+          treesPlantedInSpring:
+            season === "spring"
+              ? state.treesPlantedInSpring + 1
+              : state.treesPlantedInSpring,
+        })),
+
+      incrementSeasonalHarvest: (season) =>
+        set((state) => ({
+          treesHarvestedInAutumn:
+            season === "autumn"
+              ? state.treesHarvestedInAutumn + 1
+              : state.treesHarvestedInAutumn,
+        })),
+
+      // Tool upgrade actions
+      upgradeToolTier: (toolId) => {
+        const state = get();
+        const currentTier = state.toolUpgrades[toolId] ?? 0;
+        const nextTier = getToolUpgradeTier(currentTier);
+        if (!nextTier) return false;
+        if (!canAffordToolUpgrade(nextTier, state.resources)) return false;
+        // Deduct costs
+        const newResources = { ...state.resources };
+        for (const [resource, amount] of Object.entries(nextTier.cost)) {
+          newResources[resource as keyof typeof newResources] =
+            (newResources[resource as keyof typeof newResources] ?? 0) - amount;
+        }
+        set({
+          resources: newResources,
+          toolUpgrades: {
+            ...state.toolUpgrades,
+            [toolId]: currentTier + 1,
+          },
+        });
+        queueMicrotask(() => {
+          showToast(`Tool upgraded to tier ${currentTier + 1}!`, "success");
+        });
+        return true;
+      },
 
       // Settings actions
       setHasSeenRules: (seen) => set({ hasSeenRules: seen }),

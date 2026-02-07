@@ -6,10 +6,12 @@
  * overlaying any sparse tile overrides.
  */
 
-import { createGridCellEntity } from "../ecs/archetypes";
+import { createGridCellEntity, createWildTreeEntity } from "../ecs/archetypes";
 import { gridCellsQuery, world } from "../ecs/world";
 import type { Entity } from "../ecs/world";
-import type { ZoneDefinition, GroundMaterial } from "./types";
+import type { ZoneDefinition, GroundMaterial, WildTreeSpec } from "./types";
+import { pickWeighted } from "./WorldGenerator";
+import { createRNG, hashString } from "../utils/seedRNG";
 
 /** Map zone ground material to grid cell type. */
 function materialToCellType(material: GroundMaterial): "soil" | "water" | "rock" | "path" {
@@ -47,6 +49,9 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
 
   const defaultType = materialToCellType(zone.groundMaterial);
 
+  // Track which cells are soil (available for wild tree placement)
+  const soilCells: { worldX: number; worldZ: number }[] = [];
+
   for (let z = 0; z < zone.size.height; z++) {
     for (let x = 0; x < zone.size.width; x++) {
       const worldX = zone.origin.x + x;
@@ -62,6 +67,73 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
       (entity as Entity & { zoneId?: string }).zoneId = zone.id;
       world.add(entity);
       entities.push(entity);
+
+      // Track unoccupied soil cells for wild tree spawning
+      if (cellType === "soil") {
+        soilCells.push({ worldX, worldZ });
+      }
+    }
+  }
+
+  // Spawn wild trees on a fraction of soil tiles
+  if (zone.wildTrees && zone.wildTrees.length > 0 && zone.wildTreeDensity && zone.wildTreeDensity > 0) {
+    const wildTreeEntities = spawnWildTrees(
+      zone.id,
+      soilCells,
+      zone.wildTrees,
+      zone.wildTreeDensity,
+      entities,
+    );
+    entities.push(...wildTreeEntities);
+  }
+
+  return entities;
+}
+
+/**
+ * Spawn wild trees on available soil cells in a zone.
+ * Uses seeded RNG for deterministic placement.
+ */
+function spawnWildTrees(
+  zoneId: string,
+  soilCells: { worldX: number; worldZ: number }[],
+  wildTrees: WildTreeSpec[],
+  density: number,
+  gridEntities: Entity[],
+): Entity[] {
+  if (soilCells.length === 0) return [];
+
+  const rng = createRNG(hashString(`wild-${zoneId}`));
+  const treeCount = Math.round(soilCells.length * density);
+  const entities: Entity[] = [];
+
+  // Shuffle soil cells deterministically
+  const shuffled = [...soilCells];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const weighted = wildTrees.map((wt) => ({ value: wt.speciesId, weight: wt.weight }));
+
+  for (let i = 0; i < treeCount && i < shuffled.length; i++) {
+    const cell = shuffled[i];
+    const speciesId = pickWeighted(rng, weighted);
+    // Random starting stage between 2-4 (Sapling through Old Growth)
+    const stage = (Math.floor(rng() * 3) + 2) as 0 | 1 | 2 | 3 | 4;
+
+    const treeEntity = createWildTreeEntity(cell.worldX, cell.worldZ, speciesId, stage);
+    (treeEntity as Entity & { zoneId?: string }).zoneId = zoneId;
+    world.add(treeEntity);
+    entities.push(treeEntity);
+
+    // Mark the grid cell as occupied
+    const gridEntity = gridEntities.find(
+      (e) => e.gridCell?.gridX === cell.worldX && e.gridCell?.gridZ === cell.worldZ,
+    );
+    if (gridEntity?.gridCell) {
+      gridEntity.gridCell.occupied = true;
+      gridEntity.gridCell.treeEntityId = treeEntity.id;
     }
   }
 

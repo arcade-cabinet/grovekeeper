@@ -31,20 +31,23 @@ export class LightingManager {
     sun.diffuse = new Color3(1, 0.95, 0.8);
     this.sunLight = sun;
 
-    // Initial sky color
-    scene.clearColor = new Color4(0.53, 0.72, 0.82, 1);
+    // Initial colors — clearColor matches fog so background is seamless
+    scene.clearColor = new Color4(0.35, 0.48, 0.30, 1);
     scene.ambientColor = new Color3(0.3, 0.3, 0.35);
+
+    // Atmospheric fog — blends the horizon into the sky.
+    // fogMode 3 = LINEAR: ground is clear near the player, fades to fog at distance.
+    scene.fogMode = 3;
+    scene.fogStart = 80;   // camera-to-target distance — player area is clear
+    scene.fogEnd = 100;    // fully fogged at the horizon edges
+    scene.fogColor = new Color3(0.35, 0.48, 0.30); // earthy green mist
   }
 
   /** Update scene lighting and sky based on current game time. */
   update(scene: Scene, time: GameTime): void {
     const skyColors = getSkyColors(time);
 
-    // Update clear color (sky)
     const zenithRgb = hexToRgb(skyColors.zenith);
-    scene.clearColor = new Color4(
-      zenithRgb.r / 255, zenithRgb.g / 255, zenithRgb.b / 255, 1,
-    );
 
     // Update ambient color
     const ambientRgb = hexToRgb(skyColors.ambient);
@@ -74,6 +77,15 @@ export class LightingManager {
         Math.cos(sunAngle) * 0.5, -1, Math.sin(sunAngle) * 0.3,
       );
     }
+
+    // Fog = earthy green haze with slight sky tint for time-of-day coherence.
+    // Ground-dominated so the horizon fades into misty forest, not blue sky.
+    const fogR = Math.min(1, 0.30 + zenithRgb.r / 255 * 0.12);
+    const fogG = Math.min(1, 0.42 + zenithRgb.g / 255 * 0.10);
+    const fogB = Math.min(1, 0.25 + zenithRgb.b / 255 * 0.08);
+    scene.fogColor = new Color3(fogR, fogG, fogB);
+    // clearColor matches fog so any background beyond the ground mesh is invisible.
+    scene.clearColor = new Color4(fogR, fogG, fogB, 1);
   }
 
   dispose(): void {

@@ -344,14 +344,16 @@ describe("generateWorld — zone type variety", () => {
 // Wild forest naming
 // ============================================
 
-describe("generateWorld — wild forest naming", () => {
-  it("wild forest zones include '(wild trees)' in name", () => {
+describe("generateWorld — wild forest data", () => {
+  it("wild forest zones have wildTrees and wildTreeDensity", () => {
     let foundWildForest = false;
     for (let i = 0; i < 50; i++) {
-      const world = generateWorld(`wild-name-${i}`, 12);
+      const world = generateWorld(`wild-data-${i}`, 12);
       const forestZone = world.zones.find((z) => z.type === "forest");
       if (forestZone) {
-        expect(forestZone.name).toContain("(wild trees)");
+        expect(forestZone.wildTrees).toBeDefined();
+        expect(forestZone.wildTrees!.length).toBeGreaterThan(0);
+        expect(forestZone.wildTreeDensity).toBeGreaterThan(0);
         foundWildForest = true;
         break;
       }

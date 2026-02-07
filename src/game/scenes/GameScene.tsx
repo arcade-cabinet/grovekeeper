@@ -12,7 +12,7 @@ import { getSpeciesById } from "../constants/trees";
 import { TOOLS, getToolById } from "../constants/tools";
 import type { ResourceType } from "../constants/resources";
 import { createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
-import { gridCellsQuery, playerQuery, treesQuery, structuresQuery, world } from "../ecs/world";
+import { gridCellsQuery, playerQuery, treesQuery, structuresQuery, rainCatchersQuery, scarecrowsQuery, world } from "../ecs/world";
 import type { GridCellComponent } from "../ecs/world";
 import { createRNG, hashString } from "../utils/seedRNG";
 import type { SerializedTree } from "../stores/gameStore";
@@ -22,7 +22,7 @@ import { staminaSystem } from "../systems/stamina";
 import { harvestSystem, initHarvestable, collectHarvest } from "../systems/harvest";
 import { movementSystem, setMovementBounds } from "../systems/movement";
 import { saveGroveToStorage, loadGroveFromStorage, deserializeGrove } from "../systems/saveLoad";
-import { useKeyboardInput } from "../hooks/useKeyboardInput";
+import { InputManager } from "../systems/InputManager";
 import {
   initializeTime, updateTime,
   type GameTime, type Season,
@@ -48,6 +48,8 @@ import {
   GroundBuilder, SkyManager, PlayerMeshManager,
   TreeMeshManager,
 } from "../scene";
+import { canPlace, getTemplate } from "../structures/StructureManager";
+import { generateEntityId } from "../ecs/world";
 
 // World system
 import { WorldManager } from "../world";
@@ -72,11 +74,14 @@ export const GameScene = () => {
   const playerMeshRef = useRef(new PlayerMeshManager());
   const treeMeshRef = useRef(new TreeMeshManager());
   const worldManagerRef = useRef(new WorldManager());
+  const inputManagerRef = useRef(new InputManager());
 
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
   const [toolWheelOpen, setToolWheelOpen] = useState(false);
   const [pauseMenuOpen, setPauseMenuOpen] = useState(false);
   const [gameTime, setGameTime] = useState<GameTime | null>(null);
+  const [currentWeatherType, setCurrentWeatherType] = useState<WeatherType>("clear");
+  const [weatherTimeRemaining, setWeatherTimeRemaining] = useState(0);
 
   const {
     setScreen, selectedSpecies, selectedTool,
@@ -85,21 +90,10 @@ export const GameScene = () => {
     setCurrentSeason, setCurrentDay, hapticsEnabled, addResource,
   } = useGameStore();
 
-  // --- Keyboard controls ---
-  useKeyboardInput({
-    onMove: (x: number, z: number) => { movementRef.current = { x, z }; },
-    onMoveEnd: () => { movementRef.current = { x: 0, z: 0 }; },
-    onAction: () => { handleAction(); },
-    onOpenSeeds: () => { setSeedSelectOpen(true); },
-    onPause: () => { setPauseMenuOpen((prev) => !prev); },
-    onSelectTool: (index: number) => {
-      const tool = TOOLS[index];
-      if (tool && useGameStore.getState().unlockedTools.includes(tool.id)) {
-        useGameStore.getState().setSelectedTool(tool.id);
-      }
-    },
-    disabled: seedSelectOpen || toolWheelOpen || pauseMenuOpen,
-  });
+  // --- InputManager dialog disable sync ---
+  useEffect(() => {
+    inputManagerRef.current.setDisabled(seedSelectOpen || toolWheelOpen || pauseMenuOpen);
+  }, [seedSelectOpen, toolWheelOpen, pauseMenuOpen]);
 
   // --- Save/restore ---
   const saveCurrentGrove = useCallback(() => {
@@ -152,7 +146,8 @@ export const GameScene = () => {
       }
     }
     initializeTime(useGameStore.getState().gameTimeMicroseconds);
-  }, [applyOfflineGrowth, restorePlayerPosition]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ECS init must run exactly once on mount.
+  }, []);
 
   // Auto-save on tab hide
   useEffect(() => {
@@ -169,6 +164,7 @@ export const GameScene = () => {
   // --- BabylonJS initialization ---
   useEffect(() => {
     if (!canvasRef.current) return;
+    let cancelled = false;
 
     const sm = sceneManagerRef.current;
     const cam = cameraManagerRef.current;
@@ -181,6 +177,9 @@ export const GameScene = () => {
 
     const initBabylon = async () => {
       const { scene } = await sm.init(canvasRef.current!);
+      // React StrictMode double-mounts: if cleanup ran during async init,
+      // the engine/scene from this mount are stale — bail out.
+      if (cancelled) return;
 
       // Initialize world first so we know the bounds
       const worldDef = startingWorldData as WorldDefinition;
@@ -203,6 +202,36 @@ export const GameScene = () => {
           ground.addPlantableGrid(scene, zone.id, zone.origin, zone.size);
         }
       }
+
+      // --- InputManager setup ---
+      inputManagerRef.current.init({
+        canvas: canvasRef.current!,
+        movementRef,
+        callbacks: {
+          onAction: () => handleAction(),
+          onOpenSeeds: () => setSeedSelectOpen(true),
+          onPause: () => setPauseMenuOpen((prev) => !prev),
+          onSelectTool: (index: number) => {
+            const tool = TOOLS[index];
+            if (tool && useGameStore.getState().unlockedTools.includes(tool.id)) {
+              useGameStore.getState().setSelectedTool(tool.id);
+            }
+          },
+        },
+        getScene: () => scene,
+        getGridCells: () => gridCellsQuery,
+        getWorldBounds: () => worldMgr.getWorldBounds(),
+        getPlayerWorldPos: () => {
+          const p = playerQuery.first;
+          return p?.position ? { x: p.position.x, z: p.position.z } : { x: 0, z: 0 };
+        },
+        getPlayerTile: () => {
+          const p = playerQuery.first;
+          return p?.position
+            ? { x: Math.round(p.position.x), z: Math.round(p.position.z) }
+            : { x: 0, z: 0 };
+        },
+      });
 
       // --- Game loop ---
       let lastTime = performance.now();
@@ -231,10 +260,17 @@ export const GameScene = () => {
         if (weatherType !== lastWeatherTypeRef.current) {
           lastWeatherTypeRef.current = weatherType;
           setWeatherVisual(weatherType);
+          setCurrentWeatherType(weatherType);
           if (weatherType !== "clear") {
             const labels: Record<string, string> = { rain: "It's raining!", drought: "Drought!", windstorm: "Windstorm!" };
             showToast(labels[weatherType] ?? weatherType, weatherType === "rain" ? "success" : "warning");
           }
+        }
+        // Update weather time remaining for forecast widget (throttled to avoid excess renders)
+        if (Math.floor(now / 2000) !== Math.floor((now - deltaMs) / 2000)) {
+          const evt = weatherRef.current.current;
+          const remaining = Math.max(0, (evt.startTime + evt.duration) - gameTimeSec);
+          setWeatherTimeRemaining(remaining);
         }
 
         // Cherry blossom petals
@@ -243,6 +279,32 @@ export const GameScene = () => {
         ));
 
         const weatherGrowthMult = getWeatherGrowthMultiplier(weatherType);
+
+        // Rain catcher auto-watering during rain
+        if (weatherType === "rain") {
+          for (const catcher of rainCatchersQuery) {
+            if (!catcher.position || !catcher.rainCatcher) continue;
+            const cx = catcher.position.x;
+            const cz = catcher.position.z;
+            const radius = catcher.rainCatcher.radius;
+            for (const tree of treesQuery) {
+              if (!tree.tree || !tree.position || tree.tree.watered) continue;
+              const dx = Math.abs(tree.position.x - cx);
+              const dz = Math.abs(tree.position.z - cz);
+              if (dx <= radius && dz <= radius) {
+                tree.tree.watered = true;
+              }
+            }
+          }
+        }
+
+        // Scarecrow windstorm protection
+        if (weatherType === "windstorm") {
+          // Mark trees near scarecrows as protected (handled in processTreeUpdates)
+        }
+
+        // InputManager update (path following) — must run before movementSystem
+        inputManagerRef.current.update();
 
         // ECS systems
         movementSystem(movementRef.current, dt);
@@ -294,6 +356,8 @@ export const GameScene = () => {
     initBabylon();
 
     return () => {
+      cancelled = true;
+      inputManagerRef.current.dispose();
       worldMgr.dispose();
       treeMesh.dispose();
       playerMesh.dispose();
@@ -303,8 +367,8 @@ export const GameScene = () => {
       cam.dispose();
       sm.dispose();
     };
-  }, [checkAndAwardAchievements, isNight, // Tree milestone XP and weather damage
-        processTreeUpdates, setCurrentDay, setCurrentSeason, storeSetGameTime]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: BabylonJS engine/scene must initialize exactly once. The render loop accesses current state via useGameStore.getState() and stable refs.
+  }, []);
 
   // --- Helper functions ---
 
@@ -383,8 +447,22 @@ export const GameScene = () => {
         }
       }
 
-      // Windstorm damage
-      if (weatherType === "windstorm" && tree.stage <= 1) {
+      // Windstorm damage (Ironbark is storm immune, scarecrows protect nearby trees)
+      if (weatherType === "windstorm" && tree.stage <= 1 && tree.speciesId !== "ironbark") {
+        // Check if protected by a scarecrow
+        let scarecrowProtected = false;
+        if (entity.position) {
+          for (const sc of scarecrowsQuery) {
+            if (!sc.position || !sc.scarecrow) continue;
+            const sdx = Math.abs(entity.position.x - sc.position.x);
+            const sdz = Math.abs(entity.position.z - sc.position.z);
+            if (sdx <= sc.scarecrow.radius && sdz <= sc.scarecrow.radius) {
+              scarecrowProtected = true;
+              break;
+            }
+          }
+        }
+        if (scarecrowProtected) continue;
         const windRng = createRNG(hashString(`wind-${entity.id}-${Math.floor(gameTimeSec / 30)}`));
         if (rollWindstormDamage(windRng())) {
           tree.progress = 0;
@@ -507,9 +585,19 @@ export const GameScene = () => {
     if (!gc.occupied || !gc.treeEntityId) return;
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree) return;
-    tree.tree.progress += 0.1;
+    if (tree.tree.fertilized) {
+      showToast("Already fertilized!", "info");
+      return;
+    }
+    // Costs 5 acorns
+    if (!useGameStore.getState().spendResource("acorns" as ResourceType, 5)) {
+      showToast("Need 5 acorns to fertilize", "warning");
+      return;
+    }
+    tree.tree.fertilized = true;
     addXp(5);
     showParticle("+5 XP");
+    showToast("Fertilized! 2x growth for this stage.", "success");
     if (hapticsEnabled) await hapticLight();
   };
 
@@ -517,24 +605,49 @@ export const GameScene = () => {
     if (!gc.occupied || !gc.treeEntityId) return;
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree || tree.tree.stage < 3) return;
+    // Speed up harvest cooldown by 30%
     if (tree.harvestable) {
       tree.harvestable.cooldownElapsed += tree.harvestable.cooldownTotal * 0.3;
     }
+    // Mark pruned for 1.5x yield bonus on next harvest
+    tree.tree.pruned = true;
+    // Re-init harvestable to recalculate yields with pruned bonus
+    if (tree.harvestable) {
+      initHarvestable(tree);
+    }
     addXp(5);
     showParticle("+5 XP");
-    showToast("Pruned! Harvest sooner.", "success");
+    showToast("Pruned! 1.5x yield on next harvest.", "success");
     if (hapticsEnabled) await hapticLight();
   };
 
   const useShovel = async (gc: GridCellComponent) => {
-    if (gc.type !== "rock") return;
-    gc.type = "soil";
-    gc.occupied = false;
-    addXp(12);
-    showParticle("+12 XP");
-    showToast("Cleared rocks!", "success");
-    debouncedSaveGrove();
-    if (hapticsEnabled) await hapticMedium();
+    // Clear rocks → soil
+    if (gc.type === "rock") {
+      gc.type = "soil";
+      gc.occupied = false;
+      addXp(12);
+      showParticle("+12 XP");
+      showToast("Cleared rocks!", "success");
+      debouncedSaveGrove();
+      if (hapticsEnabled) await hapticMedium();
+      return;
+    }
+    // Remove stage 0-1 (seed/sprout) trees — dig them up
+    if (gc.occupied && gc.treeEntityId) {
+      const tree = findTreeOnCell(gc.treeEntityId);
+      if (tree?.tree && tree.tree.stage <= 1) {
+        treeMeshRef.current.removeMesh(tree.id);
+        world.remove(tree);
+        gc.occupied = false;
+        gc.treeEntityId = null;
+        addXp(5);
+        showParticle("+5 XP");
+        showToast("Removed seedling.", "success");
+        debouncedSaveGrove();
+        if (hapticsEnabled) await hapticMedium();
+      }
+    }
   };
 
   const useAlmanac = async (gc: GridCellComponent) => {
@@ -553,6 +666,113 @@ export const GameScene = () => {
     setSeedSelectOpen(true);
   };
 
+  const useRainCatcher = async (gc: GridCellComponent) => {
+    if (gc.occupied) {
+      showToast("Tile is occupied!", "warning");
+      return;
+    }
+    const player = playerQuery.first;
+    if (!player?.position) return;
+    const worldX = Math.round(player.position.x);
+    const worldZ = Math.round(player.position.z);
+
+    const entity = {
+      id: generateEntityId(),
+      position: { x: worldX, y: 0, z: worldZ },
+      rainCatcher: { radius: 2 },
+    };
+    world.add(entity);
+    gc.occupied = true;
+    addXp(10);
+    showParticle("+10 XP");
+    showToast("Rain Catcher placed! Waters nearby trees during rain.", "success");
+    if (hapticsEnabled) await hapticMedium();
+  };
+
+  const useFertilizerSpreader = async (_gc: GridCellComponent) => {
+    // Area fertilize: all trees in 2-tile radius, costs 3 acorns
+    if (!useGameStore.getState().spendResource("acorns" as ResourceType, 3)) {
+      showToast("Need 3 acorns to spread fertilizer", "warning");
+      return;
+    }
+    const player = playerQuery.first;
+    if (!player?.position) return;
+    const px = player.position.x;
+    const pz = player.position.z;
+    let count = 0;
+    for (const tree of treesQuery) {
+      if (!tree.tree || !tree.position) continue;
+      const dx = Math.abs(tree.position.x - px);
+      const dz = Math.abs(tree.position.z - pz);
+      if (dx <= 2 && dz <= 2 && !tree.tree.fertilized) {
+        tree.tree.fertilized = true;
+        count++;
+      }
+    }
+    addXp(15);
+    showParticle("+15 XP");
+    showToast(`Fertilized ${count} trees! 2x growth.`, "success");
+    if (hapticsEnabled) await hapticMedium();
+  };
+
+  const useScarecrow = async (gc: GridCellComponent) => {
+    if (gc.occupied) {
+      showToast("Tile is occupied!", "warning");
+      return;
+    }
+    const player = playerQuery.first;
+    if (!player?.position) return;
+    const worldX = Math.round(player.position.x);
+    const worldZ = Math.round(player.position.z);
+
+    const entity = {
+      id: generateEntityId(),
+      position: { x: worldX, y: 0, z: worldZ },
+      scarecrow: { radius: 3 },
+    };
+    world.add(entity);
+    gc.occupied = true;
+    addXp(10);
+    showParticle("+10 XP");
+    showToast("Scarecrow placed! Protects nearby trees from wind.", "success");
+    if (hapticsEnabled) await hapticMedium();
+  };
+
+  const useGraftingTool = async (gc: GridCellComponent) => {
+    if (!gc.occupied || !gc.treeEntityId) return;
+    const tree = findTreeOnCell(gc.treeEntityId);
+    if (!tree?.tree || tree.tree.stage < 3) {
+      showToast("Need a Mature+ tree to graft", "info");
+      return;
+    }
+    // Find 2 nearest different species trees
+    const player = playerQuery.first;
+    if (!player?.position) return;
+    const nearbySpecies: string[] = [];
+    for (const other of treesQuery) {
+      if (!other.tree || !other.position || other === tree) continue;
+      if (other.tree.speciesId !== tree.tree.speciesId && !nearbySpecies.includes(other.tree.speciesId)) {
+        nearbySpecies.push(other.tree.speciesId);
+        if (nearbySpecies.length >= 2) break;
+      }
+    }
+    if (nearbySpecies.length === 0) {
+      showToast("Need nearby trees of different species to graft!", "warning");
+      return;
+    }
+    // Combined yields: original species + first nearby species yields
+    const otherSpecies = getSpeciesById(nearbySpecies[0]);
+    if (otherSpecies) {
+      for (const y of otherSpecies.yield) {
+        addResource(y.resource, Math.ceil(y.amount * 0.5));
+      }
+    }
+    addXp(25);
+    showParticle("+25 XP");
+    showToast(`Grafted! Combined yields with ${nearbySpecies[0]}.`, "success");
+    if (hapticsEnabled) await hapticSuccess();
+  };
+
   const toolActions: Record<string, (gc: GridCellComponent) => Promise<void>> = {
     "trowel": useTrowel,
     "watering-can": useWateringCan,
@@ -562,9 +782,76 @@ export const GameScene = () => {
     "shovel": useShovel,
     "almanac": useAlmanac,
     "seed-pouch": useSeedPouch,
+    "rain-catcher": useRainCatcher,
+    "fertilizer-spreader": useFertilizerSpreader,
+    "scarecrow": useScarecrow,
+    "grafting-tool": useGraftingTool,
   };
 
   const handleAction = async () => {
+    const store = useGameStore.getState();
+
+    // Build mode — place a structure at player position
+    if (store.buildMode && store.buildTemplateId) {
+      const player = playerQuery.first;
+      if (!player?.position) return;
+      const worldX = Math.round(player.position.x);
+      const worldZ = Math.round(player.position.z);
+      const template = getTemplate(store.buildTemplateId);
+      if (!template) {
+        store.setBuildMode(false);
+        return;
+      }
+
+      // Validate placement
+      if (!canPlace(template.id, worldX, worldZ, gridCellsQuery)) {
+        showToast("Can't build here!", "warning");
+        return;
+      }
+
+      // Deduct resource costs
+      for (const [resource, amount] of Object.entries(template.cost)) {
+        if (!store.spendResource(resource as ResourceType, amount)) {
+          showToast(`Not enough ${resource}!`, "warning");
+          return;
+        }
+      }
+
+      // Create structure ECS entity
+      const structureEntity = {
+        id: generateEntityId(),
+        position: { x: worldX, y: 0, z: worldZ },
+        structure: {
+          templateId: template.id,
+          effectType: template.effect?.type,
+          effectRadius: template.effect?.radius,
+          effectMagnitude: template.effect?.magnitude,
+        },
+      };
+      world.add(structureEntity);
+
+      // Mark grid cells as occupied
+      for (let dx = 0; dx < template.footprint.width; dx++) {
+        for (let dz = 0; dz < template.footprint.depth; dz++) {
+          for (const cell of gridCellsQuery) {
+            if (cell.gridCell?.gridX === worldX + dx && cell.gridCell?.gridZ === worldZ + dz) {
+              cell.gridCell.occupied = true;
+            }
+          }
+        }
+      }
+
+      // Persist
+      store.addPlacedStructure(template.id, worldX, worldZ);
+      store.setBuildMode(false);
+      showToast(`Built ${template.name}!`, "success");
+      showParticle("+Build");
+      if (hapticsEnabled) await hapticSuccess();
+      debouncedSaveGrove();
+      return;
+    }
+
+    // Normal tool action
     const gc = findCellAtPlayer();
     if (!gc) return;
     const tool = getToolById(selectedTool);
@@ -632,13 +919,41 @@ export const GameScene = () => {
     }
   };
 
-  const handleMove = useCallback((x: number, z: number) => {
-    movementRef.current = { x, z };
-  }, []);
-
-  const handleMoveEnd = useCallback(() => {
-    movementRef.current = { x: 0, z: 0 };
-  }, []);
+  const handleBatchHarvest = useCallback(() => {
+    let count = 0;
+    const gains: Record<string, number> = {};
+    for (const entity of treesQuery) {
+      if (!entity.harvestable?.ready || !entity.tree) continue;
+      // Cost 5 stamina per tree (bulk discount)
+      if (!useGameStore.getState().spendStamina(5)) break;
+      const harvestResources = collectHarvest(entity);
+      if (harvestResources) {
+        for (const r of harvestResources) {
+          addResource(r.type as ResourceType, r.amount);
+          gains[r.type] = (gains[r.type] ?? 0) + r.amount;
+        }
+      } else {
+        const species = getSpeciesById(entity.tree.speciesId);
+        if (species) {
+          for (const y of species.yield) {
+            addResource(y.resource, y.amount);
+            gains[y.resource] = (gains[y.resource] ?? 0) + y.amount;
+          }
+        }
+      }
+      incrementTreesHarvested();
+      count++;
+    }
+    if (count > 0) {
+      const xp = count * 50;
+      addXp(xp);
+      showParticle(`+${xp} XP`);
+      const summary = Object.entries(gains)
+        .map(([r, a]) => `+${a} ${r.charAt(0).toUpperCase() + r.slice(1)}`)
+        .join(", ");
+      showToast(`Harvested ${count} trees! ${summary}`, "success");
+    }
+  }, [addResource, addXp, incrementTreesHarvested]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
@@ -648,8 +963,6 @@ export const GameScene = () => {
         style={{ touchAction: "none" }}
       />
       <GameUI
-        onMove={handleMove}
-        onMoveEnd={handleMoveEnd}
         onAction={handleAction}
         onPlant={handlePlant}
         onOpenMenu={() => setPauseMenuOpen(true)}
@@ -661,6 +974,9 @@ export const GameScene = () => {
         pauseMenuOpen={pauseMenuOpen}
         setPauseMenuOpen={setPauseMenuOpen}
         onMainMenu={() => { setPauseMenuOpen(false); setScreen("menu"); }}
+        onBatchHarvest={handleBatchHarvest}
+        currentWeather={currentWeatherType}
+        weatherTimeRemaining={weatherTimeRemaining}
         gameTime={gameTime}
       />
     </div>

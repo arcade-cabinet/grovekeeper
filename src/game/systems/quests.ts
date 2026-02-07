@@ -6,12 +6,13 @@
  */
 
 import type { Season } from './time';
+import type { ResourceType } from '../constants/resources';
 
 // ============================================
 // Goal Types
 // ============================================
 
-export type GoalCategory = 
+export type GoalCategory =
   | 'planting'
   | 'harvesting'
   | 'watering'
@@ -24,6 +25,16 @@ export type GoalCategory =
 
 export type GoalDifficulty = 'easy' | 'medium' | 'hard' | 'epic';
 
+export interface GoalRewardResource {
+  type: ResourceType;
+  amount: number;
+}
+
+export interface GoalRewardSeed {
+  speciesId: string;
+  amount: number;
+}
+
 export interface GoalTemplate {
   id: string;
   category: GoalCategory;
@@ -35,9 +46,11 @@ export interface GoalTemplate {
   seasonRequired?: Season;
   speciesRequired?: string[];
   prerequisites?: string[]; // Other goal IDs that must be completed first
+  zoneType?: string; // Zone-specific filtering
   rewards: {
-    coins: { min: number; max: number };
     xp: { min: number; max: number };
+    resources?: GoalRewardResource[];
+    seeds?: GoalRewardSeed[];
     unlocks?: string[];
   };
   difficulty: GoalDifficulty;
@@ -53,8 +66,9 @@ export interface ActiveQuest {
   expiresAt?: number; // Game microseconds
   completed: boolean;
   rewards: {
-    coins: number;
     xp: number;
+    resources?: GoalRewardResource[];
+    seeds?: GoalRewardSeed[];
     unlocks?: string[];
   };
   difficulty: GoalDifficulty;
@@ -83,7 +97,7 @@ const PLANTING_GOALS: GoalTemplate[] = [
     description: 'Plant your first tree',
     targetType: 'trees_planted',
     targetAmount: 1,
-    rewards: { coins: { min: 10, max: 20 }, xp: { min: 10, max: 15 } },
+    rewards: { xp: { min: 10, max: 15 }, resources: [{ type: 'timber', amount: 2 }] },
     difficulty: 'easy',
     repeatable: false,
   },
@@ -94,7 +108,7 @@ const PLANTING_GOALS: GoalTemplate[] = [
     description: 'Plant 5 trees',
     targetType: 'trees_planted',
     targetAmount: 5,
-    rewards: { coins: { min: 30, max: 50 }, xp: { min: 25, max: 40 } },
+    rewards: { xp: { min: 25, max: 40 }, resources: [{ type: 'timber', amount: 5 }] },
     difficulty: 'easy',
     repeatable: true,
   },
@@ -105,7 +119,7 @@ const PLANTING_GOALS: GoalTemplate[] = [
     description: 'Plant 10 trees',
     targetType: 'trees_planted',
     targetAmount: 10,
-    rewards: { coins: { min: 75, max: 100 }, xp: { min: 50, max: 75 } },
+    rewards: { xp: { min: 50, max: 75 }, resources: [{ type: 'timber', amount: 10 }, { type: 'sap', amount: 5 }] },
     difficulty: 'medium',
     repeatable: true,
   },
@@ -116,7 +130,7 @@ const PLANTING_GOALS: GoalTemplate[] = [
     description: 'Plant 3 oak trees',
     targetType: 'oak_planted',
     targetAmount: 3,
-    rewards: { coins: { min: 40, max: 60 }, xp: { min: 30, max: 45 } },
+    rewards: { xp: { min: 30, max: 45 }, seeds: [{ speciesId: 'white-oak', amount: 3 }] },
     difficulty: 'easy',
     repeatable: true,
   },
@@ -127,7 +141,7 @@ const PLANTING_GOALS: GoalTemplate[] = [
     description: 'Plant 3 birch trees',
     targetType: 'birch_planted',
     targetAmount: 3,
-    rewards: { coins: { min: 35, max: 55 }, xp: { min: 25, max: 40 } },
+    rewards: { xp: { min: 25, max: 40 }, resources: [{ type: 'sap', amount: 5 }] },
     difficulty: 'easy',
     repeatable: true,
   },
@@ -138,7 +152,7 @@ const PLANTING_GOALS: GoalTemplate[] = [
     description: 'Plant 3 pine trees',
     targetType: 'pine_planted',
     targetAmount: 3,
-    rewards: { coins: { min: 50, max: 70 }, xp: { min: 40, max: 55 } },
+    rewards: { xp: { min: 40, max: 55 }, resources: [{ type: 'timber', amount: 5 }, { type: 'sap', amount: 3 }] },
     difficulty: 'medium',
     repeatable: true,
   },
@@ -149,7 +163,7 @@ const PLANTING_GOALS: GoalTemplate[] = [
     description: 'Plant 3 different species',
     targetType: 'unique_species_planted',
     targetAmount: 3,
-    rewards: { coins: { min: 60, max: 80 }, xp: { min: 45, max: 60 } },
+    rewards: { xp: { min: 45, max: 60 }, resources: [{ type: 'acorns', amount: 5 }] },
     difficulty: 'medium',
     repeatable: true,
   },
@@ -160,7 +174,7 @@ const PLANTING_GOALS: GoalTemplate[] = [
     description: 'Plant 5 trees in a row',
     targetType: 'trees_in_row',
     targetAmount: 5,
-    rewards: { coins: { min: 100, max: 150 }, xp: { min: 75, max: 100 } },
+    rewards: { xp: { min: 75, max: 100 }, resources: [{ type: 'timber', amount: 10 }, { type: 'acorns', amount: 5 }] },
     difficulty: 'hard',
     repeatable: true,
   },
@@ -174,7 +188,7 @@ const HARVESTING_GOALS: GoalTemplate[] = [
     description: 'Harvest your first mature tree',
     targetType: 'trees_harvested',
     targetAmount: 1,
-    rewards: { coins: { min: 50, max: 75 }, xp: { min: 25, max: 35 } },
+    rewards: { xp: { min: 25, max: 35 }, resources: [{ type: 'timber', amount: 5 }] },
     difficulty: 'easy',
     repeatable: false,
   },
@@ -185,7 +199,7 @@ const HARVESTING_GOALS: GoalTemplate[] = [
     description: 'Harvest 5 mature trees',
     targetType: 'trees_harvested',
     targetAmount: 5,
-    rewards: { coins: { min: 100, max: 150 }, xp: { min: 50, max: 75 } },
+    rewards: { xp: { min: 50, max: 75 }, resources: [{ type: 'timber', amount: 10 }, { type: 'sap', amount: 5 }] },
     difficulty: 'medium',
     repeatable: true,
   },
@@ -196,7 +210,7 @@ const HARVESTING_GOALS: GoalTemplate[] = [
     description: 'Harvest an ancient tree',
     targetType: 'ancient_harvested',
     targetAmount: 1,
-    rewards: { coins: { min: 200, max: 300 }, xp: { min: 100, max: 150 } },
+    rewards: { xp: { min: 100, max: 150 }, resources: [{ type: 'timber', amount: 15 }, { type: 'acorns', amount: 10 }] },
     difficulty: 'hard',
     repeatable: true,
   },
@@ -210,7 +224,7 @@ const WATERING_GOALS: GoalTemplate[] = [
     description: 'Water 5 trees',
     targetType: 'trees_watered',
     targetAmount: 5,
-    rewards: { coins: { min: 15, max: 25 }, xp: { min: 15, max: 25 } },
+    rewards: { xp: { min: 15, max: 25 }, resources: [{ type: 'sap', amount: 3 }] },
     difficulty: 'easy',
     repeatable: true,
   },
@@ -221,7 +235,7 @@ const WATERING_GOALS: GoalTemplate[] = [
     description: 'Water all trees in your grove',
     targetType: 'grove_fully_watered',
     targetAmount: 1,
-    rewards: { coins: { min: 40, max: 60 }, xp: { min: 30, max: 45 } },
+    rewards: { xp: { min: 30, max: 45 }, resources: [{ type: 'sap', amount: 5 }, { type: 'fruit', amount: 3 }] },
     difficulty: 'medium',
     repeatable: true,
   },
@@ -232,7 +246,7 @@ const WATERING_GOALS: GoalTemplate[] = [
     description: 'Water trees for 3 days in a row',
     targetType: 'watering_streak_days',
     targetAmount: 3,
-    rewards: { coins: { min: 75, max: 100 }, xp: { min: 50, max: 75 } },
+    rewards: { xp: { min: 50, max: 75 }, resources: [{ type: 'sap', amount: 8 }] },
     difficulty: 'medium',
     repeatable: true,
   },
@@ -246,7 +260,7 @@ const GROWTH_GOALS: GoalTemplate[] = [
     description: 'Grow a seed to sprout stage',
     targetType: 'sprouts_grown',
     targetAmount: 1,
-    rewards: { coins: { min: 10, max: 15 }, xp: { min: 10, max: 15 } },
+    rewards: { xp: { min: 10, max: 15 } },
     difficulty: 'easy',
     repeatable: true,
   },
@@ -257,7 +271,7 @@ const GROWTH_GOALS: GoalTemplate[] = [
     description: 'Grow a tree to sapling stage',
     targetType: 'saplings_grown',
     targetAmount: 1,
-    rewards: { coins: { min: 25, max: 35 }, xp: { min: 20, max: 30 } },
+    rewards: { xp: { min: 20, max: 30 }, resources: [{ type: 'timber', amount: 3 }] },
     difficulty: 'easy',
     repeatable: true,
   },
@@ -268,7 +282,7 @@ const GROWTH_GOALS: GoalTemplate[] = [
     description: 'Grow 5 trees to maturity',
     targetType: 'mature_trees_grown',
     targetAmount: 5,
-    rewards: { coins: { min: 150, max: 200 }, xp: { min: 100, max: 150 } },
+    rewards: { xp: { min: 100, max: 150 }, resources: [{ type: 'timber', amount: 15 }, { type: 'fruit', amount: 8 }] },
     difficulty: 'hard',
     repeatable: true,
   },
@@ -279,7 +293,7 @@ const GROWTH_GOALS: GoalTemplate[] = [
     description: 'Grow a tree to ancient stage',
     targetType: 'ancient_trees_grown',
     targetAmount: 1,
-    rewards: { coins: { min: 300, max: 400 }, xp: { min: 200, max: 300 } },
+    rewards: { xp: { min: 200, max: 300 }, resources: [{ type: 'timber', amount: 20 }, { type: 'acorns', amount: 15 }] },
     difficulty: 'epic',
     repeatable: true,
   },
@@ -294,7 +308,7 @@ const SEASONAL_GOALS: GoalTemplate[] = [
     targetType: 'trees_planted_spring',
     targetAmount: 5,
     seasonRequired: 'spring',
-    rewards: { coins: { min: 75, max: 100 }, xp: { min: 50, max: 75 } },
+    rewards: { xp: { min: 50, max: 75 }, seeds: [{ speciesId: 'white-oak', amount: 5 }] },
     difficulty: 'medium',
     repeatable: true,
   },
@@ -306,7 +320,7 @@ const SEASONAL_GOALS: GoalTemplate[] = [
     targetType: 'trees_during_summer',
     targetAmount: 10,
     seasonRequired: 'summer',
-    rewards: { coins: { min: 100, max: 150 }, xp: { min: 75, max: 100 } },
+    rewards: { xp: { min: 75, max: 100 }, resources: [{ type: 'sap', amount: 10 }] },
     difficulty: 'medium',
     repeatable: true,
   },
@@ -318,7 +332,7 @@ const SEASONAL_GOALS: GoalTemplate[] = [
     targetType: 'trees_harvested_autumn',
     targetAmount: 5,
     seasonRequired: 'autumn',
-    rewards: { coins: { min: 150, max: 200 }, xp: { min: 100, max: 125 } },
+    rewards: { xp: { min: 100, max: 125 }, resources: [{ type: 'fruit', amount: 10 }, { type: 'acorns', amount: 8 }] },
     difficulty: 'hard',
     repeatable: true,
   },
@@ -330,7 +344,7 @@ const SEASONAL_GOALS: GoalTemplate[] = [
     targetType: 'trees_survived_winter',
     targetAmount: 5,
     seasonRequired: 'winter',
-    rewards: { coins: { min: 200, max: 250 }, xp: { min: 150, max: 200 } },
+    rewards: { xp: { min: 150, max: 200 }, resources: [{ type: 'timber', amount: 15 }, { type: 'sap', amount: 10 }] },
     difficulty: 'hard',
     repeatable: true,
   },
@@ -338,35 +352,35 @@ const SEASONAL_GOALS: GoalTemplate[] = [
 
 const ECONOMIC_GOALS: GoalTemplate[] = [
   {
-    id: 'earn_coins_100',
+    id: 'gather_timber_25',
     category: 'economic',
-    name: 'First Fortune',
-    description: 'Earn 100 coins',
-    targetType: 'coins_earned',
-    targetAmount: 100,
-    rewards: { coins: { min: 25, max: 35 }, xp: { min: 20, max: 30 } },
+    name: 'Timber Stockpile',
+    description: 'Gather 25 timber',
+    targetType: 'timber_earned',
+    targetAmount: 25,
+    rewards: { xp: { min: 20, max: 30 }, resources: [{ type: 'sap', amount: 5 }] },
     difficulty: 'easy',
     repeatable: true,
   },
   {
-    id: 'earn_coins_500',
+    id: 'gather_mixed_50',
     category: 'economic',
-    name: 'Growing Wealth',
-    description: 'Earn 500 coins',
-    targetType: 'coins_earned',
-    targetAmount: 500,
-    rewards: { coins: { min: 75, max: 100 }, xp: { min: 50, max: 75 } },
+    name: 'Resourceful',
+    description: 'Gather 50 total resources',
+    targetType: 'total_resources_earned',
+    targetAmount: 50,
+    rewards: { xp: { min: 50, max: 75 }, resources: [{ type: 'acorns', amount: 8 }] },
     difficulty: 'medium',
     repeatable: true,
   },
   {
-    id: 'earn_coins_1000',
+    id: 'gather_all_types',
     category: 'economic',
-    name: 'Prosperous Grove',
-    description: 'Earn 1000 coins',
-    targetType: 'coins_earned',
-    targetAmount: 1000,
-    rewards: { coins: { min: 150, max: 200 }, xp: { min: 100, max: 150 } },
+    name: 'Diversified Holdings',
+    description: 'Collect at least 10 of each resource type',
+    targetType: 'all_resources_10',
+    targetAmount: 1,
+    rewards: { xp: { min: 100, max: 150 }, resources: [{ type: 'timber', amount: 10 }, { type: 'sap', amount: 10 }, { type: 'fruit', amount: 10 }, { type: 'acorns', amount: 10 }] },
     difficulty: 'hard',
     repeatable: true,
   },
@@ -380,7 +394,7 @@ const MASTERY_GOALS: GoalTemplate[] = [
     description: 'Reach level 5',
     targetType: 'player_level',
     targetAmount: 5,
-    rewards: { coins: { min: 100, max: 150 }, xp: { min: 0, max: 0 }, unlocks: ['pine'] },
+    rewards: { xp: { min: 0, max: 0 }, seeds: [{ speciesId: 'elder-pine', amount: 3 }], unlocks: ['pine'] },
     difficulty: 'medium',
     repeatable: false,
   },
@@ -391,7 +405,7 @@ const MASTERY_GOALS: GoalTemplate[] = [
     description: 'Reach level 10',
     targetType: 'player_level',
     targetAmount: 10,
-    rewards: { coins: { min: 250, max: 350 }, xp: { min: 0, max: 0 }, unlocks: ['maple'] },
+    rewards: { xp: { min: 0, max: 0 }, resources: [{ type: 'timber', amount: 25 }, { type: 'sap', amount: 15 }], unlocks: ['maple'] },
     difficulty: 'hard',
     repeatable: false,
   },
@@ -402,7 +416,7 @@ const MASTERY_GOALS: GoalTemplate[] = [
     description: 'Reach level 20',
     targetType: 'player_level',
     targetAmount: 20,
-    rewards: { coins: { min: 500, max: 750 }, xp: { min: 0, max: 0 }, unlocks: ['cherry'] },
+    rewards: { xp: { min: 0, max: 0 }, resources: [{ type: 'timber', amount: 50 }, { type: 'sap', amount: 30 }, { type: 'fruit', amount: 20 }, { type: 'acorns', amount: 20 }], unlocks: ['cherry'] },
     difficulty: 'epic',
     repeatable: false,
   },
@@ -413,7 +427,7 @@ const MASTERY_GOALS: GoalTemplate[] = [
     description: 'Unlock 4 tree species',
     targetType: 'species_unlocked',
     targetAmount: 4,
-    rewards: { coins: { min: 100, max: 150 }, xp: { min: 75, max: 100 } },
+    rewards: { xp: { min: 75, max: 100 }, seeds: [{ speciesId: 'white-oak', amount: 5 }] },
     difficulty: 'medium',
     repeatable: false,
   },
@@ -423,13 +437,109 @@ const MASTERY_GOALS: GoalTemplate[] = [
 // Goal Pool Registry
 // ============================================
 
+const COLLECTION_GOALS: GoalTemplate[] = [
+  {
+    id: 'collect_timber_50',
+    category: 'collection',
+    name: 'Timber Hoard',
+    description: 'Collect 50 timber',
+    targetType: 'timber_collected',
+    targetAmount: 50,
+    rewards: { xp: { min: 40, max: 60 }, resources: [{ type: 'sap', amount: 8 }] },
+    difficulty: 'medium',
+    repeatable: true,
+  },
+  {
+    id: 'collect_sap_30',
+    category: 'collection',
+    name: 'Sap Tapper',
+    description: 'Collect 30 sap',
+    targetType: 'sap_collected',
+    targetAmount: 30,
+    rewards: { xp: { min: 40, max: 60 }, resources: [{ type: 'fruit', amount: 5 }] },
+    difficulty: 'medium',
+    repeatable: true,
+  },
+  {
+    id: 'collect_fruit_20',
+    category: 'collection',
+    name: 'Fruit Picker',
+    description: 'Collect 20 fruit',
+    targetType: 'fruit_collected',
+    targetAmount: 20,
+    rewards: { xp: { min: 50, max: 70 }, resources: [{ type: 'acorns', amount: 5 }] },
+    difficulty: 'medium',
+    repeatable: true,
+  },
+  {
+    id: 'collect_acorns_15',
+    category: 'collection',
+    name: 'Acorn Squirrel',
+    description: 'Collect 15 acorns',
+    targetType: 'acorns_collected',
+    targetAmount: 15,
+    rewards: { xp: { min: 50, max: 70 }, seeds: [{ speciesId: 'white-oak', amount: 3 }] },
+    difficulty: 'medium',
+    repeatable: true,
+  },
+];
+
+const EXPLORATION_GOALS: GoalTemplate[] = [
+  {
+    id: 'visit_non_starting',
+    category: 'exploration',
+    name: 'Beyond the Grove',
+    description: 'Visit a zone other than your starting grove',
+    targetType: 'zones_visited_non_starting',
+    targetAmount: 1,
+    rewards: { xp: { min: 30, max: 50 }, resources: [{ type: 'timber', amount: 5 }] },
+    difficulty: 'easy',
+    repeatable: false,
+  },
+  {
+    id: 'visit_3_zones',
+    category: 'exploration',
+    name: 'Wanderer',
+    description: 'Visit 3 different zones',
+    targetType: 'zones_visited',
+    targetAmount: 3,
+    rewards: { xp: { min: 60, max: 80 }, resources: [{ type: 'sap', amount: 5 }, { type: 'fruit', amount: 3 }] },
+    difficulty: 'medium',
+    repeatable: false,
+  },
+  {
+    id: 'visit_wild_forest',
+    category: 'exploration',
+    name: 'Into the Wild',
+    description: 'Visit a wild forest zone',
+    targetType: 'wild_forest_visited',
+    targetAmount: 1,
+    zoneType: 'forest',
+    rewards: { xp: { min: 50, max: 75 }, seeds: [{ speciesId: 'elder-pine', amount: 2 }] },
+    difficulty: 'medium',
+    repeatable: false,
+  },
+  {
+    id: 'visit_settlement',
+    category: 'exploration',
+    name: 'Civilization',
+    description: 'Visit a settlement',
+    targetType: 'settlement_visited',
+    targetAmount: 1,
+    zoneType: 'settlement',
+    rewards: { xp: { min: 75, max: 100 }, resources: [{ type: 'timber', amount: 10 }, { type: 'acorns', amount: 5 }] },
+    difficulty: 'hard',
+    repeatable: false,
+  },
+];
+
 export const GOAL_POOLS: Record<GoalCategory, GoalTemplate[]> = {
   planting: PLANTING_GOALS,
   harvesting: HARVESTING_GOALS,
   watering: WATERING_GOALS,
   growth: GROWTH_GOALS,
-  collection: [], // Can be extended
-  exploration: [], // Can be extended
+  collection: COLLECTION_GOALS,
+  exploration: EXPLORATION_GOALS,
   seasonal: SEASONAL_GOALS,
   economic: ECONOMIC_GOALS,
   mastery: MASTERY_GOALS,
@@ -486,10 +596,10 @@ export const generateQuest = (
   
   // Select categories based on difficulty
   const categoryOptions: Record<GoalDifficulty, GoalCategory[]> = {
-    easy: ['planting', 'watering', 'growth'],
-    medium: ['planting', 'watering', 'growth', 'harvesting', 'economic'],
-    hard: ['planting', 'harvesting', 'growth', 'seasonal', 'economic'],
-    epic: ['planting', 'harvesting', 'growth', 'seasonal', 'economic', 'mastery'],
+    easy: ['planting', 'watering', 'growth', 'exploration'],
+    medium: ['planting', 'watering', 'growth', 'harvesting', 'economic', 'collection', 'exploration'],
+    hard: ['planting', 'harvesting', 'growth', 'seasonal', 'economic', 'collection', 'exploration'],
+    epic: ['planting', 'harvesting', 'growth', 'seasonal', 'economic', 'mastery', 'collection', 'exploration'],
   };
   
   const categories = categoryOptions[difficulty];
@@ -520,16 +630,32 @@ export const generateQuest = (
   });
   
   // Calculate total rewards
-  const totalCoins = goals.reduce((sum, goal) => {
-    const template = goalTemplates.find(t => t.id === goal.templateId);
-    return sum + (template ? randomInRange(template.rewards.coins.min, template.rewards.coins.max) : 0);
-  }, 0);
-  
   const totalXp = goals.reduce((sum, goal) => {
     const template = goalTemplates.find(t => t.id === goal.templateId);
     return sum + (template ? randomInRange(template.rewards.xp.min, template.rewards.xp.max) : 0);
   }, 0);
-  
+
+  // Merge resource rewards from all goal templates
+  const resourceMap = new Map<ResourceType, number>();
+  const seedMap = new Map<string, number>();
+  for (const template of goalTemplates) {
+    if (template.rewards.resources) {
+      for (const r of template.rewards.resources) {
+        resourceMap.set(r.type, (resourceMap.get(r.type) ?? 0) + r.amount);
+      }
+    }
+    if (template.rewards.seeds) {
+      for (const s of template.rewards.seeds) {
+        seedMap.set(s.speciesId, (seedMap.get(s.speciesId) ?? 0) + s.amount);
+      }
+    }
+  }
+
+  const mergedResources: GoalRewardResource[] = Array.from(resourceMap.entries())
+    .map(([type, amount]) => ({ type, amount }));
+  const mergedSeeds: GoalRewardSeed[] = Array.from(seedMap.entries())
+    .map(([speciesId, amount]) => ({ speciesId, amount }));
+
   // Quest name generation
   const questNames: Record<GoalDifficulty, string[]> = {
     easy: ['Simple Task', 'Quick Job', 'Small Steps', 'Easy Start'],
@@ -537,9 +663,9 @@ export const generateQuest = (
     hard: ['Forester\'s Trial', 'Grove Master Challenge', 'Ancient Task', 'Deep Woods Quest'],
     epic: ['Legendary Quest', 'Grand Challenge', 'Epic Undertaking', 'Master\'s Trial'],
   };
-  
+
   const questName = questNames[difficulty][Math.floor(Math.random() * questNames[difficulty].length)];
-  
+
   return {
     id: `quest_${Date.now()}_${Math.random().toString(36).slice(2)}`,
     name: questName,
@@ -548,8 +674,9 @@ export const generateQuest = (
     startedAt: Date.now(),
     completed: false,
     rewards: {
-      coins: totalCoins,
       xp: totalXp,
+      resources: mergedResources.length > 0 ? mergedResources : undefined,
+      seeds: mergedSeeds.length > 0 ? mergedSeeds : undefined,
     },
     difficulty,
   };

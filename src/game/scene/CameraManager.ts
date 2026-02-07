@@ -1,10 +1,9 @@
 /**
- * CameraManager — Top-down orthographic camera that scales with viewport.
+ * CameraManager — Orthographic diorama camera with atmospheric fog.
  *
- * Uses ArcRotateCamera in orthographic mode. The view always centers on
- * the player and scales out to show surrounding biomes on larger screens.
- * A slight tilt angle (~15°) reveals building faces and terrain depth
- * without the "tilted diorama" effect of isometric views.
+ * Uses ArcRotateCamera in orthographic mode at a deliberate 36° diorama
+ * angle — like looking at a tabletop miniature. Building faces and tree
+ * trunks are clearly visible. Scene fog blends the horizon into the sky.
  */
 
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
@@ -20,8 +19,8 @@ const MAX_VIEW = 40;
 /** Target pixels per world tile. Smaller = more tiles visible. */
 const PIXELS_PER_TILE = 45;
 
-/** Camera tilt from vertical (radians). 30° — diorama top-down with depth. */
-const CAMERA_BETA = Math.PI / 6;
+/** Camera tilt from vertical (radians). ~36° — deliberate diorama viewing angle. */
+const CAMERA_BETA = Math.PI / 5;
 /** Camera rotation (radians). -PI/2 = camera from south looking north. */
 const CAMERA_ALPHA = -Math.PI / 2;
 /** Orthographic distance — just needs to clear all scene geometry. */
@@ -83,8 +82,14 @@ export class CameraManager {
     const idealView = canvasHeight / PIXELS_PER_TILE;
     const viewSize = Math.max(MIN_VIEW, Math.min(MAX_VIEW, idealView));
 
-    this.camera.orthoTop = viewSize / 2;
-    this.camera.orthoBottom = -viewSize / 2;
+    // With a tilted orthographic camera, the lower portion of the frustum
+    // passes below the ground plane (y=0), exposing the sky clear color.
+    // Shift the ortho bounds upward so the player sits in the lower third
+    // and more of the world ahead is visible. The shift is proportional to
+    // the tilt angle — bigger tilt = more shift needed.
+    const shift = viewSize * Math.sin(CAMERA_BETA) * 0.4;
+    this.camera.orthoTop = viewSize / 2 + shift;
+    this.camera.orthoBottom = -viewSize / 2 + shift;
     this.camera.orthoLeft = -(viewSize * aspect) / 2;
     this.camera.orthoRight = (viewSize * aspect) / 2;
   }

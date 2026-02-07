@@ -16,10 +16,10 @@ describe("Level Unlock System", () => {
       }
     });
 
-    it("contains 10 entries spanning levels 1 through 12", () => {
-      expect(LEVEL_UNLOCKS).toHaveLength(10);
+    it("contains 18 entries spanning levels 1 through 22", () => {
+      expect(LEVEL_UNLOCKS).toHaveLength(18);
       expect(LEVEL_UNLOCKS[0].level).toBe(1);
-      expect(LEVEL_UNLOCKS[LEVEL_UNLOCKS.length - 1].level).toBe(12);
+      expect(LEVEL_UNLOCKS[LEVEL_UNLOCKS.length - 1].level).toBe(22);
     });
   });
 
@@ -60,9 +60,9 @@ describe("Level Unlock System", () => {
       expect(result.tools).toEqual([]);
     });
 
-    it("returns empty arrays for a level with no entry (level 9)", () => {
+    it("returns silver-birch at level 9 with no tools", () => {
       const result = getUnlocksForLevel(9);
-      expect(result.species).toEqual([]);
+      expect(result.species).toEqual(["silver-birch"]);
       expect(result.tools).toEqual([]);
     });
 
@@ -104,12 +104,12 @@ describe("Level Unlock System", () => {
       expect(result.tools).toEqual(["trowel", "watering-can"]);
     });
 
-    it("includes all 8 species and 8 tools at level 12", () => {
-      const result = getAllUnlocksUpToLevel(12);
-      expect(result.species).toHaveLength(8);
-      expect(result.tools).toHaveLength(8);
-      expect(result.species).toContain("baobab");
-      expect(result.tools).toContain("compost-bin");
+    it("includes all 12 species and 12 tools at level 22", () => {
+      const result = getAllUnlocksUpToLevel(22);
+      expect(result.species).toHaveLength(12);
+      expect(result.tools).toHaveLength(12);
+      expect(result.species).toContain("mystic-fern");
+      expect(result.tools).toContain("grafting-tool");
     });
 
     it("returns empty arrays for level 0", () => {
@@ -119,7 +119,7 @@ describe("Level Unlock System", () => {
     });
 
     it("handles levels beyond the table (level 99) by returning everything", () => {
-      const atMax = getAllUnlocksUpToLevel(12);
+      const atMax = getAllUnlocksUpToLevel(22);
       const beyond = getAllUnlocksUpToLevel(99);
       expect(beyond).toEqual(atMax);
     });
@@ -166,16 +166,16 @@ describe("Level Unlock System", () => {
       expect(result.tools).toEqual(["almanac"]);
     });
 
-    it("returns everything for 0->12", () => {
-      const result = checkNewUnlocks(0, 12);
-      const all = getAllUnlocksUpToLevel(12);
+    it("returns everything for 0->22", () => {
+      const result = checkNewUnlocks(0, 22);
+      const all = getAllUnlocksUpToLevel(22);
       expect(result).toEqual(all);
     });
 
     it("handles multi-level jumps across gaps (7->12)", () => {
       const result = checkNewUnlocks(7, 12);
-      expect(result.species).toEqual(["redwood", "flame-maple", "baobab"]);
-      expect(result.tools).toEqual(["compost-bin"]);
+      expect(result.species).toEqual(["redwood", "silver-birch", "flame-maple", "baobab"]);
+      expect(result.tools).toEqual(["compost-bin", "rain-catcher"]);
     });
 
     it("returns only the exact single level for adjacent levels (4->5)", () => {

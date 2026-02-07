@@ -155,9 +155,6 @@ importers:
       motion-utils:
         specifier: 12.19.0
         version: 12.19.0
-      nipplejs:
-        specifier: ^0.10.2
-        version: 0.10.2
       react:
         specifier: ^19.0.0
         version: 19.2.4
@@ -2289,9 +2286,6 @@ packages:
     resolution: {integrity: sha512-U1PllBuzW5d1gfan+88L+Hky2eZx+9gv3Pf6rNBxKbORxi7boHzqiA6QFGSnqMem4j0A9tZ08NMIs5+0m/VS1Q==}
     engines: {node: '>=16.0.0'}
     hasBin: true
-
-  nipplejs@0.10.2:
-    resolution: {integrity: sha512-XGxFY8C2DOtobf1fK+MXINTzkkXJLjZDDpfQhOUZf4TSytbc9s4bmA0lB9eKKM8iDivdr9NQkO7DpIQfsST+9g==}
 
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
@@ -4791,8 +4785,6 @@ snapshots:
       yauzl: 2.10.0
     transitivePeerDependencies:
       - supports-color
-
-  nipplejs@0.10.2: {}
 
   node-releases@2.0.27: {}
 

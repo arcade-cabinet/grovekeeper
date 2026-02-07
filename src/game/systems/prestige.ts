@@ -252,6 +252,98 @@ export function getCosmeticById(id: string): PrestigeCosmetic | null {
   return PRESTIGE_COSMETICS.find((c) => c.id === id) ?? null;
 }
 
+// ---------------------------------------------------------------------------
+// Prestige Milestones
+// ---------------------------------------------------------------------------
+
+export interface PrestigeMilestone {
+  prestigeLevel: number;
+  description: string;
+  bonusSeeds: number;
+  bonusResources: Record<string, number>;
+  freeStructure?: string;
+  allToolsUnlocked?: boolean;
+}
+
+export const PRESTIGE_MILESTONES: PrestigeMilestone[] = [
+  {
+    prestigeLevel: 1,
+    description: "20 starting seeds (up from 10)",
+    bonusSeeds: 20,
+    bonusResources: {},
+  },
+  {
+    prestigeLevel: 2,
+    description: "Start with a free Well",
+    bonusSeeds: 20,
+    bonusResources: {},
+    freeStructure: "well",
+  },
+  {
+    prestigeLevel: 3,
+    description: "All tools unlocked at start",
+    bonusSeeds: 20,
+    bonusResources: {},
+    allToolsUnlocked: true,
+  },
+  {
+    prestigeLevel: 4,
+    description: "50 of each resource per prestige beyond 3",
+    bonusSeeds: 20,
+    bonusResources: { timber: 50, sap: 50, fruit: 50, acorns: 50 },
+  },
+];
+
+/**
+ * Find the highest applicable prestige milestone for the given prestige count.
+ * Returns null if the player has never prestiged (count 0).
+ */
+export function getPrestigeMilestone(
+  prestigeCount: number,
+): PrestigeMilestone | null {
+  let best: PrestigeMilestone | null = null;
+  for (const m of PRESTIGE_MILESTONES) {
+    if (prestigeCount >= m.prestigeLevel) {
+      best = m;
+    }
+  }
+  return best;
+}
+
+/**
+ * Return the number of starting seeds for a given prestige count.
+ * Prestige 0 gets the default 10 seeds; prestige 1+ gets 20.
+ */
+export function getPrestigeStartingSeeds(prestigeCount: number): number {
+  const milestone = getPrestigeMilestone(prestigeCount);
+  return milestone?.bonusSeeds ?? 10;
+}
+
+/**
+ * Return bonus starting resources for a given prestige count.
+ * Only applies at prestige 4+, scaling by 50 per overflow level.
+ */
+export function getPrestigeStartingResources(
+  prestigeCount: number,
+): Record<string, number> {
+  if (prestigeCount < 4) return {};
+  const overflow = prestigeCount - 3;
+  return {
+    timber: 50 * overflow,
+    sap: 50 * overflow,
+    fruit: 50 * overflow,
+    acorns: 50 * overflow,
+  };
+}
+
+/**
+ * Whether all tools should be unlocked at start for the given prestige count.
+ * Requires prestige 3+.
+ */
+export function shouldUnlockAllTools(prestigeCount: number): boolean {
+  return prestigeCount >= 3;
+}
+
 /**
  * Return the initial state values that should be applied when the player
  * prestiges. Only covers fields that get reset — the caller is responsible

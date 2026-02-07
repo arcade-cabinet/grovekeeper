@@ -37,6 +37,11 @@ export interface ZoneConnection {
   localEntry: { x: number; z: number };
 }
 
+export interface WildTreeSpec {
+  speciesId: string;
+  weight: number;
+}
+
 export interface ZoneDefinition {
   id: string;
   name: string;
@@ -51,6 +56,10 @@ export interface ZoneDefinition {
   props?: PropPlacement[];
   plantable: boolean;
   connections: ZoneConnection[];
+  /** Species pool for wild tree spawning in this zone. */
+  wildTrees?: WildTreeSpec[];
+  /** Fraction of soil tiles that should get wild trees (0-1). */
+  wildTreeDensity?: number;
 }
 
 export interface WorldDefinition {

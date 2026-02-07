@@ -16,16 +16,6 @@ vi.mock("@babylonjs/core/scene", () => ({
   })),
 }));
 
-// Mock nipplejs
-vi.mock("nipplejs", () => ({
-  default: {
-    create: vi.fn(() => ({
-      on: vi.fn(),
-      destroy: vi.fn(),
-    })),
-  },
-}));
-
 // Mock localStorage
 const localStorageMock = {
   getItem: vi.fn(),

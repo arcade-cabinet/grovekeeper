@@ -4,10 +4,10 @@
  * Pure function that compares player progress against achievement
  * triggers and returns newly earned achievement IDs.
  *
- * Spec reference: section 22 — 15 achievements.
+ * Spec reference: section 22 — 35 achievements (15 base + 20 expansion).
  */
 
-// All 8 base species IDs (spec order).
+// All 12 base species IDs (spec order).
 export const ALL_BASE_SPECIES = [
   "white-oak",
   "weeping-willow",
@@ -17,6 +17,10 @@ export const ALL_BASE_SPECIES = [
   "redwood",
   "flame-maple",
   "baobab",
+  "silver-birch",
+  "ironbark",
+  "golden-apple",
+  "mystic-fern",
 ] as const;
 
 export const ALL_SEASONS = ["spring", "summer", "autumn", "winter"] as const;
@@ -107,6 +111,118 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     name: "New Beginnings",
     description: "Prestige for the first time.",
   },
+
+  // --- Exploration (4) ---
+  {
+    id: "zone-hopper",
+    name: "Zone Hopper",
+    description: "Visit all 5 zone types.",
+  },
+  {
+    id: "cartographer",
+    name: "Cartographer",
+    description: "Discover 10 zones.",
+  },
+  {
+    id: "wild-harvester",
+    name: "Wild Harvester",
+    description: "Harvest 10 wild trees.",
+  },
+  {
+    id: "forest-keeper",
+    name: "Forest Keeper",
+    description: "Let 10 wild trees regrow.",
+  },
+
+  // --- Tool Mastery (4) ---
+  {
+    id: "hydration-hero",
+    name: "Hydration Hero",
+    description: "Water 100 trees.",
+  },
+  {
+    id: "master-pruner",
+    name: "Master Pruner",
+    description: "Prune 50 trees.",
+  },
+  {
+    id: "rock-breaker",
+    name: "Rock Breaker",
+    description: "Clear 25 rocks with the shovel.",
+  },
+  {
+    id: "tool-collector",
+    name: "Tool Collector",
+    description: "Unlock all 12 tools.",
+  },
+
+  // --- Seasonal (3) ---
+  {
+    id: "spring-planter",
+    name: "Spring Planter",
+    description: "Plant 20 trees in spring.",
+  },
+  {
+    id: "autumn-harvester",
+    name: "Autumn Harvester",
+    description: "Harvest 30 trees in autumn.",
+  },
+  {
+    id: "winter-survivor",
+    name: "Winter Survivor",
+    description: "Have 20 trees survive winter.",
+  },
+
+  // --- Structure (3) ---
+  {
+    id: "first-builder",
+    name: "First Builder",
+    description: "Build your first structure.",
+  },
+  {
+    id: "architect",
+    name: "Architect",
+    description: "Build all structure types.",
+  },
+  {
+    id: "master-builder",
+    name: "Master Builder",
+    description: "Upgrade any structure to tier 3.",
+  },
+
+  // --- Collector (3) ---
+  {
+    id: "lumber-lord",
+    name: "Lumber Lord",
+    description: "Accumulate 5,000 timber (lifetime).",
+  },
+  {
+    id: "resource-mogul",
+    name: "Resource Mogul",
+    description: "Have 1,000 of each resource (lifetime).",
+  },
+  {
+    id: "seed-hoarder",
+    name: "Seed Hoarder",
+    description: "Collect 50 seeds of one species.",
+  },
+
+  // --- Wild Forest (3) ---
+  {
+    id: "forager",
+    name: "Forager",
+    description: "Harvest 50 wild trees.",
+  },
+  {
+    id: "reforestation",
+    name: "Reforestation",
+    description: "Let 10 wild trees regrow after chopping.",
+  },
+  {
+    id: "wild-collector",
+    name: "Wild Collector",
+    description: "Harvest all wild species at least once.",
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -139,6 +255,39 @@ export interface AchievementCheckContext {
   unlockedAchievements: string[];
   /** Whether the player has prestiged at least once. */
   hasPrestiged?: boolean;
+
+  // --- Expansion tracking fields ---
+
+  /** Number of times each tool has been used. */
+  toolUseCounts?: Record<string, number>;
+  /** Number of zones the player has discovered. */
+  zonesDiscovered?: number;
+  /** Number of structures the player has built. */
+  structuresBuilt?: number;
+  /** Number of wild trees harvested. */
+  wildTreesHarvested?: number;
+  /** Number of wild trees that have regrown. */
+  wildTreesRegrown?: number;
+  /** Whether any structure has been upgraded to tier 3. */
+  hasMaxTierStructure?: boolean;
+  /** Number of trees that survived winter. */
+  treesSurvivedWinter?: number;
+  /** Maximum upgrade tier achieved for any tool. */
+  maxToolUpgradeTier?: number;
+  /** Set of zone types the player has visited. */
+  visitedZoneTypes?: string[];
+  /** Trees planted during spring (current spring or tracked). */
+  treesPlantedInSpring?: number;
+  /** Trees harvested during autumn. */
+  treesHarvestedInAutumn?: number;
+  /** Number of unlocked tools. */
+  unlockedToolCount?: number;
+  /** Set of species IDs harvested from wild trees. */
+  wildSpeciesHarvested?: string[];
+  /** Number of distinct structure types built. */
+  distinctStructureTypesBuilt?: number;
+  /** Max seeds held for any single species. */
+  maxSeedsOfOneSpecies?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -264,6 +413,51 @@ export function checkAchievements(ctx: AchievementCheckContext): string[] {
 
   // --- Prestige ---
   if (ctx.hasPrestiged) award("new-beginnings");
+
+  // =========================================================================
+  // Expansion achievements (Phase 5)
+  // =========================================================================
+
+  // --- Exploration ---
+  if ((ctx.visitedZoneTypes ?? []).length >= 5) award("zone-hopper");
+  if ((ctx.zonesDiscovered ?? 0) >= 10) award("cartographer");
+  if ((ctx.wildTreesHarvested ?? 0) >= 10) award("wild-harvester");
+  if ((ctx.wildTreesRegrown ?? 0) >= 10) award("forest-keeper");
+
+  // --- Tool Mastery ---
+  if ((ctx.toolUseCounts?.["watering-can"] ?? 0) >= 100)
+    award("hydration-hero");
+  if ((ctx.toolUseCounts?.["pruning-shears"] ?? 0) >= 50)
+    award("master-pruner");
+  if ((ctx.toolUseCounts?.shovel ?? 0) >= 25) award("rock-breaker");
+  if ((ctx.unlockedToolCount ?? 0) >= 12) award("tool-collector");
+
+  // --- Seasonal ---
+  if ((ctx.treesPlantedInSpring ?? 0) >= 20) award("spring-planter");
+  if ((ctx.treesHarvestedInAutumn ?? 0) >= 30) award("autumn-harvester");
+  if ((ctx.treesSurvivedWinter ?? 0) >= 20) award("winter-survivor");
+
+  // --- Structure ---
+  if ((ctx.structuresBuilt ?? 0) >= 1) award("first-builder");
+  if ((ctx.distinctStructureTypesBuilt ?? 0) >= 4) award("architect");
+  if (ctx.hasMaxTierStructure) award("master-builder");
+
+  // --- Collector ---
+  if ((ctx.lifetimeResources.timber ?? 0) >= 5000) award("lumber-lord");
+  const allResourcesOver1000 = ["timber", "sap", "fruit", "acorns"].every(
+    (r) => (ctx.lifetimeResources[r] ?? 0) >= 1000,
+  );
+  if (allResourcesOver1000) award("resource-mogul");
+  if ((ctx.maxSeedsOfOneSpecies ?? 0) >= 50) award("seed-hoarder");
+
+  // --- Wild Forest ---
+  if ((ctx.wildTreesHarvested ?? 0) >= 50) award("forager");
+  if ((ctx.wildTreesRegrown ?? 0) >= 10) award("reforestation");
+  if (
+    (ctx.wildSpeciesHarvested ?? []).length >= ALL_BASE_SPECIES.length
+  ) {
+    award("wild-collector");
+  }
 
   return earned;
 }

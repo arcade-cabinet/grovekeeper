@@ -16,16 +16,16 @@ import type { Scene } from "@babylonjs/core/scene";
 import type { Season } from "../systems/time";
 import type { ZoneDefinition } from "../world/types";
 
-/** Biome base colors (R, G, B in 0-1 range). */
+/** Biome base colors (R, G, B in 0-1 range) — vibrant and distinct. */
 const BIOME_COLORS: Record<string, { r: number; g: number; b: number }> = {
-  grass: { r: 0.35, g: 0.52, b: 0.22 },
-  soil:  { r: 0.45, g: 0.35, b: 0.20 },
-  dirt:  { r: 0.40, g: 0.30, b: 0.16 },
-  stone: { r: 0.52, g: 0.50, b: 0.46 },
+  grass: { r: 0.40, g: 0.62, b: 0.25 },   // bright meadow green
+  soil:  { r: 0.52, g: 0.38, b: 0.22 },   // warm earth brown
+  dirt:  { r: 0.58, g: 0.48, b: 0.32 },   // sandy clay path
+  stone: { r: 0.56, g: 0.54, b: 0.50 },   // cool hewn stone
 };
 
-/** Wilderness color (areas outside all zones). */
-const WILDERNESS_COLOR = { r: 0.28, g: 0.45, b: 0.18 };
+/** Wilderness color (areas outside all zones) — deep forest green. */
+const WILDERNESS_COLOR = { r: 0.18, g: 0.32, b: 0.12 };
 
 /** Width of ecological transition zone (world tiles). */
 const TRANSITION_WIDTH = 3;
@@ -80,6 +80,9 @@ export class GroundBuilder {
     // Standard material — biome blend DynamicTexture as diffuse
     this.groundMat = new StandardMaterial("groundMat", scene);
     this.groundMat.specularColor = new Color3(0, 0, 0);
+    // Enable ambient lighting on the ground — without this, scene.ambientColor
+    // has zero effect (BabylonJS multiplies scene.ambient × material.ambient).
+    this.groundMat.ambientColor = new Color3(1, 1, 1);
 
     // Paint biome blend texture
     this.biomeTexture = new DynamicTexture("biomeTex", TEX_RESOLUTION, scene, false);

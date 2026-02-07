@@ -91,6 +91,88 @@ describe("ZoneLoader", () => {
     });
   });
 
+  describe("wild tree spawning", () => {
+    const wildZone: ZoneDefinition = {
+      id: "wild-test",
+      name: "Wild Test",
+      type: "forest",
+      origin: { x: 0, z: 0 },
+      size: { width: 6, height: 6 },
+      groundMaterial: "grass",
+      plantable: false,
+      connections: [],
+      wildTrees: [
+        { speciesId: "white-oak", weight: 3 },
+        { speciesId: "elder-pine", weight: 2 },
+      ],
+      wildTreeDensity: 0.5,
+    };
+
+    it("spawns wild tree entities when zone has wildTrees", () => {
+      const entities = loadZoneEntities(wildZone);
+      const trees = entities.filter((e) => e.tree);
+      expect(trees.length).toBeGreaterThan(0);
+    });
+
+    it("wild trees have wild flag set to true", () => {
+      const entities = loadZoneEntities(wildZone);
+      const trees = entities.filter((e) => e.tree);
+      for (const tree of trees) {
+        expect(tree.tree!.wild).toBe(true);
+      }
+    });
+
+    it("wild trees start at stage 2-4", () => {
+      const entities = loadZoneEntities(wildZone);
+      const trees = entities.filter((e) => e.tree);
+      for (const tree of trees) {
+        expect(tree.tree!.stage).toBeGreaterThanOrEqual(2);
+        expect(tree.tree!.stage).toBeLessThanOrEqual(4);
+      }
+    });
+
+    it("marks grid cells as occupied for wild trees", () => {
+      const entities = loadZoneEntities(wildZone);
+      const trees = entities.filter((e) => e.tree);
+      for (const tree of trees) {
+        const cell = entities.find(
+          (e) =>
+            e.gridCell &&
+            e.gridCell.gridX === tree.position!.x &&
+            e.gridCell.gridZ === tree.position!.z,
+        );
+        expect(cell?.gridCell?.occupied).toBe(true);
+        expect(cell?.gridCell?.treeEntityId).toBe(tree.id);
+      }
+    });
+
+    it("does not spawn wild trees in zone without wildTrees", () => {
+      const entities = loadZoneEntities(testZone); // testZone has no wildTrees
+      const trees = entities.filter((e) => e.tree);
+      expect(trees.length).toBe(0);
+    });
+
+    it("spawns count proportional to density", () => {
+      const entities = loadZoneEntities(wildZone);
+      const trees = entities.filter((e) => e.tree);
+      // 6x6 = 36 tiles, with water overrides some are non-soil
+      // wildTreeDensity = 0.5, so expect roughly 50% of soil tiles
+      // Exact count depends on RNG but should be > 5 and < 36
+      expect(trees.length).toBeGreaterThan(5);
+      expect(trees.length).toBeLessThan(36);
+    });
+
+    it("uses species from weighted list", () => {
+      const entities = loadZoneEntities(wildZone);
+      const trees = entities.filter((e) => e.tree);
+      const speciesSet = new Set(trees.map((t) => t.tree!.speciesId));
+      // At least one of the two species should appear
+      expect(
+        speciesSet.has("white-oak") || speciesSet.has("elder-pine"),
+      ).toBe(true);
+    });
+  });
+
   describe("ground material mapping", () => {
     it("maps grass to soil cell type", () => {
       const grassZone: ZoneDefinition = {

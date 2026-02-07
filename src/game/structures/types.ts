@@ -32,4 +32,5 @@ export interface StructureTemplate {
     radius: number;
     magnitude: number;
   };
+  upgradeTo?: string;
 }
