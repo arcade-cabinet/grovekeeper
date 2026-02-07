@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   getWeatherGrowthMultiplier,
   getWeatherStaminaMultiplier,
@@ -8,6 +8,7 @@ import {
   type WeatherState,
   type WeatherType,
 } from "./weather";
+import { useGameStore } from "../stores/gameStore";
 
 // ============================================
 // Growth Multiplier
@@ -374,9 +375,6 @@ describe("rollWindstormDamage", () => {
 // ============================================
 // Difficulty tier interactions with weather
 // ============================================
-
-import { useGameStore } from "../stores/gameStore";
-import { beforeEach } from "vitest";
 
 describe("Weather × Difficulty tier interactions", () => {
   beforeEach(() => {

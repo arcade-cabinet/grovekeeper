@@ -466,7 +466,7 @@ describe("Cross-System Integration Tests", () => {
   // Multiple Multiplier Stacking
   // ===================================================================
   describe("Multiple multiplier stacking in growth", () => {
-    it("watered + spring + fertilized stacks multiplicatively", () => {
+    it("watered + spring stacks multiplicatively", () => {
       const rate = calcGrowthRate({
         baseTime: 15,
         difficulty: 1,

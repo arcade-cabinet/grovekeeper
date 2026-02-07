@@ -217,7 +217,7 @@ describe("Harvest System", () => {
       const oldTimber = oldResult.find((r) => r.type === "timber")?.amount ?? 0;
 
       // Old growth ironbark: stage(1.5x) * ironbark(3.0x) = 4.5x
-      expect(oldTimber).toBeGreaterThan(matureTimber * 3);
+      expect(oldTimber).toBeGreaterThanOrEqual(Math.ceil(matureTimber * 4.5));
     });
 
     it("ironbark 3x bonus does not apply at stage 3", () => {
@@ -279,8 +279,10 @@ describe("Harvest System", () => {
       useGameStore.setState({ difficulty: "normal" }); // cleanup
     });
 
-    it("uses Math.ceil for yield rounding", () => {
-      // With small base yields, fractional multipliers round up
+    it("uses Math.ceil for yield rounding with fractional multipliers", () => {
+      // Explore difficulty has 1.3x yield mult. White-oak base timber = 2.
+      // 2 * 1.3 = 2.6 → Math.ceil = 3
+      useGameStore.setState({ difficulty: "explore" });
       const tree = createTreeEntity(0, 0, "white-oak");
       tree.tree!.stage = 3;
       world.add(tree);
@@ -288,10 +290,11 @@ describe("Harvest System", () => {
       tree.harvestable!.ready = true;
       const result = collectHarvest(tree)!;
 
-      for (const r of result) {
-        expect(r.amount).toBe(Math.ceil(r.amount));
-        expect(r.amount).toBeGreaterThan(0);
-      }
+      const timber = result.find((r) => r.type === "timber");
+      expect(timber).toBeDefined();
+      // Base 2 * 1.3 = 2.6, ceil'd to 3
+      expect(timber!.amount).toBe(3);
+      useGameStore.setState({ difficulty: "normal" });
     });
   });
 });

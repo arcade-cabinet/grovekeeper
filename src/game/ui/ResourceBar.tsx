@@ -1,4 +1,5 @@
 import type { ResourceType } from "../constants/resources";
+import { COLORS } from "../constants/config";
 import { useGameStore } from "../stores/gameStore";
 
 const RESOURCE_EMOJIS: Record<ResourceType, string> = {
@@ -31,7 +32,7 @@ export const ResourceBar = () => {
       {(["timber", "sap", "fruit", "acorns"] as ResourceType[]).map((type) => (
         <div key={type} className="flex items-center gap-0.5 sm:gap-1 min-w-0">
           <span className="shrink-0">{RESOURCE_EMOJIS[type]}</span>
-          <span className="truncate" style={{ color: "#3E2723" }}>
+          <span className="truncate" style={{ color: COLORS.soilDark }}>
             {resources[type]}
             <span className="hidden md:inline"> {RESOURCE_LABELS[type]}</span>
           </span>
