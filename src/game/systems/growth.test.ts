@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { getStageScale, calcGrowthRate, growthSystem } from "./growth";
 import { world } from "../ecs/world";
-import { createTreeEntity } from "../ecs/archetypes";
+import { createTreeEntity, createGridCellEntity } from "../ecs/archetypes";
 
 describe("Growth System (5-Stage)", () => {
   beforeEach(() => {
@@ -402,6 +402,119 @@ describe("Growth System (5-Stage)", () => {
       expect(getStageScale(2, 0)).toBe(0.4);
       expect(getStageScale(3, 0)).toBe(0.8);
       expect(getStageScale(4, 0)).toBe(1.2);
+    });
+  });
+
+  describe("species-specific growth bonuses", () => {
+    it("silver-birch gets +20% growth near water tile", () => {
+      // Place a water tile adjacent to the tree
+      const waterCell = createGridCellEntity(1, 0, "water");
+      world.add(waterCell);
+
+      const birch = createTreeEntity(0, 0, "silver-birch");
+      world.add(birch);
+
+      const plainBirch = createTreeEntity(5, 5, "silver-birch");
+      world.add(plainBirch);
+
+      growthSystem(1, "summer");
+
+      // Birch near water should grow 1.2x faster
+      expect(birch.tree!.progress).toBeGreaterThan(0);
+      expect(plainBirch.tree!.progress).toBeGreaterThan(0);
+      expect(birch.tree!.progress / plainBirch.tree!.progress).toBeCloseTo(1.2, 1);
+    });
+
+    it("silver-birch does NOT get bonus from distant water", () => {
+      // Water at (10, 10) is too far from tree at (0, 0)
+      const waterCell = createGridCellEntity(10, 10, "water");
+      world.add(waterCell);
+
+      const birch = createTreeEntity(0, 0, "silver-birch");
+      world.add(birch);
+
+      const plainBirch = createTreeEntity(5, 5, "silver-birch");
+      world.add(plainBirch);
+
+      growthSystem(1, "summer");
+
+      // Both should grow at the same rate (no water bonus)
+      expect(birch.tree!.progress).toBeCloseTo(plainBirch.tree!.progress, 5);
+    });
+
+    it("mystic-fern gets +15% per adjacent tree (max +60%)", () => {
+      const fern = createTreeEntity(5, 5, "mystic-fern");
+      world.add(fern);
+
+      // Add 2 adjacent trees
+      const neighbor1 = createTreeEntity(4, 5, "white-oak");
+      world.add(neighbor1);
+      const neighbor2 = createTreeEntity(6, 5, "white-oak");
+      world.add(neighbor2);
+
+      // A lone fern for comparison
+      const loneFern = createTreeEntity(20, 20, "mystic-fern");
+      world.add(loneFern);
+
+      growthSystem(1, "summer");
+
+      // Fern with 2 neighbors: 1 + 2*0.15 = 1.3x
+      expect(fern.tree!.progress / loneFern.tree!.progress).toBeCloseTo(1.3, 1);
+    });
+
+    it("mystic-fern bonus caps at +60% (4 neighbors)", () => {
+      const fern = createTreeEntity(5, 5, "mystic-fern");
+      world.add(fern);
+
+      // Surround with 8 adjacent trees (all 8 neighbors)
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          if (dx === 0 && dz === 0) continue;
+          world.add(createTreeEntity(5 + dx, 5 + dz, "white-oak"));
+        }
+      }
+
+      // A lone fern for comparison
+      const loneFern = createTreeEntity(20, 20, "mystic-fern");
+      world.add(loneFern);
+
+      growthSystem(1, "summer");
+
+      // 8 neighbors * 0.15 = 1.2, capped at 0.6 → 1.6x
+      expect(fern.tree!.progress / loneFern.tree!.progress).toBeCloseTo(1.6, 1);
+    });
+
+    it("non-silver-birch does NOT get water bonus", () => {
+      const waterCell = createGridCellEntity(1, 0, "water");
+      world.add(waterCell);
+
+      const oak = createTreeEntity(0, 0, "white-oak");
+      world.add(oak);
+
+      const farOak = createTreeEntity(5, 5, "white-oak");
+      world.add(farOak);
+
+      growthSystem(1, "summer");
+
+      // White-oak should not get water bonus
+      expect(oak.tree!.progress).toBeCloseTo(farOak.tree!.progress, 5);
+    });
+
+    it("non-mystic-fern does NOT get adjacency bonus", () => {
+      const oak = createTreeEntity(5, 5, "white-oak");
+      world.add(oak);
+
+      // Add neighbors
+      world.add(createTreeEntity(4, 5, "white-oak"));
+      world.add(createTreeEntity(6, 5, "white-oak"));
+
+      const loneOak = createTreeEntity(20, 20, "white-oak");
+      world.add(loneOak);
+
+      growthSystem(1, "summer");
+
+      // White-oak should not get adjacency bonus
+      expect(oak.tree!.progress).toBeCloseTo(loneOak.tree!.progress, 5);
     });
   });
 });
