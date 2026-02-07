@@ -15,10 +15,9 @@ See `docs/` for complete game design, architecture, and brand documentation.
 Every decision -- from UI layout to performance budgets to touch targets -- must prioritize mobile portrait mode. Desktop is a graceful enhancement, never the primary target.
 
 - All touch targets: minimum 44x44px
-- Virtual joystick (nipplejs) is the primary movement input
-- HUD elements must not overlap the joystick zone (bottom-left 200x200px)
+- Unified InputManager: drag-anywhere on canvas (mobile), WASD (desktop), tap/click-to-move with A* pathfinding
 - Test at 375px width (iPhone SE) as the minimum viewport
-- Passive event listeners for all touch handlers
+- Passive event listeners for all pointer handlers
 - `touch-action: none` on the game canvas
 - Haptic feedback via `@capacitor/haptics` on supported devices
 
@@ -31,7 +30,7 @@ Every decision -- from UI layout to performance budgets to touch targets -- must
 | ECS | Miniplex 2.x | Entity-component-system |
 | ECS React | miniplex-react | React hooks for ECS queries |
 | State | Zustand 5.x | Persistent game state via localStorage |
-| Input | nipplejs 0.10.x | Mobile virtual joystick |
+| Input | InputManager (custom) | Unified pointer/keyboard/tap-to-move with A* pathfinding |
 | Styling | Tailwind CSS 4.x + shadcn/ui | UI component library |
 | Bundler | Vite 6.x | Fast dev server, HMR |
 | Language | TypeScript 5.7+ | Strict mode |
@@ -154,8 +153,18 @@ grovekeeper/
 │   │   │   ├── levelUnlocks.ts       # Level-based unlock progression
 │   │   │   ├── offlineGrowth.ts      # Offline growth calculation
 │   │   │   ├── saveLoad.ts           # Save/load serialization
-│   │   │   ├── harvest.ts            # Harvest yield + resource drops
+│   │   │   ├── harvest.ts            # Harvest yield + resource drops (late-binding multipliers)
 │   │   │   ├── stamina.ts            # Stamina drain + regen
+│   │   │   ├── InputManager.ts       # Unified input: pointer, keyboard, tap-to-move A*
+│   │   │   ├── pathfinding.ts        # A* on tile grid + walkability grid builder
+│   │   │   ├── pathFollowing.ts      # Waypoint interpolation for tap-to-move
+│   │   │   ├── discovery.ts          # Species discovery system
+│   │   │   ├── recipes.ts            # Crafting recipe system
+│   │   │   ├── trading.ts            # Resource trading system
+│   │   │   ├── seasonalMarket.ts     # Seasonal market prices
+│   │   │   ├── toolUpgrades.ts       # Tool upgrade progression
+│   │   │   ├── wildTreeRegrowth.ts   # Wild tree respawn system
+│   │   │   ├── zoneBonuses.ts        # Per-zone bonus effects
 │   │   │   └── *.test.ts             # Adjacent test files
 │   │   ├── stores/
 │   │   │   ├── gameStore.ts          # Zustand persistent state
@@ -297,7 +306,7 @@ Each zone is a 16x16 tile grid with trees, water tiles, rock tiles, and structur
 
 ## Testing
 
-751 tests across 37 test files. TypeScript clean (no type errors).
+755 tests across 37 test files. TypeScript clean (no type errors).
 
 Write tests first for:
 - Pure utility functions (grid math, RNG, growth calculations)
@@ -335,9 +344,16 @@ All game systems from the original design are implemented. Phase D (Polish and S
 - **Offline Growth:** Background growth calculation on app resume
 - **Save/Load:** Serialization with auto-save on `document.visibilitychange`
 - **Stamina:** Drain on tool actions, time-based regeneration
-- **Harvest:** Species-specific yields (Timber/Sap/Fruit/Acorns) with multipliers
+- **Harvest:** Species-specific yields (Timber/Sap/Fruit/Acorns) with late-binding multipliers (computed at collect time)
 - **Quests:** Goal pool generation and tracking
-- **Movement:** Joystick (mobile) + WASD (desktop) with isometric correction
+- **Input:** Unified InputManager — drag-to-move (mobile), WASD (desktop), tap/click-to-move with A* pathfinding
+- **Pathfinding:** Grid A* with walkability grid, iterative waypoint following
+- **Discovery:** Species discovery system
+- **Recipes:** Crafting recipe system
+- **Trading:** Resource trading with seasonal market prices
+- **Tool Upgrades:** Progressive tool enhancement
+- **Wild Tree Regrowth:** Wild tree respawn system
+- **Zone Bonuses:** Per-zone bonus effects
 - **Time:** Microsecond-precision day/night cycle with dynamic sky colors
 
 ### Visual Features
@@ -361,6 +377,8 @@ All game systems from the original design are implemented. Phase D (Polish and S
 - PWA manifest + service worker for offline play
 - Code splitting: ~107 KB initial, ~500 KB total game load
 - Capacitor bridge for native mobile haptics
+- CI/CD: GitHub Actions (CI + Deploy to GitHub Pages + Release)
+- Live at: https://arcade-cabinet.github.io/grovekeeper/
 
 ## Key Files to Read First
 
@@ -385,7 +403,7 @@ Before merging any UI change, verify:
 
 - [ ] Renders correctly at 375px width (iPhone SE portrait)
 - [ ] Touch targets >= 44px
-- [ ] No overlap with joystick zone (bottom-left 200x200px)
+- [ ] No overlap with bottom action bar
 - [ ] No horizontal scroll on mobile
 - [ ] Text readable without zooming (minimum 14px body)
 - [ ] Dialogs don't extend beyond viewport

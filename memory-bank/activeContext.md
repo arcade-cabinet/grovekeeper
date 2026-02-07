@@ -1,8 +1,8 @@
 # Active Context -- Grovekeeper
 
-## Current State (2026-02-06)
+## Current State (2026-02-07)
 
-World Architecture Overhaul is complete. The project has evolved from a single 12x12 grid to a multi-zone world with modular scene management, procedural world generation, and a structure placement system. 751 tests across 37 files, all passing. TypeScript clean (zero errors). Alpha release branch includes new systems: discovery, recipes, trading, seasonal market, tool upgrades, wild tree regrowth, and zone bonuses.
+Alpha release is live at https://arcade-cabinet.github.io/grovekeeper/. All game systems implemented. CI/CD pipeline with GitHub Actions (CI + Deploy + Release). Unified InputManager replaced nipplejs with drag-to-move, WASD, and tap/click-to-move A* pathfinding. 755 tests across 37 files, all passing. TypeScript clean.
 
 ## What's Working
 
@@ -57,8 +57,8 @@ Complete list of all implemented systems:
 - Seasonal tree mesh rebuild on season change
 
 ### Gameplay Systems
-- Farmer character with joystick (mobile) + WASD (desktop) movement
-- Camera follows player smoothly across zone transitions
+- Unified InputManager: drag-to-move (mobile), WASD (desktop), tap/click-to-move with A* pathfinding
+- Camera follows player smoothly across zone transitions (snaps when prefers-reduced-motion)
 - 5-stage growth system with spec formula (season, difficulty, water multipliers)
 - Weather events (rain/drought/windstorm) with CSS overlays
 - 4 resource types (Timber, Sap, Fruit, Acorns)
@@ -87,6 +87,8 @@ Complete list of all implemented systems:
 - Build mode UI with structure catalog
 
 ### Infrastructure
+- CI/CD: GitHub Actions (CI + Deploy to GitHub Pages + Release)
+- Live at: https://arcade-cabinet.github.io/grovekeeper/
 - Code splitting (107 KB initial, ~500 KB total game load)
 - PWA manifest + service worker
 - Zustand persistence with localStorage
@@ -95,7 +97,7 @@ Complete list of all implemented systems:
 
 ## No Active Work
 
-The game is feature-complete with World Architecture. No active development tasks.
+The game is feature-complete. Alpha release live on GitHub Pages.
 
 ## Potential Future Work
 
@@ -106,6 +108,5 @@ The game is feature-complete with World Architecture. No active development task
 - Additional zone types and biomes beyond current archetypes
 - Structure upgrade tiers (basic → enhanced → advanced)
 - Tutorial improvements (current RulesModal is basic)
-- Error boundaries for BabylonJS crash recovery
 - Performance profiling on actual mobile devices
 - E2E testing with Playwright or Cypress

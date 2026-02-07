@@ -50,11 +50,13 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 - [x] Camera follows player across zones
 
 ### Controls (Spec Section 13)
-- [x] Mobile joystick (nipplejs)
+- [x] Unified InputManager (replaced nipplejs)
+- [x] Drag-to-move (mobile), WASD/arrow keys (desktop)
+- [x] Tap/click-to-move with A* pathfinding
 - [x] Orthographic input conversion
-- [x] Desktop WASD/arrow keys
 - [x] Tile selection via raycast (tap)
 - [x] Context-sensitive action button
+- [x] Passive pointer listeners, prefers-reduced-motion camera
 
 ### Tree Catalog (Spec Section 14)
 - [x] 12 base species with full spec data
@@ -175,7 +177,7 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 
 ### Testing (Spec Section 29)
 - [x] Vitest configured with happy-dom
-- [x] 751 tests across 37 test files, all passing (alpha release)
+- [x] 755 tests across 37 test files, all passing
 
 ### PWA (Spec Section 30-32)
 - [x] PWA manifest (public/manifest.json)
@@ -228,7 +230,7 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 
 ## Test Coverage Summary
 
-**751 tests** across **37 test files**, all passing. TypeScript clean.
+**755 tests** across **37 test files**, all passing. TypeScript clean.
 
 Test files cover:
 - gameStore (state transitions)
@@ -254,8 +256,7 @@ Test files cover:
 Minimal remaining issues:
 1. Capacitor native builds not yet created (no `ios/` or `android/` directories)
 2. No audio system (sound effects and ambient audio are future work)
-3. No error boundaries for BabylonJS crash recovery
-4. RulesModal tutorial is basic and could be improved
+3. RulesModal tutorial is basic and could be improved
 
 ## Version History
 
@@ -267,3 +268,4 @@ Minimal remaining issues:
 - **v0.4.0** -- Phase D: Feature Complete. All 32 spec sections implemented. 11 species (8 base + 3 prestige). 15 achievements. 5 prestige border tiers. Desktop adaptations. PWA manifest + service worker. 410 tests across 21 files. TypeScript clean.
 - **v0.5.0** -- World Architecture Overhaul: Multi-zone world system, structure placement, procedural world generation, scene decomposition, miniplex-react integration, SVG minimap. GameScene.tsx refactored from ~1050 to ~400 lines. Camera changed to orthographic diorama (NOT isometric). Biome 2.3 with configured overrides.
 - **v0.6.0** -- Alpha Release: New systems (discovery, recipes, trading, seasonal market, tool upgrades, wild tree regrowth, zone bonuses). 15 species (12 base + 3 prestige). 751 tests across 37 files.
+- **v0.6.1** -- Unified InputManager (replaced nipplejs), A* pathfinding, tap/click-to-move. CI/CD with GitHub Pages deploy. 6 CodeRabbit improvements (O(n) growth, late-binding harvest, passive listeners, reduced-motion camera, deterministic wild trees). 755 tests.
