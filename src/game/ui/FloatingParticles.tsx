@@ -66,6 +66,12 @@ const ensureKeyframes = () => {
     transform: translate(var(--gk-particle-ox), -${FLOAT_DISTANCE_PX}px);
   }
 }
+@media (prefers-reduced-motion: reduce) {
+  @keyframes gk-particle-float {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+}
 `;
   document.head.appendChild(style);
 };

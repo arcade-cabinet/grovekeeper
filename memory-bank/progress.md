@@ -57,7 +57,7 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 - [x] Context-sensitive action button
 
 ### Tree Catalog (Spec Section 14)
-- [x] 8 base species with full spec data
+- [x] 12 base species with full spec data
 - [x] 3 prestige species (Ghost Birch, Crystal Oak, Cherry Blossom)
 - [x] Species data: biome, yields, harvest cycles, specials, difficulty, evergreen
 - [x] Seed costs connected to resource economy
@@ -175,7 +175,7 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 
 ### Testing (Spec Section 29)
 - [x] Vitest configured with happy-dom
-- [x] 516 tests across 25 test files, all passing
+- [x] 751 tests across 37 test files, all passing (alpha release)
 
 ### PWA (Spec Section 30-32)
 - [x] PWA manifest (public/manifest.json)
@@ -228,7 +228,7 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 
 ## Test Coverage Summary
 
-**516 tests** across **25 test files**, all passing. TypeScript clean.
+**751 tests** across **37 test files**, all passing. TypeScript clean.
 
 Test files cover:
 - gameStore (state transitions)
@@ -265,4 +265,5 @@ Minimal remaining issues:
 - **v0.3.0** -- Phase B: Systems and Persistence. Save/load with ECS serialization, offline growth, stamina gauge, resource bar, seed costs, species-specific harvesting. PR #4 merged.
 - **v0.3.5** -- Phase C: Visual Polish. SPS Tree Generator ported, PBR materials, weather overlays, growth animations, floating particles, design tokens, typography, code splitting. Achievement system, grid expansion, prestige system.
 - **v0.4.0** -- Phase D: Feature Complete. All 32 spec sections implemented. 11 species (8 base + 3 prestige). 15 achievements. 5 prestige border tiers. Desktop adaptations. PWA manifest + service worker. 410 tests across 21 files. TypeScript clean.
-- **v0.5.0** -- World Architecture Overhaul: Multi-zone world system, structure placement, procedural world generation, scene decomposition, miniplex-react integration, SVG minimap. GameScene.tsx refactored from ~1050 to ~400 lines. 516 tests across 25 files. Camera changed to orthographic diorama (NOT isometric). Biome 2.3 with configured overrides.
+- **v0.5.0** -- World Architecture Overhaul: Multi-zone world system, structure placement, procedural world generation, scene decomposition, miniplex-react integration, SVG minimap. GameScene.tsx refactored from ~1050 to ~400 lines. Camera changed to orthographic diorama (NOT isometric). Biome 2.3 with configured overrides.
+- **v0.6.0** -- Alpha Release: New systems (discovery, recipes, trading, seasonal market, tool upgrades, wild tree regrowth, zone bonuses). 15 species (12 base + 3 prestige). 751 tests across 37 files.

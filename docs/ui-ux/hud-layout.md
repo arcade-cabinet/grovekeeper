@@ -12,7 +12,7 @@ individual component files listed below.
 
 ## Mobile Portrait Layout (Primary Target)
 
-```
+```text
 +--------------------------------------------------+
 |  [Wood Frame Left]                [Wood Frame Right]|
 |                                                    |
@@ -127,15 +127,16 @@ fades out over 1200 ms. Color is auto-detected from the text content. Maximum
 |---------------------------|---------------------------------------------------|
 | Joystick hidden           | WASD keyboard input replaces the virtual joystick |
 | Keyboard badges           | Number keys 1-8 shown on each ToolBelt button     |
-| MiniMap shown             | 120x120 px canvas in bottom-left corner           |
+| MiniMap shown             | SVG-based minimap in bottom-left corner            |
 | Resource labels           | Full text labels appear next to resource icons     |
 | Wider side frames         | `w-6` (24 px) instead of `w-3` (12 px)           |
 | Center status text        | Selected tool name shown between joystick zone and action button |
 
-**MiniMap** (`MiniMap.tsx`) renders a canvas-based overhead view of the grid.
-Soil tiles are brown, occupied tiles are green, water is blue, rock is grey.
-Trees appear as 3px green squares. The player is a 3px yellow circle. Updates
-at 10 fps via `setInterval`.
+**MiniMap** (`MiniMap.tsx`) renders an SVG-based overhead view of the grid using
+miniplex-react's `ECS.Entities` for reactive rendering. Soil tiles are brown,
+occupied tiles are green, water is blue, rock is grey. Trees appear as small
+green circles. The player is a yellow circle. On mobile, a fullscreen
+`MiniMapOverlay` is available via a toggle button.
 
 ---
 

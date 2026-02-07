@@ -204,13 +204,18 @@ function createTreeBase(
         );
         treeBranches.push(bough.branch);
         treePaths.push(bough.core);
-        treeRadii.push(branch.radii);
+        treeRadii.push(bough.radii);
         treeDirections.push(boughSys);
       }
     }
   }
 
-  const tree = Mesh.MergeMeshes(treeBranches, true) as Mesh;
+  const tree = Mesh.MergeMeshes(treeBranches, true);
+  if (!tree) {
+    // Fallback: return the first branch if merge fails
+    const fallback = treeBranches[0] ?? CreateBox("fallbackTree", { size: 0.1 }, scene);
+    return { tree: fallback, paths: treePaths, radii: treeRadii, directions: treeDirections };
+  }
   return { tree, paths: treePaths, radii: treeRadii, directions: treeDirections };
 }
 

@@ -1,10 +1,27 @@
 # Rendering Architecture
 
-Grovekeeper's 3D rendering is handled by BabylonJS 8.50.x in an imperative (not declarative) style. All scene management lives in `src/game/scenes/GameScene.tsx`, which is the largest file in the codebase at approximately 1050 lines.
+Grovekeeper's 3D rendering is handled by BabylonJS 8.50.x in an imperative (not declarative) style. Scene management is split across 8 specialized managers in `src/game/scene/`, coordinated by `GameScene.tsx` (~400 lines).
+
+## Scene Decomposition
+
+The rendering architecture was refactored from a monolithic `GameScene.tsx` (~1050 lines) into modular managers:
+
+| Manager | File | Responsibility |
+|---------|------|---------------|
+| SceneManager | `SceneManager.ts` | Engine + Scene creation/disposal |
+| CameraManager | `CameraManager.ts` | Orthographic diorama camera, viewport scaling |
+| LightingManager | `LightingManager.ts` | Hemisphere + directional lights, day/night sync |
+| GroundBuilder | `GroundBuilder.ts` | DynamicTexture biome blending, grid overlay |
+| SkyManager | `SkyManager.ts` | HDRI skybox + IBL environment |
+| PlayerMeshManager | `PlayerMeshManager.ts` | Player mesh lifecycle (create, update, dispose) |
+| TreeMeshManager | `TreeMeshManager.ts` | Tree mesh lifecycle, template cache, growth lerp |
+| BorderTreeManager | `BorderTreeManager.ts` | Decorative border trees outside playable grid |
+
+`GameScene.tsx` instantiates these managers in a `useEffect` hook and calls their methods from the game loop.
 
 ## Scene Initialization
 
-The BabylonJS Engine and Scene are created in a `useEffect` hook with async initialization:
+The BabylonJS Engine and Scene are created via `SceneManager.initialize()` with async dynamic imports:
 
 ```typescript
 const initBabylon = async () => {
@@ -28,7 +45,7 @@ const engine = new Engine(canvasRef.current, true, {
 
 ## Camera
 
-The camera is a locked isometric `ArcRotateCamera` that gives a fixed diorama view:
+Managed by `CameraManager`. The camera is a locked orthographic `ArcRotateCamera` that gives a fixed diorama view:
 
 | Parameter | Value            | Purpose                          |
 |-----------|------------------|----------------------------------|
@@ -41,7 +58,7 @@ All camera inputs are cleared -- the player cannot rotate, pan, or zoom. The cam
 
 ## Lighting
 
-Two lights work together for a warm, natural look:
+Managed by `LightingManager`. Two lights work together for a warm, natural look:
 
 **Hemisphere Light** -- Soft ambient fill from above.
 - Intensity varies with time of day (from `time.ts` ambient intensity).
@@ -54,7 +71,7 @@ Two lights work together for a warm, natural look:
 
 ## Ground and Grid
 
-The scene has three ground layers:
+Managed by `GroundBuilder`. The scene has three ground layers:
 
 1. **Forest floor** -- A `CreateGround` mesh with `GrassProceduralTexture` using soil-toned colors. Extends 4 units beyond the planting grid in each direction.
 2. **Soil base** -- A flat ground covering the planting area with a dark soil material.
@@ -62,7 +79,7 @@ The scene has three ground layers:
 
 ## Player Mesh
 
-The farmer ("Fern") is built from BabylonJS primitives:
+Managed by `PlayerMeshManager`. The farmer ("Fern") is built from BabylonJS primitives:
 
 - **Body:** Cylinder (tapered, forest green)
 - **Head:** Sphere (skin-toned, parented to body)
@@ -73,15 +90,17 @@ Position is synced from the ECS player entity every frame.
 
 ## Tree Rendering
 
+Managed by `TreeMeshManager` (template caching, cloning, growth animation) with mesh generation delegated to `treeMeshBuilder.ts`.
+
 ### SPS Tree Generator
 
 Tree meshes use a ported version of the BabylonJS Extensions SPS Tree Generator, rewritten in TypeScript with seeded RNG support. The generator creates procedural trees using BabylonJS's Solid Particle System.
 
 Source: `src/game/utils/spsTreeGenerator.ts`
 
-### Species-Specific PBR Meshes
+### Species-Specific Meshes
 
-Each of the 11 species maps to a unique rendering profile in `src/game/utils/treeMeshBuilder.ts`:
+Each of the 15 species (12 base + 3 prestige) maps to a unique rendering profile in `src/game/utils/treeMeshBuilder.ts`:
 
 | Species         | Bark Texture | Leaf Texture | Special Feature                    |
 |-----------------|-------------|-------------|-------------------------------------|
@@ -93,11 +112,15 @@ Each of the 11 species maps to a unique rendering profile in `src/game/utils/tre
 | Redwood         | Thick bark  | Broad leaf  | Tallest tree, heavy trunk           |
 | Flame Maple     | Oak bark    | Broad leaf  | Orange-red seasonal tints           |
 | Baobab          | Thick bark  | Broad leaf  | Wide tapered trunk                  |
+| Silver Birch    | Birch bark  | Broad leaf  | +20% growth near water              |
+| Ironbark        | Rugged bark | Broad leaf  | Storm immune, 3x timber at Old Growth |
+| Golden Apple    | Oak bark    | Broad leaf  | 3x fruit yield in Autumn            |
+| Mystic Fern     | Smooth bark | Broad leaf  | +15% growth per adjacent tree       |
 | Crystalline Oak | Birch bark  | Broad leaf  | Prismatic seasonal color shifts     |
 | Moonwood Ash    | Smooth bark | Feathery    | Silver shimmer material             |
 | Worldtree       | Thick bark  | Broad leaf  | Largest tree, grove-wide presence   |
 
-PBR materials use textures from `/public/textures/trees/` with color, normal, and roughness/opacity maps.
+StandardMaterial (not PBR) is used with textures from `/public/textures/trees/` for color, normal, and roughness/opacity maps.
 
 ### Template Mesh Caching
 
@@ -181,4 +204,4 @@ The overlay system is controlled via `setWeatherVisual()` and `setShowPetals()` 
 
 ## Border Trees
 
-14 decorative trees are placed around the grid edges to frame the grove. They use simple primitive meshes (cylinder trunk + sphere canopy) with seeded RNG for scale variation. These trees change canopy color with the seasons but are not part of the ECS.
+Managed by `BorderTreeManager`. 14 decorative trees are placed around the grid edges to frame the grove. They use simple primitive meshes (cylinder trunk + sphere canopy) with seeded RNG for scale variation. These trees change canopy color with the seasons but are not part of the ECS.

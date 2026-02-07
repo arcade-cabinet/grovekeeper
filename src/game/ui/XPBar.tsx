@@ -1,11 +1,5 @@
+import { COLORS } from "../constants/config";
 import { useGameStore, xpToNext, totalXpForLevel } from "../stores/gameStore";
-
-const COLORS = {
-  forestGreen: "#2D5A27",
-  autumnGold: "#FFB74D",
-  soilDark: "#3E2723",
-  skyMist: "#E8F5E9",
-};
 
 export const XPBar = () => {
   const xp = useGameStore((s) => s.xp);

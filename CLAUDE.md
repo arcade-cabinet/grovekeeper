@@ -162,7 +162,7 @@ grovekeeper/
 │   │   │   └── gameStore.test.ts
 │   │   ├── constants/
 │   │   │   ├── config.ts             # Grid size, colors, growth stages
-│   │   │   ├── trees.ts              # Tree species definitions (11 species)
+│   │   │   ├── trees.ts              # Tree species definitions (15 species)
 │   │   │   ├── tools.ts              # Tool definitions + stamina costs
 │   │   │   ├── resources.ts          # Resource type definitions
 │   │   │   └── *.test.ts             # Adjacent test files
@@ -192,7 +192,7 @@ grovekeeper/
 │   │   │   ├── ActionButton.tsx      # Context-sensitive action button
 │   │   │   ├── WeatherOverlay.tsx    # CSS weather effects + petals
 │   │   │   ├── AchievementPopup.tsx  # Gold border + sparkle modal
-│   │   │   ├── MiniMap.tsx           # Desktop-only canvas mini-map
+│   │   │   ├── MiniMap.tsx           # SVG-based minimap (desktop overlay, mobile fullscreen)
 │   │   │   ├── Toast.tsx             # Toast notification system
 │   │   │   ├── FloatingParticles.tsx # +XP / +Timber floating numbers
 │   │   │   └── ErrorBoundary.tsx     # React error boundary
@@ -297,7 +297,7 @@ Each zone is a 16x16 tile grid with trees, water tiles, rock tiles, and structur
 
 ## Testing
 
-516 tests across 25 test files. TypeScript clean (no type errors).
+751 tests across 37 test files. TypeScript clean (no type errors).
 
 Write tests first for:
 - Pure utility functions (grid math, RNG, growth calculations)
@@ -343,7 +343,7 @@ All game systems from the original design are implemented. Phase D (Polish and S
 ### Visual Features
 - **SPS Trees:** Ported BabylonJS SPS Tree Generator with seeded RNG
 - **PBR Materials:** 5 bark + 2 leaf texture sets
-- **11 Species:** 8 base + 3 prestige (Ghost Birch glow, Crystal Oak prismatic tints, Cherry Blossom petals)
+- **15 Species:** 12 base + 3 prestige (Ghost Birch glow, Crystal Oak prismatic tints, Cherry Blossom petals)
 - **Growth Animations:** Lerp-based smooth scale interpolation between stages
 - **Weather Overlays:** CSS rain, drought haze, windstorm, cherry petal effects
 - **Seasonal Rebuilds:** Tree meshes rebuild on season change for canopy color shifts

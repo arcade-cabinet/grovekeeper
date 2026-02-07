@@ -2,7 +2,7 @@
 
 Grovekeeper is a cozy 2.5D isometric tree-planting simulation with idle tending mechanics. The core loop follows five repeating phases:
 
-```
+```text
 EXPLORE --> PLANT --> TEND --> HARVEST --> EXPAND & UNLOCK
                          ^                         |
                          |_________________________|
@@ -16,7 +16,7 @@ A typical session flows like this:
 
 1. **Load save** -- instant on mount, restored from `localStorage` via Zustand `persist` middleware (key: `grove-keeper-save`).
 2. **Offline growth catch-up** -- `calculateAllOfflineGrowth()` advances every tree based on elapsed real time (capped at 24 hours). Season multiplier is averaged to 1.0 and water state resets to `false`.
-3. **Harvest ready trees** -- any tree at stage 3 (Mature) or 4 (Old Growth) can be harvested for species-specific resource yields.
+3. **Harvest-ready trees** -- any tree at stage 3 (Mature) or 4 (Old Growth) can be harvested for species-specific resource yields.
 4. **Plant new seeds** -- select Trowel, pick a species from SeedSelect, tap an empty soil tile.
 5. **Water thirsty saplings** -- Watering Can on stage 0--2 trees grants a 1.3x growth multiplier until next stage transition.
 6. **Check progress** -- quest panel tracks active goals; achievement popups fire automatically.
@@ -35,7 +35,7 @@ There is no urgency. No timers penalize the player. No resources decay. Growth i
 
 ## Screen Flow
 
-```
+```text
 App.tsx
   +-- Game.tsx (screen router)
         |
@@ -46,8 +46,9 @@ App.tsx
         |
         +-- screen === "playing" --> GameScene.tsx (lazy-loaded)
                                       |
-                                      +-- BabylonJS Engine + Scene
+                                      +-- BabylonJS Engine + Scene (via SceneManager)
                                       +-- Game loop (engine.runRenderLoop)
+                                      +-- 8 scene managers (Camera, Lighting, Ground, Sky, Player, Tree, Border)
                                       +-- GameUI overlay (HUD, joystick, dialogs)
 ```
 
@@ -92,7 +93,7 @@ All systems are pure functions that operate on the Miniplex ECS world. Side effe
 | File | Role |
 |------|------|
 | `src/game/Game.tsx` | Screen router, quest refresh, rules modal |
-| `src/game/scenes/GameScene.tsx` | BabylonJS scene, game loop, all 3D logic (~1050 lines) |
+| `src/game/scenes/GameScene.tsx` | BabylonJS scene orchestrator, game loop (~400 lines, delegates to scene managers) |
 | `src/game/stores/gameStore.ts` | Zustand persistent state and actions |
 | `src/game/systems/offlineGrowth.ts` | Offline growth calculator |
 | `src/game/systems/growth.ts` | Per-frame growth system |

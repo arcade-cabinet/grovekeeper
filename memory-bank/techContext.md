@@ -19,7 +19,7 @@
 | Bundler | Vite | 6.x | `@vitejs/plugin-react`, manual chunks config |
 | Language | TypeScript | 5.7+ | Strict mode, clean (zero errors) |
 | Lint/Fmt | Biome | 2.3 | Single tool for lint + format |
-| Testing | Vitest | 4.x | `happy-dom` environment, 516 tests, 25 files |
+| Testing | Vitest | 4.x | `happy-dom` environment, 751 tests, 37 files |
 | Testing Lib | @testing-library/react | 16.x | Component testing |
 | Package Mgr | pnpm | 9.x | Lockfile: `pnpm-lock.yaml` |
 
@@ -97,7 +97,7 @@ Game load: ~500 KB total (gzipped)
 
 ## Test Infrastructure
 
-- **516 tests** across **25 test files**, all passing
+- **751 tests** across **37 test files**, all passing
 - Test files live adjacent to source: `*.test.ts(x)`
 - Key test locations: `src/game/stores/`, `src/game/systems/`, `src/game/utils/`, `src/game/world/`
 - Systems tested: growth, movement, weather, achievements, prestige, gridExpansion, offlineGrowth, levelUnlocks

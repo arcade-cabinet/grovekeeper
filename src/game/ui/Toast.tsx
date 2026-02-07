@@ -89,9 +89,14 @@ interface AnimatedToastProps {
   onDismissed: (id: string) => void;
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 const AnimatedToast = ({ item, onDismissed }: AnimatedToastProps) => {
   const [phase, setPhase] = useState<"enter" | "visible" | "exit">("enter");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reduceMotion = useRef(prefersReducedMotion());
 
   // Enter animation on mount
   useEffect(() => {
@@ -124,9 +129,14 @@ const AnimatedToast = ({ item, onDismissed }: AnimatedToastProps) => {
 
   const colors = TOAST_COLORS[item.type];
 
+  const noMotion = reduceMotion.current;
   const translateY =
-    phase === "enter" ? "-20px" : phase === "exit" ? "-20px" : "0px";
+    noMotion ? "0px"
+    : phase === "enter" ? "-20px" : phase === "exit" ? "-20px" : "0px";
   const opacity = phase === "visible" ? 1 : 0;
+  const transitionCSS = noMotion
+    ? "none"
+    : `transform ${TRANSITION_MS}ms ease-out, opacity ${TRANSITION_MS}ms ease-out`;
 
   return (
     <div
@@ -144,7 +154,7 @@ const AnimatedToast = ({ item, onDismissed }: AnimatedToastProps) => {
         boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
         transform: `translateY(${translateY})`,
         opacity,
-        transition: `transform ${TRANSITION_MS}ms ease-out, opacity ${TRANSITION_MS}ms ease-out`,
+        transition: transitionCSS,
         maxWidth: "calc(100vw - 48px)",
         textAlign: "center",
         whiteSpace: "nowrap",

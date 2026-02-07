@@ -43,8 +43,10 @@ export class TreeMeshManager {
       this.templates.set(cacheKey, template);
     }
 
-    // biome-ignore lint/style/noNonNullAssertion: clone of a valid template always succeeds
-    const mesh = template.clone(`tree_${entityId}`, null)!;
+    const mesh = template.clone(`tree_${entityId}`, null);
+    if (!mesh) {
+      throw new Error(`Failed to clone tree template "${cacheKey}" for entity "${entityId}"`);
+    }
     mesh.isVisible = true;
     mesh.setEnabled(true);
 
@@ -128,11 +130,18 @@ export class TreeMeshManager {
 
   /** Clear templates only (e.g. before a full rebuild). */
   clearTemplates(): void {
+    // Unfreeze and dispose frozen meshes before clearing the set
+    for (const entityId of this.frozen) {
+      const mesh = this.meshes.get(entityId);
+      if (mesh) {
+        mesh.unfreezeWorldMatrix();
+      }
+    }
+    this.frozen.clear();
     for (const template of this.templates.values()) {
       template.dispose();
     }
     this.templates.clear();
-    this.frozen.clear();
   }
 
   dispose(): void {

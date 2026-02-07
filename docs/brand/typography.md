@@ -89,6 +89,7 @@ compact at larger sizes. Buttons inherit the display font so action labels
 ## Practical Examples
 
 ### HUD stat label
+
 ```tsx
 <span className="text-xs font-bold" style={{ color: "#3E2723" }}>
   {resources.timber}
@@ -96,6 +97,7 @@ compact at larger sizes. Buttons inherit the display font so action labels
 ```
 
 ### Dialog title
+
 ```tsx
 <DialogTitle style={{ color: COLORS.soilDark }}>
   Select a Seed
@@ -105,6 +107,7 @@ The `DialogTitle` component inherits `font-family: var(--gk-font-display)` from
 the `h1`-`h6` base rule applied by shadcn/ui.
 
 ### Action button label
+
 ```tsx
 <button className="font-bold text-sm tracking-wide">
   PLANT

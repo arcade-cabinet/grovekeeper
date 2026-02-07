@@ -74,7 +74,7 @@ keyboard input hook listens for `WASD` and arrow keys.
 
 **Isometric conversion** mirrors the joystick math:
 
-```
+```text
 worldX = inputX - inputY
 worldZ = -(inputX + inputY)
 ```

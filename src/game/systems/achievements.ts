@@ -232,10 +232,6 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
 export interface AchievementCheckContext {
   /** Cumulative trees planted across all sessions. */
   treesPlanted: number;
-  /** Cumulative trees that have reached maturity. */
-  treesMatured: number;
-  /** Cumulative trees harvested. */
-  treesHarvested: number;
   /** Lifetime resource totals keyed by resource type. */
   lifetimeResources: Record<string, number>;
   /** Distinct species IDs the player has ever planted. */
@@ -251,6 +247,8 @@ export interface AchievementCheckContext {
   }[];
   /** Current grid side length (e.g. 12 for 12x12). */
   gridSize: number;
+  /** Number of tiles that can be planted on (excludes water, rock, path). */
+  plantableTileCount?: number;
   /** Achievement IDs already earned (will not be re-awarded). */
   unlockedAchievements: string[];
   /** Whether the player has prestiged at least once. */
@@ -388,7 +386,8 @@ export function checkAchievements(ctx: AchievementCheckContext): string[] {
     award("canopy-complete");
   }
 
-  if (ctx.currentTreeData.length >= ctx.gridSize * ctx.gridSize) {
+  const plantableCount = ctx.plantableTileCount ?? ctx.gridSize * ctx.gridSize;
+  if (plantableCount > 0 && ctx.currentTreeData.length >= plantableCount) {
     award("full-grove");
   }
 

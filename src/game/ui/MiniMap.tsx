@@ -322,12 +322,14 @@ export const MiniMap = () => {
 
       {/* Pulse animation */}
       <style>{`
-        .minimap-player-pulse {
-          animation: minimap-pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes minimap-pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
+        @media (prefers-reduced-motion: no-preference) {
+          .minimap-player-pulse {
+            animation: minimap-pulse 1.5s ease-in-out infinite;
+          }
+          @keyframes minimap-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+          }
         }
       `}</style>
     </>

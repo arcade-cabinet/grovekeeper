@@ -53,8 +53,16 @@ Defined in `src/game/systems/levelUnlocks.ts`:
 | 6 | Ghost Birch | -- |
 | 7 | -- | Axe |
 | 8 | Redwood | -- |
+| 9 | Silver Birch | -- |
 | 10 | Flame Maple | Compost Bin |
+| 11 | -- | Rain Catcher |
 | 12 | Baobab | -- |
+| 13 | -- | Fertilizer Spreader |
+| 14 | Ironbark | -- |
+| 16 | -- | Scarecrow |
+| 18 | Golden Apple | -- |
+| 20 | -- | Grafting Tool |
+| 22 | Mystic Fern | -- |
 | 25 | (prestige species) | -- |
 
 On level-up, `checkNewUnlocks(oldLevel, newLevel)` returns all species and tools earned in the level range. Toast notifications are displayed via `queueMicrotask()` to avoid side effects during Zustand state updates.
@@ -70,7 +78,7 @@ On level-up, `checkNewUnlocks(oldLevel, newLevel)` returns all species and tools
 | 1 | `first-seed` | First Seed | Plant 1 tree |
 | 2 | `seed-spreader` | Seed Spreader | Plant 50 trees (cumulative) |
 | 3 | `forest-founder` | Forest Founder | Plant 200 trees (cumulative) |
-| 4 | `one-of-each` | One of Each | Plant all 8 base species at least once |
+| 4 | `one-of-each` | One of Each | Plant all 12 base species at least once |
 | 5 | `patient-gardener` | Patient Gardener | Grow any tree to Mature (stage 3) |
 | 6 | `old-growth-guardian` | Old Growth Guardian | Grow any tree to Old Growth (stage 4) |
 | 7 | `timber-baron` | Timber Baron | Accumulate 1,000 lifetime timber |

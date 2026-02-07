@@ -58,12 +58,12 @@ describe("Movement System", () => {
 
     it("clamps position to grid bounds (max)", () => {
       const player = createPlayerEntity();
-      player.position!.x = GRID_SIZE - 1;
+      player.position!.x = GRID_SIZE;
       world.add(player);
 
       movementSystem({ x: 1, z: 0 }, 10);
 
-      expect(player.position!.x).toBe(GRID_SIZE - 1);
+      expect(player.position!.x).toBe(GRID_SIZE);
     });
 
     it("clamps position to grid bounds (min)", () => {
@@ -106,9 +106,9 @@ describe("Movement System", () => {
 
       setMovementBounds({ minX: 2, minZ: 2, maxX: 8, maxZ: 8 });
 
-      // Move far right — should clamp at maxX - 1 = 7
+      // Move far right — should clamp at maxX = 8
       movementSystem({ x: 1, z: 0 }, 100);
-      expect(player.position!.x).toBe(7);
+      expect(player.position!.x).toBe(8);
 
       // Move far left — should clamp at minX = 2
       movementSystem({ x: -1, z: 0 }, 100);

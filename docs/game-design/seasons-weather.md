@@ -144,7 +144,7 @@ Weather rolls are seeded using `hashString("weather-{rngSeed}-{nextCheckTime}")`
 
 ### Weather State Machine
 
-```
+```text
 initializeWeather(currentGameTimeSeconds)
   --> WeatherState { current: Clear, nextCheckTime: now + 300 }
 
@@ -167,7 +167,7 @@ growthSystem(deltaTime, currentSeason, weatherMult);
 
 Inside `growthSystem`, the per-tree progress update is:
 
-```
+```text
 tree.progress += rate * weatherMultiplier * deltaTime
 ```
 

@@ -159,7 +159,7 @@ When explicitly asked, review EVERY memory bank file -- even those that seem unc
 - `src/game/ui/ActionButton.tsx` -- Context-sensitive action button
 - `src/game/ui/WeatherOverlay.tsx` -- CSS weather effects + petals
 - `src/game/ui/AchievementPopup.tsx` -- Gold border + sparkle modal
-- `src/game/ui/MiniMap.tsx` -- Desktop-only canvas mini-map
+- `src/game/ui/MiniMap.tsx` -- SVG-based minimap (desktop overlay, mobile fullscreen)
 - `src/game/ui/Toast.tsx` -- Toast notification system
 - `src/game/ui/FloatingParticles.tsx` -- +XP / +Timber floating numbers
 - `src/game/ui/SeedSelect.tsx` -- Species picker dialog
@@ -215,7 +215,7 @@ When explicitly asked, review EVERY memory bank file -- even those that seem unc
 
 **Scope:** Unit tests, integration tests, type checking, linting, performance audits.
 
-**Current Status:** 516 tests across 25 test files. TypeScript clean. Zero lint errors.
+**Current Status:** 751 tests across 37 test files. TypeScript clean. Zero lint errors.
 
 **Test Files:**
 - `src/game/systems/growth.test.ts`
@@ -326,7 +326,7 @@ Documentation lives in `docs/`. Track implementation status in `memory-bank/prog
 - 5-stage growth model, resource economy (Timber/Sap/Fruit/Acorns), stamina system, seeded RNG, grid math utilities
 
 **Phase B: Content Completeness** -- COMPLETE
-- 11 tree species (8 base + 3 prestige), 8 tools with stamina costs, tile types (soil/water/rock/path), species-specific SPS tree meshes
+- 15 tree species (12 base + 3 prestige), 8 tools with stamina costs, tile types (soil/water/rock/path), species-specific SPS tree meshes
 
 **Phase C: Progression and Retention** -- COMPLETE
 - 15 achievements, prestige system (level 25+ with 5 cosmetic borders), quest system, grid expansion (12/16/20/24/32), XP formula
@@ -341,7 +341,7 @@ Documentation lives in `docs/`. Track implementation status in `memory-bank/prog
 - Structure system (6 types with grid-snap placement + effect radii)
 - Orthographic diorama camera (replaced isometric), DynamicTexture biome blending
 - HDRI skybox, SVG minimap with miniplex-react, build mode UI
-- 516 tests across 25 files. Zero lint errors.
+- 751 tests across 37 files. Zero lint errors.
 
 ### Phase E: Native and Distribution (TODO)
 

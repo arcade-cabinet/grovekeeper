@@ -6,24 +6,32 @@
 
 ## Brand Pillars
 
+
 ### Warmth
+
 Earth tones, rounded shapes, soft shadows. The palette centers on forest greens
-(`#2D6A4F`) and warm browns (`#8B6F47`). Radii default to `12px` (medium) or
+(`#2D5A27`) and warm browns (`#5D4037`). Radii default to `12px` (medium) or
 `20px` (large) so nothing feels sharp. Shadows use a green-tinted `rgba(26, 58,
 42, ...)` base rather than pure black.
 
+
 ### Growth
+
 Everything evolves; nothing stays static. Trees progress through five stages,
 the grid expands, the season wheel turns, and the player levels up. UI
 transitions (150-600 ms) reinforce this constant motion.
 
+
 ### Wonder
+
 Small magical moments hidden in the ordinary. Cherry blossom petals drift from
 mature sakura trees. Ghost Birch bark glows at night. Crystal Oak canopies
 shift prismatic hues with each season. The achievement popup arrives with a gold
 flash and sparkle animation.
 
+
 ### Patience
+
 Good things take time. The game is anti-hustle by design: 3-15 minute commute
 sessions, idle offline growth, a prestige loop that rewards replaying rather
 than rushing. The stamina bar throttles frantic tapping, encouraging the player

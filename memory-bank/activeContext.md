@@ -2,7 +2,7 @@
 
 ## Current State (2026-02-06)
 
-World Architecture Overhaul is complete. The project has evolved from a single 12x12 grid to a multi-zone world with modular scene management, procedural world generation, and a structure placement system. 516 tests across 25 files, all passing. TypeScript clean (zero errors).
+World Architecture Overhaul is complete. The project has evolved from a single 12x12 grid to a multi-zone world with modular scene management, procedural world generation, and a structure placement system. 751 tests across 37 files, all passing. TypeScript clean (zero errors). Alpha release branch includes new systems: discovery, recipes, trading, seasonal market, tool upgrades, wild tree regrowth, and zone bonuses.
 
 ## What's Working
 
@@ -47,7 +47,7 @@ Complete list of all implemented systems:
 - HDRI skybox from Poly Haven with IBL environment
 - DynamicTexture ground with smooth biome blending
 - StandardMaterial (NOT PBR) for structures and trees
-- SPS Tree Generator (ported from BabylonJS Extensions) with 11 species
+- SPS Tree Generator (ported from BabylonJS Extensions) with 15 species (12 base + 3 prestige)
 - Template mesh caching with Mesh.clone instancing
 - Matrix freezing on stage 4 static trees (LOD)
 - Ghost Birch night glow variant (emissive material, separate cache entry)

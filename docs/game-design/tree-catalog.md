@@ -1,6 +1,6 @@
 # Tree Catalog
 
-Grovekeeper has 11 tree species: 8 base species available through normal leveling, and 3 prestige species unlocked via the prestige system.
+Grovekeeper has 15 tree species: 12 base species available through normal leveling, and 3 prestige species unlocked via the prestige system.
 
 ## Growth Model
 

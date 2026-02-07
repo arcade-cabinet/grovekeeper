@@ -26,8 +26,8 @@ export const movementSystem = (
     entity.position.z += input.z * PLAYER_SPEED * deltaTime;
 
     // Clamp to world bounds
-    entity.position.x = Math.max(worldBounds.minX, Math.min(worldBounds.maxX - 1, entity.position.x));
-    entity.position.z = Math.max(worldBounds.minZ, Math.min(worldBounds.maxZ - 1, entity.position.z));
+    entity.position.x = Math.max(worldBounds.minX, Math.min(worldBounds.maxX, entity.position.x));
+    entity.position.z = Math.max(worldBounds.minZ, Math.min(worldBounds.maxZ, entity.position.z));
   }
 };
 

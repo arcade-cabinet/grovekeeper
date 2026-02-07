@@ -73,7 +73,7 @@ All persistent state is automatically synced to `localStorage` under the key `gr
 | `speciesPlanted`     | `string[]`      | Distinct species IDs ever planted        |
 | `gridSize`           | `number`        | Current grid dimension (default 12)      |
 | `prestigeCount`      | `number`        | Number of times the player has prestiged |
-| `activeBorderCosmetic` | `string | null` | Active cosmetic border theme ID        |
+| `activeBorderCosmetic` | `string \| null` | Active cosmetic border theme ID        |
 
 ### Quest State
 
@@ -88,7 +88,7 @@ All persistent state is automatically synced to `localStorage` under the key `gr
 
 | Field       | Type             | Description                                    |
 |-------------|------------------|------------------------------------------------|
-| `groveData` | `GroveData | null` | Serialized tree entities + player position   |
+| `groveData` | `GroveData \| null` | Serialized tree entities + player position   |
 
 ```typescript
 interface GroveData {
@@ -109,7 +109,7 @@ interface GroveData {
 
 The XP formula follows spec section 21:
 
-```
+```text
 xpToNext(level) = 100 + max(0, (level - 2) * 50) + floor((level - 1) / 5) * 200
 ```
 

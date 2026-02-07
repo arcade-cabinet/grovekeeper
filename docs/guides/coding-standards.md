@@ -11,7 +11,7 @@ This document defines the coding conventions enforced across the Grovekeeper cod
 | Utilities   | camelCase.ts      | `seedRNG.ts`, `treeMeshBuilder.ts`         |
 | Constants   | camelCase.ts      | `trees.ts`, `tools.ts`, `config.ts`        |
 | Stores      | camelCaseStore.ts | `gameStore.ts`                             |
-| Hooks       | useCamelCase.ts   | `useKeyboardInput.ts`, `use-mobile.ts`     |
+| Hooks       | useCamelCase.ts   | `useKeyboardInput.ts`, `useMobile.ts`      |
 | Tests       | *.test.ts(x)      | `growth.test.ts`, `gameStore.test.ts`      |
 
 Test files are co-located with their source files, not in a separate `__tests__` directory.
@@ -98,6 +98,7 @@ ECS systems are pure functions with no side effects:
 
 ```typescript
 export function growthSystem(
+  world: World,
   deltaTime: number,
   currentSeason: string,
   weatherMultiplier: number,
@@ -244,7 +245,7 @@ vi.mock("../ui/Toast", () => ({
 
 ### Test Statistics
 
-The codebase maintains 410+ tests across 21 test files:
+The codebase maintains 751 tests across 37 test files:
 
 ```
 src/game/systems/growth.test.ts

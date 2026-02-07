@@ -62,6 +62,12 @@ const ensureKeyframes = () => {
   75% { transform: translateY(75vh) translateX(8px) rotate(270deg); opacity: 0.4; }
   100% { transform: translateY(110vh) translateX(-12px) rotate(360deg); opacity: 0; }
 }
+@media (prefers-reduced-motion: reduce) {
+  @keyframes gk-rain-fall { 0% { opacity: 0.7; } 100% { opacity: 0.3; } }
+  @keyframes gk-snow-fall { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+  @keyframes gk-wind-sway { 0%, 100% { transform: none; } }
+  @keyframes gk-petal-fall { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+}
 `;
   document.head.appendChild(style);
 };

@@ -65,7 +65,7 @@
 3. **Session design:** Satisfying 5-minute play session -- DONE (offline growth, quick harvest, auto-save)
 4. **Retention hooks:** Quests + achievements + prestige + zone exploration create "one more session" feeling -- DONE
 5. **Visual charm:** Cozy, warm, organic feel -- DONE (SPS trees, StandardMaterial, weather overlays, seasonal tints, HDRI skybox)
-6. **Test coverage:** 516 tests across 25 files, all passing, TypeScript clean -- DONE
+6. **Test coverage:** 751 tests across 37 files, all passing, TypeScript clean -- DONE
 
 ## Canonical Specification
 

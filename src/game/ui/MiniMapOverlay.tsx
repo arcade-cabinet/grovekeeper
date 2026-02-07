@@ -245,6 +245,30 @@ function MinimapSVGContent({
   );
 }
 
+// --- One-time style injection for pulse animation ---
+
+const OVERLAY_STYLE_ID = "grovekeeper-minimap-overlay-pulse";
+
+function injectOverlayPulseStyle() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById(OVERLAY_STYLE_ID)) return;
+
+  const style = document.createElement("style");
+  style.id = OVERLAY_STYLE_ID;
+  style.textContent = `
+    @media (prefers-reduced-motion: no-preference) {
+      .minimap-player-pulse {
+        animation: minimap-pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes minimap-pulse {
+        0%, 100% { opacity: 1; r: 4; }
+        50% { opacity: 0.7; r: 6; }
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // --- MiniMapOverlay ---
 
 interface MiniMapOverlayProps {
@@ -256,6 +280,10 @@ export const MiniMapOverlay = ({ open, onClose }: MiniMapOverlayProps) => {
   const [snapshot, setSnapshot] = useState<MinimapSnapshot>(() =>
     readSnapshot(),
   );
+
+  useEffect(() => {
+    injectOverlayPulseStyle();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -365,16 +393,6 @@ export const MiniMapOverlay = ({ open, onClose }: MiniMapOverlayProps) => {
         </span>
       </div>
 
-      {/* Pulse animation style */}
-      <style>{`
-        .minimap-player-pulse {
-          animation: minimap-pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes minimap-pulse {
-          0%, 100% { opacity: 1; r: 4; }
-          50% { opacity: 0.7; r: 6; }
-        }
-      `}</style>
     </div>
   );
 };

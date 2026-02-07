@@ -183,13 +183,13 @@ export function createStructureMesh(
     return single;
   }
 
-  // Merge all meshes into a single mesh (multiMaterial = true to preserve per-block materials)
+  // Merge all meshes into a single mesh with multiMaterial to preserve per-block materials
   const merged = Mesh.MergeMeshes(
     allMeshes,
     true,   // disposeSource
     true,   // allow32BitsIndices
     undefined,
-    false,  // multiMaterial — false for flat merge since we share materials
+    true,   // multiMaterial — true to preserve different block type materials
     true,   // optimizeSharedMaterials
   );
 

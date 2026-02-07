@@ -112,18 +112,46 @@ function injectSparkleStyles() {
 
   const style = document.createElement("style");
   style.textContent = `
-    @keyframes gk-sparkle-pulse {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
+    @media (prefers-reduced-motion: no-preference) {
+      @keyframes gk-sparkle-pulse {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.5);
+        }
+        50% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.5);
+        }
       }
-      50% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
+
+      .gk-sparkle {
+        animation: gk-sparkle-pulse 2s ease-in-out infinite;
       }
-      100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5);
+
+      @keyframes gk-achievement-enter {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.8);
+        }
+        100% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      @keyframes gk-achievement-exit {
+        0% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.8);
+        }
       }
     }
 
@@ -134,29 +162,6 @@ function injectSparkleStyles() {
       background: #FFD700;
       border-radius: 50%;
       pointer-events: none;
-      animation: gk-sparkle-pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes gk-achievement-enter {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.8);
-      }
-      100% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
-
-    @keyframes gk-achievement-exit {
-      0% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.8);
-      }
     }
   `;
   document.head.appendChild(style);
@@ -219,12 +224,12 @@ const AnimatedAchievementPopup = ({
     injectSparkleStyles();
   }, []);
 
-  // Enter animation on mount
+  // Enter animation on mount — delay matches the 300ms CSS animation duration
   useEffect(() => {
-    const frame = requestAnimationFrame(() => {
+    const timer = setTimeout(() => {
       setPhase("visible");
-    });
-    return () => cancelAnimationFrame(frame);
+    }, 300);
+    return () => clearTimeout(timer);
   }, []);
 
   // Schedule exit before auto-dismiss

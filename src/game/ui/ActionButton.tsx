@@ -13,7 +13,7 @@ export interface TileState {
   cellType: string;
 }
 
-interface ActionButtonProps {
+interface Props {
   /** Currently selected tool id. */
   selectedTool: string;
   /** State of the tile the player is standing on, or null if unknown. */
@@ -87,13 +87,13 @@ export const ActionButton = ({
   selectedTool,
   tileState,
   onAction,
-}: ActionButtonProps) => {
+}: Props) => {
   const { label, enabled } = getActionLabel(selectedTool, tileState);
 
   return (
     <button
       type="button"
-      className="flex items-center justify-center rounded-xl font-bold text-sm tracking-wide active:scale-95 transition-all touch-manipulation select-none"
+      className="flex items-center justify-center rounded-xl font-bold text-sm tracking-wide motion-safe:active:scale-95 motion-safe:transition-all touch-manipulation select-none"
       style={{
         minWidth: 72,
         minHeight: 48,

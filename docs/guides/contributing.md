@@ -167,7 +167,7 @@ The game design documentation lives in the `docs/game-design/` directory:
 
 - [Core Loop](../game-design/core-loop.md) -- Session flow, game loop
 - [Grid System](../game-design/grid-system.md) -- Tiles, expansion, coordinates
-- [Tree Catalog](../game-design/tree-catalog.md) -- 11 species, growth stages
+- [Tree Catalog](../game-design/tree-catalog.md) -- 15 species (12 base + 3 prestige), growth stages
 - [Tools](../game-design/tools.md) -- 8 tools, stamina costs
 - [Economy](../game-design/economy.md) -- Resources, seed costs, harvesting
 - [Progression](../game-design/progression.md) -- XP, levels, achievements, prestige

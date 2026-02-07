@@ -495,12 +495,16 @@ export const useGameStore = create<GameState>()(
           maxStamina: 100 + bonus.staminaBonus,
           stamina: 100 + bonus.staminaBonus,
           gridSize: 12,
+          coins: 0,
           unlockedTools: ["trowel", "watering-can"],
           unlockedSpecies: newUnlockedSpecies,
           achievements: state.achievements, // preserve achievements
           seasonsExperienced: state.seasonsExperienced,
           speciesPlanted: [],
           lifetimeResources: state.lifetimeResources, // preserve lifetime tracking
+          placedStructures: [],
+          buildMode: false,
+          buildTemplateId: null,
           hasSeenRules: state.hasSeenRules,
           hapticsEnabled: state.hapticsEnabled,
           soundEnabled: state.soundEnabled,

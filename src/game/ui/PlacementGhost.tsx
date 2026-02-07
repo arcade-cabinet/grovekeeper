@@ -89,6 +89,11 @@ export const PlacementGhost = ({ scene, template, onConfirm, onCancel }: Placeme
       scene.onBeforeRenderObservable.remove(observer);
       ghost.dispose();
       ghostRef.current = null;
+      // Null out material refs so they get re-created for a new scene
+      validMatRef.current?.dispose();
+      invalidMatRef.current?.dispose();
+      validMatRef.current = null;
+      invalidMatRef.current = null;
     };
   }, [scene, template]);
 

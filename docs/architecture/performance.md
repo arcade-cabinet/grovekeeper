@@ -87,7 +87,7 @@ Instead of generating a full SPS tree mesh for every tree entity, the rendering 
 
 Cache key format: `{speciesId}_{season}` (with `_night` suffix for Ghost Birch glow variant).
 
-With 11 species and 4 seasons, the maximum cache size is 45 templates (11 * 4 + 1 night variant).
+With 15 species and 4 seasons, the maximum cache size is 61 templates (15 * 4 + 1 night variant).
 
 ## Matrix Freezing
 

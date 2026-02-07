@@ -79,15 +79,16 @@ export const GameScene = () => {
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
   const [toolWheelOpen, setToolWheelOpen] = useState(false);
   const [pauseMenuOpen, setPauseMenuOpen] = useState(false);
-  const [gameTime, setGameTime] = useState<GameTime | null>(null);
+  const gameTimeRef = useRef<GameTime | null>(null);
+  const [gameTimeState, setGameTimeState] = useState<GameTime | null>(null);
+  const lastGameTimeMinuteRef = useRef<number>(-1);
   const [currentWeatherType, setCurrentWeatherType] = useState<WeatherType>("clear");
   const [weatherTimeRemaining, setWeatherTimeRemaining] = useState(0);
 
   const {
     setScreen, selectedSpecies, selectedTool,
     addXp, incrementTreesPlanted, incrementTreesHarvested,
-    incrementTreesWatered, setGameTime: storeSetGameTime,
-    setCurrentSeason, setCurrentDay, hapticsEnabled, addResource,
+    incrementTreesWatered, hapticsEnabled, addResource,
   } = useGameStore();
 
   // --- InputManager dialog disable sync ---
@@ -132,9 +133,55 @@ export const GameScene = () => {
       if (savedGrove) {
         deserializeGrove(savedGrove);
         groveSeedRef.current = savedGrove.seed;
-        applyOfflineGrowth(savedGrove.timestamp);
+
+        // Apply offline growth inline to avoid stale closure issues
+        const elapsedSeconds = (Date.now() - savedGrove.timestamp) / 1000;
+        if (elapsedSeconds > 60) {
+          const offlineTrees = Array.from(treesQuery).map((e) => ({
+            speciesId: e.tree?.speciesId,
+            stage: e.tree?.stage,
+            progress: e.tree?.progress,
+            watered: e.tree?.watered,
+          }));
+          const results = calculateAllOfflineGrowth(offlineTrees, elapsedSeconds, (id) => {
+            const species = getSpeciesById(id);
+            if (!species) return undefined;
+            return { difficulty: species.difficulty, baseGrowthTimes: [...species.baseGrowthTimes], evergreen: species.evergreen };
+          });
+          let stagesAdvanced = 0;
+          const treeEntities = Array.from(treesQuery);
+          for (let i = 0; i < treeEntities.length; i++) {
+            const entity = treeEntities[i];
+            const result = results[i];
+            if (entity.tree && result) {
+              if (result.stage > entity.tree.stage) stagesAdvanced++;
+              entity.tree.stage = result.stage as 0 | 1 | 2 | 3 | 4;
+              entity.tree.progress = result.progress;
+              entity.tree.watered = result.watered;
+              if (entity.renderable) {
+                entity.renderable.scale = getStageScale(result.stage, result.progress);
+              }
+            }
+          }
+          if (stagesAdvanced > 0) {
+            queueMicrotask(() => {
+              showToast(`Trees grew while you were away! (${stagesAdvanced} advanced)`, "success");
+            });
+          }
+        }
+
         world.add(createPlayerEntity());
-        restorePlayerPosition();
+
+        // Restore player position inline
+        const groveData = useGameStore.getState().groveData;
+        if (groveData) {
+          const player = playerQuery.first;
+          if (player?.position) {
+            player.position.x = groveData.playerPosition.x;
+            player.position.z = groveData.playerPosition.z;
+          }
+        }
+
         for (const tree of treesQuery) {
           if (tree.tree && tree.tree.stage >= 3) initHarvestable(tree);
         }
@@ -233,6 +280,111 @@ export const GameScene = () => {
         },
       });
 
+      // --- Helper functions (defined inside useEffect to avoid stale closures) ---
+
+      function isNightTime(time: GameTime): boolean {
+        return time.timeOfDay === "night" || time.timeOfDay === "midnight" || time.timeOfDay === "evening";
+      }
+
+      function processTreeUpdatesInLoop(wType: WeatherType, gtSec: number): void {
+        for (const entity of treesQuery) {
+          if (!entity.tree) continue;
+          const tree = entity.tree;
+
+          if (tree.stage >= 3 && !entity.harvestable) {
+            initHarvestable(entity);
+            useGameStore.getState().incrementTreesMatured();
+          }
+
+          // Growth milestone XP
+          const species = getSpeciesById(tree.speciesId);
+          const diffBonus = species ? (species.difficulty - 1) : 0;
+          for (const [stage, baseXp] of [[2, 15], [3, 25], [4, 50]] as const) {
+            if (tree.stage >= stage) {
+              const key = `${entity.id}:${stage}`;
+              if (!milestoneXpRef.current.has(key)) {
+                milestoneXpRef.current.add(key);
+                const xpAmount = stage === 2 ? baseXp : baseXp + diffBonus * (stage === 3 ? 10 : 25);
+                useGameStore.getState().addXp(xpAmount);
+                showParticle(`+${xpAmount} XP`);
+              }
+            }
+          }
+
+          // Windstorm damage (Ironbark is storm immune, scarecrows protect nearby trees)
+          if (wType === "windstorm" && tree.stage <= 1 && tree.speciesId !== "ironbark") {
+            let scarecrowProtected = false;
+            if (entity.position) {
+              for (const sc of scarecrowsQuery) {
+                if (!sc.position || !sc.scarecrow) continue;
+                const sdx = Math.abs(entity.position.x - sc.position.x);
+                const sdz = Math.abs(entity.position.z - sc.position.z);
+                if (sdx <= sc.scarecrow.radius && sdz <= sc.scarecrow.radius) {
+                  scarecrowProtected = true;
+                  break;
+                }
+              }
+            }
+            if (scarecrowProtected) continue;
+            const windRng = createRNG(hashString(`wind-${entity.id}-${Math.floor(gtSec / 30)}`));
+            if (rollWindstormDamage(windRng())) {
+              tree.progress = 0;
+              showToast("A young tree was damaged by wind!", "warning");
+            }
+          }
+        }
+      }
+
+      function checkAndAwardAchievementsInLoop(): void {
+        const store = useGameStore.getState();
+        const currentTreeData = Array.from(treesQuery)
+          .filter((e) => e.tree && e.position)
+          .map((e) => ({
+            speciesId: e.tree?.speciesId,
+            stage: e.tree?.stage,
+            gridX: Math.round(e.position?.x),
+            gridZ: Math.round(e.position?.z),
+          }));
+
+        // Count plantable tiles for full-grove achievement
+        let plantableTileCount = 0;
+        for (const cell of gridCellsQuery) {
+          if (cell.gridCell && cell.gridCell.type === "soil") {
+            plantableTileCount++;
+          }
+        }
+
+        const newAchievements = checkAchievements({
+          treesPlanted: store.treesPlanted,
+          lifetimeResources: store.lifetimeResources,
+          speciesPlanted: store.speciesPlanted,
+          seasonsExperienced: store.seasonsExperienced,
+          currentTreeData,
+          gridSize: GRID_SIZE,
+          plantableTileCount,
+          unlockedAchievements: store.achievements,
+          hasPrestiged: store.prestigeCount > 0,
+          toolUseCounts: store.toolUseCounts,
+          zonesDiscovered: store.discoveredZones.length,
+          wildTreesHarvested: store.wildTreesHarvested,
+          wildTreesRegrown: store.wildTreesRegrown,
+          visitedZoneTypes: store.visitedZoneTypes,
+          treesPlantedInSpring: store.treesPlantedInSpring,
+          treesHarvestedInAutumn: store.treesHarvestedInAutumn,
+          unlockedToolCount: store.unlockedTools.length,
+          wildSpeciesHarvested: store.wildSpeciesHarvested,
+          structuresBuilt: store.placedStructures.length,
+          distinctStructureTypesBuilt: new Set(store.placedStructures.map(s => s.templateId)).size,
+        });
+
+        for (const id of newAchievements) {
+          store.unlockAchievement(id);
+          showAchievement(id);
+          const def = ACHIEVEMENT_DEFS.find((a) => a.id === id);
+          showToast(def ? def.name : id, "achievement");
+        }
+      }
+
       // --- Game loop ---
       let lastTime = performance.now();
       let lastSeasonUpdate: Season | null = null;
@@ -240,12 +392,20 @@ export const GameScene = () => {
       sm.startRenderLoop(() => {
         const now = performance.now();
         const deltaMs = now - lastTime;
-        const dt = deltaMs / 1000;
+        // Cap deltaTime to prevent death spirals (e.g. after tab switch or debugger pause)
+        const dt = Math.min(deltaMs / 1000, 0.1);
         lastTime = now;
 
         // Time system
         const currentTime = updateTime(deltaMs);
-        setGameTime(currentTime);
+        gameTimeRef.current = currentTime;
+
+        // Throttle gameTime state updates: only update when the in-game minute changes
+        const currentMinute = Math.floor(currentTime.microseconds / 60_000_000);
+        if (currentMinute !== lastGameTimeMinuteRef.current) {
+          lastGameTimeMinuteRef.current = currentMinute;
+          setGameTimeState(currentTime);
+        }
 
         // Weather system
         if (!weatherRef.current) {
@@ -300,7 +460,7 @@ export const GameScene = () => {
 
         // Scarecrow windstorm protection
         if (weatherType === "windstorm") {
-          // Mark trees near scarecrows as protected (handled in processTreeUpdates)
+          // Mark trees near scarecrows as protected (handled in processTreeUpdatesInLoop)
         }
 
         // InputManager update (path following) — must run before movementSystem
@@ -323,14 +483,14 @@ export const GameScene = () => {
           dt,
         );
 
-        const currentIsNight = isNight(currentTime);
+        const currentIsNight = isNightTime(currentTime);
         treeMesh.update(scene, dt, currentTime.season, currentIsNight);
 
         // Season change
         if (lastSeasonUpdate !== currentTime.season) {
           lastSeasonUpdate = currentTime.season;
           ground.updateSeason(currentTime.season, currentTime.seasonProgress);
-          setCurrentSeason(currentTime.season);
+          useGameStore.getState().setCurrentSeason(currentTime.season);
           useGameStore.getState().trackSeason(currentTime.season);
 
           treeMesh.rebuildAll(scene, currentTime.season, currentIsNight);
@@ -338,9 +498,9 @@ export const GameScene = () => {
 
         // Periodic updates (every 5s)
         if (Math.floor(now / 5000) !== Math.floor((now - deltaMs) / 5000)) {
-          storeSetGameTime(currentTime.microseconds);
-          setCurrentDay(currentTime.day);
-          checkAndAwardAchievements();
+          useGameStore.getState().setGameTime(currentTime.microseconds);
+          useGameStore.getState().setCurrentDay(currentTime.day);
+          checkAndAwardAchievementsInLoop();
         }
 
         // Auto-save every 30s
@@ -349,7 +509,7 @@ export const GameScene = () => {
         }
 
         // Tree milestone XP and weather damage
-        processTreeUpdates(weatherType, gameTimeSec);
+        processTreeUpdatesInLoop(weatherType, gameTimeSec);
       });
     };
 
@@ -369,141 +529,6 @@ export const GameScene = () => {
     };
   // biome-ignore lint/correctness/useExhaustiveDependencies: BabylonJS engine/scene must initialize exactly once. The render loop accesses current state via useGameStore.getState() and stable refs.
   }, []);
-
-  // --- Helper functions ---
-
-  function isNight(time: GameTime): boolean {
-    return time.timeOfDay === "night" || time.timeOfDay === "midnight" || time.timeOfDay === "evening";
-  }
-
-  function applyOfflineGrowth(savedTimestamp: number): void {
-    const elapsedSeconds = (Date.now() - savedTimestamp) / 1000;
-    if (elapsedSeconds <= 60) return;
-
-    const offlineTrees = Array.from(treesQuery).map((e) => ({
-      speciesId: e.tree?.speciesId,
-      stage: e.tree?.stage,
-      progress: e.tree?.progress,
-      watered: e.tree?.watered,
-    }));
-    const results = calculateAllOfflineGrowth(offlineTrees, elapsedSeconds, (id) => {
-      const species = getSpeciesById(id);
-      if (!species) return undefined;
-      return { difficulty: species.difficulty, baseGrowthTimes: [...species.baseGrowthTimes], evergreen: species.evergreen };
-    });
-    let stagesAdvanced = 0;
-    const treeEntities = Array.from(treesQuery);
-    for (let i = 0; i < treeEntities.length; i++) {
-      const entity = treeEntities[i];
-      const result = results[i];
-      if (entity.tree && result) {
-        if (result.stage > entity.tree.stage) stagesAdvanced++;
-        entity.tree.stage = result.stage as 0 | 1 | 2 | 3 | 4;
-        entity.tree.progress = result.progress;
-        entity.tree.watered = result.watered;
-        if (entity.renderable) {
-          entity.renderable.scale = getStageScale(result.stage, result.progress);
-        }
-      }
-    }
-    if (stagesAdvanced > 0) {
-      queueMicrotask(() => {
-        showToast(`Trees grew while you were away! (${stagesAdvanced} advanced)`, "success");
-      });
-    }
-  }
-
-  function restorePlayerPosition(): void {
-    const groveData = useGameStore.getState().groveData;
-    if (groveData) {
-      const player = playerQuery.first;
-      if (player?.position) {
-        player.position.x = groveData.playerPosition.x;
-        player.position.z = groveData.playerPosition.z;
-      }
-    }
-  }
-
-  function processTreeUpdates(weatherType: WeatherType, gameTimeSec: number): void {
-    for (const entity of treesQuery) {
-      if (!entity.tree) continue;
-      const tree = entity.tree;
-
-      if (tree.stage >= 3 && !entity.harvestable) {
-        initHarvestable(entity);
-        useGameStore.getState().incrementTreesMatured();
-      }
-
-      // Growth milestone XP
-      const species = getSpeciesById(tree.speciesId);
-      const diffBonus = species ? (species.difficulty - 1) : 0;
-      for (const [stage, baseXp] of [[2, 15], [3, 25], [4, 50]] as const) {
-        if (tree.stage >= stage) {
-          const key = `${entity.id}:${stage}`;
-          if (!milestoneXpRef.current.has(key)) {
-            milestoneXpRef.current.add(key);
-            const xpAmount = stage === 2 ? baseXp : baseXp + diffBonus * (stage === 3 ? 10 : 25);
-            useGameStore.getState().addXp(xpAmount);
-            showParticle(`+${xpAmount} XP`);
-          }
-        }
-      }
-
-      // Windstorm damage (Ironbark is storm immune, scarecrows protect nearby trees)
-      if (weatherType === "windstorm" && tree.stage <= 1 && tree.speciesId !== "ironbark") {
-        // Check if protected by a scarecrow
-        let scarecrowProtected = false;
-        if (entity.position) {
-          for (const sc of scarecrowsQuery) {
-            if (!sc.position || !sc.scarecrow) continue;
-            const sdx = Math.abs(entity.position.x - sc.position.x);
-            const sdz = Math.abs(entity.position.z - sc.position.z);
-            if (sdx <= sc.scarecrow.radius && sdz <= sc.scarecrow.radius) {
-              scarecrowProtected = true;
-              break;
-            }
-          }
-        }
-        if (scarecrowProtected) continue;
-        const windRng = createRNG(hashString(`wind-${entity.id}-${Math.floor(gameTimeSec / 30)}`));
-        if (rollWindstormDamage(windRng())) {
-          tree.progress = 0;
-          showToast("A young tree was damaged by wind!", "warning");
-        }
-      }
-    }
-  }
-
-  function checkAndAwardAchievements(): void {
-    const store = useGameStore.getState();
-    const currentTreeData = Array.from(treesQuery)
-      .filter((e) => e.tree && e.position)
-      .map((e) => ({
-        speciesId: e.tree?.speciesId,
-        stage: e.tree?.stage,
-        gridX: Math.round(e.position?.x),
-        gridZ: Math.round(e.position?.z),
-      }));
-
-    const newAchievements = checkAchievements({
-      treesPlanted: store.treesPlanted,
-      treesMatured: store.treesMatured,
-      treesHarvested: store.treesHarvested,
-      lifetimeResources: store.lifetimeResources,
-      speciesPlanted: store.speciesPlanted,
-      seasonsExperienced: store.seasonsExperienced,
-      currentTreeData,
-      gridSize: GRID_SIZE,
-      unlockedAchievements: store.achievements,
-    });
-
-    for (const id of newAchievements) {
-      store.unlockAchievement(id);
-      showAchievement(id);
-      const def = ACHIEVEMENT_DEFS.find((a) => a.id === id);
-      showToast(def ? def.name : id, "achievement");
-    }
-  }
 
   // --- Tool actions ---
 
@@ -811,12 +836,16 @@ export const GameScene = () => {
         return;
       }
 
-      // Deduct resource costs
+      // Validate ALL resource costs before spending any (atomicity)
       for (const [resource, amount] of Object.entries(template.cost)) {
-        if (!store.spendResource(resource as ResourceType, amount)) {
+        if ((store.resources[resource as ResourceType] ?? 0) < amount) {
           showToast(`Not enough ${resource}!`, "warning");
           return;
         }
+      }
+      // All costs validated — now spend them
+      for (const [resource, amount] of Object.entries(template.cost)) {
+        store.spendResource(resource as ResourceType, amount);
       }
 
       // Create structure ECS entity
@@ -880,20 +909,33 @@ export const GameScene = () => {
     const gridZ = Math.round(player.position.z);
 
     const species = getSpeciesById(selectedSpecies);
-    if (!useGameStore.getState().spendSeed(selectedSpecies, 1)) return;
+    const store = useGameStore.getState();
+
+    // Validate ALL costs atomically before spending anything
+    const currentSeeds = store.seeds[selectedSpecies] ?? 0;
+    if (currentSeeds < 1) return;
 
     if (species?.seedCost) {
       for (const [resource, amount] of Object.entries(species.seedCost)) {
-        if (!useGameStore.getState().spendResource(resource as ResourceType, amount)) {
-          useGameStore.getState().addSeed(selectedSpecies, 1);
+        if ((store.resources[resource as ResourceType] ?? 0) < amount) {
+          showToast(`Not enough ${resource}!`, "warning");
           return;
         }
+      }
+    }
+
+    // All validation passed — now spend resources
+    store.spendSeed(selectedSpecies, 1);
+    if (species?.seedCost) {
+      for (const [resource, amount] of Object.entries(species.seedCost)) {
+        store.spendResource(resource as ResourceType, amount);
       }
     }
 
     for (const cell of gridCellsQuery) {
       if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
         if (cell.gridCell.occupied) {
+          // Refund all costs if tile is occupied
           useGameStore.getState().addSeed(selectedSpecies, 1);
           if (species?.seedCost) {
             for (const [resource, amount] of Object.entries(species.seedCost)) {
@@ -979,7 +1021,7 @@ export const GameScene = () => {
         onBatchHarvest={handleBatchHarvest}
         currentWeather={currentWeatherType}
         weatherTimeRemaining={weatherTimeRemaining}
-        gameTime={gameTime}
+        gameTime={gameTimeState}
       />
     </div>
   );

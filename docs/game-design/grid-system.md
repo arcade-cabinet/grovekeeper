@@ -1,6 +1,6 @@
 # Grid System
 
-The grove is a square grid of plantable tiles viewed from a locked isometric camera angle. The grid starts at 12x12 and expands through four upgrade tiers as the player levels up.
+The grove is a square grid of plantable tiles viewed from a locked orthographic diorama camera angle. The grid starts at 12x12 and expands through five tiers (0-4) as the player levels up.
 
 ## Grid Dimensions
 
@@ -49,7 +49,7 @@ Floating-point `(worldX, worldZ)` in BabylonJS scene space. The isometric camera
 
 ### Conversion
 
-```
+```text
 Grid cell size: CELL_SIZE = 1 (defined in constants/config.ts)
 
 gridToWorld(gridX, gridZ):
@@ -67,7 +67,7 @@ worldToGrid(worldX, worldZ):
 
 WASD keyboard input is rotated to match the isometric camera angle:
 
-```
+```text
 worldX = inputX - inputY
 worldZ = -(inputX + inputY)
 ```

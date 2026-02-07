@@ -16,7 +16,7 @@ Grovekeeper is a cozy 2.5D isometric tree-planting simulation and idle tending g
 | Language        | TypeScript                       | 5.7+      | ES2020 target, bundler module resolution   |
 | Lint / Format   | Biome                            | 2.3       | Single tool for lint + format              |
 | Package Mgr     | pnpm                             | 9+        | Fast, strict dependency resolution         |
-| Testing         | Vitest + @testing-library/react  | 4.x       | happy-dom environment, 410+ tests          |
+| Testing         | Vitest + @testing-library/react  | 4.x       | happy-dom environment, 751 tests across 37 files |
 | Mobile Native   | Capacitor                        | 8.x       | PWA + native bridge (haptics, device info) |
 
 ### Deviation from Original Spec
@@ -33,14 +33,23 @@ These deviations are accepted. Working code is prioritized over spec purity.
 
 ## Directory Layout
 
-```
+```text
 src/
 ├── main.tsx                        # Application entry point
 ├── App.tsx                         # Root component, renders Game
 ├── game/
 │   ├── Game.tsx                    # Screen router (menu | playing)
 │   ├── scenes/
-│   │   └── GameScene.tsx           # BabylonJS canvas + game loop (~1050 lines)
+│   │   └── GameScene.tsx           # BabylonJS canvas + game loop orchestrator (~400 lines)
+│   ├── scene/                      # Scene manager modules (decomposed from GameScene)
+│   │   ├── SceneManager.ts         # Engine + Scene creation/disposal
+│   │   ├── CameraManager.ts        # Orthographic diorama camera
+│   │   ├── GroundBuilder.ts        # DynamicTexture biome blending
+│   │   ├── LightingManager.ts      # Hemisphere + directional lights
+│   │   ├── SkyManager.ts           # HDRI skybox + IBL
+│   │   ├── PlayerMeshManager.ts    # Player mesh lifecycle
+│   │   ├── TreeMeshManager.ts      # Tree mesh lifecycle + template cache
+│   │   └── BorderTreeManager.ts    # Decorative border trees
 │   ├── ecs/
 │   │   ├── world.ts               # Miniplex World, Entity interface, queries
 │   │   └── archetypes.ts          # Entity factory functions
@@ -64,7 +73,7 @@ src/
 │   │   └── gameStore.ts           # Zustand persistent state (all player data)
 │   ├── constants/
 │   │   ├── config.ts              # Grid size, colors, growth stages, multipliers
-│   │   ├── trees.ts               # 11 tree species (8 base + 3 prestige)
+│   │   ├── trees.ts               # 15 tree species (12 base + 3 prestige)
 │   │   ├── tools.ts               # 8 tool definitions with stamina costs
 │   │   └── resources.ts           # 4 resource types (timber, sap, fruit, acorns)
 │   ├── utils/
@@ -86,7 +95,7 @@ src/
 
 The application has two parallel state systems that communicate through React refs and callbacks in `GameScene.tsx`.
 
-```
+```text
                           localStorage
                               |
                      zustand/persist middleware
@@ -119,11 +128,11 @@ Systems Layer
 
 4. **Systems are pure functions.** Each system follows the signature `(world, deltaTime, ...context) => void` and runs every frame inside the game loop in `GameScene.tsx`.
 
-5. **GameScene.tsx is the integration point.** At ~1050 lines, it is the single file where ECS, BabylonJS, Zustand, and UI all converge. Only one agent should modify it at a time during parallel development.
+5. **GameScene.tsx is the integration point.** At ~400 lines (reduced from ~1050 after scene decomposition), it orchestrates ECS, BabylonJS, Zustand, and UI, delegating subsystem management to 8 specialized scene managers in `src/game/scene/`.
 
 ## Entry Point Chain
 
-```
+```text
 src/main.tsx
   -> App.tsx (root component)
     -> Game.tsx (screen router: "menu" | "playing")

@@ -142,7 +142,7 @@ export const generateEntityId = (): string => {
 Systems are pure functions that operate on the ECS world each frame. They follow a consistent pattern:
 
 ```typescript
-function systemName(deltaTime: number, ...context): void {
+function systemName(world: World, deltaTime: number, ...context): void {
   for (const entity of relevantQuery) {
     // Read component data
     // Compute new values

@@ -374,14 +374,14 @@ On prestige: reset level/XP/grove, keep achievements, apply cumulative bonuses, 
 
 ## Grid Expansion Pattern
 
-Tier-based expansion with resource and coin costs:
+Tier-based expansion with resource costs (no coins):
 
-```
-Tier 0: 12x12 (default)
-Tier 1: 16x16 (cost: coins + timber)
-Tier 2: 20x20 (cost: coins + timber + sap)
-Tier 3: 24x24 (cost: coins + all resources)
-Tier 4: 32x32 (cost: coins + all resources, high)
+```text
+Tier 0: 12x12 (default, free)
+Tier 1: 16x16 (level 5, cost: 100 Timber, 50 Sap)
+Tier 2: 20x20 (level 10, cost: 250 Timber, 100 Sap, 50 Fruit)
+Tier 3: 24x24 (level 15, cost: 500 Timber, 250 Sap, 100 Fruit, 50 Acorns)
+Tier 4: 32x32 (level 20, cost: 1000 Timber, 500 Sap, 250 Fruit, 100 Acorns)
 ```
 
 Accessible from Pause Menu. Adds new grid cells, repositions camera.

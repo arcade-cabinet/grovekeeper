@@ -90,7 +90,7 @@ Runs all tests once and exits. Returns a non-zero exit code if any test fails.
 pnpm test:coverage
 ```
 
-Generates a coverage report. The project has 410+ tests across 21 test files covering systems, stores, utilities, and components.
+Generates a coverage report. The project has 751 tests across 37 test files covering systems, stores, utilities, and components.
 
 ### Running Specific Tests
 
@@ -145,7 +145,7 @@ Runs the TypeScript compiler in `noEmit` mode to verify type correctness without
 
 The application boots through this chain:
 
-```
+```text
 src/main.tsx          -- ReactDOM.createRoot, renders <App />
   src/App.tsx         -- Root component, renders <Game />
     src/game/Game.tsx -- Screen router based on gameStore.screen

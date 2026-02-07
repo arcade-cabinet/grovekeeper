@@ -16,8 +16,6 @@ function makeCtx(
 ): AchievementCheckContext {
   return {
     treesPlanted: 0,
-    treesMatured: 0,
-    treesHarvested: 0,
     lifetimeResources: { timber: 0, sap: 0, fruit: 0, acorns: 0 },
     speciesPlanted: [],
     seasonsExperienced: [],
@@ -269,7 +267,30 @@ describe("canopy-complete", () => {
 });
 
 describe("full-grove", () => {
-  it("triggers when currentTreeData.length >= gridSize^2", () => {
+  it("triggers when currentTreeData.length >= plantableTileCount", () => {
+    // 100 plantable tiles out of a 12x12 grid (some water/rock)
+    const trees = Array.from({ length: 100 }, (_, i) => ({
+      speciesId: "white-oak",
+      stage: 0,
+      gridX: i % 12,
+      gridZ: Math.floor(i / 12),
+    }));
+    const result = checkAchievements(makeCtx({ currentTreeData: trees, plantableTileCount: 100 }));
+    expect(result).toContain("full-grove");
+  });
+
+  it("does not trigger when trees < plantableTileCount", () => {
+    const trees = Array.from({ length: 99 }, (_, i) => ({
+      speciesId: "white-oak",
+      stage: 0,
+      gridX: i % 12,
+      gridZ: Math.floor(i / 12),
+    }));
+    const result = checkAchievements(makeCtx({ currentTreeData: trees, plantableTileCount: 100 }));
+    expect(result).not.toContain("full-grove");
+  });
+
+  it("falls back to gridSize^2 when plantableTileCount is not provided", () => {
     const trees = Array.from({ length: 144 }, (_, i) => ({
       speciesId: "white-oak",
       stage: 0,
@@ -278,17 +299,6 @@ describe("full-grove", () => {
     }));
     const result = checkAchievements(makeCtx({ currentTreeData: trees }));
     expect(result).toContain("full-grove");
-  });
-
-  it("does not trigger at 143 trees on a 12x12 grid", () => {
-    const trees = Array.from({ length: 143 }, (_, i) => ({
-      speciesId: "white-oak",
-      stage: 0,
-      gridX: i % 12,
-      gridZ: Math.floor(i / 12),
-    }));
-    const result = checkAchievements(makeCtx({ currentTreeData: trees }));
-    expect(result).not.toContain("full-grove");
   });
 
   it("respects non-default gridSize", () => {

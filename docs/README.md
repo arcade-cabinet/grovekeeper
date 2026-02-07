@@ -44,7 +44,7 @@ pnpm dev
 
 - [Core Loop](game-design/core-loop.md) -- Session flow, game loop
 - [Grid System](game-design/grid-system.md) -- Tiles, expansion, coordinates
-- [Tree Catalog](game-design/tree-catalog.md) -- 11 species, growth stages
+- [Tree Catalog](game-design/tree-catalog.md) -- 15 species (12 base + 3 prestige), growth stages
 - [Tools](game-design/tools.md) -- 8 tools, stamina costs
 - [Economy](game-design/economy.md) -- Resources, seed costs, harvesting
 - [Progression](game-design/progression.md) -- XP, levels, achievements, prestige
@@ -76,7 +76,7 @@ pnpm dev
 
 ## Project Structure
 
-```
+```text
 grovekeeper/
   CLAUDE.md                       AI assistant context
   AGENTS.md                       Multi-agent orchestration guide
@@ -88,10 +88,35 @@ grovekeeper/
     game/
       Game.tsx                    Screen router (menu | playing)
       scenes/
-        GameScene.tsx             BabylonJS canvas + game loop (~1050 lines)
+        GameScene.tsx             BabylonJS canvas + game loop orchestrator (~400 lines)
+      scene/                      Scene manager modules (decomposed from GameScene)
+        SceneManager.ts           Engine + Scene creation/disposal
+        CameraManager.ts          Orthographic diorama camera
+        GroundBuilder.ts          DynamicTexture biome blending
+        LightingManager.ts        Hemisphere + directional lights
+        SkyManager.ts             HDRI skybox + IBL
+        PlayerMeshManager.ts      Player mesh lifecycle
+        TreeMeshManager.ts        Tree mesh lifecycle + template cache
+        BorderTreeManager.ts      Decorative border trees
       ecs/
         world.ts                  Miniplex World + queries
+        react.ts                  miniplex-react hooks API
         archetypes.ts             Entity factory functions
+      world/                      World data layer
+        WorldManager.ts           Zone loading, world state
+        WorldGenerator.ts         Procedural world generation
+        ZoneLoader.ts             JSON zone hydration
+        types.ts                  World/zone type definitions
+        archetypes.ts             Tile entity factories
+        data/
+          starting-world.json     Level 1-5 zone definitions
+      structures/                 Structure system
+        StructureManager.ts       Structure placement + effects
+        BlockMeshFactory.ts       Daggerfall-style block meshes
+        types.ts                  Structure type definitions
+        data/
+          blocks.json             Block catalog
+          structures.json         Structure recipes
       systems/
         growth.ts                 5-stage tree growth
         movement.ts               Player movement
@@ -108,11 +133,11 @@ grovekeeper/
         gameStore.ts              Zustand persistent state (XP, coins, resources, ...)
       constants/
         config.ts                 Grid size, colors, growth stages
-        trees.ts                  11 tree species definitions
+        trees.ts                  15 tree species definitions (12 base + 3 prestige)
         tools.ts                  8 tool definitions
       utils/
         spsTreeGenerator.ts       Ported BabylonJS SPS Tree Generator
-        treeMeshBuilder.ts        Species-specific PBR meshes
+        treeMeshBuilder.ts        Species-specific meshes
       ui/
         MainMenu.tsx              Start screen
         HUD.tsx                   Top bar overlay
@@ -132,7 +157,7 @@ grovekeeper/
         AchievementPopup.tsx      Gold border + sparkle achievement modal
         FloatingParticles.tsx     +XP/+Timber floating text
         Toast.tsx                 Notification system
-        MiniMap.tsx               Desktop-only canvas mini-map
+        MiniMap.tsx               SVG-based minimap (desktop overlay, mobile fullscreen)
         Logo.tsx                  SVG logo
         FarmerMascot.tsx          SVG farmer "Fern"
         RulesModal.tsx            First-time tutorial
