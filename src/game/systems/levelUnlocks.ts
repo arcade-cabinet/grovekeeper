@@ -78,10 +78,7 @@ export function getAllUnlocksUpToLevel(level: number): UnlockSet {
  * If `newLevel <= oldLevel`, returns empty arrays (no new unlocks).
  * Intended for showing "You unlocked X!" notifications on level-up.
  */
-export function checkNewUnlocks(
-  oldLevel: number,
-  newLevel: number,
-): UnlockSet {
+export function checkNewUnlocks(oldLevel: number, newLevel: number): UnlockSet {
   if (newLevel <= oldLevel) {
     return { species: [], tools: [] };
   }

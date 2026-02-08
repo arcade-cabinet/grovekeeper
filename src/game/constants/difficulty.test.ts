@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useGameStore } from "../stores/gameStore";
 import {
   DIFFICULTY_TIERS,
-  getDifficultyById,
   getActiveDifficulty,
+  getDifficultyById,
 } from "./difficulty";
-import { useGameStore } from "../stores/gameStore";
 
 describe("Difficulty System", () => {
   beforeEach(() => {
@@ -18,7 +18,13 @@ describe("Difficulty System", () => {
 
     it("contains all expected difficulty ids", () => {
       const ids = DIFFICULTY_TIERS.map((t) => t.id);
-      expect(ids).toEqual(["explore", "normal", "hard", "brutal", "ultra-brutal"]);
+      expect(ids).toEqual([
+        "explore",
+        "normal",
+        "hard",
+        "brutal",
+        "ultra-brutal",
+      ]);
     });
 
     it("each tier has required string fields", () => {
@@ -71,14 +77,18 @@ describe("Difficulty System", () => {
     it("harder tiers have lower growth multipliers", () => {
       const tiers = DIFFICULTY_TIERS;
       for (let i = 1; i < tiers.length; i++) {
-        expect(tiers[i].growthSpeedMult).toBeLessThanOrEqual(tiers[i - 1].growthSpeedMult);
+        expect(tiers[i].growthSpeedMult).toBeLessThanOrEqual(
+          tiers[i - 1].growthSpeedMult,
+        );
       }
     });
 
     it("harder tiers have lower resource yield multipliers", () => {
       const tiers = DIFFICULTY_TIERS;
       for (let i = 1; i < tiers.length; i++) {
-        expect(tiers[i].resourceYieldMult).toBeLessThanOrEqual(tiers[i - 1].resourceYieldMult);
+        expect(tiers[i].resourceYieldMult).toBeLessThanOrEqual(
+          tiers[i - 1].resourceYieldMult,
+        );
       }
     });
 
@@ -133,7 +143,9 @@ describe("Difficulty System", () => {
     it("explore has the most generous starting resources", () => {
       const explore = getDifficultyById("explore")!;
       const ultra = getDifficultyById("ultra-brutal")!;
-      expect(explore.startingResources.timber).toBeGreaterThan(ultra.startingResources.timber);
+      expect(explore.startingResources.timber).toBeGreaterThan(
+        ultra.startingResources.timber,
+      );
     });
 
     it("each tier has white-oak starting seeds", () => {

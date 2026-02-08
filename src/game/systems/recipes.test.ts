@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { getRecipes, getRecipeById, canCraft } from "./recipes";
+import { describe, expect, it } from "vitest";
 import type { ResourceType } from "../constants/resources";
+import { canCraft, getRecipeById, getRecipes } from "./recipes";
 
 describe("recipes", () => {
   it("getRecipes returns 4 recipes", () => {

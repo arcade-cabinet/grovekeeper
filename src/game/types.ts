@@ -23,25 +23,25 @@ export interface GridPosition {
 // ============================================
 
 export type TreeSpecies =
-  | 'oak'
-  | 'birch'
-  | 'pine'
-  | 'maple'
-  | 'cherry'
-  | 'redwood'
-  | 'willow'
-  | 'bamboo';
+  | "oak"
+  | "birch"
+  | "pine"
+  | "maple"
+  | "cherry"
+  | "redwood"
+  | "willow"
+  | "bamboo";
 
 export type GrowthStage =
-  | 'seed'
-  | 'sprout'
-  | 'seedling'
-  | 'sapling'
-  | 'young'
-  | 'mature'
-  | 'ancient';
+  | "seed"
+  | "sprout"
+  | "seedling"
+  | "sapling"
+  | "young"
+  | "mature"
+  | "ancient";
 
-export type Difficulty = 'easy' | 'medium' | 'hard' | 'expert';
+export type Difficulty = "easy" | "medium" | "hard" | "expert";
 
 export interface TreeDefinition {
   name: string;
@@ -52,7 +52,7 @@ export interface TreeDefinition {
     coins: number;
     xp: number;
   };
-  waterNeeds: 'low' | 'medium' | 'high';
+  waterNeeds: "low" | "medium" | "high";
   unlockLevel: number;
   description: string;
   color: string; // Leaf color for procedural generation
@@ -73,13 +73,13 @@ export interface TreeComponent {
 // ============================================
 
 export type ToolType =
-  | 'shovel'
-  | 'wateringCan'
-  | 'pruningShears'
-  | 'fertilizer'
-  | 'axe'
-  | 'rake'
-  | 'seedPouch';
+  | "shovel"
+  | "wateringCan"
+  | "pruningShears"
+  | "fertilizer"
+  | "axe"
+  | "rake"
+  | "seedPouch";
 
 export interface ToolDefinition {
   type: ToolType;
@@ -102,7 +102,7 @@ export interface ToolComponent {
 // Grid Cell Types
 // ============================================
 
-export type CellType = 'soil' | 'water' | 'rock' | 'path' | 'grass';
+export type CellType = "soil" | "water" | "rock" | "path" | "grass";
 
 export interface GridCellComponent {
   gridX: number;
@@ -118,7 +118,7 @@ export interface GridCellComponent {
 // Player Types
 // ============================================
 
-export type Direction = 'north' | 'south' | 'east' | 'west';
+export type Direction = "north" | "south" | "east" | "west";
 
 export interface Inventory {
   seeds: Record<TreeSpecies, number>;
@@ -163,13 +163,13 @@ export interface Entity {
 // Game State Types
 // ============================================
 
-export type GamePhase = 'menu' | 'loading' | 'playing' | 'paused';
+export type GamePhase = "menu" | "loading" | "playing" | "paused";
 
 export interface GameSettings {
   soundEnabled: boolean;
   musicEnabled: boolean;
   hapticEnabled: boolean;
-  graphicsQuality: 'low' | 'medium' | 'high';
+  graphicsQuality: "low" | "medium" | "high";
   showTutorial: boolean;
 }
 
@@ -230,15 +230,15 @@ export interface SaveData {
 // ============================================
 
 export type GameEvent =
-  | { type: 'TREE_PLANTED'; species: TreeSpecies; position: Position }
-  | { type: 'TREE_GREW'; entityId: string; newStage: GrowthStage }
-  | { type: 'TREE_MATURED'; entityId: string }
-  | { type: 'TREE_DIED'; entityId: string }
-  | { type: 'TOOL_USED'; tool: ToolType; position: Position }
-  | { type: 'LEVEL_UP'; newLevel: number }
-  | { type: 'ACHIEVEMENT_UNLOCKED'; achievement: string }
-  | { type: 'COINS_EARNED'; amount: number; source: string }
-  | { type: 'XP_EARNED'; amount: number; source: string };
+  | { type: "TREE_PLANTED"; species: TreeSpecies; position: Position }
+  | { type: "TREE_GREW"; entityId: string; newStage: GrowthStage }
+  | { type: "TREE_MATURED"; entityId: string }
+  | { type: "TREE_DIED"; entityId: string }
+  | { type: "TOOL_USED"; tool: ToolType; position: Position }
+  | { type: "LEVEL_UP"; newLevel: number }
+  | { type: "ACHIEVEMENT_UNLOCKED"; achievement: string }
+  | { type: "COINS_EARNED"; amount: number; source: string }
+  | { type: "XP_EARNED"; amount: number; source: string };
 
 // ============================================
 // Achievement Types
@@ -251,7 +251,12 @@ export interface Achievement {
   icon: string;
   unlockedAt: number | null;
   requirement: {
-    type: 'trees_planted' | 'trees_mature' | 'level' | 'species_unlocked' | 'days_played';
+    type:
+      | "trees_planted"
+      | "trees_mature"
+      | "level"
+      | "species_unlocked"
+      | "days_played";
     value: number;
   };
 }
@@ -262,7 +267,7 @@ export interface Achievement {
 
 export interface DailyReward {
   day: number;
-  type: 'coins' | 'seeds' | 'tool' | 'premium';
+  type: "coins" | "seeds" | "tool" | "premium";
   amount: number;
   species?: TreeSpecies;
   tool?: ToolType;

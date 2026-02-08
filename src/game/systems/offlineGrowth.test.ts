@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  calculateOfflineGrowth,
   calculateAllOfflineGrowth,
-  type OfflineTreeState,
+  calculateOfflineGrowth,
   type OfflineSpeciesData,
+  type OfflineTreeState,
 } from "./offlineGrowth";
 
 /**
@@ -109,7 +109,7 @@ describe("calculateOfflineGrowth", () => {
     const mediumResult = calculateOfflineGrowth(tree, 5, medium);
 
     expect(easyResult.progress).toBeCloseTo(0.5);
-    expect(mediumResult.progress).toBeCloseTo(1 / (10 * 1.3) * 5); // ~0.3846
+    expect(mediumResult.progress).toBeCloseTo((1 / (10 * 1.3)) * 5); // ~0.3846
     expect(easyResult.progress).toBeGreaterThan(mediumResult.progress);
   });
 

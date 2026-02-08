@@ -357,4 +357,3 @@ const ALL_SPECIES = [...TREE_SPECIES, ...PRESTIGE_TREE_SPECIES];
 
 export const getSpeciesById = (id: string): TreeSpeciesData | undefined =>
   ALL_SPECIES.find((s) => s.id === id);
-

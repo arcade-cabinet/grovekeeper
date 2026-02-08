@@ -1,15 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   COLORS,
-  STAGE_NAMES,
-  STAGE_VISUALS,
   DIFFICULTY_MULTIPLIERS,
-  SEASON_GROWTH_MULTIPLIERS,
-  WATER_BONUS,
   DROUGHT_PENALTY,
+  INTERACTION_RADIUS,
   MAX_STAGE,
   PLAYER_SPEED,
-  INTERACTION_RADIUS,
+  SEASON_GROWTH_MULTIPLIERS,
+  STAGE_NAMES,
+  STAGE_VISUALS,
+  WATER_BONUS,
 } from "./config";
 
 describe("config constants", () => {
@@ -31,7 +31,9 @@ describe("config constants", () => {
 
     it("scales increase monotonically", () => {
       for (let i = 1; i < STAGE_VISUALS.length; i++) {
-        expect(STAGE_VISUALS[i].scale).toBeGreaterThan(STAGE_VISUALS[i - 1].scale);
+        expect(STAGE_VISUALS[i].scale).toBeGreaterThan(
+          STAGE_VISUALS[i - 1].scale,
+        );
       }
     });
 

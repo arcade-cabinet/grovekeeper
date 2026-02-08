@@ -1,9 +1,5 @@
-import { describe, it, expect } from "vitest";
-import {
-  RESOURCE_TYPES,
-  RESOURCE_INFO,
-  emptyResources,
-} from "./resources";
+import { describe, expect, it } from "vitest";
+import { emptyResources, RESOURCE_INFO, RESOURCE_TYPES } from "./resources";
 
 describe("resources", () => {
   it("RESOURCE_TYPES contains all four types", () => {

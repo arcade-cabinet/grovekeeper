@@ -16,6 +16,9 @@ export function discoverZone(
   return { newZones: [...discoveredZones, zoneId], isNew: true };
 }
 
-export function isZoneDiscovered(discoveredZones: string[], zoneId: string): boolean {
+export function isZoneDiscovered(
+  discoveredZones: string[],
+  zoneId: string,
+): boolean {
   return discoveredZones.includes(zoneId);
 }

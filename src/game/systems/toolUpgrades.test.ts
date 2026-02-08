@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  getToolUpgradeTier,
-  getStaminaCostWithUpgrade,
-  getEffectWithUpgrade,
   canAffordToolUpgrade,
+  getEffectWithUpgrade,
+  getStaminaCostWithUpgrade,
+  getToolUpgradeTier,
   TOOL_UPGRADE_TIERS,
 } from "./toolUpgrades";
 

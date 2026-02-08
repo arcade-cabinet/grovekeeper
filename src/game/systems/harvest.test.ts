@@ -1,9 +1,9 @@
 // src/game/systems/harvest.test.ts
-import { describe, it, expect, beforeEach } from "vitest";
-import { harvestSystem, initHarvestable, collectHarvest } from "./harvest";
-import { world } from "../ecs/world";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createTreeEntity } from "../ecs/archetypes";
+import { world } from "../ecs/world";
 import { useGameStore } from "../stores/gameStore";
+import { collectHarvest, harvestSystem, initHarvestable } from "./harvest";
 
 describe("Harvest System", () => {
   beforeEach(() => {
@@ -177,8 +177,10 @@ describe("Harvest System", () => {
       const autumnResult = collectHarvest(tree, "autumn")!;
 
       // Find fruit resources
-      const summerFruit = summerResult.find((r) => r.type === "fruit")?.amount ?? 0;
-      const autumnFruit = autumnResult.find((r) => r.type === "fruit")?.amount ?? 0;
+      const summerFruit =
+        summerResult.find((r) => r.type === "fruit")?.amount ?? 0;
+      const autumnFruit =
+        autumnResult.find((r) => r.type === "fruit")?.amount ?? 0;
       expect(autumnFruit).toBe(summerFruit * 3);
     });
 
@@ -192,8 +194,10 @@ describe("Harvest System", () => {
       tree.harvestable!.ready = true;
       const summerResult = collectHarvest(tree, "summer")!;
 
-      const springFruit = springResult.find((r) => r.type === "fruit")?.amount ?? 0;
-      const summerFruit = summerResult.find((r) => r.type === "fruit")?.amount ?? 0;
+      const springFruit =
+        springResult.find((r) => r.type === "fruit")?.amount ?? 0;
+      const summerFruit =
+        summerResult.find((r) => r.type === "fruit")?.amount ?? 0;
       expect(springFruit).toBe(summerFruit);
     });
 
@@ -213,7 +217,8 @@ describe("Harvest System", () => {
       oldTree.harvestable!.ready = true;
       const oldResult = collectHarvest(oldTree)!;
 
-      const matureTimber = matureResult.find((r) => r.type === "timber")?.amount ?? 0;
+      const matureTimber =
+        matureResult.find((r) => r.type === "timber")?.amount ?? 0;
       const oldTimber = oldResult.find((r) => r.type === "timber")?.amount ?? 0;
 
       // Old growth ironbark: stage(1.5x) * ironbark(3.0x) = 4.5x
@@ -237,7 +242,8 @@ describe("Harvest System", () => {
       oldTree.harvestable!.ready = true;
       const oldResult = collectHarvest(oldTree)!;
 
-      const matureTimber = matureResult.find((r) => r.type === "timber")?.amount ?? 0;
+      const matureTimber =
+        matureResult.find((r) => r.type === "timber")?.amount ?? 0;
       const oldTimber = oldResult.find((r) => r.type === "timber")?.amount ?? 0;
 
       // Stage 3 should NOT have the 3x bonus — old growth should be significantly higher

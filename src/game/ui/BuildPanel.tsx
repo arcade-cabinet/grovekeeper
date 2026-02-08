@@ -24,7 +24,11 @@ interface BuildPanelProps {
   onSelectStructure: (template: StructureTemplate) => void;
 }
 
-export const BuildPanel = ({ open, onClose, onSelectStructure }: BuildPanelProps) => {
+export const BuildPanel = ({
+  open,
+  onClose,
+  onSelectStructure,
+}: BuildPanelProps) => {
   const { level, resources } = useGameStore();
   const templates = getAvailableTemplates(level);
 
@@ -42,7 +46,12 @@ export const BuildPanel = ({ open, onClose, onSelectStructure }: BuildPanelProps
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <DialogContent
         className="max-w-sm mx-auto"
         style={{
@@ -55,7 +64,10 @@ export const BuildPanel = ({ open, onClose, onSelectStructure }: BuildPanelProps
         <DialogHeader>
           <DialogTitle
             className="text-lg font-bold text-center"
-            style={{ color: COLORS.forestGreen, fontFamily: "var(--font-heading)" }}
+            style={{
+              color: COLORS.forestGreen,
+              fontFamily: "var(--font-heading)",
+            }}
           >
             Build Structure
           </DialogTitle>
@@ -63,7 +75,10 @@ export const BuildPanel = ({ open, onClose, onSelectStructure }: BuildPanelProps
 
         <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
           {templates.length === 0 && (
-            <p className="text-sm text-center py-4" style={{ color: COLORS.soilDark }}>
+            <p
+              className="text-sm text-center py-4"
+              style={{ color: COLORS.soilDark }}
+            >
               No structures available yet. Level up!
             </p>
           )}
@@ -83,12 +98,20 @@ export const BuildPanel = ({ open, onClose, onSelectStructure }: BuildPanelProps
                 onClick={() => handleSelect(template)}
                 disabled={!affordable}
               >
-                <span className="text-2xl flex-shrink-0 mt-0.5">{template.icon}</span>
+                <span className="text-2xl flex-shrink-0 mt-0.5">
+                  {template.icon}
+                </span>
                 <div className="text-left flex-1 min-w-0">
-                  <div className="font-semibold text-sm" style={{ color: COLORS.soilDark }}>
+                  <div
+                    className="font-semibold text-sm"
+                    style={{ color: COLORS.soilDark }}
+                  >
                     {template.name}
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: COLORS.barkBrown }}>
+                  <div
+                    className="text-xs mt-0.5"
+                    style={{ color: COLORS.barkBrown }}
+                  >
                     {template.description}
                   </div>
                   <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -106,7 +129,10 @@ export const BuildPanel = ({ open, onClose, onSelectStructure }: BuildPanelProps
                     ))}
                   </div>
                   {template.effect && (
-                    <div className="text-[10px] mt-1" style={{ color: COLORS.forestGreen }}>
+                    <div
+                      className="text-[10px] mt-1"
+                      style={{ color: COLORS.forestGreen }}
+                    >
                       {formatEffect(template.effect)}
                     </div>
                   )}
@@ -138,7 +164,9 @@ export const BuildPanel = ({ open, onClose, onSelectStructure }: BuildPanelProps
   );
 };
 
-function formatEffect(effect: NonNullable<StructureTemplate["effect"]>): string {
+function formatEffect(
+  effect: NonNullable<StructureTemplate["effect"]>,
+): string {
   const pct = Math.round(effect.magnitude * 100);
   switch (effect.type) {
     case "growth_boost":

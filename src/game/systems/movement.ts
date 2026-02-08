@@ -10,13 +10,18 @@ export interface MovementInput {
 let worldBounds = { minX: 0, minZ: 0, maxX: 12, maxZ: 12 };
 
 /** Update the movement bounds (called when zones load/change). */
-export function setMovementBounds(bounds: { minX: number; minZ: number; maxX: number; maxZ: number }): void {
+export function setMovementBounds(bounds: {
+  minX: number;
+  minZ: number;
+  maxX: number;
+  maxZ: number;
+}): void {
   worldBounds = bounds;
 }
 
 export const movementSystem = (
   input: MovementInput,
-  deltaTime: number
+  deltaTime: number,
 ): void => {
   for (const entity of playerQuery) {
     if (!entity.position) continue;
@@ -26,8 +31,14 @@ export const movementSystem = (
     entity.position.z += input.z * PLAYER_SPEED * deltaTime;
 
     // Clamp to world bounds
-    entity.position.x = Math.max(worldBounds.minX, Math.min(worldBounds.maxX, entity.position.x));
-    entity.position.z = Math.max(worldBounds.minZ, Math.min(worldBounds.maxZ, entity.position.z));
+    entity.position.x = Math.max(
+      worldBounds.minX,
+      Math.min(worldBounds.maxX, entity.position.x),
+    );
+    entity.position.z = Math.max(
+      worldBounds.minZ,
+      Math.min(worldBounds.maxZ, entity.position.z),
+    );
   }
 };
 

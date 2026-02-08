@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { TREE_SPECIES, getSpeciesById, } from "./trees";
+import { describe, expect, it } from "vitest";
+import { getSpeciesById, TREE_SPECIES } from "./trees";
 
 describe("Tree Species Catalog", () => {
   it("has exactly 12 base species", () => {

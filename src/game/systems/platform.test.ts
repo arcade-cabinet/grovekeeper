@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Capacitor modules before importing platform
 vi.mock("@capacitor/core", () => ({
@@ -33,24 +33,24 @@ vi.mock("@capacitor/haptics", () => ({
   NotificationType: { Success: "SUCCESS", Warning: "WARNING", Error: "ERROR" },
 }));
 
+import { Capacitor } from "@capacitor/core";
 import {
-  initializePlatform,
   getDeviceInfo,
   getPlatform,
-  isNative,
-  isIOS,
-  isAndroid,
-  isWeb,
-  setHapticsEnabled,
-  isHapticsEnabled,
+  getResponsiveScale,
   hapticLight,
   hapticMedium,
-  getResponsiveScale,
-  isMobileDevice,
-  isTabletDevice,
+  initializePlatform,
+  isAndroid,
   isDesktopDevice,
+  isHapticsEnabled,
+  isIOS,
+  isMobileDevice,
+  isNative,
+  isTabletDevice,
+  isWeb,
+  setHapticsEnabled,
 } from "./platform";
-import { Capacitor } from "@capacitor/core";
 
 describe("platform", () => {
   beforeEach(() => {
@@ -123,40 +123,70 @@ describe("platform", () => {
 
   describe("responsive helpers", () => {
     it("getResponsiveScale returns 1.0 for typical mobile (375-413px)", () => {
-      Object.defineProperty(window, "innerWidth", { value: 390, writable: true });
-      Object.defineProperty(window, "innerHeight", { value: 844, writable: true });
+      Object.defineProperty(window, "innerWidth", {
+        value: 390,
+        writable: true,
+      });
+      Object.defineProperty(window, "innerHeight", {
+        value: 844,
+        writable: true,
+      });
       expect(getResponsiveScale()).toBe(0.9);
     });
 
     it("getResponsiveScale returns 0.85 for very small screens", () => {
-      Object.defineProperty(window, "innerWidth", { value: 320, writable: true });
-      Object.defineProperty(window, "innerHeight", { value: 568, writable: true });
+      Object.defineProperty(window, "innerWidth", {
+        value: 320,
+        writable: true,
+      });
+      Object.defineProperty(window, "innerHeight", {
+        value: 568,
+        writable: true,
+      });
       expect(getResponsiveScale()).toBe(0.85);
     });
 
     it("getResponsiveScale returns 1.2 for large desktop", () => {
-      Object.defineProperty(window, "innerWidth", { value: 1440, writable: true });
-      Object.defineProperty(window, "innerHeight", { value: 1080, writable: true });
+      Object.defineProperty(window, "innerWidth", {
+        value: 1440,
+        writable: true,
+      });
+      Object.defineProperty(window, "innerHeight", {
+        value: 1080,
+        writable: true,
+      });
       expect(getResponsiveScale()).toBe(1.2);
     });
 
     it("isMobileDevice returns true for narrow viewport", () => {
-      Object.defineProperty(window, "innerWidth", { value: 375, writable: true });
+      Object.defineProperty(window, "innerWidth", {
+        value: 375,
+        writable: true,
+      });
       expect(isMobileDevice()).toBe(true);
     });
 
     it("isTabletDevice returns true for 768-1023px", () => {
-      Object.defineProperty(window, "innerWidth", { value: 800, writable: true });
+      Object.defineProperty(window, "innerWidth", {
+        value: 800,
+        writable: true,
+      });
       expect(isTabletDevice()).toBe(true);
     });
 
     it("isDesktopDevice returns true for >= 1024px", () => {
-      Object.defineProperty(window, "innerWidth", { value: 1440, writable: true });
+      Object.defineProperty(window, "innerWidth", {
+        value: 1440,
+        writable: true,
+      });
       expect(isDesktopDevice()).toBe(true);
     });
 
     it("isDesktopDevice returns false for mobile", () => {
-      Object.defineProperty(window, "innerWidth", { value: 375, writable: true });
+      Object.defineProperty(window, "innerWidth", {
+        value: 375,
+        writable: true,
+      });
       expect(isDesktopDevice()).toBe(false);
     });
   });

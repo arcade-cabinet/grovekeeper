@@ -8,11 +8,14 @@
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Entity } from "../ecs/world";
+import {
+  createStructureMesh,
+  disposeStructureMesh,
+} from "../structures/BlockMeshFactory";
+import { getTemplate } from "../structures/StructureManager";
+import { createPropMesh, disposePropMeshes } from "./PropFactory";
 import type { WorldDefinition, ZoneDefinition } from "./types";
 import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";
-import { createPropMesh, disposePropMeshes } from "./PropFactory";
-import { createStructureMesh, disposeStructureMesh } from "../structures/BlockMeshFactory";
-import { getTemplate } from "../structures/StructureManager";
 
 interface LoadedZone {
   definition: ZoneDefinition;
@@ -79,7 +82,12 @@ export class WorldManager {
       }
     }
 
-    this.loadedZones.set(zoneId, { definition: zoneDef, entities, propMeshes, structMeshes });
+    this.loadedZones.set(zoneId, {
+      definition: zoneDef,
+      entities,
+      propMeshes,
+      structMeshes,
+    });
   }
 
   /** Unload a zone — removes ECS entities and disposes meshes. */
@@ -109,13 +117,21 @@ export class WorldManager {
   }
 
   /** Convert world-space coords to zone-local coords. */
-  worldToLocal(x: number, z: number): { zoneId: string; localX: number; localZ: number } | null {
+  worldToLocal(
+    x: number,
+    z: number,
+  ): { zoneId: string; localX: number; localZ: number } | null {
     if (!this.worldDef) return null;
 
     for (const zone of this.worldDef.zones) {
       const localX = x - zone.origin.x;
       const localZ = z - zone.origin.z;
-      if (localX >= 0 && localX < zone.size.width && localZ >= 0 && localZ < zone.size.height) {
+      if (
+        localX >= 0 &&
+        localX < zone.size.width &&
+        localZ >= 0 &&
+        localZ < zone.size.height
+      ) {
         return { zoneId: zone.id, localX, localZ };
       }
     }
@@ -123,7 +139,11 @@ export class WorldManager {
   }
 
   /** Convert zone-local coords to world-space. */
-  localToWorld(zoneId: string, localX: number, localZ: number): { x: number; z: number } | null {
+  localToWorld(
+    zoneId: string,
+    localX: number,
+    localZ: number,
+  ): { x: number; z: number } | null {
     if (!this.worldDef) return null;
     const zone = this.worldDef.zones.find((z) => z.id === zoneId);
     if (!zone) return null;
@@ -151,7 +171,10 @@ export class WorldManager {
     // Check tile overrides for rocks
     if (zone.tiles) {
       for (const tile of zone.tiles) {
-        if (tile.x === Math.floor(local.localX) && tile.z === Math.floor(local.localZ)) {
+        if (
+          tile.x === Math.floor(local.localX) &&
+          tile.z === Math.floor(local.localZ)
+        ) {
           return tile.type !== "rock";
         }
       }

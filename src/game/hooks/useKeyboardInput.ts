@@ -1,25 +1,23 @@
 /**
- * Convert a set of pressed keys to isometric world movement vector.
+ * Convert a set of pressed keys to world movement vector.
  *
- * Spec S13 WASD -> Isometric:
- *   inputX = (D ? 1 : 0) - (A ? 1 : 0)
- *   inputY = (W ? 1 : 0) - (S ? 1 : 0)
- *   worldX = inputX - inputY
- *   worldZ = -(inputX + inputY)
- *   Normalize if magnitude > 1
+ * With the over-the-shoulder camera (looking north along +Z):
+ *   W = +Z (forward/north, away from camera), S = -Z (back/south)
+ *   A = -X (left/west), D = +X (right/east)
+ *   Normalize if magnitude > 1 (diagonal movement)
  */
-export function keysToIsometric(keys: Set<string>): { x: number; z: number } {
+export function keysToWorld(keys: Set<string>): { x: number; z: number } {
   const inputX =
     (keys.has("d") || keys.has("arrowright") ? 1 : 0) -
     (keys.has("a") || keys.has("arrowleft") ? 1 : 0);
-  const inputY =
+  const inputZ =
     (keys.has("w") || keys.has("arrowup") ? 1 : 0) -
     (keys.has("s") || keys.has("arrowdown") ? 1 : 0);
 
-  if (inputX === 0 && inputY === 0) return { x: 0, z: 0 };
+  if (inputX === 0 && inputZ === 0) return { x: 0, z: 0 };
 
-  let worldX = inputX - inputY;
-  let worldZ = -(inputX + inputY);
+  let worldX = inputX;
+  let worldZ = inputZ;
 
   // Normalize if diagonal
   const mag = Math.sqrt(worldX * worldX + worldZ * worldZ);
@@ -30,3 +28,9 @@ export function keysToIsometric(keys: Set<string>): { x: number; z: number } {
 
   return { x: worldX, z: worldZ };
 }
+
+/**
+ * @deprecated Use keysToWorld instead. This is kept for backwards compatibility
+ * with any tests that reference the old name.
+ */
+export const keysToIsometric = keysToWorld;

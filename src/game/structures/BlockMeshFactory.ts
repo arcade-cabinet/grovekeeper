@@ -6,15 +6,14 @@
  * and then merging same-material groups for draw-call efficiency.
  */
 
-import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
-import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-
-import type { BlockDefinition, StructureTemplate } from "./types";
 import blocksData from "./data/blocks.json";
+import type { BlockDefinition, StructureTemplate } from "./types";
 
 // ---------------------------------------------------------------------------
 // Block definition lookup
@@ -29,8 +28,11 @@ for (const raw of blocksData) {
 // Material palette
 // ---------------------------------------------------------------------------
 
-const MATERIAL_COLORS: Record<string, { r: number; g: number; b: number; alpha?: number }> = {
-  wood:  { r: 0.55, g: 0.35, b: 0.18 },
+const MATERIAL_COLORS: Record<
+  string,
+  { r: number; g: number; b: number; alpha?: number }
+> = {
+  wood: { r: 0.55, g: 0.35, b: 0.18 },
   straw: { r: 0.85, g: 0.75, b: 0.45 },
   stone: { r: 0.55, g: 0.52, b: 0.5 },
   glass: { r: 0.7, g: 0.85, b: 0.9, alpha: 0.5 },
@@ -39,7 +41,10 @@ const MATERIAL_COLORS: Record<string, { r: number; g: number; b: number; alpha?:
 /** Cache materials per scene to avoid re-creation. */
 const materialCache = new Map<string, StandardMaterial>();
 
-function getOrCreateMaterial(scene: Scene, materialKey: string): StandardMaterial {
+function getOrCreateMaterial(
+  scene: Scene,
+  materialKey: string,
+): StandardMaterial {
   const cacheKey = `struct_${materialKey}_${scene.uid}`;
   const cached = materialCache.get(cacheKey);
   if (cached) return cached;
@@ -186,11 +191,11 @@ export function createStructureMesh(
   // Merge all meshes into a single mesh with multiMaterial to preserve per-block materials
   const merged = Mesh.MergeMeshes(
     allMeshes,
-    true,   // disposeSource
-    true,   // allow32BitsIndices
+    true, // disposeSource
+    true, // allow32BitsIndices
     undefined,
-    true,   // multiMaterial — true to preserve different block type materials
-    true,   // optimizeSharedMaterials
+    true, // multiMaterial — true to preserve different block type materials
+    true, // optimizeSharedMaterials
   );
 
   if (!merged) {

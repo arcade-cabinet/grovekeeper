@@ -1,4 +1,3 @@
-
 import type { GameTime, Season } from "../systems/time";
 
 interface TimeDisplayProps {
@@ -30,10 +29,10 @@ const getTimeIcon = (hours: number): string => {
 
 export const TimeDisplay = ({ time }: TimeDisplayProps) => {
   const { hours, minutes, day, season } = time;
-  
+
   // Format time as HH:MM
   const timeString = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
-  
+
   return (
     <div className="flex items-center gap-1.5">
       {/* Time of day */}
@@ -47,7 +46,7 @@ export const TimeDisplay = ({ time }: TimeDisplayProps) => {
         <span>{getTimeIcon(hours)}</span>
         <span>{timeString}</span>
       </div>
-      
+
       {/* Day and Season */}
       <div
         className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
@@ -68,7 +67,7 @@ export const TimeDisplay = ({ time }: TimeDisplayProps) => {
 // Compact version for very small screens
 export const TimeDisplayCompact = ({ time }: TimeDisplayProps) => {
   const { hours, season } = time;
-  
+
   return (
     <div
       className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs"

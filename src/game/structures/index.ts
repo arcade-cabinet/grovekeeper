@@ -3,20 +3,19 @@
  */
 
 export {
-  getTemplate,
-  getAvailableTemplates,
+  createBlockMesh,
+  createStructureMesh,
+  disposeStructureMaterialCache,
+  disposeStructureMesh,
+} from "./BlockMeshFactory";
+export {
   canPlace,
+  getAvailableTemplates,
   getEffectsAtPosition,
   getGrowthMultiplier,
   getHarvestMultiplier,
   getStaminaMultiplier,
+  getTemplate,
 } from "./StructureManager";
-
-export {
-  createBlockMesh,
-  createStructureMesh,
-  disposeStructureMesh,
-  disposeStructureMaterialCache,
-} from "./BlockMeshFactory";
 
 export type { BlockDefinition, StructureTemplate } from "./types";

@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.unmock("@babylonjs/core/Engines/engine");
 vi.unmock("@babylonjs/core/scene");
@@ -8,8 +8,8 @@ import { Scene } from "@babylonjs/core/scene";
 import {
   createBlockMesh,
   createStructureMesh,
-  disposeStructureMesh,
   disposeStructureMaterialCache,
+  disposeStructureMesh,
 } from "./BlockMeshFactory";
 import type { StructureTemplate } from "./types";
 
@@ -84,7 +84,15 @@ describe("BlockMeshFactory", () => {
       name: "Test Single",
       description: "A single block",
       icon: "T",
-      blocks: [{ blockId: "timber-wall", localX: 0, localY: 0, localZ: 0, rotation: 0 }],
+      blocks: [
+        {
+          blockId: "timber-wall",
+          localX: 0,
+          localY: 0,
+          localZ: 0,
+          rotation: 0,
+        },
+      ],
       footprint: { width: 1, depth: 1 },
       cost: { timber: 5 },
       requiredLevel: 1,
@@ -96,9 +104,27 @@ describe("BlockMeshFactory", () => {
       description: "Multiple blocks",
       icon: "M",
       blocks: [
-        { blockId: "timber-wall", localX: 0, localY: 0, localZ: 0, rotation: 0 },
-        { blockId: "timber-wall", localX: 1, localY: 0, localZ: 0, rotation: 0 },
-        { blockId: "thatch-roof", localX: 0, localY: 1, localZ: 0, rotation: 0 },
+        {
+          blockId: "timber-wall",
+          localX: 0,
+          localY: 0,
+          localZ: 0,
+          rotation: 0,
+        },
+        {
+          blockId: "timber-wall",
+          localX: 1,
+          localY: 0,
+          localZ: 0,
+          rotation: 0,
+        },
+        {
+          blockId: "thatch-roof",
+          localX: 0,
+          localY: 1,
+          localZ: 0,
+          rotation: 0,
+        },
       ],
       footprint: { width: 2, depth: 1 },
       cost: { timber: 10, sap: 5 },
@@ -132,7 +158,15 @@ describe("BlockMeshFactory", () => {
       const badTemplate: StructureTemplate = {
         ...singleBlockTemplate,
         id: "test-bad",
-        blocks: [{ blockId: "nonexistent", localX: 0, localY: 0, localZ: 0, rotation: 0 }],
+        blocks: [
+          {
+            blockId: "nonexistent",
+            localX: 0,
+            localY: 0,
+            localZ: 0,
+            rotation: 0,
+          },
+        ],
       };
       const mesh = createStructureMesh(scene, badTemplate, 0, 0);
       expect(mesh).toBeNull();

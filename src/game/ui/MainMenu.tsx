@@ -136,10 +136,7 @@ export const MainMenu = ({ onStartGame, onNewGame }: MainMenuProps) => {
       </Card>
 
       {/* Version */}
-      <p
-        className="mt-4 text-xs"
-        style={{ color: `${COLORS.forestGreen}80` }}
-      >
+      <p className="mt-4 text-xs" style={{ color: `${COLORS.forestGreen}80` }}>
         Grove Keeper v0.1.0
       </p>
     </div>

@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
-  initializeTime,
-  updateTime,
+  type GameTime,
   getGameTime,
+  getSeasonalColors,
+  getSkyColors,
+  initializeTime,
+  loadTime,
   pauseTime,
   resumeTime,
-  setTimeScale,
-  getSkyColors,
-  getSeasonalColors,
-  saveTime,
-  loadTime,
-  TIME_CONFIG,
-  type GameTime,
   type Season,
+  saveTime,
+  setTimeScale,
+  TIME_CONFIG,
+  updateTime,
 } from "./time";
 
 describe("Time System", () => {

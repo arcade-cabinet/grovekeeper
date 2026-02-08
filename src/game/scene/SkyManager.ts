@@ -6,10 +6,10 @@
  * Day/night cycle modulates environmentIntensity.
  */
 
-import { HDRCubeTexture } from "@babylonjs/core/Materials/Textures/hdrCubeTexture";
 import type { BaseTexture } from "@babylonjs/core/Materials/Textures/baseTexture";
-import type { Scene } from "@babylonjs/core/scene";
+import { HDRCubeTexture } from "@babylonjs/core/Materials/Textures/hdrCubeTexture";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+import type { Scene } from "@babylonjs/core/scene";
 // Side-effect import: adds createDefaultSkybox to Scene prototype
 import "@babylonjs/core/Helpers/sceneHelpers";
 
@@ -30,7 +30,12 @@ export class SkyManager {
     scene.environmentTexture = hdrTexture;
 
     // createDefaultSkybox: (environmentTexture, pbr, scale, blur, dedicatedMaterial)
-    this.skyboxMesh = scene.createDefaultSkybox(hdrTexture, true, 1000, 0.3) as Mesh | null;
+    this.skyboxMesh = scene.createDefaultSkybox(
+      hdrTexture,
+      true,
+      1000,
+      0.3,
+    ) as Mesh | null;
   }
 
   /**

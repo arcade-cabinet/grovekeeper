@@ -13,7 +13,11 @@ export interface RegrowthEntry {
 
 const REGROWTH_TIME = 3 * 24 * 60 * 60; // 3 game-days in seconds
 
-export function createRegrowthEntry(worldX: number, worldZ: number, speciesId: string): RegrowthEntry {
+export function createRegrowthEntry(
+  worldX: number,
+  worldZ: number,
+  speciesId: string,
+): RegrowthEntry {
   return { worldX, worldZ, speciesId, timerSeconds: REGROWTH_TIME };
 }
 

@@ -16,11 +16,7 @@ export function gridToWorld(
   return { x: col * tileSize, z: row * tileSize };
 }
 
-export function worldToGrid(
-  x: number,
-  z: number,
-  tileSize = 1,
-): GridPosition {
+export function worldToGrid(x: number, z: number, tileSize = 1): GridPosition {
   return { col: Math.floor(x / tileSize), row: Math.floor(z / tileSize) };
 }
 

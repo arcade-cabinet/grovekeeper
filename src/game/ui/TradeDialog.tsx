@@ -1,15 +1,15 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { COLORS } from "../constants/config";
 import { useGameStore } from "../stores/gameStore";
-import { getTradeRates, executeTrade } from "../systems/trading";
 import type { TradeRate } from "../systems/trading";
+import { executeTrade, getTradeRates } from "../systems/trading";
 import { showToast } from "./Toast";
 
 interface TradeDialogProps {
@@ -44,11 +44,16 @@ export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className="max-w-sm"
-        style={{ background: "#F5F0E3", border: `2px solid ${COLORS.barkBrown}` }}
+        style={{
+          background: "#F5F0E3",
+          border: `2px solid ${COLORS.barkBrown}`,
+        }}
         aria-describedby={undefined}
       >
         <DialogHeader>
-          <DialogTitle style={{ color: COLORS.soilDark }}>Trading Post</DialogTitle>
+          <DialogTitle style={{ color: COLORS.soilDark }}>
+            Trading Post
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           {rates.map((rate) => (
@@ -59,7 +64,9 @@ export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
               }`}
               style={{
                 background:
-                  selectedRate === rate ? `${COLORS.leafLight}33` : "rgba(255,255,255,0.5)",
+                  selectedRate === rate
+                    ? `${COLORS.leafLight}33`
+                    : "rgba(255,255,255,0.5)",
                 borderColor: COLORS.barkBrown,
                 border: "1px solid",
                 color: COLORS.soilDark,
@@ -90,7 +97,10 @@ export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
                 min={1}
                 max={Math.max(
                   1,
-                  Math.floor((resources[selectedRate.from] ?? 0) / selectedRate.fromAmount),
+                  Math.floor(
+                    (resources[selectedRate.from] ?? 0) /
+                      selectedRate.fromAmount,
+                  ),
                 )}
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
@@ -104,8 +114,9 @@ export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
               </span>
             </div>
             <div className="text-xs" style={{ color: COLORS.soilDark }}>
-              Pay: {quantity * selectedRate.fromAmount} {selectedRate.from} {"\u2192"} Get:{" "}
-              {quantity * selectedRate.toAmount} {selectedRate.to}
+              Pay: {quantity * selectedRate.fromAmount} {selectedRate.from}{" "}
+              {"\u2192"} Get: {quantity * selectedRate.toAmount}{" "}
+              {selectedRate.to}
             </div>
             <Button
               className="w-full"

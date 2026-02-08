@@ -5,7 +5,10 @@ interface FarmerMascotProps {
   animate?: boolean;
 }
 
-export const FarmerMascot = ({ size = 120, animate = true }: FarmerMascotProps) => {
+export const FarmerMascot = ({
+  size = 120,
+  animate = true,
+}: FarmerMascotProps) => {
   return (
     <svg
       width={size}

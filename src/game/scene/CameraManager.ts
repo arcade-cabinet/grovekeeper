@@ -1,32 +1,29 @@
 /**
- * CameraManager — Orthographic diorama camera with atmospheric fog.
+ * CameraManager — Over-the-shoulder 3rd-person camera.
  *
- * Uses ArcRotateCamera in orthographic mode at a deliberate 30° diorama
- * angle — like looking at a tabletop miniature. Building faces and tree
- * trunks are clearly visible. Scene fog blends the horizon into the sky.
+ * Uses ArcRotateCamera in perspective mode positioned close behind
+ * and slightly above the player, looking forward. Similar to
+ * Animal Crossing but lower and closer for immersion.
+ * Scene fog blends the horizon into the sky.
  */
 
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import { Camera } from "@babylonjs/core/Cameras/camera";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { Engine } from "@babylonjs/core/Engines/engine";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { Scene } from "@babylonjs/core/scene";
 
-/** Minimum vertical view in world tiles — guarantees immediate area visible. */
-const MIN_VIEW = 14;
-/** Maximum vertical view in world tiles — prevents zooming out too far. */
-const MAX_VIEW = 40;
-/** Target pixels per world tile. Smaller = more tiles visible. */
-const PIXELS_PER_TILE = 45;
-
-/** Camera tilt from vertical (radians). 30° — deliberate diorama viewing angle. */
-const CAMERA_BETA = Math.PI / 6;
+/** Camera tilt from vertical (radians). ~77° — over-the-shoulder, looking forward. */
+const CAMERA_BETA = 1.35;
 /** Camera rotation (radians). -PI/2 = camera from south looking north. */
 const CAMERA_ALPHA = -Math.PI / 2;
-/** Orthographic distance — just needs to clear all scene geometry. */
-const CAMERA_RADIUS = 80;
+/** Base distance from target — tight behind the player. */
+const BASE_RADIUS = 6;
+/** Field of view (radians). ~55° — wider for immersive feel. */
+const CAMERA_FOV = 0.95;
 /** Smooth camera tracking speed. */
 const LERP_SPEED = 3;
+/** Camera target height — focus on character torso, not ground. */
+const TARGET_Y = 1.5;
 
 /** Cache reduced-motion preference (checked once at construction). */
 const prefersReducedMotion =
@@ -37,72 +34,70 @@ export class CameraManager {
   camera: ArcRotateCamera | null = null;
   private engine: Engine | null = null;
 
-  init(scene: Scene, initialTarget?: { x: number; z: number }): ArcRotateCamera {
+  init(
+    scene: Scene,
+    initialTarget?: { x: number; z: number },
+  ): ArcRotateCamera {
     const target = initialTarget
-      ? new Vector3(initialTarget.x, 0, initialTarget.z)
-      : new Vector3(5.5, 0, 5.5);
+      ? new Vector3(initialTarget.x, TARGET_Y, initialTarget.z)
+      : new Vector3(5.5, TARGET_Y, 5.5);
 
     const camera = new ArcRotateCamera(
       "camera",
       CAMERA_ALPHA,
       CAMERA_BETA,
-      CAMERA_RADIUS,
+      BASE_RADIUS,
       target,
       scene,
     );
 
     // Lock camera — no user interaction
     camera.inputs.clear();
-    camera.lowerRadiusLimit = CAMERA_RADIUS;
-    camera.upperRadiusLimit = CAMERA_RADIUS;
+    camera.lowerRadiusLimit = BASE_RADIUS * 0.9;
+    camera.upperRadiusLimit = BASE_RADIUS * 1.15;
     camera.lowerBetaLimit = CAMERA_BETA;
     camera.upperBetaLimit = CAMERA_BETA;
 
-    // Switch to orthographic — scales cleanly with viewport
-    camera.mode = Camera.ORTHOGRAPHIC_CAMERA;
+    // Perspective settings
+    camera.fov = CAMERA_FOV;
+    camera.minZ = 0.5;
+    camera.maxZ = 100;
 
     this.camera = camera;
     this.engine = scene.getEngine() as Engine;
 
-    // Set initial viewport bounds
+    // Set initial viewport
     this.updateViewport();
 
     return camera;
   }
 
   /**
-   * Recalculate orthographic bounds from current viewport dimensions.
-   * Called on resize and each frame (trivially cheap).
-   *
-   * On mobile (small canvas): shows ~14 tiles — your immediate grove.
-   * On desktop (large canvas): shows 24-40 tiles — surrounding biomes visible.
+   * Adjust camera radius based on viewport aspect ratio.
+   * Perspective FOV naturally adapts to any viewport size, but we
+   * fine-tune the radius to prevent tunnel vision on ultra-wide or
+   * overly zoomed-in feel on narrow mobile.
    */
   updateViewport(): void {
     if (!this.camera || !this.engine) return;
 
-    const canvasHeight = this.engine.getRenderHeight();
     const aspect = this.engine.getAspectRatio(this.camera);
 
-    // Determine vertical view size based on screen real estate
-    const idealView = canvasHeight / PIXELS_PER_TILE;
-    const viewSize = Math.max(MIN_VIEW, Math.min(MAX_VIEW, idealView));
-
-    // With a tilted orthographic camera, the lower portion of the frustum
-    // passes below the ground plane (y=0), exposing the sky clear color.
-    // Shift the ortho bounds upward so the player sits in the lower third
-    // and more of the world ahead is visible. The shift is proportional to
-    // the tilt angle — bigger tilt = more shift needed.
-    const shift = viewSize * Math.sin(CAMERA_BETA) * 0.4;
-    this.camera.orthoTop = viewSize / 2 + shift;
-    this.camera.orthoBottom = -viewSize / 2 + shift;
-    this.camera.orthoLeft = -(viewSize * aspect) / 2;
-    this.camera.orthoRight = (viewSize * aspect) / 2;
+    if (aspect > 2.0) {
+      // Ultra-wide: pull out slightly
+      this.camera.radius = BASE_RADIUS * 1.15;
+    } else if (aspect < 0.7) {
+      // Narrow portrait mobile: push in slightly
+      this.camera.radius = BASE_RADIUS * 0.9;
+    } else {
+      this.camera.radius = BASE_RADIUS;
+    }
   }
 
   /** Smoothly track a world position (e.g. the player). */
   trackTarget(worldX: number, worldZ: number, dt: number): void {
     if (!this.camera) return;
-    const target = new Vector3(worldX, 0, worldZ);
+    const target = new Vector3(worldX, TARGET_Y, worldZ);
     if (prefersReducedMotion) {
       this.camera.target = target;
     } else {

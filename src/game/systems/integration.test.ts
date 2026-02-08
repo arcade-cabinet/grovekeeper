@@ -9,27 +9,31 @@
  * - Growth → Harvest lifecycle
  * - Grid expansion with resource spending
  */
-import { describe, it, expect, beforeEach } from "vitest";
-import { world } from "../ecs/world";
-import { createTreeEntity, createPlayerEntity } from "../ecs/archetypes";
-import { growthSystem, calcGrowthRate, getStageScale } from "./growth";
-import { initHarvestable, harvestSystem, collectHarvest } from "./harvest";
-import { staminaSystem } from "./stamina";
-import {
-  getWeatherGrowthMultiplier,
-  initializeWeather,
-  updateWeather,
-  rollWindstormDamage,
-} from "./weather";
-import { useGameStore } from "../stores/gameStore";
+import { beforeEach, describe, expect, it } from "vitest";
+import { MAX_STAGE } from "../constants/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "../constants/difficulty";
+import { createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
+import { world } from "../ecs/world";
+import { useGameStore } from "../stores/gameStore";
+import {
+  canAffordExpansion,
+  GRID_EXPANSION_TIERS,
+  getMaxGridSizeForLevel,
+} from "./gridExpansion";
+import { calcGrowthRate, getStageScale, growthSystem } from "./growth";
+import { collectHarvest, harvestSystem, initHarvestable } from "./harvest";
 import { calculatePrestigeBonus, canPrestige } from "./prestige";
 import {
   getSeasonalSeedCostMultiplier,
   getSeasonalTradeBonus,
 } from "./seasonalMarket";
-import { getMaxGridSizeForLevel, canAffordExpansion, GRID_EXPANSION_TIERS } from "./gridExpansion";
-import { MAX_STAGE } from "../constants/config";
+import { staminaSystem } from "./stamina";
+import {
+  getWeatherGrowthMultiplier,
+  initializeWeather,
+  rollWindstormDamage,
+  updateWeather,
+} from "./weather";
 
 /** Helper: get difficulty tier, asserting it exists. */
 function difficulty(id: string) {
@@ -49,7 +53,11 @@ function makeHarvestableTree(speciesId: string, stage: 3 | 4 = 3) {
 }
 
 /** Helper: measure growth progress for a white-oak over small delta. */
-function measureProgress(difficultyId: string, season = "summer", weatherMult = 1) {
+function measureProgress(
+  difficultyId: string,
+  season = "summer",
+  weatherMult = 1,
+) {
   const tree = createTreeEntity(0, 0, "white-oak");
   world.add(tree);
   useGameStore.setState({ difficulty: difficultyId });
@@ -72,11 +80,17 @@ describe("Cross-System Integration Tests", () => {
   // ===================================================================
   describe("Difficulty tiers affect growth rates", () => {
     it("explore difficulty has 1.3x growth multiplier", () => {
-      expect(difficulty("explore").growthSpeedMult / difficulty("normal").growthSpeedMult).toBeCloseTo(1.3, 1);
+      expect(
+        difficulty("explore").growthSpeedMult /
+          difficulty("normal").growthSpeedMult,
+      ).toBeCloseTo(1.3, 1);
     });
 
     it("ultra-brutal difficulty has 0.4x growth multiplier", () => {
-      expect(difficulty("ultra-brutal").growthSpeedMult / difficulty("normal").growthSpeedMult).toBeCloseTo(0.4, 1);
+      expect(
+        difficulty("ultra-brutal").growthSpeedMult /
+          difficulty("normal").growthSpeedMult,
+      ).toBeCloseTo(0.4, 1);
     });
 
     it("all 5 difficulty tiers produce strictly ordered growth rates", () => {
@@ -111,7 +125,9 @@ describe("Cross-System Integration Tests", () => {
       tree.harvestable!.ready = true;
       const normalResult = collectHarvest(tree)!;
 
-      expect(exploreResult[0].amount).toBeGreaterThanOrEqual(normalResult[0].amount);
+      expect(exploreResult[0].amount).toBeGreaterThanOrEqual(
+        normalResult[0].amount,
+      );
     });
 
     it("ultra-brutal difficulty gives lower yields than normal", () => {
@@ -124,7 +140,9 @@ describe("Cross-System Integration Tests", () => {
       tree.harvestable!.ready = true;
       const brutalResult = collectHarvest(tree)!;
 
-      expect(brutalResult[0].amount).toBeLessThanOrEqual(normalResult[0].amount);
+      expect(brutalResult[0].amount).toBeLessThanOrEqual(
+        normalResult[0].amount,
+      );
     });
   });
 
@@ -151,10 +169,12 @@ describe("Cross-System Integration Tests", () => {
     });
 
     it("difficulty affects drought growth penalty", () => {
-      const droughtByDifficulty = ["explore", "normal", "ultra-brutal"].map((d) => {
-        useGameStore.setState({ difficulty: d });
-        return getWeatherGrowthMultiplier("drought");
-      });
+      const droughtByDifficulty = ["explore", "normal", "ultra-brutal"].map(
+        (d) => {
+          useGameStore.setState({ difficulty: d });
+          return getWeatherGrowthMultiplier("drought");
+        },
+      );
       // Each tier has harsher drought: explore (0.8) > normal (0.5) > ultra-brutal (0.2)
       expect(droughtByDifficulty[0]).toBeGreaterThan(droughtByDifficulty[1]);
       expect(droughtByDifficulty[1]).toBeGreaterThan(droughtByDifficulty[2]);
@@ -224,24 +244,36 @@ describe("Cross-System Integration Tests", () => {
     it("spring grows 1.5x faster than summer", () => {
       // Use calcGrowthRate directly (pure function, no stage wrapping)
       const springRate = calcGrowthRate({
-        baseTime: 15, difficulty: 1, season: "spring",
-        watered: false, evergreen: false,
+        baseTime: 15,
+        difficulty: 1,
+        season: "spring",
+        watered: false,
+        evergreen: false,
       });
       const summerRate = calcGrowthRate({
-        baseTime: 15, difficulty: 1, season: "summer",
-        watered: false, evergreen: false,
+        baseTime: 15,
+        difficulty: 1,
+        season: "summer",
+        watered: false,
+        evergreen: false,
       });
       expect(springRate / summerRate).toBeCloseTo(1.5, 1);
     });
 
     it("autumn grows at 0.8x summer rate", () => {
       const autumnRate = calcGrowthRate({
-        baseTime: 15, difficulty: 1, season: "autumn",
-        watered: false, evergreen: false,
+        baseTime: 15,
+        difficulty: 1,
+        season: "autumn",
+        watered: false,
+        evergreen: false,
       });
       const summerRate = calcGrowthRate({
-        baseTime: 15, difficulty: 1, season: "summer",
-        watered: false, evergreen: false,
+        baseTime: 15,
+        difficulty: 1,
+        season: "summer",
+        watered: false,
+        evergreen: false,
       });
       expect(autumnRate / summerRate).toBeCloseTo(0.8, 1);
     });
@@ -271,8 +303,10 @@ describe("Cross-System Integration Tests", () => {
       tree.harvestable!.ready = true;
       const autumnResult = collectHarvest(tree, "autumn")!;
 
-      const summerFruit = summerResult.find((r) => r.type === "fruit")?.amount ?? 0;
-      const autumnFruit = autumnResult.find((r) => r.type === "fruit")?.amount ?? 0;
+      const summerFruit =
+        summerResult.find((r) => r.type === "fruit")?.amount ?? 0;
+      const autumnFruit =
+        autumnResult.find((r) => r.type === "fruit")?.amount ?? 0;
       expect(autumnFruit).toBe(summerFruit * 3);
     });
 
@@ -285,7 +319,8 @@ describe("Cross-System Integration Tests", () => {
       tree.harvestable!.ready = true;
       const oldResult = collectHarvest(tree)!;
 
-      const matureTimber = matureResult.find((r) => r.type === "timber")?.amount ?? 0;
+      const matureTimber =
+        matureResult.find((r) => r.type === "timber")?.amount ?? 0;
       const oldTimber = oldResult.find((r) => r.type === "timber")?.amount ?? 0;
       expect(oldTimber).toBeGreaterThan(matureTimber);
     });
@@ -579,7 +614,9 @@ describe("Cross-System Integration Tests", () => {
         const prev = difficulty(tiers[i - 1]);
         const curr = difficulty(tiers[i]);
         expect(curr.growthSpeedMult).toBeLessThanOrEqual(prev.growthSpeedMult);
-        expect(curr.resourceYieldMult).toBeLessThanOrEqual(prev.resourceYieldMult);
+        expect(curr.resourceYieldMult).toBeLessThanOrEqual(
+          prev.resourceYieldMult,
+        );
       }
     });
 

@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { COLORS } from "../constants/config";
+import { treesQuery } from "../ecs/world";
 import { getNpcTemplate } from "../npcs/NpcManager";
 import { useGameStore } from "../stores/gameStore";
 import type { StructureTemplate } from "../structures/types";
+import type { ObjectTapInfo } from "../systems/InputManager";
 import { getCosmeticById } from "../systems/prestige";
 import type { GameTime } from "../systems/time";
 import type { WeatherType } from "../systems/weather";
@@ -10,6 +12,11 @@ import { getActionLabel, type TileState } from "./ActionButton";
 import { BatchHarvestButton } from "./BatchHarvestButton";
 import { BuildPanel } from "./BuildPanel";
 import { HUD } from "./HUD";
+import {
+  getNpcActions,
+  getTreeActions,
+  InteractionMenu,
+} from "./InteractionMenu";
 import { MiniMap } from "./MiniMap";
 import { NpcDialogue } from "./NpcDialogue";
 import { PauseMenu } from "./PauseMenu";
@@ -46,6 +53,9 @@ interface GameUIProps {
   nearbyNpcTemplateId?: string | null;
   npcDialogueOpen?: boolean;
   setNpcDialogueOpen?: (open: boolean) => void;
+  interactionTarget?: ObjectTapInfo | null;
+  onInteractionAction?: (actionId: string) => void;
+  onDismissInteraction?: () => void;
 }
 
 export const GameUI = ({
@@ -68,6 +78,9 @@ export const GameUI = ({
   nearbyNpcTemplateId,
   npcDialogueOpen,
   setNpcDialogueOpen,
+  interactionTarget,
+  onInteractionAction,
+  onDismissInteraction,
 }: GameUIProps) => {
   const { activeBorderCosmetic } = useGameStore();
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
@@ -77,6 +90,21 @@ export const GameUI = ({
   const cosmetic = activeBorderCosmetic
     ? getCosmeticById(activeBorderCosmetic)
     : null;
+
+  // Build interaction actions from the tapped entity
+  const interactionActions = (() => {
+    if (!interactionTarget) return [];
+    if (interactionTarget.entityType === "npc") return getNpcActions();
+    if (interactionTarget.entityType === "tree") {
+      // Find tree entity to get stage/watered info
+      for (const t of treesQuery) {
+        if (t.id === interactionTarget.entityId && t.tree) {
+          return getTreeActions(t.tree.stage, t.tree.watered);
+        }
+      }
+    }
+    return [];
+  })();
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -176,6 +204,23 @@ export const GameUI = ({
 
       {/* Mini-map - desktop only, bottom-left */}
       <MiniMap />
+
+      {/* Interaction menu - shown when tapping a 3D object */}
+      {interactionTarget &&
+        interactionActions.length > 0 &&
+        onInteractionAction &&
+        onDismissInteraction && (
+          <div className="pointer-events-auto">
+            <InteractionMenu
+              screenX={interactionTarget.screenX}
+              screenY={interactionTarget.screenY}
+              entityType={interactionTarget.entityType}
+              actions={interactionActions}
+              onSelect={onInteractionAction}
+              onDismiss={onDismissInteraction}
+            />
+          </div>
+        )}
 
       {/* Modals */}
       <div className="pointer-events-auto">

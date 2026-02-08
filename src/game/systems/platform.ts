@@ -1,21 +1,21 @@
 /**
  * Platform Detection & Native Integration
- * 
+ *
  * Handles Capacitor integration for native features:
  * - Device detection (iOS, Android, Web)
  * - Haptic feedback
  * - Safe area insets
  */
 
-import { Capacitor } from '@capacitor/core';
-import { Device } from '@capacitor/device';
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Capacitor } from "@capacitor/core";
+import { Device } from "@capacitor/device";
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
 
 // ============================================
 // Platform Types
 // ============================================
 
-export type PlatformType = 'ios' | 'android' | 'web';
+export type PlatformType = "ios" | "android" | "web";
 
 export interface DeviceInfo {
   platform: PlatformType;
@@ -48,16 +48,16 @@ let safeAreaInsets: SafeAreaInsets = { top: 0, bottom: 0, left: 0, right: 0 };
 export const initializePlatform = async (): Promise<DeviceInfo> => {
   const platform = Capacitor.getPlatform() as PlatformType;
   const isNative = Capacitor.isNativePlatform();
-  
+
   let info: DeviceInfo = {
     platform,
     isNative,
-    model: 'Unknown',
-    osVersion: 'Unknown',
-    manufacturer: 'Unknown',
+    model: "Unknown",
+    osVersion: "Unknown",
+    manufacturer: "Unknown",
     isVirtual: false,
   };
-  
+
   try {
     if (isNative) {
       const deviceDetails = await Device.getInfo();
@@ -74,40 +74,46 @@ export const initializePlatform = async (): Promise<DeviceInfo> => {
       const ua = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
       const isIOS = /iPhone|iPad|iPod/i.test(ua);
-      
+
       info = {
-        platform: 'web',
+        platform: "web",
         isNative: false,
-        model: isMobile ? (isIOS ? 'iOS Browser' : 'Android Browser') : 'Desktop Browser',
+        model: isMobile
+          ? isIOS
+            ? "iOS Browser"
+            : "Android Browser"
+          : "Desktop Browser",
         osVersion: navigator.platform,
-        manufacturer: 'Browser',
+        manufacturer: "Browser",
         isVirtual: false,
       };
     }
   } catch (error) {
-    console.warn('Failed to get device info:', error);
+    console.warn("Failed to get device info:", error);
   }
-  
+
   deviceInfo = info;
-  
+
   // Get safe area insets
   updateSafeAreaInsets();
-  
+
   return info;
 };
 
 const updateSafeAreaInsets = () => {
   // Read CSS env variables for safe area
   const computedStyle = getComputedStyle(document.documentElement);
-  
+
   // Use fallback values if CSS env vars are not supported
   safeAreaInsets = {
-    top: parseInt(computedStyle.getPropertyValue('--sat') || '0', 10) || 
-         (deviceInfo?.platform === 'ios' ? 44 : 0),
-    bottom: parseInt(computedStyle.getPropertyValue('--sab') || '0', 10) ||
-            (deviceInfo?.platform === 'ios' ? 34 : 0),
-    left: parseInt(computedStyle.getPropertyValue('--sal') || '0', 10) || 0,
-    right: parseInt(computedStyle.getPropertyValue('--sar') || '0', 10) || 0,
+    top:
+      parseInt(computedStyle.getPropertyValue("--sat") || "0", 10) ||
+      (deviceInfo?.platform === "ios" ? 44 : 0),
+    bottom:
+      parseInt(computedStyle.getPropertyValue("--sab") || "0", 10) ||
+      (deviceInfo?.platform === "ios" ? 34 : 0),
+    left: parseInt(computedStyle.getPropertyValue("--sal") || "0", 10) || 0,
+    right: parseInt(computedStyle.getPropertyValue("--sar") || "0", 10) || 0,
   };
 };
 
@@ -116,11 +122,11 @@ const updateSafeAreaInsets = () => {
 // ============================================
 
 export const getDeviceInfo = (): DeviceInfo | null => deviceInfo;
-export const getPlatform = (): PlatformType => deviceInfo?.platform ?? 'web';
+export const getPlatform = (): PlatformType => deviceInfo?.platform ?? "web";
 export const isNative = (): boolean => deviceInfo?.isNative ?? false;
-export const isIOS = (): boolean => deviceInfo?.platform === 'ios';
-export const isAndroid = (): boolean => deviceInfo?.platform === 'android';
-export const isWeb = (): boolean => deviceInfo?.platform === 'web';
+export const isIOS = (): boolean => deviceInfo?.platform === "ios";
+export const isAndroid = (): boolean => deviceInfo?.platform === "android";
+export const isWeb = (): boolean => deviceInfo?.platform === "web";
 export const getSafeAreaInsets = (): SafeAreaInsets => safeAreaInsets;
 
 // ============================================
@@ -138,11 +144,11 @@ export const isHapticsEnabled = (): boolean => hapticsEnabled;
  */
 export const hapticLight = async (): Promise<void> => {
   if (!hapticsEnabled) return;
-  
+
   try {
     if (Capacitor.isNativePlatform()) {
       await Haptics.impact({ style: ImpactStyle.Light });
-    } else if ('vibrate' in navigator) {
+    } else if ("vibrate" in navigator) {
       navigator.vibrate(10);
     }
   } catch (_error) {
@@ -155,11 +161,11 @@ export const hapticLight = async (): Promise<void> => {
  */
 export const hapticMedium = async (): Promise<void> => {
   if (!hapticsEnabled) return;
-  
+
   try {
     if (Capacitor.isNativePlatform()) {
       await Haptics.impact({ style: ImpactStyle.Medium });
-    } else if ('vibrate' in navigator) {
+    } else if ("vibrate" in navigator) {
       navigator.vibrate(20);
     }
   } catch (_error) {
@@ -172,11 +178,11 @@ export const hapticMedium = async (): Promise<void> => {
  */
 export const hapticHeavy = async (): Promise<void> => {
   if (!hapticsEnabled) return;
-  
+
   try {
     if (Capacitor.isNativePlatform()) {
       await Haptics.impact({ style: ImpactStyle.Heavy });
-    } else if ('vibrate' in navigator) {
+    } else if ("vibrate" in navigator) {
       navigator.vibrate(30);
     }
   } catch (_error) {
@@ -189,13 +195,13 @@ export const hapticHeavy = async (): Promise<void> => {
  */
 export const hapticSelection = async (): Promise<void> => {
   if (!hapticsEnabled) return;
-  
+
   try {
     if (Capacitor.isNativePlatform()) {
       await Haptics.selectionStart();
       await Haptics.selectionChanged();
       await Haptics.selectionEnd();
-    } else if ('vibrate' in navigator) {
+    } else if ("vibrate" in navigator) {
       navigator.vibrate(5);
     }
   } catch (_error) {
@@ -208,11 +214,11 @@ export const hapticSelection = async (): Promise<void> => {
  */
 export const hapticSuccess = async (): Promise<void> => {
   if (!hapticsEnabled) return;
-  
+
   try {
     if (Capacitor.isNativePlatform()) {
       await Haptics.notification({ type: NotificationType.Success });
-    } else if ('vibrate' in navigator) {
+    } else if ("vibrate" in navigator) {
       navigator.vibrate([20, 50, 20]);
     }
   } catch (_error) {
@@ -225,11 +231,11 @@ export const hapticSuccess = async (): Promise<void> => {
  */
 export const hapticWarning = async (): Promise<void> => {
   if (!hapticsEnabled) return;
-  
+
   try {
     if (Capacitor.isNativePlatform()) {
       await Haptics.notification({ type: NotificationType.Warning });
-    } else if ('vibrate' in navigator) {
+    } else if ("vibrate" in navigator) {
       navigator.vibrate([30, 30, 30]);
     }
   } catch (_error) {
@@ -242,11 +248,11 @@ export const hapticWarning = async (): Promise<void> => {
  */
 export const hapticError = async (): Promise<void> => {
   if (!hapticsEnabled) return;
-  
+
   try {
     if (Capacitor.isNativePlatform()) {
       await Haptics.notification({ type: NotificationType.Error });
-    } else if ('vibrate' in navigator) {
+    } else if ("vibrate" in navigator) {
       navigator.vibrate([50, 30, 50, 30, 50]);
     }
   } catch (_error) {
@@ -262,7 +268,7 @@ export const getResponsiveScale = (): number => {
   const width = window.innerWidth;
   const height = window.innerHeight;
   const minDimension = Math.min(width, height);
-  
+
   // Scale factor based on screen size
   if (minDimension < 375) return 0.85;
   if (minDimension < 414) return 0.9;
@@ -273,7 +279,7 @@ export const getResponsiveScale = (): number => {
 
 export const isMobileDevice = (): boolean => {
   if (deviceInfo?.isNative) return true;
-  return window.innerWidth < 768 || 'ontouchstart' in window;
+  return window.innerWidth < 768 || "ontouchstart" in window;
 };
 
 export const isTabletDevice = (): boolean => {

@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  generateQuest,
-  generateDailyQuests,
-  updateQuestProgress,
-  getAllGoals,
   GOAL_POOLS,
+  generateDailyQuests,
+  generateQuest,
+  getAllGoals,
+  updateQuestProgress,
 } from "./quests";
 
 describe("Quest System", () => {
@@ -35,20 +35,26 @@ describe("Quest System", () => {
 
     it("some goals have resource rewards", () => {
       const allGoals = getAllGoals();
-      const withResources = allGoals.filter((g) => g.rewards.resources && g.rewards.resources.length > 0);
+      const withResources = allGoals.filter(
+        (g) => g.rewards.resources && g.rewards.resources.length > 0,
+      );
       expect(withResources.length).toBeGreaterThan(0);
     });
 
     it("some goals have seed rewards", () => {
       const allGoals = getAllGoals();
-      const withSeeds = allGoals.filter((g) => g.rewards.seeds && g.rewards.seeds.length > 0);
+      const withSeeds = allGoals.filter(
+        (g) => g.rewards.seeds && g.rewards.seeds.length > 0,
+      );
       expect(withSeeds.length).toBeGreaterThan(0);
     });
   });
 
   describe("Exploration goals", () => {
     it("has visit_non_starting goal", () => {
-      const goal = GOAL_POOLS.exploration.find((g) => g.id === "visit_non_starting");
+      const goal = GOAL_POOLS.exploration.find(
+        (g) => g.id === "visit_non_starting",
+      );
       expect(goal).toBeDefined();
       expect(goal!.targetType).toBe("zones_visited_non_starting");
     });
@@ -60,13 +66,17 @@ describe("Quest System", () => {
     });
 
     it("has visit_wild_forest goal with zoneType", () => {
-      const goal = GOAL_POOLS.exploration.find((g) => g.id === "visit_wild_forest");
+      const goal = GOAL_POOLS.exploration.find(
+        (g) => g.id === "visit_wild_forest",
+      );
       expect(goal).toBeDefined();
       expect(goal!.zoneType).toBe("forest");
     });
 
     it("has visit_settlement goal", () => {
-      const goal = GOAL_POOLS.exploration.find((g) => g.id === "visit_settlement");
+      const goal = GOAL_POOLS.exploration.find(
+        (g) => g.id === "visit_settlement",
+      );
       expect(goal).toBeDefined();
       expect(goal!.zoneType).toBe("settlement");
     });
@@ -74,7 +84,9 @@ describe("Quest System", () => {
 
   describe("Collection goals", () => {
     it("has timber collection goal", () => {
-      const goal = GOAL_POOLS.collection.find((g) => g.id === "collect_timber_50");
+      const goal = GOAL_POOLS.collection.find(
+        (g) => g.id === "collect_timber_50",
+      );
       expect(goal).toBeDefined();
       expect(goal!.targetType).toBe("timber_collected");
       expect(goal!.targetAmount).toBe(50);
@@ -87,13 +99,17 @@ describe("Quest System", () => {
     });
 
     it("has fruit collection goal", () => {
-      const goal = GOAL_POOLS.collection.find((g) => g.id === "collect_fruit_20");
+      const goal = GOAL_POOLS.collection.find(
+        (g) => g.id === "collect_fruit_20",
+      );
       expect(goal).toBeDefined();
       expect(goal!.targetAmount).toBe(20);
     });
 
     it("has acorn collection goal", () => {
-      const goal = GOAL_POOLS.collection.find((g) => g.id === "collect_acorns_15");
+      const goal = GOAL_POOLS.collection.find(
+        (g) => g.id === "collect_acorns_15",
+      );
       expect(goal).toBeDefined();
       expect(goal!.targetAmount).toBe(15);
     });
@@ -196,14 +212,22 @@ describe("Quest System", () => {
     it("marks goal as completed when target met", () => {
       const quest = generateQuest("easy", "spring")!;
       const goal = quest.goals[0];
-      const updated = updateQuestProgress(quest, goal.targetType, goal.targetAmount);
+      const updated = updateQuestProgress(
+        quest,
+        goal.targetType,
+        goal.targetAmount,
+      );
       expect(updated.goals[0].completed).toBe(true);
     });
 
     it("marks quest completed when all goals done", () => {
       const quest = generateQuest("easy", "spring")!;
       const goal = quest.goals[0];
-      const updated = updateQuestProgress(quest, goal.targetType, goal.targetAmount);
+      const updated = updateQuestProgress(
+        quest,
+        goal.targetType,
+        goal.targetAmount,
+      );
       expect(updated.completed).toBe(true);
     });
 

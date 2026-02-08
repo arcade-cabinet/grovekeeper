@@ -1,6 +1,16 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { world, generateEntityId, treesQuery, playerQuery, gridCellsQuery } from "./world";
-import { createTreeEntity, createPlayerEntity, createGridCellEntity } from "./archetypes";
+import { beforeEach, describe, expect, it } from "vitest";
+import {
+  createGridCellEntity,
+  createPlayerEntity,
+  createTreeEntity,
+} from "./archetypes";
+import {
+  generateEntityId,
+  gridCellsQuery,
+  playerQuery,
+  treesQuery,
+  world,
+} from "./world";
 
 describe("ECS World", () => {
   beforeEach(() => {

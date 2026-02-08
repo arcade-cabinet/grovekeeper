@@ -84,7 +84,8 @@ export const TOOLS: ToolData[] = [
   {
     id: "rain-catcher",
     name: "Rain Catcher",
-    description: "Place on tile: auto-waters trees in 2-tile radius during rain",
+    description:
+      "Place on tile: auto-waters trees in 2-tile radius during rain",
     icon: "cloud-rain",
     unlockLevel: 11,
     staminaCost: 4,
@@ -93,7 +94,8 @@ export const TOOLS: ToolData[] = [
   {
     id: "fertilizer-spreader",
     name: "Fertilizer Spreader",
-    description: "Area fertilize: 2x growth for all trees in 2-tile radius (costs 3 acorns)",
+    description:
+      "Area fertilize: 2x growth for all trees in 2-tile radius (costs 3 acorns)",
     icon: "sparkles",
     unlockLevel: 13,
     staminaCost: 8,
@@ -102,7 +104,8 @@ export const TOOLS: ToolData[] = [
   {
     id: "scarecrow",
     name: "Scarecrow",
-    description: "Place on tile: protects trees in 3-tile radius from windstorm damage",
+    description:
+      "Place on tile: protects trees in 3-tile radius from windstorm damage",
     icon: "shield",
     unlockLevel: 16,
     staminaCost: 6,
@@ -111,7 +114,8 @@ export const TOOLS: ToolData[] = [
   {
     id: "grafting-tool",
     name: "Grafting Tool",
-    description: "Graft a Mature+ tree to combine yields from 2 nearest species",
+    description:
+      "Graft a Mature+ tree to combine yields from 2 nearest species",
     icon: "git-merge",
     unlockLevel: 20,
     staminaCost: 15,

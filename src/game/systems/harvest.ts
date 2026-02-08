@@ -1,9 +1,10 @@
 // src/game/systems/harvest.ts
+
+import { getActiveDifficulty } from "../constants/difficulty";
 import { getSpeciesById } from "../constants/trees";
 import type { Entity } from "../ecs/world";
 import { harvestableQuery, structuresQuery, world } from "../ecs/world";
 import { getHarvestMultiplier } from "../structures/StructureManager";
-import { getActiveDifficulty } from "../constants/difficulty";
 
 /**
  * Initialize the harvestable component on a tree entity.
@@ -39,7 +40,9 @@ export function harvestSystem(deltaTime: number): void {
 
     entity.harvestable.cooldownElapsed += deltaTime;
 
-    if (entity.harvestable.cooldownElapsed >= entity.harvestable.cooldownTotal) {
+    if (
+      entity.harvestable.cooldownElapsed >= entity.harvestable.cooldownTotal
+    ) {
       entity.harvestable.ready = true;
     }
   }
@@ -49,23 +52,41 @@ export function harvestSystem(deltaTime: number): void {
  * Compute the yield multiplier for a tree at harvest time.
  * Takes current game state into account (season, structures, pruned, species).
  */
-function computeYieldMultiplier(entity: Entity, currentSeason?: string): number {
+function computeYieldMultiplier(
+  entity: Entity,
+  currentSeason?: string,
+): number {
   if (!entity.tree) return 1.0;
 
   const stageMultiplier = entity.tree.stage >= 4 ? 1.5 : 1.0;
   const prunedMultiplier = entity.tree.pruned ? 1.5 : 1.0;
   const structureMult = entity.position
-    ? getHarvestMultiplier(entity.position.x, entity.position.z, structuresQuery)
+    ? getHarvestMultiplier(
+        entity.position.x,
+        entity.position.z,
+        structuresQuery,
+      )
     : 1.0;
 
   // Ironbark: 3x timber at Old Growth
-  const ironbarkMult = (entity.tree.speciesId === "ironbark" && entity.tree.stage >= 4) ? 3.0 : 1.0;
+  const ironbarkMult =
+    entity.tree.speciesId === "ironbark" && entity.tree.stage >= 4 ? 3.0 : 1.0;
 
   // Golden Apple: 3x fruit yield in Autumn
-  const goldenAppleMult = (entity.tree.speciesId === "golden-apple" && currentSeason === "autumn") ? 3.0 : 1.0;
+  const goldenAppleMult =
+    entity.tree.speciesId === "golden-apple" && currentSeason === "autumn"
+      ? 3.0
+      : 1.0;
 
   const difficultyYieldMult = getActiveDifficulty().resourceYieldMult;
-  return stageMultiplier * prunedMultiplier * structureMult * ironbarkMult * goldenAppleMult * difficultyYieldMult;
+  return (
+    stageMultiplier *
+    prunedMultiplier *
+    structureMult *
+    ironbarkMult *
+    goldenAppleMult *
+    difficultyYieldMult
+  );
 }
 
 /**

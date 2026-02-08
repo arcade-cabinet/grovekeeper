@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { createPathFollow, advancePathFollow } from "./pathFollowing";
+import { describe, expect, it } from "vitest";
+import { advancePathFollow, createPathFollow } from "./pathFollowing";
 import type { TileCoord } from "./pathfinding";
 
 // CELL_SIZE is 1, so tile (3,4) center is at world (3,4)

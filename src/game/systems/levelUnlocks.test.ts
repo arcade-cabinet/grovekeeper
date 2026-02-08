@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  LEVEL_UNLOCKS,
-  getUnlocksForLevel,
-  getAllUnlocksUpToLevel,
   checkNewUnlocks,
+  getAllUnlocksUpToLevel,
+  getUnlocksForLevel,
+  LEVEL_UNLOCKS,
 } from "./levelUnlocks";
 
 describe("Level Unlock System", () => {
@@ -174,7 +174,12 @@ describe("Level Unlock System", () => {
 
     it("handles multi-level jumps across gaps (7->12)", () => {
       const result = checkNewUnlocks(7, 12);
-      expect(result.species).toEqual(["redwood", "silver-birch", "flame-maple", "baobab"]);
+      expect(result.species).toEqual([
+        "redwood",
+        "silver-birch",
+        "flame-maple",
+        "baobab",
+      ]);
       expect(result.tools).toEqual(["compost-bin", "rain-catcher"]);
     });
 

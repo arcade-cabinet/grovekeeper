@@ -130,9 +130,13 @@ const AnimatedToast = ({ item, onDismissed }: AnimatedToastProps) => {
   const colors = TOAST_COLORS[item.type];
 
   const noMotion = reduceMotion.current;
-  const translateY =
-    noMotion ? "0px"
-    : phase === "enter" ? "-20px" : phase === "exit" ? "-20px" : "0px";
+  const translateY = noMotion
+    ? "0px"
+    : phase === "enter"
+      ? "-20px"
+      : phase === "exit"
+        ? "-20px"
+        : "0px";
   const opacity = phase === "visible" ? 1 : 0;
   const transitionCSS = noMotion
     ? "none"

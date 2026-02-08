@@ -1,5 +1,7 @@
+import { RiTrophyLine } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -8,8 +10,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { RiTrophyLine } from "@remixicon/react";
 import { COLORS } from "../constants/config";
 import type { ActiveQuest, GoalDifficulty } from "../systems/quests";
 
@@ -199,7 +199,10 @@ const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
       </div>
 
       {/* Rewards */}
-      <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: `${COLORS.forestGreen}20` }}>
+      <div
+        className="flex items-center justify-between pt-1 border-t"
+        style={{ borderColor: `${COLORS.forestGreen}20` }}
+      >
         <div className="flex items-center gap-2 text-xs flex-wrap">
           <span style={{ color: COLORS.forestGreen }}>
             +{quest.rewards.xp} XP

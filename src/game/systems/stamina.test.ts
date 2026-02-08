@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { staminaSystem, drainStamina } from "./stamina";
-import { world, type Entity } from "../ecs/world";
+import { beforeEach, describe, expect, it } from "vitest";
 import { createPlayerEntity } from "../ecs/archetypes";
+import { type Entity, world } from "../ecs/world";
 import { useGameStore } from "../stores/gameStore";
+import { drainStamina, staminaSystem } from "./stamina";
 
 describe("Stamina System", () => {
   beforeEach(() => {
