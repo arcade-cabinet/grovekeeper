@@ -6,5 +6,6 @@ export { disposeModelCache } from "./ModelLoader";
 export { NpcMeshManager } from "./NpcMeshManager";
 export { PlayerMeshManager } from "./PlayerMeshManager";
 export { SceneManager } from "./SceneManager";
+export { SelectionRingManager } from "./SelectionRingManager";
 export { SkyManager } from "./SkyManager";
 export { TreeMeshManager } from "./TreeMeshManager";

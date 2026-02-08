@@ -26,6 +26,16 @@ export interface ObjectTapInfo {
   worldZ: number;
 }
 
+/** Information about a ground tap (empty ground or object location). */
+export interface GroundTapInfo {
+  worldX: number;
+  worldZ: number;
+  screenX: number;
+  screenY: number;
+  /** If an object was picked, its entity info; otherwise null. */
+  entity: { entityId: string; entityType: string } | null;
+}
+
 export interface InputManagerCallbacks {
   onAction: () => void;
   onOpenSeeds: () => void;
@@ -33,6 +43,8 @@ export interface InputManagerCallbacks {
   onSelectTool: (index: number) => void;
   /** Called when a pickable 3D object (tree, NPC, structure) is tapped. */
   onObjectTapped?: (info: ObjectTapInfo) => void;
+  /** Called when any ground position is tapped (empty ground or object location). */
+  onGroundTapped?: (info: GroundTapInfo) => void;
 }
 
 export interface InputManagerConfig {
@@ -67,6 +79,7 @@ export class InputManager {
   private config: InputManagerConfig | null = null;
   private mode: InputMode = "idle";
   private disabled = false;
+  private joystickActive = false;
   private pathState: PathFollowState | null = null;
 
   // Pointer tracking
@@ -149,6 +162,19 @@ export class InputManager {
     }
   }
 
+  setJoystickActive(active: boolean): void {
+    this.joystickActive = active;
+    if (active) {
+      // Cancel any ongoing drag — joystick takes priority
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.pointerId = -1;
+        if (this.config) this.config.movementRef.current = { x: 0, z: 0 };
+        this.setMode("idle");
+      }
+    }
+  }
+
   cancelPath(): void {
     this.pathState = null;
     if (this.mode === "pathfollow") {
@@ -159,6 +185,23 @@ export class InputManager {
 
   getMode(): InputMode {
     return this.mode;
+  }
+
+  /** Trigger A* pathfinding to a world position. Used by external callers (e.g. walk-to-act). */
+  startPathTo(targetX: number, targetZ: number): boolean {
+    if (!this.config) return false;
+    const targetTile: TileCoord = {
+      x: Math.round(targetX),
+      z: Math.round(targetZ),
+    };
+    const playerTile = this.config.getPlayerTile();
+    const bounds = this.config.getWorldBounds();
+    const grid = buildWalkabilityGrid(this.config.getGridCells(), bounds);
+    const path = findPath(grid, playerTile, targetTile);
+    if (!path || path.length === 0) return false;
+    this.pathState = createPathFollow(path);
+    this.setMode("pathfollow");
+    return true;
   }
 
   dispose(): void {
@@ -212,6 +255,7 @@ export class InputManager {
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (!this.isDragging && dist > this.dragThreshold) {
+      if (this.joystickActive) return; // Joystick owns movement — don't start drag
       this.isDragging = true;
       // Cancel any active pathfinding when starting a drag
       this.cancelPath();
@@ -277,36 +321,42 @@ export class InputManager {
         entityType: string;
       };
       const worldPos = pickResult.pickedPoint;
+      // Fallback to mesh position if pickedPoint is null (avoids false (0,0) origin)
+      const wx = worldPos?.x ?? pickResult.pickedMesh.position.x;
+      const wz = worldPos?.z ?? pickResult.pickedMesh.position.z;
+
+      // Legacy callback (still used for non-radial interactions)
       this.config.callbacks.onObjectTapped?.({
         entityId: meta.entityId,
         entityType: meta.entityType,
         screenX,
         screenY,
-        worldX: worldPos?.x ?? 0,
-        worldZ: worldPos?.z ?? 0,
+        worldX: wx,
+        worldZ: wz,
+      });
+
+      // Unified ground tap callback for radial menu
+      this.config.callbacks.onGroundTapped?.({
+        worldX: wx,
+        worldZ: wz,
+        screenX,
+        screenY,
+        entity: { entityId: meta.entityId, entityType: meta.entityType },
       });
       return;
     }
 
-    // Fallback: tap-to-move (A* pathfinding)
+    // Fallback: empty ground tap — emit onGroundTapped (caller decides pathfinding)
     const worldPos = screenToGroundPlane(screenX, screenY, scene);
     if (!worldPos) return;
 
-    // Convert to grid tile
-    const targetTile: TileCoord = {
-      x: Math.round(worldPos.x),
-      z: Math.round(worldPos.z),
-    };
-
-    const playerTile = this.config.getPlayerTile();
-    const bounds = this.config.getWorldBounds();
-    const grid = buildWalkabilityGrid(this.config.getGridCells(), bounds);
-    const path = findPath(grid, playerTile, targetTile);
-
-    if (!path || path.length === 0) return;
-
-    this.pathState = createPathFollow(path);
-    this.setMode("pathfollow");
+    this.config.callbacks.onGroundTapped?.({
+      worldX: worldPos.x,
+      worldZ: worldPos.z,
+      screenX,
+      screenY,
+      entity: null,
+    });
   }
 
   // -----------------------------------------------------------------------

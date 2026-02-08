@@ -39,6 +39,7 @@ import {
   NpcMeshManager,
   PlayerMeshManager,
   SceneManager,
+  SelectionRingManager,
   SkyManager,
   TreeMeshManager,
 } from "../scene";
@@ -56,7 +57,7 @@ import {
   harvestSystem,
   initHarvestable,
 } from "../systems/harvest";
-import type { ObjectTapInfo } from "../systems/InputManager";
+import type { GroundTapInfo, ObjectTapInfo } from "../systems/InputManager";
 import { InputManager } from "../systems/InputManager";
 import { movementSystem, setMovementBounds } from "../systems/movement";
 import { calculateAllOfflineGrowth } from "../systems/offlineGrowth";
@@ -86,13 +87,32 @@ import { showAchievement } from "../ui/AchievementPopup";
 import type { TileState } from "../ui/ActionButton";
 import { showParticle } from "../ui/FloatingParticles";
 import { GameUI } from "../ui/GameUI";
+import type { RadialAction } from "../ui/radialActions";
+import { getActionsForTile } from "../ui/radialActions";
 import { showToast } from "../ui/Toast";
 import { setShowPetals, setWeatherVisual } from "../ui/WeatherOverlay";
 import { createRNG, hashString } from "../utils/seedRNG";
+import { worldToScreen } from "../utils/worldToScreen";
 import type { WorldDefinition } from "../world";
 // World system
 import { WorldManager } from "../world";
 import startingWorldData from "../world/data/starting-world.json";
+
+/** Radial menu target — tile info for the tapped position. */
+interface RadialTarget {
+  worldX: number;
+  worldZ: number;
+  gridX: number;
+  gridZ: number;
+  cellType: string;
+  occupied: boolean;
+  treeEntityId: string | null;
+  treeStage: number;
+  treeWatered: boolean;
+  hasNpc: boolean;
+  /** Entity from object pick, if any. */
+  entity: { entityId: string; entityType: string } | null;
+}
 
 export const GameScene = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -115,6 +135,7 @@ export const GameScene = () => {
   const worldManagerRef = useRef(new WorldManager());
   const inputManagerRef = useRef(new InputManager());
   const playerGovernorRef = useRef(new PlayerGovernor());
+  const selectionRingRef = useRef(new SelectionRingManager());
   const [autopilot, setAutopilot] = useState(
     typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).has("autopilot"),
@@ -136,8 +157,17 @@ export const GameScene = () => {
     null,
   );
   const [npcDialogueOpen, setNpcDialogueOpen] = useState(false);
-  const [interactionTarget, setInteractionTarget] =
-    useState<ObjectTapInfo | null>(null);
+
+  // Radial action menu state
+  const [radialTarget, setRadialTarget] = useState<RadialTarget | null>(null);
+  const [radialScreenPos, setRadialScreenPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [radialActions, setRadialActions] = useState<RadialAction[]>([]);
+  const pendingRadialRef = useRef<RadialTarget | null>(null);
+  const lastRadialScreenRef = useRef<{ x: number; y: number } | null>(null);
+  const radialTargetRef = useRef<RadialTarget | null>(null);
 
   const {
     setScreen,
@@ -158,14 +188,14 @@ export const GameScene = () => {
         toolWheelOpen ||
         pauseMenuOpen ||
         npcDialogueOpen ||
-        !!interactionTarget,
+        !!radialTarget,
     );
   }, [
     seedSelectOpen,
     toolWheelOpen,
     pauseMenuOpen,
     npcDialogueOpen,
-    interactionTarget,
+    radialTarget,
   ]);
 
   // --- Autopilot (PlayerGovernor) toggle with G key ---
@@ -381,6 +411,10 @@ export const GameScene = () => {
         }
       }
 
+      // --- Selection ring setup ---
+      const selRing = selectionRingRef.current;
+      selRing.init(scene);
+
       // --- InputManager setup ---
       inputManagerRef.current.init({
         canvas: canvasRef.current!,
@@ -398,7 +432,12 @@ export const GameScene = () => {
               useGameStore.getState().setSelectedTool(tool.id);
             }
           },
-          onObjectTapped: (info: ObjectTapInfo) => setInteractionTarget(info),
+          onObjectTapped: (_info: ObjectTapInfo) => {
+            // Object taps are now handled via onGroundTapped (unified flow)
+          },
+          onGroundTapped: (info: GroundTapInfo) => {
+            handleGroundTapped(info);
+          },
         },
         getScene: () => scene,
         getGridCells: () => gridCellsQuery,
@@ -422,6 +461,103 @@ export const GameScene = () => {
         movementRef,
         getWorldBounds: () => worldMgr.getWorldBounds(),
       });
+
+      // --- Ground tap handler (radial menu flow) ---
+      function handleGroundTapped(info: GroundTapInfo): void {
+        // Dismiss any existing radial menu
+        radialTargetRef.current = null;
+        setRadialTarget(null);
+        setRadialActions([]);
+        setRadialScreenPos(null);
+        selRing.hide();
+        pendingRadialRef.current = null;
+
+        const gx = Math.round(info.worldX);
+        const gz = Math.round(info.worldZ);
+
+        // Look up tile context
+        let cellType = "soil";
+        let occupied = false;
+        let treeEntityId: string | null = null;
+        let treeStage = -1;
+        let treeWatered = false;
+
+        for (const cell of gridCellsQuery) {
+          if (cell.gridCell?.gridX === gx && cell.gridCell?.gridZ === gz) {
+            cellType = cell.gridCell.type;
+            occupied = cell.gridCell.occupied;
+            treeEntityId = cell.gridCell.treeEntityId ?? null;
+            break;
+          }
+        }
+
+        if (occupied && treeEntityId) {
+          for (const t of treesQuery) {
+            if (t.id === treeEntityId && t.tree) {
+              treeStage = t.tree.stage;
+              treeWatered = t.tree.watered;
+              break;
+            }
+          }
+        }
+
+        // Check for NPC at this tile
+        let hasNpc = false;
+        for (const npcEntity of npcsQuery) {
+          if (!npcEntity.npc || !npcEntity.position) continue;
+          if (
+            Math.round(npcEntity.position.x) === gx &&
+            Math.round(npcEntity.position.z) === gz
+          ) {
+            hasNpc = true;
+            break;
+          }
+        }
+
+        const target: RadialTarget = {
+          worldX: gx,
+          worldZ: gz,
+          gridX: gx,
+          gridZ: gz,
+          cellType,
+          occupied,
+          treeEntityId,
+          treeStage,
+          treeWatered,
+          hasNpc,
+          entity: info.entity,
+        };
+
+        // Build actions — skip if no actions (path tiles)
+        const actions = getActionsForTile({
+          cellType,
+          occupied,
+          treeStage,
+          treeWatered,
+          hasNpc,
+        });
+        if (actions.length === 0) return;
+
+        // Check adjacency (Chebyshev distance)
+        const player = playerQuery.first;
+        if (!player?.position) return;
+        const px = Math.round(player.position.x);
+        const pz = Math.round(player.position.z);
+        const dist = Math.max(Math.abs(gx - px), Math.abs(gz - pz));
+
+        if (dist <= 1) {
+          // Already adjacent — show ring + menu immediately
+          selRing.show(gx, gz);
+          radialTargetRef.current = target;
+          setRadialTarget(target);
+          setRadialActions(actions);
+          // Screen pos will be computed in game loop
+        } else {
+          // Walk there first, then show
+          pendingRadialRef.current = target;
+          inputManagerRef.current.startPathTo(gx, gz);
+        }
+      }
 
       // --- Helper functions (defined inside useEffect to avoid stale closures) ---
 
@@ -647,6 +783,55 @@ export const GameScene = () => {
         // InputManager update (path following) — must run before movementSystem
         inputManagerRef.current.update();
 
+        // Selection ring pulse animation
+        selRing.update(dt);
+
+        // Walk-to-act: detect path completion when we have a pending radial target
+        if (
+          pendingRadialRef.current &&
+          inputManagerRef.current.getMode() === "idle"
+        ) {
+          const pending = pendingRadialRef.current;
+          pendingRadialRef.current = null;
+
+          const actions = getActionsForTile({
+            cellType: pending.cellType,
+            occupied: pending.occupied,
+            treeStage: pending.treeStage,
+            treeWatered: pending.treeWatered,
+            hasNpc: pending.hasNpc,
+          });
+
+          if (actions.length > 0) {
+            selRing.show(pending.gridX, pending.gridZ);
+            radialTargetRef.current = pending;
+            setRadialTarget(pending);
+            setRadialActions(actions);
+          }
+        }
+
+        // Update radial menu screen position (throttled to >1px change)
+        const curRadial = radialTargetRef.current;
+        if (curRadial) {
+          const pos = worldToScreen(
+            curRadial.worldX,
+            0.02,
+            curRadial.worldZ,
+            scene,
+          );
+          if (pos) {
+            const lastPos = lastRadialScreenRef.current;
+            if (
+              !lastPos ||
+              Math.abs(pos.x - lastPos.x) > 1 ||
+              Math.abs(pos.y - lastPos.y) > 1
+            ) {
+              lastRadialScreenRef.current = pos;
+              setRadialScreenPos(pos);
+            }
+          }
+        }
+
         // PlayerGovernor update — drives movement when autopilot is active
         playerGovernorRef.current.update(dt);
 
@@ -777,6 +962,7 @@ export const GameScene = () => {
     return () => {
       cancelled = true;
       inputManagerRef.current.dispose();
+      selectionRingRef.current.dispose();
       worldMgr.dispose();
       npcMesh.dispose();
       treeMesh.dispose();
@@ -1304,17 +1490,30 @@ export const GameScene = () => {
     }
   }, [addResource, addXp, incrementTreesHarvested]);
 
-  const handleInteractionAction = useCallback(
+  const dismissRadial = useCallback(() => {
+    radialTargetRef.current = null;
+    setRadialTarget(null);
+    setRadialActions([]);
+    setRadialScreenPos(null);
+    lastRadialScreenRef.current = null;
+    selectionRingRef.current.hide();
+    pendingRadialRef.current = null;
+  }, []);
+
+  const handleRadialAction = useCallback(
     async (actionId: string) => {
-      if (!interactionTarget) return;
+      const target = radialTarget;
+      dismissRadial();
+      if (!target) return;
 
-      const { entityId, entityType } = interactionTarget;
-      setInteractionTarget(null);
-
-      if (entityType === "npc") {
-        // Find the NPC entity and open dialogue
+      // NPC talk
+      if (actionId === "talk") {
         for (const npcEntity of npcsQuery) {
-          if (npcEntity.id === entityId && npcEntity.npc) {
+          if (!npcEntity.npc || !npcEntity.position) continue;
+          if (
+            Math.round(npcEntity.position.x) === target.gridX &&
+            Math.round(npcEntity.position.z) === target.gridZ
+          ) {
             nearbyNpcRef.current = npcEntity;
             setNearbyNpcTemplateId(npcEntity.npc.templateId);
             setNpcDialogueOpen(true);
@@ -1324,48 +1523,48 @@ export const GameScene = () => {
         return;
       }
 
-      if (entityType === "tree") {
-        // Find the tree entity
-        let treeEntity = null;
-        for (const t of treesQuery) {
-          if (t.id === entityId) {
-            treeEntity = t;
-            break;
-          }
-        }
-        if (!treeEntity?.tree) return;
-
-        // Find the grid cell for this tree
-        let gc: GridCellComponent | null = null;
-        if (treeEntity.position) {
-          const gx = Math.round(treeEntity.position.x);
-          const gz = Math.round(treeEntity.position.z);
-          for (const cell of gridCellsQuery) {
-            if (cell.gridCell?.gridX === gx && cell.gridCell?.gridZ === gz) {
-              gc = cell.gridCell;
-              break;
-            }
-          }
-        }
-        if (!gc) return;
-
-        switch (actionId) {
-          case "water":
-            if (gc.treeEntityId) await toolActions["watering-can"]?.(gc);
-            break;
-          case "prune":
-            if (gc.treeEntityId) await toolActions["pruning-shears"]?.(gc);
-            break;
-          case "harvest":
-            if (gc.treeEntityId) await toolActions.axe?.(gc);
-            break;
-          case "inspect":
-            if (gc.treeEntityId) await toolActions.almanac?.(gc);
-            break;
+      // Find the grid cell at the target tile
+      let gc: GridCellComponent | null = null;
+      for (const cell of gridCellsQuery) {
+        if (
+          cell.gridCell?.gridX === target.gridX &&
+          cell.gridCell?.gridZ === target.gridZ
+        ) {
+          gc = cell.gridCell;
+          break;
         }
       }
+      if (!gc) return;
+
+      // Map radial action IDs to tool actions
+      switch (actionId) {
+        case "water":
+          await toolActions["watering-can"]?.(gc);
+          break;
+        case "harvest":
+          await toolActions.axe?.(gc);
+          break;
+        case "prune":
+          await toolActions["pruning-shears"]?.(gc);
+          break;
+        case "plant":
+          await toolActions.trowel?.(gc);
+          break;
+        case "clear":
+          await toolActions.shovel?.(gc);
+          break;
+        case "dig-up":
+          await toolActions.shovel?.(gc);
+          break;
+        case "fertilize":
+          await toolActions["compost-bin"]?.(gc);
+          break;
+        case "inspect":
+          await toolActions.almanac?.(gc);
+          break;
+      }
     },
-    [interactionTarget, toolActions],
+    [radialTarget, dismissRadial, toolActions],
   );
 
   return (
@@ -1410,9 +1609,14 @@ export const GameScene = () => {
         nearbyNpcTemplateId={nearbyNpcTemplateId}
         npcDialogueOpen={npcDialogueOpen}
         setNpcDialogueOpen={setNpcDialogueOpen}
-        interactionTarget={interactionTarget}
-        onInteractionAction={handleInteractionAction}
-        onDismissInteraction={() => setInteractionTarget(null)}
+        radialActions={radialActions}
+        radialScreenPos={radialScreenPos}
+        onRadialAction={handleRadialAction}
+        onDismissRadial={dismissRadial}
+        movementRef={movementRef}
+        onJoystickActiveChange={(active) => {
+          inputManagerRef.current.setJoystickActive(active);
+        }}
       />
     </div>
   );
