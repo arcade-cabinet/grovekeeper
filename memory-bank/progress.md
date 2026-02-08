@@ -2,7 +2,7 @@
 
 ## Implementation Status
 
-All 32 spec sections are implemented. Phase D is complete. World Architecture Overhaul is complete.
+All 32 spec sections are implemented. Phase D is complete. World Architecture Overhaul is complete. Mobile UX Overhaul is complete.
 
 ## Spec Section Compliance
 
@@ -35,28 +35,34 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 - [x] Multi-zone support with per-zone grid sizes
 
 ### 3D Scene (Spec Section 11)
-- [x] Orthographic ArcRotateCamera (viewport-adaptive scaling, 14-40 tiles visible)
+- [x] Perspective ArcRotateCamera (replaced orthographic; viewport-adaptive, 14-40 tiles visible)
 - [x] Ground plane with DynamicTexture biome blending
 - [x] Grid overlay
 - [x] Hemisphere + directional lighting
 - [x] HDRI skybox with IBL environment
 - [x] Dynamic sky colors based on time of day
 - [x] StandardMaterial (NOT PBR) for structures and trees
+- [x] 3D character models (player farmer, NPC villagers)
 
 ### Farmer Character (Spec Section 12)
 - [x] Low-poly mesh from primitives (body, head, hat)
-- [x] Movement via joystick input + WASD
-- [x] Orthographic input conversion
+- [x] Movement via virtual joystick (mobile) + WASD (desktop)
+- [x] Perspective camera input conversion
+- [x] Smooth rotation toward movement direction
 - [x] Camera follows player across zones
 
 ### Controls (Spec Section 13)
 - [x] Unified InputManager (replaced nipplejs)
-- [x] Drag-to-move (mobile), WASD/arrow keys (desktop)
+- [x] Virtual joystick (mobile, bottom-left), WASD/arrow keys (desktop)
 - [x] Tap/click-to-move with A* pathfinding
-- [x] Orthographic input conversion
+- [x] Radial action menu on tap (trees, NPCs, ground, structures)
+- [x] Selection ring (3D torus) on tapped objects
+- [x] Walk-to-act: pathfind then show radial menu on arrival
+- [x] Mobile action buttons (bottom-right): primary action, seeds, pause
 - [x] Tile selection via raycast (tap)
-- [x] Context-sensitive action button
+- [x] Context-sensitive action button (desktop BottomControls)
 - [x] Passive pointer listeners, prefers-reduced-motion camera
+- [x] Joystick active flag prevents drag-to-move conflicts
 
 ### Tree Catalog (Spec Section 14)
 - [x] 12 base species with full spec data
@@ -177,7 +183,7 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 
 ### Testing (Spec Section 29)
 - [x] Vitest configured with happy-dom
-- [x] 755 tests across 37 test files, all passing
+- [x] 1188 tests across 58 test files, all passing
 
 ### PWA (Spec Section 30-32)
 - [x] PWA manifest (public/manifest.json)
@@ -228,28 +234,63 @@ All 32 spec sections are implemented. Phase D is complete. World Architecture Ov
 - [x] Write WorldGenerator tests (32 tests)
 - [x] Integrate with prestige reset
 
+## Mobile UX Overhaul (PR #12-15)
+
+### Phase 1: Camera Overhaul
+- [x] Switch from orthographic to perspective ArcRotateCamera
+- [x] Update input conversion for perspective projection
+
+### Phase 2: 3D Character Models
+- [x] Player farmer mesh with smooth rotation
+- [x] NPC villager meshes
+- [x] Prevent mesh disappearing during rotation
+
+### Phase 3: Tap/Click Object Interaction
+- [x] Object picking via raycast (trees, NPCs, structures)
+- [x] Radial action menu at tap position
+- [x] Walk-to-act: pathfind to target, then show radial on arrival
+- [x] Selection ring (3D torus) for tapped objects
+- [x] radialActions.ts: pure function building actions per tile/entity state
+- [x] worldToScreen.ts: BabylonJS Vector3 to screen coordinate projection
+
+### Phase 4: Input Refinement
+- [x] InputManager joystickActive flag to prevent drag conflicts
+- [x] Keyboard overrides joystick movement
+
+### Phase 5: Custom Virtual Joystick + Mobile Action Buttons
+- [x] VirtualJoystick.tsx: woodland-themed (parchment base, moss knob, cardinal dots)
+- [x] 60fps DOM mutation pattern (no React re-renders during drag)
+- [x] Dead zone, pointer capture, spring-back animation
+- [x] MobileActionButtons.tsx: context-sensitive primary action, seeds, pause
+- [x] Responsive layout: joystick bottom-left, buttons bottom-right
+
+### Phase 6: Polish
+- [x] Removed deprecated InteractionMenu.tsx
+- [x] Verified all touch targets >= 44px
+- [x] Production bundle: 138KB initial gzip
+- [x] CodeRabbit review fixes: hardware scaling, double-init guard, event handling, mesh fallback
+
 ## Test Coverage Summary
 
-**755 tests** across **37 test files**, all passing. TypeScript clean.
+**1188 tests** across **58 test files**, all passing. TypeScript clean.
 
 Test files cover:
 - gameStore (state transitions)
-- growth system
-- movement system
-- weather system
-- achievements system
-- prestige system
-- gridExpansion system
-- offlineGrowth system
-- levelUnlocks system
-- treeMeshBuilder utils
-- gridMath utils
-- seedRNG utils
-- tool catalog
-- tree catalog
-- ECS world
-- WorldManager (zone loading, structure rendering)
-- WorldGenerator (procedural world generation)
+- growth, movement, weather, time systems
+- achievements, prestige, prestige milestones
+- gridExpansion, gridGeneration, levelUnlocks
+- offlineGrowth, stamina, harvest, saveLoad
+- InputManager, pathfinding, pathFollowing
+- discovery, recipes, trading, seasonalMarket
+- toolUpgrades, wildTreeRegrowth, zoneBonuses
+- treeMeshBuilder, spsTreeGenerator, gridMath, seedRNG, projection
+- tool catalog, tree catalog, config, difficulty, resources
+- ECS world, archetypes
+- WorldManager, WorldGenerator, ZoneLoader, world archetypes
+- PropFactory, BlockMeshFactory, StructureManager
+- NpcManager, NpcDialogue, NewGameModal
+- Integration tests, HeadlessGameLoop, GovernorAgent, governor E2E
+- PlayerGovernor, db queries, localStorage migration
 
 ## Known Issues
 
@@ -269,3 +310,4 @@ Minimal remaining issues:
 - **v0.5.0** -- World Architecture Overhaul: Multi-zone world system, structure placement, procedural world generation, scene decomposition, miniplex-react integration, SVG minimap. GameScene.tsx refactored from ~1050 to ~400 lines. Camera changed to orthographic diorama (NOT isometric). Biome 2.3 with configured overrides.
 - **v0.6.0** -- Alpha Release: New systems (discovery, recipes, trading, seasonal market, tool upgrades, wild tree regrowth, zone bonuses). 15 species (12 base + 3 prestige). 751 tests across 37 files.
 - **v0.6.1** -- Unified InputManager (replaced nipplejs), A* pathfinding, tap/click-to-move. CI/CD with GitHub Pages deploy. 6 CodeRabbit improvements (O(n) growth, late-binding harvest, passive listeners, reduced-motion camera, deterministic wild trees). 755 tests.
+- **v0.7.0** -- Mobile UX Overhaul: Perspective camera, 3D character models, virtual joystick (custom woodland-themed), mobile action buttons, radial action menu with selection ring, walk-to-act, worldToScreen projection. PR #12-15. 1188 tests across 58 files.

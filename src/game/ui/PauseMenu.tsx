@@ -67,9 +67,11 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
     achievements,
     activeBorderCosmetic,
     difficulty,
+    soundEnabled,
     expandGrid,
     performPrestige,
     setActiveBorderCosmetic,
+    setSoundEnabled,
   } = useGameStore();
 
   const [confirmingPrestige, setConfirmingPrestige] = useState(false);
@@ -590,6 +592,34 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
           )}
 
           <Separator />
+
+          {/* Settings */}
+          <Card className="p-3" style={{ background: "white" }}>
+            <h4
+              className="text-sm font-bold mb-2"
+              style={{ color: COLORS.soilDark }}
+            >
+              Settings
+            </h4>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-700">Sound Effects</span>
+              <button
+                className="w-12 h-7 rounded-full transition-colors relative"
+                style={{
+                  background: soundEnabled ? COLORS.forestGreen : "#D1D5DB",
+                }}
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                aria-label="Toggle sound"
+              >
+                <span
+                  className="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform"
+                  style={{
+                    left: soundEnabled ? "calc(100% - 1.625rem)" : "0.125rem",
+                  }}
+                />
+              </button>
+            </div>
+          </Card>
 
           <div className="flex flex-col gap-2">
             <Button

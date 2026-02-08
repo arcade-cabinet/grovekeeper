@@ -1,14 +1,25 @@
 # Active Context -- Grovekeeper
 
-## Current State (2026-02-07)
+## Current State (2026-02-08)
 
-Alpha release is live at https://arcade-cabinet.github.io/grovekeeper/. All game systems implemented. CI/CD pipeline with GitHub Actions (CI + Deploy + Release). Unified InputManager replaced nipplejs with drag-to-move, WASD, and tap/click-to-move A* pathfinding. 755 tests across 37 files, all passing. TypeScript clean.
+Alpha release is live at https://arcade-cabinet.github.io/grovekeeper/. All game systems implemented. Mobile UX overhaul complete with perspective camera, virtual joystick, radial action menu, and mobile action buttons. 1188 tests across 58 files, all passing. TypeScript clean.
 
 ## What's Working
 
 Complete list of all implemented systems:
 
-### World Architecture (NEW)
+### Mobile UX Overhaul (NEW -- v0.7.0)
+- Perspective ArcRotateCamera (replaced orthographic)
+- 3D character models (player farmer, NPC villagers) with smooth rotation
+- Virtual joystick (bottom-left): custom woodland-themed, 60fps DOM mutation, dead zone, spring-back
+- Mobile action buttons (bottom-right): context-sensitive primary action, seeds, pause
+- Radial action menu: circular action picker at tap position for trees/NPCs/ground/structures
+- Selection ring: 3D torus highlight on tapped objects
+- Walk-to-act: pathfind to target, show radial menu on arrival
+- worldToScreen projection utility (engine hardware scaling aware)
+- InputManager joystick integration (prevents drag conflicts)
+
+### World Architecture
 - Multi-zone world system with seamless zone transitions
 - 3 starting zones: Starting Grove (12x12, soil), Forest Trail (4x8, dirt), Sunlit Clearing (8x8, grass)
 - WorldManager with zone loading/unloading and structure mesh rendering
@@ -17,7 +28,7 @@ Complete list of all implemented systems:
 - Per-zone tree save format
 - Zone archetype definitions with biome rules
 
-### Structure System (NEW)
+### Structure System
 - 6 structures: Wooden Fence, Tool Shed, Greenhouse, Market Stall, Well, Bench
 - StructureManager with placement validation and effect queries
 - BlockMeshFactory for procedural mesh generation from block definitions
@@ -25,25 +36,21 @@ Complete list of all implemented systems:
 - PlacementGhost for translucent placement preview
 - Block catalog (blocks.json) and structure templates (structures.json)
 
-### Scene Architecture (REFACTORED)
-- GameScene.tsx reduced from ~1050 lines to ~400-line orchestrator
+### Scene Architecture
+- GameScene.tsx orchestrator (~1600 lines with mobile UX additions)
 - Modular managers:
   - SceneManager: Engine + Scene creation/disposal
-  - CameraManager: Orthographic ArcRotateCamera (NOT isometric), viewport-adaptive scaling (14-40 tiles visible)
+  - CameraManager: Perspective ArcRotateCamera, viewport-adaptive
   - LightingManager: Hemisphere + directional light, day/night sync
-  - GroundBuilder: DynamicTexture biome blending (distance-field weights, inverse smoothstep)
-  - SkyManager: HDRI skybox (HDRCubeTexture) + IBL environment
-  - PlayerMeshManager: Player mesh lifecycle
+  - GroundBuilder: DynamicTexture biome blending
+  - SkyManager: HDRI skybox + IBL environment
+  - PlayerMeshManager: Player mesh lifecycle with smooth rotation
   - TreeMeshManager: Template cache, clone, growth animation lerp, matrix freezing
   - BorderTreeManager: Decorative border tree placement
-
-### Minimap (REWRITTEN)
-- SVG-based minimap using miniplex-react's createReactAPI
-- ECS.Entities for reactive zone/structure/tree rendering
-- MiniMapOverlay for mobile fullscreen minimap
+  - SelectionRingManager: 3D torus highlight ring for tap interactions
 
 ### 3D Scene and Rendering
-- BabylonJS scene with orthographic diorama camera (30° beta, camera from south)
+- BabylonJS scene with perspective camera
 - HDRI skybox from Poly Haven with IBL environment
 - DynamicTexture ground with smooth biome blending
 - StandardMaterial (NOT PBR) for structures and trees
@@ -57,7 +64,8 @@ Complete list of all implemented systems:
 - Seasonal tree mesh rebuild on season change
 
 ### Gameplay Systems
-- Unified InputManager: drag-to-move (mobile), WASD (desktop), tap/click-to-move with A* pathfinding
+- Unified InputManager: virtual joystick (mobile), WASD (desktop), tap-to-move with A* pathfinding
+- Radial action menu for tap interactions (replaces old InteractionMenu)
 - Camera follows player smoothly across zone transitions (snaps when prefers-reduced-motion)
 - 5-stage growth system with spec formula (season, difficulty, water multipliers)
 - Weather events (rain/drought/windstorm) with CSS overlays
@@ -89,24 +97,27 @@ Complete list of all implemented systems:
 ### Infrastructure
 - CI/CD: GitHub Actions (CI + Deploy to GitHub Pages + Release)
 - Live at: https://arcade-cabinet.github.io/grovekeeper/
-- Code splitting (107 KB initial, ~500 KB total game load)
+- Code splitting (138 KB initial gzip, ~500 KB total game load)
 - PWA manifest + service worker
 - Zustand persistence with localStorage
 - Capacitor configured (not yet built for native)
 - Biome 2.3 with configured overrides for tests, .d.ts, shadcn, game UI
 
-## No Active Work
+## Active Work (2026-02-08)
 
-The game is feature-complete. Alpha release live on GitHub Pages.
+Working on the next round of improvements:
 
-## Potential Future Work
+1. **SonarCloud quality gate** -- Failing on CI, needs investigation and fix
+2. **Sound/audio system** -- No audio currently, adding ambient + SFX
+3. **Tutorial improvements** -- Replace basic RulesModal with interactive onboarding
+4. **Capacitor native builds** -- Initialize iOS/Android platforms
+5. **E2E tests** -- Add Playwright for critical user flows
+6. **Performance profiling** -- Real device testing and optimization
 
-- Native Capacitor builds (iOS/Android) -- config exists, no platform directories yet
-- Sound effects and ambient audio -- no audio system implemented
-- Social features (compare groves) -- would require a backend
-- Additional prestige species beyond current 3
-- Additional zone types and biomes beyond current archetypes
-- Structure upgrade tiers (basic → enhanced → advanced)
-- Tutorial improvements (current RulesModal is basic)
-- Performance profiling on actual mobile devices
-- E2E testing with Playwright or Cypress
+## Known Issues
+
+1. SonarCloud quality gate failing on CI (pre-existing, not from recent changes)
+2. Capacitor native builds not yet created (no `ios/` or `android/` directories)
+3. No audio system (sound effects and ambient audio)
+4. RulesModal tutorial is basic
+5. No E2E tests

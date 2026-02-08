@@ -61,6 +61,7 @@ import type { GroundTapInfo, ObjectTapInfo } from "../systems/InputManager";
 import { InputManager } from "../systems/InputManager";
 import { movementSystem, setMovementBounds } from "../systems/movement";
 import { calculateAllOfflineGrowth } from "../systems/offlineGrowth";
+import { audioManager } from "../systems/AudioManager";
 import { hapticLight, hapticMedium, hapticSuccess } from "../systems/platform";
 import {
   deserializeGrove,
@@ -180,6 +181,15 @@ export const GameScene = () => {
     hapticsEnabled,
     addResource,
   } = useGameStore();
+
+  // --- Sync audio enabled with gameStore ---
+  useEffect(() => {
+    audioManager.setEnabled(useGameStore.getState().soundEnabled);
+    const unsub = useGameStore.subscribe((s) => {
+      audioManager.setEnabled(s.soundEnabled);
+    });
+    return unsub;
+  }, []);
 
   // --- InputManager dialog disable sync ---
   useEffect(() => {
@@ -430,6 +440,7 @@ export const GameScene = () => {
               useGameStore.getState().unlockedTools.includes(tool.id)
             ) {
               useGameStore.getState().setSelectedTool(tool.id);
+              audioManager.play("toolSelect");
             }
           },
           onObjectTapped: (_info: ObjectTapInfo) => {
@@ -681,6 +692,7 @@ export const GameScene = () => {
         for (const id of newAchievements) {
           store.unlockAchievement(id);
           showAchievement(id);
+          audioManager.play("achievement");
           const def = ACHIEVEMENT_DEFS.find((a) => a.id === id);
           showToast(def ? def.name : id, "achievement");
         }
@@ -924,6 +936,7 @@ export const GameScene = () => {
           useGameStore.getState().trackSeason(currentTime.season);
 
           treeMesh.rebuildAll(scene, currentTime.season, currentIsNight);
+          audioManager.play("seasonChange");
         }
 
         // Periodic updates (every 5s)
@@ -963,6 +976,7 @@ export const GameScene = () => {
       cancelled = true;
       inputManagerRef.current.dispose();
       selectionRingRef.current.dispose();
+      audioManager.dispose();
       worldMgr.dispose();
       npcMesh.dispose();
       treeMesh.dispose();
@@ -1000,6 +1014,7 @@ export const GameScene = () => {
 
   const useTrowel = async (gc: GridCellComponent) => {
     if (gc.occupied) return;
+    audioManager.play("click");
     if (hapticsEnabled) await hapticLight();
     setSeedSelectOpen(true);
   };
@@ -1012,6 +1027,7 @@ export const GameScene = () => {
     addXp(5);
     incrementTreesWatered();
     showParticle("+5 XP");
+    audioManager.play("water");
     if (hapticsEnabled) await hapticLight();
   };
 
@@ -1063,6 +1079,7 @@ export const GameScene = () => {
     gc.occupied = false;
     gc.treeEntityId = null;
     debouncedSaveGrove();
+    audioManager.play("harvest");
     if (hapticsEnabled) await hapticSuccess();
   };
 
@@ -1083,6 +1100,7 @@ export const GameScene = () => {
     addXp(5);
     showParticle("+5 XP");
     showToast("Fertilized! 2x growth for this stage.", "success");
+    audioManager.play("success");
     if (hapticsEnabled) await hapticLight();
   };
 
@@ -1103,6 +1121,7 @@ export const GameScene = () => {
     addXp(5);
     showParticle("+5 XP");
     showToast("Pruned! 1.5x yield on next harvest.", "success");
+    audioManager.play("chop");
     if (hapticsEnabled) await hapticLight();
   };
 
@@ -1115,6 +1134,7 @@ export const GameScene = () => {
       showParticle("+12 XP");
       showToast("Cleared rocks!", "success");
       debouncedSaveGrove();
+      audioManager.play("chop");
       if (hapticsEnabled) await hapticMedium();
       return;
     }
@@ -1130,6 +1150,7 @@ export const GameScene = () => {
         showParticle("+5 XP");
         showToast("Removed seedling.", "success");
         debouncedSaveGrove();
+        audioManager.play("chop");
         if (hapticsEnabled) await hapticMedium();
       }
     }
@@ -1176,6 +1197,7 @@ export const GameScene = () => {
       "Rain Catcher placed! Waters nearby trees during rain.",
       "success",
     );
+    audioManager.play("build");
     if (hapticsEnabled) await hapticMedium();
   };
 
@@ -1202,6 +1224,7 @@ export const GameScene = () => {
     addXp(15);
     showParticle("+15 XP");
     showToast(`Fertilized ${count} trees! 2x growth.`, "success");
+    audioManager.play("success");
     if (hapticsEnabled) await hapticMedium();
   };
 
@@ -1225,6 +1248,7 @@ export const GameScene = () => {
     addXp(10);
     showParticle("+10 XP");
     showToast("Scarecrow placed! Protects nearby trees from wind.", "success");
+    audioManager.play("build");
     if (hapticsEnabled) await hapticMedium();
   };
 
@@ -1263,6 +1287,7 @@ export const GameScene = () => {
     addXp(25);
     showParticle("+25 XP");
     showToast(`Grafted! Combined yields with ${nearbySpecies[0]}.`, "success");
+    audioManager.play("success");
     if (hapticsEnabled) await hapticSuccess();
   };
 
@@ -1353,6 +1378,7 @@ export const GameScene = () => {
       store.setBuildMode(false);
       showToast(`Built ${template.name}!`, "success");
       showParticle("+Build");
+      audioManager.play("build");
       if (hapticsEnabled) await hapticSuccess();
       debouncedSaveGrove();
       return;
@@ -1445,6 +1471,7 @@ export const GameScene = () => {
         showParticle(`+${plantXp} XP`);
 
         debouncedSaveGrove();
+        audioManager.play("plant");
         if (hapticsEnabled) await hapticMedium();
         break;
       }
@@ -1487,6 +1514,7 @@ export const GameScene = () => {
         .map(([r, a]) => `+${a} ${r.charAt(0).toUpperCase() + r.slice(1)}`)
         .join(", ");
       showToast(`Harvested ${count} trees! ${summary}`, "success");
+      audioManager.play("harvest");
     }
   }, [addResource, addXp, incrementTreesHarvested]);
 

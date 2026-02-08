@@ -27,32 +27,25 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          sqljs: ["sql.js"],
-          babylon: [
-            "@babylonjs/core/Engines/engine",
-            "@babylonjs/core/scene",
-            "@babylonjs/core/Cameras/camera",
-            "@babylonjs/core/Cameras/arcRotateCamera",
-            "@babylonjs/core/Lights/hemisphericLight",
-            "@babylonjs/core/Lights/directionalLight",
-            "@babylonjs/core/Maths/math.vector",
-            "@babylonjs/core/Maths/math.color",
-            "@babylonjs/core/Meshes/mesh",
-            "@babylonjs/core/Meshes/Builders/boxBuilder",
-            "@babylonjs/core/Meshes/Builders/cylinderBuilder",
-            "@babylonjs/core/Meshes/Builders/groundBuilder",
-            "@babylonjs/core/Meshes/Builders/sphereBuilder",
-            "@babylonjs/core/Meshes/Builders/discBuilder",
-            "@babylonjs/core/Meshes/Builders/ribbonBuilder",
-            "@babylonjs/core/Materials/standardMaterial",
-            "@babylonjs/core/Materials/PBR/pbrMaterial",
-            "@babylonjs/core/Materials/Textures/texture",
-            "@babylonjs/core/Materials/Textures/cubeTexture",
-            "@babylonjs/core/Materials/Textures/dynamicTexture",
-            "@babylonjs/core/Materials/Textures/hdrCubeTexture",
-            "@babylonjs/core/Particles/solidParticleSystem",
-          ],
+        manualChunks(id) {
+          if (id.includes("@babylonjs/")) {
+            // Keep shader/material/debug chunks lazy-loaded
+            if (
+              id.includes("/Shaders/") ||
+              id.includes("/ShadersInclude/") ||
+              id.includes("/ShadersWGSL/") ||
+              id.includes("/FlowGraph/") ||
+              id.includes("/PostProcesses/") ||
+              id.includes("/Audio/") ||
+              id.includes("/OpenPBR/") ||
+              id.includes("/Debug/") ||
+              id.includes("LoadingAdapter")
+            ) {
+              return undefined;
+            }
+            return "babylon";
+          }
+          if (id.includes("node_modules/sql.js")) return "sqljs";
         },
       },
     },
