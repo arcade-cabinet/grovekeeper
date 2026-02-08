@@ -3,11 +3,11 @@
  *
  * Loads a .glb character model for the player. Falls back to
  * primitive shapes (body + head + hat) if the model isn't available.
- * Syncs position to the player ECS entity and rotates to face
- * movement direction.
+ * Syncs position to the player ECS entity, smoothly rotates to face
+ * movement direction, and plays a procedural "Lego minifigure"
+ * hop-and-tilt walk animation.
  */
 
-import type { AnimationGroup } from "@babylonjs/core/Animations/animationGroup";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
@@ -43,14 +43,34 @@ const IDLE_BOB_HEIGHT = 0.01;
 /** How fast jiggle ramps up / decays (0→1 or 1→0 per second). */
 const JIGGLE_BLEND_RATE = 10;
 
+// ---------------------------------------------------------------------------
+// Smooth rotation
+// ---------------------------------------------------------------------------
+/** How fast the character turns to face the movement direction (radians/sec). */
+const TURN_SPEED = 12;
+
+/**
+ * Shortest-path angular interpolation.
+ * Wraps the delta to [-PI, PI] so the character always takes the short way round.
+ */
+function lerpAngle(from: number, to: number, t: number): number {
+  let diff = to - from;
+  // Normalize to [-PI, PI]
+  if (diff > Math.PI) diff -= 2 * Math.PI;
+  else if (diff < -Math.PI) diff += 2 * Math.PI;
+  return from + diff * t;
+}
+
 export class PlayerMeshManager {
   mesh: Mesh | null = null;
   private lastX = 0;
   private lastZ = 0;
-  private idleAnim: AnimationGroup | null = null;
-  private walkAnim: AnimationGroup | null = null;
-  private isWalking = false;
   private usingModel = false;
+
+  /** Current facing angle (radians). Smoothly interpolated toward target. */
+  private facingAngle = 0;
+  /** Target facing angle derived from movement direction. */
+  private targetAngle = 0;
 
   /** Jiggle walk animation state */
   private jigglePhase = 0;
@@ -69,22 +89,20 @@ export class PlayerMeshManager {
       mesh.position.y = MODEL_Y_OFFSET;
       mesh.isPickable = false;
 
-      // Find idle and walk animations
+      // Stop ALL embedded animations — we use purely procedural jiggle.
+      // Embedded animations fight with our manual position/rotation updates
+      // because BabylonJS applies them after the render callback.
       for (const ag of animations) {
-        const name = ag.name.toLowerCase();
-        if (name.includes("idle") && !this.idleAnim) {
-          this.idleAnim = ag;
-        } else if (
-          (name.includes("walk") || name.includes("run")) &&
-          !this.walkAnim
-        ) {
-          this.walkAnim = ag;
-        }
+        ag.stop();
+        ag.dispose();
       }
 
-      // Start idle by default
-      if (this.idleAnim) {
-        this.idleAnim.start(true);
+      // Prevent frustum culling — the player should always render.
+      // Scaled .glb models can have stale bounding info that causes
+      // the engine to incorrectly cull the mesh during movement.
+      mesh.alwaysSelectAsActiveMesh = true;
+      for (const child of mesh.getChildMeshes()) {
+        child.alwaysSelectAsActiveMesh = true;
       }
 
       this.mesh = mesh;
@@ -161,7 +179,7 @@ export class PlayerMeshManager {
     return playerBody;
   }
 
-  /** Sync mesh position to player entity, rotate to face movement, and jiggle. */
+  /** Sync mesh position to player entity, smoothly rotate, and jiggle. */
   update(): void {
     const playerEntity = playerQuery.first;
     if (!playerEntity?.position || !this.mesh) return;
@@ -181,30 +199,24 @@ export class PlayerMeshManager {
     const dz = newZ - this.lastZ;
     const moving = Math.abs(dx) > 0.001 || Math.abs(dz) > 0.001;
 
-    // Rotate to face movement direction
+    // Smooth rotation toward movement direction (shortest path)
     if (moving) {
-      this.mesh.rotation.y = Math.atan2(dx, dz);
+      this.targetAngle = Math.atan2(dx, dz);
     }
+    const turnFactor = Math.min(1, TURN_SPEED * dt);
+    this.facingAngle = lerpAngle(
+      this.facingAngle,
+      this.targetAngle,
+      turnFactor,
+    );
+    this.mesh.rotation.y = this.facingAngle;
 
-    // Toggle skeletal walk/idle animation (if model has them)
-    if (this.usingModel) {
-      if (moving && !this.isWalking) {
-        this.idleAnim?.stop();
-        this.walkAnim?.start(true);
-        this.isWalking = true;
-      } else if (!moving && this.isWalking) {
-        this.walkAnim?.stop();
-        this.idleAnim?.start(true);
-        this.isWalking = false;
-      }
-    }
-
-    // --- Procedural jiggle animation (works with or without skeletal anims) ---
+    // --- Procedural jiggle animation ---
 
     // Blend toward target: 1 when walking, 0 when idle
-    const target = moving ? 1 : 0;
+    const blendTarget = moving ? 1 : 0;
     this.jiggleBlend +=
-      (target - this.jiggleBlend) * Math.min(1, JIGGLE_BLEND_RATE * dt);
+      (blendTarget - this.jiggleBlend) * Math.min(1, JIGGLE_BLEND_RATE * dt);
 
     // Advance walk cycle phase only while moving
     if (moving) {
@@ -221,10 +233,12 @@ export class PlayerMeshManager {
     const idleHop = IDLE_BOB_HEIGHT * (0.5 + 0.5 * idleSin) * (1 - wb);
     this.mesh.position.y = this.baseY + walkHop + idleHop;
 
-    // Forward/backward tilt (lean into steps)
+    // Forward/backward tilt (lean into steps).
+    // BabylonJS Euler order is YXZ (intrinsic), so rotation.x is local pitch
+    // after the Y rotation — tilts in the character's forward direction.
     this.mesh.rotation.x = sin1 * TILT_X * wb;
 
-    // Side-to-side waddle (half frequency of hop)
+    // Side-to-side waddle (same frequency as tilt for Lego swagger)
     this.mesh.rotation.z = sin1 * TILT_Z * wb;
 
     // Squash & stretch on Y axis
@@ -240,10 +254,6 @@ export class PlayerMeshManager {
   }
 
   dispose(): void {
-    this.idleAnim?.stop();
-    this.walkAnim?.stop();
-    this.idleAnim = null;
-    this.walkAnim = null;
     this.mesh?.dispose(false, true);
     this.mesh = null;
   }
