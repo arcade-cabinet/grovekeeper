@@ -7,57 +7,88 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GRID_SIZE } from "../constants/config";
-import { getSpeciesById } from "../constants/trees";
-import { TOOLS, getToolById } from "../constants/tools";
-import type { ResourceType } from "../constants/resources";
-import { createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
-import { gridCellsQuery, playerQuery, treesQuery, structuresQuery, rainCatchersQuery, scarecrowsQuery, world } from "../ecs/world";
-import type { GridCellComponent } from "../ecs/world";
-import { createRNG, hashString } from "../utils/seedRNG";
-import type { SerializedTree } from "../stores/gameStore";
-import { useGameStore } from "../stores/gameStore";
-import { growthSystem, getStageScale } from "../systems/growth";
-import { staminaSystem } from "../systems/stamina";
-import { harvestSystem, initHarvestable, collectHarvest } from "../systems/harvest";
-import { movementSystem, setMovementBounds } from "../systems/movement";
-import { saveGroveToStorage, loadGroveFromStorage, deserializeGrove } from "../systems/saveLoad";
-import { persistGameStore, saveGroveToDb } from "@/db/queries";
-import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { getDb, isDbInitialized } from "@/db/client";
-import { InputManager } from "../systems/InputManager";
-import {
-  initializeTime, updateTime,
-  type GameTime, type Season,
-} from "../systems/time";
-import { hapticMedium, hapticLight, hapticSuccess } from "../systems/platform";
-import { checkAchievements, ACHIEVEMENT_DEFS } from "../systems/achievements";
-import { calculateAllOfflineGrowth } from "../systems/offlineGrowth";
-import { showToast } from "../ui/Toast";
-import { showParticle } from "../ui/FloatingParticles";
-import { showAchievement } from "../ui/AchievementPopup";
-import {
-  initializeWeather, updateWeather, getWeatherGrowthMultiplier,
-  getWeatherStaminaMultiplier, rollWindstormDamage,
-  type WeatherState, type WeatherType,
-} from "../systems/weather";
-import { setWeatherVisual, setShowPetals } from "../ui/WeatherOverlay";
-import { GameUI } from "../ui/GameUI";
-import { getStaminaMultiplier as getStructureStaminaMult } from "../structures/StructureManager";
+import { saveDatabaseToIndexedDB } from "@/db/persist";
+import { persistGameStore, saveGroveToDb } from "@/db/queries";
+import { GRID_SIZE } from "../constants/config";
 import { getActiveDifficulty } from "../constants/difficulty";
-
+import type { ResourceType } from "../constants/resources";
+import { getToolById, TOOLS } from "../constants/tools";
+import { getSpeciesById } from "../constants/trees";
+import { createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
+import type { Entity, GridCellComponent } from "../ecs/world";
+import {
+  generateEntityId,
+  gridCellsQuery,
+  npcsQuery,
+  playerQuery,
+  rainCatchersQuery,
+  scarecrowsQuery,
+  structuresQuery,
+  treesQuery,
+  world,
+} from "../ecs/world";
+import { isPlayerAdjacent } from "../npcs/NpcManager";
 // Scene managers
 import {
-  SceneManager, CameraManager, LightingManager,
-  GroundBuilder, SkyManager, PlayerMeshManager,
+  CameraManager,
+  GroundBuilder,
+  LightingManager,
+  NpcMeshManager,
+  PlayerMeshManager,
+  SceneManager,
+  SkyManager,
   TreeMeshManager,
 } from "../scene";
-import { canPlace, getTemplate } from "../structures/StructureManager";
-import { generateEntityId } from "../ecs/world";
-
+import type { SerializedTree } from "../stores/gameStore";
+import { useGameStore } from "../stores/gameStore";
+import {
+  canPlace,
+  getStaminaMultiplier as getStructureStaminaMult,
+  getTemplate,
+} from "../structures/StructureManager";
+import { ACHIEVEMENT_DEFS, checkAchievements } from "../systems/achievements";
+import { getStageScale, growthSystem } from "../systems/growth";
+import {
+  collectHarvest,
+  harvestSystem,
+  initHarvestable,
+} from "../systems/harvest";
+import { InputManager } from "../systems/InputManager";
+import { movementSystem, setMovementBounds } from "../systems/movement";
+import { calculateAllOfflineGrowth } from "../systems/offlineGrowth";
+import { hapticLight, hapticMedium, hapticSuccess } from "../systems/platform";
+import {
+  deserializeGrove,
+  loadGroveFromStorage,
+  saveGroveToStorage,
+} from "../systems/saveLoad";
+import { staminaSystem } from "../systems/stamina";
+import {
+  type GameTime,
+  initializeTime,
+  type Season,
+  updateTime,
+} from "../systems/time";
+import {
+  getWeatherGrowthMultiplier,
+  getWeatherStaminaMultiplier,
+  initializeWeather,
+  rollWindstormDamage,
+  updateWeather,
+  type WeatherState,
+  type WeatherType,
+} from "../systems/weather";
+import { showAchievement } from "../ui/AchievementPopup";
+import type { TileState } from "../ui/ActionButton";
+import { showParticle } from "../ui/FloatingParticles";
+import { GameUI } from "../ui/GameUI";
+import { showToast } from "../ui/Toast";
+import { setShowPetals, setWeatherVisual } from "../ui/WeatherOverlay";
+import { createRNG, hashString } from "../utils/seedRNG";
+import type { WorldDefinition } from "../world";
 // World system
 import { WorldManager } from "../world";
-import type { WorldDefinition } from "../world";
 import startingWorldData from "../world/data/starting-world.json";
 
 export const GameScene = () => {
@@ -77,6 +108,7 @@ export const GameScene = () => {
   const skyManagerRef = useRef(new SkyManager());
   const playerMeshRef = useRef(new PlayerMeshManager());
   const treeMeshRef = useRef(new TreeMeshManager());
+  const npcMeshRef = useRef(new NpcMeshManager());
   const worldManagerRef = useRef(new WorldManager());
   const inputManagerRef = useRef(new InputManager());
 
@@ -86,19 +118,35 @@ export const GameScene = () => {
   const gameTimeRef = useRef<GameTime | null>(null);
   const [gameTimeState, setGameTimeState] = useState<GameTime | null>(null);
   const lastGameTimeMinuteRef = useRef<number>(-1);
-  const [currentWeatherType, setCurrentWeatherType] = useState<WeatherType>("clear");
+  const [currentWeatherType, setCurrentWeatherType] =
+    useState<WeatherType>("clear");
   const [weatherTimeRemaining, setWeatherTimeRemaining] = useState(0);
+  const [playerTileInfo, setPlayerTileInfo] = useState<TileState | null>(null);
+  const lastPlayerGridRef = useRef<string>("");
+  const nearbyNpcRef = useRef<Entity | null>(null);
+  const [nearbyNpcTemplateId, setNearbyNpcTemplateId] = useState<string | null>(
+    null,
+  );
+  const [npcDialogueOpen, setNpcDialogueOpen] = useState(false);
 
   const {
-    setScreen, selectedSpecies, selectedTool,
-    addXp, incrementTreesPlanted, incrementTreesHarvested,
-    incrementTreesWatered, hapticsEnabled, addResource,
+    setScreen,
+    selectedSpecies,
+    selectedTool,
+    addXp,
+    incrementTreesPlanted,
+    incrementTreesHarvested,
+    incrementTreesWatered,
+    hapticsEnabled,
+    addResource,
   } = useGameStore();
 
   // --- InputManager dialog disable sync ---
   useEffect(() => {
-    inputManagerRef.current.setDisabled(seedSelectOpen || toolWheelOpen || pauseMenuOpen);
-  }, [seedSelectOpen, toolWheelOpen, pauseMenuOpen]);
+    inputManagerRef.current.setDisabled(
+      seedSelectOpen || toolWheelOpen || pauseMenuOpen || npcDialogueOpen,
+    );
+  }, [seedSelectOpen, toolWheelOpen, pauseMenuOpen, npcDialogueOpen]);
 
   // --- Save/restore ---
   const saveCurrentGrove = useCallback(() => {
@@ -147,11 +195,19 @@ export const GameScene = () => {
             progress: e.tree?.progress,
             watered: e.tree?.watered,
           }));
-          const results = calculateAllOfflineGrowth(offlineTrees, elapsedSeconds, (id) => {
-            const species = getSpeciesById(id);
-            if (!species) return undefined;
-            return { difficulty: species.difficulty, baseGrowthTimes: [...species.baseGrowthTimes], evergreen: species.evergreen };
-          });
+          const results = calculateAllOfflineGrowth(
+            offlineTrees,
+            elapsedSeconds,
+            (id) => {
+              const species = getSpeciesById(id);
+              if (!species) return undefined;
+              return {
+                difficulty: species.difficulty,
+                baseGrowthTimes: [...species.baseGrowthTimes],
+                evergreen: species.evergreen,
+              };
+            },
+          );
           let stagesAdvanced = 0;
           const treeEntities = Array.from(treesQuery);
           for (let i = 0; i < treeEntities.length; i++) {
@@ -163,13 +219,19 @@ export const GameScene = () => {
               entity.tree.progress = result.progress;
               entity.tree.watered = result.watered;
               if (entity.renderable) {
-                entity.renderable.scale = getStageScale(result.stage, result.progress);
+                entity.renderable.scale = getStageScale(
+                  result.stage,
+                  result.progress,
+                );
               }
             }
           }
           if (stagesAdvanced > 0) {
             queueMicrotask(() => {
-              showToast(`Trees grew while you were away! (${stagesAdvanced} advanced)`, "success");
+              showToast(
+                `Trees grew while you were away! (${stagesAdvanced} advanced)`,
+                "success",
+              );
             });
           }
         }
@@ -229,7 +291,8 @@ export const GameScene = () => {
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
   }, [saveCurrentGrove]);
 
   // --- BabylonJS initialization ---
@@ -244,6 +307,7 @@ export const GameScene = () => {
     const sky = skyManagerRef.current;
     const playerMesh = playerMeshRef.current;
     const treeMesh = treeMeshRef.current;
+    const npcMesh = npcMeshRef.current;
     const worldMgr = worldManagerRef.current;
 
     const initBabylon = async () => {
@@ -284,7 +348,10 @@ export const GameScene = () => {
           onPause: () => setPauseMenuOpen((prev) => !prev),
           onSelectTool: (index: number) => {
             const tool = TOOLS[index];
-            if (tool && useGameStore.getState().unlockedTools.includes(tool.id)) {
+            if (
+              tool &&
+              useGameStore.getState().unlockedTools.includes(tool.id)
+            ) {
               useGameStore.getState().setSelectedTool(tool.id);
             }
           },
@@ -294,7 +361,9 @@ export const GameScene = () => {
         getWorldBounds: () => worldMgr.getWorldBounds(),
         getPlayerWorldPos: () => {
           const p = playerQuery.first;
-          return p?.position ? { x: p.position.x, z: p.position.z } : { x: 0, z: 0 };
+          return p?.position
+            ? { x: p.position.x, z: p.position.z }
+            : { x: 0, z: 0 };
         },
         getPlayerTile: () => {
           const p = playerQuery.first;
@@ -307,10 +376,17 @@ export const GameScene = () => {
       // --- Helper functions (defined inside useEffect to avoid stale closures) ---
 
       function isNightTime(time: GameTime): boolean {
-        return time.timeOfDay === "night" || time.timeOfDay === "midnight" || time.timeOfDay === "evening";
+        return (
+          time.timeOfDay === "night" ||
+          time.timeOfDay === "midnight" ||
+          time.timeOfDay === "evening"
+        );
       }
 
-      function processTreeUpdatesInLoop(wType: WeatherType, gtSec: number): void {
+      function processTreeUpdatesInLoop(
+        wType: WeatherType,
+        gtSec: number,
+      ): void {
         for (const entity of treesQuery) {
           if (!entity.tree) continue;
           const tree = entity.tree;
@@ -322,13 +398,20 @@ export const GameScene = () => {
 
           // Growth milestone XP
           const species = getSpeciesById(tree.speciesId);
-          const diffBonus = species ? (species.difficulty - 1) : 0;
-          for (const [stage, baseXp] of [[2, 15], [3, 25], [4, 50]] as const) {
+          const diffBonus = species ? species.difficulty - 1 : 0;
+          for (const [stage, baseXp] of [
+            [2, 15],
+            [3, 25],
+            [4, 50],
+          ] as const) {
             if (tree.stage >= stage) {
               const key = `${entity.id}:${stage}`;
               if (!milestoneXpRef.current.has(key)) {
                 milestoneXpRef.current.add(key);
-                const xpAmount = stage === 2 ? baseXp : baseXp + diffBonus * (stage === 3 ? 10 : 25);
+                const xpAmount =
+                  stage === 2
+                    ? baseXp
+                    : baseXp + diffBonus * (stage === 3 ? 10 : 25);
                 useGameStore.getState().addXp(xpAmount);
                 showParticle(`+${xpAmount} XP`);
               }
@@ -336,7 +419,11 @@ export const GameScene = () => {
           }
 
           // Windstorm damage (Ironbark is storm immune, scarecrows protect nearby trees)
-          if (wType === "windstorm" && tree.stage <= 1 && tree.speciesId !== "ironbark") {
+          if (
+            wType === "windstorm" &&
+            tree.stage <= 1 &&
+            tree.speciesId !== "ironbark"
+          ) {
             let scarecrowProtected = false;
             if (entity.position) {
               for (const sc of scarecrowsQuery) {
@@ -350,7 +437,9 @@ export const GameScene = () => {
               }
             }
             if (scarecrowProtected) continue;
-            const windRng = createRNG(hashString(`wind-${entity.id}-${Math.floor(gtSec / 30)}`));
+            const windRng = createRNG(
+              hashString(`wind-${entity.id}-${Math.floor(gtSec / 30)}`),
+            );
             if (rollWindstormDamage(windRng())) {
               tree.progress = 0;
               showToast("A young tree was damaged by wind!", "warning");
@@ -398,7 +487,9 @@ export const GameScene = () => {
           unlockedToolCount: store.unlockedTools.length,
           wildSpeciesHarvested: store.wildSpeciesHarvested,
           structuresBuilt: store.placedStructures.length,
-          distinctStructureTypesBuilt: new Set(store.placedStructures.map(s => s.templateId)).size,
+          distinctStructureTypesBuilt: new Set(
+            store.placedStructures.map((s) => s.templateId),
+          ).size,
         });
 
         for (const id of newAchievements) {
@@ -433,12 +524,16 @@ export const GameScene = () => {
 
         // Weather system
         if (!weatherRef.current) {
-          weatherRef.current = initializeWeather(currentTime.microseconds / 1_000_000);
+          weatherRef.current = initializeWeather(
+            currentTime.microseconds / 1_000_000,
+          );
         }
         const gameTimeSec = currentTime.microseconds / 1_000_000;
         weatherRef.current = updateWeather(
-          weatherRef.current, gameTimeSec,
-          currentTime.season, hashString(groveSeedRef.current || "default"),
+          weatherRef.current,
+          gameTimeSec,
+          currentTime.season,
+          hashString(groveSeedRef.current || "default"),
         );
         const weatherType = weatherRef.current.current.type;
         if (weatherType !== lastWeatherTypeRef.current) {
@@ -446,21 +541,33 @@ export const GameScene = () => {
           setWeatherVisual(weatherType);
           setCurrentWeatherType(weatherType);
           if (weatherType !== "clear") {
-            const labels: Record<string, string> = { rain: "It's raining!", drought: "Drought!", windstorm: "Windstorm!" };
-            showToast(labels[weatherType] ?? weatherType, weatherType === "rain" ? "success" : "warning");
+            const labels: Record<string, string> = {
+              rain: "It's raining!",
+              drought: "Drought!",
+              windstorm: "Windstorm!",
+            };
+            showToast(
+              labels[weatherType] ?? weatherType,
+              weatherType === "rain" ? "success" : "warning",
+            );
           }
         }
         // Update weather time remaining for forecast widget (throttled to avoid excess renders)
         if (Math.floor(now / 2000) !== Math.floor((now - deltaMs) / 2000)) {
           const evt = weatherRef.current.current;
-          const remaining = Math.max(0, (evt.startTime + evt.duration) - gameTimeSec);
+          const remaining = Math.max(
+            0,
+            evt.startTime + evt.duration - gameTimeSec,
+          );
           setWeatherTimeRemaining(remaining);
         }
 
         // Cherry blossom petals
-        setShowPetals(treesQuery.entities.some(
-          (t) => t.tree?.speciesId === "cherry-blossom" && t.tree.stage >= 3,
-        ));
+        setShowPetals(
+          treesQuery.entities.some(
+            (t) => t.tree?.speciesId === "cherry-blossom" && t.tree.stage >= 3,
+          ),
+        );
 
         const weatherGrowthMult = getWeatherGrowthMultiplier(weatherType);
 
@@ -496,11 +603,72 @@ export const GameScene = () => {
         staminaSystem(dt);
         harvestSystem(dt);
 
+        // Update player tile info for action button disabled state
+        {
+          const player = playerQuery.first;
+          if (player?.position) {
+            const gx = Math.round(player.position.x);
+            const gz = Math.round(player.position.z);
+            const gridKey = `${gx},${gz}`;
+            if (gridKey !== lastPlayerGridRef.current) {
+              lastPlayerGridRef.current = gridKey;
+              let found = false;
+              for (const cell of gridCellsQuery) {
+                if (
+                  cell.gridCell?.gridX === gx &&
+                  cell.gridCell?.gridZ === gz
+                ) {
+                  const gc = cell.gridCell;
+                  let treeStage = -1;
+                  if (gc.occupied && gc.treeEntityId) {
+                    for (const t of treesQuery) {
+                      if (t.id === gc.treeEntityId && t.tree) {
+                        treeStage = t.tree.stage;
+                        break;
+                      }
+                    }
+                  }
+                  setPlayerTileInfo({
+                    occupied: gc.occupied,
+                    treeStage,
+                    cellType: gc.type,
+                  });
+                  found = true;
+                  break;
+                }
+              }
+              if (!found) setPlayerTileInfo(null);
+
+              // NPC proximity check (runs when player grid cell changes)
+              let foundNpc: typeof nearbyNpcRef.current = null;
+              for (const npcEntity of npcsQuery) {
+                if (!npcEntity.npc || !npcEntity.position) continue;
+                if (
+                  isPlayerAdjacent(
+                    gx,
+                    gz,
+                    npcEntity.position.x,
+                    npcEntity.position.z,
+                  )
+                ) {
+                  foundNpc = npcEntity;
+                  break;
+                }
+              }
+              if (foundNpc?.id !== nearbyNpcRef.current?.id) {
+                nearbyNpcRef.current = foundNpc;
+                setNearbyNpcTemplateId(foundNpc?.npc?.templateId ?? null);
+              }
+            }
+          }
+        }
+
         // Scene managers update
         cam.updateViewport();
         lights.update(scene, currentTime);
         sky.update(scene, currentTime.sunIntensity);
         playerMesh.update();
+        npcMesh.update(scene);
         cam.trackTarget(
           playerMesh.mesh?.position.x ?? 0,
           playerMesh.mesh?.position.z ?? 0,
@@ -555,6 +723,7 @@ export const GameScene = () => {
       cancelled = true;
       inputManagerRef.current.dispose();
       worldMgr.dispose();
+      npcMesh.dispose();
       treeMesh.dispose();
       playerMesh.dispose();
       sky.dispose();
@@ -609,12 +778,17 @@ export const GameScene = () => {
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree || tree.tree.stage < 3) return;
 
-    const harvestResources = collectHarvest(tree, useGameStore.getState().currentSeason);
+    const harvestResources = collectHarvest(
+      tree,
+      useGameStore.getState().currentSeason,
+    );
     if (harvestResources) {
-      for (const r of harvestResources) addResource(r.type as ResourceType, r.amount);
+      for (const r of harvestResources)
+        addResource(r.type as ResourceType, r.amount);
     } else {
       const species = getSpeciesById(tree.tree.speciesId);
-      if (species) for (const y of species.yield) addResource(y.resource, y.amount);
+      if (species)
+        for (const y of species.yield) addResource(y.resource, y.amount);
     }
 
     addXp(50);
@@ -624,14 +798,21 @@ export const GameScene = () => {
     const harvestSpecies = getSpeciesById(tree.tree.speciesId);
     const gains = harvestResources ?? harvestSpecies?.yield ?? [];
     for (const g of gains) {
-      const name = (g as { type?: string; resource?: string }).type
-        ?? (g as { resource?: string }).resource ?? "";
-      showParticle(`+${g.amount} ${name.charAt(0).toUpperCase() + name.slice(1)}`);
+      const name =
+        (g as { type?: string; resource?: string }).type ??
+        (g as { resource?: string }).resource ??
+        "";
+      showParticle(
+        `+${g.amount} ${name.charAt(0).toUpperCase() + name.slice(1)}`,
+      );
     }
     if (gains.length > 0) {
-      const summary = gains.map((g: { type?: string; resource?: string; amount: number }) =>
-        `+${g.amount} ${(g.type ?? g.resource ?? "").charAt(0).toUpperCase() + (g.type ?? g.resource ?? "").slice(1)}`,
-      ).join(", ");
+      const summary = gains
+        .map(
+          (g: { type?: string; resource?: string; amount: number }) =>
+            `+${g.amount} ${(g.type ?? g.resource ?? "").charAt(0).toUpperCase() + (g.type ?? g.resource ?? "").slice(1)}`,
+        )
+        .join(", ");
       showToast(`${summary}, +50 XP`, "success");
     }
 
@@ -717,7 +898,9 @@ export const GameScene = () => {
     const tree = findTreeOnCell(gc.treeEntityId);
     if (!tree?.tree) return;
     const species = getSpeciesById(tree.tree.speciesId);
-    const stageName = ["Seed", "Sprout", "Sapling", "Mature", "Old Growth"][tree.tree.stage];
+    const stageName = ["Seed", "Sprout", "Sapling", "Mature", "Old Growth"][
+      tree.tree.stage
+    ];
     showToast(
       `${species?.name ?? tree.tree.speciesId} — ${stageName} (${Math.round(tree.tree.progress * 100)}%)`,
       "info",
@@ -747,7 +930,10 @@ export const GameScene = () => {
     gc.occupied = true;
     addXp(10);
     showParticle("+10 XP");
-    showToast("Rain Catcher placed! Waters nearby trees during rain.", "success");
+    showToast(
+      "Rain Catcher placed! Waters nearby trees during rain.",
+      "success",
+    );
     if (hapticsEnabled) await hapticMedium();
   };
 
@@ -813,7 +999,10 @@ export const GameScene = () => {
     const nearbySpecies: string[] = [];
     for (const other of treesQuery) {
       if (!other.tree || !other.position || other === tree) continue;
-      if (other.tree.speciesId !== tree.tree.speciesId && !nearbySpecies.includes(other.tree.speciesId)) {
+      if (
+        other.tree.speciesId !== tree.tree.speciesId &&
+        !nearbySpecies.includes(other.tree.speciesId)
+      ) {
         nearbySpecies.push(other.tree.speciesId);
         if (nearbySpecies.length >= 2) break;
       }
@@ -835,22 +1024,29 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticSuccess();
   };
 
-  const toolActions: Record<string, (gc: GridCellComponent) => Promise<void>> = {
-    "trowel": useTrowel,
-    "watering-can": useWateringCan,
-    "axe": useAxe,
-    "compost-bin": useCompostBin,
-    "pruning-shears": usePruningShears,
-    "shovel": useShovel,
-    "almanac": useAlmanac,
-    "seed-pouch": useSeedPouch,
-    "rain-catcher": useRainCatcher,
-    "fertilizer-spreader": useFertilizerSpreader,
-    "scarecrow": useScarecrow,
-    "grafting-tool": useGraftingTool,
-  };
+  const toolActions: Record<string, (gc: GridCellComponent) => Promise<void>> =
+    {
+      trowel: useTrowel,
+      "watering-can": useWateringCan,
+      axe: useAxe,
+      "compost-bin": useCompostBin,
+      "pruning-shears": usePruningShears,
+      shovel: useShovel,
+      almanac: useAlmanac,
+      "seed-pouch": useSeedPouch,
+      "rain-catcher": useRainCatcher,
+      "fertilizer-spreader": useFertilizerSpreader,
+      scarecrow: useScarecrow,
+      "grafting-tool": useGraftingTool,
+    };
 
   const handleAction = async () => {
+    // NPC interaction — open dialogue when near an NPC
+    if (nearbyNpcRef.current?.npc) {
+      setNpcDialogueOpen(true);
+      return;
+    }
+
     const store = useGameStore.getState();
 
     // Build mode — place a structure at player position
@@ -900,7 +1096,10 @@ export const GameScene = () => {
       for (let dx = 0; dx < template.footprint.width; dx++) {
         for (let dz = 0; dz < template.footprint.depth; dz++) {
           for (const cell of gridCellsQuery) {
-            if (cell.gridCell?.gridX === worldX + dx && cell.gridCell?.gridZ === worldZ + dz) {
+            if (
+              cell.gridCell?.gridX === worldX + dx &&
+              cell.gridCell?.gridZ === worldZ + dz
+            ) {
               cell.gridCell.occupied = true;
             }
           }
@@ -928,10 +1127,19 @@ export const GameScene = () => {
       // Structure stamina reduction
       const player = playerQuery.first;
       const structStaminaMult = player?.position
-        ? getStructureStaminaMult(player.position.x, player.position.z, structuresQuery)
+        ? getStructureStaminaMult(
+            player.position.x,
+            player.position.z,
+            structuresQuery,
+          )
         : 1.0;
       const difficultyStaminaMult = getActiveDifficulty().staminaDrainMult;
-      const adjustedCost = Math.ceil(tool.staminaCost * weatherStaminaMult * structStaminaMult * difficultyStaminaMult);
+      const adjustedCost = Math.ceil(
+        tool.staminaCost *
+          weatherStaminaMult *
+          structStaminaMult *
+          difficultyStaminaMult,
+      );
       if (!useGameStore.getState().spendStamina(adjustedCost)) return;
     }
     const action = toolActions[selectedTool];
@@ -975,7 +1183,9 @@ export const GameScene = () => {
           useGameStore.getState().addSeed(selectedSpecies, 1);
           if (species?.seedCost) {
             for (const [resource, amount] of Object.entries(species.seedCost)) {
-              useGameStore.getState().addResource(resource as ResourceType, amount);
+              useGameStore
+                .getState()
+                .addResource(resource as ResourceType, amount);
             }
           }
           return;
@@ -1006,7 +1216,10 @@ export const GameScene = () => {
       if (!entity.harvestable?.ready || !entity.tree) continue;
       // Cost 5 stamina per tree (bulk discount)
       if (!useGameStore.getState().spendStamina(5)) break;
-      const harvestResources = collectHarvest(entity, useGameStore.getState().currentSeason);
+      const harvestResources = collectHarvest(
+        entity,
+        useGameStore.getState().currentSeason,
+      );
       if (harvestResources) {
         for (const r of harvestResources) {
           addResource(r.type as ResourceType, r.amount);
@@ -1053,11 +1266,18 @@ export const GameScene = () => {
         setToolWheelOpen={setToolWheelOpen}
         pauseMenuOpen={pauseMenuOpen}
         setPauseMenuOpen={setPauseMenuOpen}
-        onMainMenu={() => { setPauseMenuOpen(false); setScreen("menu"); }}
+        onMainMenu={() => {
+          setPauseMenuOpen(false);
+          setScreen("menu");
+        }}
         onBatchHarvest={handleBatchHarvest}
         currentWeather={currentWeatherType}
         weatherTimeRemaining={weatherTimeRemaining}
         gameTime={gameTimeState}
+        playerTileInfo={playerTileInfo}
+        nearbyNpcTemplateId={nearbyNpcTemplateId}
+        npcDialogueOpen={npcDialogueOpen}
+        setNpcDialogueOpen={setNpcDialogueOpen}
       />
     </div>
   );

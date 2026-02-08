@@ -1,7 +1,7 @@
 {
   "id": "starting-world",
   "name": "Grovekeeper Valley",
-  "version": 1,
+  "version": 2,
   "zones": [
     {
       "id": "starting-grove",
@@ -19,11 +19,26 @@
         { "x": 8, "z": 3, "type": "rock" },
         { "x": 0, "z": 6, "type": "path" },
         { "x": 1, "z": 6, "type": "path" },
-        { "x": 2, "z": 6, "type": "path" }
+        { "x": 2, "z": 6, "type": "path" },
+        { "x": 5, "z": 11, "type": "path" },
+        { "x": 6, "z": 11, "type": "path" }
       ],
       "structures": [
         { "templateId": "bench", "localX": 10, "localZ": 10, "rotation": 0 },
         { "templateId": "well", "localX": 5, "localZ": 8, "rotation": 0 }
+      ],
+      "props": [
+        { "propId": "signpost", "localX": 11, "localZ": 5 },
+        { "propId": "wild-flowers", "localX": 1, "localZ": 1 },
+        { "propId": "wild-flowers", "localX": 9, "localZ": 9 }
+      ],
+      "npcs": [
+        {
+          "templateId": "elder-rowan",
+          "localX": 4,
+          "localZ": 7,
+          "facing": "south"
+        }
       ],
       "plantable": true,
       "connections": [
@@ -31,6 +46,21 @@
           "direction": "east",
           "targetZoneId": "forest-trail",
           "localEntry": { "x": 11, "z": 6 }
+        },
+        {
+          "direction": "west",
+          "targetZoneId": "mossy-hollow",
+          "localEntry": { "x": 0, "z": 6 }
+        },
+        {
+          "direction": "south",
+          "targetZoneId": "village-path",
+          "localEntry": { "x": 5, "z": 11 }
+        },
+        {
+          "direction": "north",
+          "targetZoneId": "north-woods",
+          "localEntry": { "x": 5, "z": 0 }
         }
       ]
     },
@@ -57,7 +87,8 @@
       "props": [
         { "propId": "fallen-log", "localX": 0, "localZ": 0, "scale": 0.8 },
         { "propId": "mushroom-cluster", "localX": 3, "localZ": 1 },
-        { "propId": "wild-flowers", "localX": 0, "localZ": 6 }
+        { "propId": "wild-flowers", "localX": 0, "localZ": 6 },
+        { "propId": "lantern", "localX": 1, "localZ": 4 }
       ],
       "plantable": false,
       "connections": [
@@ -86,10 +117,23 @@
         { "x": 3, "z": 4, "type": "water" },
         { "x": 4, "z": 4, "type": "water" },
         { "x": 5, "z": 4, "type": "water" },
-        { "x": 4, "z": 5, "type": "water" }
+        { "x": 4, "z": 5, "type": "water" },
+        { "x": 4, "z": 7, "type": "path" }
       ],
       "structures": [
         { "templateId": "bench", "localX": 1, "localZ": 1, "rotation": 90 }
+      ],
+      "props": [
+        { "propId": "stump", "localX": 7, "localZ": 1 },
+        { "propId": "wild-flowers", "localX": 0, "localZ": 6 }
+      ],
+      "npcs": [
+        {
+          "templateId": "botanist-fern",
+          "localX": 6,
+          "localZ": 3,
+          "facing": "west"
+        }
       ],
       "plantable": true,
       "connections": [
@@ -97,6 +141,285 @@
           "direction": "west",
           "targetZoneId": "forest-trail",
           "localEntry": { "x": 0, "z": 4 }
+        },
+        {
+          "direction": "south",
+          "targetZoneId": "mushroom-grotto",
+          "localEntry": { "x": 4, "z": 7 }
+        }
+      ]
+    },
+    {
+      "id": "mossy-hollow",
+      "name": "Mossy Hollow",
+      "type": "clearing",
+      "origin": { "x": -9, "z": 2 },
+      "size": { "width": 8, "height": 8 },
+      "groundMaterial": "grass",
+      "tiles": [
+        { "x": 2, "z": 2, "type": "water" },
+        { "x": 3, "z": 2, "type": "water" },
+        { "x": 2, "z": 3, "type": "water" },
+        { "x": 3, "z": 3, "type": "water" },
+        { "x": 4, "z": 3, "type": "water" },
+        { "x": 1, "z": 5, "type": "water" },
+        { "x": 2, "z": 5, "type": "water" },
+        { "x": 5, "z": 6, "type": "water" }
+      ],
+      "props": [
+        { "propId": "mushroom-cluster", "localX": 0, "localZ": 0 },
+        { "propId": "mushroom-cluster", "localX": 6, "localZ": 7 },
+        { "propId": "wild-flowers", "localX": 7, "localZ": 1 },
+        { "propId": "boulder", "localX": 0, "localZ": 7 }
+      ],
+      "plantable": true,
+      "connections": [
+        {
+          "direction": "east",
+          "targetZoneId": "starting-grove",
+          "localEntry": { "x": 7, "z": 4 }
+        }
+      ]
+    },
+    {
+      "id": "north-woods",
+      "name": "North Woods",
+      "type": "forest",
+      "origin": { "x": -1, "z": -11 },
+      "size": { "width": 12, "height": 10 },
+      "groundMaterial": "grass",
+      "tiles": [
+        { "x": 3, "z": 2, "type": "rock" },
+        { "x": 4, "z": 2, "type": "rock" },
+        { "x": 8, "z": 5, "type": "rock" },
+        { "x": 2, "z": 7, "type": "water" },
+        { "x": 3, "z": 7, "type": "water" }
+      ],
+      "props": [
+        { "propId": "fallen-log", "localX": 1, "localZ": 1 },
+        { "propId": "fallen-log", "localX": 10, "localZ": 3 },
+        { "propId": "boulder", "localX": 7, "localZ": 8 },
+        { "propId": "mushroom-cluster", "localX": 5, "localZ": 5 },
+        { "propId": "stump", "localX": 9, "localZ": 1 }
+      ],
+      "wildTrees": [
+        { "speciesId": "white-oak", "weight": 3 },
+        { "speciesId": "elder-pine", "weight": 3 },
+        { "speciesId": "silver-birch", "weight": 2 }
+      ],
+      "wildTreeDensity": 0.25,
+      "plantable": false,
+      "connections": [
+        {
+          "direction": "south",
+          "targetZoneId": "starting-grove",
+          "localEntry": { "x": 6, "z": 9 }
+        }
+      ]
+    },
+    {
+      "id": "village-path",
+      "name": "Village Path",
+      "type": "path",
+      "origin": { "x": 4, "z": 13 },
+      "size": { "width": 4, "height": 6 },
+      "groundMaterial": "dirt",
+      "tiles": [
+        { "x": 1, "z": 0, "type": "path" },
+        { "x": 2, "z": 0, "type": "path" },
+        { "x": 1, "z": 1, "type": "path" },
+        { "x": 2, "z": 1, "type": "path" },
+        { "x": 1, "z": 2, "type": "path" },
+        { "x": 2, "z": 2, "type": "path" },
+        { "x": 1, "z": 3, "type": "path" },
+        { "x": 2, "z": 3, "type": "path" },
+        { "x": 1, "z": 4, "type": "path" },
+        { "x": 2, "z": 4, "type": "path" },
+        { "x": 1, "z": 5, "type": "path" },
+        { "x": 2, "z": 5, "type": "path" }
+      ],
+      "props": [
+        { "propId": "lantern", "localX": 0, "localZ": 1 },
+        { "propId": "lantern", "localX": 3, "localZ": 3 },
+        { "propId": "signpost", "localX": 0, "localZ": 5 }
+      ],
+      "plantable": false,
+      "connections": [
+        {
+          "direction": "north",
+          "targetZoneId": "starting-grove",
+          "localEntry": { "x": 1, "z": 0 }
+        },
+        {
+          "direction": "south",
+          "targetZoneId": "ferndale-village",
+          "localEntry": { "x": 1, "z": 5 }
+        }
+      ]
+    },
+    {
+      "id": "ferndale-village",
+      "name": "Ferndale Village",
+      "type": "settlement",
+      "origin": { "x": 2, "z": 20 },
+      "size": { "width": 8, "height": 8 },
+      "groundMaterial": "stone",
+      "tiles": [
+        { "x": 3, "z": 0, "type": "path" },
+        { "x": 4, "z": 0, "type": "path" },
+        { "x": 3, "z": 1, "type": "path" },
+        { "x": 4, "z": 1, "type": "path" },
+        { "x": 3, "z": 2, "type": "path" },
+        { "x": 4, "z": 2, "type": "path" },
+        { "x": 3, "z": 3, "type": "path" },
+        { "x": 4, "z": 3, "type": "path" },
+        { "x": 5, "z": 3, "type": "path" },
+        { "x": 6, "z": 3, "type": "path" },
+        { "x": 7, "z": 3, "type": "path" }
+      ],
+      "structures": [
+        {
+          "templateId": "market-stall",
+          "localX": 1,
+          "localZ": 2,
+          "rotation": 0
+        },
+        { "templateId": "tool-shed", "localX": 6, "localZ": 6, "rotation": 0 },
+        { "templateId": "bench", "localX": 1, "localZ": 5, "rotation": 90 },
+        { "templateId": "bench", "localX": 6, "localZ": 1, "rotation": 0 }
+      ],
+      "props": [
+        { "propId": "lantern", "localX": 2, "localZ": 0 },
+        { "propId": "lantern", "localX": 5, "localZ": 0 },
+        { "propId": "lantern", "localX": 0, "localZ": 4 },
+        { "propId": "fence-section", "localX": 0, "localZ": 7 },
+        { "propId": "fence-section", "localX": 7, "localZ": 7 },
+        { "propId": "birdbath", "localX": 4, "localZ": 5 },
+        { "propId": "campfire", "localX": 1, "localZ": 6 }
+      ],
+      "npcs": [
+        { "templateId": "hazel", "localX": 5, "localZ": 2, "facing": "south" },
+        { "templateId": "blossom", "localX": 2, "localZ": 5, "facing": "east" }
+      ],
+      "plantable": false,
+      "connections": [
+        {
+          "direction": "north",
+          "targetZoneId": "village-path",
+          "localEntry": { "x": 3, "z": 0 }
+        },
+        {
+          "direction": "east",
+          "targetZoneId": "orchard-trail",
+          "localEntry": { "x": 7, "z": 3 }
+        }
+      ]
+    },
+    {
+      "id": "orchard-trail",
+      "name": "Orchard Trail",
+      "type": "path",
+      "origin": { "x": 11, "z": 22 },
+      "size": { "width": 4, "height": 6 },
+      "groundMaterial": "dirt",
+      "tiles": [
+        { "x": 0, "z": 1, "type": "path" },
+        { "x": 1, "z": 1, "type": "path" },
+        { "x": 1, "z": 2, "type": "path" },
+        { "x": 2, "z": 2, "type": "path" },
+        { "x": 2, "z": 3, "type": "path" },
+        { "x": 3, "z": 3, "type": "path" },
+        { "x": 3, "z": 4, "type": "path" }
+      ],
+      "props": [
+        { "propId": "wild-flowers", "localX": 0, "localZ": 4 },
+        { "propId": "wild-flowers", "localX": 3, "localZ": 0 },
+        { "propId": "signpost", "localX": 0, "localZ": 0 }
+      ],
+      "wildTrees": [
+        { "speciesId": "cherry-blossom", "weight": 3 },
+        { "speciesId": "golden-apple", "weight": 3 }
+      ],
+      "wildTreeDensity": 0.15,
+      "plantable": false,
+      "connections": [
+        {
+          "direction": "west",
+          "targetZoneId": "ferndale-village",
+          "localEntry": { "x": 0, "z": 1 }
+        },
+        {
+          "direction": "east",
+          "targetZoneId": "ancient-forest",
+          "localEntry": { "x": 3, "z": 3 }
+        }
+      ]
+    },
+    {
+      "id": "ancient-forest",
+      "name": "Ancient Forest",
+      "type": "forest",
+      "origin": { "x": 16, "z": 20 },
+      "size": { "width": 10, "height": 10 },
+      "groundMaterial": "grass",
+      "tiles": [
+        { "x": 2, "z": 4, "type": "rock" },
+        { "x": 3, "z": 4, "type": "rock" },
+        { "x": 7, "z": 2, "type": "rock" },
+        { "x": 4, "z": 7, "type": "water" },
+        { "x": 5, "z": 7, "type": "water" },
+        { "x": 4, "z": 8, "type": "water" }
+      ],
+      "props": [
+        { "propId": "fallen-log", "localX": 1, "localZ": 1 },
+        { "propId": "fallen-log", "localX": 8, "localZ": 6 },
+        { "propId": "boulder", "localX": 6, "localZ": 9 },
+        { "propId": "mushroom-cluster", "localX": 3, "localZ": 2 },
+        { "propId": "stump", "localX": 8, "localZ": 1 },
+        { "propId": "stump", "localX": 1, "localZ": 8 }
+      ],
+      "wildTrees": [
+        { "speciesId": "redwood", "weight": 3 },
+        { "speciesId": "ironbark", "weight": 3 },
+        { "speciesId": "baobab", "weight": 2 },
+        { "speciesId": "white-oak", "weight": 1 }
+      ],
+      "wildTreeDensity": 0.35,
+      "plantable": false,
+      "connections": [
+        {
+          "direction": "west",
+          "targetZoneId": "orchard-trail",
+          "localEntry": { "x": 0, "z": 3 }
+        }
+      ]
+    },
+    {
+      "id": "mushroom-grotto",
+      "name": "Mushroom Grotto",
+      "type": "clearing",
+      "origin": { "x": 20, "z": 9 },
+      "size": { "width": 6, "height": 6 },
+      "groundMaterial": "grass",
+      "tiles": [
+        { "x": 2, "z": 2, "type": "water" },
+        { "x": 3, "z": 2, "type": "water" }
+      ],
+      "props": [
+        { "propId": "mushroom-cluster", "localX": 0, "localZ": 0 },
+        { "propId": "mushroom-cluster", "localX": 5, "localZ": 0 },
+        { "propId": "mushroom-cluster", "localX": 1, "localZ": 4 },
+        { "propId": "mushroom-cluster", "localX": 4, "localZ": 5 },
+        { "propId": "mushroom-cluster", "localX": 5, "localZ": 3 },
+        { "propId": "campfire", "localX": 3, "localZ": 4 },
+        { "propId": "wild-flowers", "localX": 0, "localZ": 5 }
+      ],
+      "plantable": true,
+      "connections": [
+        {
+          "direction": "north",
+          "targetZoneId": "sunlit-clearing",
+          "localEntry": { "x": 2, "z": 0 }
         }
       ]
     }

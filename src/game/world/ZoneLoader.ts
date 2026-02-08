@@ -6,20 +6,31 @@
  * overlaying any sparse tile overrides.
  */
 
-import { createGridCellEntity, createWildTreeEntity } from "../ecs/archetypes";
-import { gridCellsQuery, world } from "../ecs/world";
+import {
+  createGridCellEntity,
+  createNpcEntity,
+  createWildTreeEntity,
+} from "../ecs/archetypes";
 import type { Entity } from "../ecs/world";
-import type { ZoneDefinition, GroundMaterial, WildTreeSpec } from "./types";
-import { pickWeighted } from "./WorldGenerator";
+import { gridCellsQuery, npcsQuery, world } from "../ecs/world";
+import { getNpcTemplate } from "../npcs/NpcManager";
 import { createRNG, hashString } from "../utils/seedRNG";
+import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types";
+import { pickWeighted } from "./WorldGenerator";
 
 /** Map zone ground material to grid cell type. */
-function materialToCellType(material: GroundMaterial): "soil" | "water" | "rock" | "path" {
+function materialToCellType(
+  material: GroundMaterial,
+): "soil" | "water" | "rock" | "path" {
   switch (material) {
-    case "soil": return "soil";
-    case "dirt": return "soil";
-    case "grass": return "soil";
-    case "stone": return "path";
+    case "soil":
+      return "soil";
+    case "dirt":
+      return "soil";
+    case "grass":
+      return "soil";
+    case "stone":
+      return "path";
   }
 }
 
@@ -76,7 +87,12 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
   }
 
   // Spawn wild trees on a fraction of soil tiles
-  if (zone.wildTrees && zone.wildTrees.length > 0 && zone.wildTreeDensity && zone.wildTreeDensity > 0) {
+  if (
+    zone.wildTrees &&
+    zone.wildTrees.length > 0 &&
+    zone.wildTreeDensity &&
+    zone.wildTreeDensity > 0
+  ) {
     const wildTreeEntities = spawnWildTrees(
       zone.id,
       soilCells,
@@ -85,6 +101,39 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
       entities,
     );
     entities.push(...wildTreeEntities);
+  }
+
+  // Spawn NPC entities
+  if (zone.npcs) {
+    // Build set of existing NPC positions to avoid duplicates on reload
+    const existingNpcs = new Set<string>();
+    for (const npc of npcsQuery) {
+      if (npc.position) {
+        existingNpcs.add(`${npc.position.x},${npc.position.z}`);
+      }
+    }
+
+    for (const npcPlacement of zone.npcs) {
+      const template = getNpcTemplate(npcPlacement.templateId);
+      if (!template) continue;
+      const worldX = zone.origin.x + npcPlacement.localX;
+      const worldZ = zone.origin.z + npcPlacement.localZ;
+
+      // Skip if NPC already exists at this position (idempotent loading)
+      if (existingNpcs.has(`${worldX},${worldZ}`)) continue;
+      // Player level is checked at interaction time, so create all NPCs
+      const npcEntity = createNpcEntity(
+        worldX,
+        worldZ,
+        template.id,
+        template.function,
+        99, // always create; level gating happens on interaction
+        template.requiredLevel,
+      );
+      (npcEntity as Entity & { zoneId?: string }).zoneId = zone.id;
+      world.add(npcEntity);
+      entities.push(npcEntity);
+    }
   }
 
   return entities;
@@ -114,7 +163,10 @@ function spawnWildTrees(
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
 
-  const weighted = wildTrees.map((wt) => ({ value: wt.speciesId, weight: wt.weight }));
+  const weighted = wildTrees.map((wt) => ({
+    value: wt.speciesId,
+    weight: wt.weight,
+  }));
 
   for (let i = 0; i < treeCount && i < shuffled.length; i++) {
     const cell = shuffled[i];
@@ -122,14 +174,20 @@ function spawnWildTrees(
     // Random starting stage between 2-4 (Sapling through Old Growth)
     const stage = (Math.floor(rng() * 3) + 2) as 0 | 1 | 2 | 3 | 4;
 
-    const treeEntity = createWildTreeEntity(cell.worldX, cell.worldZ, speciesId, stage);
+    const treeEntity = createWildTreeEntity(
+      cell.worldX,
+      cell.worldZ,
+      speciesId,
+      stage,
+    );
     (treeEntity as Entity & { zoneId?: string }).zoneId = zoneId;
     world.add(treeEntity);
     entities.push(treeEntity);
 
     // Mark the grid cell as occupied
     const gridEntity = gridEntities.find(
-      (e) => e.gridCell?.gridX === cell.worldX && e.gridCell?.gridZ === cell.worldZ,
+      (e) =>
+        e.gridCell?.gridX === cell.worldX && e.gridCell?.gridZ === cell.worldZ,
     );
     if (gridEntity?.gridCell) {
       gridEntity.gridCell.occupied = true;

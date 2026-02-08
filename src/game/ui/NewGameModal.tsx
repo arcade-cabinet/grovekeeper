@@ -14,8 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { DIFFICULTY_TIERS, type DifficultyTier } from "../constants/difficulty";
 import { COLORS } from "../constants/config";
+import { DIFFICULTY_TIERS, type DifficultyTier } from "../constants/difficulty";
 
 interface NewGameModalProps {
   open: boolean;
@@ -39,9 +39,9 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
 
   const handleSelect = (tier: DifficultyTier) => {
     setSelected(tier);
-    // Reset permadeath based on forced state
+    // Reset permadeath based on forced state (including optional → default off)
     if (tier.permadeathForced === "on") setPermadeath(true);
-    else if (tier.permadeathForced === "off") setPermadeath(false);
+    else setPermadeath(false);
   };
 
   const handleStart = () => {
@@ -53,10 +53,16 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
   const bottomRow = DIFFICULTY_TIERS.slice(3);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogContent
         className="max-w-sm max-h-[90vh] overflow-y-auto"
         style={{ background: COLORS.skyMist }}
+        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.soilDark }}>
@@ -112,16 +118,33 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
 
             {/* Feature summary */}
             <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-              <FeatureRow label="Growth" value={`${selected.growthSpeedMult}x`} />
-              <FeatureRow label="Yields" value={`${selected.resourceYieldMult}x`} />
-              <FeatureRow label="Exposure" value={selected.exposureEnabled ? "Active" : "Off"} />
+              <FeatureRow
+                label="Growth"
+                value={`${selected.growthSpeedMult}x`}
+              />
+              <FeatureRow
+                label="Yields"
+                value={`${selected.resourceYieldMult}x`}
+              />
+              <FeatureRow
+                label="Exposure"
+                value={selected.exposureEnabled ? "Active" : "Off"}
+              />
               <FeatureRow
                 label="Disasters"
-                value={selected.disasterFrequency > 0 ? `${selected.disasterFrequency}/yr` : "None"}
+                value={
+                  selected.disasterFrequency > 0
+                    ? `${selected.disasterFrequency}/yr`
+                    : "None"
+                }
               />
               <FeatureRow
                 label="Building Decay"
-                value={selected.buildingDegradationRate > 0 ? `${selected.buildingDegradationRate}%/season` : "None"}
+                value={
+                  selected.buildingDegradationRate > 0
+                    ? `${selected.buildingDegradationRate}%/season`
+                    : "None"
+                }
               />
               <FeatureRow
                 label="Diseases"
@@ -136,7 +159,10 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
             style={{ background: "white", border: "1px solid #E0E0E0" }}
           >
             <div>
-              <p className="text-sm font-semibold" style={{ color: COLORS.soilDark }}>
+              <p
+                className="text-sm font-semibold"
+                style={{ color: COLORS.soilDark }}
+              >
                 Permadeath
               </p>
               <p className="text-[11px] text-gray-500">
@@ -197,10 +223,12 @@ function DifficultyTile({
   isSelected: boolean;
   onSelect: () => void;
 }>) {
+  const isRecommended = tier.id === "normal";
+
   return (
     <button
-      aria-label={`${tier.name} difficulty: ${tier.tagline}`}
-      className="flex flex-col items-center justify-center p-2 rounded-lg transition-all motion-reduce:transition-none min-h-[72px]"
+      aria-label={`${tier.name} difficulty${isRecommended ? " (Recommended)" : ""}: ${tier.tagline}`}
+      className="relative flex flex-col items-center justify-center p-2 rounded-lg transition-all motion-reduce:transition-none min-h-[72px]"
       style={{
         background: isSelected ? `${tier.color}15` : "white",
         border: `2px solid ${isSelected ? tier.color : "#E0E0E0"}`,
@@ -208,6 +236,14 @@ function DifficultyTile({
       }}
       onClick={onSelect}
     >
+      {isRecommended && (
+        <span
+          className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap"
+          style={{ background: tier.color, color: "white" }}
+        >
+          Recommended
+        </span>
+      )}
       <span className="text-xl mb-0.5">{ICONS[tier.icon] ?? ""}</span>
       <span
         className="text-xs font-bold"
@@ -219,7 +255,10 @@ function DifficultyTile({
   );
 }
 
-function FeatureRow({ label, value }: Readonly<{ label: string; value: string }>) {
+function FeatureRow({
+  label,
+  value,
+}: Readonly<{ label: string; value: string }>) {
   return (
     <div className="flex justify-between">
       <span className="text-gray-500">{label}</span>

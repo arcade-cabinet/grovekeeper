@@ -3,12 +3,14 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { harvestSystem, initHarvestable, collectHarvest } from "./harvest";
 import { world } from "../ecs/world";
 import { createTreeEntity } from "../ecs/archetypes";
+import { useGameStore } from "../stores/gameStore";
 
 describe("Harvest System", () => {
   beforeEach(() => {
     for (const entity of [...world]) {
       world.remove(entity);
     }
+    useGameStore.getState().resetGame();
   });
 
   describe("initHarvestable", () => {
@@ -178,6 +180,122 @@ describe("Harvest System", () => {
       const summerFruit = summerResult.find((r) => r.type === "fruit")?.amount ?? 0;
       const autumnFruit = autumnResult.find((r) => r.type === "fruit")?.amount ?? 0;
       expect(autumnFruit).toBe(summerFruit * 3);
+    });
+
+    it("golden apple autumn bonus does not apply in spring", () => {
+      const tree = createTreeEntity(0, 0, "golden-apple");
+      tree.tree!.stage = 3;
+      world.add(tree);
+      initHarvestable(tree);
+      tree.harvestable!.ready = true;
+      const springResult = collectHarvest(tree, "spring")!;
+      tree.harvestable!.ready = true;
+      const summerResult = collectHarvest(tree, "summer")!;
+
+      const springFruit = springResult.find((r) => r.type === "fruit")?.amount ?? 0;
+      const summerFruit = summerResult.find((r) => r.type === "fruit")?.amount ?? 0;
+      expect(springFruit).toBe(summerFruit);
+    });
+
+    it("ironbark gets 3x timber at old growth (stage 4)", () => {
+      const matureTree = createTreeEntity(0, 0, "ironbark");
+      matureTree.tree!.stage = 3;
+      world.add(matureTree);
+      initHarvestable(matureTree);
+      matureTree.harvestable!.ready = true;
+      const matureResult = collectHarvest(matureTree)!;
+
+      for (const e of [...world]) world.remove(e);
+      const oldTree = createTreeEntity(0, 0, "ironbark");
+      oldTree.tree!.stage = 4;
+      world.add(oldTree);
+      initHarvestable(oldTree);
+      oldTree.harvestable!.ready = true;
+      const oldResult = collectHarvest(oldTree)!;
+
+      const matureTimber = matureResult.find((r) => r.type === "timber")?.amount ?? 0;
+      const oldTimber = oldResult.find((r) => r.type === "timber")?.amount ?? 0;
+
+      // Old growth ironbark: stage(1.5x) * ironbark(3.0x) = 4.5x
+      expect(oldTimber).toBeGreaterThanOrEqual(Math.ceil(matureTimber * 4.5));
+    });
+
+    it("ironbark 3x bonus does not apply at stage 3", () => {
+      // Compare ironbark at stage 3 vs stage 4 to isolate the 3x bonus
+      const matureTree = createTreeEntity(0, 0, "ironbark");
+      matureTree.tree!.stage = 3;
+      world.add(matureTree);
+      initHarvestable(matureTree);
+      matureTree.harvestable!.ready = true;
+      const matureResult = collectHarvest(matureTree)!;
+
+      for (const e of [...world]) world.remove(e);
+      const oldTree = createTreeEntity(0, 0, "ironbark");
+      oldTree.tree!.stage = 4;
+      world.add(oldTree);
+      initHarvestable(oldTree);
+      oldTree.harvestable!.ready = true;
+      const oldResult = collectHarvest(oldTree)!;
+
+      const matureTimber = matureResult.find((r) => r.type === "timber")?.amount ?? 0;
+      const oldTimber = oldResult.find((r) => r.type === "timber")?.amount ?? 0;
+
+      // Stage 3 should NOT have the 3x bonus — old growth should be significantly higher
+      // Old growth = stage(1.5x) * ironbark(3.0x) = 4.5x vs stage 3 = 1x
+      expect(oldTimber / matureTimber).toBeGreaterThanOrEqual(4);
+    });
+
+    it("collectHarvest returns null for entity without harvestable component", () => {
+      const tree = createTreeEntity(0, 0, "white-oak");
+      tree.tree!.stage = 2;
+      world.add(tree);
+      // No initHarvestable called
+      expect(collectHarvest(tree)).toBeNull();
+    });
+
+    it("stacked multipliers: old growth + pruned + difficulty", () => {
+      useGameStore.setState({ difficulty: "explore" }); // 1.3x yield
+
+      const tree = createTreeEntity(0, 0, "white-oak");
+      tree.tree!.stage = 4; // old growth: 1.5x
+      tree.tree!.pruned = true; // pruned: 1.5x
+      world.add(tree);
+      initHarvestable(tree);
+      tree.harvestable!.ready = true;
+      const result = collectHarvest(tree)!;
+
+      // Base tree at stage 3 no pruning normal difficulty
+      for (const e of [...world]) world.remove(e);
+      useGameStore.setState({ difficulty: "normal" });
+      const baseTree = createTreeEntity(0, 0, "white-oak");
+      baseTree.tree!.stage = 3;
+      world.add(baseTree);
+      initHarvestable(baseTree);
+      baseTree.harvestable!.ready = true;
+      const baseResult = collectHarvest(baseTree)!;
+
+      // Boosted: 1.5 * 1.5 * 1.3 = 2.925x
+      expect(result[0].amount).toBeGreaterThan(baseResult[0].amount * 2);
+
+      useGameStore.setState({ difficulty: "normal" }); // cleanup
+    });
+
+    it("uses Math.ceil for yield rounding with fractional multipliers", () => {
+      // Explore difficulty has 1.3x yield mult. White-oak base timber = 2.
+      // 2 * 1.3 = 2.6 → Math.ceil = 3
+      useGameStore.setState({ difficulty: "explore" });
+      const tree = createTreeEntity(0, 0, "white-oak");
+      tree.tree!.stage = 3;
+      world.add(tree);
+      initHarvestable(tree);
+      tree.harvestable!.ready = true;
+      const result = collectHarvest(tree)!;
+
+      const timber = result.find((r) => r.type === "timber");
+      expect(timber).toBeDefined();
+      // Base 2 * 1.3 = 2.6, ceil'd to 3
+      expect(timber!.amount).toBe(3);
+      useGameStore.setState({ difficulty: "normal" });
     });
   });
 });

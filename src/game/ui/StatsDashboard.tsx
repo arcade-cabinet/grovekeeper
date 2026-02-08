@@ -71,6 +71,7 @@ export const StatsDashboard = ({ open, onClose }: StatsDashboardProps) => {
           background: "#F5F0E3",
           border: `2px solid ${COLORS.barkBrown}`,
         }}
+        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.soilDark }}>

@@ -1,0 +1,161 @@
+[
+  {
+    "id": "rowan-greeting",
+    "speaker": "Elder Rowan",
+    "text": "Ah, young grovekeeper! The forest grows stronger with your care. What wisdom can I share today?",
+    "choices": [
+      {
+        "label": "Tell me about growing trees",
+        "next": "rowan-tips-growth"
+      },
+      {
+        "label": "Any advice for a new keeper?",
+        "next": "rowan-tips-general"
+      },
+      {
+        "label": "Goodbye",
+        "next": null,
+        "action": { "type": "xp", "amount": 5 }
+      }
+    ]
+  },
+  {
+    "id": "rowan-tips-growth",
+    "speaker": "Elder Rowan",
+    "text": "Water your saplings regularly — it doubles their growth speed. And plant near water tiles for even better results. Rain does the watering for you, if you're patient.",
+    "choices": [
+      {
+        "label": "Thanks for the tip!",
+        "next": null,
+        "action": { "type": "xp", "amount": 10 }
+      }
+    ]
+  },
+  {
+    "id": "rowan-tips-general",
+    "speaker": "Elder Rowan",
+    "text": "Explore beyond the grove! The forest trail leads to new clearings where rare species grow wild. Harvest mature trees for timber and sap — they're the lifeblood of our village.",
+    "choices": [
+      {
+        "label": "I'll explore right away!",
+        "next": null,
+        "action": { "type": "xp", "amount": 10 }
+      }
+    ]
+  },
+  {
+    "id": "hazel-greeting",
+    "speaker": "Hazel",
+    "text": "Welcome to my trading post! I've got the best rates in Grovekeeper Valley. What'll it be?",
+    "choices": [
+      {
+        "label": "Let's trade",
+        "next": null,
+        "action": { "type": "open_trade" }
+      },
+      {
+        "label": "What do you sell?",
+        "next": "hazel-info"
+      },
+      {
+        "label": "Just browsing",
+        "next": null
+      }
+    ]
+  },
+  {
+    "id": "hazel-info",
+    "speaker": "Hazel",
+    "text": "I trade timber for sap, sap for fruit, and fruit for acorns. Better rates than you'll find anywhere else! The seasonal market changes prices too — keep an eye on that.",
+    "choices": [
+      {
+        "label": "Let's trade!",
+        "next": null,
+        "action": { "type": "open_trade" }
+      },
+      {
+        "label": "Maybe later",
+        "next": null
+      }
+    ]
+  },
+  {
+    "id": "fern-greeting",
+    "speaker": "Botanist Fern",
+    "text": "Oh! A fellow nature enthusiast! I've been cataloguing every species in the valley. Would you help me with some research?",
+    "choices": [
+      {
+        "label": "What do you need?",
+        "next": "fern-quest-info"
+      },
+      {
+        "label": "Tell me about rare species",
+        "next": "fern-species-info"
+      },
+      {
+        "label": "Not right now",
+        "next": null
+      }
+    ]
+  },
+  {
+    "id": "fern-quest-info",
+    "speaker": "Botanist Fern",
+    "text": "I'm studying the growth patterns of different species. Plant at least 5 different species and grow one to Old Growth stage — that would give me incredible data! I'll make it worth your while.",
+    "choices": [
+      {
+        "label": "I'll do it!",
+        "next": null,
+        "action": { "type": "xp", "amount": 15 }
+      }
+    ]
+  },
+  {
+    "id": "fern-species-info",
+    "speaker": "Botanist Fern",
+    "text": "The ancient forest to the southeast has Redwoods and Ironbarks — the hardiest species around. And if you ever find a Ghost Birch... well, those are truly special. They glow at night!",
+    "choices": [
+      {
+        "label": "Amazing! I'll look for them",
+        "next": null,
+        "action": { "type": "xp", "amount": 10 }
+      }
+    ]
+  },
+  {
+    "id": "blossom-greeting",
+    "speaker": "Blossom",
+    "text": "Hello, dear! Looking for something special to plant? I've collected seeds from all across the valley!",
+    "choices": [
+      {
+        "label": "Show me your seeds",
+        "next": null,
+        "action": { "type": "open_seeds" }
+      },
+      {
+        "label": "What's your best seed?",
+        "next": "blossom-recommend"
+      },
+      {
+        "label": "Just looking",
+        "next": null
+      }
+    ]
+  },
+  {
+    "id": "blossom-recommend",
+    "speaker": "Blossom",
+    "text": "Cherry Blossoms are simply gorgeous — petals float through the air when they're mature! Golden Apples are practical too — wonderful fruit yields. Take your pick!",
+    "choices": [
+      {
+        "label": "I'd like to buy some",
+        "next": null,
+        "action": { "type": "open_seeds" }
+      },
+      {
+        "label": "Maybe next time",
+        "next": null
+      }
+    ]
+  }
+]

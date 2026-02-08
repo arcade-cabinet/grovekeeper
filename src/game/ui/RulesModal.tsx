@@ -20,50 +20,71 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
     {
       icon: "🌱",
       title: "Plant Trees",
-      description: "Use the trowel to plant seeds and grow various tree species. Different trees grow at different rates and offer different rewards.",
+      description:
+        "Select the trowel, stand on an empty soil tile, and tap the action button to plant. Each species needs seeds and some require resources to plant.",
     },
     {
       icon: "💧",
       title: "Water & Care",
-      description: "Keep your trees healthy by watering them regularly. Well-watered trees grow faster and produce better yields.",
+      description:
+        "Switch to the watering can and tap near growing trees. Watered trees grow faster and produce better yields at harvest.",
     },
     {
       icon: "🪓",
       title: "Harvest",
-      description: "Once trees reach maturity, use the axe to harvest them for resources, coins, and XP. Ancient trees yield the highest rewards.",
+      description:
+        "Mature trees can be harvested with the axe for Timber, Sap, Fruit, or Acorns depending on the species. Pruning first gives bonus yields!",
+    },
+    {
+      icon: "🔋",
+      title: "Stamina",
+      description:
+        "Every tool action costs stamina. When you run low, rest and it will regenerate over time. Plan your actions wisely!",
+    },
+    {
+      icon: "🪵",
+      title: "Resources & Seeds",
+      description:
+        "Harvest trees to collect resources (Timber, Sap, Fruit, Acorns). Some tree species cost resources to plant. Trade surplus resources for ones you need.",
     },
     {
       icon: "⏰",
-      title: "Time Flows",
-      description: "The game has a day/night cycle and seasons. Some trees thrive in specific seasons, and growth rates change throughout the day.",
-    },
-    {
-      icon: "🎯",
-      title: "Complete Quests",
-      description: "Take on daily quests to earn bonus rewards. Quests range from simple planting tasks to complex seasonal challenges.",
+      title: "Seasons & Weather",
+      description:
+        "Seasons cycle through Spring, Summer, Autumn, and Winter. Rain boosts growth, drought slows it, and windstorms can damage trees.",
     },
     {
       icon: "📈",
       title: "Level Up",
-      description: "Earn XP to level up and unlock new tree species, tools, and abilities. Higher levels unlock harder quests with better rewards.",
+      description:
+        "Earn XP from planting, watering, and harvesting. Level up to unlock new species, tools, grid expansions, and quests.",
     },
   ];
 
   const controls = [
     {
-      icon: "🕹️",
-      title: "Movement",
-      description: "Use the joystick on the left to move your farmer around the grove.",
+      icon: "👆",
+      title: "Tap to Move",
+      description:
+        "Tap any tile on the ground to walk there. Your farmer will pathfind around obstacles automatically.",
     },
     {
-      icon: "👆",
-      title: "Action",
-      description: "Tap the action button on the right to use your current tool on the nearest tile.",
+      icon: "👋",
+      title: "Drag to Move",
+      description:
+        "On mobile, drag anywhere on the canvas to move your farmer. On desktop, use WASD keys.",
+    },
+    {
+      icon: "🎯",
+      title: "Action Button",
+      description:
+        "The big button at the bottom-right uses your current tool on the tile you're standing on.",
     },
     {
       icon: "🔧",
-      title: "Tools",
-      description: "Tap the tools button in the top bar to switch between different tools.",
+      title: "Switch Tools",
+      description:
+        "Tap the tools button in the top bar or use the tool belt on the right to switch between tools.",
     },
   ];
 
@@ -85,7 +106,10 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
             How to Play
             <span>🌲</span>
           </DialogTitle>
-          <DialogDescription className="text-sm" style={{ color: COLORS.barkBrown }}>
+          <DialogDescription
+            className="text-sm"
+            style={{ color: COLORS.barkBrown }}
+          >
             Welcome to Grove Keeper! Here's how to grow your forest.
           </DialogDescription>
         </DialogHeader>
@@ -93,7 +117,10 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
         <ScrollArea className="flex-1 px-4 max-h-[55vh]">
           {/* Game Rules */}
           <div className="space-y-3 pb-2">
-            <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: COLORS.forestGreen }}>
+            <h3
+              className="text-sm font-semibold uppercase tracking-wider"
+              style={{ color: COLORS.forestGreen }}
+            >
               Game Rules
             </h3>
             {rules.map((rule, index) => (
@@ -101,16 +128,22 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
                 key={index}
                 className="flex gap-3 p-3 rounded-xl"
                 style={{
-                  background: 'rgba(255,255,255,0.7)',
+                  background: "rgba(255,255,255,0.7)",
                   border: `1px solid ${COLORS.forestGreen}20`,
                 }}
               >
                 <span className="text-2xl flex-shrink-0">{rule.icon}</span>
                 <div>
-                  <h4 className="font-semibold text-sm" style={{ color: COLORS.soilDark }}>
+                  <h4
+                    className="font-semibold text-sm"
+                    style={{ color: COLORS.soilDark }}
+                  >
                     {rule.title}
                   </h4>
-                  <p className="text-xs leading-relaxed" style={{ color: COLORS.barkBrown }}>
+                  <p
+                    className="text-xs leading-relaxed"
+                    style={{ color: COLORS.barkBrown }}
+                  >
                     {rule.description}
                   </p>
                 </div>
@@ -119,8 +152,14 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
           </div>
 
           {/* Controls */}
-          <div className="space-y-3 py-3 border-t" style={{ borderColor: `${COLORS.forestGreen}20` }}>
-            <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: COLORS.forestGreen }}>
+          <div
+            className="space-y-3 py-3 border-t"
+            style={{ borderColor: `${COLORS.forestGreen}20` }}
+          >
+            <h3
+              className="text-sm font-semibold uppercase tracking-wider"
+              style={{ color: COLORS.forestGreen }}
+            >
               Controls
             </h3>
             {controls.map((control, index) => (
@@ -128,16 +167,22 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
                 key={index}
                 className="flex gap-3 p-3 rounded-xl"
                 style={{
-                  background: 'rgba(255,255,255,0.7)',
+                  background: "rgba(255,255,255,0.7)",
                   border: `1px solid ${COLORS.forestGreen}20`,
                 }}
               >
                 <span className="text-2xl flex-shrink-0">{control.icon}</span>
                 <div>
-                  <h4 className="font-semibold text-sm" style={{ color: COLORS.soilDark }}>
+                  <h4
+                    className="font-semibold text-sm"
+                    style={{ color: COLORS.soilDark }}
+                  >
                     {control.title}
                   </h4>
-                  <p className="text-xs leading-relaxed" style={{ color: COLORS.barkBrown }}>
+                  <p
+                    className="text-xs leading-relaxed"
+                    style={{ color: COLORS.barkBrown }}
+                  >
                     {control.description}
                   </p>
                 </div>
@@ -164,7 +209,7 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
             className="flex-1 h-11 rounded-xl font-semibold"
             style={{
               background: `linear-gradient(135deg, ${COLORS.forestGreen} 0%, ${COLORS.forestGreen}dd 100%)`,
-              color: 'white',
+              color: "white",
             }}
             onClick={onStart}
           >

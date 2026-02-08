@@ -30,6 +30,13 @@ export interface PropPlacement {
   scale?: number;
 }
 
+export interface NpcPlacement {
+  templateId: string;
+  localX: number;
+  localZ: number;
+  facing?: ConnectionDirection;
+}
+
 export interface ZoneConnection {
   direction: ConnectionDirection;
   targetZoneId: string;
@@ -56,6 +63,8 @@ export interface ZoneDefinition {
   props?: PropPlacement[];
   plantable: boolean;
   connections: ZoneConnection[];
+  /** NPC placements in this zone. */
+  npcs?: NpcPlacement[];
   /** Species pool for wild tree spawning in this zone. */
   wildTrees?: WildTreeSpec[];
   /** Fraction of soil tiles that should get wild trees (0-1). */

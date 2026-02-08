@@ -38,6 +38,7 @@ export const ZONE_ARCHETYPES: ZoneArchetype[] = [
     possibleProps: [
       { value: "wild-flowers", weight: 3 },
       { value: "mushroom-cluster", weight: 1 },
+      { value: "stump", weight: 1 },
     ],
     plantable: true,
     propDensity: 0.02,
@@ -54,12 +55,13 @@ export const ZONE_ARCHETYPES: ZoneArchetype[] = [
       { value: "mushroom-cluster", weight: 2 },
       { value: "boulder", weight: 2 },
       { value: "wild-flowers", weight: 1 },
+      { value: "stump", weight: 2 },
     ],
     plantable: false,
     wildTrees: [
       { speciesId: "white-oak", weight: 3 },
-      { speciesId: "sugar-maple", weight: 2 },
-      { speciesId: "lodgepole-pine", weight: 2 },
+      { speciesId: "flame-maple", weight: 2 },
+      { speciesId: "elder-pine", weight: 2 },
       { speciesId: "baobab", weight: 1 },
     ],
     wildTreeDensity: 0.3,
@@ -75,6 +77,7 @@ export const ZONE_ARCHETYPES: ZoneArchetype[] = [
     possibleProps: [
       { value: "wild-flowers", weight: 5 },
       { value: "boulder", weight: 1 },
+      { value: "campfire", weight: 1 },
     ],
     plantable: true,
     propDensity: 0.03,
@@ -89,6 +92,8 @@ export const ZONE_ARCHETYPES: ZoneArchetype[] = [
     possibleProps: [
       { value: "fallen-log", weight: 2 },
       { value: "mushroom-cluster", weight: 1 },
+      { value: "signpost", weight: 1 },
+      { value: "lantern", weight: 2 },
     ],
     plantable: false,
     propDensity: 0.03,
@@ -100,9 +105,16 @@ export const ZONE_ARCHETYPES: ZoneArchetype[] = [
     sizeRange: { minWidth: 6, maxWidth: 8, minHeight: 6, maxHeight: 8 },
     groundMaterial: "stone",
     tileRules: { waterPct: 0, rockPct: 0, pathPct: 0.3 },
-    possibleProps: [{ value: "boulder", weight: 1 }],
+    possibleProps: [
+      { value: "boulder", weight: 1 },
+      { value: "lantern", weight: 3 },
+      { value: "fence-section", weight: 2 },
+      { value: "birdbath", weight: 1 },
+      { value: "campfire", weight: 1 },
+      { value: "signpost", weight: 1 },
+    ],
     plantable: false,
-    propDensity: 0.01,
+    propDensity: 0.04,
   },
 ];
 

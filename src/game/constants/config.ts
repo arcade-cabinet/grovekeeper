@@ -13,18 +13,7 @@ export const COLORS = {
   earthRed: "#8D6E63",
 } as const;
 
-// Legacy GROWTH_STAGES kept for backwards compat during migration
-export const GROWTH_STAGES = [
-  { name: "seed", progress: 0, scale: 0.1 },
-  { name: "sprout", progress: 0.1, scale: 0.2 },
-  { name: "seedling", progress: 0.25, scale: 0.35 },
-  { name: "sapling", progress: 0.5, scale: 0.55 },
-  { name: "young", progress: 0.75, scale: 0.75 },
-  { name: "mature", progress: 1.0, scale: 1.0 },
-  { name: "ancient", progress: 1.5, scale: 1.2 },
-] as const;
-
-// New 5-stage model (spec §15)
+// 5-stage model (spec §15)
 export const STAGE_NAMES = [
   "Seed",
   "Sprout",

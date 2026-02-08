@@ -26,7 +26,7 @@ interface Props {
  * Determine the contextual action label based on the active tool and
  * the tile the player is standing on.
  */
-function getActionLabel(
+export function getActionLabel(
   selectedTool: string,
   tile: TileState | null,
 ): { label: string; enabled: boolean } {
@@ -83,11 +83,7 @@ function getActionLabel(
  *
  * Minimum touch target: 72x48px.
  */
-export const ActionButton = ({
-  selectedTool,
-  tileState,
-  onAction,
-}: Props) => {
+export const ActionButton = ({ selectedTool, tileState, onAction }: Props) => {
   const { label, enabled } = getActionLabel(selectedTool, tileState);
 
   return (

@@ -22,6 +22,7 @@ import { createSPSTree, type SPSTreeParams } from "./spsTreeGenerator";
 
 // ---------------------------------------------------------------------------
 // Texture paths — mapped from AmbientCG 1K-JPG sets
+// Prefixed with Vite's BASE_URL so paths resolve on subdirectory deploys.
 // ---------------------------------------------------------------------------
 
 interface TextureSet {
@@ -31,17 +32,27 @@ interface TextureSet {
   opacity?: string;
 }
 
+const BASE = import.meta.env.BASE_URL ?? "/";
+
+function texPath(relative: string): string {
+  return `${BASE}textures/trees/${relative}`;
+}
+
 const BARK_TEXTURES: Record<string, TextureSet> = {
-  oak:    { color: "/textures/trees/bark001/color.jpg", normal: "/textures/trees/bark001/normal.jpg", roughness: "/textures/trees/bark001/roughness.jpg" },
-  smooth: { color: "/textures/trees/bark003/color.jpg", normal: "/textures/trees/bark003/normal.jpg", roughness: "/textures/trees/bark003/roughness.jpg" },
-  rugged: { color: "/textures/trees/bark006/color.jpg", normal: "/textures/trees/bark006/normal.jpg", roughness: "/textures/trees/bark006/roughness.jpg" },
-  birch:  { color: "/textures/trees/bark009/color.jpg", normal: "/textures/trees/bark009/normal.jpg", roughness: "/textures/trees/bark009/roughness.jpg" },
-  thick:  { color: "/textures/trees/bark012/color.jpg", normal: "/textures/trees/bark012/normal.jpg", roughness: "/textures/trees/bark012/roughness.jpg" },
+  oak:     { color: texPath("bark001/color.jpg"), normal: texPath("bark001/normal.jpg"), roughness: texPath("bark001/roughness.jpg") },
+  smooth:  { color: texPath("bark003/color.jpg"), normal: texPath("bark003/normal.jpg"), roughness: texPath("bark003/roughness.jpg") },
+  twisted: { color: texPath("bark004/color.jpg"), normal: texPath("bark004/normal.jpg"), roughness: texPath("bark004/roughness.jpg") },
+  rugged:  { color: texPath("bark006/color.jpg"), normal: texPath("bark006/normal.jpg"), roughness: texPath("bark006/roughness.jpg") },
+  mossy:   { color: texPath("bark007/color.jpg"), normal: texPath("bark007/normal.jpg"), roughness: texPath("bark007/roughness.jpg") },
+  birch:   { color: texPath("bark009/color.jpg"), normal: texPath("bark009/normal.jpg"), roughness: texPath("bark009/roughness.jpg") },
+  scaled:  { color: texPath("bark010/color.jpg"), normal: texPath("bark010/normal.jpg"), roughness: texPath("bark010/roughness.jpg") },
+  thick:   { color: texPath("bark012/color.jpg"), normal: texPath("bark012/normal.jpg"), roughness: texPath("bark012/roughness.jpg") },
 };
 
 const LEAF_TEXTURES: Record<string, TextureSet> = {
-  broad:   { color: "/textures/trees/leaf001/color.jpg", normal: "/textures/trees/leaf001/normal.jpg", opacity: "/textures/trees/leaf001/opacity.jpg" },
-  feathery: { color: "/textures/trees/leaf003/color.jpg", normal: "/textures/trees/leaf003/normal.jpg", opacity: "/textures/trees/leaf003/opacity.jpg" },
+  broad:    { color: texPath("leaf001/color.jpg"), normal: texPath("leaf001/normal.jpg"), opacity: texPath("leaf001/opacity.jpg") },
+  maple:    { color: texPath("leaf002/color.jpg"), normal: texPath("leaf002/normal.jpg"), opacity: texPath("leaf002/opacity.jpg") },
+  feathery: { color: texPath("leaf003/color.jpg"), normal: texPath("leaf003/normal.jpg"), opacity: texPath("leaf003/opacity.jpg") },
 };
 
 // ---------------------------------------------------------------------------
@@ -79,7 +90,7 @@ const SPECIES_PROFILES: Record<string, SpeciesProfile> = {
     sps: { trunkHeight: 2.6, forks: 2, boughs: 1, branches: 6, leavesOnBranch: 4, forkAngle: 0.4, forkRatio: 0.55, bowHeight: 1.5 },
   },
   "cherry-blossom": {
-    bark: "smooth", leaf: "broad",
+    bark: "twisted", leaf: "broad",
     barkTint: [0.5, 0.35, 0.3],
     leafTint: [0.91, 0.63, 0.75], // pink tint
     sps: { trunkHeight: 1.6, forks: 3, boughs: 2, branches: 10, leavesOnBranch: 9, forkAngle: 1.1, forkRatio: 0.65, bowHeight: 2.5 },
@@ -91,13 +102,13 @@ const SPECIES_PROFILES: Record<string, SpeciesProfile> = {
     sps: { trunkHeight: 2.0, forks: 3, boughs: 2, branches: 6, leavesOnBranch: 4, forkAngle: 0.9, forkRatio: 0.6, bowHeight: 2 },
   },
   "redwood": {
-    bark: "oak", leaf: "feathery",
+    bark: "scaled", leaf: "feathery",
     barkTint: [0.55, 0.3, 0.2],
     leafTint: [0.18, 0.49, 0.2],
     sps: { trunkHeight: 3.5, forks: 3, boughs: 2, branches: 10, leavesOnBranch: 5, forkAngle: 0.8, forkRatio: 0.6, bowHeight: 2 },
   },
   "flame-maple": {
-    bark: "rugged", leaf: "broad",
+    bark: "rugged", leaf: "maple",
     barkTint: [0.6, 0.45, 0.35],
     leafTint: [0.91, 0.38, 0.0], // fiery orange
     sps: { trunkHeight: 2.0, forks: 4, boughs: 2, branches: 10, leavesOnBranch: 6, forkAngle: 1.0, forkRatio: 0.65, bowHeight: 2.5 },
@@ -116,13 +127,13 @@ const SPECIES_PROFILES: Record<string, SpeciesProfile> = {
     sps: { trunkHeight: 2.2, forks: 3, boughs: 2, branches: 8, leavesOnBranch: 6, forkAngle: 1.0, forkRatio: 0.7, bowHeight: 2 },
   },
   "moonwood-ash": {
-    bark: "smooth", leaf: "broad",
+    bark: "mossy", leaf: "broad",
     barkTint: [0.81, 0.85, 0.86],
     leafTint: [0.7, 0.62, 0.86], // purple shimmer
     sps: { trunkHeight: 2.4, forks: 3, boughs: 2, branches: 8, leavesOnBranch: 5, forkAngle: 1.0, forkRatio: 0.65, bowHeight: 2.5 },
   },
   "worldtree": {
-    bark: "oak", leaf: "broad",
+    bark: "mossy", leaf: "maple",
     barkTint: [0.45, 0.3, 0.2],
     leafTint: [0.1, 0.37, 0.13],
     sps: { trunkHeight: 3.5, forks: 5, boughs: 2, branches: 15, leavesOnBranch: 8, forkAngle: 0.9, forkRatio: 0.6, bowHeight: 2 },

@@ -45,6 +45,7 @@ export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
       <DialogContent
         className="max-w-sm"
         style={{ background: "#F5F0E3", border: `2px solid ${COLORS.barkBrown}` }}
+        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.soilDark }}>Trading Post</DialogTitle>

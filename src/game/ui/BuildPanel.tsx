@@ -50,6 +50,7 @@ export const BuildPanel = ({ open, onClose, onSelectStructure }: BuildPanelProps
           border: `3px solid ${COLORS.barkBrown}`,
           borderRadius: 16,
         }}
+        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle
