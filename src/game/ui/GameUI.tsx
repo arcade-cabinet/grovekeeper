@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { COLORS } from "../constants/config";
-import { treesQuery } from "../ecs/world";
 import { getNpcTemplate } from "../npcs/NpcManager";
 import { useGameStore } from "../stores/gameStore";
 import type { StructureTemplate } from "../structures/types";
-import type { ObjectTapInfo } from "../systems/InputManager";
 import { getCosmeticById } from "../systems/prestige";
 import type { GameTime } from "../systems/time";
 import type { WeatherType } from "../systems/weather";
@@ -12,19 +10,18 @@ import { getActionLabel, type TileState } from "./ActionButton";
 import { BatchHarvestButton } from "./BatchHarvestButton";
 import { BuildPanel } from "./BuildPanel";
 import { HUD } from "./HUD";
-import {
-  getNpcActions,
-  getTreeActions,
-  InteractionMenu,
-} from "./InteractionMenu";
 import { MiniMap } from "./MiniMap";
+import { MobileActionButtons } from "./MobileActionButtons";
 import { NpcDialogue } from "./NpcDialogue";
 import { PauseMenu } from "./PauseMenu";
+import { RadialActionMenu } from "./RadialActionMenu";
+import type { RadialAction } from "./radialActions";
 import { SeedSelect } from "./SeedSelect";
 import { StaminaGauge } from "./StaminaGauge";
 import { ToolBelt } from "./ToolBelt";
 import { ToolWheel } from "./ToolWheel";
 import { TradeDialog } from "./TradeDialog";
+import { VirtualJoystick } from "./VirtualJoystick";
 import { WeatherForecast } from "./WeatherForecast";
 import { WeatherOverlay } from "./WeatherOverlay";
 
@@ -53,9 +50,12 @@ interface GameUIProps {
   nearbyNpcTemplateId?: string | null;
   npcDialogueOpen?: boolean;
   setNpcDialogueOpen?: (open: boolean) => void;
-  interactionTarget?: ObjectTapInfo | null;
-  onInteractionAction?: (actionId: string) => void;
-  onDismissInteraction?: () => void;
+  radialActions?: RadialAction[];
+  radialScreenPos?: { x: number; y: number } | null;
+  onRadialAction?: (actionId: string) => void;
+  onDismissRadial?: () => void;
+  movementRef?: React.RefObject<{ x: number; z: number }>;
+  onJoystickActiveChange?: (active: boolean) => void;
 }
 
 export const GameUI = ({
@@ -78,9 +78,12 @@ export const GameUI = ({
   nearbyNpcTemplateId,
   npcDialogueOpen,
   setNpcDialogueOpen,
-  interactionTarget,
-  onInteractionAction,
-  onDismissInteraction,
+  radialActions,
+  radialScreenPos,
+  onRadialAction,
+  onDismissRadial,
+  movementRef,
+  onJoystickActiveChange,
 }: GameUIProps) => {
   const { activeBorderCosmetic } = useGameStore();
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
@@ -90,21 +93,6 @@ export const GameUI = ({
   const cosmetic = activeBorderCosmetic
     ? getCosmeticById(activeBorderCosmetic)
     : null;
-
-  // Build interaction actions from the tapped entity
-  const interactionActions = (() => {
-    if (!interactionTarget) return [];
-    if (interactionTarget.entityType === "npc") return getNpcActions();
-    if (interactionTarget.entityType === "tree") {
-      // Find tree entity to get stage/watered info
-      for (const t of treesQuery) {
-        if (t.id === interactionTarget.entityId && t.tree) {
-          return getTreeActions(t.tree.stage, t.tree.watered);
-        }
-      }
-    }
-    return [];
-  })();
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -187,9 +175,9 @@ export const GameUI = ({
         <StaminaGauge />
       </div>
 
-      {/* Bottom control area */}
+      {/* Bottom control area — desktop only */}
       <div
-        className="absolute bottom-0 left-0 right-0 pointer-events-auto"
+        className="absolute bottom-0 left-0 right-0 pointer-events-auto hidden md:block"
         style={{
           background: `linear-gradient(0deg, ${COLORS.soilDark} 0%, ${COLORS.soilDark}ee 60%, transparent 100%)`,
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -202,22 +190,37 @@ export const GameUI = ({
         />
       </div>
 
+      {/* Mobile controls — joystick (left) + action buttons (right) */}
+      {movementRef && (
+        <VirtualJoystick
+          movementRef={movementRef}
+          onActiveChange={onJoystickActiveChange}
+        />
+      )}
+      <MobileActionButtons
+        onAction={onAction}
+        onOpenSeeds={() => setSeedSelectOpen(true)}
+        onPause={() => setPauseMenuOpen(true)}
+        tileState={playerTileInfo ?? null}
+        nearbyNpcTemplateId={nearbyNpcTemplateId ?? null}
+      />
+
       {/* Mini-map - desktop only, bottom-left */}
       <MiniMap />
 
-      {/* Interaction menu - shown when tapping a 3D object */}
-      {interactionTarget &&
-        interactionActions.length > 0 &&
-        onInteractionAction &&
-        onDismissInteraction && (
+      {/* Radial action menu - shown when tapping ground/objects */}
+      {radialActions &&
+        radialActions.length > 0 &&
+        radialScreenPos &&
+        onRadialAction &&
+        onDismissRadial && (
           <div className="pointer-events-auto">
-            <InteractionMenu
-              screenX={interactionTarget.screenX}
-              screenY={interactionTarget.screenY}
-              entityType={interactionTarget.entityType}
-              actions={interactionActions}
-              onSelect={onInteractionAction}
-              onDismiss={onDismissInteraction}
+            <RadialActionMenu
+              centerX={radialScreenPos.x}
+              centerY={radialScreenPos.y}
+              actions={radialActions}
+              onSelect={onRadialAction}
+              onDismiss={onDismissRadial}
             />
           </div>
         )}
