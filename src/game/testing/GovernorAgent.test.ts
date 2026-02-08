@@ -170,7 +170,9 @@ describe("GovernorAgent", () => {
   });
 
   it("respects preferred species", () => {
-    useGameStore.getState().addSeed("sugar-maple", 10);
+    useGameStore.getState().addSeed("elder-pine", 10);
+    // Elder-pine seedCost: { timber: 5 }
+    useGameStore.getState().addResource("timber", 50);
 
     const profile: GovernorProfile = {
       ...DEFAULT_PROFILE,
@@ -179,7 +181,8 @@ describe("GovernorAgent", () => {
       harvestWeight: 0.0,
       exploreWeight: 0.0,
       pruneWeight: 0.0,
-      preferredSpecies: ["sugar-maple"],
+      tradeWeight: 0.0,
+      preferredSpecies: ["elder-pine"],
       decisionInterval: 1,
     };
     const governor = new GovernorAgent(profile, 4);
@@ -187,8 +190,8 @@ describe("GovernorAgent", () => {
     for (let i = 0; i < 20; i++) governor.update();
 
     const trees = [...treesQuery];
-    const maples = trees.filter((t) => t.tree?.speciesId === "sugar-maple");
-    expect(maples.length).toBeGreaterThan(0);
+    const pines = trees.filter((t) => t.tree?.speciesId === "elder-pine");
+    expect(pines.length).toBeGreaterThan(0);
   });
 
   it("idles when stamina is too low", () => {
@@ -255,5 +258,98 @@ describe("GovernorAgent", () => {
     for (let i = 0; i < 50; i++) governor.update();
 
     expect(governor.stats.decisionsMade).toBeGreaterThan(0);
+  });
+
+  it("trades resources when target resource is zero", () => {
+    // Give timber but no sap — governor should trade timber → sap (and may chain to fruit)
+    useGameStore.getState().addResource("timber", 20);
+
+    const profile: GovernorProfile = {
+      ...DEFAULT_PROFILE,
+      plantWeight: 0.0,
+      waterWeight: 0.0,
+      harvestWeight: 0.0,
+      exploreWeight: 0.0,
+      pruneWeight: 0.0,
+      tradeWeight: 1.0,
+      decisionInterval: 1,
+    };
+    const governor = new GovernorAgent(profile, 4);
+
+    for (let i = 0; i < 20; i++) governor.update();
+
+    const state = useGameStore.getState();
+
+    expect(governor.stats.tradesExecuted).toBeGreaterThan(0);
+    expect(state.resources.timber).toBeLessThan(20);
+    // Governor chains trades: timber→sap→fruit, so check lifetime production
+    expect(state.lifetimeResources.sap).toBeGreaterThan(0);
+  });
+
+  it("skips invalid species in pickSpecies", () => {
+    // Add seeds for a non-existent species
+    useGameStore.getState().addSeed("phantom-tree", 10);
+    // Remove white-oak seeds
+    useGameStore.setState({ seeds: { "phantom-tree": 10 } });
+
+    const profile: GovernorProfile = {
+      ...DEFAULT_PROFILE,
+      plantWeight: 1.0,
+      waterWeight: 0.0,
+      harvestWeight: 0.0,
+      exploreWeight: 0.0,
+      pruneWeight: 0.0,
+      tradeWeight: 0.0,
+      decisionInterval: 1,
+    };
+    const governor = new GovernorAgent(profile, 4);
+
+    for (let i = 0; i < 20; i++) governor.update();
+
+    // Should not have planted any trees (phantom species should be skipped)
+    expect(useGameStore.getState().treesPlanted).toBe(0);
+  });
+
+  it("prefers species that produce needed resources", () => {
+    // Low sap (< 5 threshold), have silver-birch seeds (yields sap, seedCost: 4 sap)
+    useGameStore.setState({
+      resources: { timber: 0, sap: 4, fruit: 0, acorns: 0 },
+      seeds: { "white-oak": 10, "silver-birch": 10 },
+    });
+
+    const profile: GovernorProfile = {
+      ...DEFAULT_PROFILE,
+      plantWeight: 1.0,
+      waterWeight: 0.0,
+      harvestWeight: 0.0,
+      exploreWeight: 0.0,
+      pruneWeight: 0.0,
+      tradeWeight: 0.0,
+      preferredSpecies: ["white-oak"],
+      decisionInterval: 1,
+    };
+    const governor = new GovernorAgent(profile, 4);
+
+    for (let i = 0; i < 5; i++) governor.update();
+
+    const trees = [...treesQuery];
+    // Should prefer silver-birch over white-oak because sap is low
+    const birches = trees.filter((t) => t.tree?.speciesId === "silver-birch");
+    expect(birches.length).toBeGreaterThan(0);
+  });
+
+  it("tracks action log", () => {
+    const governor = new GovernorAgent({
+      ...DEFAULT_PROFILE,
+      decisionInterval: 1,
+    });
+
+    for (let i = 0; i < 30; i++) governor.update();
+
+    const totalActions = Object.values(governor.stats.actionLog).reduce(
+      (a, b) => a + b,
+      0,
+    );
+    expect(totalActions).toBe(governor.stats.decisionsMade);
   });
 });

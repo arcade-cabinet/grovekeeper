@@ -1,8 +1,9 @@
-export { SceneManager } from "./SceneManager";
 export { CameraManager } from "./CameraManager";
-export { LightingManager } from "./LightingManager";
-export { GroundBuilder } from "./GroundBuilder";
 export type { WorldBounds } from "./GroundBuilder";
-export { SkyManager } from "./SkyManager";
+export { GroundBuilder } from "./GroundBuilder";
+export { LightingManager } from "./LightingManager";
+export { NpcMeshManager } from "./NpcMeshManager";
 export { PlayerMeshManager } from "./PlayerMeshManager";
+export { SceneManager } from "./SceneManager";
+export { SkyManager } from "./SkyManager";
 export { TreeMeshManager } from "./TreeMeshManager";

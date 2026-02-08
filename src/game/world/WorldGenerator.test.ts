@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { generateWorld, pickWeighted } from "./WorldGenerator";
+import { describe, expect, it } from "vitest";
 import { createRNG } from "../utils/seedRNG";
+import { generateWorld, pickWeighted } from "./WorldGenerator";
 
 // ============================================
 // pickWeighted helper
@@ -143,7 +143,9 @@ describe("generateWorld — determinism", () => {
       expect(world1.zones[i].origin).toEqual(world2.zones[i].origin);
       expect(world1.zones[i].size).toEqual(world2.zones[i].size);
       expect(world1.zones[i].type).toBe(world2.zones[i].type);
-      expect(world1.zones[i].groundMaterial).toBe(world2.zones[i].groundMaterial);
+      expect(world1.zones[i].groundMaterial).toBe(
+        world2.zones[i].groundMaterial,
+      );
       expect(world1.zones[i].plantable).toBe(world2.zones[i].plantable);
     }
   });
@@ -153,8 +155,12 @@ describe("generateWorld — determinism", () => {
     const world2 = generateWorld("seed-beta", 10);
 
     // With different seeds, at least some zone origins should differ
-    const origins1 = world1.zones.map((z) => `${z.origin.x},${z.origin.z}`).join(";");
-    const origins2 = world2.zones.map((z) => `${z.origin.x},${z.origin.z}`).join(";");
+    const origins1 = world1.zones
+      .map((z) => `${z.origin.x},${z.origin.z}`)
+      .join(";");
+    const origins2 = world2.zones
+      .map((z) => `${z.origin.x},${z.origin.z}`)
+      .join(";");
     expect(origins1).not.toBe(origins2);
   });
 });
@@ -284,6 +290,12 @@ describe("generateWorld — props", () => {
       "mushroom-cluster",
       "wild-flowers",
       "boulder",
+      "signpost",
+      "lantern",
+      "fence-section",
+      "stump",
+      "birdbath",
+      "campfire",
     ]);
     const world = generateWorld("valid-props-test", 15);
 

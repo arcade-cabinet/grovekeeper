@@ -1,8 +1,9 @@
+import type { NpcFunction } from "../npcs/types";
+import type { SerializedTree } from "../stores/gameStore";
+import { getStageScale } from "../systems/growth";
+import { hashString } from "../utils/seedRNG";
 import type { Entity } from "./world";
 import { generateEntityId } from "./world";
-import { hashString } from "../utils/seedRNG";
-import { getStageScale } from "../systems/growth";
-import type { SerializedTree } from "../stores/gameStore";
 
 export const createTreeEntity = (
   gridX: number,
@@ -35,7 +36,11 @@ export const restoreTreeEntity = (data: SerializedTree): Entity => ({
     plantedAt: data.plantedAt,
     meshSeed: data.meshSeed,
   },
-  renderable: { meshId: null, visible: true, scale: getStageScale(data.stage, data.progress) },
+  renderable: {
+    meshId: null,
+    visible: true,
+    scale: getStageScale(data.stage, data.progress),
+  },
 });
 
 export const createPlayerEntity = (): Entity => ({
@@ -78,7 +83,11 @@ export const createWildTreeEntity = (
       meshSeed: seed,
       wild: true,
     },
-    renderable: { meshId: null, visible: true, scale: getStageScale(stage, progress) },
+    renderable: {
+      meshId: null,
+      visible: true,
+      scale: getStageScale(stage, progress),
+    },
   };
 };
 
@@ -96,4 +105,22 @@ export const createGridCellEntity = (
     occupied: false,
     treeEntityId: null,
   },
+});
+
+export const createNpcEntity = (
+  worldX: number,
+  worldZ: number,
+  templateId: string,
+  npcFunction: NpcFunction,
+  playerLevel: number,
+  requiredLevel: number,
+): Entity => ({
+  id: generateEntityId(),
+  position: { x: worldX, y: 0, z: worldZ },
+  npc: {
+    templateId,
+    function: npcFunction,
+    interactable: playerLevel >= requiredLevel,
+  },
+  renderable: { meshId: null, visible: true, scale: 1 },
 });

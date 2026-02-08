@@ -1,0 +1,118 @@
+[
+  {
+    "id": "elder-rowan",
+    "name": "Elder Rowan",
+    "title": "Village Elder",
+    "icon": "\ud83e\uddd3",
+    "function": "tips",
+    "appearance": {
+      "bodyColor": "#5D4037",
+      "headColor": "#FFCCBC",
+      "hatColor": "#8D6E63",
+      "hatStyle": "pointed",
+      "scale": 1.1
+    },
+    "requiredLevel": 1,
+    "dialogue": {
+      "greeting": "rowan-greeting",
+      "idle": [
+        "The old trees whisper if you listen...",
+        "Every forest begins with a single seed.",
+        "Water your saplings, and patience will reward you."
+      ]
+    }
+  },
+  {
+    "id": "hazel",
+    "name": "Hazel",
+    "title": "Wandering Trader",
+    "icon": "\ud83e\uddd1\u200d\ud83c\udf3e",
+    "function": "trading",
+    "appearance": {
+      "bodyColor": "#FF8F00",
+      "headColor": "#FFCCBC",
+      "hatColor": "#4E342E",
+      "hatStyle": "wide",
+      "scale": 1.0
+    },
+    "requiredLevel": 1,
+    "dialogue": {
+      "greeting": "hazel-greeting",
+      "idle": [
+        "Fresh goods from the forest!",
+        "Trading keeps the village alive.",
+        "Got timber? I've got what you need."
+      ]
+    },
+    "tradeConfig": {
+      "bonusRates": [
+        { "from": "timber", "to": "sap", "fromAmount": 8, "toAmount": 5 },
+        { "from": "fruit", "to": "acorns", "fromAmount": 12, "toAmount": 5 }
+      ]
+    }
+  },
+  {
+    "id": "botanist-fern",
+    "name": "Botanist Fern",
+    "title": "Forest Botanist",
+    "icon": "\ud83e\udd13",
+    "function": "quests",
+    "appearance": {
+      "bodyColor": "#2E7D32",
+      "headColor": "#FFCCBC",
+      "hatColor": "#1B5E20",
+      "hatStyle": "round",
+      "scale": 0.95
+    },
+    "requiredLevel": 3,
+    "dialogue": {
+      "greeting": "fern-greeting",
+      "idle": [
+        "So many species yet to discover!",
+        "Have you tried planting near water?",
+        "The ancient forest holds rare specimens."
+      ]
+    },
+    "questConfig": {
+      "specialQuestIds": ["plant-5-species", "grow-old-growth"]
+    }
+  },
+  {
+    "id": "blossom",
+    "name": "Blossom",
+    "title": "Seed Merchant",
+    "icon": "\ud83c\udf38",
+    "function": "seeds",
+    "appearance": {
+      "bodyColor": "#E91E63",
+      "headColor": "#FFCCBC",
+      "hatColor": "#F48FB1",
+      "hatStyle": "flat",
+      "scale": 0.9
+    },
+    "requiredLevel": 4,
+    "dialogue": {
+      "greeting": "blossom-greeting",
+      "idle": [
+        "Seeds of every kind, right here!",
+        "Cherry Blossoms are my favorite.",
+        "Plant something beautiful today."
+      ]
+    },
+    "seedConfig": {
+      "stock": [
+        {
+          "speciesId": "cherry-blossom",
+          "cost": { "fruit": 10, "acorns": 5 },
+          "quantity": 3
+        },
+        {
+          "speciesId": "golden-apple",
+          "cost": { "timber": 15, "sap": 10 },
+          "quantity": 2
+        },
+        { "speciesId": "silver-birch", "cost": { "sap": 8 }, "quantity": 5 }
+      ]
+    }
+  }
+]

@@ -1,29 +1,36 @@
 import { useState } from "react";
 import { COLORS } from "../constants/config";
+import { getNpcTemplate } from "../npcs/NpcManager";
 import { useGameStore } from "../stores/gameStore";
+import type { StructureTemplate } from "../structures/types";
+import { getCosmeticById } from "../systems/prestige";
+import type { GameTime } from "../systems/time";
+import type { WeatherType } from "../systems/weather";
+import { getActionLabel, type TileState } from "./ActionButton";
+import { BatchHarvestButton } from "./BatchHarvestButton";
+import { BuildPanel } from "./BuildPanel";
 import { HUD } from "./HUD";
+import { MiniMap } from "./MiniMap";
+import { NpcDialogue } from "./NpcDialogue";
 import { PauseMenu } from "./PauseMenu";
 import { SeedSelect } from "./SeedSelect";
-import { ToolWheel } from "./ToolWheel";
 import { StaminaGauge } from "./StaminaGauge";
 import { ToolBelt } from "./ToolBelt";
-import { WeatherOverlay } from "./WeatherOverlay";
-import { MiniMap } from "./MiniMap";
-import { BuildPanel } from "./BuildPanel";
+import { ToolWheel } from "./ToolWheel";
 import { TradeDialog } from "./TradeDialog";
-import type { GameTime } from "../systems/time";
-import { getCosmeticById } from "../systems/prestige";
-import type { StructureTemplate } from "../structures/types";
-import type { WeatherType } from "../systems/weather";
 import { WeatherForecast } from "./WeatherForecast";
-import { BatchHarvestButton } from "./BatchHarvestButton";
+import { WeatherOverlay } from "./WeatherOverlay";
 
 interface GameUIProps {
   onAction: () => void;
   onPlant: () => void;
   onOpenMenu: () => void;
   onOpenTools: () => void;
-  onPlaceStructure?: (template: StructureTemplate, worldX: number, worldZ: number) => void;
+  onPlaceStructure?: (
+    template: StructureTemplate,
+    worldX: number,
+    worldZ: number,
+  ) => void;
   onBatchHarvest?: () => void;
   currentWeather?: WeatherType;
   weatherTimeRemaining?: number;
@@ -35,6 +42,10 @@ interface GameUIProps {
   setPauseMenuOpen: (open: boolean) => void;
   onMainMenu: () => void;
   gameTime: GameTime | null;
+  playerTileInfo?: TileState | null;
+  nearbyNpcTemplateId?: string | null;
+  npcDialogueOpen?: boolean;
+  setNpcDialogueOpen?: (open: boolean) => void;
 }
 
 export const GameUI = ({
@@ -53,13 +64,19 @@ export const GameUI = ({
   setPauseMenuOpen,
   onMainMenu,
   gameTime,
+  playerTileInfo,
+  nearbyNpcTemplateId,
+  npcDialogueOpen,
+  setNpcDialogueOpen,
 }: GameUIProps) => {
   const { activeBorderCosmetic } = useGameStore();
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
   const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
 
   // Prestige cosmetic border — applied as subtle screen vignette
-  const cosmetic = activeBorderCosmetic ? getCosmeticById(activeBorderCosmetic) : null;
+  const cosmetic = activeBorderCosmetic
+    ? getCosmeticById(activeBorderCosmetic)
+    : null;
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -102,7 +119,10 @@ export const GameUI = ({
 
       {/* Weather forecast widget - below top HUD */}
       {currentWeather && gameTime && (
-        <div className="absolute pointer-events-auto" style={{ top: 64, right: 12 }}>
+        <div
+          className="absolute pointer-events-auto"
+          style={{ top: 64, right: 12 }}
+        >
           <WeatherForecast
             currentWeather={currentWeather}
             weatherTimeRemaining={weatherTimeRemaining ?? 0}
@@ -112,19 +132,30 @@ export const GameUI = ({
       )}
 
       {/* Tool belt - bottom right */}
-      <div className="absolute pointer-events-auto" style={{ bottom: 140, right: 12 }}>
-        <ToolBelt onSelectTool={(id) => useGameStore.getState().setSelectedTool(id)} />
+      <div
+        className="absolute pointer-events-auto"
+        style={{ bottom: 140, right: 12 }}
+      >
+        <ToolBelt
+          onSelectTool={(id) => useGameStore.getState().setSelectedTool(id)}
+        />
       </div>
 
       {/* Batch harvest button - above tool belt, higher z-index */}
       {onBatchHarvest && (
-        <div className="absolute pointer-events-auto" style={{ bottom: 240, right: 16, zIndex: 10 }}>
+        <div
+          className="absolute pointer-events-auto"
+          style={{ bottom: 240, right: 16, zIndex: 10 }}
+        >
           <BatchHarvestButton onBatchHarvest={onBatchHarvest} />
         </div>
       )}
 
       {/* Stamina gauge - right side */}
-      <div className="absolute pointer-events-none" style={{ bottom: 240, right: 20 }}>
+      <div
+        className="absolute pointer-events-none"
+        style={{ bottom: 240, right: 20 }}
+      >
         <StaminaGauge />
       </div>
 
@@ -136,7 +167,11 @@ export const GameUI = ({
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
-        <BottomControls onAction={onAction} />
+        <BottomControls
+          onAction={onAction}
+          tileState={playerTileInfo ?? null}
+          nearbyNpcTemplateId={nearbyNpcTemplateId ?? null}
+        />
       </div>
 
       {/* Mini-map - desktop only, bottom-left */}
@@ -165,6 +200,15 @@ export const GameUI = ({
           open={tradeDialogOpen}
           onClose={() => setTradeDialogOpen(false)}
         />
+        {setNpcDialogueOpen && (
+          <NpcDialogue
+            open={npcDialogueOpen ?? false}
+            onClose={() => setNpcDialogueOpen(false)}
+            npcTemplateId={nearbyNpcTemplateId ?? null}
+            onOpenTrade={() => setTradeDialogOpen(true)}
+            onOpenSeeds={() => setSeedSelectOpen(true)}
+          />
+        )}
         <PauseMenu
           open={pauseMenuOpen}
           onClose={() => setPauseMenuOpen(false)}
@@ -178,13 +222,26 @@ export const GameUI = ({
 // Bottom controls — action button + tool label (joystick removed)
 const BottomControls = ({
   onAction,
+  tileState,
+  nearbyNpcTemplateId,
 }: {
   onAction: () => void;
+  tileState: TileState | null;
+  nearbyNpcTemplateId: string | null;
 }) => {
   const { selectedTool, buildMode } = useGameStore();
 
   // Tool-specific action button appearance
   const getActionButtonStyle = () => {
+    // NPC interaction override
+    if (nearbyNpcTemplateId) {
+      const npcTemplate = getNpcTemplate(nearbyNpcTemplateId);
+      return {
+        bg: COLORS.autumnGold,
+        icon: npcTemplate?.icon ?? "\u{1F4AC}",
+        label: "Talk",
+      };
+    }
     if (buildMode) {
       return { bg: COLORS.barkBrown, icon: "\u{1F3D7}\uFE0F", label: "Build" };
     }
@@ -220,6 +277,12 @@ const BottomControls = ({
 
   const actionStyle = getActionButtonStyle();
 
+  // Determine if the action is valid for the current tool + tile combo
+  const actionEnabled =
+    !!nearbyNpcTemplateId ||
+    buildMode ||
+    getActionLabel(selectedTool, tileState).enabled;
+
   return (
     <div className="relative h-24 sm:h-28 md:h-32 lg:h-36 flex items-center justify-end px-4 sm:px-6 md:px-8 lg:px-12">
       {/* Status text - center (hidden on mobile) */}
@@ -240,18 +303,24 @@ const BottomControls = ({
         <button
           className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl shadow-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
           style={{
-            background: `linear-gradient(135deg, ${actionStyle.bg} 0%, ${actionStyle.bg}cc 100%)`,
-            border: `3px solid ${COLORS.soilDark}`,
-            boxShadow: `0 4px 12px ${actionStyle.bg}60, inset 0 2px 4px rgba(255,255,255,0.3)`,
+            background: actionEnabled
+              ? `linear-gradient(135deg, ${actionStyle.bg} 0%, ${actionStyle.bg}cc 100%)`
+              : `linear-gradient(135deg, #9E9E9E 0%, #757575 100%)`,
+            border: `3px solid ${actionEnabled ? COLORS.soilDark : "#616161"}`,
+            boxShadow: actionEnabled
+              ? `0 4px 12px ${actionStyle.bg}60, inset 0 2px 4px rgba(255,255,255,0.3)`
+              : "0 2px 4px rgba(0,0,0,0.15)",
+            opacity: actionEnabled ? 1 : 0.55,
           }}
-          onClick={onAction}
+          disabled={!actionEnabled}
+          onClick={actionEnabled ? onAction : undefined}
         >
           {actionStyle.icon}
         </button>
         {/* Action label on mobile */}
         <span
-          className="text-[10px] font-medium md:hidden"
-          style={{ color: "white" }}
+          className="text-xs font-medium md:hidden"
+          style={{ color: actionEnabled ? "white" : "rgba(255,255,255,0.5)" }}
         >
           {actionStyle.label}
         </span>

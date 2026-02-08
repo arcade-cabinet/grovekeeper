@@ -63,13 +63,19 @@ const waterCount = [...gridCellsQuery].filter(
   (c) => c.gridCell?.type === "water",
 ).length;
 
-// Give generous starting resources
+// Give generous starting seeds (all real species from trees.ts)
 const store = useGameStore.getState();
 store.addSeed("white-oak", 30);
-store.addSeed("sugar-maple", 15);
+store.addSeed("elder-pine", 15);
 store.addSeed("weeping-willow", 8);
-store.addSeed("red-cedar", 10);
-store.addSeed("birch", 12);
+store.addSeed("silver-birch", 10);
+store.addSeed("golden-apple", 12);
+
+// Starting resources to bootstrap the resource chain
+// (elder-pine costs 5 timber, silver-birch costs 4 sap, golden-apple costs 10 fruit)
+store.addResource("timber", 30);
+store.addResource("sap", 15);
+store.addResource("fruit", 15);
 
 // Unlock all tools
 useGameStore.setState({
@@ -95,7 +101,10 @@ console.log(
 );
 console.log(`  Governor: balanced profile, decision every 15 ticks`);
 console.log(
-  `  Simulation: ${TOTAL_TICKS} ticks at 30 TPS = ${(TOTAL_TICKS / 30).toFixed(0)}s game time`,
+  `  Simulation: ${TOTAL_TICKS} ticks at 30 TPS, timeScale=500`,
+);
+console.log(
+  `  Calendar speed: ~${((TOTAL_TICKS / 30) * 500 / 86400).toFixed(1)} game-days in ${(TOTAL_TICKS / 30).toFixed(0)}s real time`,
 );
 console.log();
 console.log("─── Starting playthrough... ───────────────────────────");
@@ -108,8 +117,9 @@ const profile: GovernorProfile = {
   waterWeight: 0.7,
   harvestWeight: 0.95,
   pruneWeight: 0.4,
-  exploreWeight: 0.3,
-  preferredSpecies: ["white-oak", "sugar-maple", "birch"],
+  tradeWeight: 0.6,
+  exploreWeight: 0.1,
+  preferredSpecies: ["white-oak", "elder-pine", "silver-birch", "golden-apple"],
   decisionInterval: 15,
 };
 
@@ -117,6 +127,7 @@ const loop = new HeadlessGameLoop({
   ticksPerSecond: 30,
   weatherEnabled: true,
   weatherSeed: Date.now(),
+  timeScale: 500,
 });
 const governor = new GovernorAgent(profile, GRID_SIZE);
 
@@ -126,10 +137,30 @@ let prevPlanted = 0;
 let prevWatered = 0;
 let prevHarvested = 0;
 let stallTicks = 0;
+let prevSeason = loop.season;
+let prevWeather = loop.weather;
+const seasonLog: string[] = [];
+const weatherLog: string[] = [];
 
 for (let tick = 1; tick <= TOTAL_TICKS; tick++) {
   governor.update();
   loop.tick();
+
+  // Track season changes
+  if (loop.season !== prevSeason) {
+    const msg = `  [Season change at tick ${tick}] ${prevSeason} → ${loop.season}`;
+    console.log(msg);
+    seasonLog.push(`${prevSeason} → ${loop.season} (tick ${tick})`);
+    prevSeason = loop.season;
+  }
+
+  // Track weather changes
+  if (loop.weather !== prevWeather) {
+    const msg = `  [Weather change at tick ${tick}] ${prevWeather} → ${loop.weather}`;
+    console.log(msg);
+    weatherLog.push(`${prevWeather} → ${loop.weather} (tick ${tick})`);
+    prevWeather = loop.weather;
+  }
 
   // Track stalls
   const s0 = useGameStore.getState();
@@ -188,6 +219,9 @@ for (let tick = 1; tick <= TOTAL_TICKS; tick++) {
     );
     console.log(
       `    Level ${s.level} | XP: ${s.xp} | Stamina: ${s.stamina.toFixed(0)}/${s.maxStamina}`,
+    );
+    console.log(
+      `    Trades: ${governor.stats.tradesExecuted} | Prunes: ${governor.stats.prunesAttempted}`,
     );
     console.log();
   }
@@ -251,7 +285,22 @@ console.log(`    Plants attempted: ${governor.stats.plantsAttempted}`);
 console.log(`    Waters attempted: ${governor.stats.watersAttempted}`);
 console.log(`    Harvests attempted: ${governor.stats.harvestsAttempted}`);
 console.log(`    Prunes attempted: ${governor.stats.prunesAttempted}`);
+console.log(`    Trades executed: ${governor.stats.tradesExecuted}`);
 console.log(`    Idle ticks: ${governor.stats.idleTicks}`);
+console.log();
+console.log("  DECISION LOG");
+for (const [action, count] of Object.entries(governor.stats.actionLog).sort((a, b) => b[1] - a[1])) {
+  console.log(`    ${action}: ${count} decisions`);
+}
+console.log();
+console.log("  SEASON CHANGES");
+if (seasonLog.length === 0) console.log("    (none)");
+for (const entry of seasonLog) console.log(`    ${entry}`);
+console.log();
+console.log("  WEATHER EVENTS");
+if (weatherLog.length === 0) console.log("    (none)");
+for (const entry of weatherLog.slice(0, 20)) console.log(`    ${entry}`);
+if (weatherLog.length > 20) console.log(`    ... and ${weatherLog.length - 20} more`);
 console.log();
 console.log("═══════════════════════════════════════════════════════");
 console.log("  Every forest begins with a single seed.");

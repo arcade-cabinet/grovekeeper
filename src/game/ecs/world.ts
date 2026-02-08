@@ -74,6 +74,12 @@ export interface ScarecrowComponent {
   radius: number;
 }
 
+export interface NpcComponent {
+  templateId: string;
+  function: "trading" | "quests" | "tips" | "seeds";
+  interactable: boolean;
+}
+
 // Entity definition
 export interface Entity {
   id: string;
@@ -94,6 +100,7 @@ export interface Entity {
   structure?: StructureComponent;
   rainCatcher?: RainCatcherComponent;
   scarecrow?: ScarecrowComponent;
+  npc?: NpcComponent;
   zoneId?: string;
 }
 
@@ -118,3 +125,4 @@ export const structuresQuery = world.with("structure", "position");
 export const propsQuery = world.with("prop", "position");
 export const rainCatchersQuery = world.with("rainCatcher", "position");
 export const scarecrowsQuery = world.with("scarecrow", "position");
+export const npcsQuery = world.with("npc", "position", "renderable");

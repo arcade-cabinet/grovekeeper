@@ -35,6 +35,8 @@ export interface HeadlessLoopConfig {
   weatherEnabled?: boolean;
   /** RNG seed for weather rolls (default: 42). */
   weatherSeed?: number;
+  /** Time scale multiplier for fast-forwarding seasons/weather (default: 1). */
+  timeScale?: number;
 }
 
 export class HeadlessGameLoop {
@@ -45,6 +47,7 @@ export class HeadlessGameLoop {
   private _weatherState: WeatherState | null = null;
   private readonly _weatherEnabled: boolean;
   private readonly _weatherSeed: number;
+  private readonly _timeScale: number;
 
   constructor(config: HeadlessLoopConfig = {}) {
     const tps = config.ticksPerSecond ?? 30;
@@ -52,6 +55,7 @@ export class HeadlessGameLoop {
     this._dtMs = (1 / tps) * 1000;
     this._weatherEnabled = config.weatherEnabled ?? false;
     this._weatherSeed = config.weatherSeed ?? 42;
+    this._timeScale = config.timeScale ?? 1;
 
     // Initialize the time system
     initializeTime(useGameStore.getState().gameTimeMicroseconds);
@@ -77,6 +81,11 @@ export class HeadlessGameLoop {
     return this._gameTime;
   }
 
+  /** Time scale multiplier. */
+  get timeScale(): number {
+    return this._timeScale;
+  }
+
   /** Current weather type. */
   get weather(): WeatherType {
     return this._weatherState?.current.type ?? "clear";
@@ -88,8 +97,8 @@ export class HeadlessGameLoop {
    * Also promotes trees to harvestable when they reach stage 3+.
    */
   tick(): void {
-    // 1. Time system — advance game clock
-    this._gameTime = updateTime(this._dtMs);
+    // 1. Time system — advance game clock (scaled for fast-forward)
+    this._gameTime = updateTime(this._dtMs * this._timeScale);
     const season = this._gameTime.season;
 
     // 2. Weather system (optional)

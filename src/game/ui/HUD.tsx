@@ -1,12 +1,12 @@
+import { RiBuilding2Line, RiMenuLine, RiToolsLine } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
-import { RiMenuLine, RiToolsLine, RiBuilding2Line } from "@remixicon/react";
 import { COLORS } from "../constants/config";
 import { useGameStore } from "../stores/gameStore";
-import { TimeDisplay, TimeDisplayCompact } from "./TimeDisplay";
+import type { GameTime } from "../systems/time";
 import { QuestPanel } from "./QuestPanel";
 import { ResourceBar } from "./ResourceBar";
+import { TimeDisplay, TimeDisplayCompact } from "./TimeDisplay";
 import { XPBar } from "./XPBar";
-import type { GameTime } from "../systems/time";
 
 interface HUDProps {
   onPlant: () => void;
@@ -16,11 +16,24 @@ interface HUDProps {
   gameTime: GameTime | null;
 }
 
-export const HUD = ({ onOpenMenu, onOpenTools, onOpenBuild, gameTime }: HUDProps) => {
-  const { selectedTool, activeQuests, addXp, addResource, addSeed, completeQuest, level } = useGameStore();
+export const HUD = ({
+  onOpenMenu,
+  onOpenTools,
+  onOpenBuild,
+  gameTime,
+}: HUDProps) => {
+  const {
+    selectedTool,
+    activeQuests,
+    addXp,
+    addResource,
+    addSeed,
+    completeQuest,
+    level,
+  } = useGameStore();
 
   const handleClaimReward = (questId: string) => {
-    const quest = activeQuests.find(q => q.id === questId);
+    const quest = activeQuests.find((q) => q.id === questId);
     if (quest?.completed) {
       addXp(quest.rewards.xp);
       if (quest.rewards.resources) {
@@ -64,12 +77,12 @@ export const HUD = ({ onOpenMenu, onOpenTools, onOpenBuild, gameTime }: HUDProps
       <div className="flex items-center gap-1 sm:gap-2">
         {/* Quest panel */}
         <QuestPanel quests={activeQuests} onClaimReward={handleClaimReward} />
-        
+
         {/* Build button (unlocked at level 3) */}
         {level >= 3 && onOpenBuild && (
           <Button
             size="sm"
-            className="h-8 px-2 sm:h-9 sm:px-3 rounded-full"
+            className="h-11 px-2 sm:px-3 rounded-full"
             style={{
               background: COLORS.barkBrown,
               color: "white",
@@ -84,7 +97,7 @@ export const HUD = ({ onOpenMenu, onOpenTools, onOpenBuild, gameTime }: HUDProps
         {/* Tool selector button */}
         <Button
           size="sm"
-          className="h-8 px-2 sm:h-9 sm:px-3 rounded-full"
+          className="h-11 px-2 sm:px-3 rounded-full"
           style={{
             background: COLORS.forestGreen,
             color: "white",
@@ -99,7 +112,7 @@ export const HUD = ({ onOpenMenu, onOpenTools, onOpenBuild, gameTime }: HUDProps
         <Button
           size="icon"
           variant="ghost"
-          className="w-8 h-8 sm:w-9 sm:h-9 text-white hover:bg-white/10"
+          className="w-11 h-11 text-white hover:bg-white/10"
           onClick={onOpenMenu}
         >
           <RiMenuLine className="w-5 h-5 sm:w-6 sm:h-6" />

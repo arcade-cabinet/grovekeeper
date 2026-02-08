@@ -5,7 +5,7 @@
  * desirability each decision interval, then executes the winner directly via
  * the headless GameActions layer.
  *
- * Actions: Plant, Water, Harvest, Prune, Explore (idle/fallback)
+ * Actions: Plant, Water, Harvest, Prune, Trade, Explore (idle/fallback)
  *
  * In headless mode, all movement is instant (teleport) and actions complete
  * atomically — no multi-tick goal chains needed.
@@ -26,7 +26,10 @@ import {
   spendToolStamina,
   waterTree,
 } from "../actions/GameActions";
+import type { ResourceType } from "../constants/resources";
+import { getSpeciesById } from "../constants/trees";
 import { useGameStore } from "../stores/gameStore";
+import { BASE_TRADE_RATES, executeTrade } from "../systems/trading";
 
 // ──────────────────────────────────────────────
 // Governor Profile
@@ -43,6 +46,8 @@ export interface GovernorProfile {
   exploreWeight: number;
   /** Weight for pruning priority (0-1). */
   pruneWeight: number;
+  /** Weight for trading priority (0-1). */
+  tradeWeight: number;
   /** Preferred species to plant. Random from available if empty. */
   preferredSpecies?: string[];
   /** Ticks between decision re-evaluations (default: 10). */
@@ -53,8 +58,9 @@ export const DEFAULT_PROFILE: GovernorProfile = {
   plantWeight: 0.8,
   waterWeight: 0.6,
   harvestWeight: 0.9,
-  exploreWeight: 0.3,
+  exploreWeight: 0.1,
   pruneWeight: 0.4,
+  tradeWeight: 0.6,
   decisionInterval: 10,
 };
 
@@ -75,7 +81,7 @@ class GovernorEntity extends GameEntity {
 // Action types for direct execution
 // ──────────────────────────────────────────────
 
-type ActionType = "plant" | "water" | "harvest" | "prune" | "explore";
+type ActionType = "plant" | "water" | "harvest" | "prune" | "trade" | "explore";
 
 // ──────────────────────────────────────────────
 // Goal Evaluators — score each action's desirability
@@ -135,10 +141,39 @@ class HarvestEvaluator extends GoalEvaluator<GovernorEntity> {
 
 class PruneEvaluator extends GoalEvaluator<GovernorEntity> {
   calculateDesirability(): number {
-    const trees = findMatureTrees().filter((t) => t.tree && !t.tree.pruned);
+    // Score high for mature unpruned trees that aren't yet harvestable.ready —
+    // these are in the cooldown window where pruning gives 1.5x yield bonus.
+    const trees = findMatureTrees().filter(
+      (t) => t.tree && !t.tree.pruned && !t.harvestable?.ready,
+    );
     if (trees.length === 0) return 0;
 
-    return this.characterBias * Math.min(1, trees.length / 3);
+    return this.characterBias * Math.min(1, trees.length / 2);
+  }
+
+  setGoal(): void {}
+}
+
+class TradeEvaluator extends GoalEvaluator<GovernorEntity> {
+  calculateDesirability(): number {
+    const store = useGameStore.getState();
+    const { resources } = store;
+
+    // Score high when we have excess of one resource and zero of another
+    for (const rate of BASE_TRADE_RATES) {
+      if (resources[rate.from] >= rate.fromAmount && resources[rate.to] === 0) {
+        return this.characterBias * 0.8;
+      }
+    }
+
+    // Moderate score when we have enough to trade and low target resource
+    for (const rate of BASE_TRADE_RATES) {
+      if (resources[rate.from] >= rate.fromAmount && resources[rate.to] < 10) {
+        return this.characterBias * 0.4;
+      }
+    }
+
+    return 0;
   }
 
   setGoal(): void {}
@@ -146,7 +181,8 @@ class PruneEvaluator extends GoalEvaluator<GovernorEntity> {
 
 class ExploreEvaluator extends GoalEvaluator<GovernorEntity> {
   calculateDesirability(): number {
-    return this.characterBias * 0.2;
+    // Minimal fallback — only chosen when no other action is possible
+    return this.characterBias * 0.05;
   }
 
   setGoal(): void {}
@@ -172,7 +208,9 @@ export class GovernorAgent {
     watersAttempted: 0,
     harvestsAttempted: 0,
     prunesAttempted: 0,
+    tradesExecuted: 0,
     idleTicks: 0,
+    actionLog: {} as Record<ActionType, number>,
   };
 
   constructor(profile: GovernorProfile = DEFAULT_PROFILE, gridSize = 12) {
@@ -185,12 +223,14 @@ export class GovernorAgent {
     const waterEval = new WaterEvaluator(profile.waterWeight);
     const harvestEval = new HarvestEvaluator(profile.harvestWeight);
     const pruneEval = new PruneEvaluator(profile.pruneWeight);
+    const tradeEval = new TradeEvaluator(profile.tradeWeight);
     const exploreEval = new ExploreEvaluator(profile.exploreWeight);
 
     this.entity.brain.addEvaluator(plantEval);
     this.entity.brain.addEvaluator(waterEval);
     this.entity.brain.addEvaluator(harvestEval);
     this.entity.brain.addEvaluator(pruneEval);
+    this.entity.brain.addEvaluator(tradeEval);
     this.entity.brain.addEvaluator(exploreEval);
 
     this.evaluators = new Map<ActionType, GoalEvaluator<GovernorEntity>>([
@@ -198,6 +238,7 @@ export class GovernorAgent {
       ["water", waterEval],
       ["harvest", harvestEval],
       ["prune", pruneEval],
+      ["trade", tradeEval],
       ["explore", exploreEval],
     ]);
   }
@@ -217,9 +258,10 @@ export class GovernorAgent {
     this.ticksSinceDecision = 0;
     this.stats.decisionsMade++;
 
-    // Find the action with the highest desirability
+    // Find the action with the highest desirability.
+    // bestScore starts at 0 so evaluators scoring 0 don't win — explore is the idle fallback.
     let bestAction: ActionType = "explore";
-    let bestScore = -1;
+    let bestScore = 0;
 
     for (const [action, evaluator] of this.evaluators) {
       const score = evaluator.calculateDesirability(this.entity);
@@ -234,6 +276,8 @@ export class GovernorAgent {
 
   /** Execute the chosen action directly via GameActions. */
   private executeAction(action: ActionType): void {
+    this.stats.actionLog[action] = (this.stats.actionLog[action] ?? 0) + 1;
+
     switch (action) {
       case "plant":
         this.doPlant();
@@ -246,6 +290,9 @@ export class GovernorAgent {
         break;
       case "prune":
         this.doPrune();
+        break;
+      case "trade":
+        this.doTrade();
         break;
       case "explore":
         this.doExplore();
@@ -322,24 +369,66 @@ export class GovernorAgent {
     pruneTree(target.id);
   }
 
+  private doTrade(): void {
+    const store = useGameStore.getState();
+    const { resources } = store;
+
+    // Find the most beneficial trade: prefer trades where target resource is 0
+    for (const rate of BASE_TRADE_RATES) {
+      if (resources[rate.from] >= rate.fromAmount) {
+        const result = executeTrade(rate, rate.fromAmount, resources);
+        if (result) {
+          store.spendResource(result.spend.type, result.spend.amount);
+          store.addResource(result.gain.type, result.gain.amount);
+          this.stats.tradesExecuted++;
+          return;
+        }
+      }
+    }
+  }
+
   private doExplore(): void {
     const targetX = Math.floor(Math.random() * this.gridSize);
     const targetZ = Math.floor(Math.random() * this.gridSize);
     movePlayerTo(targetX, targetZ);
   }
 
-  /** Pick the best species to plant based on profile preferences and seed availability. */
+  /** Pick the best species to plant based on resource needs, preferences, and seed availability. */
   private pickSpecies(): string | null {
     const store = useGameStore.getState();
 
-    if (this.profile.preferredSpecies) {
-      for (const sp of this.profile.preferredSpecies) {
-        if ((store.seeds[sp] ?? 0) > 0) return sp;
+    // Priority 1: Pick species that produce a resource we're low on
+    const LOW_THRESHOLD = 5;
+    const neededResources: ResourceType[] = [];
+    if (store.resources.sap < LOW_THRESHOLD) neededResources.push("sap");
+    if (store.resources.fruit < LOW_THRESHOLD) neededResources.push("fruit");
+    if (store.resources.acorns < LOW_THRESHOLD) neededResources.push("acorns");
+
+    if (neededResources.length > 0) {
+      for (const [sp, count] of Object.entries(store.seeds)) {
+        if (count <= 0) continue;
+        const species = getSpeciesById(sp);
+        if (!species) continue;
+        const produces = species.yield.some((y) =>
+          neededResources.includes(y.resource),
+        );
+        if (produces) return sp;
       }
     }
 
+    // Priority 2: Profile preferred species
+    if (this.profile.preferredSpecies) {
+      for (const sp of this.profile.preferredSpecies) {
+        if ((store.seeds[sp] ?? 0) > 0) {
+          // Validate species exists
+          if (getSpeciesById(sp)) return sp;
+        }
+      }
+    }
+
+    // Priority 3: Any valid species with seeds
     for (const [sp, count] of Object.entries(store.seeds)) {
-      if (count > 0) return sp;
+      if (count > 0 && getSpeciesById(sp)) return sp;
     }
 
     return null;

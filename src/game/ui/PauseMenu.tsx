@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -8,7 +8,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { isDbInitialized } from "@/db/client";
+import { exportSaveFile, importSaveFile } from "@/db/export";
 import { COLORS } from "../constants/config";
+import { getDifficultyById } from "../constants/difficulty";
+import { TOOLS } from "../constants/tools";
+import { TREE_SPECIES } from "../constants/trees";
 import { useGameStore } from "../stores/gameStore";
 import { ACHIEVEMENT_DEFS } from "../systems/achievements";
 import {
@@ -18,14 +23,12 @@ import {
 import {
   calculatePrestigeBonus,
   canPrestige,
-  PRESTIGE_MIN_LEVEL,
   getUnlockedCosmetics,
   PRESTIGE_COSMETICS,
+  PRESTIGE_MIN_LEVEL,
 } from "../systems/prestige";
-import { getDifficultyById } from "../constants/difficulty";
-import { exportSaveFile, importSaveFile } from "@/db/export";
-import { isDbInitialized } from "@/db/client";
 import { FarmerMascot } from "./FarmerMascot";
+import { RulesModal } from "./RulesModal";
 import { StatsDashboard } from "./StatsDashboard";
 import { showToast } from "./Toast";
 
@@ -71,6 +74,7 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
 
   const [confirmingPrestige, setConfirmingPrestige] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
   const diffTier = getDifficultyById(difficulty);
 
@@ -188,8 +192,12 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
           </Card>
 
           <div className="text-sm text-gray-600">
-            <p>Species unlocked: {unlockedSpecies.length}/8</p>
-            <p>Tools unlocked: {unlockedTools.length}/8</p>
+            <p>
+              Species unlocked: {unlockedSpecies.length}/{TREE_SPECIES.length}
+            </p>
+            <p>
+              Tools unlocked: {unlockedTools.length}/{TOOLS.length}
+            </p>
             {prestigeCount > 0 && (
               <p style={{ color: COLORS.autumnGold }}>
                 Prestige: {prestigeCount}
@@ -203,7 +211,9 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                 >
                   {diffTier.name}
                 </span>
-                <span className="text-xs text-gray-400">difficulty (locked)</span>
+                <span className="text-xs text-gray-400">
+                  difficulty (locked)
+                </span>
               </p>
             )}
           </div>
@@ -339,14 +349,18 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                 <button
                   className="w-full text-left p-2 rounded text-xs transition-colors"
                   style={{
-                    background: activeBorderCosmetic === null
-                      ? `${COLORS.forestGreen}20`
-                      : "rgba(0,0,0,0.05)",
+                    background:
+                      activeBorderCosmetic === null
+                        ? `${COLORS.forestGreen}20`
+                        : "rgba(0,0,0,0.05)",
                     border: `1px solid ${activeBorderCosmetic === null ? COLORS.forestGreen : "#E0E0E0"}`,
                   }}
                   onClick={() => setActiveBorderCosmetic(null)}
                 >
-                  <div className="font-semibold" style={{ color: COLORS.soilDark }}>
+                  <div
+                    className="font-semibold"
+                    style={{ color: COLORS.soilDark }}
+                  >
                     Default Wood Frame
                   </div>
                   <div className="text-gray-500 mt-0.5">
@@ -360,15 +374,19 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                     key={cosmetic.id}
                     className="w-full text-left p-2 rounded text-xs transition-colors"
                     style={{
-                      background: activeBorderCosmetic === cosmetic.id
-                        ? `${COLORS.forestGreen}20`
-                        : "rgba(0,0,0,0.05)",
+                      background:
+                        activeBorderCosmetic === cosmetic.id
+                          ? `${COLORS.forestGreen}20`
+                          : "rgba(0,0,0,0.05)",
                       border: `1px solid ${activeBorderCosmetic === cosmetic.id ? COLORS.forestGreen : "#E0E0E0"}`,
                     }}
                     onClick={() => setActiveBorderCosmetic(cosmetic.id)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="font-semibold" style={{ color: COLORS.soilDark }}>
+                      <div
+                        className="font-semibold"
+                        style={{ color: COLORS.soilDark }}
+                      >
                         {cosmetic.name}
                       </div>
                       {activeBorderCosmetic === cosmetic.id && (
@@ -392,7 +410,9 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                 ))}
 
                 {/* Locked cosmetics preview */}
-                {PRESTIGE_COSMETICS.filter(c => c.prestigeRequired > prestigeCount).map((cosmetic) => (
+                {PRESTIGE_COSMETICS.filter(
+                  (c) => c.prestigeRequired > prestigeCount,
+                ).map((cosmetic) => (
                   <div
                     key={cosmetic.id}
                     className="w-full text-left p-2 rounded text-xs opacity-60"
@@ -405,7 +425,10 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                       <div className="font-semibold text-gray-400">
                         {cosmetic.name}
                       </div>
-                      <span className="text-xs" style={{ color: COLORS.autumnGold }}>
+                      <span
+                        className="text-xs"
+                        style={{ color: COLORS.autumnGold }}
+                      >
                         Prestige {cosmetic.prestigeRequired}
                       </span>
                     </div>
@@ -516,7 +539,10 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                   size="sm"
                   variant="outline"
                   className="flex-1 text-xs min-h-[44px]"
-                  style={{ borderColor: COLORS.barkBrown, color: COLORS.soilDark }}
+                  style={{
+                    borderColor: COLORS.barkBrown,
+                    color: COLORS.soilDark,
+                  }}
                   onClick={() => {
                     try {
                       exportSaveFile();
@@ -533,7 +559,10 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                   size="sm"
                   variant="outline"
                   className="flex-1 text-xs min-h-[44px]"
-                  style={{ borderColor: COLORS.barkBrown, color: COLORS.soilDark }}
+                  style={{
+                    borderColor: COLORS.barkBrown,
+                    color: COLORS.soilDark,
+                  }}
                   onClick={() => importRef.current?.click()}
                 >
                   Import Save
@@ -567,6 +596,17 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
               className="w-full"
               variant="outline"
               style={{
+                borderColor: COLORS.forestGreen,
+                color: COLORS.forestGreen,
+              }}
+              onClick={() => setRulesOpen(true)}
+            >
+              How to Play
+            </Button>
+            <Button
+              className="w-full"
+              variant="outline"
+              style={{
                 borderColor: COLORS.barkBrown,
                 color: COLORS.soilDark,
               }}
@@ -596,6 +636,11 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
         </div>
 
         <StatsDashboard open={statsOpen} onClose={() => setStatsOpen(false)} />
+        <RulesModal
+          open={rulesOpen}
+          onClose={() => setRulesOpen(false)}
+          onStart={() => setRulesOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

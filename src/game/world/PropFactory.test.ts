@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Unmock BabylonJS so NullEngine + Scene work (global setup.ts mocks these)
 vi.unmock("@babylonjs/core/Engines/engine");
@@ -81,6 +81,49 @@ describe("PropFactory", () => {
     // Boulder default scaling is (1.2, 0.7, 1.0), after scaleInPlace(2) = (2.4, 1.4, 2.0)
     expect(mesh!.scaling.x).toBeCloseTo(2.4);
     expect(mesh!.scaling.y).toBeCloseTo(1.4);
+  });
+
+  it("creates a signpost mesh with plank children", () => {
+    const mesh = createPropMesh(scene, makeProp("signpost"), 3, 7);
+    expect(mesh).not.toBeNull();
+    expect(mesh!.isPickable).toBe(false);
+    expect(mesh!.getChildMeshes().length).toBeGreaterThan(0);
+  });
+
+  it("creates a lantern mesh with emissive body", () => {
+    const mesh = createPropMesh(scene, makeProp("lantern"), 1, 2);
+    expect(mesh).not.toBeNull();
+    expect(mesh!.isPickable).toBe(false);
+    expect(mesh!.getChildMeshes().length).toBeGreaterThan(0);
+  });
+
+  it("creates a fence-section mesh with posts and rails", () => {
+    const mesh = createPropMesh(scene, makeProp("fence-section"), 4, 5);
+    expect(mesh).not.toBeNull();
+    expect(mesh!.isVisible).toBe(false); // root is invisible
+    expect(mesh!.getChildMeshes().length).toBe(4); // 2 posts + 2 rails
+  });
+
+  it("creates a stump mesh with dark top", () => {
+    const mesh = createPropMesh(scene, makeProp("stump"), 2, 2);
+    expect(mesh).not.toBeNull();
+    expect(mesh!.isPickable).toBe(false);
+    expect(mesh!.getChildMeshes().length).toBe(1); // dark top ring
+  });
+
+  it("creates a birdbath mesh with water surface", () => {
+    const mesh = createPropMesh(scene, makeProp("birdbath"), 6, 3);
+    expect(mesh).not.toBeNull();
+    expect(mesh!.isPickable).toBe(false);
+    expect(mesh!.getChildMeshes().length).toBe(2); // bowl + water
+  });
+
+  it("creates a campfire mesh with stones, logs, and flames", () => {
+    const mesh = createPropMesh(scene, makeProp("campfire"), 5, 5);
+    expect(mesh).not.toBeNull();
+    expect(mesh!.isVisible).toBe(false); // root is invisible
+    // 6 stones + 2 logs + 2 flames = 10 children
+    expect(mesh!.getChildMeshes().length).toBe(10);
   });
 
   it("disposePropMeshes disposes all meshes", () => {
