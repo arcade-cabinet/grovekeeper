@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { createGridCellEntity, createTreeEntity } from "../ecs/archetypes";
+import { gridCellsQuery, treesQuery, world } from "../ecs/world";
 import {
-  serializeGrove,
   deserializeGrove,
   type GroveSaveData,
+  serializeGrove,
 } from "./saveLoad";
-import { world, treesQuery, gridCellsQuery } from "../ecs/world";
-import { createTreeEntity, createGridCellEntity } from "../ecs/archetypes";
 
 describe("Save/Load System", () => {
   beforeEach(() => {

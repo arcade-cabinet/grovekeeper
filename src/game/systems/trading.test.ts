@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { getTradeRates, calculateTradeOutput, executeTrade } from "./trading";
-import type { TradeRate } from "./trading";
+import { describe, expect, it } from "vitest";
 import type { ResourceType } from "../constants/resources";
+import type { TradeRate } from "./trading";
+import { calculateTradeOutput, executeTrade, getTradeRates } from "./trading";
 
 describe("trading", () => {
   const makeResources = (
@@ -29,7 +29,12 @@ describe("trading", () => {
   });
 
   describe("calculateTradeOutput", () => {
-    const timberToSap: TradeRate = { from: "timber", to: "sap", fromAmount: 10, toAmount: 5 };
+    const timberToSap: TradeRate = {
+      from: "timber",
+      to: "sap",
+      fromAmount: 10,
+      toAmount: 5,
+    };
 
     it("returns 0 for insufficient amount", () => {
       expect(calculateTradeOutput(timberToSap, 5)).toBe(0);
@@ -51,8 +56,18 @@ describe("trading", () => {
   });
 
   describe("executeTrade", () => {
-    const timberToSap: TradeRate = { from: "timber", to: "sap", fromAmount: 10, toAmount: 5 };
-    const fruitToAcorns: TradeRate = { from: "fruit", to: "acorns", fromAmount: 15, toAmount: 5 };
+    const timberToSap: TradeRate = {
+      from: "timber",
+      to: "sap",
+      fromAmount: 10,
+      toAmount: 5,
+    };
+    const fruitToAcorns: TradeRate = {
+      from: "fruit",
+      to: "acorns",
+      fromAmount: 15,
+      toAmount: 5,
+    };
 
     it("returns null for insufficient resources", () => {
       const resources = makeResources({ timber: 5 });

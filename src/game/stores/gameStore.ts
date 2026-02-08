@@ -1,14 +1,25 @@
 import { create } from "zustand";
+import { emptyResources, type ResourceType } from "../constants/resources";
+import { getToolById } from "../constants/tools";
+import { getSpeciesById } from "../constants/trees";
+import {
+  canAffordExpansion,
+  getNextExpansionTier,
+} from "../systems/gridExpansion";
+import { checkNewUnlocks } from "../systems/levelUnlocks";
+import {
+  calculatePrestigeBonus,
+  canPrestige,
+  getPrestigeResetState,
+  getUnlockedPrestigeSpecies,
+} from "../systems/prestige";
 import type { ActiveQuest } from "../systems/quests";
 import type { Season } from "../systems/time";
-import { type ResourceType, emptyResources } from "../constants/resources";
-import { checkNewUnlocks } from "../systems/levelUnlocks";
+import {
+  canAffordToolUpgrade,
+  getToolUpgradeTier,
+} from "../systems/toolUpgrades";
 import { showToast } from "../ui/Toast";
-import { getSpeciesById } from "../constants/trees";
-import { getToolById } from "../constants/tools";
-import { getNextExpansionTier, canAffordExpansion } from "../systems/gridExpansion";
-import { canPrestige, getPrestigeResetState, calculatePrestigeBonus, getUnlockedPrestigeSpecies } from "../systems/prestige";
-import { getToolUpgradeTier, canAffordToolUpgrade } from "../systems/toolUpgrades";
 
 export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";
 
@@ -116,7 +127,10 @@ interface GameState {
   soundEnabled: boolean;
 
   // Actions
-  saveGrove: (trees: SerializedTree[], playerPos: { x: number; z: number }) => void;
+  saveGrove: (
+    trees: SerializedTree[],
+    playerPos: { x: number; z: number },
+  ) => void;
   setScreen: (screen: GameScreen) => void;
   setSelectedTool: (tool: string) => void;
   setSelectedSpecies: (species: string) => void;
@@ -141,7 +155,11 @@ interface GameState {
   performPrestige: () => boolean;
   setActiveBorderCosmetic: (id: string | null) => void;
   setBuildMode: (enabled: boolean, templateId?: string) => void;
-  addPlacedStructure: (templateId: string, worldX: number, worldZ: number) => void;
+  addPlacedStructure: (
+    templateId: string,
+    worldX: number,
+    worldZ: number,
+  ) => void;
   removePlacedStructure: (worldX: number, worldZ: number) => void;
   resetGame: () => void;
 
@@ -190,7 +208,9 @@ interface GameState {
  */
 export function xpToNext(level: number): number {
   if (level < 1) return 100;
-  return 100 + Math.max(0, (level - 2) * 50) + Math.floor((level - 1) / 5) * 200;
+  return (
+    100 + Math.max(0, (level - 2) * 50) + Math.floor((level - 1) / 5) * 200
+  );
 }
 
 /**
@@ -229,10 +249,11 @@ const INITIAL_GAME_TIME = (() => {
   const hoursPerDay = 24;
   const daysPerMonth = 30;
   const monthsPerYear = 12;
-  
-  const totalDays = ((year - 1) * monthsPerYear * daysPerMonth) +
-                   ((month - 1) * daysPerMonth) +
-                   (day - 1);
+
+  const totalDays =
+    (year - 1) * monthsPerYear * daysPerMonth +
+    (month - 1) * daysPerMonth +
+    (day - 1);
   const totalHours = totalDays * hoursPerDay + hours;
   const totalMinutes = totalHours * minutesPerHour;
   const totalSeconds = totalMinutes * secondsPerMinute;
@@ -254,7 +275,7 @@ const initialState = {
   treesMatured: 0,
   treesHarvested: 0,
   treesWatered: 0,
-  
+
   // Resources
   resources: emptyResources(),
   seeds: { "white-oak": 10 } as Record<string, number>,
@@ -279,7 +300,11 @@ const initialState = {
   // Build mode
   buildMode: false,
   buildTemplateId: null as string | null,
-  placedStructures: [] as { templateId: string; worldX: number; worldZ: number }[],
+  placedStructures: [] as {
+    templateId: string;
+    worldX: number;
+    worldZ: number;
+  }[],
 
   // Prestige
   prestigeCount: 0,
@@ -292,13 +317,13 @@ const initialState = {
   gameTimeMicroseconds: INITIAL_GAME_TIME,
   currentSeason: "spring" as Season,
   currentDay: 1,
-  
+
   // Quest state
   activeQuests: [] as ActiveQuest[],
   completedQuestIds: [] as string[],
   completedGoalIds: [] as string[],
   lastQuestRefresh: 0,
-  
+
   // Discovery
   discoveredZones: ["starting-grove"] as string[],
 
@@ -324,341 +349,359 @@ const initialState = {
   soundEnabled: true,
 };
 
-export const useGameStore = create<GameState>()(
-    (set, get) => ({
-      ...initialState,
+export const useGameStore = create<GameState>()((set, get) => ({
+  ...initialState,
 
-      saveGrove: (trees, playerPos) =>
-        set({ groveData: { trees, playerPosition: playerPos } }),
+  saveGrove: (trees, playerPos) =>
+    set({ groveData: { trees, playerPosition: playerPos } }),
 
-      setScreen: (screen) => set({ screen }),
-      setSelectedTool: (selectedTool) => set({ selectedTool }),
-      setSelectedSpecies: (selectedSpecies) => set({ selectedSpecies }),
+  setScreen: (screen) => set({ screen }),
+  setSelectedTool: (selectedTool) => set({ selectedTool }),
+  setSelectedSpecies: (selectedSpecies) => set({ selectedSpecies }),
 
-      addCoins: (amount) =>
-        set((state) => ({ coins: state.coins + amount })),
+  addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
 
-      addXp: (amount) =>
-        set((state) => {
-          const newXp = state.xp + amount;
-          const newLevel = levelFromXp(newXp);
+  addXp: (amount) =>
+    set((state) => {
+      const newXp = state.xp + amount;
+      const newLevel = levelFromXp(newXp);
 
-          if (newLevel > state.level) {
-            // Auto-unlock species and tools for new levels
-            const unlocks = checkNewUnlocks(state.level, newLevel);
-            const newUnlockedTools = [...state.unlockedTools];
-            const newUnlockedSpecies = [...state.unlockedSpecies];
+      if (newLevel > state.level) {
+        // Auto-unlock species and tools for new levels
+        const unlocks = checkNewUnlocks(state.level, newLevel);
+        const newUnlockedTools = [...state.unlockedTools];
+        const newUnlockedSpecies = [...state.unlockedSpecies];
 
-            for (const toolId of unlocks.tools) {
-              if (!newUnlockedTools.includes(toolId)) {
-                newUnlockedTools.push(toolId);
-              }
-            }
-            for (const speciesId of unlocks.species) {
-              if (!newUnlockedSpecies.includes(speciesId)) {
-                newUnlockedSpecies.push(speciesId);
-              }
-            }
-
-            // Deferred toast notifications (avoid side effects during setState)
-            queueMicrotask(() => {
-              showToast(`Level ${newLevel}!`, "success");
-              for (const speciesId of unlocks.species) {
-                const sp = getSpeciesById(speciesId);
-                showToast(`Unlocked: ${sp?.name ?? speciesId}`, "achievement");
-              }
-              for (const toolId of unlocks.tools) {
-                const tool = getToolById(toolId);
-                showToast(`Unlocked: ${tool?.name ?? toolId}`, "achievement");
-              }
-            });
-
-            return {
-              xp: newXp,
-              level: newLevel,
-              unlockedTools: newUnlockedTools,
-              unlockedSpecies: newUnlockedSpecies,
-            };
+        for (const toolId of unlocks.tools) {
+          if (!newUnlockedTools.includes(toolId)) {
+            newUnlockedTools.push(toolId);
           }
-
-          return { xp: newXp, level: newLevel };
-        }),
-
-      unlockTool: (toolId) =>
-        set((state) => ({
-          unlockedTools: state.unlockedTools.includes(toolId)
-            ? state.unlockedTools
-            : [...state.unlockedTools, toolId],
-        })),
-
-      unlockSpecies: (speciesId) =>
-        set((state) => ({
-          unlockedSpecies: state.unlockedSpecies.includes(speciesId)
-            ? state.unlockedSpecies
-            : [...state.unlockedSpecies, speciesId],
-        })),
-
-      incrementTreesPlanted: () =>
-        set((state) => ({ treesPlanted: state.treesPlanted + 1 })),
-
-      incrementTreesMatured: () =>
-        set((state) => ({ treesMatured: state.treesMatured + 1 })),
-
-      incrementTreesHarvested: () =>
-        set((state) => ({ treesHarvested: state.treesHarvested + 1 })),
-
-      incrementTreesWatered: () =>
-        set((state) => ({ treesWatered: state.treesWatered + 1 })),
-
-      addResource: (type, amount) =>
-        set((state) => ({
-          resources: { ...state.resources, [type]: state.resources[type] + amount },
-          lifetimeResources: { ...state.lifetimeResources, [type]: state.lifetimeResources[type] + amount },
-        })),
-
-      spendResource: (type, amount) => {
-        const current = get().resources[type];
-        if (current < amount) return false;
-        set((state) => ({
-          resources: { ...state.resources, [type]: state.resources[type] - amount },
-        }));
-        return true;
-      },
-
-      addSeed: (speciesId, amount) =>
-        set((state) => ({
-          seeds: { ...state.seeds, [speciesId]: (state.seeds[speciesId] ?? 0) + amount },
-        })),
-
-      spendSeed: (speciesId, amount) => {
-        const current = get().seeds[speciesId] ?? 0;
-        if (current < amount) return false;
-        set((state) => ({
-          seeds: { ...state.seeds, [speciesId]: (state.seeds[speciesId] ?? 0) - amount },
-        }));
-        return true;
-      },
-
-      setStamina: (value) => set({ stamina: value }),
-
-      spendStamina: (amount) => {
-        const current = get().stamina;
-        if (current < amount) return false;
-        set({ stamina: current - amount });
-        return true;
-      },
-
-      unlockAchievement: (id) =>
-        set((state) =>
-          state.achievements.includes(id)
-            ? state
-            : { achievements: [...state.achievements, id] },
-        ),
-
-      trackSpeciesPlanted: (speciesId) =>
-        set((state) =>
-          state.speciesPlanted.includes(speciesId)
-            ? state
-            : { speciesPlanted: [...state.speciesPlanted, speciesId] },
-        ),
-
-      trackSeason: (season) =>
-        set((state) =>
-          state.seasonsExperienced.includes(season)
-            ? state
-            : { seasonsExperienced: [...state.seasonsExperienced, season] },
-        ),
-
-      expandGrid: () => {
-        const state = get();
-        const nextTier = getNextExpansionTier(state.gridSize);
-        if (!nextTier) return false;
-        if (!canAffordExpansion(nextTier, state.resources, state.level)) return false;
-        // Spend resources
-        const newResources = { ...state.resources };
-        for (const [resource, amount] of Object.entries(nextTier.cost)) {
-          newResources[resource as keyof typeof newResources] = (newResources[resource as keyof typeof newResources] ?? 0) - amount;
         }
-        set({ gridSize: nextTier.size, resources: newResources });
-        queueMicrotask(() => {
-          showToast(`Grove expanded to ${nextTier.size}x${nextTier.size}!`, "success");
-        });
-        return true;
-      },
+        for (const speciesId of unlocks.species) {
+          if (!newUnlockedSpecies.includes(speciesId)) {
+            newUnlockedSpecies.push(speciesId);
+          }
+        }
 
-      performPrestige: () => {
-        const state = get();
-        if (!canPrestige(state.level)) return false;
-        const newCount = state.prestigeCount + 1;
-        const resetState = getPrestigeResetState();
-        const bonus = calculatePrestigeBonus(newCount);
-        const prestigeSpecies = getUnlockedPrestigeSpecies(newCount);
-        const newUnlockedSpecies = ["white-oak", ...prestigeSpecies.map(s => s.id)];
-        set({
-          ...resetState,
-          prestigeCount: newCount,
-          maxStamina: 100 + bonus.staminaBonus,
-          stamina: 100 + bonus.staminaBonus,
-          gridSize: 12,
-          coins: 0,
-          unlockedTools: ["trowel", "watering-can"],
+        // Deferred toast notifications (avoid side effects during setState)
+        queueMicrotask(() => {
+          showToast(`Level ${newLevel}!`, "success");
+          for (const speciesId of unlocks.species) {
+            const sp = getSpeciesById(speciesId);
+            showToast(`Unlocked: ${sp?.name ?? speciesId}`, "achievement");
+          }
+          for (const toolId of unlocks.tools) {
+            const tool = getToolById(toolId);
+            showToast(`Unlocked: ${tool?.name ?? toolId}`, "achievement");
+          }
+        });
+
+        return {
+          xp: newXp,
+          level: newLevel,
+          unlockedTools: newUnlockedTools,
           unlockedSpecies: newUnlockedSpecies,
-          achievements: state.achievements, // preserve achievements
-          seasonsExperienced: state.seasonsExperienced,
-          speciesPlanted: [],
-          lifetimeResources: state.lifetimeResources, // preserve lifetime tracking
-          placedStructures: [],
-          buildMode: false,
-          buildTemplateId: null,
-          hasSeenRules: state.hasSeenRules,
-          hapticsEnabled: state.hapticsEnabled,
-          soundEnabled: state.soundEnabled,
-        });
-        queueMicrotask(() => {
-          showToast(`Prestige ${newCount}! Bonuses applied.`, "achievement");
-          for (const sp of prestigeSpecies) {
-            if (sp.requiredPrestiges === newCount) {
-              showToast(`Unlocked: ${sp.name}`, "achievement");
-            }
-          }
-        });
-        return true;
-      },
+        };
+      }
 
-      setActiveBorderCosmetic: (id) => set({ activeBorderCosmetic: id }),
-
-      setBuildMode: (enabled, templateId) => set({
-        buildMode: enabled,
-        buildTemplateId: enabled ? (templateId ?? null) : null,
-      }),
-
-      addPlacedStructure: (templateId, worldX, worldZ) =>
-        set((state) => ({
-          placedStructures: [...state.placedStructures, { templateId, worldX, worldZ }],
-        })),
-
-      removePlacedStructure: (worldX, worldZ) =>
-        set((state) => ({
-          placedStructures: state.placedStructures.filter(
-            (s) => s.worldX !== worldX || s.worldZ !== worldZ,
-          ),
-        })),
-
-      resetGame: () => set(initialState),
-
-      // Time actions
-      setGameTime: (microseconds) => set({ gameTimeMicroseconds: microseconds }),
-      setCurrentSeason: (season) => set({ currentSeason: season }),
-      setCurrentDay: (day) => set({ currentDay: day }),
-      
-      // Quest actions
-      setActiveQuests: (quests) => set({ activeQuests: quests }),
-      updateQuest: (questId, quest) =>
-        set((state) => ({
-          activeQuests: state.activeQuests.map((q) =>
-            q.id === questId ? quest : q
-          ),
-        })),
-      completeQuest: (questId) =>
-        set((state) => ({
-          activeQuests: state.activeQuests.filter((q) => q.id !== questId),
-          completedQuestIds: [...state.completedQuestIds, questId],
-        })),
-      setLastQuestRefresh: (time) => set({ lastQuestRefresh: time }),
-      
-      // Discovery actions
-      discoverZone: (zoneId) => {
-        const state = get();
-        if (state.discoveredZones.includes(zoneId)) return false;
-        set({ discoveredZones: [...state.discoveredZones, zoneId] });
-        queueMicrotask(() => {
-          showToast(`Discovered new area!`, "success");
-        });
-        // Award discovery XP
-        get().addXp(50);
-        return true;
-      },
-
-      // World/zone actions
-      setCurrentZoneId: (zoneId) => set({ currentZoneId: zoneId }),
-      setWorldSeed: (seed) => set({ worldSeed: seed }),
-
-      // Achievement expansion tracking actions
-      incrementToolUse: (toolId) =>
-        set((state) => ({
-          toolUseCounts: {
-            ...state.toolUseCounts,
-            [toolId]: (state.toolUseCounts[toolId] ?? 0) + 1,
-          },
-        })),
-
-      incrementWildTreesHarvested: (speciesId) =>
-        set((state) => ({
-          wildTreesHarvested: state.wildTreesHarvested + 1,
-          wildSpeciesHarvested:
-            speciesId && !state.wildSpeciesHarvested.includes(speciesId)
-              ? [...state.wildSpeciesHarvested, speciesId]
-              : state.wildSpeciesHarvested,
-        })),
-
-      incrementWildTreesRegrown: () =>
-        set((state) => ({ wildTreesRegrown: state.wildTreesRegrown + 1 })),
-
-      trackVisitedZoneType: (zoneType) =>
-        set((state) =>
-          state.visitedZoneTypes.includes(zoneType)
-            ? state
-            : { visitedZoneTypes: [...state.visitedZoneTypes, zoneType] },
-        ),
-
-      incrementSeasonalPlanting: (season) =>
-        set((state) => ({
-          treesPlantedInSpring:
-            season === "spring"
-              ? state.treesPlantedInSpring + 1
-              : state.treesPlantedInSpring,
-        })),
-
-      incrementSeasonalHarvest: (season) =>
-        set((state) => ({
-          treesHarvestedInAutumn:
-            season === "autumn"
-              ? state.treesHarvestedInAutumn + 1
-              : state.treesHarvestedInAutumn,
-        })),
-
-      // Tool upgrade actions
-      upgradeToolTier: (toolId) => {
-        const state = get();
-        const currentTier = state.toolUpgrades[toolId] ?? 0;
-        const nextTier = getToolUpgradeTier(currentTier);
-        if (!nextTier) return false;
-        if (!canAffordToolUpgrade(nextTier, state.resources)) return false;
-        // Deduct costs
-        const newResources = { ...state.resources };
-        for (const [resource, amount] of Object.entries(nextTier.cost)) {
-          newResources[resource as keyof typeof newResources] =
-            (newResources[resource as keyof typeof newResources] ?? 0) - amount;
-        }
-        set({
-          resources: newResources,
-          toolUpgrades: {
-            ...state.toolUpgrades,
-            [toolId]: currentTier + 1,
-          },
-        });
-        queueMicrotask(() => {
-          showToast(`Tool upgraded to tier ${currentTier + 1}!`, "success");
-        });
-        return true;
-      },
-
-      // Settings actions
-      setHasSeenRules: (seen) => set({ hasSeenRules: seen }),
-      setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
-      setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
-
-      // Database hydration — bulk-set state from SQLite
-      hydrateFromDb: (dbState) => set(dbState),
+      return { xp: newXp, level: newLevel };
     }),
-);
+
+  unlockTool: (toolId) =>
+    set((state) => ({
+      unlockedTools: state.unlockedTools.includes(toolId)
+        ? state.unlockedTools
+        : [...state.unlockedTools, toolId],
+    })),
+
+  unlockSpecies: (speciesId) =>
+    set((state) => ({
+      unlockedSpecies: state.unlockedSpecies.includes(speciesId)
+        ? state.unlockedSpecies
+        : [...state.unlockedSpecies, speciesId],
+    })),
+
+  incrementTreesPlanted: () =>
+    set((state) => ({ treesPlanted: state.treesPlanted + 1 })),
+
+  incrementTreesMatured: () =>
+    set((state) => ({ treesMatured: state.treesMatured + 1 })),
+
+  incrementTreesHarvested: () =>
+    set((state) => ({ treesHarvested: state.treesHarvested + 1 })),
+
+  incrementTreesWatered: () =>
+    set((state) => ({ treesWatered: state.treesWatered + 1 })),
+
+  addResource: (type, amount) =>
+    set((state) => ({
+      resources: { ...state.resources, [type]: state.resources[type] + amount },
+      lifetimeResources: {
+        ...state.lifetimeResources,
+        [type]: state.lifetimeResources[type] + amount,
+      },
+    })),
+
+  spendResource: (type, amount) => {
+    const current = get().resources[type];
+    if (current < amount) return false;
+    set((state) => ({
+      resources: { ...state.resources, [type]: state.resources[type] - amount },
+    }));
+    return true;
+  },
+
+  addSeed: (speciesId, amount) =>
+    set((state) => ({
+      seeds: {
+        ...state.seeds,
+        [speciesId]: (state.seeds[speciesId] ?? 0) + amount,
+      },
+    })),
+
+  spendSeed: (speciesId, amount) => {
+    const current = get().seeds[speciesId] ?? 0;
+    if (current < amount) return false;
+    set((state) => ({
+      seeds: {
+        ...state.seeds,
+        [speciesId]: (state.seeds[speciesId] ?? 0) - amount,
+      },
+    }));
+    return true;
+  },
+
+  setStamina: (value) => set({ stamina: value }),
+
+  spendStamina: (amount) => {
+    const current = get().stamina;
+    if (current < amount) return false;
+    set({ stamina: current - amount });
+    return true;
+  },
+
+  unlockAchievement: (id) =>
+    set((state) =>
+      state.achievements.includes(id)
+        ? state
+        : { achievements: [...state.achievements, id] },
+    ),
+
+  trackSpeciesPlanted: (speciesId) =>
+    set((state) =>
+      state.speciesPlanted.includes(speciesId)
+        ? state
+        : { speciesPlanted: [...state.speciesPlanted, speciesId] },
+    ),
+
+  trackSeason: (season) =>
+    set((state) =>
+      state.seasonsExperienced.includes(season)
+        ? state
+        : { seasonsExperienced: [...state.seasonsExperienced, season] },
+    ),
+
+  expandGrid: () => {
+    const state = get();
+    const nextTier = getNextExpansionTier(state.gridSize);
+    if (!nextTier) return false;
+    if (!canAffordExpansion(nextTier, state.resources, state.level))
+      return false;
+    // Spend resources
+    const newResources = { ...state.resources };
+    for (const [resource, amount] of Object.entries(nextTier.cost)) {
+      newResources[resource as keyof typeof newResources] =
+        (newResources[resource as keyof typeof newResources] ?? 0) - amount;
+    }
+    set({ gridSize: nextTier.size, resources: newResources });
+    queueMicrotask(() => {
+      showToast(
+        `Grove expanded to ${nextTier.size}x${nextTier.size}!`,
+        "success",
+      );
+    });
+    return true;
+  },
+
+  performPrestige: () => {
+    const state = get();
+    if (!canPrestige(state.level)) return false;
+    const newCount = state.prestigeCount + 1;
+    const resetState = getPrestigeResetState();
+    const bonus = calculatePrestigeBonus(newCount);
+    const prestigeSpecies = getUnlockedPrestigeSpecies(newCount);
+    const newUnlockedSpecies = [
+      "white-oak",
+      ...prestigeSpecies.map((s) => s.id),
+    ];
+    set({
+      ...resetState,
+      prestigeCount: newCount,
+      maxStamina: 100 + bonus.staminaBonus,
+      stamina: 100 + bonus.staminaBonus,
+      gridSize: 12,
+      coins: 0,
+      unlockedTools: ["trowel", "watering-can"],
+      unlockedSpecies: newUnlockedSpecies,
+      achievements: state.achievements, // preserve achievements
+      seasonsExperienced: state.seasonsExperienced,
+      speciesPlanted: [],
+      lifetimeResources: state.lifetimeResources, // preserve lifetime tracking
+      placedStructures: [],
+      buildMode: false,
+      buildTemplateId: null,
+      hasSeenRules: state.hasSeenRules,
+      hapticsEnabled: state.hapticsEnabled,
+      soundEnabled: state.soundEnabled,
+    });
+    queueMicrotask(() => {
+      showToast(`Prestige ${newCount}! Bonuses applied.`, "achievement");
+      for (const sp of prestigeSpecies) {
+        if (sp.requiredPrestiges === newCount) {
+          showToast(`Unlocked: ${sp.name}`, "achievement");
+        }
+      }
+    });
+    return true;
+  },
+
+  setActiveBorderCosmetic: (id) => set({ activeBorderCosmetic: id }),
+
+  setBuildMode: (enabled, templateId) =>
+    set({
+      buildMode: enabled,
+      buildTemplateId: enabled ? (templateId ?? null) : null,
+    }),
+
+  addPlacedStructure: (templateId, worldX, worldZ) =>
+    set((state) => ({
+      placedStructures: [
+        ...state.placedStructures,
+        { templateId, worldX, worldZ },
+      ],
+    })),
+
+  removePlacedStructure: (worldX, worldZ) =>
+    set((state) => ({
+      placedStructures: state.placedStructures.filter(
+        (s) => s.worldX !== worldX || s.worldZ !== worldZ,
+      ),
+    })),
+
+  resetGame: () => set(initialState),
+
+  // Time actions
+  setGameTime: (microseconds) => set({ gameTimeMicroseconds: microseconds }),
+  setCurrentSeason: (season) => set({ currentSeason: season }),
+  setCurrentDay: (day) => set({ currentDay: day }),
+
+  // Quest actions
+  setActiveQuests: (quests) => set({ activeQuests: quests }),
+  updateQuest: (questId, quest) =>
+    set((state) => ({
+      activeQuests: state.activeQuests.map((q) =>
+        q.id === questId ? quest : q,
+      ),
+    })),
+  completeQuest: (questId) =>
+    set((state) => ({
+      activeQuests: state.activeQuests.filter((q) => q.id !== questId),
+      completedQuestIds: [...state.completedQuestIds, questId],
+    })),
+  setLastQuestRefresh: (time) => set({ lastQuestRefresh: time }),
+
+  // Discovery actions
+  discoverZone: (zoneId) => {
+    const state = get();
+    if (state.discoveredZones.includes(zoneId)) return false;
+    set({ discoveredZones: [...state.discoveredZones, zoneId] });
+    queueMicrotask(() => {
+      showToast(`Discovered new area!`, "success");
+    });
+    // Award discovery XP
+    get().addXp(50);
+    return true;
+  },
+
+  // World/zone actions
+  setCurrentZoneId: (zoneId) => set({ currentZoneId: zoneId }),
+  setWorldSeed: (seed) => set({ worldSeed: seed }),
+
+  // Achievement expansion tracking actions
+  incrementToolUse: (toolId) =>
+    set((state) => ({
+      toolUseCounts: {
+        ...state.toolUseCounts,
+        [toolId]: (state.toolUseCounts[toolId] ?? 0) + 1,
+      },
+    })),
+
+  incrementWildTreesHarvested: (speciesId) =>
+    set((state) => ({
+      wildTreesHarvested: state.wildTreesHarvested + 1,
+      wildSpeciesHarvested:
+        speciesId && !state.wildSpeciesHarvested.includes(speciesId)
+          ? [...state.wildSpeciesHarvested, speciesId]
+          : state.wildSpeciesHarvested,
+    })),
+
+  incrementWildTreesRegrown: () =>
+    set((state) => ({ wildTreesRegrown: state.wildTreesRegrown + 1 })),
+
+  trackVisitedZoneType: (zoneType) =>
+    set((state) =>
+      state.visitedZoneTypes.includes(zoneType)
+        ? state
+        : { visitedZoneTypes: [...state.visitedZoneTypes, zoneType] },
+    ),
+
+  incrementSeasonalPlanting: (season) =>
+    set((state) => ({
+      treesPlantedInSpring:
+        season === "spring"
+          ? state.treesPlantedInSpring + 1
+          : state.treesPlantedInSpring,
+    })),
+
+  incrementSeasonalHarvest: (season) =>
+    set((state) => ({
+      treesHarvestedInAutumn:
+        season === "autumn"
+          ? state.treesHarvestedInAutumn + 1
+          : state.treesHarvestedInAutumn,
+    })),
+
+  // Tool upgrade actions
+  upgradeToolTier: (toolId) => {
+    const state = get();
+    const currentTier = state.toolUpgrades[toolId] ?? 0;
+    const nextTier = getToolUpgradeTier(currentTier);
+    if (!nextTier) return false;
+    if (!canAffordToolUpgrade(nextTier, state.resources)) return false;
+    // Deduct costs
+    const newResources = { ...state.resources };
+    for (const [resource, amount] of Object.entries(nextTier.cost)) {
+      newResources[resource as keyof typeof newResources] =
+        (newResources[resource as keyof typeof newResources] ?? 0) - amount;
+    }
+    set({
+      resources: newResources,
+      toolUpgrades: {
+        ...state.toolUpgrades,
+        [toolId]: currentTier + 1,
+      },
+    });
+    queueMicrotask(() => {
+      showToast(`Tool upgraded to tier ${currentTier + 1}!`, "success");
+    });
+    return true;
+  },
+
+  // Settings actions
+  setHasSeenRules: (seen) => set({ hasSeenRules: seen }),
+  setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
+  setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
+
+  // Database hydration — bulk-set state from SQLite
+  hydrateFromDb: (dbState) => set(dbState),
+}));

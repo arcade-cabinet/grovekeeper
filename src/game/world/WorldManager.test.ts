@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { WorldManager } from "./WorldManager";
+import { beforeEach, describe, expect, it } from "vitest";
 import type { WorldDefinition } from "./types";
+import { WorldManager } from "./WorldManager";
 
 const testWorld: WorldDefinition = {
   id: "test-world",
@@ -16,7 +16,11 @@ const testWorld: WorldDefinition = {
       groundMaterial: "soil",
       plantable: true,
       connections: [
-        { direction: "east", targetZoneId: "zone-b", localEntry: { x: 9, z: 5 } },
+        {
+          direction: "east",
+          targetZoneId: "zone-b",
+          localEntry: { x: 9, z: 5 },
+        },
       ],
     },
     {
@@ -32,7 +36,11 @@ const testWorld: WorldDefinition = {
       ],
       plantable: true,
       connections: [
-        { direction: "west", targetZoneId: "zone-a", localEntry: { x: 0, z: 4 } },
+        {
+          direction: "west",
+          targetZoneId: "zone-a",
+          localEntry: { x: 0, z: 4 },
+        },
       ],
     },
   ],

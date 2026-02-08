@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   buildWalkabilityGrid,
   findPath,
-  type WalkabilityGrid,
   type TileCoord,
+  type WalkabilityGrid,
 } from "./pathfinding";
 
 // ---------------------------------------------------------------------------

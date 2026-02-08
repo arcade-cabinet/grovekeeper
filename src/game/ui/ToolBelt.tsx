@@ -92,7 +92,8 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
             color: "#3E2723",
           }}
         >
-          {"\u{1F331}"} {selectedSpecies} ({"\u{00D7}"}{seeds[selectedSpecies] ?? 0})
+          {"\u{1F331}"} {selectedSpecies} ({"\u{00D7}"}
+          {seeds[selectedSpecies] ?? 0})
         </div>
       )}
     </div>

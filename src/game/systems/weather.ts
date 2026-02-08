@@ -13,8 +13,8 @@
  * - Windstorm: 10% chance to damage seedling/sprout trees, lasts 30-60 game seconds
  */
 
-import { createRNG, hashString } from "../utils/seedRNG";
 import { getActiveDifficulty } from "../constants/difficulty";
+import { createRNG, hashString } from "../utils/seedRNG";
 
 // ============================================
 // Public Types
@@ -46,7 +46,10 @@ export interface WeatherState {
 const WEATHER_CHECK_INTERVAL = 300; // 5 game minutes
 
 /** Duration ranges per weather type [min, max] in game seconds */
-const DURATION_RANGES: Record<Exclude<WeatherType, "clear">, [number, number]> = {
+const DURATION_RANGES: Record<
+  Exclude<WeatherType, "clear">,
+  [number, number]
+> = {
   rain: [60, 120],
   drought: [90, 180],
   windstorm: [30, 60],
@@ -57,11 +60,14 @@ const DURATION_RANGES: Record<Exclude<WeatherType, "clear">, [number, number]> =
  * Each array is ordered: [rain, drought, windstorm, clear].
  * Values are cumulative thresholds (the final "clear" is implicit remainder).
  */
-const SEASON_PROBABILITIES: Record<string, { rain: number; drought: number; windstorm: number }> = {
-  spring:  { rain: 0.30, drought: 0.05, windstorm: 0.10 },
-  summer:  { rain: 0.15, drought: 0.25, windstorm: 0.05 },
-  autumn:  { rain: 0.20, drought: 0.10, windstorm: 0.20 },
-  winter:  { rain: 0.05, drought: 0.15, windstorm: 0.15 },
+const SEASON_PROBABILITIES: Record<
+  string,
+  { rain: number; drought: number; windstorm: number }
+> = {
+  spring: { rain: 0.3, drought: 0.05, windstorm: 0.1 },
+  summer: { rain: 0.15, drought: 0.25, windstorm: 0.05 },
+  autumn: { rain: 0.2, drought: 0.1, windstorm: 0.2 },
+  winter: { rain: 0.05, drought: 0.15, windstorm: 0.15 },
 };
 
 // Windstorm damage chance is now driven by difficulty config (windstormDamageChance)
@@ -99,7 +105,9 @@ export function getWeatherStaminaMultiplier(weather: WeatherType): number {
  * Create a fresh weather state starting with clear skies.
  * The first weather roll will happen after one full check interval.
  */
-export function initializeWeather(currentGameTimeSeconds: number): WeatherState {
+export function initializeWeather(
+  currentGameTimeSeconds: number,
+): WeatherState {
   return {
     current: {
       type: "clear",
@@ -142,7 +150,10 @@ export function updateWeather(
   // Event expired but haven't reached next check time -- stay clear until check
   if (currentGameTimeSeconds < state.nextCheckTime) {
     // If current weather already transitioned to clear waiting state, return as-is
-    if (state.current.type === "clear" && state.current.startTime === eventEnd) {
+    if (
+      state.current.type === "clear" &&
+      state.current.startTime === eventEnd
+    ) {
       return state;
     }
     // Transition to clear while waiting for the next check

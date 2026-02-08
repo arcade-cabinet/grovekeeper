@@ -1,5 +1,5 @@
-import type { ResourceType } from "../constants/resources";
 import { COLORS } from "../constants/config";
+import type { ResourceType } from "../constants/resources";
 import { useGameStore } from "../stores/gameStore";
 
 const RESOURCE_EMOJIS: Record<ResourceType, string> = {

@@ -391,7 +391,6 @@ export const MiniMapOverlay = ({ open, onClose }: MiniMapOverlayProps) => {
           Water
         </span>
       </div>
-
     </div>
   );
 };

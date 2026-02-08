@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { useGameStore } from "../stores/gameStore";
 import {
   getWeatherGrowthMultiplier,
   getWeatherStaminaMultiplier,
   initializeWeather,
-  updateWeather,
   rollWindstormDamage,
+  updateWeather,
   type WeatherState,
   type WeatherType,
 } from "./weather";
-import { useGameStore } from "../stores/gameStore";
 
 // ============================================
 // Growth Multiplier
@@ -352,7 +352,7 @@ describe("rollWindstormDamage", () => {
   });
 
   it("returns false when rngValue >= 0.10", () => {
-    expect(rollWindstormDamage(0.10)).toBe(false);
+    expect(rollWindstormDamage(0.1)).toBe(false);
     expect(rollWindstormDamage(0.11)).toBe(false);
     expect(rollWindstormDamage(0.5)).toBe(false);
     expect(rollWindstormDamage(0.99)).toBe(false);
@@ -397,7 +397,7 @@ describe("Weather × Difficulty tier interactions", () => {
     it("brutal has 20% windstorm damage", () => {
       useGameStore.setState({ difficulty: "brutal" });
       expect(rollWindstormDamage(0.19)).toBe(true);
-      expect(rollWindstormDamage(0.20)).toBe(false);
+      expect(rollWindstormDamage(0.2)).toBe(false);
     });
 
     it("ultra-brutal has 25% windstorm damage", () => {
@@ -409,7 +409,13 @@ describe("Weather × Difficulty tier interactions", () => {
 
   describe("rain growth bonus is consistent across difficulties", () => {
     it("rain bonus is 1.3 for all difficulty tiers", () => {
-      for (const diff of ["explore", "normal", "hard", "brutal", "ultra-brutal"]) {
+      for (const diff of [
+        "explore",
+        "normal",
+        "hard",
+        "brutal",
+        "ultra-brutal",
+      ]) {
         useGameStore.setState({ difficulty: diff });
         expect(getWeatherGrowthMultiplier("rain")).toBe(1.3);
       }
@@ -459,7 +465,9 @@ describe("updateWeather edge cases", () => {
   it("handles very large game times", () => {
     const state = initializeWeather(1_000_000);
     const result = updateWeather(state, 1_000_300, "spring", 42);
-    expect(["clear", "rain", "drought", "windstorm"]).toContain(result.current.type);
+    expect(["clear", "rain", "drought", "windstorm"]).toContain(
+      result.current.type,
+    );
   });
 
   it("expired clear waiting state returns same reference", () => {
@@ -478,6 +486,8 @@ describe("updateWeather edge cases", () => {
   it("unknown season defaults to spring probabilities", () => {
     const state = initializeWeather(0);
     const result = updateWeather(state, 300, "monsoon", 42);
-    expect(["clear", "rain", "drought", "windstorm"]).toContain(result.current.type);
+    expect(["clear", "rain", "drought", "windstorm"]).toContain(
+      result.current.type,
+    );
   });
 });

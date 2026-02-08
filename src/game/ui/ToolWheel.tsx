@@ -1,3 +1,9 @@
+import {
+  RiDropLine,
+  RiLeafLine,
+  RiScissorsLine,
+  RiToolsLine,
+} from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -5,12 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  RiDropLine,
-  RiLeafLine,
-  RiScissorsLine,
-  RiToolsLine,
-} from "@remixicon/react";
 import { COLORS } from "../constants/config";
 import { TOOLS, type ToolData } from "../constants/tools";
 import { useGameStore } from "../stores/gameStore";
@@ -80,14 +80,24 @@ export const ToolWheel = ({ open, onClose }: ToolWheelProps) => {
                 onClick={() => handleSelectTool(tool)}
                 disabled={!isUnlocked && !canUnlock}
               >
-                <div style={{ color: isUnlocked ? COLORS.forestGreen : COLORS.barkBrown }}>
+                <div
+                  style={{
+                    color: isUnlocked ? COLORS.forestGreen : COLORS.barkBrown,
+                  }}
+                >
                   {toolIcons[tool.id] || <RiToolsLine className="w-6 h-6" />}
                 </div>
-                <span className="text-xs mt-1" style={{ color: COLORS.soilDark }}>
+                <span
+                  className="text-xs mt-1"
+                  style={{ color: COLORS.soilDark }}
+                >
                   {tool.name}
                 </span>
                 {!isUnlocked && (
-                  <span className="text-xs" style={{ color: COLORS.autumnGold }}>
+                  <span
+                    className="text-xs"
+                    style={{ color: COLORS.autumnGold }}
+                  >
                     Lv.{tool.unlockLevel}
                   </span>
                 )}

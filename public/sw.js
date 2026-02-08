@@ -1,4 +1,4 @@
-const CACHE_VERSION = 3;
+const CACHE_VERSION = 4;
 const CACHE_NAME = `grovekeeper-v${CACHE_VERSION}`;
 
 // Derive the base path from the service worker's own URL

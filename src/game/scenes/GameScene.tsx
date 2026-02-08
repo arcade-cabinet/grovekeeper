@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getDb, isDbInitialized } from "@/db/client";
 import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { persistGameStore, saveGroveToDb } from "@/db/queries";
+import { PlayerGovernor } from "../ai/PlayerGovernor";
 import { GRID_SIZE } from "../constants/config";
 import { getActiveDifficulty } from "../constants/difficulty";
 import type { ResourceType } from "../constants/resources";
@@ -32,6 +33,7 @@ import { isPlayerAdjacent } from "../npcs/NpcManager";
 // Scene managers
 import {
   CameraManager,
+  disposeModelCache,
   GroundBuilder,
   LightingManager,
   NpcMeshManager,
@@ -54,6 +56,7 @@ import {
   harvestSystem,
   initHarvestable,
 } from "../systems/harvest";
+import type { ObjectTapInfo } from "../systems/InputManager";
 import { InputManager } from "../systems/InputManager";
 import { movementSystem, setMovementBounds } from "../systems/movement";
 import { calculateAllOfflineGrowth } from "../systems/offlineGrowth";
@@ -111,6 +114,11 @@ export const GameScene = () => {
   const npcMeshRef = useRef(new NpcMeshManager());
   const worldManagerRef = useRef(new WorldManager());
   const inputManagerRef = useRef(new InputManager());
+  const playerGovernorRef = useRef(new PlayerGovernor());
+  const [autopilot, setAutopilot] = useState(
+    typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("autopilot"),
+  );
 
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
   const [toolWheelOpen, setToolWheelOpen] = useState(false);
@@ -128,6 +136,8 @@ export const GameScene = () => {
     null,
   );
   const [npcDialogueOpen, setNpcDialogueOpen] = useState(false);
+  const [interactionTarget, setInteractionTarget] =
+    useState<ObjectTapInfo | null>(null);
 
   const {
     setScreen,
@@ -144,9 +154,42 @@ export const GameScene = () => {
   // --- InputManager dialog disable sync ---
   useEffect(() => {
     inputManagerRef.current.setDisabled(
-      seedSelectOpen || toolWheelOpen || pauseMenuOpen || npcDialogueOpen,
+      seedSelectOpen ||
+        toolWheelOpen ||
+        pauseMenuOpen ||
+        npcDialogueOpen ||
+        !!interactionTarget,
     );
-  }, [seedSelectOpen, toolWheelOpen, pauseMenuOpen, npcDialogueOpen]);
+  }, [
+    seedSelectOpen,
+    toolWheelOpen,
+    pauseMenuOpen,
+    npcDialogueOpen,
+    interactionTarget,
+  ]);
+
+  // --- Autopilot (PlayerGovernor) toggle with G key ---
+  useEffect(() => {
+    playerGovernorRef.current.enabled = autopilot;
+    if (autopilot) {
+      inputManagerRef.current.setDisabled(true);
+    }
+  }, [autopilot]);
+
+  useEffect(() => {
+    const handleAutopilotKey = (e: KeyboardEvent) => {
+      if (
+        e.key.toLowerCase() === "g" &&
+        !(e.target instanceof HTMLInputElement) &&
+        !(e.target instanceof HTMLTextAreaElement)
+      ) {
+        e.preventDefault();
+        setAutopilot((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleAutopilotKey);
+    return () => window.removeEventListener("keydown", handleAutopilotKey);
+  }, []);
 
   // --- Save/restore ---
   const saveCurrentGrove = useCallback(() => {
@@ -329,7 +372,7 @@ export const GameScene = () => {
       lights.init(scene);
       ground.init(scene, bounds, worldDef.zones);
       sky.init(scene);
-      playerMesh.init(scene);
+      await playerMesh.init(scene);
 
       // Add plantable grid overlays for zones where players can plant
       for (const zone of worldDef.zones) {
@@ -355,6 +398,7 @@ export const GameScene = () => {
               useGameStore.getState().setSelectedTool(tool.id);
             }
           },
+          onObjectTapped: (info: ObjectTapInfo) => setInteractionTarget(info),
         },
         getScene: () => scene,
         getGridCells: () => gridCellsQuery,
@@ -371,6 +415,12 @@ export const GameScene = () => {
             ? { x: Math.round(p.position.x), z: Math.round(p.position.z) }
             : { x: 0, z: 0 };
         },
+      });
+
+      // --- PlayerGovernor setup ---
+      playerGovernorRef.current.init({
+        movementRef,
+        getWorldBounds: () => worldMgr.getWorldBounds(),
       });
 
       // --- Helper functions (defined inside useEffect to avoid stale closures) ---
@@ -597,6 +647,9 @@ export const GameScene = () => {
         // InputManager update (path following) — must run before movementSystem
         inputManagerRef.current.update();
 
+        // PlayerGovernor update — drives movement when autopilot is active
+        playerGovernorRef.current.update(dt);
+
         // ECS systems
         movementSystem(movementRef.current, dt);
         growthSystem(dt, currentTime.season, weatherGrowthMult);
@@ -726,6 +779,7 @@ export const GameScene = () => {
       npcMesh.dispose();
       treeMesh.dispose();
       playerMesh.dispose();
+      disposeModelCache();
       sky.dispose();
       ground.dispose();
       lights.dispose();
@@ -1248,6 +1302,70 @@ export const GameScene = () => {
     }
   }, [addResource, addXp, incrementTreesHarvested]);
 
+  const handleInteractionAction = useCallback(
+    async (actionId: string) => {
+      if (!interactionTarget) return;
+
+      const { entityId, entityType } = interactionTarget;
+      setInteractionTarget(null);
+
+      if (entityType === "npc") {
+        // Find the NPC entity and open dialogue
+        for (const npcEntity of npcsQuery) {
+          if (npcEntity.id === entityId && npcEntity.npc) {
+            nearbyNpcRef.current = npcEntity;
+            setNearbyNpcTemplateId(npcEntity.npc.templateId);
+            setNpcDialogueOpen(true);
+            break;
+          }
+        }
+        return;
+      }
+
+      if (entityType === "tree") {
+        // Find the tree entity
+        let treeEntity = null;
+        for (const t of treesQuery) {
+          if (t.id === entityId) {
+            treeEntity = t;
+            break;
+          }
+        }
+        if (!treeEntity?.tree) return;
+
+        // Find the grid cell for this tree
+        let gc: GridCellComponent | null = null;
+        if (treeEntity.position) {
+          const gx = Math.round(treeEntity.position.x);
+          const gz = Math.round(treeEntity.position.z);
+          for (const cell of gridCellsQuery) {
+            if (cell.gridCell?.gridX === gx && cell.gridCell?.gridZ === gz) {
+              gc = cell.gridCell;
+              break;
+            }
+          }
+        }
+        if (!gc) return;
+
+        switch (actionId) {
+          case "water":
+            if (gc.treeEntityId) await toolActions["watering-can"]?.(gc);
+            break;
+          case "prune":
+            if (gc.treeEntityId) await toolActions["pruning-shears"]?.(gc);
+            break;
+          case "harvest":
+            if (gc.treeEntityId) await toolActions.axe?.(gc);
+            break;
+          case "inspect":
+            if (gc.treeEntityId) await toolActions.almanac?.(gc);
+            break;
+        }
+      }
+    },
+    [interactionTarget, toolActions],
+  );
+
   return (
     <div ref={containerRef} className="relative w-full h-full">
       <canvas
@@ -1255,6 +1373,18 @@ export const GameScene = () => {
         className="absolute inset-0 w-full h-full"
         style={{ touchAction: "none" }}
       />
+      {autopilot && (
+        <div
+          className="absolute top-12 left-1/2 -translate-x-1/2 z-50 px-3 py-1 rounded-full text-xs font-bold tracking-wider"
+          style={{
+            background: "rgba(34,197,94,0.85)",
+            color: "#fff",
+            pointerEvents: "none",
+          }}
+        >
+          AUTOPILOT [G]
+        </div>
+      )}
       <GameUI
         onAction={handleAction}
         onPlant={handlePlant}
@@ -1278,6 +1408,9 @@ export const GameScene = () => {
         nearbyNpcTemplateId={nearbyNpcTemplateId}
         npcDialogueOpen={npcDialogueOpen}
         setNpcDialogueOpen={setNpcDialogueOpen}
+        interactionTarget={interactionTarget}
+        onInteractionAction={handleInteractionAction}
+        onDismissInteraction={() => setInteractionTarget(null)}
       />
     </div>
   );

@@ -82,7 +82,11 @@ export function calculateOfflineGrowth(
 
   // Already at max stage -- nothing to grow
   if (stage >= MAX_STAGE) {
-    return { stage: MAX_STAGE, progress: Math.min(progress, 1.0), watered: false };
+    return {
+      stage: MAX_STAGE,
+      progress: Math.min(progress, 1.0),
+      watered: false,
+    };
   }
 
   const diffMult = DIFFICULTY_MULTIPLIERS[speciesData.difficulty] ?? 1.0;

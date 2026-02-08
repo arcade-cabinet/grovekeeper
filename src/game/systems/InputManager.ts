@@ -1,18 +1,14 @@
 import type { Scene } from "@babylonjs/core/scene";
-import { keysToIsometric } from "../hooks/useKeyboardInput";
-import { isMobileDevice } from "./platform";
+import type { GridCellComponent } from "../ecs/world";
+import { keysToWorld } from "../hooks/useKeyboardInput";
 import { screenToGroundPlane } from "../utils/projection";
 import {
-  buildWalkabilityGrid,
-  findPath,
-  type TileCoord,
-} from "./pathfinding";
-import {
-  createPathFollow,
   advancePathFollow,
+  createPathFollow,
   type PathFollowState,
 } from "./pathFollowing";
-import type { GridCellComponent } from "../ecs/world";
+import { buildWalkabilityGrid, findPath, type TileCoord } from "./pathfinding";
+import { isMobileDevice } from "./platform";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -20,11 +16,23 @@ import type { GridCellComponent } from "../ecs/world";
 
 export type InputMode = "idle" | "keyboard" | "drag" | "pathfollow";
 
+/** Information about a tapped 3D object. */
+export interface ObjectTapInfo {
+  entityId: string;
+  entityType: string;
+  screenX: number;
+  screenY: number;
+  worldX: number;
+  worldZ: number;
+}
+
 export interface InputManagerCallbacks {
   onAction: () => void;
   onOpenSeeds: () => void;
   onPause: () => void;
   onSelectTool: (index: number) => void;
+  /** Called when a pickable 3D object (tree, NPC, structure) is tapped. */
+  onObjectTapped?: (info: ObjectTapInfo) => void;
 }
 
 export interface InputManagerConfig {
@@ -50,7 +58,6 @@ export interface InputManagerConfig {
 const TAP_MAX_MS = 300;
 const DRAG_THRESHOLD_MOBILE = 6;
 const DRAG_THRESHOLD_DESKTOP = 10;
-const ISO_ANGLE = Math.PI / 4; // 45° to match camera
 
 // ---------------------------------------------------------------------------
 // InputManager
@@ -99,10 +106,18 @@ export class InputManager {
     this.boundKeyUp = this.onKeyUp.bind(this);
     this.boundBlur = this.onBlur.bind(this);
 
-    config.canvas.addEventListener("pointerdown", this.boundPointerDown, { passive: true });
-    config.canvas.addEventListener("pointermove", this.boundPointerMove, { passive: true });
-    config.canvas.addEventListener("pointerup", this.boundPointerUp, { passive: true });
-    config.canvas.addEventListener("pointercancel", this.boundPointerUp, { passive: true });
+    config.canvas.addEventListener("pointerdown", this.boundPointerDown, {
+      passive: true,
+    });
+    config.canvas.addEventListener("pointermove", this.boundPointerMove, {
+      passive: true,
+    });
+    config.canvas.addEventListener("pointerup", this.boundPointerUp, {
+      passive: true,
+    });
+    config.canvas.addEventListener("pointercancel", this.boundPointerUp, {
+      passive: true,
+    });
 
     window.addEventListener("keydown", this.boundKeyDown);
     window.addEventListener("keyup", this.boundKeyUp);
@@ -160,8 +175,7 @@ export class InputManager {
     }
     if (this.boundKeyDown)
       window.removeEventListener("keydown", this.boundKeyDown);
-    if (this.boundKeyUp)
-      window.removeEventListener("keyup", this.boundKeyUp);
+    if (this.boundKeyUp) window.removeEventListener("keyup", this.boundKeyUp);
     if (this.boundBlur) window.removeEventListener("blur", this.boundBlur);
 
     this.config = null;
@@ -170,7 +184,7 @@ export class InputManager {
   }
 
   // -----------------------------------------------------------------------
-  // Pointer Events (drag-to-move + tap-to-move)
+  // Pointer Events (drag-to-move + tap-to-move + object picking)
   // -----------------------------------------------------------------------
 
   private onPointerDown(e: PointerEvent): void {
@@ -205,14 +219,15 @@ export class InputManager {
     }
 
     if (this.isDragging) {
-      // Normalize to magnitude 1, then rotate 45° for isometric camera
+      // Normalize to magnitude 1
+      // With perspective camera, screen directions map directly to world XZ
       const mag = Math.max(dist, 1);
       const nx = dx / mag;
       const ny = -dy / mag; // screen Y is inverted
 
-      // Rotate by ISO_ANGLE to match camera orientation
-      const rx = nx * Math.cos(ISO_ANGLE) - ny * Math.sin(ISO_ANGLE);
-      const rz = -(nx * Math.sin(ISO_ANGLE) + ny * Math.cos(ISO_ANGLE));
+      // Direct mapping for perspective camera (no isometric rotation needed)
+      const rx = nx;
+      const rz = ny;
 
       // Clamp magnitude to 1
       const rmag = Math.sqrt(rx * rx + rz * rz);
@@ -249,6 +264,31 @@ export class InputManager {
     const scene = this.config.getScene();
     if (!scene) return;
 
+    // First: try to pick a 3D object (tree, NPC, structure)
+    const pickResult = scene.pick(
+      screenX,
+      screenY,
+      (mesh) => mesh.isPickable && !!mesh.metadata?.entityType,
+    );
+
+    if (pickResult?.hit && pickResult.pickedMesh?.metadata) {
+      const meta = pickResult.pickedMesh.metadata as {
+        entityId: string;
+        entityType: string;
+      };
+      const worldPos = pickResult.pickedPoint;
+      this.config.callbacks.onObjectTapped?.({
+        entityId: meta.entityId,
+        entityType: meta.entityType,
+        screenX,
+        screenY,
+        worldX: worldPos?.x ?? 0,
+        worldZ: worldPos?.z ?? 0,
+      });
+      return;
+    }
+
+    // Fallback: tap-to-move (A* pathfinding)
     const worldPos = screenToGroundPlane(screenX, screenY, scene);
     if (!worldPos) return;
 
@@ -369,10 +409,10 @@ export class InputManager {
 
   private updateKeyboardMovement(): void {
     if (!this.config) return;
-    const iso = keysToIsometric(this.keysDown);
-    this.config.movementRef.current = iso;
+    const movement = keysToWorld(this.keysDown);
+    this.config.movementRef.current = movement;
 
-    if (iso.x === 0 && iso.z === 0) {
+    if (movement.x === 0 && movement.z === 0) {
       if (this.mode === "keyboard") this.setMode("idle");
     } else {
       this.setMode("keyboard");

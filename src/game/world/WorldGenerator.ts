@@ -69,7 +69,9 @@ function getZoneCount(playerLevel: number, rng: () => number): number {
 // Archetype selection by level
 // ============================================
 
-function getAvailableArchetypes(playerLevel: number): { value: ZoneArchetype; weight: number }[] {
+function getAvailableArchetypes(
+  playerLevel: number,
+): { value: ZoneArchetype; weight: number }[] {
   const archetypes: { value: ZoneArchetype; weight: number }[] = [];
 
   for (const arch of ZONE_ARCHETYPES) {
@@ -186,7 +188,10 @@ interface OpenEdge {
   size: { width: number; height: number };
 }
 
-function getOpenEdges(zone: ZoneDefinition, usedDirections: Set<string>): OpenEdge[] {
+function getOpenEdges(
+  zone: ZoneDefinition,
+  usedDirections: Set<string>,
+): OpenEdge[] {
   const edges: OpenEdge[] = [];
   const directions: ConnectionDirection[] = ["north", "south", "east", "west"];
 
@@ -217,21 +222,27 @@ function computeNewOrigin(
     case "east":
       return {
         x: origin.x + size.width + gap,
-        z: origin.z + Math.floor(rng() * Math.max(1, size.height - newHeight + 1)),
+        z:
+          origin.z +
+          Math.floor(rng() * Math.max(1, size.height - newHeight + 1)),
       };
     case "west":
       return {
         x: origin.x - newWidth - gap,
-        z: origin.z + Math.floor(rng() * Math.max(1, size.height - newHeight + 1)),
+        z:
+          origin.z +
+          Math.floor(rng() * Math.max(1, size.height - newHeight + 1)),
       };
     case "south":
       return {
-        x: origin.x + Math.floor(rng() * Math.max(1, size.width - newWidth + 1)),
+        x:
+          origin.x + Math.floor(rng() * Math.max(1, size.width - newWidth + 1)),
         z: origin.z + size.height + gap,
       };
     case "north":
       return {
-        x: origin.x + Math.floor(rng() * Math.max(1, size.width - newWidth + 1)),
+        x:
+          origin.x + Math.floor(rng() * Math.max(1, size.width - newWidth + 1)),
         z: origin.z - newHeight - gap,
       };
   }
@@ -306,8 +317,16 @@ export function generateWorld(
     const available = getAvailableArchetypes(playerLevel);
     const archetype = pickWeighted(rng, available);
 
-    const width = rollInt(rng, archetype.sizeRange.minWidth, archetype.sizeRange.maxWidth);
-    const height = rollInt(rng, archetype.sizeRange.minHeight, archetype.sizeRange.maxHeight);
+    const width = rollInt(
+      rng,
+      archetype.sizeRange.minWidth,
+      archetype.sizeRange.maxWidth,
+    );
+    const height = rollInt(
+      rng,
+      archetype.sizeRange.minHeight,
+      archetype.sizeRange.maxHeight,
+    );
 
     // Collect all open edges from all placed zones
     const allEdges: OpenEdge[] = [];
@@ -371,7 +390,12 @@ function createZoneFromArchetype(
   origin: { x: number; z: number },
   size: { width: number; height: number },
 ): ZoneDefinition {
-  const tiles = generateTileOverrides(rng, size.width, size.height, archetype.tileRules);
+  const tiles = generateTileOverrides(
+    rng,
+    size.width,
+    size.height,
+    archetype.tileRules,
+  );
 
   // Build a set of occupied tile keys (from overrides) for prop placement
   const occupiedTiles = new Set<string>();
@@ -402,6 +426,8 @@ function createZoneFromArchetype(
     plantable: archetype.plantable,
     connections: [],
     wildTrees: hasWildTrees ? archetype.wildTrees : undefined,
-    wildTreeDensity: hasWildTrees ? (archetype.wildTreeDensity ?? 0) : undefined,
+    wildTreeDensity: hasWildTrees
+      ? (archetype.wildTreeDensity ?? 0)
+      : undefined,
   };
 }

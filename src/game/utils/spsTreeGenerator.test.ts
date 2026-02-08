@@ -1,14 +1,14 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Unmock BabylonJS so NullEngine + Scene work (global setup.ts mocks these)
 vi.unmock("@babylonjs/core/Engines/engine");
 vi.unmock("@babylonjs/core/scene");
 
 import { NullEngine } from "@babylonjs/core/Engines/nullEngine";
-import { Scene } from "@babylonjs/core/scene";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { createSPSTree, type SPSTreeParams } from "./spsTreeGenerator";
+import { Scene } from "@babylonjs/core/scene";
 import { createRNG } from "./seedRNG";
+import { createSPSTree, type SPSTreeParams } from "./spsTreeGenerator";
 
 describe("spsTreeGenerator", () => {
   let engine: NullEngine;
@@ -87,7 +87,9 @@ describe("spsTreeGenerator", () => {
     expect(children1.length).toBe(children2.length);
 
     for (let i = 0; i < children1.length; i++) {
-      expect(children1[i].getTotalVertices()).toBe(children2[i].getTotalVertices());
+      expect(children1[i].getTotalVertices()).toBe(
+        children2[i].getTotalVertices(),
+      );
     }
   });
 
@@ -118,11 +120,23 @@ describe("spsTreeGenerator", () => {
   });
 
   it("boughs=2 produces more vertices than boughs=1", () => {
-    const tree1 = createSPSTree(makeParams({ boughs: 1 }), scene, createRNG(42));
-    const tree2 = createSPSTree(makeParams({ boughs: 2 }), scene, createRNG(42));
+    const tree1 = createSPSTree(
+      makeParams({ boughs: 1 }),
+      scene,
+      createRNG(42),
+    );
+    const tree2 = createSPSTree(
+      makeParams({ boughs: 2 }),
+      scene,
+      createRNG(42),
+    );
 
-    const verts1 = tree1.getChildMeshes(true).reduce((sum, m) => sum + m.getTotalVertices(), 0);
-    const verts2 = tree2.getChildMeshes(true).reduce((sum, m) => sum + m.getTotalVertices(), 0);
+    const verts1 = tree1
+      .getChildMeshes(true)
+      .reduce((sum, m) => sum + m.getTotalVertices(), 0);
+    const verts2 = tree2
+      .getChildMeshes(true)
+      .reduce((sum, m) => sum + m.getTotalVertices(), 0);
 
     expect(verts2).toBeGreaterThan(verts1);
   });
@@ -131,8 +145,12 @@ describe("spsTreeGenerator", () => {
     const tree2 = createSPSTree(makeParams({ forks: 2 }), scene, createRNG(42));
     const tree5 = createSPSTree(makeParams({ forks: 5 }), scene, createRNG(42));
 
-    const verts2 = tree2.getChildMeshes(true).reduce((sum, m) => sum + m.getTotalVertices(), 0);
-    const verts5 = tree5.getChildMeshes(true).reduce((sum, m) => sum + m.getTotalVertices(), 0);
+    const verts2 = tree2
+      .getChildMeshes(true)
+      .reduce((sum, m) => sum + m.getTotalVertices(), 0);
+    const verts5 = tree5
+      .getChildMeshes(true)
+      .reduce((sum, m) => sum + m.getTotalVertices(), 0);
 
     expect(verts5).toBeGreaterThan(verts2);
   });
@@ -140,7 +158,11 @@ describe("spsTreeGenerator", () => {
   it("applies trunk material to base mesh", () => {
     const trunkMat = new StandardMaterial("myTrunk", scene);
     const rng = createRNG(42);
-    const tree = createSPSTree(makeParams({ trunkMaterial: trunkMat }), scene, rng);
+    const tree = createSPSTree(
+      makeParams({ trunkMaterial: trunkMat }),
+      scene,
+      rng,
+    );
 
     const children = tree.getChildMeshes(true);
     // First child is the base tree mesh — should have trunk material
@@ -150,7 +172,11 @@ describe("spsTreeGenerator", () => {
   it("applies leaf material to leaf crown", () => {
     const leafMat = new StandardMaterial("myLeaf", scene);
     const rng = createRNG(42);
-    const tree = createSPSTree(makeParams({ leafMaterial: leafMat }), scene, rng);
+    const tree = createSPSTree(
+      makeParams({ leafMaterial: leafMat }),
+      scene,
+      rng,
+    );
 
     const children = tree.getChildMeshes(true);
     // Last child is the leaf crown — should have leaf material

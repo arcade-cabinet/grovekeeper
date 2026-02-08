@@ -1,5 +1,5 @@
 import { COLORS } from "../constants/config";
-import { useGameStore, xpToNext, totalXpForLevel } from "../stores/gameStore";
+import { totalXpForLevel, useGameStore, xpToNext } from "../stores/gameStore";
 
 export const XPBar = () => {
   const xp = useGameStore((s) => s.xp);
@@ -7,9 +7,8 @@ export const XPBar = () => {
 
   const xpForCurrentLevel = totalXpForLevel(level);
   const xpNeeded = xpToNext(level);
-  const currentLevelProgress = xpNeeded > 0
-    ? Math.min((xp - xpForCurrentLevel) / xpNeeded, 1)
-    : 0;
+  const currentLevelProgress =
+    xpNeeded > 0 ? Math.min((xp - xpForCurrentLevel) / xpNeeded, 1) : 0;
   const percent = Math.round(currentLevelProgress * 100);
 
   return (

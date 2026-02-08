@@ -6,13 +6,13 @@
  * red (invalid) based on placement validation.
  */
 
-import { useEffect, useRef } from "react";
-import type { Scene } from "@babylonjs/core/scene";
-import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { playerQuery, gridCellsQuery } from "../ecs/world";
+import type { Scene } from "@babylonjs/core/scene";
+import { useEffect, useRef } from "react";
+import { gridCellsQuery, playerQuery } from "../ecs/world";
 import { canPlace } from "../structures/StructureManager";
 import type { StructureTemplate } from "../structures/types";
 
@@ -23,7 +23,12 @@ interface PlacementGhostProps {
   onCancel: () => void;
 }
 
-export const PlacementGhost = ({ scene, template, onConfirm, onCancel }: PlacementGhostProps) => {
+export const PlacementGhost = ({
+  scene,
+  template,
+  onConfirm,
+  onCancel,
+}: PlacementGhostProps) => {
   const ghostRef = useRef<Mesh | null>(null);
   const validMatRef = useRef<StandardMaterial | null>(null);
   const invalidMatRef = useRef<StandardMaterial | null>(null);
@@ -56,11 +61,15 @@ export const PlacementGhost = ({ scene, template, onConfirm, onCancel }: Placeme
     }
 
     // Create ghost mesh
-    const ghost = CreateBox("placementGhost", {
-      width: template.footprint.width,
-      height: 0.5,
-      depth: template.footprint.depth,
-    }, scene);
+    const ghost = CreateBox(
+      "placementGhost",
+      {
+        width: template.footprint.width,
+        height: 0.5,
+        depth: template.footprint.depth,
+      },
+      scene,
+    );
     ghost.position.y = 0.25;
     ghost.isPickable = false;
     ghostRef.current = ghost;

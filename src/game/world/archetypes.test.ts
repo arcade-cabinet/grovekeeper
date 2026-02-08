@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { ZONE_ARCHETYPES, getArchetype } from "./archetypes";
+import { describe, expect, it } from "vitest";
+import { getArchetype, ZONE_ARCHETYPES } from "./archetypes";
 
 describe("zone archetypes", () => {
   it("has all expected archetype IDs", () => {
@@ -13,8 +13,12 @@ describe("zone archetypes", () => {
 
   it("every archetype has valid size ranges (min <= max)", () => {
     for (const arch of ZONE_ARCHETYPES) {
-      expect(arch.sizeRange.minWidth).toBeLessThanOrEqual(arch.sizeRange.maxWidth);
-      expect(arch.sizeRange.minHeight).toBeLessThanOrEqual(arch.sizeRange.maxHeight);
+      expect(arch.sizeRange.minWidth).toBeLessThanOrEqual(
+        arch.sizeRange.maxWidth,
+      );
+      expect(arch.sizeRange.minHeight).toBeLessThanOrEqual(
+        arch.sizeRange.maxHeight,
+      );
       expect(arch.sizeRange.minWidth).toBeGreaterThan(0);
       expect(arch.sizeRange.minHeight).toBeGreaterThan(0);
     }
@@ -22,7 +26,10 @@ describe("zone archetypes", () => {
 
   it("tile rule percentages sum to at most 1.0", () => {
     for (const arch of ZONE_ARCHETYPES) {
-      const sum = arch.tileRules.waterPct + arch.tileRules.rockPct + arch.tileRules.pathPct;
+      const sum =
+        arch.tileRules.waterPct +
+        arch.tileRules.rockPct +
+        arch.tileRules.pathPct;
       expect(sum).toBeLessThanOrEqual(1.0);
     }
   });

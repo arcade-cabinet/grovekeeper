@@ -148,7 +148,7 @@ export function generateGrid(size: number, groveSeed: string): GridTile[] {
       : Math.max(
           minPondSize,
           Math.round(
-            waterRemaining * (0.3 + rng() * 0.4) // 30-70% of remaining
+            waterRemaining * (0.3 + rng() * 0.4), // 30-70% of remaining
           ),
         );
 

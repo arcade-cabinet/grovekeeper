@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  createRegrowthEntry,
   advanceRegrowthTimers,
+  createRegrowthEntry,
   getRegrowthTime,
 } from "./wildTreeRegrowth";
 
@@ -34,7 +34,10 @@ describe("wildTreeRegrowth", () => {
 
     it("completes entries when timer reaches 0", () => {
       const entry = createRegrowthEntry(0, 0, "white-oak");
-      const { completed, remaining } = advanceRegrowthTimers([entry], REGROWTH_TIME);
+      const { completed, remaining } = advanceRegrowthTimers(
+        [entry],
+        REGROWTH_TIME,
+      );
       expect(completed).toHaveLength(1);
       expect(remaining).toHaveLength(0);
       expect(completed[0].speciesId).toBe("white-oak");
@@ -42,7 +45,10 @@ describe("wildTreeRegrowth", () => {
 
     it("completes entries when timer goes below 0", () => {
       const entry = createRegrowthEntry(3, 7, "birch");
-      const { completed, remaining } = advanceRegrowthTimers([entry], REGROWTH_TIME + 500);
+      const { completed, remaining } = advanceRegrowthTimers(
+        [entry],
+        REGROWTH_TIME + 500,
+      );
       expect(completed).toHaveLength(1);
       expect(remaining).toHaveLength(0);
       expect(completed[0].timerSeconds).toBeLessThan(0);
@@ -65,8 +71,14 @@ describe("wildTreeRegrowth", () => {
 
     it("multiple entries advance independently", () => {
       const entryA = createRegrowthEntry(0, 0, "oak");
-      const entryB = { ...createRegrowthEntry(5, 5, "pine"), timerSeconds: 100 };
-      const { completed, remaining } = advanceRegrowthTimers([entryA, entryB], 150);
+      const entryB = {
+        ...createRegrowthEntry(5, 5, "pine"),
+        timerSeconds: 100,
+      };
+      const { completed, remaining } = advanceRegrowthTimers(
+        [entryA, entryB],
+        150,
+      );
       // entryA should still be remaining (259200 - 150 > 0)
       // entryB should be completed (100 - 150 = -50 <= 0)
       expect(completed).toHaveLength(1);

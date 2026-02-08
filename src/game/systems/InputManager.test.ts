@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { InputManagerCallbacks, InputManagerConfig } from "./InputManager";
 import { InputManager } from "./InputManager";
-import type { InputManagerConfig, InputManagerCallbacks } from "./InputManager";
 
 // ---------------------------------------------------------------------------
 // Mock helpers
@@ -110,11 +110,11 @@ describe("InputManager", () => {
     });
 
     it("WASD keys set movement vector", () => {
-      // Press 'w'
+      // Press 'w' — moves forward (positive Z, away from camera)
       window.dispatchEvent(
         new KeyboardEvent("keydown", { key: "w", bubbles: true }),
       );
-      expect(config.movementRef.current.x).not.toBe(0);
+      expect(config.movementRef.current.z).toBeGreaterThan(0);
 
       // Release 'w'
       window.dispatchEvent(
@@ -207,7 +207,7 @@ describe("InputManager", () => {
       window.dispatchEvent(
         new KeyboardEvent("keydown", { key: "w", bubbles: true }),
       );
-      expect(config.movementRef.current.x).not.toBe(0);
+      expect(config.movementRef.current.z).not.toBe(0);
 
       mgr.setDisabled(true);
       expect(config.movementRef.current).toEqual({ x: 0, z: 0 });

@@ -102,10 +102,7 @@ export function deserializeGrove(data: GroveSaveData): void {
   const cellMap = new Map<string, (typeof gridCellsQuery.entities)[number]>();
   for (const entity of gridCellsQuery) {
     if (entity.gridCell) {
-      cellMap.set(
-        `${entity.gridCell.gridX},${entity.gridCell.gridZ}`,
-        entity,
-      );
+      cellMap.set(`${entity.gridCell.gridX},${entity.gridCell.gridZ}`, entity);
     }
   }
 
@@ -141,10 +138,7 @@ export function deserializeGrove(data: GroveSaveData): void {
 /**
  * Save grove data to localStorage.
  */
-export function saveGroveToStorage(
-  gridSize: number,
-  groveSeed: string,
-): void {
+export function saveGroveToStorage(gridSize: number, groveSeed: string): void {
   const data = serializeGrove(gridSize, groveSeed);
   localStorage.setItem(SAVE_KEY, JSON.stringify(data));
 }

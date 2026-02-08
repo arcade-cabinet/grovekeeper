@@ -5,8 +5,8 @@
  * registration point and handles window resize.
  */
 
-import { Color4 } from "@babylonjs/core/Maths/math.color";
 import type { Engine } from "@babylonjs/core/Engines/engine";
+import { Color4 } from "@babylonjs/core/Maths/math.color";
 import type { Scene } from "@babylonjs/core/scene";
 
 export class SceneManager {
@@ -16,7 +16,9 @@ export class SceneManager {
   private resizeHandler: (() => void) | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
-  async init(canvas: HTMLCanvasElement): Promise<{ engine: Engine; scene: Scene }> {
+  async init(
+    canvas: HTMLCanvasElement,
+  ): Promise<{ engine: Engine; scene: Scene }> {
     const { Engine } = await import("@babylonjs/core/Engines/engine");
     const { Scene } = await import("@babylonjs/core/scene");
 
@@ -29,7 +31,7 @@ export class SceneManager {
 
     const scene = new Scene(engine);
     // Match clear color to fog/wilderness so any exposed background blends.
-    scene.clearColor = new Color4(0.35, 0.48, 0.30, 1);
+    scene.clearColor = new Color4(0.35, 0.48, 0.3, 1);
     this.scene = scene;
 
     this.resizeHandler = () => engine.resize();

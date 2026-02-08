@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
+  canAffordExpansion,
   GRID_EXPANSION_TIERS,
   getMaxGridSizeForLevel,
-  getNextExpansionTier,
-  canAffordExpansion,
   getNewCellPositions,
+  getNextExpansionTier,
 } from "./gridExpansion";
 
 describe("Grid Expansion System", () => {

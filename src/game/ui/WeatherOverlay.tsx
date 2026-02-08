@@ -80,14 +80,18 @@ const RAIN_DROP_COUNT = 40;
 
 const RainOverlay = () => {
   const drops = Array.from({ length: RAIN_DROP_COUNT }, (_, i) => {
-    const left = (i / RAIN_DROP_COUNT) * 100 + Math.random() * (100 / RAIN_DROP_COUNT);
+    const left =
+      (i / RAIN_DROP_COUNT) * 100 + Math.random() * (100 / RAIN_DROP_COUNT);
     const delay = Math.random() * 1.5;
     const duration = 0.6 + Math.random() * 0.4;
     return { left, delay, duration, key: `rain-${i}` };
   });
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.6 }}>
+    <div
+      className="absolute inset-0 overflow-hidden pointer-events-none"
+      style={{ opacity: 0.6 }}
+    >
       {drops.map((d) => (
         <div
           key={d.key}
@@ -97,7 +101,8 @@ const RainOverlay = () => {
             top: 0,
             width: 2,
             height: 18,
-            background: "linear-gradient(180deg, transparent, rgba(150,200,255,0.6), rgba(100,160,255,0.3))",
+            background:
+              "linear-gradient(180deg, transparent, rgba(150,200,255,0.6), rgba(100,160,255,0.3))",
             borderRadius: 1,
             animation: `gk-rain-fall ${d.duration}s ${d.delay}s linear infinite`,
           }}
@@ -121,7 +126,8 @@ const DroughtOverlay = () => (
     <div
       className="absolute inset-0"
       style={{
-        background: "linear-gradient(180deg, rgba(255,180,60,0.06) 0%, rgba(255,120,20,0.04) 50%, transparent 100%)",
+        background:
+          "linear-gradient(180deg, rgba(255,180,60,0.06) 0%, rgba(255,120,20,0.04) 50%, transparent 100%)",
       }}
     />
   </div>
@@ -158,7 +164,10 @@ const CherryPetalOverlay = () => {
   });
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.5 }}>
+    <div
+      className="absolute inset-0 overflow-hidden pointer-events-none"
+      style={{ opacity: 0.5 }}
+    >
       {petals.map((p) => (
         <div
           key={p.key}
@@ -168,7 +177,8 @@ const CherryPetalOverlay = () => {
             top: 0,
             width: 8,
             height: 8,
-            background: "radial-gradient(circle, rgba(255,182,193,0.9), rgba(255,105,180,0.6))",
+            background:
+              "radial-gradient(circle, rgba(255,182,193,0.9), rgba(255,105,180,0.6))",
             borderRadius: "50% 0% 50% 0%",
             animation: `gk-petal-fall ${p.duration}s ${p.delay}s ease-in-out infinite`,
           }}

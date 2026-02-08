@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { getStageScale, calcGrowthRate, growthSystem } from "./growth";
+import { beforeEach, describe, expect, it } from "vitest";
+import { createGridCellEntity, createTreeEntity } from "../ecs/archetypes";
 import { world } from "../ecs/world";
-import { createTreeEntity, createGridCellEntity } from "../ecs/archetypes";
+import { calcGrowthRate, getStageScale, growthSystem } from "./growth";
 
 describe("Growth System (5-Stage)", () => {
   beforeEach(() => {
@@ -424,7 +424,10 @@ describe("Growth System (5-Stage)", () => {
       // Birch near water should grow 1.2x faster
       expect(birch.tree!.progress).toBeGreaterThan(0);
       expect(plainBirch.tree!.progress).toBeGreaterThan(0);
-      expect(birch.tree!.progress / plainBirch.tree!.progress).toBeCloseTo(1.2, 1);
+      expect(birch.tree!.progress / plainBirch.tree!.progress).toBeCloseTo(
+        1.2,
+        1,
+      );
     });
 
     it("silver-birch does NOT get bonus from distant water", () => {

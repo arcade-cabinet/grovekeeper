@@ -150,8 +150,7 @@ const Particle = ({ particle }: ParticleProps) => {
         fontSize: 16,
         lineHeight: "20px",
         color: particle.color,
-        textShadow:
-          "0 1px 3px rgba(0,0,0,0.7), 0 0px 6px rgba(0,0,0,0.4)",
+        textShadow: "0 1px 3px rgba(0,0,0,0.7), 0 0px 6px rgba(0,0,0,0.4)",
         whiteSpace: "nowrap",
         userSelect: "none",
         willChange: "transform, opacity",

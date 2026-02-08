@@ -32,15 +32,15 @@ export class LightingManager {
     this.sunLight = sun;
 
     // Initial colors — clearColor matches fog so background is seamless
-    scene.clearColor = new Color4(0.35, 0.48, 0.30, 1);
+    scene.clearColor = new Color4(0.35, 0.48, 0.3, 1);
     scene.ambientColor = new Color3(0.3, 0.3, 0.35);
 
     // Atmospheric fog — blends the horizon into the sky.
     // fogMode 3 = LINEAR: ground is clear near the player, fades to fog at distance.
     scene.fogMode = 3;
-    scene.fogStart = 80;   // camera-to-target distance — player area is clear
-    scene.fogEnd = 100;    // fully fogged at the horizon edges
-    scene.fogColor = new Color3(0.35, 0.48, 0.30); // earthy green mist
+    scene.fogStart = 20; // player area is clear
+    scene.fogEnd = 40; // fully fogged at the horizon edges
+    scene.fogColor = new Color3(0.35, 0.48, 0.3); // earthy green mist
   }
 
   /** Update scene lighting and sky based on current game time. */
@@ -52,7 +52,9 @@ export class LightingManager {
     // Update ambient color
     const ambientRgb = hexToRgb(skyColors.ambient);
     scene.ambientColor = new Color3(
-      ambientRgb.r / 255, ambientRgb.g / 255, ambientRgb.b / 255,
+      ambientRgb.r / 255,
+      ambientRgb.g / 255,
+      ambientRgb.b / 255,
     );
 
     // Hemisphere light
@@ -60,7 +62,9 @@ export class LightingManager {
       this.hemiLight.intensity = time.ambientIntensity;
       const horizonRgb = hexToRgb(skyColors.horizon);
       this.hemiLight.groundColor = new Color3(
-        horizonRgb.r / 255 * 0.5, horizonRgb.g / 255 * 0.5, horizonRgb.b / 255 * 0.5,
+        (horizonRgb.r / 255) * 0.5,
+        (horizonRgb.g / 255) * 0.5,
+        (horizonRgb.b / 255) * 0.5,
       );
     }
 
@@ -69,20 +73,24 @@ export class LightingManager {
       this.sunLight.intensity = time.sunIntensity;
       const sunRgb = hexToRgb(skyColors.sun);
       this.sunLight.diffuse = new Color3(
-        sunRgb.r / 255, sunRgb.g / 255, sunRgb.b / 255,
+        sunRgb.r / 255,
+        sunRgb.g / 255,
+        sunRgb.b / 255,
       );
       // Rotate sun direction based on time of day
       const sunAngle = (time.hours / 24) * Math.PI * 2 - Math.PI / 2;
       this.sunLight.direction = new Vector3(
-        Math.cos(sunAngle) * 0.5, -1, Math.sin(sunAngle) * 0.3,
+        Math.cos(sunAngle) * 0.5,
+        -1,
+        Math.sin(sunAngle) * 0.3,
       );
     }
 
     // Fog = earthy green haze with slight sky tint for time-of-day coherence.
     // Ground-dominated so the horizon fades into misty forest, not blue sky.
-    const fogR = Math.min(1, 0.30 + zenithRgb.r / 255 * 0.12);
-    const fogG = Math.min(1, 0.42 + zenithRgb.g / 255 * 0.10);
-    const fogB = Math.min(1, 0.25 + zenithRgb.b / 255 * 0.08);
+    const fogR = Math.min(1, 0.3 + (zenithRgb.r / 255) * 0.12);
+    const fogG = Math.min(1, 0.42 + (zenithRgb.g / 255) * 0.1);
+    const fogB = Math.min(1, 0.25 + (zenithRgb.b / 255) * 0.08);
     scene.fogColor = new Color3(fogR, fogG, fogB);
     // clearColor matches fog so any background beyond the ground mesh is invisible.
     scene.clearColor = new Color4(fogR, fogG, fogB, 1);

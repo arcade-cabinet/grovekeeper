@@ -1,7 +1,12 @@
-import { describe, it, expect } from "vitest";
-import { createTreeEntity, restoreTreeEntity, createGridCellEntity, createPlayerEntity } from "./archetypes";
-import { getStageScale } from "../systems/growth";
+import { describe, expect, it } from "vitest";
 import type { SerializedTree } from "../stores/gameStore";
+import { getStageScale } from "../systems/growth";
+import {
+  createGridCellEntity,
+  createPlayerEntity,
+  createTreeEntity,
+  restoreTreeEntity,
+} from "./archetypes";
 
 describe("archetypes", () => {
   describe("createTreeEntity", () => {
@@ -61,7 +66,9 @@ describe("archetypes", () => {
       const entity = restoreTreeEntity(savedTree);
       expect(entity.renderable).toBeDefined();
       expect(entity.renderable?.visible).toBe(true);
-      expect(entity.renderable?.scale).toBe(getStageScale(savedTree.stage, savedTree.progress));
+      expect(entity.renderable?.scale).toBe(
+        getStageScale(savedTree.stage, savedTree.progress),
+      );
     });
 
     it("generates a unique entity ID", () => {

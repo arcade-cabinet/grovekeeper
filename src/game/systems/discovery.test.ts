@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { discoverZone, isZoneDiscovered } from "./discovery";
+import { beforeEach, describe, expect, it } from "vitest";
 import { useGameStore } from "../stores/gameStore";
+import { discoverZone, isZoneDiscovered } from "./discovery";
 
 describe("discovery", () => {
   describe("discoverZone", () => {
@@ -12,7 +12,10 @@ describe("discovery", () => {
     });
 
     it("returns isNew: false for already discovered zone", () => {
-      const result = discoverZone(["starting-grove", "forest-east"], "forest-east");
+      const result = discoverZone(
+        ["starting-grove", "forest-east"],
+        "forest-east",
+      );
       expect(result.isNew).toBe(false);
       expect(result.newZones).toEqual(["starting-grove", "forest-east"]);
     });
@@ -26,7 +29,9 @@ describe("discovery", () => {
 
   describe("isZoneDiscovered", () => {
     it("returns true for discovered zone", () => {
-      expect(isZoneDiscovered(["starting-grove", "forest-east"], "forest-east")).toBe(true);
+      expect(
+        isZoneDiscovered(["starting-grove", "forest-east"], "forest-east"),
+      ).toBe(true);
     });
 
     it("returns false for undiscovered zone", () => {

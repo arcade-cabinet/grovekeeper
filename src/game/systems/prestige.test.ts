@@ -1,15 +1,15 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  canPrestige,
   calculatePrestigeBonus,
-  getUnlockedPrestigeSpecies,
-  getPrestigeResetState,
-  getUnlockedCosmetics,
+  canPrestige,
   getActiveCosmetic,
   getCosmeticById,
-  PRESTIGE_SPECIES,
-  PRESTIGE_MIN_LEVEL,
+  getPrestigeResetState,
+  getUnlockedCosmetics,
+  getUnlockedPrestigeSpecies,
   PRESTIGE_COSMETICS,
+  PRESTIGE_MIN_LEVEL,
+  PRESTIGE_SPECIES,
 } from "./prestige";
 
 // ---------------------------------------------------------------------------

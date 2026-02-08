@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { describe, expect, it } from "vitest";
 import { screenToGroundPlane } from "./projection";
 
 /**

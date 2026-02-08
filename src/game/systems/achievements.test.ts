@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  checkAchievements,
   ACHIEVEMENT_DEFS,
+  type AchievementCheckContext,
   ALL_BASE_SPECIES,
   ALL_SEASONS,
-  type AchievementCheckContext,
+  checkAchievements,
 } from "./achievements";
 
 /**
@@ -120,7 +120,9 @@ describe("Growth achievements", () => {
   it("patient-gardener triggers with a stage 3 tree", () => {
     const result = checkAchievements(
       makeCtx({
-        currentTreeData: [{ speciesId: "white-oak", stage: 3, gridX: 0, gridZ: 0 }],
+        currentTreeData: [
+          { speciesId: "white-oak", stage: 3, gridX: 0, gridZ: 0 },
+        ],
       }),
     );
     expect(result).toContain("patient-gardener");
@@ -129,7 +131,9 @@ describe("Growth achievements", () => {
   it("patient-gardener also triggers with stage 4", () => {
     const result = checkAchievements(
       makeCtx({
-        currentTreeData: [{ speciesId: "white-oak", stage: 4, gridX: 0, gridZ: 0 }],
+        currentTreeData: [
+          { speciesId: "white-oak", stage: 4, gridX: 0, gridZ: 0 },
+        ],
       }),
     );
     expect(result).toContain("patient-gardener");
@@ -138,7 +142,9 @@ describe("Growth achievements", () => {
   it("patient-gardener does not trigger with stage 2", () => {
     const result = checkAchievements(
       makeCtx({
-        currentTreeData: [{ speciesId: "white-oak", stage: 2, gridX: 0, gridZ: 0 }],
+        currentTreeData: [
+          { speciesId: "white-oak", stage: 2, gridX: 0, gridZ: 0 },
+        ],
       }),
     );
     expect(result).not.toContain("patient-gardener");
@@ -147,7 +153,9 @@ describe("Growth achievements", () => {
   it("old-growth-guardian triggers with a stage 4 tree", () => {
     const result = checkAchievements(
       makeCtx({
-        currentTreeData: [{ speciesId: "white-oak", stage: 4, gridX: 0, gridZ: 0 }],
+        currentTreeData: [
+          { speciesId: "white-oak", stage: 4, gridX: 0, gridZ: 0 },
+        ],
       }),
     );
     expect(result).toContain("old-growth-guardian");
@@ -156,7 +164,9 @@ describe("Growth achievements", () => {
   it("old-growth-guardian does not trigger with stage 3", () => {
     const result = checkAchievements(
       makeCtx({
-        currentTreeData: [{ speciesId: "white-oak", stage: 3, gridX: 0, gridZ: 0 }],
+        currentTreeData: [
+          { speciesId: "white-oak", stage: 3, gridX: 0, gridZ: 0 },
+        ],
       }),
     );
     expect(result).not.toContain("old-growth-guardian");
@@ -275,7 +285,9 @@ describe("full-grove", () => {
       gridX: i % 12,
       gridZ: Math.floor(i / 12),
     }));
-    const result = checkAchievements(makeCtx({ currentTreeData: trees, plantableTileCount: 100 }));
+    const result = checkAchievements(
+      makeCtx({ currentTreeData: trees, plantableTileCount: 100 }),
+    );
     expect(result).toContain("full-grove");
   });
 
@@ -286,7 +298,9 @@ describe("full-grove", () => {
       gridX: i % 12,
       gridZ: Math.floor(i / 12),
     }));
-    const result = checkAchievements(makeCtx({ currentTreeData: trees, plantableTileCount: 100 }));
+    const result = checkAchievements(
+      makeCtx({ currentTreeData: trees, plantableTileCount: 100 }),
+    );
     expect(result).not.toContain("full-grove");
   });
 
@@ -680,7 +694,12 @@ describe("resource-mogul", () => {
   it("triggers at 1000 of each resource", () => {
     const result = checkAchievements(
       makeCtx({
-        lifetimeResources: { timber: 1000, sap: 1000, fruit: 1000, acorns: 1000 },
+        lifetimeResources: {
+          timber: 1000,
+          sap: 1000,
+          fruit: 1000,
+          acorns: 1000,
+        },
       }),
     );
     expect(result).toContain("resource-mogul");
@@ -689,7 +708,12 @@ describe("resource-mogul", () => {
   it("does not trigger if any resource is below 1000", () => {
     const result = checkAchievements(
       makeCtx({
-        lifetimeResources: { timber: 1000, sap: 999, fruit: 1000, acorns: 1000 },
+        lifetimeResources: {
+          timber: 1000,
+          sap: 999,
+          fruit: 1000,
+          acorns: 1000,
+        },
       }),
     );
     expect(result).not.toContain("resource-mogul");
@@ -814,13 +838,22 @@ describe("does not re-award already unlocked achievements", () => {
         hasPrestiged: true,
         seasonsExperienced: [...ALL_SEASONS],
         speciesPlanted: [...ALL_BASE_SPECIES],
-        lifetimeResources: { timber: 9999, sap: 9999, fruit: 9999, acorns: 9999 },
+        lifetimeResources: {
+          timber: 9999,
+          sap: 9999,
+          fruit: 9999,
+          acorns: 9999,
+        },
         // Expansion fields fully satisfied
         visitedZoneTypes: ["forest", "meadow", "swamp", "mountain", "desert"],
         zonesDiscovered: 20,
         wildTreesHarvested: 100,
         wildTreesRegrown: 50,
-        toolUseCounts: { "watering-can": 200, "pruning-shears": 100, "shovel": 50 },
+        toolUseCounts: {
+          "watering-can": 200,
+          "pruning-shears": 100,
+          shovel: 50,
+        },
         unlockedToolCount: 12,
         treesPlantedInSpring: 50,
         treesHarvestedInAutumn: 50,
@@ -847,9 +880,7 @@ describe("edge cases", () => {
   });
 
   it("handles missing resource keys gracefully", () => {
-    const result = checkAchievements(
-      makeCtx({ lifetimeResources: {} }),
-    );
+    const result = checkAchievements(makeCtx({ lifetimeResources: {} }));
     // Should not throw; timber-baron et al. simply not earned.
     expect(result).not.toContain("timber-baron");
     expect(result).not.toContain("sap-collector");

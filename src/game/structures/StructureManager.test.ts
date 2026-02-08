@@ -1,12 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  getTemplate,
-  getAvailableTemplates,
   canPlace,
+  getAvailableTemplates,
   getEffectsAtPosition,
   getGrowthMultiplier,
   getHarvestMultiplier,
   getStaminaMultiplier,
+  getTemplate,
 } from "./StructureManager";
 
 // ============================================
@@ -303,7 +303,7 @@ describe("getGrowthMultiplier", () => {
 
   it("stacks multiple growth boosts", () => {
     const structures = [
-      makeStructureEntity(0, 0, "growth_boost", 5, 0.2),  // greenhouse
+      makeStructureEntity(0, 0, "growth_boost", 5, 0.2), // greenhouse
       makeStructureEntity(2, 0, "growth_boost", 5, 0.15), // well
     ];
     expect(getGrowthMultiplier(1, 0, structures)).toBeCloseTo(1.35);
@@ -346,9 +346,7 @@ describe("getHarvestMultiplier", () => {
   });
 
   it("ignores non-harvest effects", () => {
-    const structures = [
-      makeStructureEntity(0, 0, "growth_boost", 5, 0.2),
-    ];
+    const structures = [makeStructureEntity(0, 0, "growth_boost", 5, 0.2)];
     expect(getHarvestMultiplier(0, 0, structures)).toBe(1.0);
   });
 });

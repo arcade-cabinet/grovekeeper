@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { TOOLS, getToolById, } from "./tools";
+import { describe, expect, it } from "vitest";
+import { getToolById, TOOLS } from "./tools";
 
 describe("Tool Definitions", () => {
   it("has exactly 12 tools", () => {

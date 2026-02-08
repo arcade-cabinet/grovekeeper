@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";
-import { world, gridCellsQuery } from "../ecs/world";
+import { beforeEach, describe, expect, it } from "vitest";
+import { gridCellsQuery, world } from "../ecs/world";
 import type { ZoneDefinition } from "./types";
+import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";
 
 const testZone: ZoneDefinition = {
   id: "test-zone",
@@ -167,9 +167,9 @@ describe("ZoneLoader", () => {
       const trees = entities.filter((e) => e.tree);
       const speciesSet = new Set(trees.map((t) => t.tree!.speciesId));
       // At least one of the two species should appear
-      expect(
-        speciesSet.has("white-oak") || speciesSet.has("elder-pine"),
-      ).toBe(true);
+      expect(speciesSet.has("white-oak") || speciesSet.has("elder-pine")).toBe(
+        true,
+      );
     });
   });
 

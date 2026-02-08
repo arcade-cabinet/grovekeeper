@@ -5,10 +5,10 @@ import {
   STAGE_VISUALS,
   WATER_BONUS,
 } from "../constants/config";
-import { getSpeciesById } from "../constants/trees";
-import { treesQuery, structuresQuery, gridCellsQuery } from "../ecs/world";
-import { getGrowthMultiplier as getStructureGrowthMult } from "../structures/StructureManager";
 import { getActiveDifficulty } from "../constants/difficulty";
+import { getSpeciesById } from "../constants/trees";
+import { gridCellsQuery, structuresQuery, treesQuery } from "../ecs/world";
+import { getGrowthMultiplier as getStructureGrowthMult } from "../structures/StructureManager";
 
 /**
  * Calculate the visual scale for a tree at a given stage + progress.
@@ -78,7 +78,11 @@ export function calcGrowthRate(params: GrowthRateParams): number {
  * Builds spatial lookup maps once per frame for O(1) neighbor queries,
  * avoiding O(n^2) per-tree iteration over grid cells and other trees.
  */
-export function growthSystem(deltaTime: number, currentSeason: string, weatherMultiplier = 1.0): void {
+export function growthSystem(
+  deltaTime: number,
+  currentSeason: string,
+  weatherMultiplier = 1.0,
+): void {
   // Build per-frame spatial lookups for species bonuses
   const waterTiles = new Set<string>();
   const treeCounts = new Map<string, number>();
@@ -128,7 +132,11 @@ export function growthSystem(deltaTime: number, currentSeason: string, weatherMu
 
     // Structure growth boost
     const structureMult = entity.position
-      ? getStructureGrowthMult(entity.position.x, entity.position.z, structuresQuery)
+      ? getStructureGrowthMult(
+          entity.position.x,
+          entity.position.z,
+          structuresQuery,
+        )
       : 1.0;
 
     // Fertilized bonus (2x growth for the current stage cycle)
@@ -169,7 +177,14 @@ export function growthSystem(deltaTime: number, currentSeason: string, weatherMu
 
     // Advance progress (weather + structure + fertilized + species + difficulty multipliers)
     const difficultyGrowthMult = getActiveDifficulty().growthSpeedMult;
-    tree.progress += rate * weatherMultiplier * structureMult * fertilizedMult * speciesBonus * difficultyGrowthMult * deltaTime;
+    tree.progress +=
+      rate *
+      weatherMultiplier *
+      structureMult *
+      fertilizedMult *
+      speciesBonus *
+      difficultyGrowthMult *
+      deltaTime;
     tree.totalGrowthTime += deltaTime;
 
     // Handle stage transition

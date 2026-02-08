@@ -6,8 +6,8 @@
  * transitions are smooth gradients — no hard edges.
  */
 
-import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
@@ -18,10 +18,10 @@ import type { ZoneDefinition } from "../world/types";
 
 /** Biome base colors (R, G, B in 0-1 range) — vibrant and distinct. */
 const BIOME_COLORS: Record<string, { r: number; g: number; b: number }> = {
-  grass: { r: 0.40, g: 0.62, b: 0.25 },   // bright meadow green
-  soil:  { r: 0.52, g: 0.38, b: 0.22 },   // warm earth brown
-  dirt:  { r: 0.58, g: 0.48, b: 0.32 },   // sandy clay path
-  stone: { r: 0.56, g: 0.54, b: 0.50 },   // cool hewn stone
+  grass: { r: 0.4, g: 0.62, b: 0.25 }, // bright meadow green
+  soil: { r: 0.52, g: 0.38, b: 0.22 }, // warm earth brown
+  dirt: { r: 0.58, g: 0.48, b: 0.32 }, // sandy clay path
+  stone: { r: 0.56, g: 0.54, b: 0.5 }, // cool hewn stone
 };
 
 /** Wilderness color (areas outside all zones) — deep forest green. */
@@ -70,11 +70,15 @@ export class GroundBuilder {
     const centerZ = (padMinZ + padMaxZ) / 2 - 0.5;
 
     // Single ground mesh — no per-zone overlays
-    this.groundMesh = CreateGround("ground", {
-      width: groundSize,
-      height: groundSize,
-      subdivisions: 1,
-    }, scene);
+    this.groundMesh = CreateGround(
+      "ground",
+      {
+        width: groundSize,
+        height: groundSize,
+        subdivisions: 1,
+      },
+      scene,
+    );
     this.groundMesh.position = new Vector3(centerX, -0.05, centerZ);
 
     // Standard material — biome blend DynamicTexture as diffuse
@@ -85,7 +89,12 @@ export class GroundBuilder {
     this.groundMat.ambientColor = new Color3(1, 1, 1);
 
     // Paint biome blend texture
-    this.biomeTexture = new DynamicTexture("biomeTex", TEX_RESOLUTION, scene, false);
+    this.biomeTexture = new DynamicTexture(
+      "biomeTex",
+      TEX_RESOLUTION,
+      scene,
+      false,
+    );
     this.paintBiomeTexture(padMinX, padMinZ, padMaxX, padMaxZ);
     this.groundMat.diffuseTexture = this.biomeTexture;
 
@@ -105,12 +114,16 @@ export class GroundBuilder {
     const centerX = origin.x + size.width / 2 - 0.5;
     const centerZ = origin.z + size.height / 2 - 0.5;
 
-    const overlay = CreateGround(`zone_grid_${zoneId}`, {
-      width: size.width,
-      height: size.height,
-      subdivisionsX: size.width,
-      subdivisionsY: size.height,
-    }, scene);
+    const overlay = CreateGround(
+      `zone_grid_${zoneId}`,
+      {
+        width: size.width,
+        height: size.height,
+        subdivisionsX: size.width,
+        subdivisionsY: size.height,
+      },
+      scene,
+    );
     overlay.position = new Vector3(centerX, 0.01, centerZ);
 
     const gridMat = new StandardMaterial(`gridMat_${zoneId}`, scene);
@@ -144,8 +157,10 @@ export class GroundBuilder {
 
   /** Paint the DynamicTexture with smooth ecological biome blending. */
   private paintBiomeTexture(
-    worldMinX: number, worldMinZ: number,
-    worldMaxX: number, worldMaxZ: number,
+    worldMinX: number,
+    worldMinZ: number,
+    worldMaxX: number,
+    worldMaxZ: number,
   ): void {
     if (!this.biomeTexture) return;
 
@@ -173,7 +188,10 @@ export class GroundBuilder {
   }
 
   /** Sample blended biome color at a world position using distance-field weights. */
-  private sampleBiomeColor(worldX: number, worldZ: number): { r: number; g: number; b: number } {
+  private sampleBiomeColor(
+    worldX: number,
+    worldZ: number,
+  ): { r: number; g: number; b: number } {
     let totalWeight = 0;
     let r = 0;
     let g = 0;
@@ -211,15 +229,19 @@ export class GroundBuilder {
    * Compute signed distance from a point to a zone boundary.
    * Returns negative if inside the zone, positive if outside.
    */
-  private distanceToZone(worldX: number, worldZ: number, zone: ZoneDefinition): number {
+  private distanceToZone(
+    worldX: number,
+    worldZ: number,
+    zone: ZoneDefinition,
+  ): number {
     const ox = zone.origin.x;
     const oz = zone.origin.z;
     const w = zone.size.width;
     const h = zone.size.height;
 
-    const dLeft   = ox - worldX;
-    const dRight  = worldX - (ox + w);
-    const dTop    = oz - worldZ;
+    const dLeft = ox - worldX;
+    const dRight = worldX - (ox + w);
+    const dTop = oz - worldZ;
     const dBottom = worldZ - (oz + h);
 
     // Inside: all four are negative; distance is the max (closest to edge)

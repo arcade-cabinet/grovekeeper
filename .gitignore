@@ -36,3 +36,4 @@ vite.config.d.ts
 
 # Screenshots from visual testing
 *.png
+!public/*.png

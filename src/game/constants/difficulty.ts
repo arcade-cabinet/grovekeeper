@@ -5,8 +5,9 @@
  * via getActiveDifficulty() which reads the current difficulty from
  * the game store.
  */
-import difficultyData from "./difficulty.json";
+
 import { useGameStore } from "../stores/gameStore";
+import difficultyData from "./difficulty.json";
 
 export interface DifficultyTier {
   id: string;
@@ -54,7 +55,8 @@ export interface DifficultyTier {
 /**
  * All difficulty tiers, typed.
  */
-export const DIFFICULTY_TIERS: DifficultyTier[] = difficultyData as DifficultyTier[];
+export const DIFFICULTY_TIERS: DifficultyTier[] =
+  difficultyData as DifficultyTier[];
 
 /**
  * Lookup a difficulty tier by id.
@@ -66,7 +68,8 @@ export function getDifficultyById(id: string): DifficultyTier | undefined {
 /**
  * The default fallback tier (Normal).
  */
-const NORMAL_TIER = DIFFICULTY_TIERS.find((t) => t.id === "normal") ?? DIFFICULTY_TIERS[0];
+const NORMAL_TIER =
+  DIFFICULTY_TIERS.find((t) => t.id === "normal") ?? DIFFICULTY_TIERS[0];
 
 /**
  * Get the active difficulty tier based on the current game store state.

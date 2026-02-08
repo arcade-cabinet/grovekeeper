@@ -405,9 +405,7 @@ export function checkAchievements(ctx: AchievementCheckContext): string[] {
   }
 
   // --- Old Growth cluster ---
-  const oldGrowthCount = ctx.currentTreeData.filter(
-    (t) => t.stage >= 4,
-  ).length;
+  const oldGrowthCount = ctx.currentTreeData.filter((t) => t.stage >= 4).length;
   if (oldGrowthCount >= 5) award("enchanted-grove");
 
   // --- Prestige ---
@@ -452,9 +450,7 @@ export function checkAchievements(ctx: AchievementCheckContext): string[] {
   // --- Wild Forest ---
   if ((ctx.wildTreesHarvested ?? 0) >= 50) award("forager");
   if ((ctx.wildTreesRegrown ?? 0) >= 10) award("reforestation");
-  if (
-    (ctx.wildSpeciesHarvested ?? []).length >= ALL_BASE_SPECIES.length
-  ) {
+  if ((ctx.wildSpeciesHarvested ?? []).length >= ALL_BASE_SPECIES.length) {
     award("wild-collector");
   }
 

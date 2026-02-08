@@ -13,15 +13,15 @@
  * License: Apache-2.0 (same as BabylonJS)
  */
 
-import { Vector3, Quaternion, } from "@babylonjs/core/Maths/math.vector";
+import type { Material } from "@babylonjs/core/Materials/material";
 import { Axis } from "@babylonjs/core/Maths/math.axis";
-import { CreateRibbon } from "@babylonjs/core/Meshes/Builders/ribbonBuilder";
-import { CreateDisc } from "@babylonjs/core/Meshes/Builders/discBuilder";
+import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
+import { CreateDisc } from "@babylonjs/core/Meshes/Builders/discBuilder";
+import { CreateRibbon } from "@babylonjs/core/Meshes/Builders/ribbonBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { SolidParticleSystem } from "@babylonjs/core/Particles/solidParticleSystem";
 import type { Scene } from "@babylonjs/core/scene";
-import type { Material } from "@babylonjs/core/Materials/material";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -89,14 +89,19 @@ function createBranch(
     // damped wave for natural bowing
     corePoint.addInPlace(
       branchSys.x.scale(
-        bowHeight * Math.exp(-dSlicesLength) * Math.sin(bowFreq * dSlicesLength * Math.PI),
+        bowHeight *
+          Math.exp(-dSlicesLength) *
+          Math.sin(bowFreq * dSlicesLength * Math.PI),
       ),
     );
     corePoint.addInPlace(branchAt);
     corePath[d] = corePoint;
 
     // randomize radius and taper
-    const xsr = branchRadius * (1 + (0.4 * rng() - 0.2)) * (1 - (1 - branchTaper) * dSlicesLength);
+    const xsr =
+      branchRadius *
+      (1 + (0.4 * rng() - 0.2)) *
+      (1 - (1 - branchTaper) * dSlicesLength);
     radii.push(xsr);
 
     for (let a = 0; a < aSides; a++) {
@@ -157,8 +162,16 @@ function createTreeBase(
   const treeDirections: CoordSystem[] = [];
 
   const trunk = createBranch(
-    trunkRootAt, trunkSys, trunkHeight, trunkTaper, trunkSlices,
-    1, bowHeight, 1, scene, rng,
+    trunkRootAt,
+    trunkSys,
+    trunkHeight,
+    trunkTaper,
+    trunkSlices,
+    1,
+    bowHeight,
+    1,
+    scene,
+    rng,
   );
   treeBranches.push(trunk.branch);
   treePaths.push(trunk.core);
@@ -178,8 +191,16 @@ function createTreeBase(
     const forkSys = coordSystem(forkDir);
 
     const branch = createBranch(
-      topPoint, forkSys, trunkHeight * forkRatio, trunkTaper, trunkSlices,
-      bowFreq, bowHeight * PHI, trunkTaper, scene, rng,
+      topPoint,
+      forkSys,
+      trunkHeight * forkRatio,
+      trunkTaper,
+      trunkSlices,
+      bowFreq,
+      bowHeight * PHI,
+      trunkTaper,
+      scene,
+      rng,
     );
     treeBranches.push(branch.branch);
     treePaths.push(branch.core);
@@ -198,9 +219,16 @@ function createTreeBase(
         const boughSys = coordSystem(boughDir);
 
         const bough = createBranch(
-          boughTop, boughSys,
-          trunkHeight * forkRatio * forkRatio, trunkTaper, trunkSlices,
-          bowFreq, bowHeight * PHI * PHI, trunkTaper * trunkTaper, scene, rng,
+          boughTop,
+          boughSys,
+          trunkHeight * forkRatio * forkRatio,
+          trunkTaper,
+          trunkSlices,
+          bowFreq,
+          bowHeight * PHI * PHI,
+          trunkTaper * trunkTaper,
+          scene,
+          rng,
         );
         treeBranches.push(bough.branch);
         treePaths.push(bough.core);
@@ -213,10 +241,21 @@ function createTreeBase(
   const tree = Mesh.MergeMeshes(treeBranches, true);
   if (!tree) {
     // Fallback: return the first branch if merge fails
-    const fallback = treeBranches[0] ?? CreateBox("fallbackTree", { size: 0.1 }, scene);
-    return { tree: fallback, paths: treePaths, radii: treeRadii, directions: treeDirections };
+    const fallback =
+      treeBranches[0] ?? CreateBox("fallbackTree", { size: 0.1 }, scene);
+    return {
+      tree: fallback,
+      paths: treePaths,
+      radii: treeRadii,
+      directions: treeDirections,
+    };
   }
-  return { tree, paths: treePaths, radii: treeRadii, directions: treeDirections };
+  return {
+    tree,
+    paths: treePaths,
+    radii: treeRadii,
+    directions: treeDirections,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -275,18 +314,38 @@ export function createSPSTree(
   rng: () => number,
 ): Mesh {
   const {
-    trunkHeight, trunkTaper, trunkSlices, trunkMaterial,
-    boughs, forks, forkAngle, forkRatio,
-    branches, branchAngle, bowFreq, bowHeight,
-    leavesOnBranch, leafWHRatio, leafMaterial,
+    trunkHeight,
+    trunkTaper,
+    trunkSlices,
+    trunkMaterial,
+    boughs,
+    forks,
+    forkAngle,
+    forkRatio,
+    branches,
+    branchAngle,
+    bowFreq,
+    bowHeight,
+    leavesOnBranch,
+    leafWHRatio,
+    leafMaterial,
   } = params;
 
-  const clampedBoughs = (boughs === 1 || boughs === 2) ? boughs : 1;
+  const clampedBoughs = boughs === 1 || boughs === 2 ? boughs : 1;
 
   // --- 1. Create base tree (trunk + forking branches) ---
   const base = createTreeBase(
-    trunkHeight, trunkTaper, trunkSlices, clampedBoughs, forks,
-    forkAngle, forkRatio, bowFreq, bowHeight, scene, rng,
+    trunkHeight,
+    trunkTaper,
+    trunkSlices,
+    clampedBoughs,
+    forks,
+    forkAngle,
+    forkRatio,
+    bowFreq,
+    bowHeight,
+    scene,
+    rng,
   );
   base.tree.material = trunkMaterial;
 
@@ -295,16 +354,26 @@ export function createSPSTree(
   const leafGap = branchLength / (2 * leavesOnBranch);
   const leafWidth = 1.5 * trunkTaper ** (clampedBoughs - 1);
 
-  const leaf = CreateDisc("leaf", {
-    radius: leafWidth / 2,
-    tessellation: 12,
-    sideOrientation: Mesh.DOUBLESIDE,
-  }, scene);
+  const leaf = CreateDisc(
+    "leaf",
+    {
+      radius: leafWidth / 2,
+      tessellation: 12,
+      sideOrientation: Mesh.DOUBLESIDE,
+    },
+    scene,
+  );
 
   // --- 3. Build leaves SPS on base tree branches ---
-  const leavesSPS = new SolidParticleSystem("leaveSPS", scene, { updatable: false });
+  const leavesSPS = new SolidParticleSystem("leaveSPS", scene, {
+    updatable: false,
+  });
 
-  const setLeaves = (particle: { position: Vector3; rotation: Vector3; scale: Vector3 }, _i: number, s: number) => {
+  const setLeaves = (
+    particle: { position: Vector3; rotation: Vector3; scale: Vector3 },
+    _i: number,
+    s: number,
+  ) => {
     let a: number;
     if (clampedBoughs === 1) {
       a = Math.floor(s / (2 * leavesOnBranch)) + 1;
@@ -321,18 +390,29 @@ export function createSPSTree(
     const gl = lower / (trunkSlices - 1);
     const gu = upper / (trunkSlices - 1);
 
-    const px = base.paths[a][lower].x + (base.paths[a][upper].x - base.paths[a][lower].x) * (g - gl) / (gu - gl);
-    const py = base.paths[a][lower].y + (base.paths[a][upper].y - base.paths[a][lower].y) * (g - gl) / (gu - gl);
-    const pz = base.paths[a][lower].z + (base.paths[a][upper].z - base.paths[a][lower].z) * (g - gl) / (gu - gl);
+    const px =
+      base.paths[a][lower].x +
+      ((base.paths[a][upper].x - base.paths[a][lower].x) * (g - gl)) /
+        (gu - gl);
+    const py =
+      base.paths[a][lower].y +
+      ((base.paths[a][upper].y - base.paths[a][lower].y) * (g - gl)) /
+        (gu - gl);
+    const pz =
+      base.paths[a][lower].z +
+      ((base.paths[a][upper].z - base.paths[a][lower].z) * (g - gl)) /
+        (gu - gl);
 
     particle.position = new Vector3(
       px,
-      py + (0.6 * leafWidth / leafWHRatio + base.radii[a][upper]) * (2 * (s % 2) - 1),
+      py +
+        ((0.6 * leafWidth) / leafWHRatio + base.radii[a][upper]) *
+          (2 * (s % 2) - 1),
       pz,
     );
-    particle.rotation.z = rng() * Math.PI / 4;
-    particle.rotation.y = rng() * Math.PI / 2;
-    particle.rotation.x = rng() * Math.PI / 4;
+    particle.rotation.z = (rng() * Math.PI) / 4;
+    particle.rotation.y = (rng() * Math.PI) / 2;
+    particle.rotation.x = (rng() * Math.PI) / 4;
     particle.scale.y = 1 / leafWHRatio;
   };
 
@@ -343,17 +423,27 @@ export function createSPSTree(
   leaf.dispose();
 
   // --- 4. Build mini-tree + leaf SPS for full canopy ---
-  const miniTreesSPS = new SolidParticleSystem("miniSPS", scene, { updatable: false });
-  const miniLeavesSPS = new SolidParticleSystem("minileavesSPS", scene, { updatable: false });
+  const miniTreesSPS = new SolidParticleSystem("miniSPS", scene, {
+    updatable: false,
+  });
+  const miniLeavesSPS = new SolidParticleSystem("minileavesSPS", scene, {
+    updatable: false,
+  });
 
   // Pre-computed random turns for fork-end mini-trees
   const turns: number[] = [];
   const forkTurn = (2 * Math.PI) / forks;
   for (let f = 0; f < forks ** (clampedBoughs + 1); f++) {
-    turns.push(randPct(Math.floor(f / forks ** clampedBoughs) * forkTurn, 0.2, rng));
+    turns.push(
+      randPct(Math.floor(f / forks ** clampedBoughs) * forkTurn, 0.2, rng),
+    );
   }
 
-  const setMiniTrees = (particle: { position: Vector3; quaternion: Quaternion; scale: Vector3 }, _i: number, s: number) => {
+  const setMiniTrees = (
+    particle: { position: Vector3; quaternion: Quaternion; scale: Vector3 },
+    _i: number,
+    s: number,
+  ) => {
     let a: number;
     const idx = s % forks ** clampedBoughs;
     if (clampedBoughs === 1) {
@@ -392,7 +482,11 @@ export function createSPSTree(
     ]);
   }
 
-  const setBranches = (particle: { position: Vector3; quaternion: Quaternion; scale: Vector3 }, _i: number, s: number) => {
+  const setBranches = (
+    particle: { position: Vector3; quaternion: Quaternion; scale: Vector3 },
+    _i: number,
+    s: number,
+  ) => {
     const a = places[s][0];
     const b = places[s][1];
     const miniSys = base.directions[a];

@@ -9,11 +9,13 @@
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import { treesQuery } from "../ecs/world";
-import { buildSpeciesTreeMesh } from "../utils/treeMeshBuilder";
 import type { Season } from "../systems/time";
+import { buildSpeciesTreeMesh } from "../utils/treeMeshBuilder";
 
 /** Lerp speed for smooth growth animations. */
 const LERP_SPEED = 3.0;
+/** Visual scale multiplier — shrinks trees for the close over-the-shoulder camera. */
+const TREE_VISUAL_SCALE = 0.5;
 
 export class TreeMeshManager {
   /** Live tree meshes keyed by entity ID. */
@@ -32,12 +34,20 @@ export class TreeMeshManager {
     _meshSeed: number | undefined,
     nightTime: boolean,
   ): Mesh {
-    const nightSuffix = speciesId === "ghost-birch" && nightTime ? "_night" : "";
+    const nightSuffix =
+      speciesId === "ghost-birch" && nightTime ? "_night" : "";
     const cacheKey = `${speciesId}_${season ?? "default"}${nightSuffix}`;
     let template = this.templates.get(cacheKey);
 
     if (!template) {
-      template = buildSpeciesTreeMesh(scene, `template_${cacheKey}`, speciesId, season, 0, nightTime);
+      template = buildSpeciesTreeMesh(
+        scene,
+        `template_${cacheKey}`,
+        speciesId,
+        season,
+        0,
+        nightTime,
+      );
       template.isVisible = false;
       template.setEnabled(false);
       this.templates.set(cacheKey, template);
@@ -45,17 +55,30 @@ export class TreeMeshManager {
 
     const mesh = template.clone(`tree_${entityId}`, null);
     if (!mesh) {
-      throw new Error(`Failed to clone tree template "${cacheKey}" for entity "${entityId}"`);
+      throw new Error(
+        `Failed to clone tree template "${cacheKey}" for entity "${entityId}"`,
+      );
     }
     mesh.isVisible = true;
     mesh.setEnabled(true);
+    mesh.isPickable = true;
+    mesh.metadata = {
+      entityId,
+      entityType: "tree",
+      speciesId,
+    };
 
     this.meshes.set(entityId, mesh);
     return mesh;
   }
 
   /** Sync all tree meshes: position, lerp scale, and freeze stage 4 matrices. */
-  update(scene: Scene, dt: number, season: Season | undefined, isNight: boolean): void {
+  update(
+    scene: Scene,
+    dt: number,
+    season: Season | undefined,
+    isNight: boolean,
+  ): void {
     const lerpFactor = Math.min(1, dt * LERP_SPEED);
 
     for (const entity of treesQuery) {
@@ -63,13 +86,20 @@ export class TreeMeshManager {
 
       let mesh = this.meshes.get(entity.id);
       if (!mesh) {
-        mesh = this.createMesh(scene, entity.id, entity.tree.speciesId, season, entity.tree.meshSeed, isNight);
+        mesh = this.createMesh(
+          scene,
+          entity.id,
+          entity.tree.speciesId,
+          season,
+          entity.tree.meshSeed,
+          isNight,
+        );
       }
 
       mesh.position.x = entity.position.x;
       mesh.position.z = entity.position.z;
 
-      const targetScale = entity.renderable.scale;
+      const targetScale = entity.renderable.scale * TREE_VISUAL_SCALE;
       const currentScale = mesh.scaling.x;
       const isScaling = Math.abs(targetScale - currentScale) > 0.001;
 
@@ -79,7 +109,8 @@ export class TreeMeshManager {
           mesh.unfreezeWorldMatrix();
           this.frozen.delete(entity.id);
         }
-        const smoothed = currentScale + (targetScale - currentScale) * lerpFactor;
+        const smoothed =
+          currentScale + (targetScale - currentScale) * lerpFactor;
         mesh.scaling.setAll(smoothed);
         mesh.position.y = smoothed * 0.4;
       } else {
@@ -120,10 +151,19 @@ export class TreeMeshManager {
     for (const entity of treesQuery) {
       if (!entity.tree) continue;
       const oldMesh = this.meshes.get(entity.id);
-      const savedScale = oldMesh?.scaling.x ?? entity.renderable?.scale ?? 1;
+      const savedScale =
+        oldMesh?.scaling.x ??
+        (entity.renderable?.scale ?? 1) * TREE_VISUAL_SCALE;
       if (oldMesh) oldMesh.dispose();
 
-      const newMesh = this.createMesh(scene, entity.id, entity.tree.speciesId, season, entity.tree.meshSeed, isNight);
+      const newMesh = this.createMesh(
+        scene,
+        entity.id,
+        entity.tree.speciesId,
+        season,
+        entity.tree.meshSeed,
+        isNight,
+      );
       newMesh.scaling.setAll(savedScale);
     }
   }
