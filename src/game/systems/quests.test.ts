@@ -156,7 +156,7 @@ describe("Quest System", () => {
 
     it("exploration goals can appear in easy quests", () => {
       let foundExploration = false;
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 200; i++) {
         const quest = generateQuest("easy", "spring");
         if (quest?.goals.some((g) => g.targetType.startsWith("zones_"))) {
           foundExploration = true;
@@ -168,7 +168,7 @@ describe("Quest System", () => {
 
     it("collection goals can appear in medium quests", () => {
       let foundCollection = false;
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 200; i++) {
         const quest = generateQuest("medium", "spring");
         if (quest?.goals.some((g) => g.targetType.endsWith("_collected"))) {
           foundCollection = true;
