@@ -321,8 +321,9 @@ export class InputManager {
         entityType: string;
       };
       const worldPos = pickResult.pickedPoint;
-      const wx = worldPos?.x ?? 0;
-      const wz = worldPos?.z ?? 0;
+      // Fallback to mesh position if pickedPoint is null (avoids false (0,0) origin)
+      const wx = worldPos?.x ?? pickResult.pickedMesh.position.x;
+      const wz = worldPos?.z ?? pickResult.pickedMesh.position.z;
 
       // Legacy callback (still used for non-radial interactions)
       this.config.callbacks.onObjectTapped?.({

@@ -7,6 +7,7 @@
  * edges. Dismissed by tapping the invisible backdrop.
  */
 
+import { useEffect } from "react";
 import { COLORS } from "../constants/config";
 import type { RadialAction } from "./radialActions";
 
@@ -30,6 +31,15 @@ export const RadialActionMenu = ({
   onSelect,
   onDismiss,
 }: Props) => {
+  // Document-level Escape key listener (reliable regardless of focus)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onDismiss();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onDismiss]);
+
   if (actions.length === 0) return null;
 
   // Viewport clamping: shift center so all buttons stay inside the screen
@@ -47,10 +57,6 @@ export const RadialActionMenu = ({
         tabIndex={-1}
         className="fixed inset-0 z-40"
         onClick={onDismiss}
-        onPointerDown={onDismiss}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") onDismiss();
-        }}
       />
 
       {/* Radial buttons */}

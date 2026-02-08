@@ -35,6 +35,8 @@ export class SelectionRingManager {
   private phase = 0;
 
   init(scene: Scene): void {
+    if (this.mesh) return; // Already initialized — prevent GPU resource leaks
+
     const torus = CreateTorus(
       "selectionRing",
       {

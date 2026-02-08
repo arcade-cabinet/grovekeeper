@@ -5,8 +5,8 @@ import type { Scene } from "@babylonjs/core/scene";
  * Project a 3D world position to CSS pixel coordinates.
  *
  * Uses BabylonJS `Vector3.Project()` through the view-projection
- * pipeline, then converts from engine pixels to CSS pixels by
- * dividing by `devicePixelRatio`.
+ * pipeline, then converts from engine pixels to CSS pixels using
+ * the engine's hardware scaling level.
  *
  * Returns `null` if the point is behind the camera (z < 0 or z > 1).
  */
@@ -39,10 +39,11 @@ export function worldToScreen(
   // Behind camera check
   if (projected.z < 0 || projected.z > 1) return null;
 
-  // BabylonJS gives engine-pixel coordinates — divide by DPR for CSS pixels
-  const dpr = window.devicePixelRatio || 1;
+  // BabylonJS gives engine-pixel coordinates — convert to CSS pixels
+  // using the engine's hardware scaling level (accounts for custom scaling)
+  const scaling = engine.getHardwareScalingLevel();
   return {
-    x: projected.x / dpr,
-    y: projected.y / dpr,
+    x: projected.x * scaling,
+    y: projected.y * scaling,
   };
 }
