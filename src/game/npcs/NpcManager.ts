@@ -39,7 +39,7 @@ export function getDialogueNode(nodeId: string): DialogueNode | undefined {
 
 /**
  * Check if a player at (px, pz) is adjacent to an NPC at (nx, nz).
- * Uses Manhattan distance <= 1.5 (adjacent tile in any direction).
+ * Uses Chebyshev distance <= 1.5 (adjacent tile including diagonals).
  */
 export function isPlayerAdjacent(
   px: number,

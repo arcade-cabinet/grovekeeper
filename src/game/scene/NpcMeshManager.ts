@@ -25,6 +25,8 @@ export class NpcMeshManager {
     style: HatStyle,
     hatColor: Color3,
   ): Mesh | null {
+    if (style === "none") return null;
+
     const hatMat = new StandardMaterial(`${name}_hatMat`, scene);
     hatMat.diffuseColor = hatColor;
 
@@ -97,8 +99,6 @@ export class NpcMeshManager {
         hat.material = hatMat;
         return hat;
       }
-      case "none":
-        return null;
     }
   }
 
@@ -178,7 +178,7 @@ export class NpcMeshManager {
   removeMesh(entityId: string): void {
     const mesh = this.meshes.get(entityId);
     if (mesh) {
-      mesh.dispose();
+      mesh.dispose(false, true);
       this.meshes.delete(entityId);
     }
   }
@@ -186,7 +186,7 @@ export class NpcMeshManager {
   /** Dispose all NPC meshes. */
   dispose(): void {
     for (const mesh of this.meshes.values()) {
-      mesh.dispose();
+      mesh.dispose(false, true);
     }
     this.meshes.clear();
   }

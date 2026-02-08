@@ -121,6 +121,7 @@ export const createNpcEntity = (
     templateId,
     function: npcFunction,
     interactable: playerLevel >= requiredLevel,
+    requiredLevel,
   },
   renderable: { meshId: null, visible: true, scale: 1 },
 });

@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { COLORS } from "../constants/config";
-import type { ResourceType } from "../constants/resources";
+import { RESOURCE_TYPES, type ResourceType } from "../constants/resources";
 import { getDialogueNode, getNpcTemplate } from "../npcs/NpcManager";
 import type { DialogueAction, DialogueNode } from "../npcs/types";
 import { useGameStore } from "../stores/gameStore";
@@ -68,7 +68,11 @@ export const NpcDialogue = ({
           onOpenSeeds?.();
           break;
         case "give_resource":
-          if (action.resource && action.amount) {
+          if (
+            action.resource &&
+            action.amount &&
+            RESOURCE_TYPES.includes(action.resource as ResourceType)
+          ) {
             store.addResource(action.resource as ResourceType, action.amount);
             showToast(
               `Received ${action.amount} ${action.resource}!`,
@@ -86,7 +90,8 @@ export const NpcDialogue = ({
           }
           break;
         case "open_quests":
-          showToast("Quest accepted!", "success");
+          // TODO: wire to quest panel when quest UI is built
+          showToast("New quest available!", "info");
           break;
       }
     },

@@ -12,7 +12,7 @@ import {
   createWildTreeEntity,
 } from "../ecs/archetypes";
 import type { Entity } from "../ecs/world";
-import { gridCellsQuery, world } from "../ecs/world";
+import { gridCellsQuery, npcsQuery, world } from "../ecs/world";
 import { getNpcTemplate } from "../npcs/NpcManager";
 import { createRNG, hashString } from "../utils/seedRNG";
 import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types";
@@ -105,11 +105,22 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
 
   // Spawn NPC entities
   if (zone.npcs) {
+    // Build set of existing NPC positions to avoid duplicates on reload
+    const existingNpcs = new Set<string>();
+    for (const npc of npcsQuery) {
+      if (npc.position) {
+        existingNpcs.add(`${npc.position.x},${npc.position.z}`);
+      }
+    }
+
     for (const npcPlacement of zone.npcs) {
       const template = getNpcTemplate(npcPlacement.templateId);
       if (!template) continue;
       const worldX = zone.origin.x + npcPlacement.localX;
       const worldZ = zone.origin.z + npcPlacement.localZ;
+
+      // Skip if NPC already exists at this position (idempotent loading)
+      if (existingNpcs.has(`${worldX},${worldZ}`)) continue;
       // Player level is checked at interaction time, so create all NPCs
       const npcEntity = createNpcEntity(
         worldX,

@@ -78,6 +78,7 @@ export interface NpcComponent {
   templateId: string;
   function: "trading" | "quests" | "tips" | "seeds";
   interactable: boolean;
+  requiredLevel: number;
 }
 
 // Entity definition
