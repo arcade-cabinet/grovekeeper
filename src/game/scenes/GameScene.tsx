@@ -770,7 +770,9 @@ export const GameScene = () => {
       });
     };
 
-    initBabylon();
+    initBabylon().catch((err) => {
+      console.error("[Grovekeeper] Scene init failed:", err);
+    });
 
     return () => {
       cancelled = true;

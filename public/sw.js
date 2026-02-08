@@ -1,4 +1,4 @@
-const CACHE_VERSION = 4;
+const CACHE_VERSION = 5;
 const CACHE_NAME = `grovekeeper-v${CACHE_VERSION}`;
 
 // Derive the base path from the service worker's own URL
@@ -31,34 +31,36 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
-  // Navigation requests: stale-while-revalidate
+  // Navigation requests: network-first with cache fallback.
+  // Always try to get fresh HTML so that hashed asset references are current.
   if (event.request.mode === "navigate") {
     event.respondWith(
-      caches.match(event.request).then((cached) => {
-        const fetchPromise = fetch(event.request).then((response) => {
+      fetch(event.request)
+        .then((response) => {
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
-        });
-        return cached || fetchPromise;
-      })
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match(SW_SCOPE + "index.html")))
     );
     return;
   }
 
-  // All other GET requests: cache-first, update cache on fetch
+  // Hashed assets (JS/CSS/WASM): cache-first since hashed filenames are immutable.
+  // If a cached response turns out stale (server returns 404), purge it and
+  // let the browser handle the error so the error boundary can offer a reload.
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const fetched = fetch(event.request).then((response) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
         if (response && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
       });
-      return cached || fetched;
     })
   );
 });

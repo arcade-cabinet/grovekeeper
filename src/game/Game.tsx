@@ -14,7 +14,22 @@ import { NewGameModal } from "./ui/NewGameModal";
 import { RulesModal } from "./ui/RulesModal";
 
 const GameScene = lazy(() =>
-  import("./scenes/GameScene").then((m) => ({ default: m.GameScene })),
+  import("./scenes/GameScene")
+    .then((m) => ({ default: m.GameScene }))
+    .catch(() => {
+      // Chunk load failed (likely stale SW cache) — purge caches and retry once
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          for (const r of regs) r.unregister();
+        });
+        caches.keys().then((names) => {
+          for (const n of names) caches.delete(n);
+        });
+      }
+      return import("./scenes/GameScene").then((m) => ({
+        default: m.GameScene,
+      }));
+    }),
 );
 
 export const Game = () => {
