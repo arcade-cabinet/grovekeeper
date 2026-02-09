@@ -604,7 +604,7 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-700">Sound Effects</span>
               <button
-                className="w-12 h-7 rounded-full transition-colors relative"
+                className="w-14 h-8 rounded-full transition-colors relative p-2 min-h-[44px] min-w-[44px] motion-safe:transition-colors"
                 style={{
                   background: soundEnabled ? COLORS.forestGreen : "#D1D5DB",
                 }}
@@ -614,9 +614,9 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                 aria-label="Toggle sound"
               >
                 <span
-                  className="absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform"
+                  className="absolute top-1 w-6 h-6 bg-white rounded-full shadow motion-safe:transition-transform"
                   style={{
-                    left: soundEnabled ? "calc(100% - 1.625rem)" : "0.125rem",
+                    left: soundEnabled ? "calc(100% - 1.75rem)" : "0.25rem",
                   }}
                 />
               </button>

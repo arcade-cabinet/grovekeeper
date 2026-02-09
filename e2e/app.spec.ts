@@ -15,7 +15,7 @@ test.describe("App Launch", () => {
 
   test("does not have horizontal scroll", async ({ page }) => {
     await page.goto("/");
-    await page.waitForTimeout(2000);
+    await page.getByRole("button", { name: /start growing|continue grove/i }).waitFor({ timeout: 10000 });
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
@@ -61,7 +61,7 @@ test.describe("Mobile Viewport", () => {
 
   test("no horizontal scroll on mobile", async ({ page }) => {
     await page.goto("/");
-    await page.waitForTimeout(2000);
+    await page.getByRole("button", { name: /start growing|continue grove/i }).waitFor({ timeout: 10000 });
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollWidth).toBeLessThanOrEqual(375 + 1);
   });
