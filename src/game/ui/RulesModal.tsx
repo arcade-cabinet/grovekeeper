@@ -127,14 +127,18 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
             return (
               <button
                 key={s.title}
-                className="w-2 h-2 rounded-full transition-all"
-                style={{
-                  background: bg,
-                  transform: i === step ? "scale(1.3)" : "scale(1)",
-                }}
+                className="w-11 h-11 flex items-center justify-center"
                 onClick={() => setStep(i)}
                 aria-label={`Go to step ${i + 1}`}
-              />
+              >
+                <span
+                  className="w-2 h-2 rounded-full motion-safe:transition-all"
+                  style={{
+                    background: bg,
+                    transform: i === step ? "scale(1.3)" : "scale(1)",
+                  }}
+                />
+              </button>
             );
           })}
         </div>
@@ -187,10 +191,7 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
                 borderColor: `${COLORS.barkBrown}80`,
                 color: COLORS.barkBrown,
               }}
-              onClick={() => {
-                setStep(0);
-                onClose();
-              }}
+              onClick={onClose}
             >
               Skip
             </Button>
