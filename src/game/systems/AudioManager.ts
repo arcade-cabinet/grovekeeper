@@ -71,7 +71,7 @@ class AudioManagerImpl {
 
     // Resume context if suspended (e.g. after tab switch)
     if (ctx.state === "suspended") {
-      ctx.resume();
+      ctx.resume().catch(() => {});
     }
 
     switch (id) {
@@ -138,6 +138,9 @@ class AudioManagerImpl {
 
   dispose(): void {
     if (this.ctx) {
+      if (this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
       this.ctx.close();
       this.ctx = null;
       this.masterGain = null;

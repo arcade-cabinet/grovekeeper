@@ -59,7 +59,12 @@ export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className="max-w-sm max-h-[80vh] overflow-y-auto"
-        style={{ background: COLORS.skyMist }}
+        style={{
+          background: COLORS.skyMist,
+          border: `3px solid ${COLORS.forestGreen}40`,
+          borderRadius: 16,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.12)`,
+        }}
         aria-describedby={undefined}
       >
         <DialogHeader>
@@ -96,16 +101,28 @@ export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
                   style={{ background: `${COLORS.soilDark}20` }}
                 >
                   {isUnlocked ? (
-                    <div className="flex flex-col items-center">
-                      <div
-                        className="w-8 h-8 rounded-full"
-                        style={{ background: species.meshParams.color.canopy }}
+                    <svg width="36" height="48" viewBox="0 0 36 48" fill="none" className="mb-1">
+                      {/* Trunk */}
+                      <rect
+                        x="15" y="28" width="6" height="16" rx="1.5"
+                        fill={species.meshParams.color.trunk}
                       />
-                      <div
-                        className="w-2 h-4 -mt-1"
-                        style={{ background: species.meshParams.color.trunk }}
+                      {/* Canopy layers */}
+                      <ellipse
+                        cx="18" cy="22" rx="14" ry="12"
+                        fill={species.meshParams.color.canopy}
                       />
-                    </div>
+                      <ellipse
+                        cx="18" cy="16" rx="10" ry="10"
+                        fill={species.meshParams.color.canopy}
+                        opacity="0.7"
+                      />
+                      {/* Highlight */}
+                      <ellipse
+                        cx="14" cy="16" rx="4" ry="3"
+                        fill="white" opacity="0.15"
+                      />
+                    </svg>
                   ) : (
                     <RiLock2Line className="w-8 h-8 mb-2 text-gray-400" />
                   )}
