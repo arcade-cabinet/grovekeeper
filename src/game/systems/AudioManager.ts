@@ -66,7 +66,8 @@ class AudioManagerImpl {
   play(id: SoundId): void {
     if (!this.enabled) return;
     const ctx = this.ensureContext();
-    if (!ctx || !this.masterGain) return;
+    const master = this.masterGain;
+    if (!ctx || !master) return;
 
     // Resume context if suspended (e.g. after tab switch)
     if (ctx.state === "suspended") {
@@ -157,6 +158,8 @@ class AudioManagerImpl {
       delay?: number;
     },
   ): void {
+    const master = this.masterGain;
+    if (!master) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = opts.type;
@@ -171,7 +174,7 @@ class AudioManagerImpl {
     gain.gain.exponentialRampToValueAtTime(0.001, endTime);
 
     osc.connect(gain);
-    gain.connect(this.masterGain!);
+    gain.connect(master);
     osc.start(startTime);
     osc.stop(endTime + 0.01);
   }
@@ -184,6 +187,8 @@ class AudioManagerImpl {
     type: OscillatorType,
     gain: number,
   ): void {
+    const master = this.masterGain;
+    if (!master) return;
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.type = type;
@@ -193,7 +198,7 @@ class AudioManagerImpl {
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
     osc.connect(g);
-    g.connect(this.masterGain!);
+    g.connect(master);
     osc.start();
     osc.stop(ctx.currentTime + duration + 0.01);
   }
@@ -267,9 +272,11 @@ class AudioManagerImpl {
     g.gain.setValueAtTime(gain, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
+    const master = this.masterGain;
+    if (!master) return;
     source.connect(filter);
     filter.connect(g);
-    g.connect(this.masterGain!);
+    g.connect(master);
     source.start();
     source.stop(ctx.currentTime + duration + 0.01);
   }

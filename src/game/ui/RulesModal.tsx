@@ -120,23 +120,23 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
 
         {/* Progress dots */}
         <div className="flex justify-center gap-1.5 px-5 pb-3">
-          {STEPS.map((_, i) => (
-            <button
-              key={i}
-              className="w-2 h-2 rounded-full transition-all"
-              style={{
-                background:
-                  i === step
-                    ? COLORS.forestGreen
-                    : i < step
-                      ? `${COLORS.forestGreen}60`
-                      : `${COLORS.forestGreen}20`,
-                transform: i === step ? "scale(1.3)" : "scale(1)",
-              }}
-              onClick={() => setStep(i)}
-              aria-label={`Go to step ${i + 1}`}
-            />
-          ))}
+          {STEPS.map((s, i) => {
+            let bg = `${COLORS.forestGreen}20`;
+            if (i === step) bg = COLORS.forestGreen;
+            else if (i < step) bg = `${COLORS.forestGreen}60`;
+            return (
+              <button
+                key={s.title}
+                className="w-2 h-2 rounded-full transition-all"
+                style={{
+                  background: bg,
+                  transform: i === step ? "scale(1.3)" : "scale(1)",
+                }}
+                onClick={() => setStep(i)}
+                aria-label={`Go to step ${i + 1}`}
+              />
+            );
+          })}
         </div>
 
         {/* Current step content */}
