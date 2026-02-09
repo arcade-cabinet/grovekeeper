@@ -257,8 +257,10 @@ class AudioManagerImpl {
     const bufferSize = Math.floor(ctx.sampleRate * duration);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
+    const rng = new Uint32Array(bufferSize);
+    crypto.getRandomValues(rng);
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
+      data[i] = (rng[i] / 2147483647.5 - 1);
     }
 
     const source = ctx.createBufferSource();
