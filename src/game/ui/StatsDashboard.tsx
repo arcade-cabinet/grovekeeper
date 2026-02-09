@@ -69,7 +69,9 @@ export const StatsDashboard = ({ open, onClose }: StatsDashboardProps) => {
         className="max-w-sm max-h-[80vh] overflow-y-auto"
         style={{
           background: COLORS.parchment,
-          border: `2px solid ${COLORS.barkBrown}`,
+          border: `3px solid ${COLORS.barkBrown}`,
+          borderRadius: 16,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.15)`,
         }}
         aria-describedby={undefined}
       >

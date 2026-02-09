@@ -139,7 +139,9 @@ export const NpcDialogue = ({
         className="max-w-sm"
         style={{
           background: COLORS.skyMist,
-          border: `2px solid ${COLORS.barkBrown}`,
+          border: `3px solid ${COLORS.barkBrown}`,
+          borderRadius: 16,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.15)`,
         }}
         aria-describedby={undefined}
       >

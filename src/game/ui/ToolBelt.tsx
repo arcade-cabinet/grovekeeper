@@ -1,15 +1,26 @@
+import {
+  RiBookOpenLine,
+  RiDropLine,
+  RiHammerLine,
+  RiPlantLine,
+  RiRecycleLine,
+  RiScissorsLine,
+  RiSeedlingLine,
+  RiToolsLine,
+} from "@remixicon/react";
+import { COLORS } from "../constants/config";
 import { TOOLS } from "../constants/tools";
 import { useGameStore } from "../stores/gameStore";
 
-const TOOL_EMOJIS: Record<string, string> = {
-  trowel: "\u{1F528}",
-  "watering-can": "\u{1FAA3}",
-  almanac: "\u{1F4D6}",
-  "pruning-shears": "\u{2702}\u{FE0F}",
-  "seed-pouch": "\u{1F331}",
-  shovel: "\u{26CF}\u{FE0F}",
-  axe: "\u{1FA93}",
-  "compost-bin": "\u{267B}\u{FE0F}",
+const TOOL_ICONS: Record<string, React.ReactNode> = {
+  trowel: <RiPlantLine className="w-5 h-5" />,
+  "watering-can": <RiDropLine className="w-5 h-5" />,
+  almanac: <RiBookOpenLine className="w-5 h-5" />,
+  "pruning-shears": <RiScissorsLine className="w-5 h-5" />,
+  "seed-pouch": <RiSeedlingLine className="w-5 h-5" />,
+  shovel: <RiToolsLine className="w-5 h-5" />,
+  axe: <RiHammerLine className="w-5 h-5" />,
+  "compost-bin": <RiRecycleLine className="w-5 h-5" />,
 };
 
 interface ToolBeltProps {
@@ -27,8 +38,8 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
     <div
       className="flex flex-col gap-1 p-1.5 rounded-xl"
       style={{
-        background: "rgba(245, 240, 227, 0.90)",
-        border: "2px solid #5D4037",
+        background: `${COLORS.parchment}e6`,
+        border: `2px solid ${COLORS.barkBrown}`,
         boxShadow: "0 4px 12px rgba(26, 58, 42, 0.15)",
       }}
     >
@@ -64,14 +75,14 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
               disabled={!isUnlocked}
               title={`${tool.name}${!isUnlocked ? ` (Lv.${tool.unlockLevel})` : ""}`}
             >
-              {TOOL_EMOJIS[tool.id] ?? "\u{1F527}"}
+              {TOOL_ICONS[tool.id] ?? <RiToolsLine className="w-5 h-5" />}
               {/* Keyboard shortcut badge - desktop only */}
               <span
                 className="hidden md:flex absolute top-0 right-0 items-center justify-center text-[8px] font-bold rounded-full"
                 style={{
                   width: 14,
                   height: 14,
-                  background: "#5D4037",
+                  background: COLORS.barkBrown,
                   color: "white",
                   transform: "translate(25%, -25%)",
                 }}
@@ -89,10 +100,10 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
           className="text-[10px] font-bold text-center px-1 py-0.5 rounded"
           style={{
             background: "rgba(74, 124, 89, 0.2)",
-            color: "#3E2723",
+            color: COLORS.soilDark,
           }}
         >
-          {"\u{1F331}"} {selectedSpecies} ({"\u{00D7}"}
+          <RiSeedlingLine className="w-3 h-3 inline" /> {selectedSpecies} ({"\u{00D7}"}
           {seeds[selectedSpecies] ?? 0})
         </div>
       )}

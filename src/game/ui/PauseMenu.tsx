@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isDbInitialized } from "@/db/client";
 import { exportSaveFile, importSaveFile } from "@/db/export";
 import { COLORS } from "../constants/config";
@@ -119,7 +119,12 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="max-w-sm max-h-[85vh] overflow-y-auto"
-        style={{ background: COLORS.skyMist }}
+        style={{
+          background: COLORS.skyMist,
+          border: `3px solid ${COLORS.barkBrown}`,
+          borderRadius: 16,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.15)`,
+        }}
         aria-describedby={undefined}
       >
         <DialogHeader>
@@ -132,498 +137,520 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
-          {/* Stats card */}
-          <Card className="p-4" style={{ background: "white" }}>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-500">Level</p>
-                <p
-                  className="text-xl font-bold"
-                  style={{ color: COLORS.forestGreen }}
-                >
-                  {level}
-                </p>
+        <Tabs defaultValue="stats" className="mt-2">
+          <TabsList
+            className="w-full"
+            style={{
+              background: `${COLORS.parchment}`,
+              border: `1px solid ${COLORS.barkBrown}30`,
+            }}
+          >
+            <TabsTrigger value="stats" className="flex-1 text-xs min-h-[36px]">
+              Stats
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="flex-1 text-xs min-h-[36px]">
+              Progress
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex-1 text-xs min-h-[36px]">
+              Settings
+            </TabsTrigger>
+          </TabsList>
+
+          {/* ── Stats tab ── */}
+          <TabsContent value="stats" className="space-y-3 mt-2">
+            <Card className="p-4" style={{ background: "white" }}>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500">Level</p>
+                  <p
+                    className="text-xl font-bold"
+                    style={{ color: COLORS.forestGreen }}
+                  >
+                    {level}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">XP</p>
+                  <p
+                    className="text-xl font-bold"
+                    style={{ color: COLORS.forestGreen }}
+                  >
+                    {xp}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Coins</p>
+                  <p
+                    className="text-xl font-bold"
+                    style={{ color: COLORS.autumnGold }}
+                  >
+                    {coins}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Trees Planted</p>
+                  <p
+                    className="text-xl font-bold"
+                    style={{ color: COLORS.leafLight }}
+                  >
+                    {treesPlanted}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Trees Matured</p>
+                  <p
+                    className="text-xl font-bold"
+                    style={{ color: COLORS.leafLight }}
+                  >
+                    {treesMatured}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Grid Size</p>
+                  <p
+                    className="text-xl font-bold"
+                    style={{ color: COLORS.forestGreen }}
+                  >
+                    {gridSize}x{gridSize}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-500">XP</p>
-                <p
-                  className="text-xl font-bold"
-                  style={{ color: COLORS.forestGreen }}
-                >
-                  {xp}
+            </Card>
+
+            <div className="text-sm text-gray-600">
+              <p>
+                Species unlocked: {unlockedSpecies.length}/{TREE_SPECIES.length}
+              </p>
+              <p>
+                Tools unlocked: {unlockedTools.length}/{TOOLS.length}
+              </p>
+              {prestigeCount > 0 && (
+                <p style={{ color: COLORS.autumnGold }}>
+                  Prestige: {prestigeCount}
                 </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Coins</p>
-                <p
-                  className="text-xl font-bold"
+              )}
+              {diffTier && (
+                <p className="flex items-center gap-1.5 mt-1">
+                  <span
+                    className="inline-block px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                    style={{ background: diffTier.color }}
+                  >
+                    {diffTier.name}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    difficulty (locked)
+                  </span>
+                </p>
+              )}
+            </div>
+
+            <Button
+              className="w-full"
+              variant="outline"
+              size="sm"
+              style={{
+                borderColor: COLORS.barkBrown,
+                color: COLORS.soilDark,
+              }}
+              onClick={() => setStatsOpen(true)}
+            >
+              Full Stats Dashboard
+            </Button>
+          </TabsContent>
+
+          {/* ── Progress tab (Achievements, Grid, Prestige) ── */}
+          <TabsContent value="progress" className="space-y-3 mt-2">
+            {/* Achievements */}
+            <Card className="p-3" style={{ background: "white" }}>
+              <h4
+                className="text-sm font-bold mb-2 flex items-center justify-between"
+                style={{ color: COLORS.soilDark }}
+              >
+                <span>Achievements</span>
+                <span
+                  className="text-xs font-normal"
                   style={{ color: COLORS.autumnGold }}
                 >
-                  {coins}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Trees Planted</p>
-                <p
-                  className="text-xl font-bold"
-                  style={{ color: COLORS.leafLight }}
-                >
-                  {treesPlanted}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Trees Matured</p>
-                <p
-                  className="text-xl font-bold"
-                  style={{ color: COLORS.leafLight }}
-                >
-                  {treesMatured}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Grid Size</p>
-                <p
-                  className="text-xl font-bold"
-                  style={{ color: COLORS.forestGreen }}
-                >
-                  {gridSize}x{gridSize}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <div className="text-sm text-gray-600">
-            <p>
-              Species unlocked: {unlockedSpecies.length}/{TREE_SPECIES.length}
-            </p>
-            <p>
-              Tools unlocked: {unlockedTools.length}/{TOOLS.length}
-            </p>
-            {prestigeCount > 0 && (
-              <p style={{ color: COLORS.autumnGold }}>
-                Prestige: {prestigeCount}
-              </p>
-            )}
-            {diffTier && (
-              <p className="flex items-center gap-1.5 mt-1">
-                <span
-                  className="inline-block px-2 py-0.5 rounded-full text-xs font-bold text-white"
-                  style={{ background: diffTier.color }}
-                >
-                  {diffTier.name}
+                  {achievements.length}/{ACHIEVEMENT_DEFS.length}
                 </span>
-                <span className="text-xs text-gray-400">
-                  difficulty (locked)
-                </span>
-              </p>
-            )}
-          </div>
-
-          <Separator />
-
-          {/* Achievements section */}
-          <Card className="p-3" style={{ background: "white" }}>
-            <h4
-              className="text-sm font-bold mb-2 flex items-center justify-between"
-              style={{ color: COLORS.soilDark }}
-            >
-              <span>Achievements</span>
-              <span
-                className="text-xs font-normal"
-                style={{ color: COLORS.autumnGold }}
-              >
-                {achievements.length}/{ACHIEVEMENT_DEFS.length} Unlocked
-              </span>
-            </h4>
-
-            <div className="max-h-48 overflow-y-auto space-y-2">
-              {ACHIEVEMENT_DEFS.map((achievement) => {
-                const isUnlocked = achievements.includes(achievement.id);
-
-                return (
-                  <div
-                    key={achievement.id}
-                    className="flex items-start gap-2 p-2 rounded"
-                    style={{
-                      background: isUnlocked
-                        ? "rgba(255, 215, 0, 0.1)"
-                        : "rgba(0, 0, 0, 0.05)",
-                      border: `1px solid ${isUnlocked ? "#FFD700" : "#E0E0E0"}`,
-                    }}
-                  >
+              </h4>
+              <div className="max-h-48 overflow-y-auto space-y-2">
+                {ACHIEVEMENT_DEFS.map((achievement) => {
+                  const isUnlocked = achievements.includes(achievement.id);
+                  return (
                     <div
-                      className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full"
+                      key={achievement.id}
+                      className="flex items-start gap-2 p-2 rounded"
                       style={{
-                        background: isUnlocked ? "#FFD700" : "#9E9E9E",
-                        color: "white",
-                        fontSize: 12,
+                        background: isUnlocked
+                          ? `${COLORS.gold}1a`
+                          : "rgba(0, 0, 0, 0.05)",
+                        border: `1px solid ${isUnlocked ? COLORS.gold : "#E0E0E0"}`,
                       }}
                     >
-                      {isUnlocked ? "\u2713" : "\u{1F512}"}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-xs font-semibold"
+                      <div
+                        className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full"
                         style={{
-                          color: isUnlocked ? COLORS.soilDark : "#9E9E9E",
+                          background: isUnlocked ? COLORS.gold : COLORS.silver,
+                          color: "white",
+                          fontSize: 12,
                         }}
                       >
-                        {achievement.name}
-                      </p>
-                      {isUnlocked ? (
-                        <p className="text-[10px] text-gray-600 mt-0.5">
-                          {achievement.description}
+                        {isUnlocked ? "\u2713" : "\u{1F512}"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-xs font-semibold"
+                          style={{
+                            color: isUnlocked ? COLORS.soilDark : COLORS.silver,
+                          }}
+                        >
+                          {achievement.name}
                         </p>
-                      ) : (
-                        <p className="text-[10px] text-gray-400 mt-0.5">???</p>
-                      )}
+                        {isUnlocked ? (
+                          <p className="text-[10px] text-gray-600 mt-0.5">
+                            {achievement.description}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-gray-400 mt-0.5">
+                            ???
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+                  );
+                })}
+              </div>
+            </Card>
 
-          {/* Grid Expansion section */}
-          <Card className="p-3" style={{ background: "white" }}>
-            <h4
-              className="text-sm font-bold mb-2"
-              style={{ color: COLORS.soilDark }}
-            >
-              Grid Expansion
-            </h4>
-            <p className="text-xs text-gray-500 mb-2">
-              Current: {gridSize}x{gridSize}
-            </p>
-            {nextTier ? (
-              <>
-                <p className="text-xs text-gray-600 mb-1">
-                  Next: {nextTier.size}x{nextTier.size} (Lv.
-                  {nextTier.requiredLevel})
-                </p>
-                <p className="text-xs text-gray-500 mb-2">
-                  Cost: {formatCost(nextTier.cost)}
-                </p>
-                <Button
-                  size="sm"
-                  className="w-full text-xs"
-                  style={{
-                    background: canExpand ? COLORS.forestGreen : "#9E9E9E",
-                    color: "white",
-                  }}
-                  disabled={!canExpand}
-                  onClick={handleExpandGrid}
-                >
-                  Expand to {nextTier.size}x{nextTier.size}
-                </Button>
-                {!canExpand && level < nextTier.requiredLevel && (
-                  <p
-                    className="text-[10px] text-center mt-1"
-                    style={{ color: COLORS.earthRed }}
-                  >
-                    Requires Level {nextTier.requiredLevel}
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="text-xs text-gray-500 italic">
-                Maximum grid size reached.
-              </p>
-            )}
-          </Card>
-
-          {/* Prestige cosmetics section */}
-          {unlockedCosmetics.length > 0 && (
+            {/* Grid Expansion */}
             <Card className="p-3" style={{ background: "white" }}>
               <h4
                 className="text-sm font-bold mb-2"
                 style={{ color: COLORS.soilDark }}
               >
-                Border Cosmetics
+                Grid Expansion
               </h4>
               <p className="text-xs text-gray-500 mb-2">
-                Customize your grove border (unlocked by prestige)
+                Current: {gridSize}x{gridSize}
               </p>
-              <div className="space-y-2">
-                {/* Default option */}
-                <button
-                  className="w-full text-left p-2 rounded text-xs transition-colors"
-                  style={{
-                    background:
-                      activeBorderCosmetic === null
-                        ? `${COLORS.forestGreen}20`
-                        : "rgba(0,0,0,0.05)",
-                    border: `1px solid ${activeBorderCosmetic === null ? COLORS.forestGreen : "#E0E0E0"}`,
-                  }}
-                  onClick={() => setActiveBorderCosmetic(null)}
-                >
-                  <div
-                    className="font-semibold"
-                    style={{ color: COLORS.soilDark }}
+              {nextTier ? (
+                <>
+                  <p className="text-xs text-gray-600 mb-1">
+                    Next: {nextTier.size}x{nextTier.size} (Lv.
+                    {nextTier.requiredLevel})
+                  </p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Cost: {formatCost(nextTier.cost)}
+                  </p>
+                  <Button
+                    size="sm"
+                    className="w-full text-xs"
+                    style={{
+                      background: canExpand ? COLORS.forestGreen : COLORS.silver,
+                      color: "white",
+                    }}
+                    disabled={!canExpand}
+                    onClick={handleExpandGrid}
                   >
-                    Default Wood Frame
-                  </div>
-                  <div className="text-gray-500 mt-0.5">
-                    Classic wooden border
-                  </div>
-                </button>
+                    Expand to {nextTier.size}x{nextTier.size}
+                  </Button>
+                  {!canExpand && level < nextTier.requiredLevel && (
+                    <p
+                      className="text-[10px] text-center mt-1"
+                      style={{ color: COLORS.earthRed }}
+                    >
+                      Requires Level {nextTier.requiredLevel}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-gray-500 italic">
+                  Maximum grid size reached.
+                </p>
+              )}
+            </Card>
 
-                {/* Unlocked cosmetics */}
-                {unlockedCosmetics.map((cosmetic) => (
+            {/* Prestige cosmetics */}
+            {unlockedCosmetics.length > 0 && (
+              <Card className="p-3" style={{ background: "white" }}>
+                <h4
+                  className="text-sm font-bold mb-2"
+                  style={{ color: COLORS.soilDark }}
+                >
+                  Border Cosmetics
+                </h4>
+                <p className="text-xs text-gray-500 mb-2">
+                  Customize your grove border (unlocked by prestige)
+                </p>
+                <div className="space-y-2">
                   <button
-                    key={cosmetic.id}
                     className="w-full text-left p-2 rounded text-xs transition-colors"
                     style={{
                       background:
-                        activeBorderCosmetic === cosmetic.id
+                        activeBorderCosmetic === null
                           ? `${COLORS.forestGreen}20`
                           : "rgba(0,0,0,0.05)",
-                      border: `1px solid ${activeBorderCosmetic === cosmetic.id ? COLORS.forestGreen : "#E0E0E0"}`,
+                      border: `1px solid ${activeBorderCosmetic === null ? COLORS.forestGreen : "#E0E0E0"}`,
                     }}
-                    onClick={() => setActiveBorderCosmetic(cosmetic.id)}
+                    onClick={() => setActiveBorderCosmetic(null)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div
-                        className="font-semibold"
-                        style={{ color: COLORS.soilDark }}
-                      >
-                        {cosmetic.name}
-                      </div>
-                      {activeBorderCosmetic === cosmetic.id && (
-                        <span style={{ color: COLORS.forestGreen }}>✓</span>
-                      )}
+                    <div
+                      className="font-semibold"
+                      style={{ color: COLORS.soilDark }}
+                    >
+                      Default Wood Frame
                     </div>
                     <div className="text-gray-500 mt-0.5">
-                      {cosmetic.description}
+                      Classic wooden border
                     </div>
-                    <div
-                      className="mt-1 h-4 rounded"
-                      style={{
-                        border: cosmetic.borderStyle,
-                        borderColor: cosmetic.borderColor,
-                        boxShadow: cosmetic.glowColor
-                          ? `0 0 8px ${cosmetic.glowColor}`
-                          : undefined,
-                      }}
-                    />
                   </button>
-                ))}
-
-                {/* Locked cosmetics preview */}
-                {PRESTIGE_COSMETICS.filter(
-                  (c) => c.prestigeRequired > prestigeCount,
-                ).map((cosmetic) => (
-                  <div
-                    key={cosmetic.id}
-                    className="w-full text-left p-2 rounded text-xs opacity-60"
-                    style={{
-                      background: "rgba(0,0,0,0.02)",
-                      border: "1px dashed #E0E0E0",
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold text-gray-400">
-                        {cosmetic.name}
-                      </div>
-                      <span
-                        className="text-xs"
-                        style={{ color: COLORS.autumnGold }}
-                      >
-                        Prestige {cosmetic.prestigeRequired}
-                      </span>
-                    </div>
-                    <div className="text-gray-400 mt-0.5">
-                      {cosmetic.description}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Prestige section */}
-          <Card className="p-3" style={{ background: "white" }}>
-            <h4
-              className="text-sm font-bold mb-2"
-              style={{ color: COLORS.soilDark }}
-            >
-              Prestige
-            </h4>
-            {prestigeCount > 0 && (
-              <div className="text-xs text-gray-600 mb-2">
-                <p>Current prestige: {prestigeCount}</p>
-                <p>
-                  Growth speed:{" "}
-                  {Math.round(
-                    (calculatePrestigeBonus(prestigeCount)
-                      .growthSpeedMultiplier -
-                      1) *
-                      100,
-                  )}
-                  % bonus
-                </p>
-              </div>
-            )}
-
-            {isPrestigeEligible ? (
-              confirmingPrestige ? (
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-700">
-                    Prestige will reset your level, resources, seeds, and grove
-                    to start fresh. You keep achievements, lifetime stats, and
-                    gain permanent bonuses. Are you sure?
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      className="flex-1 text-xs"
+                  {unlockedCosmetics.map((cosmetic) => (
+                    <button
+                      key={cosmetic.id}
+                      className="w-full text-left p-2 rounded text-xs transition-colors"
                       style={{
-                        background: COLORS.autumnGold,
-                        color: "white",
+                        background:
+                          activeBorderCosmetic === cosmetic.id
+                            ? `${COLORS.forestGreen}20`
+                            : "rgba(0,0,0,0.05)",
+                        border: `1px solid ${activeBorderCosmetic === cosmetic.id ? COLORS.forestGreen : "#E0E0E0"}`,
                       }}
-                      onClick={handlePrestige}
+                      onClick={() => setActiveBorderCosmetic(cosmetic.id)}
                     >
-                      Confirm Prestige
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 text-xs"
-                      onClick={handleCancelPrestige}
+                      <div className="flex items-center justify-between">
+                        <div
+                          className="font-semibold"
+                          style={{ color: COLORS.soilDark }}
+                        >
+                          {cosmetic.name}
+                        </div>
+                        {activeBorderCosmetic === cosmetic.id && (
+                          <span style={{ color: COLORS.forestGreen }}>
+                            {"\u2713"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-gray-500 mt-0.5">
+                        {cosmetic.description}
+                      </div>
+                      <div
+                        className="mt-1 h-4 rounded"
+                        style={{
+                          border: cosmetic.borderStyle,
+                          borderColor: cosmetic.borderColor,
+                          boxShadow: cosmetic.glowColor
+                            ? `0 0 8px ${cosmetic.glowColor}`
+                            : undefined,
+                        }}
+                      />
+                    </button>
+                  ))}
+                  {PRESTIGE_COSMETICS.filter(
+                    (c) => c.prestigeRequired > prestigeCount,
+                  ).map((cosmetic) => (
+                    <div
+                      key={cosmetic.id}
+                      className="w-full text-left p-2 rounded text-xs opacity-60"
+                      style={{
+                        background: "rgba(0,0,0,0.02)",
+                        border: "1px dashed #E0E0E0",
+                      }}
                     >
-                      Cancel
-                    </Button>
-                  </div>
+                      <div className="flex items-center justify-between">
+                        <div className="font-semibold text-gray-400">
+                          {cosmetic.name}
+                        </div>
+                        <span
+                          className="text-xs"
+                          style={{ color: COLORS.autumnGold }}
+                        >
+                          Prestige {cosmetic.prestigeRequired}
+                        </span>
+                      </div>
+                      <div className="text-gray-400 mt-0.5">
+                        {cosmetic.description}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <Button
-                  size="sm"
-                  className="w-full text-xs"
-                  style={{
-                    background: COLORS.autumnGold,
-                    color: "white",
-                  }}
-                  onClick={handlePrestige}
-                >
-                  Prestige (Reset for Bonuses)
-                </Button>
-              )
-            ) : (
-              <p className="text-xs text-gray-500">
-                Reach Level {PRESTIGE_MIN_LEVEL} to unlock Prestige.
-                {level > 0 && (
-                  <span
-                    className="block mt-0.5"
-                    style={{ color: COLORS.earthRed }}
-                  >
-                    Current: Lv.{level} / {PRESTIGE_MIN_LEVEL}
-                  </span>
-                )}
-              </p>
+              </Card>
             )}
-          </Card>
 
-          <Separator />
-
-          {/* Save management */}
-          {isDbInitialized() && (
+            {/* Prestige */}
             <Card className="p-3" style={{ background: "white" }}>
               <h4
                 className="text-sm font-bold mb-2"
                 style={{ color: COLORS.soilDark }}
               >
-                Save Management
+                Prestige
               </h4>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1 text-xs min-h-[44px]"
+              {prestigeCount > 0 && (
+                <div className="text-xs text-gray-600 mb-2">
+                  <p>Current prestige: {prestigeCount}</p>
+                  <p>
+                    Growth speed:{" "}
+                    {Math.round(
+                      (calculatePrestigeBonus(prestigeCount)
+                        .growthSpeedMultiplier -
+                        1) *
+                        100,
+                    )}
+                    % bonus
+                  </p>
+                </div>
+              )}
+              {isPrestigeEligible ? (
+                confirmingPrestige ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-700">
+                      Prestige will reset your level, resources, seeds, and
+                      grove to start fresh. You keep achievements, lifetime
+                      stats, and gain permanent bonuses. Are you sure?
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="flex-1 text-xs"
+                        style={{
+                          background: COLORS.autumnGold,
+                          color: "white",
+                        }}
+                        onClick={handlePrestige}
+                      >
+                        Confirm Prestige
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-xs"
+                        onClick={handleCancelPrestige}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="w-full text-xs"
+                    style={{
+                      background: COLORS.autumnGold,
+                      color: "white",
+                    }}
+                    onClick={handlePrestige}
+                  >
+                    Prestige (Reset for Bonuses)
+                  </Button>
+                )
+              ) : (
+                <p className="text-xs text-gray-500">
+                  Reach Level {PRESTIGE_MIN_LEVEL} to unlock Prestige.
+                  {level > 0 && (
+                    <span
+                      className="block mt-0.5"
+                      style={{ color: COLORS.earthRed }}
+                    >
+                      Current: Lv.{level} / {PRESTIGE_MIN_LEVEL}
+                    </span>
+                  )}
+                </p>
+              )}
+            </Card>
+          </TabsContent>
+
+          {/* ── Settings tab ── */}
+          <TabsContent value="settings" className="space-y-3 mt-2">
+            {/* Sound */}
+            <Card className="p-3" style={{ background: "white" }}>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-700">Sound Effects</span>
+                <button
+                  className="w-14 h-8 rounded-full relative p-2 min-h-[44px] min-w-[44px] motion-safe:transition-colors"
                   style={{
-                    borderColor: COLORS.barkBrown,
-                    color: COLORS.soilDark,
+                    background: soundEnabled ? COLORS.forestGreen : "#D1D5DB",
                   }}
-                  onClick={() => {
-                    try {
-                      exportSaveFile();
-                      showToast("Save exported!", "success");
-                    } catch (err) {
-                      console.error("Export failed:", err);
-                      showToast("Export failed", "warning");
-                    }
-                  }}
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  role="switch"
+                  aria-checked={soundEnabled}
+                  aria-label="Toggle sound"
                 >
-                  Export Save
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1 text-xs min-h-[44px]"
-                  style={{
-                    borderColor: COLORS.barkBrown,
-                    color: COLORS.soilDark,
-                  }}
-                  onClick={() => importRef.current?.click()}
-                >
-                  Import Save
-                </Button>
-                <input
-                  ref={importRef}
-                  type="file"
-                  accept=".sqlite,.db"
-                  className="hidden"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    try {
-                      await importSaveFile(file);
-                    } catch {
-                      showToast("Invalid save file", "warning");
-                    } finally {
-                      // Reset input so re-selecting the same file triggers onChange
-                      e.currentTarget.value = "";
-                    }
-                  }}
-                />
+                  <span
+                    className="absolute top-1 w-6 h-6 bg-white rounded-full shadow motion-safe:transition-transform"
+                    style={{
+                      left: soundEnabled
+                        ? "calc(100% - 1.75rem)"
+                        : "0.25rem",
+                    }}
+                  />
+                </button>
               </div>
             </Card>
-          )}
 
-          <Separator />
+            {/* Save management */}
+            {isDbInitialized() && (
+              <Card className="p-3" style={{ background: "white" }}>
+                <h4
+                  className="text-sm font-bold mb-2"
+                  style={{ color: COLORS.soilDark }}
+                >
+                  Save Management
+                </h4>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs min-h-[44px]"
+                    style={{
+                      borderColor: COLORS.barkBrown,
+                      color: COLORS.soilDark,
+                    }}
+                    onClick={() => {
+                      try {
+                        exportSaveFile();
+                        showToast("Save exported!", "success");
+                      } catch (err) {
+                        console.error("Export failed:", err);
+                        showToast("Export failed", "warning");
+                      }
+                    }}
+                  >
+                    Export Save
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs min-h-[44px]"
+                    style={{
+                      borderColor: COLORS.barkBrown,
+                      color: COLORS.soilDark,
+                    }}
+                    onClick={() => importRef.current?.click()}
+                  >
+                    Import Save
+                  </Button>
+                  <input
+                    ref={importRef}
+                    type="file"
+                    accept=".sqlite,.db"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        await importSaveFile(file);
+                      } catch {
+                        showToast("Invalid save file", "warning");
+                      } finally {
+                        e.currentTarget.value = "";
+                      }
+                    }}
+                  />
+                </div>
+              </Card>
+            )}
 
-          {/* Settings */}
-          <Card className="p-3" style={{ background: "white" }}>
-            <h4
-              className="text-sm font-bold mb-2"
-              style={{ color: COLORS.soilDark }}
-            >
-              Settings
-            </h4>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Sound Effects</span>
-              <button
-                className="w-14 h-8 rounded-full relative p-2 min-h-[44px] min-w-[44px] motion-safe:transition-colors"
-                style={{
-                  background: soundEnabled ? COLORS.forestGreen : "#D1D5DB",
-                }}
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                role="switch"
-                aria-checked={soundEnabled}
-                aria-label="Toggle sound"
-              >
-                <span
-                  className="absolute top-1 w-6 h-6 bg-white rounded-full shadow motion-safe:transition-transform"
-                  style={{
-                    left: soundEnabled ? "calc(100% - 1.75rem)" : "0.25rem",
-                  }}
-                />
-              </button>
-            </div>
-          </Card>
-
-          <div className="flex flex-col gap-2">
+            {/* How to Play */}
             <Button
               className="w-full"
               variant="outline"
@@ -635,36 +662,29 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
             >
               How to Play
             </Button>
-            <Button
-              className="w-full"
-              variant="outline"
-              style={{
-                borderColor: COLORS.barkBrown,
-                color: COLORS.soilDark,
-              }}
-              onClick={() => setStatsOpen(true)}
-            >
-              Stats
-            </Button>
-            <Button
-              className="w-full"
-              style={{ background: COLORS.forestGreen, color: "white" }}
-              onClick={onClose}
-            >
-              Continue Playing
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              style={{
-                borderColor: COLORS.earthRed,
-                color: COLORS.earthRed,
-              }}
-              onClick={onMainMenu}
-            >
-              Return to Menu
-            </Button>
-          </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Action buttons (always visible below tabs) */}
+        <div className="flex flex-col gap-2 mt-2">
+          <Button
+            className="w-full"
+            style={{ background: COLORS.forestGreen, color: "white" }}
+            onClick={onClose}
+          >
+            Continue Playing
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            style={{
+              borderColor: COLORS.earthRed,
+              color: COLORS.earthRed,
+            }}
+            onClick={onMainMenu}
+          >
+            Return to Menu
+          </Button>
         </div>
 
         <StatsDashboard open={statsOpen} onClose={() => setStatsOpen(false)} />
