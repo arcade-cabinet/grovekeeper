@@ -58,6 +58,8 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@2f77a1ec69fb1d595b06f35ab27e97605bdef703 # v5
+        with:
+          args: -Dproject.settings=.sonarcloud.properties
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
