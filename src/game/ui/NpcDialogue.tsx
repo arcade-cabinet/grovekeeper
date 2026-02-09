@@ -90,8 +90,8 @@ export const NpcDialogue = ({
           }
           break;
         case "open_quests":
-          // TODO: wire to quest panel when quest UI is built
-          showToast("New quest available!", "info");
+          showToast("Check your quest panel!", "info");
+          onClose();
           break;
       }
     },
