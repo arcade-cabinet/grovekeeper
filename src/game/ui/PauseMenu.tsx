@@ -609,6 +609,8 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                   background: soundEnabled ? COLORS.forestGreen : "#D1D5DB",
                 }}
                 onClick={() => setSoundEnabled(!soundEnabled)}
+                role="switch"
+                aria-checked={soundEnabled}
                 aria-label="Toggle sound"
               >
                 <span

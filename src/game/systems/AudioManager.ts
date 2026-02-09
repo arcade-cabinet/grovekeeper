@@ -33,6 +33,11 @@ class AudioManagerImpl {
 
   /** Lazily create AudioContext (must happen after user gesture on mobile). */
   private ensureContext(): AudioContext | null {
+    // Re-create if previously disposed (self-healing singleton)
+    if (this.ctx?.state === "closed") {
+      this.ctx = null;
+      this.masterGain = null;
+    }
     if (this.ctx) return this.ctx;
     try {
       this.ctx = new AudioContext();
