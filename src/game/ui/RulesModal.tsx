@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -6,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { COLORS } from "../constants/config";
 
 interface RulesModalProps {
@@ -15,91 +15,95 @@ interface RulesModalProps {
   onStart: () => void;
 }
 
-export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
-  const rules = [
-    {
-      icon: "🌱",
-      title: "Plant Trees",
-      description:
-        "Select the trowel, stand on an empty soil tile, and tap the action button to plant. Each species needs seeds and some require resources to plant.",
-    },
-    {
-      icon: "💧",
-      title: "Water & Care",
-      description:
-        "Switch to the watering can and tap near growing trees. Watered trees grow faster and produce better yields at harvest.",
-    },
-    {
-      icon: "🪓",
-      title: "Harvest",
-      description:
-        "Mature trees can be harvested with the axe for Timber, Sap, Fruit, or Acorns depending on the species. Pruning first gives bonus yields!",
-    },
-    {
-      icon: "🔋",
-      title: "Stamina",
-      description:
-        "Every tool action costs stamina. When you run low, rest and it will regenerate over time. Plan your actions wisely!",
-    },
-    {
-      icon: "🪵",
-      title: "Resources & Seeds",
-      description:
-        "Harvest trees to collect resources (Timber, Sap, Fruit, Acorns). Some tree species cost resources to plant. Trade surplus resources for ones you need.",
-    },
-    {
-      icon: "⏰",
-      title: "Seasons & Weather",
-      description:
-        "Seasons cycle through Spring, Summer, Autumn, and Winter. Rain boosts growth, drought slows it, and windstorms can damage trees.",
-    },
-    {
-      icon: "📈",
-      title: "Level Up",
-      description:
-        "Earn XP from planting, watering, and harvesting. Level up to unlock new species, tools, grid expansions, and quests.",
-    },
-  ];
+const STEPS = [
+  {
+    icon: "🌱",
+    title: "Plant Trees",
+    description:
+      "Select the trowel, stand on an empty soil tile, and tap the action button to plant. Each species needs seeds — some require resources too.",
+  },
+  {
+    icon: "💧",
+    title: "Water & Care",
+    description:
+      "Switch to the watering can and tap near growing trees. Watered trees grow 30% faster and produce better yields at harvest.",
+  },
+  {
+    icon: "🪓",
+    title: "Harvest",
+    description:
+      "Mature trees can be harvested with the axe for Timber, Sap, Fruit, or Acorns depending on the species. Pruning first gives 1.5x yield!",
+  },
+  {
+    icon: "🔋",
+    title: "Stamina",
+    description:
+      "Every tool action costs stamina. When you run low, rest and it regenerates over time. Plan your actions wisely!",
+  },
+  {
+    icon: "🪵",
+    title: "Resources & Seeds",
+    description:
+      "Harvest trees to collect resources. Some species cost resources to plant. Trade surplus at the seasonal market for what you need.",
+  },
+  {
+    icon: "⏰",
+    title: "Seasons & Weather",
+    description:
+      "Spring boosts growth, winter halts it. Rain helps, drought hurts, windstorms can damage young trees. Evergreens grow in winter!",
+  },
+  {
+    icon: "📈",
+    title: "Level Up & Explore",
+    description:
+      "Earn XP from everything you do. Level up to unlock new species, tools, grid expansions, and new zones to explore.",
+  },
+  {
+    icon: "👆",
+    title: "Controls",
+    description:
+      "Tap to walk anywhere. Use the joystick (mobile) or WASD (desktop) to move. Tap objects to interact. The action button uses your current tool.",
+  },
+];
 
-  const controls = [
-    {
-      icon: "👆",
-      title: "Tap to Move",
-      description:
-        "Tap any tile on the ground to walk there. Your farmer will pathfind around obstacles automatically.",
-    },
-    {
-      icon: "👋",
-      title: "Drag to Move",
-      description:
-        "On mobile, drag anywhere on the canvas to move your farmer. On desktop, use WASD keys.",
-    },
-    {
-      icon: "🎯",
-      title: "Action Button",
-      description:
-        "The big button at the bottom-right uses your current tool on the tile you're standing on.",
-    },
-    {
-      icon: "🔧",
-      title: "Switch Tools",
-      description:
-        "Tap the tools button in the top bar or use the tool belt on the right to switch between tools.",
-    },
-  ];
+export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
+  const [step, setStep] = useState(0);
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setStep(0);
+      onClose();
+    }
+  };
+
+  const handleNext = () => {
+    if (step < STEPS.length - 1) {
+      setStep(step + 1);
+    } else {
+      setStep(0);
+      onStart();
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 0) setStep(step - 1);
+  };
+
+  const current = STEPS[step];
+  const isLast = step === STEPS.length - 1;
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] p-0 gap-0 rounded-2xl overflow-hidden"
+        className="max-w-sm w-[calc(100%-2rem)] p-0 gap-0 rounded-2xl overflow-hidden"
         style={{
           background: `linear-gradient(180deg, #faf9f6 0%, ${COLORS.skyMist} 100%)`,
           border: `3px solid ${COLORS.forestGreen}40`,
         }}
       >
-        <DialogHeader className="p-4 pb-2 text-center">
+        <DialogHeader className="p-5 pb-3 text-center">
           <DialogTitle
-            className="text-2xl font-bold flex items-center justify-center gap-2"
+            className="text-xl font-bold flex items-center justify-center gap-2"
             style={{ color: COLORS.forestGreen }}
           >
             <span>🌲</span>
@@ -107,113 +111,99 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
             <span>🌲</span>
           </DialogTitle>
           <DialogDescription
-            className="text-sm"
+            className="text-xs"
             style={{ color: COLORS.barkBrown }}
           >
-            Welcome to Grove Keeper! Here's how to grow your forest.
+            Step {step + 1} of {STEPS.length}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-4 max-h-[55vh]">
-          {/* Game Rules */}
-          <div className="space-y-3 pb-2">
-            <h3
-              className="text-sm font-semibold uppercase tracking-wider"
-              style={{ color: COLORS.forestGreen }}
-            >
-              Game Rules
-            </h3>
-            {rules.map((rule, index) => (
-              <div
-                key={index}
-                className="flex gap-3 p-3 rounded-xl"
+        {/* Progress dots */}
+        <div className="flex justify-center gap-1.5 px-5 pb-3">
+          {STEPS.map((s, i) => {
+            let bg = `${COLORS.forestGreen}20`;
+            if (i === step) bg = COLORS.forestGreen;
+            else if (i < step) bg = `${COLORS.forestGreen}60`;
+            return (
+              <button
+                key={s.title}
+                className="w-2 h-2 rounded-full transition-all"
                 style={{
-                  background: "rgba(255,255,255,0.7)",
-                  border: `1px solid ${COLORS.forestGreen}20`,
+                  background: bg,
+                  transform: i === step ? "scale(1.3)" : "scale(1)",
                 }}
-              >
-                <span className="text-2xl flex-shrink-0">{rule.icon}</span>
-                <div>
-                  <h4
-                    className="font-semibold text-sm"
-                    style={{ color: COLORS.soilDark }}
-                  >
-                    {rule.title}
-                  </h4>
-                  <p
-                    className="text-xs leading-relaxed"
-                    style={{ color: COLORS.barkBrown }}
-                  >
-                    {rule.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+                onClick={() => setStep(i)}
+                aria-label={`Go to step ${i + 1}`}
+              />
+            );
+          })}
+        </div>
 
-          {/* Controls */}
+        {/* Current step content */}
+        <div className="px-5 pb-4">
           <div
-            className="space-y-3 py-3 border-t"
-            style={{ borderColor: `${COLORS.forestGreen}20` }}
-          >
-            <h3
-              className="text-sm font-semibold uppercase tracking-wider"
-              style={{ color: COLORS.forestGreen }}
-            >
-              Controls
-            </h3>
-            {controls.map((control, index) => (
-              <div
-                key={index}
-                className="flex gap-3 p-3 rounded-xl"
-                style={{
-                  background: "rgba(255,255,255,0.7)",
-                  border: `1px solid ${COLORS.forestGreen}20`,
-                }}
-              >
-                <span className="text-2xl flex-shrink-0">{control.icon}</span>
-                <div>
-                  <h4
-                    className="font-semibold text-sm"
-                    style={{ color: COLORS.soilDark }}
-                  >
-                    {control.title}
-                  </h4>
-                  <p
-                    className="text-xs leading-relaxed"
-                    style={{ color: COLORS.barkBrown }}
-                  >
-                    {control.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        {/* Action buttons */}
-        <div className="p-4 pt-2 flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 h-11 rounded-xl font-semibold"
+            className="flex flex-col items-center gap-3 p-5 rounded-xl text-center"
             style={{
-              borderColor: COLORS.forestGreen,
-              borderWidth: 2,
-              color: COLORS.forestGreen,
+              background: "rgba(255,255,255,0.7)",
+              border: `1px solid ${COLORS.forestGreen}20`,
             }}
-            onClick={onClose}
           >
-            Maybe Later
-          </Button>
+            <span className="text-5xl">{current.icon}</span>
+            <h4
+              className="font-bold text-lg"
+              style={{ color: COLORS.soilDark }}
+            >
+              {current.title}
+            </h4>
+            <p
+              className="text-sm leading-relaxed"
+              style={{ color: COLORS.barkBrown }}
+            >
+              {current.description}
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation buttons */}
+        <div className="p-4 pt-0 flex gap-2">
+          {step > 0 ? (
+            <Button
+              variant="outline"
+              className="flex-1 h-11 rounded-xl font-semibold"
+              style={{
+                borderColor: COLORS.forestGreen,
+                borderWidth: 2,
+                color: COLORS.forestGreen,
+              }}
+              onClick={handleBack}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="flex-1 h-11 rounded-xl font-semibold"
+              style={{
+                borderColor: `${COLORS.barkBrown}80`,
+                color: COLORS.barkBrown,
+              }}
+              onClick={() => {
+                setStep(0);
+                onClose();
+              }}
+            >
+              Skip
+            </Button>
+          )}
           <Button
             className="flex-1 h-11 rounded-xl font-semibold"
             style={{
               background: `linear-gradient(135deg, ${COLORS.forestGreen} 0%, ${COLORS.forestGreen}dd 100%)`,
               color: "white",
             }}
-            onClick={onStart}
+            onClick={handleNext}
           >
-            Let's Grow!
+            {isLast ? "Let's Grow!" : "Next"}
           </Button>
         </div>
       </DialogContent>
