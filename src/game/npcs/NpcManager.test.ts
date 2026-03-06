@@ -37,9 +37,9 @@ describe("NpcManager", () => {
   });
 
   describe("getAllNpcTemplates", () => {
-    it("returns all 4 NPC templates", () => {
+    it("returns all 10 NPC templates", () => {
       const all = getAllNpcTemplates();
-      expect(all.length).toBe(4);
+      expect(all.length).toBe(10);
     });
   });
 

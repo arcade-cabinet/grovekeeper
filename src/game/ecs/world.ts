@@ -1,4 +1,5 @@
 import { World } from "miniplex";
+import type { NpcFunction } from "../npcs/types";
 
 // Component types
 export interface Position {
@@ -76,7 +77,7 @@ export interface ScarecrowComponent {
 
 export interface NpcComponent {
   templateId: string;
-  function: "trading" | "quests" | "tips" | "seeds";
+  function: NpcFunction;
   interactable: boolean;
   requiredLevel: number;
 }

@@ -172,6 +172,14 @@
         { "propId": "wild-flowers", "localX": 7, "localZ": 1 },
         { "propId": "boulder", "localX": 0, "localZ": 7 }
       ],
+      "npcs": [
+        {
+          "templateId": "willow",
+          "localX": 5,
+          "localZ": 1,
+          "facing": "south"
+        }
+      ],
       "plantable": true,
       "connections": [
         {
@@ -208,6 +216,20 @@
         { "speciesId": "silver-birch", "weight": 2 }
       ],
       "wildTreeDensity": 0.25,
+      "npcs": [
+        {
+          "templateId": "bramble",
+          "localX": 6,
+          "localZ": 4,
+          "facing": "south"
+        },
+        {
+          "templateId": "ember",
+          "localX": 10,
+          "localZ": 7,
+          "facing": "west"
+        }
+      ],
       "plantable": false,
       "connections": [
         {
@@ -299,7 +321,13 @@
       ],
       "npcs": [
         { "templateId": "hazel", "localX": 5, "localZ": 2, "facing": "south" },
-        { "templateId": "blossom", "localX": 2, "localZ": 5, "facing": "east" }
+        { "templateId": "blossom", "localX": 2, "localZ": 5, "facing": "east" },
+        {
+          "templateId": "oakley",
+          "localX": 7,
+          "localZ": 5,
+          "facing": "west"
+        }
       ],
       "plantable": false,
       "connections": [
@@ -378,6 +406,14 @@
         { "propId": "stump", "localX": 8, "localZ": 1 },
         { "propId": "stump", "localX": 1, "localZ": 8 }
       ],
+      "npcs": [
+        {
+          "templateId": "thorn",
+          "localX": 5,
+          "localZ": 5,
+          "facing": "north"
+        }
+      ],
       "wildTrees": [
         { "speciesId": "redwood", "weight": 3 },
         { "speciesId": "ironbark", "weight": 3 },
@@ -413,6 +449,14 @@
         { "propId": "mushroom-cluster", "localX": 5, "localZ": 3 },
         { "propId": "campfire", "localX": 3, "localZ": 4 },
         { "propId": "wild-flowers", "localX": 0, "localZ": 5 }
+      ],
+      "npcs": [
+        {
+          "templateId": "sage",
+          "localX": 4,
+          "localZ": 1,
+          "facing": "south"
+        }
       ],
       "plantable": true,
       "connections": [

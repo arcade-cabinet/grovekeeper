@@ -39,6 +39,12 @@ const NPC_MODEL_MAP: Record<string, string> = {
   hazel: "trader.glb",
   "botanist-fern": "botanist.glb",
   blossom: "merchant.glb",
+  bramble: "ranger.glb",
+  willow: "herbalist.glb",
+  oakley: "carpenter.glb",
+  thorn: "ranger.glb",
+  sage: "mage.glb",
+  ember: "alchemist.glb",
 };
 
 interface NpcMeshEntry {
@@ -205,6 +211,13 @@ export class NpcMeshManager {
             mesh.scaling.setAll(NPC_MODEL_SCALE * template.appearance.scale);
             mesh.isPickable = true;
             mesh.name = `npc_${entity.id}`;
+
+            // .glb imports set rotationQuaternion which overrides .rotation (Euler).
+            // Null it so our idle sway animation can use .rotation.x/z.
+            mesh.rotationQuaternion = null;
+            for (const child of mesh.getChildMeshes()) {
+              child.rotationQuaternion = null;
+            }
 
             // Find and start idle animation
             for (const ag of loaded.animations) {
