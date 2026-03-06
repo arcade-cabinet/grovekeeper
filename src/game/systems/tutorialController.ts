@@ -49,6 +49,8 @@ interface StepDef {
   delayBeforeDialogue: number;
 }
 
+const DIALOGUE_OPEN_DELAY = 0.5;
+
 const STEPS: StepDef[] = [
   {
     id: "approach",
@@ -64,7 +66,7 @@ const STEPS: StepDef[] = [
     dialogueId: "tutorial-welcome",
     completionType: "dialogue_close",
     completionValue: null,
-    delayBeforeDialogue: 0.5,
+    delayBeforeDialogue: DIALOGUE_OPEN_DELAY,
   },
   {
     id: "select_trowel",
@@ -91,7 +93,7 @@ const STEPS: StepDef[] = [
     dialogueId: "tutorial-planted",
     completionType: "dialogue_close",
     completionValue: null,
-    delayBeforeDialogue: 0.5,
+    delayBeforeDialogue: DIALOGUE_OPEN_DELAY,
   },
   {
     id: "select_water",
@@ -121,7 +123,7 @@ const STEPS: StepDef[] = [
     dialogueId: "tutorial-complete",
     completionType: "dialogue_close",
     completionValue: null,
-    delayBeforeDialogue: 0.5,
+    delayBeforeDialogue: DIALOGUE_OPEN_DELAY,
   },
 ];
 
@@ -253,6 +255,9 @@ export class TutorialController {
   }
 
   dispose(): void {
+    if (this.active) {
+      this.callbacks?.clearNpcOverride();
+    }
     this.active = false;
     this.callbacks = null;
     this.waitingForDialogueClose = false;

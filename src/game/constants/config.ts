@@ -76,4 +76,5 @@ export const DROUGHT_PENALTY = 0.5;
 export const MAX_STAGE = 4;
 
 export const PLAYER_SPEED = 3;
+export const NPC_MOVE_SPEED = 1.8;
 export const INTERACTION_RADIUS = 1.5;

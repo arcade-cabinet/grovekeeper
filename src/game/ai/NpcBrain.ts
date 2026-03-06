@@ -383,11 +383,10 @@ export class NpcBrain {
       const chebyshev = Math.max(dx, dz);
 
       if (chebyshev < ADJACENT_RANGE) {
-      if (chebyshev < ADJACENT_RANGE) {
-        const callback = this.tutorialOverride.onArrival;
+        const cb = this.tutorialOverride.onArrival;
         this.tutorialOverride = null;
         this.currentBehavior = "idle";
-        callback?.();
+        cb?.();
       }
     }
 

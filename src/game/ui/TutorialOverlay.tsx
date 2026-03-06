@@ -20,7 +20,10 @@ export const TutorialOverlay = ({ targetId, label }: Props) => {
 
     const track = () => {
       // Sanitize to alphanumeric + hyphens only (prevents selector injection)
-      const safeId = targetId.split("").filter((c) => /[a-zA-Z0-9-]/.test(c)).join("");
+      const safeId = targetId
+        .split("")
+        .filter((c) => /[a-zA-Z0-9-]/.test(c))
+        .join("");
       const el = document.querySelector(`[data-tutorial-id="${safeId}"]`);
       if (el) {
         setRect(el.getBoundingClientRect());
@@ -40,13 +43,13 @@ export const TutorialOverlay = ({ targetId, label }: Props) => {
   if (!targetId || !rect) return null;
 
   // Determine if label should go above or below the ring
-  const viewportHeight = window.innerHeight;
+  const viewportHeight = globalThis.innerHeight;
   const spaceBelow = viewportHeight - rect.bottom;
   const labelAbove = spaceBelow < 80;
 
   // Clamp label horizontal position to stay within viewport
   const labelCenterX = rect.left + rect.width / 2;
-  const viewportWidth = window.innerWidth;
+  const viewportWidth = globalThis.innerWidth;
 
   return (
     <div
@@ -59,35 +62,16 @@ export const TutorialOverlay = ({ targetId, label }: Props) => {
     >
       <style>
         {`
-          `@keyframes` tutorialPulse {
+          @keyframes tutorialPulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.7; transform: scale(1.05); }
           }
-          .tutorial-overlay-ring {
-            animation: tutorialPulse 600ms ease-in-out infinite;
-          }
-          `@media` (prefers-reduced-motion: reduce) {
+          @media (prefers-reduced-motion: reduce) {
             .tutorial-overlay-ring {
               animation: none !important;
             }
           }
         `}
-      </style>
-
-       <div
-         className="tutorial-overlay-ring"
-         style={{
-           position: "absolute",
-           left: rect.left - 6,
-           top: rect.top - 6,
-           width: rect.width + 12,
-           height: rect.height + 12,
-           borderRadius: 12,
-           border: `3px solid ${COLORS.autumnGold}`,
-           boxShadow: `0 0 12px ${COLORS.autumnGold}80, inset 0 0 12px ${COLORS.autumnGold}40`,
-           pointerEvents: "none",
-         }}
-       />
       </style>
 
       {/* Pulsing gold ring */}

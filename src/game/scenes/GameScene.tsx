@@ -1064,10 +1064,10 @@ export const GameScene = () => {
             if (def) npcQuestStates.set(def.npcId, "in_progress");
           }
 
-          // Mark NPCs that have available quest chains (overrides in_progress)
+          // Mark NPCs that have available quest chains (takes priority over in_progress)
           for (const chainId of chainState.availableChainIds) {
             const def = getChainDef(chainId);
-            if (def && !npcQuestStates.has(def.npcId)) {
+            if (def) {
               npcQuestStates.set(def.npcId, "available");
             }
           }
@@ -1103,9 +1103,10 @@ export const GameScene = () => {
         const elderRowan = [...npcsQuery].find(
           (e) => e.npc?.templateId === "elder-rowan",
         );
-        const elderBrain = elderRowan
-          ? npcBrainsRef.current.get(elderRowan.id)
-          : null;
+
+        // Resolve brain lazily — brains are created on first game loop frame
+        const getElderBrain = () =>
+          elderRowan ? npcBrainsRef.current.get(elderRowan.id) : null;
 
         tutorialRef.current.start({
           openDialogue: (dialogueId: string) => {
@@ -1126,21 +1127,20 @@ export const GameScene = () => {
             _targetZ: number,
             onArrival: () => void,
           ) => {
-            if (elderBrain && playerMeshRef.current.mesh) {
+            const brain = getElderBrain();
+            if (brain && playerMeshRef.current.mesh) {
               const pmesh = playerMeshRef.current.mesh;
-              // Walk to a tile adjacent to the player
-              elderBrain.setTutorialTarget(
+              brain.setTutorialTarget(
                 Math.round(pmesh.position.x) + 1,
                 Math.round(pmesh.position.z),
                 onArrival,
               );
             } else {
-              // No NPC or mesh — skip approach step
               onArrival();
             }
           },
           clearNpcOverride: () => {
-            elderBrain?.clearTutorialTarget();
+            getElderBrain()?.clearTutorialTarget();
           },
         });
       }

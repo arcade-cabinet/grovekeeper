@@ -9,8 +9,7 @@ import {
   type WalkabilityGrid,
 } from "./pathfinding";
 
-/** NPC move speed in tiles/sec (player is 3). */
-const NPC_MOVE_SPEED = 1.8;
+import { NPC_MOVE_SPEED } from "../constants/config";
 
 /** Active path states keyed by NPC entity ID. */
 const activePaths = new Map<string, PathFollowState>();
