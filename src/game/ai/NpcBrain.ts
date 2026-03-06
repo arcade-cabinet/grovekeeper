@@ -68,7 +68,7 @@ class IdleEvaluator extends GoalEvaluator<NpcEntity> {
   calculateDesirability(): number {
     return this.characterBias * 0.1;
   }
-  setGoal(): void {}
+  setGoal(): void { /* Unused — we dispatch behaviors manually, not via Yuka goals */ }
 }
 
 class WanderEvaluator extends GoalEvaluator<NpcEntity> {
@@ -76,7 +76,7 @@ class WanderEvaluator extends GoalEvaluator<NpcEntity> {
     if (entity.wanderTimer > 0) return 0;
     return this.characterBias * 0.15;
   }
-  setGoal(): void {}
+  setGoal(): void { /* Unused — we dispatch behaviors manually, not via Yuka goals */ }
 }
 
 class ApproachPlayerEvaluator extends GoalEvaluator<NpcEntity> {
@@ -91,7 +91,7 @@ class ApproachPlayerEvaluator extends GoalEvaluator<NpcEntity> {
     // Within notice range but beyond approach range — mild interest
     return this.characterBias * 0.3;
   }
-  setGoal(): void {}
+  setGoal(): void { /* Unused — we dispatch behaviors manually, not via Yuka goals */ }
 }
 
 class ReturnHomeEvaluator extends GoalEvaluator<NpcEntity> {
@@ -107,7 +107,7 @@ class ReturnHomeEvaluator extends GoalEvaluator<NpcEntity> {
     if (homeDist <= 2) return 0;
     return this.characterBias * 0.6;
   }
-  setGoal(): void {}
+  setGoal(): void { /* Unused — we dispatch behaviors manually, not via Yuka goals */ }
 }
 
 // ──────────────────────────────────────────────
@@ -129,12 +129,12 @@ export class NpcBrain {
   readonly entityId: string;
   readonly templateId: string;
 
-  private entity: NpcEntity;
-  private taggedEvaluators: TaggedEvaluator[];
+  private readonly entity: NpcEntity;
+  private readonly taggedEvaluators: TaggedEvaluator[];
 
   private currentBehavior: NpcBehavior = "idle";
-  private homeX: number;
-  private homeZ: number;
+  private readonly homeX: number;
+  private readonly homeZ: number;
 
   /** Tutorial override — when set, normal AI is suppressed. */
   private tutorialOverride: {

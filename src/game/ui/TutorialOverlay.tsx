@@ -20,7 +20,7 @@ export const TutorialOverlay = ({ targetId, label }: TutorialOverlayProps) => {
 
     const track = () => {
       // Sanitize to alphanumeric + hyphens only (prevents selector injection)
-      const safeId = targetId.replace(/[^a-zA-Z0-9-]/g, "");
+      const safeId = targetId.split("").filter((c) => /[a-zA-Z0-9-]/.test(c)).join("");
       const el = document.querySelector(`[data-tutorial-id="${safeId}"]`);
       if (el) {
         setRect(el.getBoundingClientRect());
