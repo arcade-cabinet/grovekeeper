@@ -30,7 +30,7 @@ import {
   world,
 } from "../ecs/world";
 import { isPlayerAdjacent } from "../npcs/NpcManager";
-import { getAllChainDefs } from "../quests/questChainEngine";
+import { getChainDef } from "../quests/questChainEngine";
 // Scene managers
 import {
   CameraManager,
@@ -72,7 +72,7 @@ import {
   updateNpcMovement,
 } from "../systems/npcMovement";
 import { TutorialController } from "../systems/tutorialController";
-import { buildWalkabilityGrid } from "../systems/pathfinding";
+import { buildWalkabilityGrid, type WalkabilityGrid } from "../systems/pathfinding";
 import { hapticLight, hapticMedium, hapticSuccess } from "../systems/platform";
 import {
   deserializeGrove,
@@ -723,6 +723,8 @@ export const GameScene = () => {
       let lastTime = performance.now();
       let lastSeasonUpdate: Season | null = null;
       let lastDayUpdate = useGameStore.getState().currentDay;
+      let cachedWalkGrid: WalkabilityGrid | null = null;
+      let walkGridAge = Infinity; // Force rebuild on first frame
 
       sm.startRenderLoop(() => {
         const now = performance.now();
@@ -950,7 +952,14 @@ export const GameScene = () => {
         // NPC AI brains: evaluate behavior + pathfind movement
         const npcBrains = npcBrainsRef.current;
         const bounds = worldManagerRef.current.getWorldBounds();
-        const walkGrid = buildWalkabilityGrid(gridCellsQuery, bounds);
+
+        // Rebuild walkability grid at most every 0.5s (rarely changes)
+        walkGridAge += dt;
+        if (!cachedWalkGrid || walkGridAge > 0.5) {
+          cachedWalkGrid = buildWalkabilityGrid(gridCellsQuery, bounds);
+          walkGridAge = 0;
+        }
+        const walkGrid = cachedWalkGrid;
 
         for (const npcEntity of npcsQuery) {
           if (!npcEntity.npc || !npcEntity.position) continue;
@@ -1051,13 +1060,13 @@ export const GameScene = () => {
 
           // Mark NPCs that have active (in-progress) quest chains
           for (const progress of Object.values(chainState.activeChains)) {
-            const def = getAllChainDefs().find((c) => c.id === progress.chainId);
+            const def = getChainDef(progress.chainId);
             if (def) npcQuestStates.set(def.npcId, "in_progress");
           }
 
           // Mark NPCs that have available quest chains (overrides in_progress)
           for (const chainId of chainState.availableChainIds) {
-            const def = getAllChainDefs().find((c) => c.id === chainId);
+            const def = getChainDef(chainId);
             if (def && !npcQuestStates.has(def.npcId)) {
               npcQuestStates.set(def.npcId, "available");
             }
