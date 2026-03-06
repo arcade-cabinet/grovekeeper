@@ -58,7 +58,8 @@ export interface DialogueAction {
     | "open_quests"
     | "open_seeds"
     | "give_resource"
-    | "give_seed";
+    | "give_seed"
+    | "skip_tutorial";
   amount?: number;
   resource?: ResourceType;
   speciesId?: string;

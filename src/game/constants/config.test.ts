@@ -5,6 +5,7 @@ import {
   DROUGHT_PENALTY,
   INTERACTION_RADIUS,
   MAX_STAGE,
+  NPC_MOVE_SPEED,
   PLAYER_SPEED,
   SEASON_GROWTH_MULTIPLIERS,
   STAGE_NAMES,
@@ -89,6 +90,11 @@ describe("config constants", () => {
 
     it("PLAYER_SPEED is positive", () => {
       expect(PLAYER_SPEED).toBeGreaterThan(0);
+    });
+
+    it("NPC_MOVE_SPEED is positive and slower than player", () => {
+      expect(NPC_MOVE_SPEED).toBeGreaterThan(0);
+      expect(NPC_MOVE_SPEED).toBeLessThan(PLAYER_SPEED);
     });
 
     it("INTERACTION_RADIUS is positive", () => {

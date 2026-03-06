@@ -11,7 +11,6 @@ import { generateDailyQuests } from "./systems/quests";
 import { GameErrorBoundary } from "./ui/ErrorBoundary";
 import { MainMenu } from "./ui/MainMenu";
 import { NewGameModal } from "./ui/NewGameModal";
-import { RulesModal } from "./ui/RulesModal";
 
 const GameScene = lazy(() =>
   import("./scenes/GameScene")
@@ -36,8 +35,6 @@ export const Game = () => {
   const {
     screen,
     setScreen,
-    hasSeenRules,
-    setHasSeenRules,
     currentSeason,
     level,
     completedGoalIds,
@@ -50,7 +47,6 @@ export const Game = () => {
 
   const [dbLoading, setDbLoading] = useState(true);
   const [showNewGame, setShowNewGame] = useState(false);
-  const [showRules, setShowRules] = useState(false);
   const [, setPlatformInitialized] = useState(false);
 
   // Initialize platform on mount
@@ -106,13 +102,9 @@ export const Game = () => {
     setLastQuestRefresh,
   ]);
 
-  // Show rules when starting game for first time
+  // Go straight to playing — tutorial happens in-game via Elder Rowan NPC
   const handleStartGame = () => {
-    if (!hasSeenRules) {
-      setShowRules(true);
-    } else {
-      setScreen("playing");
-    }
+    setScreen("playing");
   };
 
   // Handle "New Grove" button — show difficulty selection
@@ -150,12 +142,7 @@ export const Game = () => {
         }
 
         setShowNewGame(false);
-        // Inline handleStartGame logic to avoid stale closure over hasSeenRules
-        if (!useGameStore.getState().hasSeenRules) {
-          setShowRules(true);
-        } else {
-          setScreen("playing");
-        }
+        setScreen("playing");
       } catch (error) {
         console.error("Failed to create new game:", error);
         setShowNewGame(false);
@@ -164,15 +151,6 @@ export const Game = () => {
     [hydrateFromDb, setScreen],
   );
 
-  const handleRulesClose = () => {
-    setShowRules(false);
-  };
-
-  const handleRulesStart = () => {
-    setHasSeenRules(true);
-    setShowRules(false);
-    setScreen("playing");
-  };
 
   // Loading state while database initializes
   if (dbLoading) {
@@ -213,13 +191,6 @@ export const Game = () => {
           </Suspense>
         </GameErrorBoundary>
       )}
-
-      {/* Rules modal */}
-      <RulesModal
-        open={showRules}
-        onClose={handleRulesClose}
-        onStart={handleRulesStart}
-      />
 
       {/* New game difficulty selection */}
       <NewGameModal

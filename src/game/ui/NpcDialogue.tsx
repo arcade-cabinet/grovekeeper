@@ -27,6 +27,10 @@ interface NpcDialogueProps {
   npcTemplateId: string | null;
   onOpenTrade?: () => void;
   onOpenSeeds?: () => void;
+  /** Override the starting dialogue node (used by tutorial). */
+  overrideDialogueId?: string;
+  /** Called when a dialogue choice triggers an action (for tutorial events). */
+  onDialogueAction?: (actionType: string) => void;
 }
 
 export const NpcDialogue = ({
@@ -35,22 +39,32 @@ export const NpcDialogue = ({
   npcTemplateId,
   onOpenTrade,
   onOpenSeeds,
+  overrideDialogueId,
+  onDialogueAction,
 }: NpcDialogueProps) => {
   const [currentNode, setCurrentNode] = useState<DialogueNode | null>(null);
   const template = npcTemplateId ? getNpcTemplate(npcTemplateId) : null;
 
-  // Reset to greeting when opened with a new NPC
+  // Reset to greeting (or tutorial override) when opened
   useEffect(() => {
-    if (open && template) {
-      const greetingNode = getDialogueNode(template.dialogue.greeting);
-      setCurrentNode(greetingNode ?? null);
-    } else if (!open) {
+    if (open) {
+      if (overrideDialogueId) {
+        const overrideNode = getDialogueNode(overrideDialogueId);
+        setCurrentNode(overrideNode ?? null);
+      } else if (template) {
+        const greetingNode = getDialogueNode(template.dialogue.greeting);
+        setCurrentNode(greetingNode ?? null);
+      }
+    } else {
       setCurrentNode(null);
     }
-  }, [open, template]);
+  }, [open, template, overrideDialogueId]);
 
   const executeAction = useCallback(
     (action: DialogueAction) => {
+      // Notify tutorial controller of any action
+      onDialogueAction?.(action.type);
+
       const store = useGameStore.getState();
       switch (action.type) {
         case "xp":
@@ -93,9 +107,12 @@ export const NpcDialogue = ({
           showToast("Check your quest panel!", "info");
           onClose();
           break;
+        case "skip_tutorial":
+          // Handled by onDialogueAction callback
+          break;
       }
     },
-    [onClose, onOpenTrade, onOpenSeeds],
+    [onClose, onOpenTrade, onOpenSeeds, onDialogueAction],
   );
 
   const handleChoice = useCallback(

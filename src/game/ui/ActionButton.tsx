@@ -89,6 +89,7 @@ export const ActionButton = ({ selectedTool, tileState, onAction }: Props) => {
   return (
     <button
       type="button"
+      data-tutorial-id="action-button"
       className="flex items-center justify-center rounded-xl font-bold text-sm tracking-wide motion-safe:active:scale-95 motion-safe:transition-all touch-manipulation select-none"
       style={{
         minWidth: 72,

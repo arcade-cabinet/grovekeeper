@@ -30,6 +30,7 @@ import {
   world,
 } from "../ecs/world";
 import { isPlayerAdjacent } from "../npcs/NpcManager";
+import { getChainDef } from "../quests/questChainEngine";
 // Scene managers
 import {
   CameraManager,
@@ -43,6 +44,7 @@ import {
   SkyManager,
   TreeMeshManager,
 } from "../scene";
+import type { NpcQuestMarkerType } from "../scene";
 import type { SerializedTree } from "../stores/gameStore";
 import { useGameStore } from "../stores/gameStore";
 import {
@@ -62,6 +64,15 @@ import { InputManager } from "../systems/InputManager";
 import { movementSystem, setMovementBounds } from "../systems/movement";
 import { calculateAllOfflineGrowth } from "../systems/offlineGrowth";
 import { audioManager } from "../systems/AudioManager";
+import { NpcBrain } from "../ai/NpcBrain";
+import type { NpcBrainContext } from "../ai/NpcBrain";
+import {
+  cancelAllNpcMovements,
+  isNpcMoving,
+  updateNpcMovement,
+} from "../systems/npcMovement";
+import { TutorialController } from "../systems/tutorialController";
+import { buildWalkabilityGrid, type WalkabilityGrid } from "../systems/pathfinding";
 import { hapticLight, hapticMedium, hapticSuccess } from "../systems/platform";
 import {
   deserializeGrove,
@@ -137,6 +148,8 @@ export const GameScene = () => {
   const inputManagerRef = useRef(new InputManager());
   const playerGovernorRef = useRef(new PlayerGovernor());
   const selectionRingRef = useRef(new SelectionRingManager());
+  const npcBrainsRef = useRef(new Map<string, NpcBrain>());
+  const tutorialRef = useRef(new TutorialController());
   const [autopilot, setAutopilot] = useState(
     typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).has("autopilot"),
@@ -159,6 +172,9 @@ export const GameScene = () => {
     null,
   );
   const [npcDialogueOpen, setNpcDialogueOpen] = useState(false);
+  const [tutorialHighlightId, setTutorialHighlightId] = useState<string | null>(null);
+  const [tutorialHighlightLabel, setTutorialHighlightLabel] = useState<string | null>(null);
+  const [tutorialDialogueId, setTutorialDialogueId] = useState<string | null>(null);
 
   // Radial action menu state
   const [radialTarget, setRadialTarget] = useState<RadialTarget | null>(null);
@@ -707,6 +723,8 @@ export const GameScene = () => {
       let lastTime = performance.now();
       let lastSeasonUpdate: Season | null = null;
       let lastDayUpdate = useGameStore.getState().currentDay;
+      let cachedWalkGrid: WalkabilityGrid | null = null;
+      let walkGridAge = Infinity; // Force rebuild on first frame
 
       sm.startRenderLoop(() => {
         const now = performance.now();
@@ -925,11 +943,80 @@ export const GameScene = () => {
         sky.update(scene, currentTime.sunIntensity);
         playerMesh.update();
         npcMesh.update(scene);
-        cam.trackTarget(
-          playerMesh.mesh?.position.x ?? 0,
-          playerMesh.mesh?.position.z ?? 0,
-          dt,
-        );
+
+        // NPC animation: idle sway + face player + quest marker bob
+        const px = playerMesh.mesh?.position.x ?? 0;
+        const pz = playerMesh.mesh?.position.z ?? 0;
+        npcMesh.animate(px, pz, dt);
+
+        // NPC AI brains: evaluate behavior + pathfind movement
+        const npcBrains = npcBrainsRef.current;
+        const bounds = worldManagerRef.current.getWorldBounds();
+
+        // Rebuild walkability grid at most every 0.5s (rarely changes)
+        walkGridAge += dt;
+        if (!cachedWalkGrid || walkGridAge > 0.5) {
+          cachedWalkGrid = buildWalkabilityGrid(gridCellsQuery, bounds);
+          walkGridAge = 0;
+        }
+        const walkGrid = cachedWalkGrid;
+
+        for (const npcEntity of npcsQuery) {
+          if (!npcEntity.npc || !npcEntity.position) continue;
+
+          // Create brain if not exists
+          if (!npcBrains.has(npcEntity.id)) {
+            npcBrains.set(
+              npcEntity.id,
+              new NpcBrain(
+                npcEntity.id,
+                npcEntity.npc.templateId,
+                npcEntity.position.x,
+                npcEntity.position.z,
+              ),
+            );
+          }
+
+          const brain = npcBrains.get(npcEntity.id);
+          if (!brain) continue;
+          const npcX = npcEntity.position.x;
+          const npcZ = npcEntity.position.z;
+          const distToPlayer = Math.max(
+            Math.abs(px - npcX),
+            Math.abs(pz - npcZ),
+          );
+
+          const ctx: NpcBrainContext = {
+            grid: walkGrid,
+            playerX: px,
+            playerZ: pz,
+            npcX,
+            npcZ,
+            homeX: brain.homePosition.x,
+            homeZ: brain.homePosition.z,
+            distToPlayer,
+          };
+
+          brain.update(dt, ctx);
+
+          // Apply NPC movement from pathfinding
+          if (isNpcMoving(npcEntity.id)) {
+            const result = updateNpcMovement(npcEntity.id, npcX, npcZ, dt);
+            npcEntity.position.x = result.x;
+            npcEntity.position.z = result.z;
+          }
+        }
+
+        // Tutorial controller update
+        const tutorial = tutorialRef.current;
+        if (tutorial.isActive()) {
+          tutorial.update(dt);
+          const hl = tutorial.getHighlight();
+          setTutorialHighlightId(hl?.targetId ?? null);
+          setTutorialHighlightLabel(hl?.label ?? null);
+        }
+
+        cam.trackTarget(px, pz, dt);
 
         const currentIsNight = isNightTime(currentTime);
         treeMesh.update(scene, dt, currentTime.season, currentIsNight);
@@ -965,6 +1052,27 @@ export const GameScene = () => {
           }
 
           checkAndAwardAchievementsInLoop();
+
+          // Update NPC quest markers based on quest chain state
+          const qStore = useGameStore.getState();
+          const chainState = qStore.questChainState;
+          const npcQuestStates = new Map<string, NpcQuestMarkerType>();
+
+          // Mark NPCs that have active (in-progress) quest chains
+          for (const progress of Object.values(chainState.activeChains)) {
+            const def = getChainDef(progress.chainId);
+            if (def) npcQuestStates.set(def.npcId, "in_progress");
+          }
+
+          // Mark NPCs that have available quest chains (takes priority over in_progress)
+          for (const chainId of chainState.availableChainIds) {
+            const def = getChainDef(chainId);
+            if (def) {
+              npcQuestStates.set(def.npcId, "available");
+            }
+          }
+
+          npcMesh.updateQuestMarkers(npcQuestStates, scene);
         }
 
         // Auto-save every 30s
@@ -989,6 +1097,53 @@ export const GameScene = () => {
       });
 
       setSceneReady(true);
+
+      // Start tutorial if player hasn't seen rules
+      if (!useGameStore.getState().hasSeenRules) {
+        const elderRowan = [...npcsQuery].find(
+          (e) => e.npc?.templateId === "elder-rowan",
+        );
+
+        // Resolve brain lazily — brains are created on first game loop frame
+        const getElderBrain = () =>
+          elderRowan ? npcBrainsRef.current.get(elderRowan.id) : null;
+
+        tutorialRef.current.start({
+          openDialogue: (dialogueId: string) => {
+            setTutorialDialogueId(dialogueId);
+            if (elderRowan) {
+              setNearbyNpcTemplateId(elderRowan.npc?.templateId ?? null);
+            }
+            setNpcDialogueOpen(true);
+          },
+          getSelectedTool: () => useGameStore.getState().selectedTool,
+          setHasSeenRules: (seen: boolean) => {
+            useGameStore.getState().setHasSeenRules(seen);
+            setTutorialHighlightId(null);
+            setTutorialHighlightLabel(null);
+          },
+          startNpcApproach: (
+            _targetX: number,
+            _targetZ: number,
+            onArrival: () => void,
+          ) => {
+            const brain = getElderBrain();
+            if (brain && playerMeshRef.current.mesh) {
+              const pmesh = playerMeshRef.current.mesh;
+              brain.setTutorialTarget(
+                Math.round(pmesh.position.x) + 1,
+                Math.round(pmesh.position.z),
+                onArrival,
+              );
+            } else {
+              onArrival();
+            }
+          },
+          clearNpcOverride: () => {
+            getElderBrain()?.clearTutorialTarget();
+          },
+        });
+      }
     };
 
     initBabylon().catch((err) => {
@@ -999,6 +1154,10 @@ export const GameScene = () => {
       cancelled = true;
       inputManagerRef.current.dispose();
       selectionRingRef.current.dispose();
+      tutorialRef.current.dispose();
+      for (const brain of npcBrainsRef.current.values()) brain.dispose();
+      npcBrainsRef.current.clear();
+      cancelAllNpcMovements();
       audioManager.dispose();
       worldMgr.dispose();
       npcMesh.dispose();
@@ -1050,6 +1209,7 @@ export const GameScene = () => {
     addXp(5);
     incrementTreesWatered();
     useGameStore.getState().advanceQuestObjective("trees_watered", 1);
+    tutorialRef.current.onQuestEvent("trees_watered");
     showParticle("+5 XP");
     audioManager.play("water");
     if (hapticsEnabled) await hapticLight();
@@ -1495,6 +1655,7 @@ export const GameScene = () => {
         useGameStore.getState().trackSpeciesPlanted(selectedSpecies);
         useGameStore.getState().trackSpeciesPlanting(selectedSpecies);
         useGameStore.getState().advanceQuestObjective("trees_planted", 1);
+        tutorialRef.current.onQuestEvent("trees_planted");
         const plantXp = 10 + (species ? (species.difficulty - 1) * 5 : 0);
         addXp(plantXp);
         showParticle(`+${plantXp} XP`);
@@ -1690,7 +1851,19 @@ export const GameScene = () => {
         playerTileInfo={playerTileInfo}
         nearbyNpcTemplateId={nearbyNpcTemplateId}
         npcDialogueOpen={npcDialogueOpen}
-        setNpcDialogueOpen={setNpcDialogueOpen}
+        setNpcDialogueOpen={(open) => {
+          setNpcDialogueOpen(open);
+          if (!open) {
+            tutorialRef.current.onDialogueClosed();
+            setTutorialDialogueId(null);
+          }
+        }}
+        tutorialDialogueId={tutorialDialogueId}
+        onTutorialDialogueAction={(actionType) => {
+          tutorialRef.current.onDialogueAction(actionType);
+        }}
+        tutorialHighlightId={tutorialHighlightId}
+        tutorialHighlightLabel={tutorialHighlightLabel}
         radialActions={radialActions}
         radialScreenPos={radialScreenPos}
         onRadialAction={handleRadialAction}
