@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { COLORS } from "../constants/config";
 
-interface TutorialOverlayProps {
+interface Props {
   /** data-tutorial-id value of the target element */
   targetId: string | null;
   /** Instruction text to show near the highlight */
   label: string | null;
 }
 
-export const TutorialOverlay = ({ targetId, label }: TutorialOverlayProps) => {
+export const TutorialOverlay = ({ targetId, label }: Props) => {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
