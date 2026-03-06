@@ -59,7 +59,7 @@
 3. **Session design:** Satisfying 5-minute play session -- DONE
 4. **Retention hooks:** Quests + achievements + prestige + zone exploration -- DONE
 5. **Visual charm:** Cozy, warm, organic feel -- DONE
-6. **Test coverage:** 1188 tests across 58 files -- DONE (being rebuilt with Jest)
+6. **Test coverage:** 1188 tests across 58 files -- DONE (BabylonJS era; currently 205+ tests rebuilt with Jest)
 
 ## Migration Context
 
