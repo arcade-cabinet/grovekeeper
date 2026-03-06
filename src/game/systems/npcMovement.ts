@@ -64,7 +64,14 @@ export function updateNpcMovement(
     return { x: currentX, z: currentZ, done: true };
   }
 
-  const step = NPC_MOVE_SPEED * dt;
+  const waypoint = state.waypoints[state.currentIndex];
+  if (!waypoint) {
+    activePaths.delete(entityId);
+    return { x: currentX, z: currentZ, done: true };
+  }
+
+  const remaining = Math.hypot(waypoint.x - currentX, waypoint.z - currentZ);
+  const step = Math.min(remaining, NPC_MOVE_SPEED * dt);
   return {
     x: currentX + dir.x * step,
     z: currentZ + dir.z * step,
