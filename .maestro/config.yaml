@@ -1,0 +1,5 @@
+# Default environment variables for Maestro flows
+# Override per-platform: maestro test -e APP_URL=http://localhost:8081 .maestro/
+env:
+  APP_ID: arcade_cabinet.grovekeeper
+  APP_URL: http://localhost:8081

@@ -19,6 +19,9 @@ export default function Root({ children }: PropsWithChildren) {
         */}
         <ScrollViewStyleReset />
 
+        {/* Enable SharedArrayBuffer on hosts without custom header support (e.g. GitHub Pages) */}
+        <script src="/coi-serviceworker.js" />
+
         {/* Add any additional <head> elements that you want globally available on web... */}
       </head>
       <body>{children}</body>

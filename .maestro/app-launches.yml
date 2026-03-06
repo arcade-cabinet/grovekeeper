@@ -1,0 +1,8 @@
+# Smoke test: app launches and renders the home screen
+# Web:    pnpm test:e2e:web
+# Native: pnpm test:e2e
+appId: ${APP_ID}
+url: ${APP_URL}
+---
+- launchApp
+- assertVisible: ".*"
