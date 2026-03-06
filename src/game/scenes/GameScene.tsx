@@ -11,7 +11,7 @@ import { getDb, isDbInitialized } from "@/db/client";
 import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { persistGameStore, saveGroveToDb } from "@/db/queries";
 import { PlayerGovernor } from "../ai/PlayerGovernor";
-import { GRID_SIZE } from "../constants/config";
+import { COLORS, GRID_SIZE } from "../constants/config";
 import { getActiveDifficulty } from "../constants/difficulty";
 import type { ResourceType } from "../constants/resources";
 import { getToolById, TOOLS } from "../constants/tools";
@@ -142,6 +142,7 @@ export const GameScene = () => {
       new URLSearchParams(window.location.search).has("autopilot"),
   );
 
+  const [sceneReady, setSceneReady] = useState(false);
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
   const [toolWheelOpen, setToolWheelOpen] = useState(false);
   const [pauseMenuOpen, setPauseMenuOpen] = useState(false);
@@ -986,6 +987,8 @@ export const GameScene = () => {
         // Tree milestone XP and weather damage
         processTreeUpdatesInLoop(weatherType, gameTimeSec);
       });
+
+      setSceneReady(true);
     };
 
     initBabylon().catch((err) => {
@@ -1630,6 +1633,29 @@ export const GameScene = () => {
         className="absolute inset-0 w-full h-full"
         style={{ touchAction: "none" }}
       />
+      <div
+        className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 transition-opacity duration-500"
+        style={{
+          background: `linear-gradient(180deg, ${COLORS.skyMist} 0%, ${COLORS.leafLight}40 100%)`,
+          opacity: sceneReady ? 0 : 1,
+          pointerEvents: sceneReady ? "none" : "auto",
+        }}
+        onTransitionEnd={(e) => {
+          if (e.propertyName === "opacity" && sceneReady) {
+            (e.currentTarget as HTMLElement).style.display = "none";
+          }
+        }}
+      >
+        <div
+          className="w-8 h-8 border-3 border-t-transparent rounded-full motion-safe:animate-spin motion-reduce:animate-pulse"
+          style={{
+            borderColor: `${COLORS.forestGreen} transparent ${COLORS.forestGreen} ${COLORS.forestGreen}`,
+          }}
+        />
+        <p className="text-sm" style={{ color: COLORS.barkBrown }}>
+          Preparing grove...
+        </p>
+      </div>
       {autopilot && (
         <div
           className="absolute top-12 left-1/2 -translate-x-1/2 z-50 px-3 py-1 rounded-full text-xs font-bold tracking-wider"

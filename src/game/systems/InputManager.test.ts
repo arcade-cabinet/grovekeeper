@@ -109,18 +109,113 @@ describe("InputManager", () => {
       mgr.init(config);
     });
 
-    it("WASD keys set movement vector", () => {
-      // Press 'w' — moves forward (positive Z, away from camera)
+    it("W key moves forward (positive Z)", () => {
       window.dispatchEvent(
         new KeyboardEvent("keydown", { key: "w", bubbles: true }),
       );
-      expect(config.movementRef.current.z).toBeGreaterThan(0);
-
-      // Release 'w'
+      expect(config.movementRef.current).toEqual({ x: 0, z: 1 });
       window.dispatchEvent(
         new KeyboardEvent("keyup", { key: "w", bubbles: true }),
       );
       expect(config.movementRef.current).toEqual({ x: 0, z: 0 });
+    });
+
+    it("A key moves left (negative X)", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "a", bubbles: true }),
+      );
+      expect(config.movementRef.current).toEqual({ x: -1, z: 0 });
+      expect(mgr.getMode()).toBe("keyboard");
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { key: "a", bubbles: true }),
+      );
+      expect(config.movementRef.current).toEqual({ x: 0, z: 0 });
+    });
+
+    it("S key moves backward (negative Z)", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "s", bubbles: true }),
+      );
+      expect(config.movementRef.current).toEqual({ x: 0, z: -1 });
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { key: "s", bubbles: true }),
+      );
+      expect(config.movementRef.current).toEqual({ x: 0, z: 0 });
+    });
+
+    it("D key moves right (positive X)", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "d", bubbles: true }),
+      );
+      expect(config.movementRef.current).toEqual({ x: 1, z: 0 });
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { key: "d", bubbles: true }),
+      );
+      expect(config.movementRef.current).toEqual({ x: 0, z: 0 });
+    });
+
+    it("arrow keys match WASD", () => {
+      for (const [arrow, wasd] of [
+        ["ArrowUp", "w"],
+        ["ArrowDown", "s"],
+        ["ArrowLeft", "a"],
+        ["ArrowRight", "d"],
+      ] as const) {
+        // Press WASD, capture value, release
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", { key: wasd, bubbles: true }),
+        );
+        const wasdVec = { ...config.movementRef.current };
+        window.dispatchEvent(
+          new KeyboardEvent("keyup", { key: wasd, bubbles: true }),
+        );
+
+        // Press Arrow, capture value, release
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", { key: arrow, bubbles: true }),
+        );
+        const arrowVec = { ...config.movementRef.current };
+        window.dispatchEvent(
+          new KeyboardEvent("keyup", { key: arrow, bubbles: true }),
+        );
+
+        expect(arrowVec).toEqual(wasdVec);
+      }
+    });
+
+    it("diagonal W+A normalizes to magnitude 1", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "w", bubbles: true }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "a", bubbles: true }),
+      );
+      const { x, z } = config.movementRef.current;
+      expect(x).toBeLessThan(0);
+      expect(z).toBeGreaterThan(0);
+      expect(Math.sqrt(x * x + z * z)).toBeCloseTo(1, 4);
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { key: "w", bubbles: true }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { key: "a", bubbles: true }),
+      );
+    });
+
+    it("opposite keys cancel out", () => {
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "a", bubbles: true }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "d", bubbles: true }),
+      );
+      expect(config.movementRef.current).toEqual({ x: 0, z: 0 });
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { key: "a", bubbles: true }),
+      );
+      window.dispatchEvent(
+        new KeyboardEvent("keyup", { key: "d", bubbles: true }),
+      );
     });
 
     it("enters keyboard mode on WASD", () => {
