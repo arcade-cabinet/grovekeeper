@@ -75,8 +75,6 @@ export default function GameScreen() {
         <Canvas shadows style={styles.canvas}>
           <Camera />
           <Lighting
-            timeOfDay={timeVisuals.timeOfDay}
-            season={currentSeason}
             sunIntensity={timeVisuals.sunIntensity}
             ambientIntensity={timeVisuals.ambientIntensity}
             skyColors={timeVisuals.skyColors}
