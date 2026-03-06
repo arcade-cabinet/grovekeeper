@@ -66,6 +66,9 @@ export const TutorialOverlay = ({ targetId, label }: Props) => {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.7; transform: scale(1.05); }
           }
+          .tutorial-overlay-ring {
+            animation: tutorialPulse 1.5s ease-in-out infinite;
+          }
           @media (prefers-reduced-motion: reduce) {
             .tutorial-overlay-ring {
               animation: none !important;
@@ -86,7 +89,6 @@ export const TutorialOverlay = ({ targetId, label }: Props) => {
           borderRadius: 12,
           border: `3px solid ${COLORS.autumnGold}`,
           boxShadow: `0 0 12px ${COLORS.autumnGold}80, inset 0 0 12px ${COLORS.autumnGold}40`,
-          animation: "tutorialPulse 1.5s ease-in-out infinite",
           pointerEvents: "none",
         }}
       />
