@@ -1,7 +1,11 @@
 import {
+  RiBookOpenLine,
   RiDropLine,
-  RiLeafLine,
+  RiHammerLine,
+  RiPlantLine,
+  RiRecycleLine,
   RiScissorsLine,
+  RiSeedlingLine,
   RiToolsLine,
 } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
@@ -21,14 +25,14 @@ interface ToolWheelProps {
 }
 
 const toolIcons: Record<string, React.ReactNode> = {
-  trowel: <RiToolsLine className="w-6 h-6" />,
+  trowel: <RiPlantLine className="w-6 h-6" />,
   "watering-can": <RiDropLine className="w-6 h-6" />,
-  almanac: <RiLeafLine className="w-6 h-6" />,
+  almanac: <RiBookOpenLine className="w-6 h-6" />,
   "pruning-shears": <RiScissorsLine className="w-6 h-6" />,
-  "seed-pouch": <RiLeafLine className="w-6 h-6" />,
+  "seed-pouch": <RiSeedlingLine className="w-6 h-6" />,
   shovel: <RiToolsLine className="w-6 h-6" />,
-  axe: <RiToolsLine className="w-6 h-6" />,
-  "compost-bin": <RiToolsLine className="w-6 h-6" />,
+  axe: <RiHammerLine className="w-6 h-6" />,
+  "compost-bin": <RiRecycleLine className="w-6 h-6" />,
 };
 
 export const ToolWheel = ({ open, onClose }: ToolWheelProps) => {
@@ -50,7 +54,12 @@ export const ToolWheel = ({ open, onClose }: ToolWheelProps) => {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
         className="max-w-xs"
-        style={{ background: COLORS.skyMist }}
+        style={{
+          background: COLORS.skyMist,
+          border: `3px solid ${COLORS.forestGreen}40`,
+          borderRadius: 16,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.12)`,
+        }}
         aria-describedby={undefined}
       >
         <DialogHeader>

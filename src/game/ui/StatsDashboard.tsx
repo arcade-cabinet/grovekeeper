@@ -68,8 +68,10 @@ export const StatsDashboard = ({ open, onClose }: StatsDashboardProps) => {
       <DialogContent
         className="max-w-sm max-h-[80vh] overflow-y-auto"
         style={{
-          background: "#F5F0E3",
-          border: `2px solid ${COLORS.barkBrown}`,
+          background: COLORS.parchment,
+          border: `3px solid ${COLORS.barkBrown}`,
+          borderRadius: 16,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.15)`,
         }}
         aria-describedby={undefined}
       >

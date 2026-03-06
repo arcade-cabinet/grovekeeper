@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
 import { COLORS } from "../constants/config";
 import { useGameStore } from "../stores/gameStore";
 import type { TradeRate } from "../systems/trading";
@@ -45,8 +46,10 @@ export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
       <DialogContent
         className="max-w-sm"
         style={{
-          background: "#F5F0E3",
-          border: `2px solid ${COLORS.barkBrown}`,
+          background: COLORS.parchment,
+          border: `3px solid ${COLORS.barkBrown}`,
+          borderRadius: 16,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 ${COLORS.parchment}`,
         }}
         aria-describedby={undefined}
       >
@@ -88,12 +91,11 @@ export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
         </div>
         {selectedRate && (
           <div className="mt-3 space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <span className="text-sm" style={{ color: COLORS.soilDark }}>
                 x
               </span>
-              <input
-                type="range"
+              <Slider
                 min={1}
                 max={Math.max(
                   1,
@@ -102,13 +104,16 @@ export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
                       selectedRate.fromAmount,
                   ),
                 )}
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="flex-1"
+                value={[quantity]}
+                onValueChange={([v]) => setQuantity(v)}
+                className="flex-1 [&_[data-slot=slider-track]]:h-2 [&_[data-slot=slider-range]]:bg-[var(--range-color)] [&_[data-slot=slider-thumb]]:border-[var(--range-color)] [&_[data-slot=slider-thumb]]:size-5"
+                style={
+                  { "--range-color": COLORS.forestGreen } as React.CSSProperties
+                }
               />
               <span
-                className="text-sm font-medium w-8 text-center"
-                style={{ color: COLORS.soilDark }}
+                className="text-sm font-bold w-8 text-center tabular-nums"
+                style={{ color: COLORS.forestGreen }}
               >
                 {quantity}
               </span>

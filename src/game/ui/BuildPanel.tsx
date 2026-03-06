@@ -55,7 +55,7 @@ export const BuildPanel = ({
       <DialogContent
         className="max-w-sm mx-auto"
         style={{
-          background: "#F5F0E3",
+          background: COLORS.parchment,
           border: `3px solid ${COLORS.barkBrown}`,
           borderRadius: 16,
         }}
