@@ -1,0 +1,30 @@
+{
+  "colors": {
+    "forestGreen": "#2D5A27",
+    "barkBrown": "#5D4037",
+    "soilDark": "#3E2723",
+    "leafLight": "#81C784",
+    "autumnGold": "#FFB74D",
+    "skyMist": "#E8F5E9",
+    "sunsetWarm": "#FFAB91",
+    "earthRed": "#8D6E63",
+    "parchment": "#F5F0E3",
+    "parchmentDark": "#E8E0CC",
+    "success": "#4CAF50",
+    "warning": "#FF9800",
+    "danger": "#F44336",
+    "info": "#64B5F6",
+    "gold": "#FFD700",
+    "silver": "#9E9E9E",
+    "springGreen": "#90EE90",
+    "summerYellow": "#FFD54F",
+    "autumnOrange": "#FF8A65",
+    "winterBlue": "#90CAF9",
+    "prestigeGold": "#FFD700",
+    "prestigePurple": "#9C27B0"
+  },
+  "typography": {
+    "heading": "Fredoka",
+    "body": "Nunito"
+  }
+}

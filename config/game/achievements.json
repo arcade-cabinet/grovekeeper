@@ -1,0 +1,177 @@
+[
+  {
+    "id": "first-seed",
+    "name": "First Seed",
+    "description": "Plant your first tree."
+  },
+  {
+    "id": "seed-spreader",
+    "name": "Seed Spreader",
+    "description": "Plant 50 trees (cumulative)."
+  },
+  {
+    "id": "forest-founder",
+    "name": "Forest Founder",
+    "description": "Plant 200 trees (cumulative)."
+  },
+  {
+    "id": "one-of-each",
+    "name": "One of Each",
+    "description": "Plant every base species at least once."
+  },
+  {
+    "id": "patient-gardener",
+    "name": "Patient Gardener",
+    "description": "Grow any tree to Mature (stage 3)."
+  },
+  {
+    "id": "old-growth-guardian",
+    "name": "Old Growth Guardian",
+    "description": "Grow any tree to Old Growth (stage 4)."
+  },
+  {
+    "id": "timber-baron",
+    "name": "Timber Baron",
+    "description": "Accumulate 1,000 timber (lifetime)."
+  },
+  {
+    "id": "sap-collector",
+    "name": "Sap Collector",
+    "description": "Accumulate 500 sap (lifetime)."
+  },
+  {
+    "id": "the-giving-tree",
+    "name": "The Giving Tree",
+    "description": "Harvest 500 fruit (lifetime)."
+  },
+  {
+    "id": "canopy-complete",
+    "name": "Canopy Complete",
+    "description": "Fill an entire grid row with mature+ trees."
+  },
+  {
+    "id": "full-grove",
+    "name": "Full Grove",
+    "description": "Fill the entire grid with trees."
+  },
+  {
+    "id": "biodiversity",
+    "name": "Biodiversity",
+    "description": "Have 5 or more species growing simultaneously."
+  },
+  {
+    "id": "seasonal-veteran",
+    "name": "Seasonal Veteran",
+    "description": "Experience all 4 seasons."
+  },
+  {
+    "id": "enchanted-grove",
+    "name": "Enchanted Grove",
+    "description": "Have 5 Old Growth trees simultaneously."
+  },
+  {
+    "id": "new-beginnings",
+    "name": "New Beginnings",
+    "description": "Prestige for the first time."
+  },
+  {
+    "id": "zone-hopper",
+    "name": "Zone Hopper",
+    "description": "Visit all 5 zone types."
+  },
+  {
+    "id": "cartographer",
+    "name": "Cartographer",
+    "description": "Discover 10 zones."
+  },
+  {
+    "id": "wild-harvester",
+    "name": "Wild Harvester",
+    "description": "Harvest 10 wild trees."
+  },
+  {
+    "id": "forest-keeper",
+    "name": "Forest Keeper",
+    "description": "Let 10 wild trees regrow."
+  },
+  {
+    "id": "hydration-hero",
+    "name": "Hydration Hero",
+    "description": "Water 100 trees."
+  },
+  {
+    "id": "master-pruner",
+    "name": "Master Pruner",
+    "description": "Prune 50 trees."
+  },
+  {
+    "id": "rock-breaker",
+    "name": "Rock Breaker",
+    "description": "Clear 25 rocks with the shovel."
+  },
+  {
+    "id": "tool-collector",
+    "name": "Tool Collector",
+    "description": "Unlock all 12 tools."
+  },
+  {
+    "id": "spring-planter",
+    "name": "Spring Planter",
+    "description": "Plant 20 trees in spring."
+  },
+  {
+    "id": "autumn-harvester",
+    "name": "Autumn Harvester",
+    "description": "Harvest 30 trees in autumn."
+  },
+  {
+    "id": "winter-survivor",
+    "name": "Winter Survivor",
+    "description": "Have 20 trees survive winter."
+  },
+  {
+    "id": "first-builder",
+    "name": "First Builder",
+    "description": "Build your first structure."
+  },
+  {
+    "id": "architect",
+    "name": "Architect",
+    "description": "Build all structure types."
+  },
+  {
+    "id": "master-builder",
+    "name": "Master Builder",
+    "description": "Upgrade any structure to tier 3."
+  },
+  {
+    "id": "lumber-lord",
+    "name": "Lumber Lord",
+    "description": "Accumulate 5,000 timber (lifetime)."
+  },
+  {
+    "id": "resource-mogul",
+    "name": "Resource Mogul",
+    "description": "Have 1,000 of each resource (lifetime)."
+  },
+  {
+    "id": "seed-hoarder",
+    "name": "Seed Hoarder",
+    "description": "Collect 50 seeds of one species."
+  },
+  {
+    "id": "forager",
+    "name": "Forager",
+    "description": "Harvest 50 wild trees."
+  },
+  {
+    "id": "reforestation",
+    "name": "Reforestation",
+    "description": "Let 10 wild trees regrow after chopping."
+  },
+  {
+    "id": "wild-collector",
+    "name": "Wild Collector",
+    "description": "Harvest all wild species at least once."
+  }
+]

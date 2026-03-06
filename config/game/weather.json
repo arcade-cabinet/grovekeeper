@@ -1,0 +1,22 @@
+{
+  "types": ["clear", "rain", "drought", "windstorm"],
+  "checkIntervalSec": 300,
+  "durationRanges": {
+    "rain": [60, 120],
+    "drought": [90, 180],
+    "windstorm": [30, 60]
+  },
+  "seasonProbabilities": {
+    "spring": { "rain": 0.3, "drought": 0.05, "windstorm": 0.1 },
+    "summer": { "rain": 0.15, "drought": 0.25, "windstorm": 0.05 },
+    "autumn": { "rain": 0.2, "drought": 0.1, "windstorm": 0.2 },
+    "winter": { "rain": 0.05, "drought": 0.15, "windstorm": 0.15 }
+  },
+  "staminaMultipliers": {
+    "clear": 1.0,
+    "rain": 1.0,
+    "drought": 1.5,
+    "windstorm": 1.0
+  },
+  "windstormVulnerableStages": [0, 1]
+}

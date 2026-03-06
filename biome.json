@@ -1,8 +1,17 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "files": {
-    "includes": ["src/**", "*.ts", "*.tsx", "*.json"]
+    "includes": [
+      "app/**",
+      "components/**",
+      "game/**",
+      "config/**",
+      "*.ts",
+      "*.tsx",
+      "*.json"
+    ],
+    "ignoreUnknown": true
   },
   "linter": {
     "enabled": true,
@@ -35,40 +44,18 @@
       }
     },
     {
-      "includes": ["src/components/ui/**"],
+      "includes": ["components/ui/**"],
       "linter": {
         "rules": {
-          "suspicious": { "noDocumentCookie": "off", "noArrayIndexKey": "off" },
-          "a11y": {
-            "noRedundantRoles": "off",
-            "useSemanticElements": "off",
-            "useFocusableInteractive": "off",
-            "useAriaPropsForRole": "off"
-          },
-          "security": { "noDangerouslySetInnerHtml": "off" }
-        }
-      }
-    },
-    {
-      "includes": ["src/game/ui/**"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useButtonType": "off",
-            "noSvgWithoutTitle": "off",
-            "useKeyWithClickEvents": "off",
-            "useSemanticElements": "off"
-          },
           "suspicious": { "noArrayIndexKey": "off" }
         }
       }
     },
     {
-      "includes": ["src/game/scenes/**"],
+      "includes": ["components/game/**"],
       "linter": {
         "rules": {
-          "style": { "noNonNullAssertion": "off" },
-          "correctness": { "useExhaustiveDependencies": "off" }
+          "suspicious": { "noArrayIndexKey": "off" }
         }
       }
     }

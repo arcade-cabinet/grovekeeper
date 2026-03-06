@@ -3,7 +3,7 @@ const { hairlineWidth } = require('nativewind/theme');
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: 'class',
-  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
+  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './game/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
@@ -41,6 +41,46 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // Game-specific design tokens
+        forest: {
+          green: '#2D5A27',
+          dark: '#1B5E20',
+        },
+        bark: {
+          brown: '#5D4037',
+          dark: '#3E2723',
+        },
+        soil: {
+          dark: '#3E2723',
+        },
+        leaf: {
+          light: '#81C784',
+        },
+        autumn: {
+          gold: '#FFB74D',
+          orange: '#FF8A65',
+        },
+        sky: {
+          mist: '#E8F5E9',
+        },
+        parchment: {
+          DEFAULT: '#F5F0E3',
+          dark: '#E8E0CC',
+        },
+        prestige: {
+          gold: '#FFD700',
+          purple: '#9C27B0',
+        },
+        season: {
+          spring: '#90EE90',
+          summer: '#FFD54F',
+          autumn: '#FF8A65',
+          winter: '#90CAF9',
+        },
+      },
+      fontFamily: {
+        heading: ['Fredoka'],
+        body: ['Nunito'],
       },
       borderRadius: {
         lg: 'var(--radius)',

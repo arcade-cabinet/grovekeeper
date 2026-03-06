@@ -53,7 +53,7 @@ A typical 5-minute session:
 6. Check quest progress
 7. Walk to adjacent zone to check on trees there
 8. Place a decorative structure or expand grid
-9. Auto-save on exit (visibility change)
+9. Auto-save on exit
 
 Everything works with one hand (thumb on joystick, index finger tapping).
 

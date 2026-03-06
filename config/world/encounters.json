@@ -1,0 +1,137 @@
+[
+  {
+    "id": "mysterious-traveler",
+    "name": "Mysterious Traveler",
+    "icon": "\ud83e\uddf3",
+    "description": "A cloaked figure emerges from the mist, carrying a pack of rare goods...",
+    "season": "any",
+    "minLevel": 3,
+    "rarity": 0.15,
+    "choices": [
+      {
+        "label": "Trade 20 timber for rare seeds",
+        "effect": {
+          "type": "give_seed",
+          "speciesId": "flame-maple",
+          "amount": 2
+        }
+      },
+      {
+        "label": "Share some fruit for knowledge",
+        "effect": { "type": "give_xp", "amount": 100 }
+      },
+      { "label": "Politely decline", "effect": { "type": "nothing" } }
+    ]
+  },
+  {
+    "id": "golden-rain",
+    "name": "Golden Rain",
+    "icon": "\u2728",
+    "description": "A shower of golden light falls on your grove. Trees touched by the light grow faster!",
+    "season": "spring",
+    "minLevel": 1,
+    "rarity": 0.1,
+    "choices": [
+      {
+        "label": "Bask in the golden light",
+        "effect": { "type": "buff_growth", "multiplier": 2.0, "duration": 3 }
+      },
+      {
+        "label": "Collect the golden dust",
+        "effect": {
+          "type": "give_resource",
+          "resource": "acorns",
+          "amount": 25
+        }
+      }
+    ]
+  },
+  {
+    "id": "lost-seedling",
+    "name": "Lost Seedling",
+    "icon": "\ud83c\udf31",
+    "description": "You find a tiny seedling struggling to survive among the rocks. It looks rare...",
+    "season": "any",
+    "minLevel": 5,
+    "rarity": 0.12,
+    "choices": [
+      {
+        "label": "Rescue and plant it",
+        "effect": {
+          "type": "give_seed",
+          "speciesId": "silver-birch",
+          "amount": 3
+        }
+      },
+      {
+        "label": "Leave it to nature",
+        "effect": { "type": "give_xp", "amount": 30 }
+      }
+    ]
+  },
+  {
+    "id": "ancient-spirit",
+    "name": "Ancient Spirit",
+    "icon": "\ud83d\udc7b",
+    "description": "An ethereal presence whispers ancient secrets of the forest...",
+    "season": "autumn",
+    "minLevel": 8,
+    "rarity": 0.08,
+    "choices": [
+      {
+        "label": "Listen to the spirit's wisdom",
+        "effect": { "type": "give_xp", "amount": 200 }
+      },
+      {
+        "label": "Ask for a blessing",
+        "effect": { "type": "buff_growth", "multiplier": 1.5, "duration": 5 }
+      },
+      {
+        "label": "Request rare seeds",
+        "effect": {
+          "type": "give_seed",
+          "speciesId": "ghost-birch",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "wandering-bees",
+    "name": "Wandering Bees",
+    "icon": "\ud83d\udc1d",
+    "description": "A swarm of wild bees has settled in your grove! They seem friendly...",
+    "season": "summer",
+    "minLevel": 2,
+    "rarity": 0.2,
+    "choices": [
+      {
+        "label": "Welcome the bees (boost fruit yield)",
+        "effect": { "type": "give_resource", "resource": "fruit", "amount": 20 }
+      },
+      {
+        "label": "Collect honey (sap bonus)",
+        "effect": { "type": "give_resource", "resource": "sap", "amount": 15 }
+      }
+    ]
+  },
+  {
+    "id": "aurora-display",
+    "name": "Aurora Display",
+    "icon": "\ud83c\udf0c",
+    "description": "The northern lights dance across the winter sky, energizing the dormant trees...",
+    "season": "winter",
+    "minLevel": 4,
+    "rarity": 0.1,
+    "choices": [
+      {
+        "label": "Watch in wonder",
+        "effect": { "type": "give_xp", "amount": 150 }
+      },
+      {
+        "label": "Channel the energy to your trees",
+        "effect": { "type": "buff_growth", "multiplier": 1.75, "duration": 4 }
+      }
+    ]
+  }
+]
