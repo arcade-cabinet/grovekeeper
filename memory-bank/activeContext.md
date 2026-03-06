@@ -5,9 +5,11 @@
 Migration from BabylonJS to Expo/R3F is well underway. The project has been rebuilt on a new tech stack (Expo SDK 55, React Three Fiber, NativeWind, expo-sqlite) while preserving all game design, ECS patterns, and game logic.
 
 ### Archive
+
 The complete BabylonJS implementation is archived at `/Users/jbogaty/src/arcade-cabinet/grovekeeper-babylonjs-archive/` (READ ONLY reference). This was a fully feature-complete implementation with 1188 tests across 58 files, all 32 spec sections implemented.
 
 ### New Stack
+
 - **Expo SDK 55** -- Universal app (iOS + Android + Web)
 - **React 19.2 + React Native 0.83** -- UI runtime
 - **React Three Fiber + @react-three/drei** -- Declarative 3D (replaces BabylonJS)
