@@ -42,7 +42,6 @@ const WANDER_INTERVAL = 8;
 const NOTICE_RANGE = 6;
 const APPROACH_RANGE = 3;
 const ADJACENT_RANGE = 1.5;
-const HOME_RETURN_RANGE = 5;
 
 // ──────────────────────────────────────────────
 // Yuka Entity wrapper
@@ -368,10 +367,11 @@ export class NpcBrain {
       );
       this.tutorialOverride.started = true;
       if (!started) {
-        // Can't reach target — fire callback anyway and clear
-        this.tutorialOverride.onArrival?.();
+        // Can't reach target — clear override first, then fire callback
+        const cb = this.tutorialOverride.onArrival;
         this.tutorialOverride = null;
         this.currentBehavior = "idle";
+        cb?.();
         return this.currentBehavior;
       }
     }
@@ -383,9 +383,10 @@ export class NpcBrain {
       const chebyshev = Math.max(dx, dz);
 
       if (chebyshev < ADJACENT_RANGE) {
-        this.tutorialOverride.onArrival?.();
+        const cb = this.tutorialOverride.onArrival;
         this.tutorialOverride = null;
         this.currentBehavior = "idle";
+        cb?.();
       }
     }
 

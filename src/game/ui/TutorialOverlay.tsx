@@ -19,7 +19,9 @@ export const TutorialOverlay = ({ targetId, label }: TutorialOverlayProps) => {
     }
 
     const track = () => {
-      const el = document.querySelector(`[data-tutorial-id="${targetId}"]`);
+      // Sanitize to alphanumeric + hyphens only (prevents selector injection)
+      const safeId = targetId.replace(/[^a-zA-Z0-9-]/g, "");
+      const el = document.querySelector(`[data-tutorial-id="${safeId}"]`);
       if (el) {
         setRect(el.getBoundingClientRect());
       } else {

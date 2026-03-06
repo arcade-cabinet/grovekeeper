@@ -968,7 +968,8 @@ export const GameScene = () => {
             );
           }
 
-          const brain = npcBrains.get(npcEntity.id)!;
+          const brain = npcBrains.get(npcEntity.id);
+          if (!brain) continue;
           const npcX = npcEntity.position.x;
           const npcZ = npcEntity.position.z;
           const distToPlayer = Math.max(
