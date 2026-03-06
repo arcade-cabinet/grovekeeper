@@ -1,0 +1,15 @@
+appId: com.grovekeeper.app
+---
+- launchApp
+- tapOn: "New Grove"
+- extendedWaitUntil:
+    visible: "Level"
+    timeout: 10000
+# Open tool belt
+- tapOn:
+    id: "tool-belt-button"
+    optional: true
+# Verify tools are available
+- assertVisible:
+    text: "Trowel"
+    optional: true

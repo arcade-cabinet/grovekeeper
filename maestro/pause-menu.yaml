@@ -1,0 +1,16 @@
+appId: com.grovekeeper.app
+---
+- launchApp
+- tapOn: "New Grove"
+- extendedWaitUntil:
+    visible: "Level"
+    timeout: 10000
+# Open pause menu
+- tapOn:
+    id: "pause-button"
+- assertVisible: "Paused"
+- assertVisible: "Stats"
+- assertVisible: "Settings"
+# Close pause menu
+- tapOn: "Resume"
+- assertNotVisible: "Paused"

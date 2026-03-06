@@ -1,0 +1,15 @@
+appId: com.grovekeeper.app
+---
+- launchApp
+- tapOn: "New Grove"
+- extendedWaitUntil:
+    visible: "Level"
+    timeout: 10000
+# Verify HUD elements are present
+- assertVisible:
+    id: "hud-resource-bar"
+- assertVisible:
+    id: "hud-xp-bar"
+- assertVisible:
+    id: "hud-stamina-gauge"
+    optional: true

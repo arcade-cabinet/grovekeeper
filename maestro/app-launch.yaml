@@ -1,0 +1,5 @@
+appId: com.grovekeeper.app
+---
+- launchApp
+- assertVisible: "Every forest begins with a single seed"
+- assertVisible: "New Grove"
