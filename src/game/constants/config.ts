@@ -3,6 +3,7 @@ export const GRID_SIZE = 12;
 export const CELL_SIZE = 1;
 
 export const COLORS = {
+  // Core palette
   forestGreen: "#2D5A27",
   barkBrown: "#5D4037",
   soilDark: "#3E2723",
@@ -11,6 +12,28 @@ export const COLORS = {
   skyMist: "#E8F5E9",
   sunsetWarm: "#FFAB91",
   earthRed: "#8D6E63",
+
+  // Surface colors
+  parchment: "#F5F0E3",
+  parchmentDark: "#E8E0CC",
+
+  // Semantic colors
+  success: "#4CAF50",
+  warning: "#FF9800",
+  danger: "#F44336",
+  info: "#64B5F6",
+  gold: "#FFD700",
+  silver: "#9E9E9E",
+
+  // Season accent colors
+  springGreen: "#90EE90",
+  summerYellow: "#FFD54F",
+  autumnOrange: "#FF8A65",
+  winterBlue: "#90CAF9",
+
+  // Prestige / special
+  prestigeGold: "#FFD700",
+  prestigePurple: "#9C27B0",
 } as const;
 
 // 5-stage model (spec §15)

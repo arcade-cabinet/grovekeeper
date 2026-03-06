@@ -37,22 +37,60 @@ export const MainMenu = ({ onStartGame, onNewGame }: MainMenuProps) => {
         background: `linear-gradient(180deg, ${COLORS.skyMist} 0%, ${COLORS.leafLight}40 50%, ${COLORS.forestGreen}30 100%)`,
       }}
     >
-      {/* Decorative tree silhouettes */}
+      {/* Floating leaf particles */}
+      <style>{`
+        @keyframes leaf-float {
+          0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+          10%  { opacity: 0.6; }
+          90%  { opacity: 0.4; }
+          100% { transform: translate(var(--leaf-dx), var(--leaf-dy)) rotate(var(--leaf-rot)); opacity: 0; }
+        }
+        .leaf-particle {
+          animation: leaf-float var(--leaf-dur) ease-in-out infinite;
+          animation-delay: var(--leaf-delay);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .leaf-particle { animation: none; opacity: 0.3; }
+        }
+      `}</style>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute bottom-0 left-0 w-24 h-32 sm:w-32 sm:h-40"
-          style={{
-            background: `linear-gradient(0deg, ${COLORS.forestGreen}40 0%, transparent 100%)`,
-            borderRadius: "50% 50% 0 0",
-          }}
-        />
-        <div
-          className="absolute bottom-0 right-0 w-20 h-28 sm:w-28 sm:h-36"
-          style={{
-            background: `linear-gradient(0deg, ${COLORS.forestGreen}30 0%, transparent 100%)`,
-            borderRadius: "50% 50% 0 0",
-          }}
-        />
+        {/* Decorative tree silhouettes */}
+        <svg className="absolute bottom-0 left-0 w-28 h-40 sm:w-36 sm:h-48" viewBox="0 0 100 140" fill="none">
+          <ellipse cx="50" cy="50" rx="40" ry="45" fill={`${COLORS.forestGreen}30`} />
+          <ellipse cx="35" cy="60" rx="30" ry="35" fill={`${COLORS.forestGreen}20`} />
+          <rect x="45" y="90" width="10" height="50" rx="2" fill={`${COLORS.barkBrown}20`} />
+        </svg>
+        <svg className="absolute bottom-0 right-0 w-24 h-36 sm:w-32 sm:h-44" viewBox="0 0 100 140" fill="none">
+          <ellipse cx="50" cy="55" rx="35" ry="40" fill={`${COLORS.forestGreen}25`} />
+          <ellipse cx="60" cy="45" rx="25" ry="30" fill={`${COLORS.forestGreen}18`} />
+          <rect x="46" y="90" width="8" height="50" rx="2" fill={`${COLORS.barkBrown}18`} />
+        </svg>
+
+        {/* Floating leaves */}
+        {[
+          { x: "15%", y: "20%", dx: "40px", dy: "60vh", rot: "180deg", dur: "8s", delay: "0s" },
+          { x: "45%", y: "10%", dx: "-30px", dy: "70vh", rot: "-120deg", dur: "10s", delay: "2s" },
+          { x: "75%", y: "15%", dx: "20px", dy: "65vh", rot: "200deg", dur: "9s", delay: "4s" },
+          { x: "30%", y: "5%", dx: "-50px", dy: "80vh", rot: "-160deg", dur: "12s", delay: "1s" },
+          { x: "85%", y: "25%", dx: "-25px", dy: "55vh", rot: "140deg", dur: "7s", delay: "6s" },
+        ].map((l, i) => (
+          <div
+            key={i}
+            className="leaf-particle absolute text-sm"
+            style={{
+              left: l.x,
+              top: l.y,
+              "--leaf-dx": l.dx,
+              "--leaf-dy": l.dy,
+              "--leaf-rot": l.rot,
+              "--leaf-dur": l.dur,
+              "--leaf-delay": l.delay,
+              color: COLORS.leafLight,
+            } as React.CSSProperties}
+          >
+            {"\u{1F343}"}
+          </div>
+        ))}
       </div>
 
       <Card
@@ -81,7 +119,7 @@ export const MainMenu = ({ onStartGame, onNewGame }: MainMenuProps) => {
           className="text-center text-sm italic"
           style={{ color: COLORS.barkBrown }}
         >
-          "Tend. Grow. Thrive."
+          "Every forest begins with a single seed."
         </p>
 
         {/* Buttons */}
@@ -137,7 +175,7 @@ export const MainMenu = ({ onStartGame, onNewGame }: MainMenuProps) => {
 
       {/* Version */}
       <p className="mt-4 text-xs" style={{ color: `${COLORS.forestGreen}80` }}>
-        Grove Keeper v0.1.0
+        Grovekeeper v0.1.0
       </p>
     </div>
   );
