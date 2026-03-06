@@ -60,7 +60,7 @@ const smoothedScale = currentScale + (targetScale - currentScale) * lerpFactor;
 // Update instance matrix with new scale
 ```
 
-Old Growth trees (stage 4) with stable scale can have their instance matrix updates skipped for additional savings.
+Old-Growth trees (stage 4) with stable scale can have their instance matrix updates skipped for additional savings.
 
 ## Seasonal Updates
 
