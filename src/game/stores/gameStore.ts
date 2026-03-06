@@ -3,10 +3,32 @@ import { emptyResources, type ResourceType } from "../constants/resources";
 import { getToolById } from "../constants/tools";
 import { getSpeciesById } from "../constants/trees";
 import {
+  advanceFestivalChallenge,
+  type EventContext,
+  getFestivalDef,
+  initializeEventState,
+  resolveEncounter as resolveEncounterPure,
+  updateEvents,
+} from "../events/eventScheduler";
+import type { EventState } from "../events/types";
+import {
+  advanceObjectives,
+  claimStepReward,
+  computeAvailableChains,
+  initializeChainState,
+  startChain,
+} from "../quests/questChainEngine";
+import type { QuestChainState } from "../quests/types";
+import {
   canAffordExpansion,
   getNextExpansionTier,
 } from "../systems/gridExpansion";
 import { checkNewUnlocks } from "../systems/levelUnlocks";
+import {
+  initializeMarketEventState,
+  type MarketEventState,
+  updateMarketEvents,
+} from "../systems/marketEvents";
 import {
   calculatePrestigeBonus,
   canPrestige,
@@ -14,11 +36,28 @@ import {
   getUnlockedPrestigeSpecies,
 } from "../systems/prestige";
 import type { ActiveQuest } from "../systems/quests";
+import {
+  computeDiscoveryTier,
+  createEmptyProgress,
+  type SpeciesProgress,
+} from "../systems/speciesDiscovery";
+import {
+  initializeMarketState,
+  type MarketState,
+  pruneHistory,
+  recordTrade,
+} from "../systems/supplyDemand";
 import type { Season } from "../systems/time";
 import {
   canAffordToolUpgrade,
   getToolUpgradeTier,
 } from "../systems/toolUpgrades";
+import {
+  initializeMerchantState,
+  type MerchantState,
+  purchaseOffer,
+  updateMerchant,
+} from "../systems/travelingMerchant";
 import { showToast } from "../ui/Toast";
 
 export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";
@@ -121,6 +160,21 @@ interface GameState {
   treesHarvestedInAutumn: number;
   wildSpeciesHarvested: string[];
 
+  // Quest chain state
+  questChainState: QuestChainState;
+
+  // Economy state
+  marketState: MarketState;
+  merchantState: MerchantState;
+  marketEventState: MarketEventState;
+
+  // Event scheduler state
+  eventState: EventState;
+
+  // Species codex progress
+  speciesProgress: Record<string, SpeciesProgress>;
+  pendingCodexUnlocks: string[];
+
   // Settings
   hasSeenRules: boolean;
   hapticsEnabled: boolean;
@@ -174,6 +228,15 @@ interface GameState {
   completeQuest: (questId: string) => void;
   setLastQuestRefresh: (time: number) => void;
 
+  // Quest chain actions
+  refreshAvailableChains: () => void;
+  startQuestChain: (chainId: string) => void;
+  advanceQuestObjective: (
+    eventType: string,
+    amount: number,
+  ) => { chainId: string; stepId: string }[];
+  claimQuestStepReward: (chainId: string) => void;
+
   // Discovery actions
   discoverZone: (zoneId: string) => boolean;
 
@@ -191,6 +254,26 @@ interface GameState {
 
   // Tool upgrade actions
   upgradeToolTier: (toolId: string) => boolean;
+
+  // Economy actions
+  recordMarketTrade: (
+    resource: ResourceType,
+    direction: "buy" | "sell",
+    amount: number,
+  ) => void;
+  updateEconomy: (currentDay: number) => void;
+  purchaseMerchantOffer: (offerId: string) => boolean;
+
+  // Event scheduler actions
+  tickEvents: (context: EventContext) => void;
+  advanceEventChallenge: (challengeType: string, amount?: number) => void;
+  resolveEncounter: (definitionId: string) => void;
+
+  // Species codex actions
+  trackSpeciesPlanting: (speciesId: string) => void;
+  trackSpeciesGrowth: (speciesId: string, newStage: number) => void;
+  trackSpeciesHarvest: (speciesId: string, yieldAmount: number) => void;
+  consumePendingCodexUnlock: () => string | null;
 
   // Settings actions
   setHasSeenRules: (seen: boolean) => void;
@@ -343,6 +426,21 @@ const initialState = {
   treesHarvestedInAutumn: 0,
   wildSpeciesHarvested: [] as string[],
 
+  // Quest chain state
+  questChainState: initializeChainState(),
+
+  // Economy state
+  marketState: initializeMarketState(),
+  merchantState: initializeMerchantState(),
+  marketEventState: initializeMarketEventState(),
+
+  // Event scheduler state
+  eventState: initializeEventState(),
+
+  // Species codex progress
+  speciesProgress: {} as Record<string, SpeciesProgress>,
+  pendingCodexUnlocks: [] as string[],
+
   // Settings
   hasSeenRules: false,
   hapticsEnabled: true,
@@ -433,14 +531,19 @@ export const useGameStore = create<GameState>()((set, get) => ({
   incrementTreesWatered: () =>
     set((state) => ({ treesWatered: state.treesWatered + 1 })),
 
-  addResource: (type, amount) =>
+  addResource: (type, amount) => {
     set((state) => ({
       resources: { ...state.resources, [type]: state.resources[type] + amount },
       lifetimeResources: {
         ...state.lifetimeResources,
         [type]: state.lifetimeResources[type] + amount,
       },
-    })),
+    }));
+    // Advance quest objectives for resource collection
+    queueMicrotask(() => {
+      get().advanceQuestObjective(`${type}_collected`, amount);
+    });
+  },
 
   spendResource: (type, amount) => {
     const current = get().resources[type];
@@ -547,9 +650,16 @@ export const useGameStore = create<GameState>()((set, get) => ({
       seasonsExperienced: state.seasonsExperienced,
       speciesPlanted: [],
       lifetimeResources: state.lifetimeResources, // preserve lifetime tracking
+      speciesProgress: state.speciesProgress, // preserve codex progress
+      pendingCodexUnlocks: [],
+      questChainState: state.questChainState, // preserve quest chain progress
       placedStructures: [],
       buildMode: false,
       buildTemplateId: null,
+      marketState: initializeMarketState(),
+      merchantState: initializeMerchantState(),
+      marketEventState: initializeMarketEventState(),
+      eventState: initializeEventState(), // reset events on prestige
       hasSeenRules: state.hasSeenRules,
       hapticsEnabled: state.hapticsEnabled,
       soundEnabled: state.soundEnabled,
@@ -609,6 +719,73 @@ export const useGameStore = create<GameState>()((set, get) => ({
       completedQuestIds: [...state.completedQuestIds, questId],
     })),
   setLastQuestRefresh: (time) => set({ lastQuestRefresh: time }),
+
+  // Quest chain actions
+  refreshAvailableChains: () => {
+    const state = get();
+    const available = computeAvailableChains(
+      state.questChainState,
+      state.level,
+    );
+    set({
+      questChainState: {
+        ...state.questChainState,
+        availableChainIds: available,
+      },
+    });
+  },
+
+  startQuestChain: (chainId) => {
+    const state = get();
+    const newChainState = startChain(
+      state.questChainState,
+      chainId,
+      state.currentDay,
+    );
+    set({ questChainState: newChainState });
+  },
+
+  advanceQuestObjective: (eventType, amount) => {
+    const state = get();
+    const result = advanceObjectives(state.questChainState, eventType, amount);
+    if (result.state !== state.questChainState) {
+      set({ questChainState: result.state });
+    }
+    return result.completedSteps;
+  },
+
+  claimQuestStepReward: (chainId) => {
+    const state = get();
+    const result = claimStepReward(state.questChainState, chainId);
+    if (!result.stepDef) return;
+
+    set({ questChainState: result.state });
+
+    // Apply rewards
+    const reward = result.stepDef.reward;
+    const store = get();
+
+    if (reward.xp) {
+      store.addXp(reward.xp);
+    }
+    if (reward.resources) {
+      for (const [resource, amount] of Object.entries(reward.resources)) {
+        if (amount) store.addResource(resource as ResourceType, amount);
+      }
+    }
+    if (reward.seeds) {
+      for (const seed of reward.seeds) {
+        store.addSeed(seed.speciesId, seed.amount);
+      }
+    }
+    if (reward.unlockSpecies) {
+      store.unlockSpecies(reward.unlockSpecies);
+    }
+
+    queueMicrotask(() => {
+      showToast(`Quest step complete: ${result.stepDef?.name}`, "success");
+    });
+  },
 
   // Discovery actions
   discoverZone: (zoneId) => {
@@ -695,6 +872,292 @@ export const useGameStore = create<GameState>()((set, get) => ({
       showToast(`Tool upgraded to tier ${currentTier + 1}!`, "success");
     });
     return true;
+  },
+
+  // Economy actions
+  recordMarketTrade: (resource, direction, amount) => {
+    const state = get();
+    const newMarketState = recordTrade(
+      state.marketState,
+      resource,
+      direction,
+      amount,
+      state.currentDay,
+    );
+    set({ marketState: newMarketState });
+  },
+
+  updateEconomy: (currentDay) => {
+    const state = get();
+    const rngSeed = state.worldSeed || "default";
+
+    // Prune old trade history
+    const prunedMarket = pruneHistory(state.marketState, currentDay);
+
+    // Update merchant arrival/departure
+    const newMerchantState = updateMerchant(
+      state.merchantState,
+      currentDay,
+      rngSeed,
+    );
+
+    // Update market events
+    const eventResult = updateMarketEvents(
+      state.marketEventState,
+      currentDay,
+      rngSeed,
+    );
+
+    const updates: Partial<GameState> = {};
+
+    if (prunedMarket !== state.marketState) {
+      updates.marketState = prunedMarket;
+    }
+    if (newMerchantState !== state.merchantState) {
+      updates.merchantState = newMerchantState;
+      if (newMerchantState.isPresent && !state.merchantState.isPresent) {
+        queueMicrotask(() => {
+          showToast("A traveling merchant has arrived!", "success");
+        });
+      }
+    }
+    if (eventResult.state !== state.marketEventState) {
+      updates.marketEventState = eventResult.state;
+      if (eventResult.newEventTriggered && eventResult.state.activeEvent) {
+        queueMicrotask(() => {
+          showToast("Market event started!", "success");
+        });
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      set(updates);
+    }
+  },
+
+  purchaseMerchantOffer: (offerId) => {
+    const state = get();
+    if (!state.merchantState.isPresent) return false;
+
+    const offer = state.merchantState.currentOffers.find(
+      (o) => o.id === offerId,
+    );
+    if (!offer || offer.quantity <= 0) return false;
+
+    // Check if player can afford the cost
+    for (const [resource, amount] of Object.entries(offer.cost)) {
+      if (
+        (state.resources[resource as ResourceType] ?? 0) < (amount as number)
+      ) {
+        return false;
+      }
+    }
+
+    // Deduct resources
+    const newResources = { ...state.resources };
+    for (const [resource, amount] of Object.entries(offer.cost)) {
+      newResources[resource as ResourceType] -= amount as number;
+    }
+
+    // Process purchase in merchant state
+    const result = purchaseOffer(state.merchantState, offerId);
+    if (!result.offer) return false;
+
+    set({ resources: newResources, merchantState: result.state });
+
+    // Apply reward
+    const reward = result.offer.reward;
+    const store = get();
+    if (reward.type === "resource" && reward.resource && reward.amount) {
+      store.addResource(reward.resource, reward.amount);
+    } else if (reward.type === "seed" && reward.speciesId && reward.amount) {
+      store.addSeed(reward.speciesId, reward.amount);
+    } else if (reward.type === "xp" && reward.amount) {
+      store.addXp(reward.amount);
+    }
+
+    queueMicrotask(() => {
+      showToast(`Purchased: ${result.offer?.name}`, "success");
+    });
+
+    return true;
+  },
+
+  // Event scheduler actions
+  tickEvents: (context) => {
+    const state = get();
+    const result = updateEvents(state.eventState, context);
+    if (result.state !== state.eventState) {
+      set({ eventState: result.state });
+    }
+    if (result.festivalStarted) {
+      queueMicrotask(() => {
+        showToast(`${result.festivalStarted?.name} has begun!`, "achievement");
+      });
+    }
+    if (result.festivalEnded) {
+      const def = getFestivalDef(result.festivalEnded);
+      const completed = state.eventState.activeFestival?.completed;
+      queueMicrotask(() => {
+        if (completed && def) {
+          showToast(`${def.name} complete!`, "success");
+          // Apply completion rewards
+          const store = get();
+          const reward = def.completionReward;
+          if (reward.xp) store.addXp(reward.xp);
+          if (reward.resources) {
+            for (const [resource, amount] of Object.entries(reward.resources)) {
+              if (amount) store.addResource(resource as ResourceType, amount);
+            }
+          }
+          if (reward.seeds) {
+            for (const seed of reward.seeds) {
+              store.addSeed(seed.speciesId, seed.amount);
+            }
+          }
+        } else if (def) {
+          showToast(`${def.name} has ended.`, "info");
+        }
+      });
+    }
+    if (result.encounterTriggered) {
+      queueMicrotask(() => {
+        showToast(`${result.encounterTriggered?.name}!`, "info");
+      });
+    }
+  },
+
+  advanceEventChallenge: (challengeType, amount = 1) => {
+    const state = get();
+    if (!state.eventState.activeFestival) return;
+    const newEventState = advanceFestivalChallenge(
+      state.eventState,
+      challengeType,
+      amount,
+    );
+    if (newEventState !== state.eventState) {
+      set({ eventState: newEventState });
+    }
+  },
+
+  resolveEncounter: (definitionId) => {
+    const state = get();
+    const newEventState = resolveEncounterPure(state.eventState, definitionId);
+    if (newEventState !== state.eventState) {
+      set({ eventState: newEventState });
+    }
+  },
+
+  // Species codex actions
+  trackSpeciesPlanting: (speciesId) =>
+    set((state) => {
+      const existing =
+        state.speciesProgress[speciesId] ?? createEmptyProgress();
+      const updated: SpeciesProgress = {
+        ...existing,
+        timesPlanted: existing.timesPlanted + 1,
+      };
+      updated.discoveryTier = computeDiscoveryTier(updated);
+
+      const tierChanged = updated.discoveryTier > existing.discoveryTier;
+      const newPending = tierChanged
+        ? [...state.pendingCodexUnlocks, speciesId]
+        : state.pendingCodexUnlocks;
+
+      if (tierChanged) {
+        const sp = getSpeciesById(speciesId);
+        queueMicrotask(() => {
+          showToast(
+            `Codex: ${sp?.name ?? speciesId} -- Discovered!`,
+            "achievement",
+          );
+        });
+      }
+
+      return {
+        speciesProgress: { ...state.speciesProgress, [speciesId]: updated },
+        pendingCodexUnlocks: newPending,
+      };
+    }),
+
+  trackSpeciesGrowth: (speciesId, newStage) =>
+    set((state) => {
+      const existing =
+        state.speciesProgress[speciesId] ?? createEmptyProgress();
+      if (newStage <= existing.maxStageReached) return state;
+
+      const updated: SpeciesProgress = {
+        ...existing,
+        maxStageReached: newStage,
+      };
+      updated.discoveryTier = computeDiscoveryTier(updated);
+
+      const tierChanged = updated.discoveryTier > existing.discoveryTier;
+      const newPending = tierChanged
+        ? [...state.pendingCodexUnlocks, speciesId]
+        : state.pendingCodexUnlocks;
+
+      if (tierChanged) {
+        const sp = getSpeciesById(speciesId);
+        const tierNames = [
+          "",
+          "Discovered",
+          "Studied",
+          "Mastered",
+          "Legendary",
+        ];
+        queueMicrotask(() => {
+          showToast(
+            `Codex: ${sp?.name ?? speciesId} -- ${tierNames[updated.discoveryTier]}!`,
+            "achievement",
+          );
+        });
+      }
+
+      return {
+        speciesProgress: { ...state.speciesProgress, [speciesId]: updated },
+        pendingCodexUnlocks: newPending,
+      };
+    }),
+
+  trackSpeciesHarvest: (speciesId, yieldAmount) =>
+    set((state) => {
+      const existing =
+        state.speciesProgress[speciesId] ?? createEmptyProgress();
+      const updated: SpeciesProgress = {
+        ...existing,
+        timesHarvested: existing.timesHarvested + 1,
+        totalYield: existing.totalYield + yieldAmount,
+      };
+      updated.discoveryTier = computeDiscoveryTier(updated);
+
+      const tierChanged = updated.discoveryTier > existing.discoveryTier;
+      const newPending = tierChanged
+        ? [...state.pendingCodexUnlocks, speciesId]
+        : state.pendingCodexUnlocks;
+
+      if (tierChanged) {
+        const sp = getSpeciesById(speciesId);
+        queueMicrotask(() => {
+          showToast(
+            `Codex: ${sp?.name ?? speciesId} -- Legendary!`,
+            "achievement",
+          );
+        });
+      }
+
+      return {
+        speciesProgress: { ...state.speciesProgress, [speciesId]: updated },
+        pendingCodexUnlocks: newPending,
+      };
+    }),
+
+  consumePendingCodexUnlock: () => {
+    const state = get();
+    if (state.pendingCodexUnlocks.length === 0) return null;
+    const [first, ...rest] = state.pendingCodexUnlocks;
+    set({ pendingCodexUnlocks: rest });
+    return first;
   },
 
   // Settings actions

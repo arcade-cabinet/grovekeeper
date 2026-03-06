@@ -189,7 +189,7 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
               }}
               onClick={() => {
                 setStep(0);
-                onClose();
+                onStart();
               }}
             >
               Skip

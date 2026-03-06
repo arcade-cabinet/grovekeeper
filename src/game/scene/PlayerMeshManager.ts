@@ -89,6 +89,13 @@ export class PlayerMeshManager {
       mesh.position.y = MODEL_Y_OFFSET;
       mesh.isPickable = false;
 
+      // .glb imports set rotationQuaternion, which overrides .rotation (Euler).
+      // Null it so our manual Euler rotation updates take effect.
+      mesh.rotationQuaternion = null;
+      for (const child of mesh.getChildMeshes()) {
+        child.rotationQuaternion = null;
+      }
+
       // Stop ALL embedded animations — we use purely procedural jiggle.
       // Embedded animations fight with our manual position/rotation updates
       // because BabylonJS applies them after the render callback.
@@ -209,8 +216,6 @@ export class PlayerMeshManager {
       this.targetAngle,
       turnFactor,
     );
-    this.mesh.rotation.y = this.facingAngle;
-
     // --- Procedural jiggle animation ---
 
     // Blend toward target: 1 when walking, 0 when idle
@@ -232,6 +237,8 @@ export class PlayerMeshManager {
     const walkHop = Math.abs(sin2) * HOP_HEIGHT * wb;
     const idleHop = IDLE_BOB_HEIGHT * (0.5 + 0.5 * idleSin) * (1 - wb);
     this.mesh.position.y = this.baseY + walkHop + idleHop;
+
+    this.mesh.rotation.y = this.facingAngle;
 
     // Forward/backward tilt (lean into steps).
     // BabylonJS Euler order is YXZ (intrinsic), so rotation.x is local pitch

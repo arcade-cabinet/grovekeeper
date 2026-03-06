@@ -605,6 +605,10 @@ export const GameScene = () => {
               const key = `${entity.id}:${stage}`;
               if (!milestoneXpRef.current.has(key)) {
                 milestoneXpRef.current.add(key);
+                useGameStore.getState().trackSpeciesGrowth(tree.speciesId, stage);
+                if (stage === 3) {
+                  useGameStore.getState().advanceQuestObjective("saplings_grown", 1);
+                }
                 const xpAmount =
                   stage === 2
                     ? baseXp
@@ -701,6 +705,7 @@ export const GameScene = () => {
       // --- Game loop ---
       let lastTime = performance.now();
       let lastSeasonUpdate: Season | null = null;
+      let lastDayUpdate = useGameStore.getState().currentDay;
 
       sm.startRenderLoop(() => {
         const now = performance.now();
@@ -943,6 +948,21 @@ export const GameScene = () => {
         if (Math.floor(now / 5000) !== Math.floor((now - deltaMs) / 5000)) {
           useGameStore.getState().setGameTime(currentTime.microseconds);
           useGameStore.getState().setCurrentDay(currentTime.day);
+
+          // Tick economy + event systems on day change
+          if (currentTime.day !== lastDayUpdate) {
+            lastDayUpdate = currentTime.day;
+            const store = useGameStore.getState();
+            store.updateEconomy(currentTime.day);
+            store.tickEvents({
+              currentDay: currentTime.day,
+              season: currentTime.season,
+              playerLevel: store.level,
+              rngSeed: currentTime.day,
+            });
+            store.refreshAvailableChains();
+          }
+
           checkAndAwardAchievementsInLoop();
         }
 
@@ -1026,6 +1046,7 @@ export const GameScene = () => {
     tree.tree.watered = true;
     addXp(5);
     incrementTreesWatered();
+    useGameStore.getState().advanceQuestObjective("trees_watered", 1);
     showParticle("+5 XP");
     audioManager.play("water");
     if (hapticsEnabled) await hapticLight();
@@ -1051,6 +1072,8 @@ export const GameScene = () => {
 
     addXp(50);
     incrementTreesHarvested();
+    useGameStore.getState().advanceQuestObjective("trees_harvested", 1);
+    useGameStore.getState().trackSpeciesHarvest(tree.tree.speciesId, harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0);
     showParticle("+50 XP");
 
     const harvestSpecies = getSpeciesById(tree.tree.speciesId);
@@ -1375,6 +1398,7 @@ export const GameScene = () => {
 
       // Persist
       store.addPlacedStructure(template.id, worldX, worldZ);
+      store.advanceQuestObjective("structures_built", 1);
       store.setBuildMode(false);
       showToast(`Built ${template.name}!`, "success");
       showParticle("+Build");
@@ -1466,6 +1490,8 @@ export const GameScene = () => {
 
         incrementTreesPlanted();
         useGameStore.getState().trackSpeciesPlanted(selectedSpecies);
+        useGameStore.getState().trackSpeciesPlanting(selectedSpecies);
+        useGameStore.getState().advanceQuestObjective("trees_planted", 1);
         const plantXp = 10 + (species ? (species.difficulty - 1) * 5 : 0);
         addXp(plantXp);
         showParticle(`+${plantXp} XP`);
@@ -1504,9 +1530,11 @@ export const GameScene = () => {
         }
       }
       incrementTreesHarvested();
+      useGameStore.getState().trackSpeciesHarvest(entity.tree.speciesId, harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0);
       count++;
     }
     if (count > 0) {
+      useGameStore.getState().advanceQuestObjective("trees_harvested", count);
       const xp = count * 50;
       addXp(xp);
       showParticle(`+${xp} XP`);
