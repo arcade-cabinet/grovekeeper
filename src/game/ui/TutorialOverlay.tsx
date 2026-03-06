@@ -59,15 +59,21 @@ export const TutorialOverlay = ({ targetId, label }: TutorialOverlayProps) => {
     >
       <style>
         {`
-          @keyframes tutorialPulse {
+          `@keyframes` tutorialPulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.7; transform: scale(1.05); }
+          }
+          `@media` (prefers-reduced-motion: reduce) {
+            .tutorial-overlay-ring {
+              animation: none !important;
+            }
           }
         `}
       </style>
 
       {/* Pulsing gold ring */}
       <div
+        className="tutorial-overlay-ring"
         style={{
           position: "absolute",
           left: rect.left - 6,
