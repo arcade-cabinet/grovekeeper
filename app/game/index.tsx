@@ -98,7 +98,7 @@ export default function GameScreen() {
             resources={resources}
             level={level}
             xpProgress={xpProgress}
-            gameTime={null}
+            gameTime={timeVisuals.gameTime}
             selectedTool={selectedTool}
             onOpenMenu={() => setScreen("paused")}
             onOpenTools={() => {
