@@ -191,7 +191,7 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
                 borderColor: `${COLORS.barkBrown}80`,
                 color: COLORS.barkBrown,
               }}
-              onClick={onClose}
+              onClick={onStart}
             >
               Skip
             </Button>
