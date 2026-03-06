@@ -952,9 +952,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }
     if (result.festivalStarted) {
       queueMicrotask(() => {
-        const festDef = result.festivalStarted
-          ? getFestivalDef(result.festivalStarted.definitionId)
-          : null;
+        const festDef = result.festivalStarted;
         if (festDef) {
           showToast(`${festDef.name} has begun!`, "achievement");
         }
@@ -986,9 +984,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }
     if (result.encounterTriggered) {
       queueMicrotask(() => {
-        const encDef = result.encounterTriggered
-          ? getFestivalDef(result.encounterTriggered.definitionId)
-          : null;
+        const encDef = result.encounterTriggered;
         if (encDef) {
           showToast(`${encDef.name}!`, "info");
         }
