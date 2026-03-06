@@ -952,7 +952,12 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }
     if (result.festivalStarted) {
       queueMicrotask(() => {
-        showToast(`${result.festivalStarted?.name} has begun!`, "achievement");
+        const festDef = result.festivalStarted
+          ? getFestivalDef(result.festivalStarted.definitionId)
+          : null;
+        if (festDef) {
+          showToast(`${festDef.name} has begun!`, "achievement");
+        }
       });
     }
     if (result.festivalEnded) {
@@ -981,7 +986,12 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }
     if (result.encounterTriggered) {
       queueMicrotask(() => {
-        showToast(`${result.encounterTriggered?.name}!`, "info");
+        const encDef = result.encounterTriggered
+          ? getFestivalDef(result.encounterTriggered.definitionId)
+          : null;
+        if (encDef) {
+          showToast(`${encDef.name}!`, "info");
+        }
       });
     }
   },

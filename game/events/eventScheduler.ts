@@ -28,7 +28,8 @@ export function initializeEventState(): EventState {
     activeEncounter: null,
     lastFestivalDay: 0,
     lastEncounterDay: 0,
-    completedFestivals: [],
+    completedFestivalIds: [],
+    resolvedEncounterIds: [],
   };
 }
 

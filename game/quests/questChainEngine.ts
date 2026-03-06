@@ -18,7 +18,7 @@ export interface StepDef {
 
 export function initializeChainState(): QuestChainState {
   return {
-    activeChains: [],
+    activeChains: {},
     completedChainIds: [],
     availableChainIds: [],
   };
