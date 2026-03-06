@@ -1402,5 +1402,52 @@
         "action": { "type": "xp", "amount": 15 }
       }
     ]
+  },
+
+  {
+    "id": "tutorial-welcome",
+    "speaker": "Elder Rowan",
+    "text": "Welcome, young grovekeeper! I'm Elder Rowan, guardian of this grove. Let me show you the basics of tending our forest.",
+    "choices": [
+      { "label": "I'm ready to learn!", "next": "tutorial-welcome-2" },
+      {
+        "label": "Skip tutorial",
+        "next": null,
+        "action": { "type": "skip_tutorial" }
+      }
+    ]
+  },
+  {
+    "id": "tutorial-welcome-2",
+    "speaker": "Elder Rowan",
+    "text": "Every great forest starts with a single seed. Let's plant your first tree! First, select the trowel from your tools on the right.",
+    "choices": [{ "label": "Got it!", "next": null }]
+  },
+  {
+    "id": "tutorial-planted",
+    "speaker": "Elder Rowan",
+    "text": "Wonderful! You've planted your first tree! Now it needs water to grow strong. Grab the watering can and give it a drink.",
+    "choices": [
+      { "label": "On it!", "next": null },
+      { "label": "How does watering work?", "next": "tutorial-water-info" }
+    ]
+  },
+  {
+    "id": "tutorial-water-info",
+    "speaker": "Elder Rowan",
+    "text": "Watered trees grow 30% faster and produce better yields at harvest. Stand near a growing tree and tap the action button to water it.",
+    "choices": [{ "label": "Thanks!", "next": null }]
+  },
+  {
+    "id": "tutorial-complete",
+    "speaker": "Elder Rowan",
+    "text": "You're a natural! Your grove will grow and thrive under your care. Explore, discover new species, and don't forget to check your quests. I'll be here if you need more guidance!",
+    "choices": [
+      {
+        "label": "Let's grow!",
+        "next": null,
+        "action": { "type": "xp", "amount": 25 }
+      }
+    ]
   }
 ]

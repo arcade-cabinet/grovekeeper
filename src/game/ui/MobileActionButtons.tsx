@@ -111,6 +111,7 @@ export const MobileActionButtons = ({
 
       {/* Primary action button */}
       <button
+        data-tutorial-id="action-button"
         className="flex flex-col items-center justify-center rounded-full text-2xl motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
         style={{
           width: 64,

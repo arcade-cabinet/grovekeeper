@@ -23,6 +23,7 @@ import { ToolWheel } from "./ToolWheel";
 import { TradeDialog } from "./TradeDialog";
 import { VirtualJoystick } from "./VirtualJoystick";
 import { WeatherForecast } from "./WeatherForecast";
+import { TutorialOverlay } from "./TutorialOverlay";
 import { WeatherOverlay } from "./WeatherOverlay";
 
 interface GameUIProps {
@@ -56,6 +57,10 @@ interface GameUIProps {
   onDismissRadial?: () => void;
   movementRef?: React.RefObject<{ x: number; z: number }>;
   onJoystickActiveChange?: (active: boolean) => void;
+  tutorialDialogueId?: string | null;
+  onTutorialDialogueAction?: (actionType: string) => void;
+  tutorialHighlightId?: string | null;
+  tutorialHighlightLabel?: string | null;
 }
 
 export const GameUI = ({
@@ -84,6 +89,10 @@ export const GameUI = ({
   onDismissRadial,
   movementRef,
   onJoystickActiveChange,
+  tutorialDialogueId,
+  onTutorialDialogueAction,
+  tutorialHighlightId,
+  tutorialHighlightLabel,
 }: GameUIProps) => {
   const { activeBorderCosmetic } = useGameStore();
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
@@ -255,6 +264,8 @@ export const GameUI = ({
             npcTemplateId={nearbyNpcTemplateId ?? null}
             onOpenTrade={() => setTradeDialogOpen(true)}
             onOpenSeeds={() => setSeedSelectOpen(true)}
+            overrideDialogueId={tutorialDialogueId ?? undefined}
+            onDialogueAction={onTutorialDialogueAction}
           />
         )}
         <PauseMenu
@@ -263,6 +274,12 @@ export const GameUI = ({
           onMainMenu={onMainMenu}
         />
       </div>
+
+      {/* Tutorial highlight overlay */}
+      <TutorialOverlay
+        targetId={tutorialHighlightId ?? null}
+        label={tutorialHighlightLabel ?? null}
+      />
     </div>
   );
 };
@@ -349,6 +366,7 @@ const BottomControls = ({
       {/* Action button - right side */}
       <div className="flex flex-col items-center gap-1 flex-shrink-0">
         <button
+          data-tutorial-id="action-button"
           className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl shadow-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
           style={{
             background: actionEnabled

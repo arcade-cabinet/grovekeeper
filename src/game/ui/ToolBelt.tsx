@@ -55,6 +55,7 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
             <button
               key={tool.id}
               type="button"
+              data-tutorial-id={`tool-${tool.id}`}
               className="relative flex items-center justify-center rounded-lg motion-safe:transition-transform motion-safe:active:scale-95 touch-manipulation"
               style={{
                 width: 44,
