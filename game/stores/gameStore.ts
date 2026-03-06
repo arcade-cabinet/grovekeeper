@@ -929,7 +929,12 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const reward = result.offer.reward;
     const store = get();
     if (reward.type === "resource" && reward.resource && reward.amount) {
-      store.addResource(reward.resource as ResourceType, reward.amount);
+      if (reward.type === "resource" && reward.resource && reward.amount) {
+        const resourceType = reward.resource as ResourceType;
+        if (resourceType in state.resources) {
+          store.addResource(resourceType, reward.amount);
+        }
+      }
     } else if (reward.type === "seed" && reward.speciesId && reward.amount) {
       store.addSeed(reward.speciesId, reward.amount);
     } else if (reward.type === "xp" && reward.amount) {
