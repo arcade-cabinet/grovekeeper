@@ -85,7 +85,7 @@ export class PlayerMeshManager {
 
     if (loaded) {
       const { mesh, animations } = loaded;
-      mesh.scaling.setAll(MODEL_SCALE);
+      mesh.scaling.set(MODEL_SCALE, MODEL_SCALE, -MODEL_SCALE);
       mesh.position.y = MODEL_Y_OFFSET;
       mesh.isPickable = false;
 
