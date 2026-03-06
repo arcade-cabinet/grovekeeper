@@ -63,12 +63,31 @@ export const TutorialOverlay = ({ targetId, label }: Props) => {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.7; transform: scale(1.05); }
           }
+          .tutorial-overlay-ring {
+            animation: tutorialPulse 600ms ease-in-out infinite;
+          }
           `@media` (prefers-reduced-motion: reduce) {
             .tutorial-overlay-ring {
               animation: none !important;
             }
           }
         `}
+      </style>
+
+       <div
+         className="tutorial-overlay-ring"
+         style={{
+           position: "absolute",
+           left: rect.left - 6,
+           top: rect.top - 6,
+           width: rect.width + 12,
+           height: rect.height + 12,
+           borderRadius: 12,
+           border: `3px solid ${COLORS.autumnGold}`,
+           boxShadow: `0 0 12px ${COLORS.autumnGold}80, inset 0 0 12px ${COLORS.autumnGold}40`,
+           pointerEvents: "none",
+         }}
+       />
       </style>
 
       {/* Pulsing gold ring */}
