@@ -5,4 +5,4 @@ appId: ${APP_ID}
 url: ${APP_URL}
 ---
 - launchApp
-- assertVisible: ".*"
+- assertVisible: "Grovekeeper"  # or another stable home screen element
