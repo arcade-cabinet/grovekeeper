@@ -84,6 +84,100 @@ describe("hedgePlacement", () => {
     });
   });
 
+  describe("generateMaze — solvability (Spec §17.5)", () => {
+    /**
+     * A recursive-backtracker maze is a spanning tree over the grid, which
+     * means every cell is reachable from every other cell (perfect maze).
+     * BFS from [0][0] must visit all N² cells.
+     */
+    it("maze is solvable — all cells reachable from (0,0) via BFS", () => {
+      const maze = generateMaze(42);
+      const visited = new Set<string>();
+      const queue: [number, number][] = [[0, 0]];
+      visited.add("0,0");
+
+      while (queue.length > 0) {
+        const [x, z] = queue.shift()!;
+        const cell = maze.grid[x][z];
+
+        if (!cell.walls.north && z > 0 && !visited.has(`${x},${z - 1}`)) {
+          visited.add(`${x},${z - 1}`);
+          queue.push([x, z - 1]);
+        }
+        if (!cell.walls.south && z < maze.size - 1 && !visited.has(`${x},${z + 1}`)) {
+          visited.add(`${x},${z + 1}`);
+          queue.push([x, z + 1]);
+        }
+        if (!cell.walls.west && x > 0 && !visited.has(`${x - 1},${z}`)) {
+          visited.add(`${x - 1},${z}`);
+          queue.push([x - 1, z]);
+        }
+        if (!cell.walls.east && x < maze.size - 1 && !visited.has(`${x + 1},${z}`)) {
+          visited.add(`${x + 1},${z}`);
+          queue.push([x + 1, z]);
+        }
+      }
+
+      expect(visited.size).toBe(maze.size * maze.size);
+    });
+
+    it("center cell (centerX, centerZ) is reachable from (0,0) via BFS", () => {
+      const maze = generateMaze(42);
+      const { centerX, centerZ } = maze;
+      const target = `${centerX},${centerZ}`;
+
+      const visited = new Set<string>();
+      const queue: [number, number][] = [[0, 0]];
+      visited.add("0,0");
+
+      while (queue.length > 0) {
+        const [x, z] = queue.shift()!;
+        const cell = maze.grid[x][z];
+
+        if (!cell.walls.north && z > 0 && !visited.has(`${x},${z - 1}`)) {
+          visited.add(`${x},${z - 1}`);
+          queue.push([x, z - 1]);
+        }
+        if (!cell.walls.south && z < maze.size - 1 && !visited.has(`${x},${z + 1}`)) {
+          visited.add(`${x},${z + 1}`);
+          queue.push([x, z + 1]);
+        }
+        if (!cell.walls.west && x > 0 && !visited.has(`${x - 1},${z}`)) {
+          visited.add(`${x - 1},${z}`);
+          queue.push([x - 1, z]);
+        }
+        if (!cell.walls.east && x < maze.size - 1 && !visited.has(`${x + 1},${z}`)) {
+          visited.add(`${x + 1},${z}`);
+          queue.push([x + 1, z]);
+        }
+      }
+
+      expect(visited.has(target)).toBe(true);
+    });
+
+    it("center cell is reachable across multiple seeds", () => {
+      // Verify center reachability is not seed-specific
+      const seeds = [1, 12345, 999999, 0xdeadbeef];
+      for (const seed of seeds) {
+        const maze = generateMaze(seed);
+        const { centerX, centerZ } = maze;
+        const target = `${centerX},${centerZ}`;
+        const visited = new Set<string>();
+        const queue: [number, number][] = [[0, 0]];
+        visited.add("0,0");
+        while (queue.length > 0) {
+          const [x, z] = queue.shift()!;
+          const cell = maze.grid[x][z];
+          if (!cell.walls.north && z > 0 && !visited.has(`${x},${z - 1}`)) { visited.add(`${x},${z - 1}`); queue.push([x, z - 1]); }
+          if (!cell.walls.south && z < maze.size - 1 && !visited.has(`${x},${z + 1}`)) { visited.add(`${x},${z + 1}`); queue.push([x, z + 1]); }
+          if (!cell.walls.west && x > 0 && !visited.has(`${x - 1},${z}`)) { visited.add(`${x - 1},${z}`); queue.push([x - 1, z]); }
+          if (!cell.walls.east && x < maze.size - 1 && !visited.has(`${x + 1},${z}`)) { visited.add(`${x + 1},${z}`); queue.push([x + 1, z]); }
+        }
+        expect(visited.has(target)).toBe(true);
+      }
+    });
+  });
+
   describe("mazeToHedgePieces", () => {
     it("produces hedge pieces from a maze", () => {
       const maze = generateMaze(42);
@@ -105,6 +199,20 @@ describe("hedgePlacement", () => {
       const a = mazeToHedgePieces(maze, 42);
       const b = mazeToHedgePieces(maze, 42);
       expect(a).toEqual(b);
+    });
+
+    /**
+     * For a 12×12 perfect maze (spanning tree), 143 internal walls are removed
+     * from 264 internal walls + 48 boundary walls = 312 total. Center clearing
+     * removes 4 more internal walls. Expected piece count ≈ 165 ± ~25.
+     */
+    it("piece count is in correct range for a 12x12 maze", () => {
+      const maze = generateMaze(42);
+      const pieces = mazeToHedgePieces(maze, 42);
+      // Minimum: well above zero; a spanning tree guarantees many walls remain.
+      expect(pieces.length).toBeGreaterThanOrEqual(120);
+      // Maximum: cannot exceed total wall count for a 12x12 grid.
+      expect(pieces.length).toBeLessThanOrEqual(312);
     });
   });
 

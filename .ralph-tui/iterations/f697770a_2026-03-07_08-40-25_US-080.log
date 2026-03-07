@@ -1,0 +1,107 @@
+# Iteration 80 Log
+
+## Metadata
+
+- **Task ID**: US-080
+- **Task Title**: Render hedge maze from modular GLBs
+- **Description**: As a developer, I want a HedgeMaze component that places HedgeComponent entities from the maze layout with a fountain and benches at center so that mazes are walkable 3D environments. See GAME_SPEC.md...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T14:40:25.892Z
+- **Ended At**: 2026-03-07T14:45:43.880Z
+- **Duration**: 5m 17s
+- **Input Tokens**: 11356
+- **Output Tokens**: 19066
+- **Total Tokens**: 30422
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/**/*.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs[0m pattern: [96mHedgeComponent|HedgeMaze|hedge[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/terrain.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Let me read the maze generator and existing structure/entity rendering components to understand the patterns.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.tsx[0m
+Now let me check the ECS world for hedge queries and look at how entities are queried:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m pattern: [96mhedge|labyrinth|maze[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.ts[0m
+Let me check existing entity component patterns and how they consume ECS queries:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceInstances.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/HedgeMaze*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.ts[0m
+Let me check for existing test files for entity components:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/*.test.ts*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StaticInstances.tsx[0m
+Now let me look at FenceInstances.test.ts to understand the testing pattern:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceInstances.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceModel.test.ts[0m
+Let me check entity id patterns in the ECS:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m pattern: [96mentity\.id|world\.add|\"id\"[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/PropInstances.tsx[0m
+Now let me check PropModel.tsx to understand individual GLB rendering patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/PropModel.tsx[0m
+Let me check the Entity interface in the world file:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write[0m
+`★ Insight ─────────────────────────────────────`
+- **Hedge wall pieces** are batched via `StaticModelInstances` (same pattern as `FenceInstances`) — many repetitions of the same hedge GLB, ideal for InstancedMesh
+- **Decorations** (fountain, benches, flowers) are rendered individually — each unique GLB, sparse count (≤20 per maze), no instancing benefit
+- The **testable seam** pattern: export pure `resolveHedgeGLBPath` / `resolveDecorationGLBPath` functions so tests work without WebGL/R3F context
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/HedgeMaze.tsx[0m "/**
+ * HedgeMaze — renders all ECS hedge maze entities as 3D GLBs.
+ *
+ * Hedge wall pieces are batched by modelPath into InstancedMeshes (performance budget §28).
+ * Decorations (fountain, benches, fl... (8128 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The test file mirrors the mocking pattern from `FenceInstances.test.ts` — mock `@react-three/drei`, `@react-three/fiber`, the world module, and `StaticInstances`
+- Pure functions (`resolveHedgeGLBPath`, `resolveDecorationGLBPath`, `hedgeRotationToRadians`) are tested without any R3F/WebGL context — the component export is verified separately
+- Testing the throw-on-empty-path behavior validates the "no silent fallbacks" hard rule from the spec
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/HedgeMaze.test.ts[0m "/**
+ * Tests for HedgeMaze — hedge GLB path resolution and rotation conversion (Spec §18).
+ *
+ * Tests exported pure functions without WebGL/R3F context.
+ * Component export is verified separately.
+ *... (6477 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run HedgeMaze tests $ npx jest --no-coverage components/entities/HedgeMaze.test.ts 2>&1
+19 tests pass. Now run the full suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+2271 tests, 0 failures. Now append the progress log:
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-079" → "---
+
+## 2026-03-07 - US-080
+- Created `components/..."
+[94m[TodoWrite][0m
+US-080 complete. Here's what was implemented:
+
+**`components/entities/HedgeMaze.tsx`** — 185 lines
+- Reads `hedgesQuery` (wall pieces) + `hedgeDecorationsQuery` (fountain/benches/flowers)
+- Wall pieces → batched `StaticModelInstances` per `modelPath` (same pattern as `FenceInstances`)
+- Decorations → individual `DecorationGLBModel` sub-components (sparse, unique GLBs)
+- Pure exports: `resolveHedgeGLBPath`, `resolveDecorationGLBPath`, `hedgeRotationToRadians`
+
+**`components/entities/HedgeMaze.test.ts`** — 19 tests covering:
+- Path validation (returns pre-computed path, throws on empty with diagnostic context)
+- Degree→radian conversion (0°, 90°, 180°, 270°, 360°)
+- Component export shape
+
+Quality: `tsc` → 0 errors, `jest` → 2271/2271 passed (116 suites).
+
+<promise>COMPLETE</promise>

@@ -1528,3 +1528,23 @@ after each iteration and it's included in prompts for context.
   - **ECS snapshot in React Native land**: `const [playerEntity] = [...playerQuery]` — spread Miniplex query for a snapshot. Refreshes on every re-render driven by `gameTimeMicroseconds`.
   - **Transitive reanimated mock chain**: Any sub-component importing `react-native-reanimated` (e.g. `ResourceBar`) pulls in `react-native-worklets` (ESM-only, not in jest transform). Fix: mock ALL local sub-components in test file to break the chain without touching `jest.config.js`.
   - **Compass via atan2**: `Math.atan2(dx, -dz) * (180/Math.PI)`, normalized `((angle % 360) + 360) % 360`. Rotate unicode "↑" via `transform: [{ rotate: \`${bearing}deg\` }]`.
+
+## 2026-03-07 - US-081
+- Added solvability, center-reachability, and piece-count tests to `game/systems/hedgePlacement.test.ts`
+- 26 tests already existed in `game/world/mazeGenerator.test.ts` (determinism, structure, decorations, elevation)
+- 3 new describe-group + 4 new tests added to hedgePlacement.test.ts covering missing acceptance criteria:
+  - BFS solvability: visits all 144 cells from [0][0] — proves perfect maze property
+  - BFS center reachability: [centerX][centerZ] reachable from [0][0] (single seed)
+  - BFS center reachability: across 4 seeds (1, 12345, 999999, 0xdeadbeef)
+  - Piece count bounds: [120, 312] for a 12×12 spanning-tree maze
+- **Files changed:**
+  - `game/systems/hedgePlacement.test.ts` — added 4 tests in new solvability describe block + piece count test
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2275 tests, 0 failures (116 suites, +19 new tests total vs baseline)
+- **Learnings:**
+  - **BFS on maze grid for solvability**: Navigate via `cell.walls.{north,south,east,west}` flags. `north` = z-1, `south` = z+1, `west` = x-1, `east` = x+1. Track visited as `Set<"x,z">`. `visited.size === N²` proves full connectivity.
+  - **Perfect maze ↔ spanning tree**: Recursive backtracker guarantees all N²-1 edges in spanning tree → every cell reachable from every other. Solvability test directly validates this invariant.
+  - **Piece count math**: 12×12 maze has 312 total wall slots. Spanning tree removes 143 + 4 center = ~147 walls. Expected piece count ≈ 165. Range [120, 312] is the right sanity check bound.
+  - **Multi-seed reachability**: Running the BFS test across 4 known seeds catches edge cases where a specific seed might expose a backtracker bug without relying solely on seed=42.
+---
