@@ -78,6 +78,24 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-143
+- Created `game/systems/gameLoop.integration.test.ts` — 28 integration tests across 4 describe blocks, all passing.
+- Files changed:
+  - `game/systems/gameLoop.integration.test.ts` — new: 4 integration scenarios with no mocks, testing real system composition
+- **Integration scenarios covered:**
+  - **Menu → New Game → Tutorial → Plant → Growth Tick → Harvest → Save → Load**: screen transitions via store, all 11 tutorial steps via `advanceTutorial`, seed spending + `incrementTreesPlanted`, mature ECS tree entity + harvest counters + `addResource`, chunk diff save/reload round-trip via `recordPlantedTree` + `applyChunkDiff` + ECS clear.
+  - **NPC Dialogue → Quest Start → Quest Advance → Quest Complete**: `applyDialogueNodeEffects` with `start_quest`, `advanceQuestObjective("trees_planted", 1)`, `claimQuestStepReward`, XP reward verified, chain step index advance verified. Also tests pure `questChainEngine` independently.
+  - **Chunk Load → Chunk Unload → Chunk Reload**: `recordPlantedTree`, `applyChunkDiff` (world positions from chunkX/chunkZ), ECS clear, re-apply diff, verify stage/progress restored. Multiple independent chunks tested.
+  - **ECS queries after state transitions**: `world.with("tree")` vs `world.with("chunk")` isolation, `world.with("tree", "position")` multi-constraint filtering, add/remove entity consistency, stage filtering, `applyChunkDiff` makes entities immediately queryable.
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3415 tests, 147 suites pass (+28 new tests)
+- **Learnings:**
+  - **Integration tests use zero mocks**: All four scenarios import real implementations — `useGameStore`, `world`, `chunkDiffs$` (Legend State observable), `questChainEngine`, `tutorial`. No module-level mocking needed because all are pure `.ts` files with no JSX/RN runtime chain.
+  - **NpcComponent field mismatch at TS check**: Using `npcId` (guessed field) instead of `templateId` (actual NpcComponent field) fails `tsc --noEmit` but not Jest (which uses Babel transpile). Always check the component interface before constructing entity literals in tests. Fixed by using `ChunkComponent` (3 fields: chunkX, chunkZ, biome) for the non-tree entity.
+  - **Integration tests exercise joints between systems**: The chunk diff → ECS world round-trip test is the most valuable — it proves that `recordPlantedTree` (pure observable write) + `applyChunkDiff` (world.add) + `world.with("tree")` (Miniplex query) compose end-to-end. Unit tests for each function alone don't catch import-chain or interface mismatches.
+  - **`clearEcsWorld()` helper is essential for beforeEach isolation**: Miniplex `world` is a module singleton. Without removing all entities before each test, test order dependencies cause flaky failures. `for (const entity of [...world.entities]) world.remove(entity)` is the correct idiom (spread snapshot to avoid iterator invalidation during removal).
+
+---
+
 ## 2026-03-07 - US-140
 - Implemented loading screen (Spec §1.3).
 - Files created:
