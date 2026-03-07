@@ -2251,3 +2251,20 @@ after each iteration and it's included in prompts for context.
   - **Effective unlock level = max(pieceUnlock, materialUnlock)**: A piece+material combo is locked if EITHER the piece type OR the material unlocks later. Display and guard logic both use `Math.max(unlockLevels[piece], materialUnlockLevels[material])`.
 
 ---
+
+## 2026-03-07 - US-118
+- Updated `components/game/PlacementGhost.tsx` (209→253 lines) to use Rapier physics raycasts for snap detection
+- Camera-center raycast via `useRapier()` + `castRay` finds terrain hit point each frame; X/Z snapped to grid, Y kept at terrain height
+- Ghost follows camera look direction (FPS building mode), rotates with Q/E keyboard and ↺↻ overlay touch buttons
+- Color feedback: green = `validatePlacementWithRapier` passes, red = invalid (clearance or snap mismatch)
+- Created `components/game/PlacementGhostUtils.ts` for pure helpers (`snapToGrid`, `rotateIncrement`, `buildGhostPiece`)
+- Created `components/game/PlacementGhostUtils.test.ts` with 9 Jest tests
+- Renamed `usePlacementGhostRef` → `usePlacementGhostRefs` (now returns both `gridPosRef` + `rotationRef`); fixed barrel in `components/game/index.ts`
+- `PlacementGhostProps.onConfirm` now passes a full `ModularPieceComponent` (includes position + rotation) instead of bare (x, z)
+- **Files changed:** `components/game/PlacementGhost.tsx`, `components/game/PlacementGhostUtils.ts` (new), `components/game/PlacementGhostUtils.test.ts` (new), `components/game/index.ts`
+- **Learnings:**
+  - **`Math.round(-0.4)` returns `-0` in V8 (IEEE 754 signed zero)**: Jest `toEqual` distinguishes `-0` from `0`. Avoid near-zero negative inputs in `snapToGrid` tests; use `z: -1.4` → `-1` instead of `z: -0.4` → `0`.
+  - **`rotationRef` as shared mutable ref between R3F canvas and RN overlay**: The Q/E `keydown` listener in `useEffect` writes to `rotationRef.current`; the overlay buttons also write to it via callbacks; `useFrame` reads from it each tick. Zero React state updates, zero re-renders.
+  - **`KitbashRapierWorld`/`KitbashRapierModule` minimal interfaces for casting**: Real Rapier objects satisfy the minimal interfaces — cast `rapierWorld as unknown as KitbashRapierWorld` to pass into kitbashing pure functions without importing the full Rapier package into component-land.
+
+---

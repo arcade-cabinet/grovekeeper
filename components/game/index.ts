@@ -71,7 +71,7 @@ export type { PlacementGhostProps } from "./PlacementGhost";
 export {
   PlacementGhostMeshLayer,
   PlacementGhostUILayer,
-  usePlacementGhostRef,
+  usePlacementGhostRefs,
 } from "./PlacementGhost";
 export type { RadialAction, TileContext } from "./radialActions";
 export { getActionsForTile } from "./radialActions";
