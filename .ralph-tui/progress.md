@@ -46,6 +46,30 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-059
+- Implemented `components/player/ToolViewModel.tsx` — first-person held tool model in camera space (Spec §11)
+- Implemented `resolveToolGLBPath(toolId, config)` and `resolveToolVisual(toolId, config)` — pure functions exported as testable seams
+- Created `config/game/toolVisuals.json` — maps 5 game tools to GLB files with offset, scale, useAnimation, useDuration
+- Tool-to-GLB mapping follows `assets/models/tools/README.md`: trowel→Hoe.glb, axe→Axe.glb, pruning-shears→Hatchet.glb, shovel→Shovel.glb, pickaxe→Pickaxe.glb
+- Camera attachment via `createPortal(children, camera)` from `@react-three/fiber` — renders group as camera child; moves with camera automatically
+- `ToolGLBModel` sub-component wraps `useGLTF` (Rules of Hooks — only mounted when glbPath is non-null)
+- `scene.clone(true)` in `useMemo` prevents shared useGLTF cache object from being stolen by multiple renders
+- Tools with no GLB (watering-can, almanac, etc.) return null — no placeholder boxes per README §11 rule
+- **Files changed:**
+  - `components/player/ToolViewModel.tsx` — new: pure functions + ToolGLBModel + ToolViewModel
+  - `components/player/ToolViewModel.test.ts` — new: 15 tests covering resolveToolGLBPath, resolveToolVisual, ToolViewModel export
+  - `config/game/toolVisuals.json` — new: 5-tool visual config
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 1971 tests, 0 failures (105 suites, +15 new tests)
+- **Learnings:**
+  - **createPortal camera-space pattern**: `createPortal(children, camera)` from `@react-three/fiber` is the canonical R3F way to render in camera-local space. The camera IS a THREE.Object3D — children become camera children and move/rotate with it. No per-frame matrix math needed.
+  - **scene.clone(true) required for portals**: `useGLTF` returns a cached scene. `<primitive object={scene} />` in a portal would steal the scene from any other render location. Always `useMemo(() => scene.clone(true), [scene])`.
+  - **assets/models/tools/README.md is authoritative**: Before implementing ToolViewModel, read the README — it specifies the exact GLB→tool mapping and explicitly forbids placeholder boxes. This README prevented a spec/implementation mismatch.
+  - **ToolVisualsConfig index signature**: `{ readonly [toolId: string]: ToolVisualEntry | undefined }` is the correct type for accepting arbitrary tool IDs at runtime while preserving `| undefined` in the value type for safe nullish coalescing.
+
+---
+
 ## 2026-03-07 - US-058
 - Implemented `game/world/audioZonePlacer.ts` — pure function deriving ambient audio zones from water body placements (Spec §27)
 - `placeAudioZones(waterPlacements)`: 1:1 mapping, `soundscape: "water"`, `radius = max(width, depth) * waterRadiusScale`, `volume` from config
