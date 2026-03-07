@@ -2326,3 +2326,23 @@ after each iteration and it's included in prompts for context.
   - **`makeGroundedRapier()` helper consolidates happy-path Rapier mocks**: Combines `intersectionsWithShape: false` (clear) + `castRay: { toi: 0.1 }` (grounded). Each test overrides only the one dimension it's testing, keeping setup noise minimal.
 
 ---
+
+## 2026-03-07 - US-123
+- Updated `game/systems/baseRaids.ts` for DayNightComponent integration
+- Files changed: `game/systems/baseRaids.ts`, `game/systems/baseRaids.test.ts`, `config/game/raids.json`
+- Changes:
+  - Added `import type { DayNightComponent }` from ECS procedural barrel
+  - Fixed RNG scope from `"raids"` → `"raid"` (matches Spec §36 table: `base-raid` scope)
+  - Renamed `waveNumber` → `dayNumber` in `generateRaidWave` — seeding raids per day, not per wave index
+  - Added `shouldTriggerRaid(dayNight, affectsGameplay)`: returns true only when `timeOfDay === "night"` AND `affectsGameplay` (Survival mode)
+  - Added `ApproachDirection` type ("north"|"south"|"east"|"west")
+  - Added `getApproachDirections(chunkX, chunkZ, worldSeed, dayNumber)`: seeded per chunk+day, returns 1-2 cardinal directions; 40% chance of a second direction (config: `approachParams.secondDirectionChance` in raids.json)
+  - Added `approachParams.secondDirectionChance: 0.4` to `config/game/raids.json`
+  - Expanded test suite from 18 → 34 tests (added shouldTriggerRaid × 6, getApproachDirections × 7, generateRaidWave day variance × 1)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest baseRaids.test --no-coverage` → 34/34 pass
+- **Learnings:**
+  - **`DayNightComponent` is a pure interface** (no React/RN imports in atmosphere.ts) — safe to import in `.ts` test files without any mock setup
+  - **Spread fixture pattern for time-of-day tests**: `const noon = { ...nightDayNight, timeOfDay: "noon", gameHour: 12 }` — build one base fixture and override only the fields under test. Clean, no repetition.
+  - **Approach direction seeding includes chunk coords**: `scopedRNG("raid", worldSeed, dayNumber, chunkX, chunkZ)` — adding chunk coords to the extra args ensures different chunks get different approach vectors even on the same day, using the same composable `scopedRNG` mechanism already established in the codebase.
+
+---

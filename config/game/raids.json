@@ -43,5 +43,8 @@
     "standard": 0.25,
     "harsh": 0.5,
     "ironwood": 1.0
+  },
+  "approachParams": {
+    "secondDirectionChance": 0.4
   }
 }

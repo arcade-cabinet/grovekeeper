@@ -1,16 +1,35 @@
 /**
  * Base raids system tests.
- * Tests raid probability, wave generation, warnings, and loot.
+ * Tests raid probability, wave generation, warnings, loot, night-only trigger,
+ * and approach directions.
+ *
+ * Spec §18.5, §34.
  */
 
+import type { DayNightComponent } from "../ecs/components/procedural";
 import {
   calculateRaidProbability,
   generateRaidWave,
   getRaidWarning,
   calculateRaidLoot,
+  shouldTriggerRaid,
+  getApproachDirections,
 } from "./baseRaids";
 
-describe("Base Raids System", () => {
+// Minimal DayNightComponent fixture for tests
+const nightDayNight: DayNightComponent = {
+  gameHour: 22,
+  timeOfDay: "night",
+  dayNumber: 5,
+  season: "autumn",
+  ambientColor: "#112244",
+  ambientIntensity: 0.2,
+  directionalColor: "#aaaacc",
+  directionalIntensity: 0.3,
+  shadowOpacity: 0.5,
+};
+
+describe("Base Raids System (Spec §18.5, §34)", () => {
   describe("calculateRaidProbability", () => {
     it("should return 0 for exploration difficulty", () => {
       expect(calculateRaidProbability(500, 30, "exploration")).toBe(0);
@@ -45,7 +64,37 @@ describe("Base Raids System", () => {
     });
   });
 
-  describe("generateRaidWave", () => {
+  describe("shouldTriggerRaid (Spec §18.5 night-only, Survival mode)", () => {
+    it("should return false in Exploration mode (affectsGameplay = false)", () => {
+      expect(shouldTriggerRaid(nightDayNight, false)).toBe(false);
+    });
+
+    it("should return true at night in Survival mode", () => {
+      expect(shouldTriggerRaid(nightDayNight, true)).toBe(true);
+    });
+
+    it("should return false at noon even in Survival mode", () => {
+      const noon: DayNightComponent = { ...nightDayNight, timeOfDay: "noon", gameHour: 12 };
+      expect(shouldTriggerRaid(noon, true)).toBe(false);
+    });
+
+    it("should return false at dawn in Survival mode", () => {
+      const dawn: DayNightComponent = { ...nightDayNight, timeOfDay: "dawn", gameHour: 5 };
+      expect(shouldTriggerRaid(dawn, true)).toBe(false);
+    });
+
+    it("should return false at evening in Survival mode", () => {
+      const evening: DayNightComponent = { ...nightDayNight, timeOfDay: "evening", gameHour: 19 };
+      expect(shouldTriggerRaid(evening, true)).toBe(false);
+    });
+
+    it("should return false at midnight in Survival mode (only 'night' triggers)", () => {
+      const midnight: DayNightComponent = { ...nightDayNight, timeOfDay: "midnight", gameHour: 0 };
+      expect(shouldTriggerRaid(midnight, true)).toBe(false);
+    });
+  });
+
+  describe("generateRaidWave (seeded by dayNumber via scopedRNG('raid', ...))", () => {
     it("should generate at least 1 wave", () => {
       const raid = generateRaidWave(50, 1, "test-seed");
       expect(raid.waves.length).toBeGreaterThanOrEqual(1);
@@ -93,6 +142,12 @@ describe("Base Raids System", () => {
       );
       expect(raid.totalEnemyCount).toBe(counted);
     });
+
+    it("should produce different raids for different day numbers", () => {
+      const day3 = generateRaidWave(200, 3, "seed-xyz");
+      const day7 = generateRaidWave(200, 7, "seed-xyz");
+      expect(JSON.stringify(day3)).not.toBe(JSON.stringify(day7));
+    });
   });
 
   describe("getRaidWarning", () => {
@@ -132,6 +187,58 @@ describe("Base Raids System", () => {
       const standard = calculateRaidLoot(20, "standard");
       const ironwood = calculateRaidLoot(20, "ironwood");
       expect(ironwood).toBeGreaterThan(standard);
+    });
+  });
+
+  describe("getApproachDirections (chunk-edge seeded directions)", () => {
+    const VALID_DIRS = ["north", "south", "east", "west"];
+
+    it("should return at least one direction", () => {
+      const dirs = getApproachDirections(0, 0, "test-seed", 1);
+      expect(dirs.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should return at most two directions", () => {
+      const dirs = getApproachDirections(0, 0, "test-seed", 1);
+      expect(dirs.length).toBeLessThanOrEqual(2);
+    });
+
+    it("should only return valid cardinal directions", () => {
+      const dirs = getApproachDirections(3, 5, "test-seed", 7);
+      for (const d of dirs) {
+        expect(VALID_DIRS).toContain(d);
+      }
+    });
+
+    it("should be deterministic with same params", () => {
+      const a = getApproachDirections(2, 4, "seed-123", 3);
+      const b = getApproachDirections(2, 4, "seed-123", 3);
+      expect(a).toEqual(b);
+    });
+
+    it("should not return duplicate directions in a single result", () => {
+      const dirs = getApproachDirections(1, 1, "test-seed", 5);
+      const unique = new Set(dirs);
+      expect(unique.size).toBe(dirs.length);
+    });
+
+    it("should vary across different chunk positions", () => {
+      // Sample 5x5 chunks and confirm more than one direction is used
+      const dirs = new Set<string>();
+      for (let cx = 0; cx < 5; cx++) {
+        for (let cz = 0; cz < 5; cz++) {
+          getApproachDirections(cx, cz, "test-seed", 1).forEach((d) => dirs.add(d));
+        }
+      }
+      expect(dirs.size).toBeGreaterThan(1);
+    });
+
+    it("should vary across different day numbers", () => {
+      const dirs = new Set<string>();
+      for (let day = 1; day <= 10; day++) {
+        getApproachDirections(0, 0, "test-seed", day).forEach((d) => dirs.add(d));
+      }
+      expect(dirs.size).toBeGreaterThan(1);
     });
   });
 });

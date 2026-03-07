@@ -4,9 +4,13 @@
  * Higher base value attracts more frequent and stronger raids.
  * Raids come in 1-3 waves with increasing difficulty.
  * Warning system: ominous sounds at 2 min, horn blast at 30 sec.
+ * Raids only trigger at night in Survival mode (affectsGameplay).
+ *
+ * Spec §18.5, §34. RNG scope: "raid" (table in Spec §36).
  */
 
 import { scopedRNG } from "../utils/seedWords";
+import type { DayNightComponent } from "../ecs/components/procedural";
 import raidsConfig from "../../config/game/raids.json";
 
 /** Single wave within a raid event. */
@@ -29,6 +33,11 @@ export interface RaidEvent {
   totalEnemyCount: number;
   estimatedDifficulty: number;
 }
+
+/** Cardinal direction enemies approach from (chunk edge). */
+export type ApproachDirection = "north" | "south" | "east" | "west";
+
+const APPROACH_DIRECTIONS: ApproachDirection[] = ["north", "south", "east", "west"];
 
 /**
  * Calculate the probability of a raid occurring this game-day.
@@ -58,15 +67,35 @@ export function calculateRaidProbability(
 }
 
 /**
- * Generate a raid with 1-3 waves based on base value and wave number.
- * Uses scopedRNG for deterministic raids from world seed.
+ * Check whether a raid is eligible to trigger.
+ *
+ * Raids only trigger at night and only in Survival mode (affectsGameplay).
+ *
+ * @param dayNight - Current DayNightComponent state from ECS.
+ * @param affectsGameplay - True when Survival mode is active (from WeatherComponent or game mode).
+ */
+export function shouldTriggerRaid(
+  dayNight: DayNightComponent,
+  affectsGameplay: boolean,
+): boolean {
+  if (!affectsGameplay) return false;
+  return dayNight.timeOfDay === "night";
+}
+
+/**
+ * Generate a raid with 1-3 waves based on base value and day number.
+ * Uses scopedRNG for deterministic raids from world seed and day.
+ *
+ * @param baseValue - Current base value (sum of placed piece tiers × material multipliers).
+ * @param dayNumber - Current day number from DayNightComponent.dayNumber (seeds composition).
+ * @param worldSeed - World seed string.
  */
 export function generateRaidWave(
   baseValue: number,
-  waveNumber: number,
+  dayNumber: number,
   worldSeed: string,
 ): RaidEvent {
-  const rng = scopedRNG("raids", worldSeed, waveNumber);
+  const rng = scopedRNG("raid", worldSeed, dayNumber);
 
   const waveTable = raidsConfig.waveComposition;
   const maxWaves = Math.min(
@@ -112,6 +141,40 @@ export function generateRaidWave(
     totalEnemyCount,
     estimatedDifficulty,
   };
+}
+
+/**
+ * Get the approach direction(s) enemies use to enter the chunk.
+ *
+ * Direction is seeded by raid + world seed + day + chunk position,
+ * giving deterministic but varied approach vectors per chunk per day.
+ *
+ * @param chunkX - Chunk X coordinate.
+ * @param chunkZ - Chunk Z coordinate.
+ * @param worldSeed - World seed string.
+ * @param dayNumber - Current day number from DayNightComponent.dayNumber.
+ * @returns 1-2 cardinal directions enemies approach from (chunk edges).
+ */
+export function getApproachDirections(
+  chunkX: number,
+  chunkZ: number,
+  worldSeed: string,
+  dayNumber: number,
+): ApproachDirection[] {
+  const rng = scopedRNG("raid", worldSeed, dayNumber, chunkX, chunkZ);
+  const primary = APPROACH_DIRECTIONS[Math.floor(rng() * APPROACH_DIRECTIONS.length)];
+
+  if (rng() >= raidsConfig.approachParams.secondDirectionChance) {
+    return [primary];
+  }
+
+  // Pick a different secondary direction
+  let secondary: ApproachDirection;
+  do {
+    secondary = APPROACH_DIRECTIONS[Math.floor(rng() * APPROACH_DIRECTIONS.length)];
+  } while (secondary === primary);
+
+  return [primary, secondary];
 }
 
 /**
