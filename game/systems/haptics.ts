@@ -1,7 +1,12 @@
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 
+import hapticsConfig from "@/config/game/haptics.json" with { type: "json" };
+
 export type HapticType = "light" | "medium" | "heavy" | "success" | "warning" | "error";
+
+/** The five core tool actions — mirrors GameAction but kept local to avoid circular imports. */
+export type ToolAction = "DIG" | "CHOP" | "WATER" | "PLANT" | "PRUNE";
 
 /**
  * Trigger haptic feedback on supported native platforms.
@@ -34,4 +39,14 @@ export async function triggerHaptic(type: HapticType): Promise<void> {
   } catch {
     // expo-haptics not available (e.g. simulator without haptics support)
   }
+}
+
+/**
+ * Fire haptic feedback for a tool action.
+ * Pattern is sourced from config/game/haptics.json — no inline constants.
+ * No-op on non-native platforms (web, desktop).
+ */
+export async function triggerActionHaptic(action: ToolAction): Promise<void> {
+  const pattern = (hapticsConfig.toolActions as Record<string, string>)[action] as HapticType | undefined;
+  if (pattern) await triggerHaptic(pattern);
 }

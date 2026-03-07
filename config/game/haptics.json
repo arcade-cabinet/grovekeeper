@@ -1,0 +1,9 @@
+{
+  "toolActions": {
+    "DIG": "heavy",
+    "CHOP": "medium",
+    "WATER": "light",
+    "PLANT": "medium",
+    "PRUNE": "light"
+  }
+}

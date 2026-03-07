@@ -2671,3 +2671,17 @@ after each iteration and it's included in prompts for context.
   - **Two-pool affinity avoids role lock-in**: 70% chance to pick from role-preferred base list, 30% from all models. This means minority bases still appear across a large NPC population — prevents a world of only merchants for trading roles.
   - **Stop condition applies**: When acceptance criteria are fully met by existing implementation and tests, verify + signal. Do not re-implement.
 ---
+
+## 2026-03-07 - US-147
+- Wired haptics to tool action dispatch (DIG/CHOP/WATER/PLANT/PRUNE)
+- Files changed:
+  - `config/game/haptics.json` — new: per-action haptic intensity (heavy/medium/light)
+  - `game/systems/haptics.ts` — added `ToolAction` type + `triggerActionHaptic(action)` async fn
+  - `game/actions/actionDispatcher.ts` — import `triggerActionHaptic`; restructured switch to track `success`; call `void triggerActionHaptic(action)` on success
+  - `game/systems/haptics.test.ts` — added 6 `triggerActionHaptic` tests (5 actions + web no-op)
+  - `game/actions/actionDispatcher.test.ts` — added `jest.mock("@/game/systems/haptics")`; 4 haptics-wiring tests
+- **Learnings:**
+  - **Avoid circular import via local type alias**: `haptics.ts` needs `GameAction` but importing it from `actionDispatcher.ts` creates a cycle (dispatcher imports haptics). Define a local `ToolAction = "DIG"|"CHOP"|...` in haptics.ts — TypeScript verifies structural compatibility at the call site without any actual import.
+  - **expo-haptics mock needs enum values as strings**: Jest auto-mock doesn't reconstruct TypeScript const enums. Provide `ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" }` in the mock factory — the production code does `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)`, which in test resolves to `mockImpactAsync("heavy")`.
+  - **Fire-and-forget haptics keeps dispatch synchronous**: `dispatchAction` is a sync function. Use `void triggerActionHaptic(action)` to start the async haptic without blocking or requiring callers to await.
+---

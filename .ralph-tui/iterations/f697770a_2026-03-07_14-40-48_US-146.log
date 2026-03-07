@@ -1,0 +1,70 @@
+# Iteration 146 Log
+
+## Metadata
+
+- **Task ID**: US-146
+- **Task Title**: Update npcAppearance for ChibiCharacter GLB assembly
+- **Description**: As a developer, I want the existing npcAppearance.ts (176 lines) updated to assemble ChibiCharacter GLBs with seeded item selection (hair, outfit, armor, accessories) from config/game/npcAssets.json u...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T20:40:48.967Z
+- **Ended At**: 2026-03-07T20:45:03.512Z
+- **Duration**: 4m 14s
+- **Input Tokens**: 92
+- **Output Tokens**: 11591
+- **Total Tokens**: 11683
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/npcAssets.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/npcAssets.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/npcAppearance.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|section 15|NPC Appearance|npcAppearance|ChibiCharacter[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils[0m pattern: [96mscopedRNG[0m
+Let me check GAME_SPEC.md for the NPC section that §15 refers to:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## (§15|15\.|15 )[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/utils/seedRNG.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mbiome.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/biome.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mtsconfig.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/tsconfig.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mnode_modules/expo/tsconfig.base.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/expo/tsconfig.base.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json[0m pattern: [96m\"lint\"|\"check\"|\"format\"[0m
+Let me check the NpcMeshes component and any GLB resolution utilities:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/NpcMeshes*[0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run npcAppearance Jest tests $ npx jest --no-coverage --testPathPattern="npcAppearance" 2>&1 | tail -30
+Both checks pass. The existing implementation is complete and correct — all 11 tests pass, TypeScript is clean.
+
+`★ Insight ─────────────────────────────────────`
+- The `npcAppearance.ts` uses a type alias between two import statements — TypeScript allows this since imports are hoisted. Biome's `organizeImports` is set as an `assist` action (not a lint rule), so `biome check` doesn't fail on it.
+- The role affinity system uses a two-pool approach: 70% chance to pick from role-preferred base models, 30% from all models — this ensures diversity across all 6 base characters while still favoring role-appropriate ones.
+`─────────────────────────────────────────────────`
+
+Now I'll document in progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+The implementation is complete and all tests pass. Let me append to progress.md:
+[94m[Bash][0m Get end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-146 entry to progress.md $ import { C } from "y"` compiles because TypeScript hoists all imports before executing module bodies...
+US-146 is already complete. The existing `game/systems/npcAppearance.ts` (176 lines) fully satisfies all acceptance criteria:
+
+- **ChibiCharacter GLB assembly**: Selects from 6 base models (excluding `allinone`) + 33 mix-and-match items from `npcAssets.json`
+- **Seeded selection**: `scopedRNG("npc-appearance", worldSeed, npcId, role)` — deterministic and scoped
+- **Color palette**: Picked from 16 cozy hex colors via seeded RNG
+- **Same seed → same appearance**: Confirmed by 11 passing tests
+- **`npx tsc --noEmit`**: 0 errors
+- **`npx jest --no-coverage`**: 11/11 pass
+
+<promise>COMPLETE</promise>

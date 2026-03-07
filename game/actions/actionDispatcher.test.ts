@@ -21,6 +21,11 @@ jest.mock("@/game/actions/GameActions", () => ({
   clearRock: jest.fn(() => true),
 }));
 
+// Mock haptics — dispatcher tests don't exercise haptic hardware.
+jest.mock("@/game/systems/haptics", () => ({
+  triggerActionHaptic: jest.fn().mockResolvedValue(undefined),
+}));
+
 import {
   harvestTree,
   waterTree,
@@ -28,12 +33,14 @@ import {
   plantTree,
   clearRock,
 } from "@/game/actions/GameActions";
+import { triggerActionHaptic } from "@/game/systems/haptics";
 
 const mockHarvestTree = harvestTree as jest.Mock;
 const mockWaterTree = waterTree as jest.Mock;
 const mockPruneTree = pruneTree as jest.Mock;
 const mockPlantTree = plantTree as jest.Mock;
 const mockClearRock = clearRock as jest.Mock;
+const mockTriggerActionHaptic = triggerActionHaptic as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -253,5 +260,29 @@ describe("dispatchAction (Spec §11)", () => {
       expect(dispatchAction(ctx)).toBe(false);
       expect(mockHarvestTree).not.toHaveBeenCalled();
     });
+  });
+});
+
+// ── Haptics wiring (Spec §11) ──────────────────────────────────────────────
+
+describe("dispatchAction haptics (Spec §11)", () => {
+  it("fires triggerActionHaptic on successful CHOP", () => {
+    dispatchAction({ toolId: "axe", targetType: "tree", entity: { id: "t1" } as never });
+    expect(mockTriggerActionHaptic).toHaveBeenCalledWith("CHOP");
+  });
+
+  it("fires triggerActionHaptic on successful DIG", () => {
+    dispatchAction({ toolId: "shovel", targetType: "rock", gridX: 1, gridZ: 2 });
+    expect(mockTriggerActionHaptic).toHaveBeenCalledWith("DIG");
+  });
+
+  it("does not fire triggerActionHaptic when action fails (missing entity)", () => {
+    dispatchAction({ toolId: "axe", targetType: "tree" });
+    expect(mockTriggerActionHaptic).not.toHaveBeenCalled();
+  });
+
+  it("does not fire triggerActionHaptic when no valid action mapping", () => {
+    dispatchAction({ toolId: "almanac", targetType: "tree" });
+    expect(mockTriggerActionHaptic).not.toHaveBeenCalled();
   });
 });

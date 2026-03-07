@@ -11,6 +11,7 @@
 import { clearRock, harvestTree, plantTree, pruneTree, waterTree } from "@/game/actions/GameActions";
 import type { Entity } from "@/game/ecs/world";
 import type { RaycastEntityType } from "@/game/hooks/useRaycast";
+import { triggerActionHaptic } from "@/game/systems/haptics";
 
 /** The five core game verbs mapped by the dispatcher. */
 export type GameAction = "DIG" | "CHOP" | "WATER" | "PLANT" | "PRUNE";
@@ -71,26 +72,36 @@ export function dispatchAction(ctx: DispatchContext): boolean {
   const action = resolveAction(ctx.toolId, ctx.targetType);
   if (!action) return false;
 
+  let success = false;
+
   switch (action) {
     case "CHOP": {
       if (!ctx.entity?.id) return false;
-      return harvestTree(ctx.entity.id) !== null;
+      success = harvestTree(ctx.entity.id) !== null;
+      break;
     }
     case "WATER": {
       if (!ctx.entity?.id) return false;
-      return waterTree(ctx.entity.id);
+      success = waterTree(ctx.entity.id);
+      break;
     }
     case "PRUNE": {
       if (!ctx.entity?.id) return false;
-      return pruneTree(ctx.entity.id);
+      success = pruneTree(ctx.entity.id);
+      break;
     }
     case "PLANT": {
       if (ctx.gridX === undefined || ctx.gridZ === undefined || !ctx.speciesId) return false;
-      return plantTree(ctx.speciesId, ctx.gridX, ctx.gridZ);
+      success = plantTree(ctx.speciesId, ctx.gridX, ctx.gridZ);
+      break;
     }
     case "DIG": {
       if (ctx.gridX === undefined || ctx.gridZ === undefined) return false;
-      return clearRock(ctx.gridX, ctx.gridZ);
+      success = clearRock(ctx.gridX, ctx.gridZ);
+      break;
     }
   }
+
+  if (success) void triggerActionHaptic(action);
+  return success;
 }
