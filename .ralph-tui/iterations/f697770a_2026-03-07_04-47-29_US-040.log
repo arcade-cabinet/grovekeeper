@@ -1,0 +1,49 @@
+# Iteration 40 Log
+
+## Metadata
+
+- **Task ID**: US-040
+- **Task Title**: Write Jest tests for grass placement
+- **Description**: As a developer, I want tests for grass placement so that density controls and deterministic placement are verified. See GAME_SPEC.md §8.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:47:29.852Z
+- **Ended At**: 2026-03-07T10:48:41.514Z
+- **Duration**: 1m 11s
+- **Input Tokens**: 65
+- **Output Tokens**: 2936
+- **Total Tokens**: 3001
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/grass*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*[Gg]rass*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Now let me read the existing grass implementation and test files from US-039.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrassInstances.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrassInstances.test.ts[0m
+Let me check the US-039 progress entry and verify tests pass:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m pattern: [96mUS-039[0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+The tests already exist from US-039 (28 tests in `GrassInstances.test.ts`). Let me verify the quality checks pass.
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -5
+[94m[Bash][0m Run GrassInstances tests $ npx jest --no-coverage --testPathPattern GrassInstances 2>&1 | tail -20
+`★ Insight ─────────────────────────────────────`
+The Docs > Tests > Code pipeline means US-040 ("write tests for grass placement") is a no-op — US-039 shipped 28 tests with the implementation. This is the intended workflow: tests travel with the feature, not as a separate follow-up story.
+`─────────────────────────────────────────────────`
+
+Work is already complete. US-039 shipped 28 tests covering all US-040 acceptance criteria:
+- **Density controls** — `returns exactly density transforms`, `returns 0 transforms for density 0`, `density 6 returns 6 instances`
+- **Deterministic placement** — `is deterministic — same entityId + density gives identical result`, `different entityIds produce different transforms`
+- **Scatter bounds** — `all instances are within GRASS_SCATTER_RADIUS of origin`, `rotY is in [0, 2π) for all instances`
+
+Both `npx tsc --noEmit` (0 errors) and `npx jest --no-coverage` (28 tests, 0 failures) pass.
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **Config-sourced scatter radius**: `GRASS_SCAT..." → "  - **Config-sourced scatter radius**: `GRASS_SCAT..."
+<promise>COMPLETE</promise>

@@ -37,6 +37,33 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-041
+- Created `components/entities/NpcModel.tsx`:
+  - `resolveBaseModelPath(baseModelId)` — pure lookup from `npcAssets.json`; throws for unknown (no fallback)
+  - `resolveBaseModelEmissionPath(baseModelId)` — returns emission GLB path for night glow effect
+  - `resolveItemPath(itemId)` — pure lookup for item GLBs; throws for unknown
+  - `resolveNpcAppearance(npcId, worldSeed, role)` — testable seam wrapping `generateNpcAppearance`; maps to GLB paths
+  - `NpcGLBPart` — internal sub-component for useGLTF + clone + tint (Rules of Hooks)
+  - `NpcModel` — public component; each item slot conditionally mounts a `NpcGLBPart`
+- Created `components/entities/NpcModel.test.ts` — 33 tests (all green):
+  - `resolveBaseModelPath`: correct paths for all 7 base models, all .glb, all unique, throws for unknown/empty
+  - `resolveBaseModelEmissionPath`: emission paths differ from base, all .glb, throws for unknown
+  - `resolveItemPath`: correct paths for hairone/shirt/pants/bag, all .glb, throws for unknown/empty
+  - `resolveNpcAppearance`: deterministic, different npcId→different output, different worldSeed→different output, hex color, boolean useEmission, item paths .glb, valid slots, emission path matches `-pr.glb`, default role works
+  - `NpcModel`: exports as function component
+- **Files changed:**
+  - `components/entities/NpcModel.tsx`: new file
+  - `components/entities/NpcModel.test.ts`: new file — 33 tests
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern NpcModel` → 33 tests, 0 failures
+- **Learnings:**
+  - `generateNpcAppearance` already existed in `game/systems/npcAppearance.ts` — NpcModel delegates to it rather than reimplementing scopedRNG usage. Pure-function seam pattern: export `resolveNpcAppearance` from the component so tests can verify path resolution without WebGL.
+  - Conditional item slot rendering: `{itemPaths.head && <NpcGLBPart ...>}` — conditionally *mounts* components, never conditionally *calls hooks*. Each `NpcGLBPart` always calls `useGLTF` when mounted; Rules of Hooks satisfied.
+  - Color tint on base model only, items use original textures — same `MeshStandardMaterial` clone pattern as TreeModel/BushModel but scoped to base GLB only.
+
+---
+
 ## 2026-03-07 - US-038
 - Work already complete — `components/entities/BushModel.test.ts` was created as part of US-037 (Docs > Tests > Code workflow)
 - 36 tests covering: VALID_SEASONS (5 seasons, each present), VALID_BUSH_SHAPES (≥52, all start with `bush_`, no duplicates), `buildModelKey` (correct patterns, all 5 seasons produce different keys, all shapes produce different keys), `resolveBushGLBPath` (correct paths, ends in .glb, includes prefix, same shape→different path per season, different shapes→different paths, all 52×5 resolve without throwing, all 260 paths unique, throws for unknown/empty/partial bushShape), BushModel component export check
