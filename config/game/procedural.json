@@ -152,7 +152,8 @@
       "color": "#c8ff00",
       "gravity": -0.1,
       "maxParticles": 30,
-      "activeHours": [20, 4]
+      "activeHours": [20, 4],
+      "waterProximityRadius": 12.0
     },
     "pollen": {
       "emissionRate": 5,
@@ -181,6 +182,18 @@
       "color": "#ff6600",
       "gravity": -0.8,
       "maxParticles": 15
+    },
+    "leaves": {
+      "emissionRate": 8,
+      "lifetime": 5.0,
+      "emissionRadius": 8.0,
+      "size": 0.08,
+      "color": "#c8854a",
+      "gravity": 0.2,
+      "windAffected": true,
+      "maxParticles": 50,
+      "activeSeason": "autumn",
+      "minWindSpeed": 0.5
     },
     "waterfallSplash": {
       "emissionRate": 15,

@@ -78,6 +78,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-136
+- Implemented ambient particle emitters system (Spec §36.1).
+- Files changed:
+  - `config/game/procedural.json` — added `particles.leaves` (emissionRate=8, lifetime=5s, autumn-only, minWindSpeed=0.5) and `particles.fireflies.waterProximityRadius: 12.0`
+  - `game/systems/ambientParticles.ts` — new: pure condition helpers (isNightTime, isNearWater, isPollenSeason, isLeafCondition), emitter builders (buildFireflyEmitter, buildPollenEmitter, buildLeavesEmitter), and ECS tick (tickAmbientParticles) managing per-chunk emitter lifecycle via Map<chunkKey, ChunkEmitterSet>
+  - `game/systems/ambientParticles.test.ts` — new: 62 tests, all passing
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3327 tests, 142 suites pass
+- **Learnings:**
+  - **Per-chunk emitter Map pattern**: Use `Map<chunkKey, ChunkEmitterSet>` to track up to 3 concurrent emitters per chunk (firefly, pollen, leaves). On each tick: iterate stale keys (not in activeKeys) to despawn+delete, then iterate activeChunks to spawn/despawn per condition. O(1) lookups, O(stale) cleanup.
+  - **Night window wraps midnight**: `isNightTime(hour)` requires `hour >= START || hour < END` — the OR form handles the midnight wrap. Using AND would create a dead zone around midnight.
+  - **Firefly water proximity uses 2D distance**: Only X and Z matter for chunk-to-water proximity — Y is ignored. `dx*dx + dz*dz <= r*r` (no sqrt) for efficiency.
+
+---
+
 ## 2026-03-07 - US-135
 - Implemented seasonal effects system (Spec §6.3).
 - Files changed:
