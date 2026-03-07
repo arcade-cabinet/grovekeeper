@@ -1,5 +1,5 @@
 /**
- * Tests for NPC walk-cycle animation system.
+ * Tests for NPC animation system (walk cycle, idle breathing, talk gestures).
  * Spec: GAME_SPEC.md §15 — NPC Animation (Lego-style rigid body part rotation)
  */
 
@@ -27,8 +27,12 @@ function makeNpc(overrides: Partial<NpcComponent> = {}): NpcComponent {
   };
 }
 
-describe("computeNpcLimbRotations (Spec §15)", () => {
-  it("returns zero rotations for idle state", () => {
+// ---------------------------------------------------------------------------
+// computeNpcLimbRotations — walk cycle (US-043)
+// ---------------------------------------------------------------------------
+
+describe("computeNpcLimbRotations walk (Spec §15)", () => {
+  it("returns zero walk-limb rotations for idle state", () => {
     const npc = makeNpc({ currentAnim: "idle" });
     const rot = computeNpcLimbRotations(npc);
     expect(rot.leftArm).toBe(0);
@@ -38,7 +42,7 @@ describe("computeNpcLimbRotations (Spec §15)", () => {
     expect(rot.bounceY).toBe(0);
   });
 
-  it("returns zero rotations for talk state", () => {
+  it("returns zero walk-limb rotations for talk state", () => {
     const npc = makeNpc({ currentAnim: "talk", animProgress: 1.5 });
     const rot = computeNpcLimbRotations(npc);
     expect(rot.leftArm).toBe(0);
@@ -47,7 +51,7 @@ describe("computeNpcLimbRotations (Spec §15)", () => {
     expect(rot.rightLeg).toBe(0);
   });
 
-  it("returns zero rotations for sleep state", () => {
+  it("returns zero walk-limb rotations for sleep state", () => {
     const npc = makeNpc({ currentAnim: "sleep", animProgress: 2.0 });
     const rot = computeNpcLimbRotations(npc);
     expect(rot.leftArm).toBe(0);
@@ -116,7 +120,127 @@ describe("computeNpcLimbRotations (Spec §15)", () => {
     const rot2 = computeNpcLimbRotations(npc2);
     expect(rot1.leftArm).not.toBeCloseTo(rot2.leftArm, 5);
   });
+
+  it("walk returns zero for idle-specific fields", () => {
+    const npc = makeNpc({ currentAnim: "walk", animProgress: 0.5 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.torsoY).toBe(0);
+    expect(rot.headSway).toBe(0);
+    expect(rot.armGesture).toBe(0);
+  });
 });
+
+// ---------------------------------------------------------------------------
+// computeNpcLimbRotations — idle breathing + head sway (US-044)
+// ---------------------------------------------------------------------------
+
+describe("computeNpcLimbRotations idle (Spec §15)", () => {
+  it("torsoY is non-zero during idle at non-zero animProgress", () => {
+    // t=0.5: sin(0.5 * 1.5) = sin(0.75) ≠ 0
+    const npc = makeNpc({ currentAnim: "idle", animProgress: 0.5 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.torsoY).not.toBe(0);
+  });
+
+  it("headSway is non-zero during idle at non-zero animProgress", () => {
+    // t=1.0: sin(1.0 * 0.7) = sin(0.7) ≠ 0
+    const npc = makeNpc({ currentAnim: "idle", animProgress: 1.0 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.headSway).not.toBe(0);
+  });
+
+  it("torsoY stays within idle bodyBob amplitude (0.02 m)", () => {
+    for (let i = 0; i <= 60; i++) {
+      const npc = makeNpc({ currentAnim: "idle", animProgress: i * 0.1 });
+      const rot = computeNpcLimbRotations(npc);
+      expect(Math.abs(rot.torsoY)).toBeLessThanOrEqual(0.02 + 1e-10);
+    }
+  });
+
+  it("headSway stays within idle headTurn maxAngle (0.08 rad)", () => {
+    for (let i = 0; i <= 60; i++) {
+      const npc = makeNpc({ currentAnim: "idle", animProgress: i * 0.1 });
+      const rot = computeNpcLimbRotations(npc);
+      expect(Math.abs(rot.headSway)).toBeLessThanOrEqual(0.08 + 1e-10);
+    }
+  });
+
+  it("idle does not move walk limbs", () => {
+    const npc = makeNpc({ currentAnim: "idle", animProgress: 0.5 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.leftArm).toBe(0);
+    expect(rot.rightArm).toBe(0);
+    expect(rot.leftLeg).toBe(0);
+    expect(rot.rightLeg).toBe(0);
+    expect(rot.bounceY).toBe(0);
+    expect(rot.armGesture).toBe(0);
+  });
+
+  it("idle torsoY oscillates — can be negative (smooth sine, not abs)", () => {
+    // After half a period it should be negative
+    const period = (2 * Math.PI) / 1.5; // ~4.19s
+    const npc = makeNpc({ currentAnim: "idle", animProgress: period * 0.75 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.torsoY).toBeLessThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeNpcLimbRotations — talk head nod + arm gesture (US-044)
+// ---------------------------------------------------------------------------
+
+describe("computeNpcLimbRotations talk (Spec §15)", () => {
+  it("headSway is non-zero during talk at non-zero animProgress", () => {
+    // t=0.5: sin(0.5 * 1.0) = sin(0.5) ≠ 0
+    const npc = makeNpc({ currentAnim: "talk", animProgress: 0.5 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.headSway).not.toBe(0);
+  });
+
+  it("armGesture is non-zero during talk at non-zero animProgress", () => {
+    // t=0.5: sin(0.5 * 1.5) ≠ 0
+    const npc = makeNpc({ currentAnim: "talk", animProgress: 0.5 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.armGesture).not.toBe(0);
+  });
+
+  it("torsoY is non-zero during talk at non-zero animProgress", () => {
+    // t=0.5: sin(0.5 * 2.0) = sin(1.0) ≠ 0
+    const npc = makeNpc({ currentAnim: "talk", animProgress: 0.5 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.torsoY).not.toBe(0);
+  });
+
+  it("talk headSway stays within talk headTurn maxAngle (0.25 rad)", () => {
+    for (let i = 0; i <= 60; i++) {
+      const npc = makeNpc({ currentAnim: "talk", animProgress: i * 0.1 });
+      const rot = computeNpcLimbRotations(npc);
+      expect(Math.abs(rot.headSway)).toBeLessThanOrEqual(0.25 + 1e-10);
+    }
+  });
+
+  it("talk armGesture stays within talk armSwing maxAngle (0.15 rad)", () => {
+    for (let i = 0; i <= 60; i++) {
+      const npc = makeNpc({ currentAnim: "talk", animProgress: i * 0.1 });
+      const rot = computeNpcLimbRotations(npc);
+      expect(Math.abs(rot.armGesture)).toBeLessThanOrEqual(0.15 + 1e-10);
+    }
+  });
+
+  it("talk does not move walk limbs", () => {
+    const npc = makeNpc({ currentAnim: "talk", animProgress: 1.5 });
+    const rot = computeNpcLimbRotations(npc);
+    expect(rot.leftArm).toBe(0);
+    expect(rot.rightArm).toBe(0);
+    expect(rot.leftLeg).toBe(0);
+    expect(rot.rightLeg).toBe(0);
+    expect(rot.bounceY).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// advanceNpcAnimation — progress accumulation
+// ---------------------------------------------------------------------------
 
 describe("advanceNpcAnimation (Spec §15)", () => {
   it("advances animProgress during walk", () => {
@@ -125,7 +249,19 @@ describe("advanceNpcAnimation (Spec §15)", () => {
     expect(npc.animProgress).toBeCloseTo(0.016);
   });
 
-  it("scales animProgress by animSpeed", () => {
+  it("advances animProgress during idle", () => {
+    const npc = makeNpc({ currentAnim: "idle", animProgress: 0, animSpeed: 1 });
+    advanceNpcAnimation(npc, 0.016);
+    expect(npc.animProgress).toBeCloseTo(0.016);
+  });
+
+  it("advances animProgress during talk", () => {
+    const npc = makeNpc({ currentAnim: "talk", animProgress: 3.0, animSpeed: 1 });
+    advanceNpcAnimation(npc, 0.016);
+    expect(npc.animProgress).toBeCloseTo(3.016);
+  });
+
+  it("scales animProgress by animSpeed during walk", () => {
     const slow = makeNpc({ currentAnim: "walk", animProgress: 0, animSpeed: 0.5 });
     const fast = makeNpc({ currentAnim: "walk", animProgress: 0, animSpeed: 2.0 });
     advanceNpcAnimation(slow, 0.1);
@@ -134,25 +270,19 @@ describe("advanceNpcAnimation (Spec §15)", () => {
     expect(fast.animProgress).toBeCloseTo(slow.animProgress * 4);
   });
 
-  it("does NOT advance animProgress during idle", () => {
-    const npc = makeNpc({ currentAnim: "idle", animProgress: 0, animSpeed: 1 });
-    advanceNpcAnimation(npc, 0.016);
-    expect(npc.animProgress).toBe(0);
-  });
-
-  it("does NOT advance animProgress during talk", () => {
-    const npc = makeNpc({ currentAnim: "talk", animProgress: 3.0, animSpeed: 1 });
-    advanceNpcAnimation(npc, 0.016);
-    expect(npc.animProgress).toBe(3.0);
-  });
-
   it("does NOT advance animProgress during sleep", () => {
     const npc = makeNpc({ currentAnim: "sleep", animProgress: 1.5, animSpeed: 1 });
     advanceNpcAnimation(npc, 0.1);
     expect(npc.animProgress).toBe(1.5);
   });
 
-  it("accumulates progress across multiple frames", () => {
+  it("does NOT advance animProgress during work", () => {
+    const npc = makeNpc({ currentAnim: "work", animProgress: 2.0, animSpeed: 1 });
+    advanceNpcAnimation(npc, 0.1);
+    expect(npc.animProgress).toBe(2.0);
+  });
+
+  it("accumulates progress across multiple frames during walk", () => {
     const npc = makeNpc({ currentAnim: "walk", animProgress: 0, animSpeed: 1 });
     advanceNpcAnimation(npc, 0.016);
     advanceNpcAnimation(npc, 0.016);
@@ -160,7 +290,14 @@ describe("advanceNpcAnimation (Spec §15)", () => {
     expect(npc.animProgress).toBeCloseTo(0.048);
   });
 
-  it("higher animSpeed produces faster limb oscillation", () => {
+  it("accumulates progress across multiple frames during idle", () => {
+    const npc = makeNpc({ currentAnim: "idle", animProgress: 0, animSpeed: 1 });
+    advanceNpcAnimation(npc, 0.016);
+    advanceNpcAnimation(npc, 0.016);
+    expect(npc.animProgress).toBeCloseTo(0.032);
+  });
+
+  it("higher animSpeed produces faster limb oscillation during walk", () => {
     const slow = makeNpc({ currentAnim: "walk", animProgress: 0, animSpeed: 1 });
     const fast = makeNpc({ currentAnim: "walk", animProgress: 0, animSpeed: 3 });
     // Advance both by same dt

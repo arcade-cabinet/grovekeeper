@@ -2,7 +2,7 @@
   "animations": {
     "idle": {
       "bodyBob": { "amplitude": 0.02, "frequency": 1.5 },
-      "headTurn": { "maxAngle": 0, "frequency": 0 },
+      "headTurn": { "maxAngle": 0.08, "frequency": 0.7 },
       "armSwing": { "maxAngle": 0, "frequency": 0 },
       "legSwing": { "maxAngle": 0, "frequency": 0 }
     },

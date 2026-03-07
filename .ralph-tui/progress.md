@@ -797,3 +797,21 @@ after each iteration and it's included in prompts for context.
   - Phase offsets from config (`leftArm=0, rightArm=π, leftLeg=π, rightLeg=0`) wire up counter-swing automatically; the system just reads them
   - Pure system pattern (no Three.js refs, no anime.js dependency): computes values, R3F component applies them — keeps system fully testable without WebGL
 ---
+
+## 2026-03-07 - US-044
+- Extended `NpcLimbRotations` with `torsoY`, `headSway`, `armGesture` fields
+- Implemented idle animation: smooth sine breathing bob (`torsoY`) + gentle head sway (`headSway`) using config from `npcAnimation.json`
+- Implemented talk animation: head nod (`headSway`) + arm gesture (`armGesture`) + slight torso bob (`torsoY`)
+- Updated `advanceNpcAnimation` to advance `animProgress` for idle and talk states (previously walk-only)
+- Updated `npcAnimation.json` idle `headTurn`: `maxAngle: 0 → 0.08`, `frequency: 0 → 0.7` for visible head sway
+- Tests updated: replaced "does NOT advance during idle/talk" with positive assertions; added 13 new tests for idle/talk cases (33 total in suite)
+- Files changed:
+  - `config/game/npcAnimation.json` — idle headTurn values
+  - `game/systems/npcAnimation.ts` — new interface fields + idle/talk cases
+  - `game/systems/npcAnimation.test.ts` — fixed 2 tests, added 13 new tests
+- **Learnings:**
+  - Adding new output fields (`torsoY`, `headSway`, `armGesture`) instead of overloading existing `leftArm`/`rightArm` kept all walk tests passing without modification — critical design decision
+  - Idle uses smooth `sin` for torsoY (oscillates up/down) vs walk `abs(sin)` for bounceY (always positive) — the distinction is important for natural breathing feel vs foot-fall bounce
+  - `{ ...ZERO_ROTATIONS, torsoY: ..., headSway: ... }` pattern ensures TypeScript validates all fields at ZERO_ROTATIONS definition site, making future interface additions safe
+  - `advanceNpcAnimation` advancing for 3 states (walk/idle/talk) leaves sleep/work stationary — consistent with config having zero amplitudes for sleep
+---
