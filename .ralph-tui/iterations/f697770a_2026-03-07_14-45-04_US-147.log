@@ -1,0 +1,136 @@
+# Iteration 147 Log
+
+## Metadata
+
+- **Task ID**: US-147
+- **Task Title**: Wire haptics to tool actions
+- **Description**: As a developer, I want the existing haptics.ts (37 lines) wired to the action dispatch system so that DIG/CHOP/WATER/PLANT/PRUNE each trigger distinct haptic patterns on mobile. See GAME_SPEC.md §11.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T20:45:04.644Z
+- **Ended At**: 2026-03-07T20:50:10.407Z
+- **Duration**: 5m 5s
+- **Input Tokens**: 128
+- **Output Tokens**: 15915
+- **Total Tokens**: 16043
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/haptics.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/actionDispatcher*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.test.ts[0m
+Now let me check the GAME_SPEC.md §11 and config directory:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|haptic|Haptic[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|section 11|## 11|^# 11[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The circular-dependency risk here is real: `haptics.ts` → import `GameAction` from `actionDispatcher.ts` → which will import `triggerActionHaptic` from `haptics.ts`. Solution: define a local `ToolAction` string union in `haptics.ts` that mirrors `GameAction` without importing it. TypeScript checks structural compatibility at the call site.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Edit[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/haptics.json[0m "{
+  "toolActions": {
+    "DIG": "heavy",
+    "CHOP": "medium",
+    "WATER": "light",
+    "PLANT": "medium",
+    "PRUNE": "light"
+  }
+}
+"
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/haptics.ts[0m edit: "import * as Haptics from "expo-haptics";
+import { ..." → "import * as Haptics from "expo-haptics";
+import { ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/haptics.ts[0m edit: "  } catch {
+    // expo-haptics not available (e.g..." → "  } catch {
+    // expo-haptics not available (e.g..."
+[94m[TodoWrite][0m
+Now wire haptics into the dispatcher. The fire-and-forget `void` pattern keeps dispatch synchronous:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.ts[0m edit: "import { clearRock, harvestTree, plantTree, pruneT..." → "import { clearRock, harvestTree, plantTree, pruneT..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.ts[0m edit: "export function dispatchAction(ctx: DispatchContex..." → "export function dispatchAction(ctx: DispatchContex..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Mocking `expo-haptics` in Jest requires providing the `ImpactFeedbackStyle` enum values as constants — jest.mock auto-mocking doesn't reconstruct TypeScript enums. Providing them explicitly (`Heavy: "Heavy"`) avoids `undefined` when the production code does `Haptics.ImpactFeedbackStyle.Heavy`.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/haptics.test.ts[0m "/**
+ * haptics.test.ts
+ *
+ * Tests for triggerActionHaptic (Spec §11).
+ * Verifies each tool action maps to the correct haptic pattern from config.
+ */
+
+jest.mock("expo-haptics", () => ({
+  impactAsyn... (2139 chars)"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Bash][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Bash failed due to the following issues:
+The required parameter `command` is missing
+An unexpected parameter `cmd` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/haptics.test.ts[0m
+The test file already exists with `triggerHaptic` tests. I'll add `triggerActionHaptic` tests at the end:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/haptics.test.ts[0m edit: "import { Platform } from "react-native";
+import { ..." → "import { Platform } from "react-native";
+import { ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/haptics.test.ts[0m edit: "    Platform.OS = original;
+  });
+});" → "    Platform.OS = original;
+  });
+});
+
+describe("t..."
+[94m[TodoWrite][0m
+Now update the dispatcher test to mock haptics (so `expo-haptics` doesn't bleed in) and assert haptics fire on success:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.test.ts[0m edit: "// Mock the GameActions module — dispatcher tests ..." → "// Mock the GameActions module — dispatcher tests ..."
+Now import and assert `triggerActionHaptic` is called on success. Add it alongside the existing imports:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.test.ts[0m edit: "import {
+  harvestTree,
+  waterTree,
+  pruneTree,
+..." → "import {
+  harvestTree,
+  waterTree,
+  pruneTree,
+..."
+Now add a haptics-assertion test block at the end of the file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.test.ts[0m edit: "  describe("no-op cases", () => {
+    it("returns ..." → "  describe("no-op cases", () => {
+    it("returns ..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run haptics and actionDispatcher tests $ npx jest --no-coverage --testPathPattern="haptics|actionDispatcher" 2>&1 | tail -60
+All 40 tests pass. Let me also do a full test run to make sure nothing is broken:
+[94m[Bash][0m Run full jest suite $ npx jest --no-coverage 2>&1 | tail -20
+147 suites, 3451 tests — all green.
+[94m[TodoWrite][0m
+Now update progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-147 entry to progress.md $ 4 haptics-wiring tests - **Learnings:**   - **Avoid circular import via local type alias**: `haptics...
+`★ Insight ─────────────────────────────────────`
+The `void triggerActionHaptic(action)` pattern is idiomatic TypeScript for "fire and forget async in sync context" — it explicitly discards the Promise (silencing `no-floating-promises` linters) while keeping `dispatchAction` synchronous. The alternative (making `dispatchAction` async) would cascade through all callers with no benefit.
+`─────────────────────────────────────────────────`
+
+All done. Here's a summary of what was implemented:
+
+**Files changed:**
+- `config/game/haptics.json` — new config: DIG=heavy, CHOP=medium, WATER=light, PLANT=medium, PRUNE=light
+- `game/systems/haptics.ts` — added `ToolAction` type and `triggerActionHaptic(action)` (reads pattern from config, delegates to `triggerHaptic`, no-op on web via existing `Platform.OS` guard)
+- `game/actions/actionDispatcher.ts` — imported `triggerActionHaptic`; refactored switch to track `success`; fires `void triggerActionHaptic(action)` on success only
+- `game/systems/haptics.test.ts` — 6 new tests covering all 5 actions + web no-op
+- `game/actions/actionDispatcher.test.ts` — mocked `@/game/systems/haptics`; 4 new wiring tests
+
+tsc: clean. Jest: 3451/3451 pass.
+
+<promise>COMPLETE</promise>

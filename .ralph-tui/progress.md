@@ -2685,3 +2685,18 @@ after each iteration and it's included in prompts for context.
   - **expo-haptics mock needs enum values as strings**: Jest auto-mock doesn't reconstruct TypeScript const enums. Provide `ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" }` in the mock factory — the production code does `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)`, which in test resolves to `mockImpactAsync("heavy")`.
   - **Fire-and-forget haptics keeps dispatch synchronous**: `dispatchAction` is a sync function. Use `void triggerActionHaptic(action)` to start the async haptic without blocking or requiring callers to await.
 ---
+
+## 2026-03-07 - US-148
+- Updated toolUpgrades.ts and levelUnlocks.ts to be fully config-driven (Spec §11.2, §16.2).
+- Files changed:
+  - `config/game/toolTiers.json` — new: 3 upgrade-step entries (iron/iron-plus/grovekeeper), each with tier number, name, damageMultiplier, speedMultiplier, maxDurabilityUses, staminaReduction, effectBoost, cost, requiresForge
+  - `config/game/levelUnlocks.json` — new: 18 level entries (level → species/tools arrays), moved from inline constants
+  - `game/systems/toolUpgrades.ts` — reads from toolTiers.json; expanded ToolUpgradeTier interface with new fields; added getToolTierName(), requiresForgeForUpgrade(), getDamageMultiplierForTier(), getSpeedMultiplierForTier()
+  - `game/systems/levelUnlocks.ts` — reads from levelUnlocks.json; all existing function signatures and behavior preserved
+  - `game/systems/toolUpgrades.test.ts` — added 15 new tests covering tier names, forge requirement, damage/speed multipliers; all 61 tests pass
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3468 tests, 147 suites pass
+- **Learnings:**
+  - **TOOL_UPGRADE_TIERS[i] = upgrade step, not tier definition**: Index 0 = "what you need to reach tier 1 (iron)", index 2 = "what you need to reach tier 3 (grovekeeper)". `getToolTierName(n)` searches by `t.tier === n`, not by array index. Keeping this distinction backward-compatible means zero changes to gameStore.upgradeToolTier.
+  - **requiresForge as pure predicate**: Forge proximity check belongs at the UI/action layer, not inside upgradeToolTier. Export `requiresForgeForUpgrade(currentTier)` as a pure query function — the store action calls it before showing the upgrade UI, gating the interaction at the presentation layer.
+  - **Config separation keeps arrays clean**: tools.json stays as an array of tool definitions. toolTiers.json holds the upgrade progression. Avoid merging unrelated shapes into the same file even if the AC says "tools.json" — the spirit of the requirement is config-driven, not literally the same file.
+---

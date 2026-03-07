@@ -1,8 +1,12 @@
 import {
   canAffordToolUpgrade,
+  getDamageMultiplierForTier,
   getEffectWithUpgrade,
+  getSpeedMultiplierForTier,
   getStaminaCostWithUpgrade,
+  getToolTierName,
   getToolUpgradeTier,
+  requiresForgeForUpgrade,
   TOOL_UPGRADE_TIERS,
 } from "./toolUpgrades";
 
@@ -28,6 +32,15 @@ describe("tool upgrades system", () => {
       const cost1Keys = Object.keys(TOOL_UPGRADE_TIERS[0].cost);
       const cost3Keys = Object.keys(TOOL_UPGRADE_TIERS[2].cost);
       expect(cost3Keys.length).toBeGreaterThan(cost1Keys.length);
+    });
+
+    it("each tier has a name and requiresForge field (from config)", () => {
+      expect(typeof TOOL_UPGRADE_TIERS[0].name).toBe("string");
+      expect(typeof TOOL_UPGRADE_TIERS[0].requiresForge).toBe("boolean");
+    });
+
+    it("final tier is named grovekeeper (Spec §11.2)", () => {
+      expect(TOOL_UPGRADE_TIERS[2].name).toBe("grovekeeper");
     });
   });
 
@@ -134,6 +147,74 @@ describe("tool upgrades system", () => {
       expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[2], resources)).toBe(true);
       const insufficient = { timber: 80, sap: 40, fruit: 20, acorns: 9 };
       expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[2], insufficient)).toBe(false);
+    });
+  });
+
+  describe("getToolTierName (Spec §11.2)", () => {
+    it("returns basic for tier 0", () => {
+      expect(getToolTierName(0)).toBe("basic");
+    });
+
+    it("returns iron for tier 1", () => {
+      expect(getToolTierName(1)).toBe("iron");
+    });
+
+    it("returns grovekeeper for max tier", () => {
+      expect(getToolTierName(3)).toBe("grovekeeper");
+    });
+
+    it("returns basic for negative tier", () => {
+      expect(getToolTierName(-1)).toBe("basic");
+    });
+
+    it("returns basic for unknown tier beyond max", () => {
+      expect(getToolTierName(99)).toBe("basic");
+    });
+  });
+
+  describe("requiresForgeForUpgrade (Spec §11.2)", () => {
+    it("returns true when upgrading from basic (forge required)", () => {
+      expect(requiresForgeForUpgrade(0)).toBe(true);
+    });
+
+    it("returns true when upgrading from iron", () => {
+      expect(requiresForgeForUpgrade(1)).toBe(true);
+    });
+
+    it("returns false at max tier (no upgrade available)", () => {
+      expect(requiresForgeForUpgrade(3)).toBe(false);
+    });
+  });
+
+  describe("getDamageMultiplierForTier (Spec §11.2)", () => {
+    it("returns 1.0 for tier 0 (basic)", () => {
+      expect(getDamageMultiplierForTier(0)).toBe(1.0);
+    });
+
+    it("returns 1.5 for tier 1 (iron)", () => {
+      expect(getDamageMultiplierForTier(1)).toBe(1.5);
+    });
+
+    it("returns 2.0 for tier 3 (grovekeeper)", () => {
+      expect(getDamageMultiplierForTier(3)).toBe(2.0);
+    });
+
+    it("returns 1.0 for unknown tier", () => {
+      expect(getDamageMultiplierForTier(-1)).toBe(1.0);
+    });
+  });
+
+  describe("getSpeedMultiplierForTier (Spec §11.2)", () => {
+    it("returns 1.0 for tier 0 (basic)", () => {
+      expect(getSpeedMultiplierForTier(0)).toBe(1.0);
+    });
+
+    it("returns 1.25 for tier 1 (iron)", () => {
+      expect(getSpeedMultiplierForTier(1)).toBe(1.25);
+    });
+
+    it("returns 1.5 for tier 3 (grovekeeper)", () => {
+      expect(getSpeedMultiplierForTier(3)).toBe(1.5);
     });
   });
 });
