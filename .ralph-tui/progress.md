@@ -37,6 +37,34 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-047
+- Created `config/game/fences.json` — 79 fence variants across 7 types (brick/drystone/wooden/metal/plackard/plaster/picket), keyed by `{fenceType}:{variant}` → modelPath at `assets/models/fences/{type}/{variant}.glb`
+- Created `components/entities/FenceModel.tsx`:
+  - `resolveFenceGLBPath(fenceType, variant)` — pure lookup from fences.json; throws for unknown (no fallback)
+  - `resolveConnectedVariant(fenceType, connections)` — auto-connect: maps `{north,south,east,west}` neighbor booleans to correct variant (straight/corner/isolated/end-cap) per type
+  - `resolveConnectedRotation(connections)` — returns π/2 for E-W aligned fences, 0 otherwise
+  - `FenceGLBModel` — inner sub-component wrapping `useGLTF` + `scene.clone(true)` (Rules of Hooks)
+  - `FenceModel` — public component; accepts `fenceType`, `variant`, `position`, `rotationY`, optional `connections` (auto-connect mode when provided)
+- Created `components/entities/FenceModel.test.ts` — 54 tests (all green):
+  - `resolveFenceGLBPath`: 18 spot-checks across all 7 types, all paths end in `.glb`, under `assets/models/fences/`, fenceType in directory, throws for unknown/empty/wrong-type
+  - `resolveConnectedVariant`: all 7 types × isolated/end/straight/corner/all-four topologies; integration test that all outputs are valid fences.json variants
+  - `resolveConnectedRotation`: N-S=0, E-W=π/2, east-only=π/2, west-only=π/2, no connections=0, corner=0
+  - `FenceModel`: exports as function, all 7 types covered
+- **Files changed:**
+  - `config/game/fences.json`: new file — 79 entries
+  - `components/entities/FenceModel.tsx`: new file
+  - `components/entities/FenceModel.test.ts`: new file — 54 tests
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern FenceModel` → 54 tests, 0 failures
+  - `npx jest --no-coverage` → 1759 tests, 0 failures (94 suites)
+- **Learnings:**
+  - Auto-connect via `resolveConnectedVariant` + `resolveConnectedRotation` is cleaner than embedding ECS queries in a rendering component — pure functions are testable and the component just conditionally uses them over explicit props.
+  - Compound map key `{fenceType}:{variant}` lets a single Map handle 79 entries across 7 types, matching the `FenceComponent.variant` field convention (exact filenames without .glb).
+  - `resolveConnectedVariant` outputs should always be validated against `resolveFenceGLBPath` in tests — the integration test catches any mismatch between auto-connect logic and fences.json entries.
+
+---
+
 ## 2026-03-07 - US-046
 - Created `components/entities/StructureModel.tsx`:
   - `resolveStructureGLBPath(templateId)` — pure lookup from `structures.json`; throws for unknown (no fallback)
