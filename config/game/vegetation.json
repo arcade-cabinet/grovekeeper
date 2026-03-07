@@ -131,6 +131,7 @@
     "bush_full",
     "bush_half_single"
   ],
+  "grassScatterRadius": 1.5,
   "bushRootsProbability": 0.3,
   "biomeDensity": {
     "temperate": {

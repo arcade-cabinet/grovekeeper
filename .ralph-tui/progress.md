@@ -720,3 +720,16 @@ after each iteration and it's included in prompts for context.
   - **Config as allowlist**: `resolveBushGLBPath` validates against `vegetation.json bushShapes` (throws on unknown). Adding a new shape only requires a config change — no code change needed.
   - **Uniqueness test**: `all resolved paths are unique across 52 shapes x 5 seasons` verifies 52x5=260 distinct paths in one test — catches any accidental path collisions from bad key composition.
 ---
+## 2026-03-07 - US-039
+- Implemented `components/entities/GrassInstances.tsx` — InstancedMesh rendering for all ECS grass entities
+- Added `grassScatterRadius: 1.5` to `config/game/vegetation.json`
+- Wrote 28 tests in `components/entities/GrassInstances.test.ts`
+- Wired `<GrassInstances />` into `app/game/index.tsx` scene (after `<TreeInstances />`)
+- Files changed: `config/game/vegetation.json`, `components/entities/GrassInstances.tsx`, `components/entities/GrassInstances.test.ts`, `app/game/index.tsx`
+- **Learnings:**
+  - **Grass InstancedMesh — grow-only capacity pattern**: `InstancedMesh` max count (`args[2]`) is fixed at construction. Never shrink it — just set `mesh.count = activeInstances` each frame. Only call `setState` (triggering remount with new capacity) when entities exceed allocation. A `capacitiesRef` (mutable, no re-render) tracks allocation; `typeCapacities` state drives JSX for sub-component mounting.
+  - **Dynamic grassType mounting via sub-components**: Use a parent `useFrame` that detects new grassTypes, updates React state infrequently (only on chunk load/unload). Sub-component `GrassTypeInstances` calls `useGLTF` at its own top level — satisfies Rules of Hooks. Parent renders `{[...map.entries()].map(...)}` with stable `key={grassType}`.
+  - **`grassQuery` module-level mock not needed in Jest**: `world.with("grass", "position")` runs at module load in `world.ts` but Miniplex is a real npm package that runs fine in Node/Jest. Mock `@/game/ecs/world` only in test files that need `grassQuery.entities` to be controlled — here we mock it as `{ grassQuery: { entities: [] } }` so the component can be imported without ECS side effects.
+  - **Reusable Three.js allocations in useFrame**: Pre-allocate `THREE.Vector3/Quaternion/Matrix4` via `useMemo(() => new THREE.Foo(), [])` in the component body. Reuse in `useFrame` via `.set()` / `.compose()` — avoids per-frame GC pressure from `new Matrix4()` inside the loop.
+  - **Config-sourced scatter radius**: `GRASS_SCATTER_RADIUS` exported from `vegetation.json.grassScatterRadius` satisfies the no-inline-magic-numbers rule while remaining testable (test verifies it equals the config value).
+---

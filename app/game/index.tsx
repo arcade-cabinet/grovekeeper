@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { GrassInstances } from "@/components/entities/GrassInstances";
 import { NpcMeshes } from "@/components/entities/NpcMeshes";
 import { Player } from "@/components/entities/Player";
 import { TreeInstances } from "@/components/entities/TreeInstances";
@@ -248,6 +249,7 @@ export default function GameScreen() {
             />
             <Player />
             <TreeInstances onTreeTap={onTreeTap} />
+            <GrassInstances />
             <NpcMeshes onNpcTap={onNpcTap} />
           </Physics>
         </Canvas>
