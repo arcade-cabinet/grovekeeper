@@ -78,6 +78,17 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-075
+- Work already complete — `game/world/villageGenerator.test.ts` (26 tests) was created as part of US-074
+- All acceptance criteria already satisfied: building count range, NPC population, campfire presence, determinism from seed
+- **Files changed:** none (verified existing file)
+- **Verification:** `npx jest --no-coverage game/world/villageGenerator.test.ts` → 26 passed, 0 failed
+- **Learnings:**
+  - **Tests-with-task mandate**: Following CLAUDE.md's "nothing is tested without implementation" rule in US-074 meant US-075 was a zero-work verification pass — a good outcome
+  - **beforeAll pattern for expensive generation**: Use `beforeAll` at describe scope to generate once, then assert many properties in child `it` blocks — avoids redundant generator calls per assertion
+
+---
+
 ## 2026-03-07 - US-073
 - Created `game/world/pathGenerator.ts` — pure path generation following the waterPlacer pattern
 - `isLandmarkChunk(worldSeed, chunkX, chunkZ)` — chunk (0,0) always landmark; others by `scopedRNG("landmark-roll") < 0.15`
