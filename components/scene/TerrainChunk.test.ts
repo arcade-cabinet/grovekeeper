@@ -1,12 +1,33 @@
 /**
- * Tests for TerrainChunks R3F component (Spec §31.1).
+ * Tests for TerrainChunks R3F component (Spec §31.1, §9).
  *
- * Tests exported constants and buildTerrainGeometry without WebGL/R3F context.
- * The imperative useFrame rendering is tested via the exported pure builder.
+ * Tests exported constants and buildTerrainGeometry/buildTrimeshArgs without
+ * WebGL/R3F/Rapier context. The imperative useFrame rendering is tested via
+ * the exported pure builders.
  */
 
 jest.mock("@react-three/fiber", () => ({
   useFrame: jest.fn(),
+}));
+
+jest.mock("@react-three/rapier", () => ({
+  useRapier: jest.fn().mockReturnValue({
+    world: {
+      createRigidBody: jest.fn().mockReturnValue({}),
+      createCollider: jest.fn(),
+      removeRigidBody: jest.fn(),
+    },
+    rapier: {
+      RigidBodyDesc: {
+        fixed: jest.fn().mockReturnValue({
+          setTranslation: jest.fn().mockReturnThis(),
+        }),
+      },
+      ColliderDesc: {
+        trimesh: jest.fn().mockReturnValue({}),
+      },
+    },
+  }),
 }));
 
 jest.mock("three", () => {
@@ -51,7 +72,12 @@ jest.mock("@/game/world/ChunkManager", () => ({
 }));
 
 import * as THREE from "three";
-import { buildTerrainGeometry, HEIGHT_SCALE, TerrainChunks } from "./TerrainChunk";
+import {
+  buildTerrainGeometry,
+  buildTrimeshArgs,
+  HEIGHT_SCALE,
+  TerrainChunks,
+} from "./TerrainChunk";
 import { CHUNK_SIZE } from "@/game/world/ChunkManager";
 
 // Typed mock helpers
@@ -73,7 +99,7 @@ describe("HEIGHT_SCALE (Spec §31.1)", () => {
 
 // ─── TerrainChunks component ─────────────────────────────────────────────────
 
-describe("TerrainChunks component (Spec §31.1)", () => {
+describe("TerrainChunks component (Spec §31.1, §9)", () => {
   it("exports TerrainChunks as a function component", () => {
     expect(typeof TerrainChunks).toBe("function");
   });
@@ -210,5 +236,67 @@ describe("buildTerrainGeometry (Spec §31.1)", () => {
     } else {
       expect(MockBufferAttribute).toHaveBeenCalled();
     }
+  });
+});
+
+// ─── buildTrimeshArgs ─────────────────────────────────────────────────────────
+
+describe("buildTrimeshArgs (Spec §9)", () => {
+  /** Build a flat zeroed heightmap for tests that don't care about height. */
+  function makeHeightmap(value = 0): Float32Array {
+    return new Float32Array(CHUNK_SIZE * CHUNK_SIZE).fill(value);
+  }
+
+  it("returns an object with vertices and indices", () => {
+    const result = buildTrimeshArgs(makeHeightmap());
+    expect(result).toHaveProperty("vertices");
+    expect(result).toHaveProperty("indices");
+  });
+
+  it("vertices is a Float32Array with CHUNK_SIZE * CHUNK_SIZE * 3 elements", () => {
+    const { vertices } = buildTrimeshArgs(makeHeightmap());
+    expect(vertices).toBeInstanceOf(Float32Array);
+    expect(vertices.length).toBe(CHUNK_SIZE * CHUNK_SIZE * 3);
+  });
+
+  it("indices is a Uint32Array with (CHUNK_SIZE-1)^2 * 6 elements (2 triangles per quad)", () => {
+    const { indices } = buildTrimeshArgs(makeHeightmap());
+    expect(indices).toBeInstanceOf(Uint32Array);
+    expect(indices.length).toBe((CHUNK_SIZE - 1) * (CHUNK_SIZE - 1) * 6);
+  });
+
+  it("flat zero heightmap produces Y=0 for all vertices", () => {
+    const { vertices } = buildTrimeshArgs(makeHeightmap(0));
+    for (let i = 1; i < vertices.length; i += 3) {
+      expect(vertices[i]).toBeCloseTo(0);
+    }
+  });
+
+  it("heightmap value 1 maps to HEIGHT_SCALE in Y", () => {
+    const { vertices } = buildTrimeshArgs(makeHeightmap(1));
+    // Y is at stride offset 1 (x=0, y=1, z=2)
+    expect(vertices[1]).toBeCloseTo(HEIGHT_SCALE);
+  });
+
+  it("heightmap value -1 maps to -HEIGHT_SCALE in Y", () => {
+    const { vertices } = buildTrimeshArgs(makeHeightmap(-1));
+    expect(vertices[1]).toBeCloseTo(-HEIGHT_SCALE);
+  });
+
+  it("all index values are within valid vertex range", () => {
+    const { indices } = buildTrimeshArgs(makeHeightmap());
+    const vertexCount = CHUNK_SIZE * CHUNK_SIZE;
+    for (const idx of indices) {
+      expect(idx).toBeGreaterThanOrEqual(0);
+      expect(idx).toBeLessThan(vertexCount);
+    }
+  });
+
+  it("X values span 0..CHUNK_SIZE-1 for first and last vertex in a row", () => {
+    const { vertices } = buildTrimeshArgs(makeHeightmap());
+    // First vertex: (ix=0, iz=0) → X=0
+    expect(vertices[0]).toBeCloseTo(0);
+    // Last vertex of first row: (ix=CHUNK_SIZE-1, iz=0) → X=CHUNK_SIZE-1
+    expect(vertices[(CHUNK_SIZE - 1) * 3]).toBeCloseTo(CHUNK_SIZE - 1);
   });
 });

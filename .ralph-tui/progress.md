@@ -26,7 +26,33 @@ after each iteration and it's included in prompts for context.
 - **TerrainChunk geometry — Y-up custom BufferGeometry, no PlaneGeometry rotation**: Build terrain geometry with Y = height directly (not displaced PlaneGeometry). Avoids the XY→XZ rotation confusion where PlaneGeometry's Y flips to -Z in world space. Use `(CHUNK_SIZE)^2` vertices (not `(CHUNK_SIZE+1)^2`) and `(CHUNK_SIZE-1)^2` quads for an exact 1:1 heightmap vertex match.
 - **Three.js mock cast pattern in tests**: `jest.mock("three", ...)` replaces at runtime but TypeScript still sees original types. Use `const MockFoo = Foo as unknown as jest.Mock` to safely access `.mock.calls` etc. Never use `as jest.Mock` directly — TypeScript rejects the conversion without the `unknown` intermediate.
 - **Vertex color geometry needs both sides**: `geometry.setAttribute("color", ...)` + `material.vertexColors: true`. Missing either silently falls back to white material. `computeVertexNormals()` is mandatory after displacement — without it shading breaks.
+- **Rapier trimesh — imperative creation in useFrame**: `useRapier()` at component level, store `{ rapier, world: rapierWorld }` as stable refs, then inside `useFrame` call `rapier.RigidBodyDesc.fixed().setTranslation(x, y, z)` + `rapierWorld.createRigidBody()` + `rapier.ColliderDesc.trimesh(vertices, indices)` + `rapierWorld.createCollider()`. On unload: `rapierWorld.removeRigidBody(body)` removes the body and its colliders.
+- **isDirty variable loses TypeScript narrowing**: Extracting `const isDirty = !geometry || terrainChunk.dirty` to a separate boolean breaks control-flow narrowing — TypeScript can't prove geometry is non-null after `if (isDirty)`. Always use the condition directly in the `if`: `if (!geometry || terrainChunk.dirty)` so TS narrows `geometry` to non-undefined after the block.
+- **Rapier ColliderDesc.trimesh requires Uint32Array for indices**: `buildTrimeshArgs` returns `{ vertices: Float32Array, indices: Uint32Array }` — using `number[]` for indices fails the type check.
 
+---
+
+## 2026-03-07 - US-023
+- Exported `buildTrimeshArgs(heightmap: Float32Array): { vertices: Float32Array; indices: Uint32Array }` from `components/scene/TerrainChunk.tsx` — pure function that extracts flat vertex positions (local chunk space, Y = heightmap * HEIGHT_SCALE) and CCW-wound triangle indices for Rapier's trimesh collider.
+- Modified `TerrainChunks` to:
+  - Call `useRapier()` at component level, destructure `{ rapier, world: rapierWorld }`
+  - Add `rigidBodyMapRef` (`Map<string, RapierBody>`) alongside existing mesh/geometry maps
+  - In `useFrame`, create a Rapier fixed RigidBody + trimesh collider for each new chunk (body positioned at `(position.x, position.y, position.z)`; vertices in local chunk space 0..CHUNK_SIZE-1)
+  - On dirty geometry rebuild, destroy existing Rapier body from map (so it's recreated with fresh geometry on the next iteration)
+  - On chunk unload, call `rapierWorld.removeRigidBody(body)` (removes attached colliders too)
+- Updated `components/scene/TerrainChunk.test.ts`:
+  - Added `jest.mock("@react-three/rapier", ...)` mock with `useRapier`, `createRigidBody`, `createCollider`, `removeRigidBody`, `RigidBodyDesc.fixed`, `ColliderDesc.trimesh`
+  - Added 8 tests for `buildTrimeshArgs`: correct return shape, `Float32Array` vertices (CHUNK_SIZE²×3), `Uint32Array` indices ((CHUNK_SIZE-1)²×6), Y=0 flat heightmap, Y=HEIGHT_SCALE at value 1, Y=-HEIGHT_SCALE at value -1, all indices in valid range, X spans 0..CHUNK_SIZE-1
+- **Files changed:**
+  - `components/scene/TerrainChunk.tsx`: added `buildTrimeshArgs` export; added `useRapier` import + type aliases; added `rigidBodyMapRef`; added Rapier body creation/destruction in `useFrame`
+  - `components/scene/TerrainChunk.test.ts`: added Rapier mock; added 8 `buildTrimeshArgs` tests; imported `buildTrimeshArgs`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 81 suites, 1395 tests, 0 failures
+- **Learnings:**
+  - Rapier trimesh collider: `ColliderDesc.trimesh(vertices: Float32Array, indices: Uint32Array)` — vertices are in local body space, body is positioned via `RigidBodyDesc.fixed().setTranslation(worldX, worldY, worldZ)`. Body + collider share the same coordinate space.
+  - Extracting a compound boolean condition to a `const` variable breaks TypeScript's control-flow narrowing — use the condition directly in the `if` statement.
+  - `rapierWorld.removeRigidBody(body)` removes the body AND all its attached colliders — no need to separately track/remove colliders.
 ---
 
 ## 2026-03-07 - US-022

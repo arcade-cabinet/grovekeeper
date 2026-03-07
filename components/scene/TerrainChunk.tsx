@@ -1,14 +1,19 @@
 /**
- * TerrainChunks — R3F component that renders all ECS terrain chunk entities.
+ * TerrainChunks — R3F component that renders all ECS terrain chunk entities
+ * and maintains Rapier static trimesh colliders for physics.
  *
  * Each terrain chunk is a BufferGeometry with Y-displaced vertices from the
  * heightmap and uniform vertex colors derived from the biome's baseColor.
+ * A matching fixed Rapier RigidBody + TrimeshCollider is created per chunk
+ * so the player capsule can walk on the terrain surface.
  *
  * Spec §31.1: "Vertex colors: biome-derived base color applied to terrain mesh"
+ * Spec §9:    "Rapier collider: trimesh per terrain chunk for physics"
  * Follows the TreeInstances imperative rendering pattern.
  */
 
 import { useFrame } from "@react-three/fiber";
+import { useRapier } from "@react-three/rapier";
 import { useRef } from "react";
 import * as THREE from "three";
 
@@ -17,6 +22,10 @@ import { CHUNK_SIZE } from "@/game/world/ChunkManager";
 
 /** Maximum world-space height displacement from the heightmap [-1, 1] range. */
 export const HEIGHT_SCALE = 4;
+
+type RapierWorld = ReturnType<typeof useRapier>["world"];
+type RapierModule = ReturnType<typeof useRapier>["rapier"];
+type RapierBody = ReturnType<RapierWorld["createRigidBody"]>;
 
 /**
  * Build a BufferGeometry from a terrain heightmap with uniform vertex colors.
@@ -80,10 +89,53 @@ export function buildTerrainGeometry(
 }
 
 /**
- * TerrainChunks — renders all loaded terrain chunk ECS entities.
+ * Extract flat vertex positions and triangle indices suitable for Rapier's
+ * trimesh collider. Vertices are in local chunk space (X: 0..CHUNK_SIZE-1,
+ * Y: height-displaced, Z: 0..CHUNK_SIZE-1). The rigid body is positioned at
+ * the chunk's world origin via setTranslation() in the caller.
+ *
+ * @param heightmap  Float32Array of CHUNK_SIZE*CHUNK_SIZE values in [-1, 1]
+ */
+export function buildTrimeshArgs(heightmap: Float32Array): {
+  vertices: Float32Array;
+  indices: Uint32Array;
+} {
+  const n = CHUNK_SIZE;
+  const segments = n - 1;
+
+  const vertices = new Float32Array(n * n * 3);
+  for (let iz = 0; iz < n; iz++) {
+    for (let ix = 0; ix < n; ix++) {
+      const vi = iz * n + ix;
+      vertices[vi * 3 + 0] = ix;
+      vertices[vi * 3 + 1] = heightmap[vi] * HEIGHT_SCALE;
+      vertices[vi * 3 + 2] = iz;
+    }
+  }
+
+  const indices = new Uint32Array(segments * segments * 6);
+  let i = 0;
+  for (let iz = 0; iz < segments; iz++) {
+    for (let ix = 0; ix < segments; ix++) {
+      const a = iz * n + ix;
+      const b = iz * n + ix + 1;
+      const c = (iz + 1) * n + ix;
+      const d = (iz + 1) * n + ix + 1;
+      indices[i++] = a; indices[i++] = c; indices[i++] = b;
+      indices[i++] = b; indices[i++] = c; indices[i++] = d;
+    }
+  }
+
+  return { vertices, indices };
+}
+
+/**
+ * TerrainChunks — renders all loaded terrain chunk ECS entities and maintains
+ * matching Rapier static trimesh colliders for player capsule physics.
  *
  * Queries terrainChunksQuery each frame (imperative, no React re-renders).
- * Creates/destroys Three.js meshes as chunks load/unload via ChunkManager.
+ * Creates/destroys Three.js meshes and Rapier rigid bodies as chunks
+ * load/unload via ChunkManager.
  */
 export const TerrainChunks = () => {
   const groupRef = useRef<THREE.Group>(null);
@@ -91,6 +143,11 @@ export const TerrainChunks = () => {
   const geometryCacheRef = useRef(new Map<string, THREE.BufferGeometry>());
   // Per-entity mesh map for O(1) lookup
   const meshMapRef = useRef(new Map<string, THREE.Mesh>());
+  // Per-entity Rapier static rigid body (trimesh collider attached)
+  const rigidBodyMapRef = useRef(new Map<string, RapierBody>());
+
+  // Rapier world and module — stable references, safe to use inside useFrame
+  const { rapier, world: rapierWorld } = useRapier();
 
   useFrame(() => {
     const group = groupRef.current;
@@ -98,6 +155,7 @@ export const TerrainChunks = () => {
 
     const geometryCache = geometryCacheRef.current;
     const meshMap = meshMapRef.current;
+    const rigidBodyMap = rigidBodyMapRef.current;
     const aliveIds = new Set<string>();
 
     for (const entity of terrainChunksQuery.entities) {
@@ -110,6 +168,14 @@ export const TerrainChunks = () => {
         if (geometry) geometry.dispose();
         geometry = buildTerrainGeometry(terrainChunk.heightmap, terrainChunk.baseColor);
         geometryCache.set(id, geometry);
+
+        // Destroy existing Rapier body — recreated below with fresh geometry
+        const existingBody = rigidBodyMap.get(id);
+        if (existingBody) {
+          rapierWorld.removeRigidBody(existingBody);
+          rigidBodyMap.delete(id);
+        }
+
         terrainChunk.dirty = false;
       }
 
@@ -139,9 +205,23 @@ export const TerrainChunks = () => {
       // Visibility controlled by ChunkManager (active vs buffer ring)
       const visible = entity.renderable?.visible ?? true;
       mesh.visible = visible;
+
+      // Create Rapier static trimesh collider if not yet present for this chunk
+      if (!rigidBodyMap.has(id)) {
+        const { vertices, indices } = buildTrimeshArgs(terrainChunk.heightmap);
+        const bodyDesc = (rapier as RapierModule).RigidBodyDesc.fixed().setTranslation(
+          position.x,
+          position.y,
+          position.z,
+        );
+        const body = rapierWorld.createRigidBody(bodyDesc);
+        const colliderDesc = (rapier as RapierModule).ColliderDesc.trimesh(vertices, indices);
+        rapierWorld.createCollider(colliderDesc, body);
+        rigidBodyMap.set(id, body);
+      }
     }
 
-    // Destroy meshes for chunks that were unloaded by ChunkManager
+    // Destroy meshes and Rapier bodies for chunks that were unloaded by ChunkManager
     for (const [id, mesh] of meshMap) {
       if (!aliveIds.has(id)) {
         group.remove(mesh);
@@ -152,6 +232,13 @@ export const TerrainChunks = () => {
         }
         (mesh.material as THREE.Material).dispose();
         meshMap.delete(id);
+
+        // Remove Rapier rigid body (also removes its attached collider)
+        const body = rigidBodyMap.get(id);
+        if (body) {
+          rapierWorld.removeRigidBody(body);
+          rigidBodyMap.delete(id);
+        }
       }
     }
   });

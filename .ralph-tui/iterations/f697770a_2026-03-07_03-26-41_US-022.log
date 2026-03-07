@@ -1,0 +1,135 @@
+# Iteration 22 Log
+
+## Metadata
+
+- **Task ID**: US-022
+- **Task Title**: Create terrain mesh R3F component
+- **Description**: As a developer, I want a TerrainChunk R3F component that creates a PlaneGeometry displaced by the heightmap with vertex colors from biome data so that terrain is visible in the scene. See GAME_SPEC.md...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:26:41.512Z
+- **Ended At**: 2026-03-07T09:33:05.790Z
+- **Duration**: 6m 24s
+- **Input Tokens**: 139
+- **Output Tokens**: 20556
+- **Total Tokens**: 20695
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/scene/**[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/terrainGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/biomeMapper.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+Now let me read the scene components to understand patterns, and review GAME_SPEC.md for the terrain rendering section.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/Ground.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§6|terrain.*render|TerrainChunk|vertex.*color|PlaneGeometry|heightmap[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+Let me look at §31 for terrain rendering in the spec:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 31|^### 31\.|TerrainChunk.*R3F|terrain.*chunk.*component|PlaneGeometry|vertex color[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+Let me check the test setup and existing component tests:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeInstances.tsx[0m
+Let me check how world.ts exports queries:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Now let me check the jest config and package.json:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.setup.ts[0m
+Now I have everything I need. Let me set up tasks and implement:
+
+`★ Insight ─────────────────────────────────────`
+- The `TreeInstances.tsx` pattern is the archetype for ECS-driven imperative Three.js rendering: query entities in `useFrame`, maintain a `meshMap` with per-entity mesh lifetimes, and use a group ref as the scene container.
+- `terrainChunksQuery` already exists in `world.ts` — no need to add it.
+- For terrain geometry, building a custom `BufferGeometry` with Y as height (no rotation) is cleaner than displacing a rotated PlaneGeometry, because PlaneGeometry's XY→XZ rotation flips the axis mapping for heightmap indexing.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.tsx[0m "/**
+ * TerrainChunks — R3F component that renders all ECS terrain chunk entities.
+ *
+ * Each terrain chunk is a BufferGeometry with Y-displaced vertices from the
+ * heightmap and uniform vertex colors... (5463 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `buildTerrainGeometry` is exported as a named pure function — this lets tests verify geometry construction without a WebGL context or R3F, mirroring the `getCameraPosition` / `isGrounded` / `rotateByYaw` precedents.
+- Vertex colors in Three.js require both `geometry.setAttribute("color", ...)` (3-component RGB float buffer) AND `material.vertexColors: true`. Missing either silently falls back to white.
+- `geometry.computeVertexNormals()` is critical after heightmap displacement — without it, lighting shading is wrong because normals still point straight up from the flat plane.
+`─────────────────────────────────────────────────`
+
+Now write the tests:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.test.ts[0m "/**
+ * Tests for TerrainChunks R3F component (Spec §31.1).
+ *
+ * Tests exported constants and buildTerrainGeometry without WebGL/R3F context.
+ * The imperative useFrame rendering is tested via the exp... (7208 chars)"
+[94m[TodoWrite][0m
+Now wire `TerrainChunks` into `app/game/index.tsx`:
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m edit: "import { Camera } from "@/components/scene/Camera"..." → "import { Camera } from "@/components/scene/Camera"..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m edit: "import { Camera } from "@/components/scene/Camera"..." → "import { Camera } from "@/components/scene/Camera"..."
+Now add `<TerrainChunks />` to the Canvas JSX alongside the other scene components:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m edit: "            <Ground
+              gridSize={gridSi..." → "            <TerrainChunks />
+            <Ground
+..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+
+[91m[Error: Exit code 2
+components/scene/TerrainChunk.test.ts(157,6): error TS2352: Conversion of type 'typeof Color' to type 'Mock<any, any, any>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'typeof Color' is missing the following properties from type 'Mock<any, any, any>': getMockName, mock, mockClear, mockReset, and 13 more.
+components/scene/TerrainChunk.test.ts(196,45): error TS2339: Property 'length' does not exist on type 'never'.
+components/scene/TerrainChunk.test.ts(205,6): error TS2352: Conversion of type 'typeof Color' to type 'Mock<any, any, any>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'typeof Color' is missing the following properties from type 'Mock<any, any, any>': getMockName, mock, mockClear, mockReset, and 13 more.
+components/scene/TerrainChunk.test.ts(209,24): error TS2352: Conversion of type 'typeof Color' to type 'Mock<any, any, any>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'typeof Color' is missing the following properties from type 'Mock<any, any, any>': getMockName, mock, mockClear, mockReset, and 13 more.][0m
+Need to fix TypeScript cast issues in the test — use `unknown` intermediate cast:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.test.ts[0m "/**
+ * Tests for TerrainChunks R3F component (Spec §31.1).
+ *
+ * Tests exported constants and buildTerrainGeometry without WebGL/R3F context.
+ * The imperative useFrame rendering is tested via the exp... (7239 chars)"
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run TerrainChunk tests $ npx jest --no-coverage --testPathPattern TerrainChunk 2>&1
+15 tests passing. Now run the full suite to verify no regressions:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+81 suites, 1387 tests, 0 failures (15 new tests, up from 1372).
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **Priority-order biome dispatch**: List biome ru..." → "- **Priority-order biome dispatch**: List biome ru..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-021" → "## 2026-03-07 - US-022
+- Created `components/scene..."
+[94m[TodoWrite][0m
+All acceptance criteria met:
+
+| Criterion | Status |
+|-----------|--------|
+| `components/scene/TerrainChunk.tsx` exists | ✓ |
+| PlaneGeometry displaced by heightmap | ✓ (custom BufferGeometry, Y = heightmap × HEIGHT_SCALE) |
+| Vertex colors from biome baseColor | ✓ (`THREE.Color(hex)` → vertex color buffer) |
+| Visible textured terrain in scene | ✓ (wired into `app/game/index.tsx`) |
+| `npx tsc --noEmit` passes | ✓ (0 errors) |
+| `npx jest --no-coverage` passes | ✓ (81 suites, 1387 tests) |
+
+`★ Insight ─────────────────────────────────────`
+- The `TerrainChunks` component follows the exact `TreeInstances` imperative pattern: `useFrame` queries ECS, `meshMapRef` + `geometryCacheRef` handle lifetimes, and `aliveIds` drives cleanup. This pattern works well because ECS state is not reactive (no React re-renders on entity add/remove).
+- A custom `BufferGeometry` with Y as height (no mesh rotation) is cleaner than displacing a rotated `PlaneGeometry` — the axis mapping `geometry.Z → world.Y` after a -90° X-rotation is a subtle gotcha that makes heightmap indexing error-prone.
+- `(CHUNK_SIZE - 1)` segments give exactly `CHUNK_SIZE × CHUNK_SIZE` vertices, matching the heightmap 1:1. Using `CHUNK_SIZE` segments would give `(CHUNK_SIZE+1)²` vertices requiring interpolation.
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>
