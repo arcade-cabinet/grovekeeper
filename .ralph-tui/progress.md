@@ -5,6 +5,8 @@ after each iteration and it's included in prompts for context.
 
 ## Codebase Patterns (Study These First)
 
+- **jsdom `@jest-environment jsdom` docblock**: Tests that use browser DOM APIs (`window`, `document`, `MouseEvent`, `KeyboardEvent`, etc.) must have `/** @jest-environment jsdom */` at the very top of the file. `jest-expo` uses React Native env by default; the docblock overrides per-file.
+- **jsdom `movementX`/`movementY` not in MouseEvent init dict**: `new MouseEvent('mousemove', { movementX: 100 })` → `event.movementX` is `undefined` in jsdom. Use `Object.defineProperty(event, 'movementX', { value: 100 })` after construction instead.
 - **useMouseLook pointer lock guard**: In `mousemove` handler always check `document.pointerLockElement !== canvas` and return early if not locked — mousemove fires globally, not just when locked.
 - **FPS camera Euler order**: Always set `camera.rotation.order = "YXZ"` before writing yaw/pitch. Three.js default "XYZ" causes gimbal lock in FPS look.
 
@@ -507,4 +509,17 @@ after each iteration and it's included in prompts for context.
   - `toolSwap` is `number` (not boolean) to support directional semantics: `+1` = next, `-1` = prev, `0` = no change — consistent with arch doc `toolCycle` pattern
   - `IInputProvider.poll()` returns `Partial<InputFrame>` so providers only specify what they contribute; manager merges with defined rules (sum movement, OR booleans, first-non-zero for toolSwap)
   - `inputManager` module-level singleton export is for game code; tests use `new InputManager()` for isolation
+---
+
+## 2026-03-07 - US-026
+- Implemented `game/input/KeyboardMouseProvider.ts` — desktop keyboard + pointer-locked mouse input
+- Implemented `game/input/KeyboardMouseProvider.test.ts` — 27 tests, all passing
+- **Files changed:**
+  - `game/input/KeyboardMouseProvider.ts` (new)
+  - `game/input/KeyboardMouseProvider.test.ts` (new)
+- **Learnings:**
+  - **jsdom `@jest-environment` docblock**: Add `/** @jest-environment jsdom */` at the very top of test files that need browser DOM APIs (window, document, MouseEvent, etc.). The `jest-expo` preset uses React Native env by default; the docblock overrides per-file. `jest-environment-jsdom` must be installed (it is in this project).
+  - **jsdom `movementX`/`movementY` not in MouseEvent init dict**: `new MouseEvent('mousemove', { movementX: 100 })` → `event.movementX` is `undefined` in jsdom. Workaround: `Object.defineProperty(event, 'movementX', { value: 100 })` after construction. This is the canonical jsdom pattern for testing pointer lock delta events.
+  - **Edge-triggered vs held inputs**: jump/interact use a `pressedThisFrame` flag set on `keydown`, cleared in `postFrame()`. This means even holding Space only fires jump once per keypress — correct FPS behavior. Sprint uses direct `heldKeys.has("ShiftLeft")` for held semantics.
+  - **Math.sign for movement**: `Math.sign(right - left)` handles simultaneous key presses cleanly — opposing keys cancel to 0, single key gives ±1. Avoids accumulating raw counts.
 ---
