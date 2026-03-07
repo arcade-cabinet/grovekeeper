@@ -89,6 +89,9 @@ after each iteration and it's included in prompts for context.
   - **Export pure helpers for testability**: Exporting `buildQuestContext` and `buildQuestDef` as named exports allows direct unit testing of per-category behavior without having to find seeds that produce specific categories. Tests use a `makeRng([0, 0, 0])` helper to control the PRNG deterministically.
   - **deliver quest is 2-step**: Deliver is the only template with 2 steps (gather then deliver-to-npc). All other categories have 1 step. Tests assert `toHaveLength(2)` specifically for deliver.
 
+- **QuestPanel pure function needs mocks for React Native UI imports**: `mapQuestBranchToDisplay` is a pure function in `QuestPanel.tsx` but the file also imports `@/components/ui/text` which pulls in `@rn-primitives/slot` (contains JSX, not in `transformIgnorePatterns`). Tests that import the pure function must mock `@/components/ui/text`, `@/game/ecs/world`, `@/game/stores/gameStore`, and `./Toast` before imports.
+- **HUD test must mock new QuestPanel import**: When `HUD.tsx` imports `ConnectedQuestPanel` from `./QuestPanel`, `HUD.test.ts` must mock `./QuestPanel` to avoid the same `@rn-primitives/slot` parse error. Pattern: `jest.mock("./QuestPanel", () => ({ ConnectedQuestPanel: () => null }))`.
+
 ---
 
 ## 2026-03-07 - US-112
@@ -111,6 +114,27 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Quest test pyramid**: 4 layers tested independently — pure state machine → chain engine → main quest integration → world quest templates. Each layer only tests its own concerns.
   - **Stop condition applies**: When a task's acceptance criteria are satisfied by prior iteration work, verify and signal completion immediately. Do not re-implement.
+
+---
+
+## 2026-03-07 - US-113
+- Updated `components/game/QuestPanel.tsx` (184 → 296 lines):
+  - Added `mapQuestBranchToDisplay(branches, questChainState)` — pure function; joins ECS `QuestBranchComponent` entities with store chain state to produce `ActiveQuestDisplay[]`. Filters non-active quests, uses chain def for name/icon, falls back to ECS `currentObjective` text when no chain state exists.
+  - Added `useActiveQuestsFromECS()` — React hook; snapshots `questBranchQuery`, calls mapper, fires `showToast` via `useRef` tracking when a step becomes completable (objectives done, not yet claimed).
+  - Added `ConnectedQuestPanel` — self-wired wrapper around `QuestPanel` using the hook; passes `claimQuestStepReward` from `useGameStore.getState()` as `onClaimReward`.
+- Updated `components/game/HUD.tsx` (+23 lines to 293):
+  - Added `ScrollIcon` import and `ConnectedQuestPanel` import.
+  - Added `questPanelVisible` state with toggle button (44px, `accessibilityLabel`).
+  - Renders `ConnectedQuestPanel` in a `questPanel` positioned style (top: 80, left: 8).
+- Updated `components/game/QuestPanel.test.ts` (3 → 13 tests):
+  - Added mocks for `@/components/ui/text`, `@/game/ecs/world`, `@/game/stores/gameStore`, `./Toast` to prevent `@rn-primitives/slot` JSX parse error.
+  - 10 new tests for `mapQuestBranchToDisplay`: empty input, status filtering, ECS fallback, chain def name/icon, step objectives from chain state, step completion propagation.
+- Updated `components/game/HUD.test.ts`: added `ScrollIcon` to lucide mock and `./QuestPanel` mock.
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2898 tests pass (133 suites, +10 new tests).
+- **Learnings:**
+  - **mapQuestBranchToDisplay as testable seam**: Pure function pattern (same as `resolveCompassBearing` in HUD) allows testing the ECS→display mapping without React context. Two data sources joined: ECS entity gives "which chain is active + current step index", store chain state gives per-objective progress counts.
+  - **QuestPanel pure function needs mocks for React Native UI imports**: Even when only testing a pure function, if it lives in a `.tsx` file that imports `@/components/ui/text` → `@rn-primitives/slot`, Jest fails to parse. Mock `@/components/ui/text`, `@/game/ecs/world`, `@/game/stores/gameStore`, and `./Toast` before imports.
+  - **HUD test must mock ConnectedQuestPanel import**: Adding any React component import to HUD.tsx requires the HUD test to mock it, otherwise the mock chain breaks. Pattern: `jest.mock("./QuestPanel", () => ({ ConnectedQuestPanel: () => null }))`.
 
 ---
 

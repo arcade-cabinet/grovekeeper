@@ -9,8 +9,8 @@
  * Mobile-first: all touch targets >= 44px, no overlap with virtual joystick zone.
  */
 
-import { useMemo } from "react";
-import { MenuIcon } from "lucide-react-native";
+import { useMemo, useState } from "react";
+import { MenuIcon, ScrollIcon } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/ui/icon";
@@ -19,6 +19,7 @@ import { TOOLS } from "@/game/config/tools";
 import { grovekeeperSpiritsQuery, playerQuery } from "@/game/ecs/world";
 import { totalXpForLevel, useGameStore, xpToNext } from "@/game/stores/gameStore";
 import { computeTimeState } from "@/game/systems/time";
+import { ConnectedQuestPanel } from "./QuestPanel";
 import { ResourceBar } from "./ResourceBar";
 import { StaminaGauge } from "./StaminaGauge";
 import { TimeDisplayCompact, type GameTime } from "./TimeDisplay";
@@ -132,6 +133,8 @@ export function HUD({ onOpenMenu, onOpenSeedSelect }: HUDProps) {
   const seeds = useGameStore((s) => s.seeds);
   const selectedSpecies = useGameStore((s) => s.selectedSpecies);
 
+  const [questPanelVisible, setQuestPanelVisible] = useState(false);
+
   const xpProgress = useMemo(() => {
     const base = totalXpForLevel(level);
     const needed = xpToNext(level);
@@ -166,6 +169,13 @@ export function HUD({ onOpenMenu, onOpenSeedSelect }: HUDProps) {
           </View>
           <Pressable
             style={styles.menuButton}
+            onPress={() => setQuestPanelVisible((v) => !v)}
+            accessibilityLabel="Toggle quest panel"
+          >
+            <Icon as={ScrollIcon} size={22} className="text-white" />
+          </Pressable>
+          <Pressable
+            style={styles.menuButton}
             onPress={onOpenMenu}
             accessibilityLabel="Open menu"
           >
@@ -179,6 +189,13 @@ export function HUD({ onOpenMenu, onOpenSeedSelect }: HUDProps) {
       {/* ── Center: crosshair + target info ───────────────────────── */}
       <Crosshair />
       <TargetInfo />
+
+      {/* ── Left quest panel (toggled via quest button) ──────────── */}
+      {questPanelVisible && (
+        <View style={styles.questPanel} pointerEvents="box-none">
+          <ConnectedQuestPanel onDismiss={() => setQuestPanelVisible(false)} />
+        </View>
+      )}
 
       {/* ── Right-side panel: stamina gauge + tool belt ───────────── */}
       <View style={styles.rightPanel} pointerEvents="box-none">
@@ -267,5 +284,10 @@ const styles = StyleSheet.create({
     bottom: 100,
     alignItems: "flex-end",
     gap: 8,
+  },
+  questPanel: {
+    position: "absolute",
+    top: 80,
+    left: 8,
   },
 });

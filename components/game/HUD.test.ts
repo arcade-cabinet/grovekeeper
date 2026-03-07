@@ -11,8 +11,11 @@ jest.mock("react-native-safe-area-context", () => ({
   SafeAreaView: "SafeAreaView",
 }));
 
+jest.mock("./QuestPanel", () => ({ ConnectedQuestPanel: () => null }));
+
 jest.mock("lucide-react-native", () => ({
   MenuIcon: "MenuIcon",
+  ScrollIcon: "ScrollIcon",
   AxeIcon: "AxeIcon",
   BookOpenIcon: "BookOpenIcon",
   DropletsIcon: "DropletsIcon",
