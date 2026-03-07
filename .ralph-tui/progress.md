@@ -71,6 +71,22 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-100
+- Created `game/systems/dialogueBranch.ts` — 3 pure exported functions:
+  - `normalizeSeedBias(branches)` — normalizes seedBias weights to sum 1.0; all-zero → uniform
+  - `selectDefaultBranch(branches, worldSeed, entityId, nodeIndex)` → index — weighted roulette-wheel via `scopedRNG("dialogue-branch", ...)`
+  - `selectDefaultBranchNode(branches, worldSeed, entityId, nodeIndex)` → `DialogueBranch | undefined` — convenience wrapper
+- Created `game/systems/dialogueBranch.test.ts` — 18 tests across 3 describe blocks
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2629 tests, 0 failures (125 suites, +18 new)
+- **Learnings:**
+  - **Cumulative probability (roulette wheel) for weighted branch selection**: Iterate weights, accumulate, pick when `roll < cumulative`. Fallback to last index handles `roll === 1.0` floating-point edge case.
+  - **Single-branch short-circuit**: Return `0` immediately when `branches.length === 1` — avoids unnecessary RNG call and normalization edge case.
+  - **scopedRNG scope key matches spec §33.2 table**: Use `"dialogue-branch"` (from RNG scope table at §20) not `"grovekeeper-dialogue"` (from §32 spirits section). US-100 acceptance criteria is the authority.
+
+---
+
 ## 2026-03-07 - US-097
 - Created `config/game/mining.json` — ore table per biome (8 biomes), rock hardness table (default/granite/iron-vein/obsidian), baseStaminaPerHardness=8
 - Added "pick" tool to `config/game/tools.json` (action: "MINE", staminaCost: 10, unlockLevel: 6, effectPower: 4.0)
