@@ -22,6 +22,17 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-016
+- Work already complete — `game/utils/seededNoise.test.ts` was created as part of US-015 (Docs > Tests > Code workflow)
+- 26 tests covering all 4 methods: determinism, seed isolation, range bounds, structural properties (Perlin lattice=0, warpStrength=0 identity), fBm octave variation, ridged vs fbm divergence
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern seededNoise` → 26 tests, 0 failures
+- **Learnings:**
+  - When a story says "write tests for X" and the impl story already shipped tests, verify and signal complete — no new work needed
+  - The Docs > Tests > Code workflow eliminates deferred "write tests" stories by requiring tests as part of each impl task
+---
+
 ## 2026-03-07 - US-015
 - Created `game/utils/seededNoise.ts` with `SeededNoise` class implementing all four noise methods
 - `perlin(x, y)` — classic 2D Perlin noise with seeded permutation table (Fisher-Yates shuffle via Mulberry32 PRNG from `seedRNG`). Returns [-1, 1].

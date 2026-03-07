@@ -241,8 +241,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": "Phase 0-C: Chunk System + Terrain. Tests for US-015."
+      "passes": true,
+      "notes": "Phase 0-C: Chunk System + Terrain. Tests for US-015.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-017",
@@ -2736,6 +2737,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T09:08:16.804Z"
+    "updatedAt": "2026-03-07T09:09:18.431Z"
   }
 }
