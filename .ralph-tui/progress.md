@@ -95,6 +95,29 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-103
+- Created `components/game/DialogueChoices.tsx` — React Native overlay for dialogue branch choice buttons
+  - `computeAutoAdvanceProgress(elapsed, duration)` — countdown progress math, clamped [0,1]
+  - `AUTO_ADVANCE_DURATION = 3` (matches Spec §33.5)
+  - `DialogueChoicesProps`: branches, visible, worldSeed, entityId, nodeIndex, onBranchSelect
+  - `useEffect` timer fires after 3s with no player input, calls `selectDefaultBranchNode` to pick seed branch
+  - Timer cancels on player press or when effect deps change (visible/branches/worldSeed/entityId/nodeIndex/onBranchSelect)
+  - 44px min touch targets via `min-h-[44px]` on Pressable
+  - Returns null when `!visible || branches.length === 0`
+- Created `components/game/DialogueChoices.test.ts` — 13 tests
+  - `computeAutoAdvanceProgress`: 10 tests (zero, full, half, clamp high/low, zero duration, linear, proportional, arbitrary range)
+  - `AUTO_ADVANCE_DURATION`: 1 test (3 seconds)
+  - Component export: 2 tests (function type, name)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2683 tests, 0 failures (127 suites, +13 new)
+- **Learnings:**
+  - **RN component test mocking**: Only need to mock `@/components/ui/text` — jest-expo handles react-native (Pressable, View) natively. No need to mock react itself or @/game/systems/dialogueBranch (pure functions work directly).
+  - **setTimeout ref pattern for timers**: `useRef<ReturnType<typeof setTimeout> | null>(null)` is the correct cross-env type (avoids `NodeJS.Timeout` vs browser `number` mismatch). Cancel at effect start before re-arming to avoid double-fire.
+  - **onBranchSelect in useEffect deps**: Include the callback in the dependency array per React exhaustive-deps. Document that callers should wrap with `useCallback` to avoid unnecessary timer resets.
+
+---
+
 ## 2026-03-07 - US-101
 - Added `DialogueContext` interface to `game/ecs/components/dialogue.ts` — plain value object (playerLevel, inventory, completedQuests, discoveredLocations, discoveredSpirits, currentSeason, timeOfDay)
 - Added `evaluateCondition(condition, context)` and `filterAvailableBranches(branches, context)` to `game/systems/dialogueBranch.ts`
