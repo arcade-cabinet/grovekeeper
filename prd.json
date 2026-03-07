@@ -2541,8 +2541,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 153,
-      "passes": false,
-      "notes": "Phase 5 (early). cropGrowth.ts (160 lines) already exists — update for chunk/ECS vision."
+      "passes": true,
+      "notes": "Phase 5 (early). cropGrowth.ts (160 lines) already exists — update for chunk/ECS vision.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-154",
@@ -2873,6 +2874,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T21:40:22.661Z"
+    "updatedAt": "2026-03-07T21:49:00.044Z"
   }
 }

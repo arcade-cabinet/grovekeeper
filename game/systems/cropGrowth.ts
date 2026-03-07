@@ -6,7 +6,11 @@
  */
 
 import cropsConfig from "@/config/game/crops.json" with { type: "json" };
-import type { CropId, CropStage } from "@/game/ecs/components/structures";
+import type {
+  CropComponent,
+  CropId,
+  CropStage,
+} from "@/game/ecs/components/structures";
 
 // ---------------------------------------------------------------------------
 // Crop definition (loaded from config)
@@ -157,4 +161,81 @@ export function replantCrop(crop: CropState): CropState | null {
     progress: 0,
     watered: false,
   };
+}
+
+// ---------------------------------------------------------------------------
+// ECS Tick (Spec §8)
+// ---------------------------------------------------------------------------
+
+/** Minimal ECS entity interface for crop growth tick. */
+export interface CropTickEntity {
+  id: string;
+  crop: CropComponent;
+  position: { x: number; y: number; z: number };
+}
+
+/**
+ * Tick all crop ECS entities — advance growth driven by season, weather, and
+ * watering state. Mutates crop components in-place (same pattern as tree growth).
+ * Harvestable crops (stage === 3) are skipped — player must act to harvest.
+ *
+ * @param crops             Iterable of ECS entities (from cropsQuery)
+ * @param season            Current season from DayNightComponent.season
+ * @param weatherMultiplier Growth multiplier from WeatherComponent (rain, sun, etc.)
+ * @param dt                Delta time in real seconds
+ */
+export function tickCropGrowth(
+  crops: Iterable<CropTickEntity>,
+  season: string,
+  weatherMultiplier: number,
+  dt: number,
+): void {
+  for (const entity of crops) {
+    const { crop } = entity;
+    if (crop.stage >= 3) continue;
+
+    const prevStage = crop.stage;
+
+    // advanceCropGrowth expects CropState — CropComponent is a structural superset
+    const next = advanceCropGrowth(
+      crop,
+      dt * weatherMultiplier,
+      season,
+      0,
+      0,
+    );
+
+    crop.stage = next.stage;
+    crop.progress = next.progress;
+
+    // Clear watered flag on stage advance (watering bonus consumed per stage)
+    if (next.stage !== prevStage && crop.watered) {
+      crop.watered = false;
+    }
+  }
+}
+
+/**
+ * Harvest a crop entity at stage 3. Returns HarvestResult or null if not
+ * harvestable. If the crop is replantable, resets it back to stage 0 in-place.
+ *
+ * Caller is responsible for calling addResource() with the returned amount.
+ */
+export function harvestCropEntity(
+  entity: CropTickEntity,
+  toolTierBonus = 0,
+): HarvestResult | null {
+  const { crop } = entity;
+
+  const result = calculateHarvestYield(crop, toolTierBonus, 0);
+  if (!result) return null;
+
+  const replanted = replantCrop(crop);
+  if (replanted) {
+    crop.stage = replanted.stage;
+    crop.progress = replanted.progress;
+    crop.watered = replanted.watered;
+  }
+
+  return result;
 }

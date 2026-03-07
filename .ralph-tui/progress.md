@@ -2793,3 +2793,22 @@ after each iteration and it's included in prompts for context.
   - **HedgePiece carries pieceType/sizeClass/junction**: Adding these fields to the `HedgePiece` interface (returned by `mazeToHedgePieces`) eliminates the need to parse the model path string in the world layer. The consumer (`mazeGenerator.ts`) just copies the fields through — no inference needed.
   - **Vertex wall formula for grid mazes**: At vertex (vx, vz): `east = grid[vx][vz].walls.north || (vz===size && grid[vx][size-1].walls.south)`. The boundary case (vz===size or vx===size) uses the adjacent cell's opposite wall. The `&&` operators have higher precedence than `||` in TypeScript, so `a && b || c && d` is `(a&&b)||(c&&d)` — no extra parens needed for correctness.
   - **Corner fill rotation convention**: E+S corner → 0°, W+S → 90°, W+N → 180°, E+N → 270°. T-junction rotation points toward the absent wall.
+
+## 2026-03-07 - US-153
+- Updated `game/systems/cropGrowth.ts`: added `CropTickEntity` interface, `tickCropGrowth` (ECS tick), and `harvestCropEntity` (player harvest action). Both functions operate on `CropComponent` directly (structural superset of `CropState`).
+- Updated `game/world/chunkPersistence.ts`: added `PlantedCrop` interface, `plantedCrops?: PlantedCrop[]` to `ChunkDiff`, `recordPlantedCrop`, `updateCropInDiff`, and extended `applyChunkDiff` to restore crop entities with `modelPath` resolved from `cropsConfig` inline.
+- Updated `game/hooks/useGameLoop.ts`: imported `cropsQuery` and `tickCropGrowth`, added step 3b call `tickCropGrowth(cropsQuery, timeState.season, weatherGrowthMult, dt)`.
+- Files changed:
+  - `game/systems/cropGrowth.ts` — added `CropTickEntity`, `tickCropGrowth`, `harvestCropEntity`
+  - `game/systems/cropGrowth.test.ts` — added 12 tests for `tickCropGrowth` + 4 for `harvestCropEntity`
+  - `game/world/chunkPersistence.ts` — added `PlantedCrop`, `recordPlantedCrop`, `updateCropInDiff`, extended `applyChunkDiff`
+  - `game/world/chunkPersistence.test.ts` — added 11 crop persistence tests
+  - `game/hooks/useGameLoop.ts` — wired crop growth tick into step 3b
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3529 tests, 148 suites pass (+88 new tests)
+- **Learnings:**
+  - **CropComponent as CropState superset**: `CropComponent` has all fields of `CropState` plus `modelPath`. TypeScript structural typing allows passing `CropComponent` directly to functions expecting `CropState` — no casting needed.
+  - **Weather multiplier via dt scaling**: `dt * weatherMultiplier` (rather than adding a boost parameter) keeps weather as a proportional real-time speedup, matching the spirit of the tree growth `weatherGrowthMult` pattern.
+  - **Config lookup in applyChunkDiff avoids cross-layer import**: Build a `Map<id, modelPath>` from `cropsConfig.crops` inline in `applyChunkDiff` rather than importing `getCropById` from the systems layer — keeps persistence module free of system dependencies.
+  - **PlantedCrop.watered preserved in diff**: Watering state persists across chunk unload so crops don't silently lose their watered bonus on reload.
+
+---

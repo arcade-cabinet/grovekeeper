@@ -1,0 +1,123 @@
+# Iteration 152 Log
+
+## Metadata
+
+- **Task ID**: US-152
+- **Task Title**: Wire hedgePlacement to maze generator
+- **Description**: As a developer, I want the existing hedgePlacement.ts (280 lines) updated to read maze layouts from mazeGenerator.ts and place modular hedge GLB pieces with proper rotation and connection. See GAME_SP...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T21:27:02.445Z
+- **Ended At**: 2026-03-07T21:40:22.659Z
+- **Duration**: 13m 20s
+- **Input Tokens**: 124
+- **Output Tokens**: 46632
+- **Total Tokens**: 46756
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/mazeGenerator*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.test.ts[0m
+Let me read more context files.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/hedgeMaze.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/terrain*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/hedgeMaze.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/terrain.ts[0m
+Now let me check if there's an existing test file for hedgePlacement, and look at the GAME_SPEC.md section §18:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/hedgePlacement*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§18|section 18|Hedge|hedgePlacement[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.test.ts[0m
+Let me check the `seedRNG` utility and look at the current progress log to understand the state:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m pattern: [96mcreateRNG|scopedRNG[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite,Bash[0m
+`★ Insight ─────────────────────────────────────`
+- The current `hedgePlacement.ts` (280 lines) already generates mazes and consumes `mazeGenerator.ts` — the real work is adding **corner fill logic**: at each grid vertex, classify the wall radiating directions (L-corner, T-junction, X-junction) and select the appropriate piece type (round/triangle)
+- The file will exceed 300 lines with the addition, requiring decomposition into a `hedgePlacement/` subpackage — TypeScript automatically resolves `"./hedgePlacement"` imports to `./hedgePlacement/index.ts`, so no test import changes needed
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement/types.ts[0m "/** Shared types for the hedge maze placement system. Spec §17.5. */
+import type { HedgePieceType } from "@/game/ecs/components/terrain";
+
+export interface MazeCell {
+  x: number;
+  z: number;
+  walls... (996 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement/mazeGen.ts[0m "/** Maze generation via seeded recursive backtracker. Spec §17.5. */
+import { createRNG } from "@/game/utils/seedRNG";
+import hedgeMazeConfig from "@/config/game/hedgeMaze.json";
+import type { MazeCel... (2879 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement/wallPieces.ts[0m "/**
+ * Wall segment + corner fill piece generation for hedge mazes. Spec §17.5.
+ *
+ * Phase 1 — wall segments: iterate cells and place a piece for each wall edge.
+ *   Primary type is "basic"; 20% of ... (6621 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement/decorations.ts[0m "/** Maze decoration placement: center reward area + dead ends + intersections. Spec §17.5. */
+import { createRNG } from "@/game/utils/seedRNG";
+import hedgeMazeConfig from "@/config/game/hedgeMaze.jso... (3037 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement/index.ts[0m "/**
+ * Hedge maze placement system — barrel export. Spec §17.5.
+ *
+ * Consumers import from "@/game/systems/hedgePlacement" (resolves to this file).
+ */
+export type { MazeCell, MazeResult, HedgePiece,... (380 chars)"
+Now delete the original flat file to avoid a conflict with the directory:
+[94m[Bash][0m Delete original hedgePlacement.ts (replaced by directory) $ rm /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.ts
+[94m[TodoWrite][0m
+Now update `mazeGenerator.ts` to use `piece.pieceType` instead of hardcoding `"basic"`:
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+`★ Insight ─────────────────────────────────────`
+- `mazeGenerator.ts` previously hardcoded `pieceType: "basic"` and parsed the size class from the model path string — both are now unnecessary since `HedgePiece` carries those fields directly
+- Removing `extractSizeClass` eliminates a fragile string-parsing function that would have broken for non-basic piece paths
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.ts[0m edit: "/**
+ * Extract size class from a basic hedge model..." → "/**"
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.ts[0m edit: "  const hedges: HedgePlacement[] = hedgePieces.map..." → "  const hedges: HedgePlacement[] = hedgePieces.map..."
+[94m[TodoWrite][0m
+Now update the test files. The `hedgePlacement.test.ts` needs to accept multiple piece types:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.test.ts[0m edit: "    it("all pieces have valid model paths", () => ..." → "    it("all pieces have valid model paths and rota..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.test.ts[0m edit: "    /**
+     * For a 12×12 perfect maze (spanning ..." → "    /**
+     * For a 12×12 perfect maze (spanning ..."
+Now update `mazeGenerator.test.ts` for the pieceType and rotation assertions:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.test.ts[0m edit: "  it("all hedge pieces have pieceType 'basic'", ()..." → "  it("all hedge pieces have a valid pieceType", ()..."
+Now run the type check and tests:
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run hedgePlacement and mazeGenerator tests $ npx jest --no-coverage --testPathPattern="hedgePlacement|mazeGenerator" 2>&1 | tail -40
+All 46 tests pass. Run the full suite to check for regressions:
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -15
+3504 tests, 148 suites — all pass. No regressions.
+[94m[TodoWrite][0m
+Now append to the progress log:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Append US-152 entry to progress.md $ `npx jest --no-coverage` → 3504 tests, 148 suites pass - **Learnings:**   - **Two-phase hedge piece ...
+`★ Insight ─────────────────────────────────────`
+- The **vertex-based corner detection** is the key algorithm: iterating `(size+1)²` vertices and checking how many walls radiate outward maps cleanly to piece types — 2-perpendicular → round corner, 3+ → triangle junction. This is the geometrically correct complement to the cell-wall iteration in Phase 1
+- **Extending the `HedgePiece` interface** with `pieceType/sizeClass/junction` was the right architectural move — it made `mazeGenerator.ts`'s mapping trivial and removed the fragile `extractSizeClass` string parser that only handled basic-type paths
+`─────────────────────────────────────────────────`
+
+**Summary of changes:**
+
+| File | Action |
+|------|--------|
+| `game/systems/hedgePlacement.ts` | Deleted (replaced by directory) |
+| `game/systems/hedgePlacement/types.ts` | New — `HedgePiece` now carries `pieceType`, `sizeClass`, `junction` |
+| `game/systems/hedgePlacement/mazeGen.ts` | New — `generateMaze` (unchanged algorithm) |
+| `game/systems/hedgePlacement/wallPieces.ts` | New — `mazeToHedgePieces` with 2-phase corner detection |
+| `game/systems/hedgePlacement/decorations.ts` | New — `placeMazeDecorations` (unchanged) |
+| `game/systems/hedgePlacement/index.ts` | New — barrel exports |
+| `game/world/mazeGenerator.ts` | Removed `extractSizeClass`, reads `piece.pieceType/sizeClass/junction` directly |
+| `game/systems/hedgePlacement.test.ts` | Updated assertions for multi-type pieces and 0/90/180/270 rotations |
+| `game/world/mazeGenerator.test.ts` | Updated pieceType/modelPath/rotation assertions |
+
+All acceptance criteria met: **tsc → 0 errors**, **jest → 3504 tests pass**.
+
+<promise>COMPLETE</promise>
