@@ -71,6 +71,24 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-101
+- Added `DialogueContext` interface to `game/ecs/components/dialogue.ts` — plain value object (playerLevel, inventory, completedQuests, discoveredLocations, discoveredSpirits, currentSeason, timeOfDay)
+- Added `evaluateCondition(condition, context)` and `filterAvailableBranches(branches, context)` to `game/systems/dialogueBranch.ts`
+  - `evaluateCondition`: switch dispatch over all 7 condition types (has_item, has_level, has_discovered, quest_complete, season, time_of_day, spirit_discovered); supports `negate` flag
+  - `filterAvailableBranches`: removes branches where any condition fails (AND semantics); no-condition branches always pass
+- Added 21 new tests to `game/systems/dialogueBranch.test.ts` (37 total in file, 2648 total suite)
+  - evaluateCondition: 5 condition types × pass/fail + negation = 14 tests
+  - filterAvailableBranches: 6 tests covering ungated, single-gate, AND semantics, all-gated, negation
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2648 tests, 0 failures (125 suites)
+- **Learnings:**
+  - **DialogueContext as injectable value object**: Pure interface with no game store import — inject at test time, build from store in production. Decouples condition evaluation completely from persistence layer.
+  - **AND semantics via .every()**: `branch.conditions.every(c => evaluateCondition(c, ctx))` — all conditions must pass. Short-circuit exits on first failure, no-condition branches pass the `!branch.conditions || .length === 0` guard.
+  - **Switch dispatch for extensible condition types**: Each condition type is one case. Adding a new type is one case + one test block — no ripple to caller.
+
+---
+
 ## 2026-03-07 - US-100
 - Created `game/systems/dialogueBranch.ts` — 3 pure exported functions:
   - `normalizeSeedBias(branches)` — normalizes seedBias weights to sum 1.0; all-zero → uniform

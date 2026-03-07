@@ -102,6 +102,27 @@ export interface DialogueComponent {
   inConversation: boolean;
 }
 
+/**
+ * Player context injected into condition evaluation.
+ * Pure value object — no game store imports needed for testing.
+ */
+export interface DialogueContext {
+  /** Current player level. */
+  playerLevel: number;
+  /** Item IDs the player currently holds. */
+  inventory: string[];
+  /** Quest IDs the player has completed. */
+  completedQuests: string[];
+  /** Location IDs the player has discovered. */
+  discoveredLocations: string[];
+  /** Spirit IDs the player has discovered. */
+  discoveredSpirits: string[];
+  /** Current season: "spring" | "summer" | "autumn" | "winter". */
+  currentSeason: string;
+  /** Current time of day: "dawn" | "morning" | "afternoon" | "evening" | "night". */
+  timeOfDay: string;
+}
+
 /** Quest state driven by dialogue branching. */
 export interface QuestBranchComponent {
   /** Quest chain ID. */

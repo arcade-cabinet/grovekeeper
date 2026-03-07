@@ -13,7 +13,11 @@
  */
 
 import { scopedRNG } from "@/game/utils/seedWords";
-import type { DialogueBranch } from "@/game/ecs/components/dialogue";
+import type {
+  DialogueBranch,
+  DialogueCondition,
+  DialogueContext,
+} from "@/game/ecs/components/dialogue";
 
 // ---------------------------------------------------------------------------
 // Weight normalization
@@ -89,4 +93,62 @@ export function selectDefaultBranchNode(
   const idx = selectDefaultBranch(branches, worldSeed, entityId, nodeIndex);
   if (idx === -1) return undefined;
   return branches[idx];
+}
+
+// ---------------------------------------------------------------------------
+// Condition gating (Spec §33.4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Evaluate a single DialogueCondition against the current player context.
+ *
+ * Returns true if the condition is satisfied (after applying negation).
+ */
+export function evaluateCondition(
+  condition: DialogueCondition,
+  context: DialogueContext,
+): boolean {
+  let result: boolean;
+  switch (condition.type) {
+    case "has_item":
+      result = context.inventory.includes(String(condition.value));
+      break;
+    case "has_level":
+      result = context.playerLevel >= Number(condition.value);
+      break;
+    case "has_discovered":
+      result = context.discoveredLocations.includes(String(condition.value));
+      break;
+    case "quest_complete":
+      result = context.completedQuests.includes(String(condition.value));
+      break;
+    case "season":
+      result = context.currentSeason === String(condition.value);
+      break;
+    case "time_of_day":
+      result = context.timeOfDay === String(condition.value);
+      break;
+    case "spirit_discovered":
+      result = context.discoveredSpirits.includes(String(condition.value));
+      break;
+    default:
+      result = false;
+  }
+  return condition.negate === true ? !result : result;
+}
+
+/**
+ * Filter branches to those whose conditions are satisfied by the given context.
+ *
+ * A branch with no conditions is always available.
+ * A branch with conditions is available only if ALL conditions evaluate true.
+ */
+export function filterAvailableBranches(
+  branches: DialogueBranch[],
+  context: DialogueContext,
+): DialogueBranch[] {
+  return branches.filter((branch) => {
+    if (!branch.conditions || branch.conditions.length === 0) return true;
+    return branch.conditions.every((c) => evaluateCondition(c, context));
+  });
 }

@@ -1,0 +1,89 @@
+# Iteration 100 Log
+
+## Metadata
+
+- **Task ID**: US-100
+- **Task Title**: Implement seed-keyed branch selection
+- **Description**: As a developer, I want dialogue branches selected deterministically via scopedRNG so that the same seed always selects the same branch with normalized seedBias weights. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:21:49.161Z
+- **Ended At**: 2026-03-07T16:25:04.324Z
+- **Duration**: 3m 15s
+- **Input Tokens**: 95
+- **Output Tokens**: 11884
+- **Total Tokens**: 11979
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/dialogue*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/dialogue*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueLoader.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueLoader.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils[0m pattern: [96mscopedRNG[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mscopedRNG[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mexport function scopedRNG|function scopedRNG[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|§33|dialogue.*branch|seedBias|seed.*branch|branch.*seed[0m
+Now I have all the context. Let me implement US-100.
+
+`★ Insight ─────────────────────────────────────`
+- `scopedRNG` combines scope + worldSeed + extra args via `hashString(key)` → deterministic. Same inputs always → same pseudo-random sequence.
+- Cumulative probability selection (weighted roulette wheel) is the standard approach for normalized weights — iterate and pick when `roll < cumulative`.
+- A single-branch short-circuit is important: when there's only one option, no RNG call needed (and avoids edge case with weight normalization returning 1.0).
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m "/**
+ * Dialogue branch selection system (Spec §33.2).
+ *
+ * Pure functions — no ECS, Rapier, or R3F imports.
+ *
+ * Selects the "default" branch from a dialogue node using normalized
+ * seedBias weight... (3147 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m "/**
+ * Dialogue branch selection tests (Spec §33.2).
+ *
+ * Covers:
+ * - normalizeSeedBias: empty, single, equal, weighted, all-zero
+ * - selectDefaultBranch: empty, single, valid index, determinism, d... (7545 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run dialogueBranch tests only $ npx jest --no-coverage --testPathPattern="dialogueBranch" 2>&1
+All 18 tests pass. Let me run the full test suite to confirm nothing regressed.
+[94m[Bash][0m Full jest suite, tail to see summary $ npx jest --no-coverage 2>&1 | tail -20
+125 suites, 2629 tests, all passing. Now update `progress.md`.
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-097" → "---
+
+## 2026-03-07 - US-100
+- Created `game/system..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The scope key `"dialogue-branch"` is authoritative from the RNG scope table (GAME_SPEC.md §20). The `"grovekeeper-dialogue"` scope in §32 is spirits-specific — different subsystems get independent RNG streams by design.
+- All-zero `seedBias` falling back to uniform is a defensive necessity: authors may forget to set weights, and crashing on a zero-total divide would be worse than equal distribution.
+- Each unique `(worldSeed, entityId, nodeIndex)` triple creates a fresh RNG stream — so the same NPC's node 3 and node 5 are independently random, while being reproducible across sessions.
+`─────────────────────────────────────────────────`
+
+**US-100 complete.**
+
+- `game/systems/dialogueBranch.ts` — 3 pure functions implementing seed-keyed branch selection
+- `game/systems/dialogueBranch.test.ts` — 18 tests (normalization, determinism, diversity, weighted distribution)
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 2629 tests, 0 failures
+
+<promise>COMPLETE</promise>
