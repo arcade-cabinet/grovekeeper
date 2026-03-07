@@ -82,15 +82,6 @@ function heightAt(
 }
 
 /**
- * Extract size class from a basic hedge model path.
- * e.g. "hedges/basic/basic_2x1.glb" → "2x1"
- */
-function extractSizeClass(modelPath: string): string {
-  const match = modelPath.match(/basic_(\d+x\d+)\.glb/);
-  return match ? match[1] : "1x1";
-}
-
-/**
  * Extract item identifier from a decoration model path.
  * e.g. "hedges/misc/stone/fountain01_round_water.glb" → "fountain01_round_water"
  */
@@ -169,18 +160,15 @@ export function generateLabyrinth(
   const hedges: HedgePlacement[] = hedgePieces.map((piece) => {
     const wx = worldOriginX + piece.x;
     const wz = worldOriginZ + piece.z;
-    const localX = piece.x;
-    const localZ = piece.z;
-    const y = heightAt(heightmap, localX, localZ);
-    const sizeClass = extractSizeClass(piece.modelPath);
+    const y = heightAt(heightmap, piece.x, piece.z);
 
     return {
       position: { x: wx, y, z: wz },
       rotationY: piece.rotation,
       hedge: {
-        pieceType: "basic" as const,
-        sizeClass,
-        junction: "",
+        pieceType: piece.pieceType,
+        sizeClass: piece.sizeClass,
+        junction: piece.junction,
         rotation: piece.rotation,
         modelPath: piece.modelPath,
       },

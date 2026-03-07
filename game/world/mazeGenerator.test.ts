@@ -177,21 +177,23 @@ describe("generateLabyrinth — hedge pieces (Spec §17.5)", () => {
     result = r;
   });
 
-  it("all hedge pieces have pieceType 'basic'", () => {
+  it("all hedge pieces have a valid pieceType", () => {
+    const validTypes = new Set(["basic", "diagonal", "round", "slope", "triangle"]);
     for (const h of result.hedges) {
-      expect(h.hedge.pieceType).toBe("basic");
+      expect(validTypes.has(h.hedge.pieceType)).toBe(true);
     }
   });
 
   it("all hedge pieces have a valid modelPath", () => {
     for (const h of result.hedges) {
-      expect(h.hedge.modelPath).toMatch(/^hedges\/basic\/basic_\d+x\d+\.glb$/);
+      // Path: hedges/<type>/<type>_<size>.glb or similar
+      expect(h.hedge.modelPath).toMatch(/^hedges\/[a-z]+\/.+\.glb$/);
     }
   });
 
-  it("all hedge pieces have rotation 0 or 90 degrees", () => {
+  it("all hedge pieces have a valid rotation (0, 90, 180, or 270 degrees)", () => {
     for (const h of result.hedges) {
-      expect([0, 90]).toContain(h.rotationY);
+      expect([0, 90, 180, 270]).toContain(h.rotationY);
     }
   });
 

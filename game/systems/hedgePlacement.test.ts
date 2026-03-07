@@ -185,13 +185,25 @@ describe("hedgePlacement", () => {
       expect(pieces.length).toBeGreaterThan(0);
     });
 
-    it("all pieces have valid model paths", () => {
+    it("all pieces have valid model paths and rotations", () => {
       const maze = generateMaze(42);
       const pieces = mazeToHedgePieces(maze, 42);
+      const validTypes = new Set(["basic", "diagonal", "round", "slope", "triangle"]);
       for (const piece of pieces) {
-        expect(piece.modelPath).toMatch(/^hedges\/basic\/basic_\d+x\d+\.glb$/);
-        expect([0, 90]).toContain(piece.rotation);
+        // Model path follows hedges/<type>/<type>_<size>.glb or hedges/junction/<type>/<id>.glb
+        expect(piece.modelPath).toMatch(/^hedges\/[a-z]+\/.+\.glb$/);
+        expect([0, 90, 180, 270]).toContain(piece.rotation);
+        expect(validTypes.has(piece.pieceType)).toBe(true);
       }
+    });
+
+    it("includes both straight wall pieces and corner fill pieces", () => {
+      const maze = generateMaze(42);
+      const pieces = mazeToHedgePieces(maze, 42);
+      const hasBasicOrDiag = pieces.some((p) => p.pieceType === "basic" || p.pieceType === "diagonal");
+      const hasRoundOrTri = pieces.some((p) => p.pieceType === "round" || p.pieceType === "triangle");
+      expect(hasBasicOrDiag).toBe(true);
+      expect(hasRoundOrTri).toBe(true);
     });
 
     it("is deterministic for same seed", () => {
@@ -202,17 +214,17 @@ describe("hedgePlacement", () => {
     });
 
     /**
-     * For a 12×12 perfect maze (spanning tree), 143 internal walls are removed
-     * from 264 internal walls + 48 boundary walls = 312 total. Center clearing
-     * removes 4 more internal walls. Expected piece count ≈ 165 ± ~25.
+     * For a 12×12 perfect maze (spanning tree), ~169 wall segment pieces are
+     * placed in Phase 1, plus ~80-150 corner/junction fill pieces in Phase 2.
+     * Expected total ≈ 250-320 pieces.
      */
     it("piece count is in correct range for a 12x12 maze", () => {
       const maze = generateMaze(42);
       const pieces = mazeToHedgePieces(maze, 42);
-      // Minimum: well above zero; a spanning tree guarantees many walls remain.
+      // Minimum: wall segments alone guarantee well above zero.
       expect(pieces.length).toBeGreaterThanOrEqual(120);
-      // Maximum: cannot exceed total wall count for a 12x12 grid.
-      expect(pieces.length).toBeLessThanOrEqual(312);
+      // Maximum: wall segments (~312) + corner fills (~169 vertices × max 1 piece each).
+      expect(pieces.length).toBeLessThanOrEqual(500);
     });
   });
 

@@ -2773,3 +2773,23 @@ after each iteration and it's included in prompts for context.
   - **scopedRNG('vegetation', ...) vs entitySpawner's 'entity-trees'**: Using a different scope key means the supplemental vegetation from `spawnChunkVegetation` is deterministically different from (and non-conflicting with) entitySpawner's trees/bushes — same positions never produced, no deduplication needed.
   - **StructureComponent durability field**: `durability` (current) and `maxDurability` (cap) are separate fields on `StructureComponent`. World-gen structures initialize `durability = maxDurability` (fully intact). Forgetting `durability` causes TS error since it's optional but `maxDurability` is also optional — only the interface check catches it.
   - **Chunk-based probability roll pattern**: `if (rng() >= template.probability) return []` — single roll for 0-or-1 structure placement. `probability: 0.05` → frozen-peaks rarely have structures; `0.40` → orchard-valley frequently does. The test uses 10 chunks at 5% to verify "at most 3" (statistically sound at 6σ).
+
+---
+
+## 2026-03-07 - US-152
+- Wired `hedgePlacement.ts` to produce modular piece types (basic/diagonal/round/triangle) for all maze wall configurations.
+- Decomposed flat `hedgePlacement.ts` (280 lines) into `game/systems/hedgePlacement/` subpackage (stays under 300-line limit per file):
+  - `types.ts` — `MazeCell`, `MazeResult`, `HedgePiece` (now carries `pieceType`, `sizeClass`, `junction`), `MazeDecoration`
+  - `mazeGen.ts` — `generateMaze` + helpers (unchanged algorithm)
+  - `wallPieces.ts` — `mazeToHedgePieces` with two-phase algorithm (wall segments + corner fill)
+  - `decorations.ts` — `placeMazeDecorations` (unchanged, center fountain/benches + dead-end flowers/vases/columns)
+  - `index.ts` — barrel re-exports
+- Updated `game/world/mazeGenerator.ts`: removed `extractSizeClass` (no longer needed), reads `piece.pieceType/sizeClass/junction` directly.
+- Updated `game/systems/hedgePlacement.test.ts`: relaxed model-path regex, extended rotation set to [0,90,180,270], updated piece count upper bound to 500, added test for mixed piece types.
+- Updated `game/world/mazeGenerator.test.ts`: updated pieceType assertion to accept all valid types, updated modelPath regex, updated rotation assertion to [0,90,180,270].
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3504 tests, 148 suites pass
+- **Learnings:**
+  - **Two-phase hedge piece algorithm**: Phase 1 places wall segment pieces (basic/round/diagonal) per cell wall. Phase 2 iterates all (size+1)×(size+1) grid vertices and classifies wall radiations: 2-perp walls → round corner fill, 3+ walls → triangle junction fill. Straight (collinear 2-wall) vertices are skipped — no fill needed.
+  - **HedgePiece carries pieceType/sizeClass/junction**: Adding these fields to the `HedgePiece` interface (returned by `mazeToHedgePieces`) eliminates the need to parse the model path string in the world layer. The consumer (`mazeGenerator.ts`) just copies the fields through — no inference needed.
+  - **Vertex wall formula for grid mazes**: At vertex (vx, vz): `east = grid[vx][vz].walls.north || (vz===size && grid[vx][size-1].walls.south)`. The boundary case (vz===size or vx===size) uses the adjacent cell's opposite wall. The `&&` operators have higher precedence than `||` in TypeScript, so `a && b || c && d` is `(a&&b)||(c&&d)` — no extra parens needed for correctness.
+  - **Corner fill rotation convention**: E+S corner → 0°, W+S → 90°, W+N → 180°, E+N → 270°. T-junction rotation points toward the absent wall.
