@@ -2907,3 +2907,14 @@ after each iteration and it's included in prompts for context.
   - **Nested Modal in PauseMenu**: React Native supports stacked `<Modal>` components — SettingsScreen's own Modal opens on top of PauseMenu's Modal without needing a portal or navigation.
   - **System `reducedMotion` auto-detection**: `AccessibilityInfo.isReduceMotionEnabled()` + `addEventListener("reduceMotionChanged")` already used in `MainMenu.tsx` — same hook works in SettingsScreen to override the store pref when the system says to reduce motion.
 ---
+
+## 2026-03-07 - US-159
+- What was implemented: Decomposed MainMenu.tsx (319 lines → 177 lines) by extracting background decoration components into a new `mainMenuBackground.tsx`. Fixed a button label bug where the "New Grove" button incorrectly showed "Continue Grove" when a save exists (used `primaryButtonLabel` which returns "Continue Grove" for the wrong button).
+- Files changed:
+  - `components/game/mainMenuBackground.tsx` — new file (137 lines): exports `FloatingLeaf`, `LeftTreeSilhouette`, `RightTreeSilhouette`, `LEAF_CONFIGS`, `LeafConfig`, `useReducedMotion`
+  - `components/game/MainMenu.tsx` — decomposed to 177 lines: imports from `mainMenuBackground.tsx`, removed unused `showNewGroveButton` import, fixed "New Grove" button label when save exists
+- **Learnings:**
+  - **Sibling extraction pattern for line-limit compliance**: Extract internal sub-components to a sibling `*Background.tsx` / `*Parts.tsx` file rather than a new directory. Keep the barrel `index.ts` clean — the extracted file is an implementation detail, not a public API. Same pattern as `mainMenuLogic.ts`.
+  - **Button label bug from reusing `primaryButtonLabel` for secondary button**: When save exists, `primaryButtonLabel(n)` returns "Continue Grove" — but the secondary button (calls `onNewGrove`) should read "New Grove". Fix: use the label directly (`saveExists ? "New Grove" : primaryButtonLabel(treesPlanted)`). Don't change the pure function; fix the usage site.
+  - **Pre-existing TS5097 errors are project-wide, not task-specific**: The entire codebase uses explicit `.tsx`/`.ts` extensions in imports (e.g. `from "./Logo.tsx"`). These cause TS5097 warnings codebase-wide — not introduced by US-159. Follow the existing pattern consistently.
+---
