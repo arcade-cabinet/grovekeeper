@@ -114,6 +114,28 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-079
+- Created `game/world/mazeGenerator.ts` — world-layer wrapper around the existing `game/systems/hedgePlacement.ts` maze algorithm
+- `isLabyrinthChunk(worldSeed, chunkX, chunkZ)` — detects labyrinth chunks at ~3% probability using a dedicated "labyrinth-roll" scopedRNG scope; chunk (0,0) always excluded (tutorial village)
+- `generateLabyrinth(worldSeed, chunkX, chunkZ, heightmap)` — derives an integer maze seed via `hashString("maze-{seed}-{x}-{z}")`, calls `generateMaze` + `mazeToHedgePieces` + `placeMazeDecorations` from hedgePlacement.ts, then converts results to world-space `HedgePlacement[]` + `DecorationPlacement[]` with ECS-ready `HedgeComponent` / `HedgeDecorationComponent` fields
+- Exposes `centerPosition`, `entrancePosition`, and `mazeIndex` (0–7 via chunk coord hash, for spirit system)
+- Created `game/world/mazeGenerator.test.ts` — 26 tests covering detection, null guard, structure, hedge pieces, decorations, determinism, elevation sampling
+- **Files changed:**
+  - `game/world/mazeGenerator.ts` — new file (~180 lines, world-layer wrapper)
+  - `game/world/mazeGenerator.test.ts` — new test file (26 tests)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2252 tests, 0 failures (115 suites, +26 new tests)
+- **Learnings:**
+  - **World-layer wrapper pattern**: `mazeGenerator.ts` sits between `hedgePlacement.ts` (pure maze algorithm using integer seeds) and the chunk system (worldSeed strings + chunk coords). Converts HedgePiece/MazeDecoration → ECS-typed HedgeComponent/HedgeDecorationComponent with world-space positions.
+  - **Separate landmark scope for labyrinths**: Labyrinths are rarer (~3%) than regular landmarks (15%), so they use a dedicated `"labyrinth-roll"` scope rather than extending `getLandmarkType`. This keeps both systems independent.
+  - **Stable mazeIndex via chunk coord hash**: `hashString("\${chunkX}-\${chunkZ}") % 8` gives a stable [0-7] index without an incremental counter — required because chunks load in arbitrary order.
+  - **Integer seed derivation from string seed**: `hashString("maze-{worldSeed}-{x}-{z}")` bridges the gap between string-based `scopedRNG` (used by other world generators) and the integer-seeded `createRNG` used in `hedgePlacement.ts`. The concatenated key ensures uniqueness per chunk.
+
+---
+
+---
+
 ## 2026-03-07 - US-077
 - Compass widget was already complete in `components/game/HUD.tsx` with full tests in `HUD.test.ts` — `resolveCompassBearing`, `findNearestUndiscoveredSpirit`, and the `Compass` component all existed
 - Added `SignpostComponent` + `SignpostDirection` to `game/ecs/components/procedural/terrain.ts`
