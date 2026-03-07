@@ -1,0 +1,176 @@
+# Iteration 77 Log
+
+## Metadata
+
+- **Task ID**: US-077
+- **Task Title**: Add compass widget and signpost entities
+- **Description**: As a player, I want a compass that points to the nearest undiscovered direction and signpost entities at path intersections so that I can navigate the world. See GAME_SPEC.md §16.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T14:22:44.225Z
+- **Ended At**: 2026-03-07T14:30:21.436Z
+- **Duration**: 7m 37s
+- **Input Tokens**: 185
+- **Output Tokens**: 24679
+- **Total Tokens**: 24864
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§16|compass|signpost|Compass|Signpost[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 16\.|^### 16\.[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m
+Now let me look at the components and game store to understand where to integrate:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m
+The compass widget already exists in HUD.tsx. Let me check for tests and the signpost component:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/HUD.test.*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*signpost*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/villageGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/structures.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural[0m
+
+[91m[Error: EISDIR: illegal operation on a directory, read '/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural'][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/procedural/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/index.ts[0m
+Now I have a complete picture. Let me implement:
+
+`★ Insight ─────────────────────────────────────`
+- The compass widget already exists in `HUD.tsx` with full tests — the only missing piece is signpost ECS entities
+- Path intersections = landmark chunks with 2+ connected neighbors. The signpost goes at the landmark position
+- SignpostComponent needs to be added to the `procedural/terrain.ts` ECS layer, then wired through `world.ts` → `pathGenerator.ts` → `ChunkManager.ts`
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m
+Now I have the full picture. Let me implement all the changes:
+
+`★ Insight ─────────────────────────────────────`
+- Tests use `outer:` labeled loops with early break to find qualifying chunks without fragile hardcoded coordinates — this is the pattern to follow for signpost intersection tests
+- SignpostComponent lives in `terrain.ts` (not `structures.ts`) because it's a procedurally-generated navigation aid, not a player-built structure
+- Using `string` for `targetLandmarkType` in SignpostComponent avoids a circular import between terrain.ts and pathGenerator.ts
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m edit: "/** Procedural path/trail segment carved into terr..." → "/** Procedural path/trail segment carved into terr..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m edit: "/** Procedural path/trail segment carved into terr..." → "/** Procedural path/trail segment carved into terr..."
+[94m[TodoWrite][0m
+Now add `signpost` to the `Entity` interface and add the query:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "import type {
+  TerrainChunkComponent,
+  PathSegme..." → "import type {
+  TerrainChunkComponent,
+  PathSegme..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+The file was read earlier in the session. Let me try the edits:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "import type {
+  TerrainChunkComponent,
+  PathSegme..." → "import type {
+  TerrainChunkComponent,
+  PathSegme..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "import type {
+  TerrainChunkComponent,
+  PathSegme..." → "import type {
+  TerrainChunkComponent,
+  PathSegme..."
+Now add `signpost` to the Entity interface and the query. I need to read those sections:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "  // Procedural (shader/particle — no GLB models)
+..." → "  // Procedural (shader/particle — no GLB models)
+..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "export const pathSegmentsQuery = world.with("pathS..." → "export const pathSegmentsQuery = world.with("pathS..."
+[94m[TodoWrite][0m
+Now add `generateSignpostForChunk` to `pathGenerator.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m edit: "import type { PathSegmentComponent } from "@/game/..." → "import type {
+  PathSegmentComponent,
+  SignpostCo..."
+Now add the `SignpostPlacement` type and `generateSignpostForChunk` at the end of pathGenerator.ts:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m edit: "// ── Types ──────────────────────────────────────..." → "// ── Types ──────────────────────────────────────..."
+Now add the `generateSignpostForChunk` function at the end of the file:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m edit: "  return placements;
+}" → "  return placements;
+}
+
+// ── Signpost generation ..."
+[94m[TodoWrite][0m
+Now add tests to `pathGenerator.test.ts`. First read the end of the file:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m edit: "import {
+  isLandmarkChunk,
+  getLandmarkLocalPos,..." → "import {
+  isLandmarkChunk,
+  getLandmarkLocalPos,..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m edit: "  it("position anchor is at the landmark world-spa..." → "  it("position anchor is at the landmark world-spa..."
+[94m[TodoWrite][0m
+Now wire signposts in ChunkManager.ts:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "import { generatePathsForChunk } from "./pathGener..." → "import { generatePathsForChunk, generateSignpostFo..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "import { generatePathsForChunk } from "./pathGener..." → "import { generatePathsForChunk, generateSignpostFo..."
+Now add the signpost placement after the path generation in `loadChunk`:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "    // Generate trail paths between landmarks — ca..." → "    // Generate trail paths between landmarks — ca..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run pathGenerator tests $ npx jest --no-coverage --testPathPattern="pathGenerator" 2>&1 | tail -40
+All 36 tests pass. Let me run the full test suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+2226 tests, 0 failures. Both checks pass cleanly.
+[94m[TodoWrite][0m
+Now update the progress log:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-075" → "## 2026-03-07 - US-077
+- Compass widget was alread..."
+`★ Insight ─────────────────────────────────────`
+- `connected.find(...) ?? connected[0]` is a clean pattern for "prefer X type, else first item" — no if/else needed
+- The `outer:` labeled loop with `break outer` is the idiomatic way to exit nested scanning loops in TypeScript without a flag variable — used consistently across all pathGenerator tests
+- `SignpostComponent` lives in `terrain.ts` alongside `PathSegmentComponent` since both are procedurally generated navigation artifacts, not player-built structures — keeps the domain boundary clean
+`─────────────────────────────────────────────────`
+
+Implementation complete. Here's a summary:
+
+**What was already done:** The compass widget (`resolveCompassBearing`, `findNearestUndiscoveredSpirit`, `Compass` component) was fully implemented in `HUD.tsx` with 14 tests in `HUD.test.ts`.
+
+**What I added (signpost entities):**
+
+| File | Change |
+|------|--------|
+| `game/ecs/components/procedural/terrain.ts` | Added `SignpostComponent` + `SignpostDirection` |
+| `game/ecs/world.ts` | Added `signpost?` to `Entity`, added `signpostsQuery` |
+| `game/world/pathGenerator.ts` | Added `generateSignpostForChunk()` — returns placement at intersections (2+ connected landmark neighbors), prefers village as target |
+| `game/world/pathGenerator.test.ts` | +8 tests covering null cases, placement, direction, target coords, village preference, determinism |
+| `game/world/ChunkManager.ts` | Wired signpost generation after path placement in `loadChunk` |
+
+**Results:** `npx tsc --noEmit` → 0 errors | `npx jest --no-coverage` → 2226 tests, 0 failures
+
+<promise>COMPLETE</promise>

@@ -99,6 +99,21 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-078
+- Work already complete — navigation tests were written alongside their implementations in US-076 and US-077
+- `game/systems/fastTravel.test.ts` — 18 tests covering campfire discovery (`discoverCampfire`, `isCampfireDiscovered`, `canDiscoverMore`) and fast travel teleport (`getTeleportTarget`)
+- `components/game/HUD.test.ts` — 7 tests for `resolveCompassBearing` + 6 for `findNearestUndiscoveredSpirit` (compass direction)
+- Total: 32 navigation tests, all 3 acceptance criteria categories covered
+- **Files changed:** none (verified existing files)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage game/systems/fastTravel.test.ts components/game/HUD.test.ts` → 32 passed, 0 failed
+- **Learnings:**
+  - **Tests-with-task mandate pays off again**: Following CLAUDE.md's rule in US-076/US-077 meant US-078 was a zero-work verification pass — same outcome as US-075
+  - **Navigation spec §17.6 maps to 2 files**: campfire/teleport → `fastTravel.ts` (pure functions), compass → `HUD.tsx` (exported pure function). Both fully testable without ECS or R3F context.
+
+---
+
 ## 2026-03-07 - US-077
 - Compass widget was already complete in `components/game/HUD.tsx` with full tests in `HUD.test.ts` — `resolveCompassBearing`, `findNearestUndiscoveredSpirit`, and the `Compass` component all existed
 - Added `SignpostComponent` + `SignpostDirection` to `game/ecs/components/procedural/terrain.ts`
