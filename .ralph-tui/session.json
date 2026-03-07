@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T16:28:45.635Z",
-  "currentIteration": 100,
+  "updatedAt": "2026-03-07T16:37:54.795Z",
+  "currentIteration": 101,
   "maxIterations": 0,
-  "tasksCompleted": 100,
+  "tasksCompleted": 101,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -616,8 +616,8 @@
       {
         "id": "US-101",
         "title": "Write Jest tests for dialogue branching",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-102",
@@ -2041,6 +2041,16 @@
       "durationMs": 195163,
       "startedAt": "2026-03-07T16:21:49.161Z",
       "endedAt": "2026-03-07T16:25:04.324Z"
+    },
+    {
+      "iteration": 101,
+      "status": "completed",
+      "taskId": "US-101",
+      "taskTitle": "Write Jest tests for dialogue branching",
+      "taskCompleted": true,
+      "durationMs": 220176,
+      "startedAt": "2026-03-07T16:25:05.456Z",
+      "endedAt": "2026-03-07T16:28:45.632Z"
     }
   ],
   "skippedTaskIds": [],

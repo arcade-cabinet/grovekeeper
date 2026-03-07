@@ -71,6 +71,30 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-102
+- Created `components/entities/SpeechBubble.tsx` — world-space billboarded speech bubble for dialogue
+  - `computeOpacity(visible, currentOpacity, dt, fadeDuration)` — fade in/out math, clamped [0,1]
+  - `computeBubbleY(entityY, offset)` — positions bubble above entity
+  - `FADE_DURATION = 0.3` (matches Spec §33.5)
+  - `BUBBLE_OFFSET = 2.2` (world units above entity base)
+  - Uses `Billboard` from drei for camera-facing quad
+  - Uses `Text` from drei with Fredoka font (require from `@expo-google-fonts/fredoka/400Regular/Fredoka_400Regular.ttf`)
+  - Imperative ref mutation in `useFrame` for both `bgMaterialRef.current.opacity` and `textRef.current.fillOpacity` — no React state updates per frame
+- Created `components/entities/SpeechBubble.test.ts` — 22 tests
+  - `computeOpacity`: 12 tests (ramp up/down, clamping, symmetry, full-cycle accumulation, boundary values)
+  - `computeBubbleY`: 6 tests (formula, offsets, negative Y)
+  - Constants: 2 tests (FADE_DURATION=0.3, BUBBLE_OFFSET>2)
+  - Component export: 2 tests
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2670 tests, 0 failures (126 suites, +22 new)
+- **Learnings:**
+  - **Font asset via require() in R3F context**: `require("@expo-google-fonts/fredoka/400Regular/Fredoka_400Regular.ttf") as string` works because jest-expo's `assetFileTransformer` returns `1` for `.ttf` files and drei is fully mocked in tests — the value never reaches troika at test time.
+  - **troika TextMesh fillOpacity via `any` ref**: drei's `Text` ref type is complex troika internals; use `useRef<any>(null)` with a `biome-ignore lint/suspicious/noExplicitAny` comment. Property access (`textRef.current.fillOpacity = x`) works at runtime; mocked in tests.
+  - **Billboard + imperative material opacity**: Same `materialRef.current.opacity = value` pattern as SpiritOrb. Avoid React state for per-frame animation to prevent 60fps re-renders.
+
+---
+
 ## 2026-03-07 - US-101
 - Added `DialogueContext` interface to `game/ecs/components/dialogue.ts` — plain value object (playerLevel, inventory, completedQuests, discoveredLocations, discoveredSpirits, currentSeason, timeOfDay)
 - Added `evaluateCondition(condition, context)` and `filterAvailableBranches(branches, context)` to `game/systems/dialogueBranch.ts`
