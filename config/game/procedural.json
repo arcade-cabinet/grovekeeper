@@ -191,6 +191,36 @@
       "gravity": 0.5,
       "maxParticles": 30
     },
+    "rain": {
+      "emissionRate": 250,
+      "lifetime": 1.2,
+      "emissionRadius": 20.0,
+      "size": 0.02,
+      "color": "#a0c8e0",
+      "gravity": 1.0,
+      "windAffected": true,
+      "maxParticles": 500
+    },
+    "snow": {
+      "emissionRate": 100,
+      "lifetime": 3.0,
+      "emissionRadius": 20.0,
+      "size": 0.05,
+      "color": "#f0f4ff",
+      "gravity": 0.3,
+      "windAffected": true,
+      "maxParticles": 300
+    },
+    "wind": {
+      "emissionRate": 50,
+      "lifetime": 2.0,
+      "emissionRadius": 15.0,
+      "size": 0.03,
+      "color": "#c8b890",
+      "gravity": 0.1,
+      "windAffected": true,
+      "maxParticles": 100
+    },
     "splash": {
       "emissionRate": 15,
       "lifetime": 0.8,

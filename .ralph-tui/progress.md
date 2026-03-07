@@ -2445,3 +2445,15 @@ after each iteration and it's included in prompts for context.
   - **Panner3D pool as fixed-size pre-allocated resource**: Create all Panner3D nodes at `initialize()` time. Callers acquire/release rather than create/destroy — avoids expensive AudioContext node creation per sound event.
 
 ---
+
+## 2026-03-07 - US-131
+- Implemented `game/systems/weatherParticles.ts` — rain (500), snow (300), wind/dust (100) particles driven by WeatherComponent
+- Added rain/snow/wind emitter configs to `config/game/procedural.json` (particles section) so all tuning values are config-sourced
+- Wrote `game/systems/weatherParticles.test.ts` — 46 tests, all passing
+- Files changed: `game/systems/weatherParticles.ts`, `game/systems/weatherParticles.test.ts`, `config/game/procedural.json`
+- **Learnings:**
+  - **Weather particle type mapping**: `resolveParticleCategory` unifies "rain" + "thunderstorm" → same emitter; "windstorm" → dust-type particles. Clear/fog → null (no particles). Single function is the testable seam for this logic.
+  - **Intensity-scaled emissionRate with floor**: `cfg.emissionRate * Math.max(0.1, intensity)` ensures even intensity=0 doesn't produce a dead emitter. `maxParticles` stays fixed at the spec budget cap regardless of intensity.
+  - **Single emitter per weather system**: Only one emitter entity lives in the world at a time. Category change triggers remove-old + spawn-new in the same tick — no risk of two emitters accumulating.
+  - **Config-as-spec**: Adding rain/snow/wind under `particles` (not just `weather.particleCounts`) keeps the builder functions consistent with existing splash/bubbles pattern — `buildXEmitter` reads from `proceduralConfig.particles.X` exclusively.
+---
