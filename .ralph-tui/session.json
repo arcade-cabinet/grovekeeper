@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T12:35:31.659Z",
-  "currentIteration": 60,
+  "updatedAt": "2026-03-07T12:47:42.067Z",
+  "currentIteration": 61,
   "maxIterations": 0,
-  "tasksCompleted": 60,
+  "tasksCompleted": 61,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -376,8 +376,8 @@
       {
         "id": "US-061",
         "title": "Implement walk bob",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-062",
@@ -1641,6 +1641,16 @@
       "durationMs": 363586,
       "startedAt": "2026-03-07T12:24:19.490Z",
       "endedAt": "2026-03-07T12:30:23.076Z"
+    },
+    {
+      "iteration": 61,
+      "status": "completed",
+      "taskId": "US-061",
+      "taskTitle": "Implement walk bob",
+      "taskCompleted": true,
+      "durationMs": 307456,
+      "startedAt": "2026-03-07T12:30:24.201Z",
+      "endedAt": "2026-03-07T12:35:31.657Z"
     }
   ],
   "skippedTaskIds": [],

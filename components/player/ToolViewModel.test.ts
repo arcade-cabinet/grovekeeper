@@ -5,6 +5,11 @@
  * (R3F / drei require WebGL context, mocked here).
  */
 
+jest.mock("animejs", () => ({
+  __esModule: true,
+  default: jest.fn(() => ({ pause: jest.fn() })),
+}));
+
 jest.mock("@react-three/drei", () => ({
   useGLTF: jest.fn(),
 }));
@@ -23,7 +28,15 @@ jest.mock("@/game/stores/gameStore", () => ({
 }));
 
 import toolVisuals from "@/config/game/toolVisuals.json";
-import { computeSwayOffset, computeWalkBob, resolveToolGLBPath, resolveToolVisual, ToolViewModel } from "./ToolViewModel";
+import {
+  buildSwapDownParams,
+  buildSwapUpParams,
+  computeSwayOffset,
+  computeWalkBob,
+  resolveToolGLBPath,
+  resolveToolVisual,
+  ToolViewModel,
+} from "./ToolViewModel";
 
 type ToolVisualsConfig = typeof toolVisuals;
 
@@ -152,6 +165,65 @@ describe("computeWalkBob (Spec §11)", () => {
   it("returns zero at t=0 regardless of other params", () => {
     // sin(0) = 0
     expect(computeWalkBob(0, 0.05, 12.0, 1)).toBe(0);
+  });
+});
+
+describe("buildSwapDownParams (Spec §11)", () => {
+  it("sets targets to the provided ref object", () => {
+    const ref = { y: 0 };
+    const params = buildSwapDownParams(ref, 0.4, 150, jest.fn());
+    expect(params.targets).toBe(ref);
+  });
+
+  it("animates y to negative lowerY", () => {
+    const params = buildSwapDownParams({ y: 0 }, 0.4, 150, jest.fn());
+    expect(params.y).toBe(-0.4);
+  });
+
+  it("uses the provided duration", () => {
+    const params = buildSwapDownParams({ y: 0 }, 0.4, 200, jest.fn());
+    expect(params.duration).toBe(200);
+  });
+
+  it("uses easeInQuad easing for a quick entry into the lower arc", () => {
+    const params = buildSwapDownParams({ y: 0 }, 0.4, 150, jest.fn());
+    expect(params.easing).toBe("easeInQuad");
+  });
+
+  it("wires onComplete callback into the complete field", () => {
+    const onComplete = jest.fn();
+    const params = buildSwapDownParams({ y: 0 }, 0.4, 150, onComplete);
+    params.complete();
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it("different lowerY values produce proportionally different y targets", () => {
+    const small = buildSwapDownParams({ y: 0 }, 0.2, 150, jest.fn());
+    const large = buildSwapDownParams({ y: 0 }, 0.4, 150, jest.fn());
+    expect(large.y).toBe(small.y * 2);
+  });
+});
+
+describe("buildSwapUpParams (Spec §11)", () => {
+  it("sets targets to the provided ref object", () => {
+    const ref = { y: -0.4 };
+    const params = buildSwapUpParams(ref, 150);
+    expect(params.targets).toBe(ref);
+  });
+
+  it("animates y back to 0 (neutral position)", () => {
+    const params = buildSwapUpParams({ y: -0.4 }, 150);
+    expect(params.y).toBe(0);
+  });
+
+  it("uses the provided duration", () => {
+    const params = buildSwapUpParams({ y: -0.4 }, 200);
+    expect(params.duration).toBe(200);
+  });
+
+  it("uses easeOutQuad easing for a smooth deceleration into resting position", () => {
+    const params = buildSwapUpParams({ y: -0.4 }, 150);
+    expect(params.easing).toBe("easeOutQuad");
   });
 });
 

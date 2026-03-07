@@ -9,10 +9,11 @@
  * Tools with no model are silently hidden (no placeholder boxes — Spec §11).
  */
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import { createPortal, useFrame, useThree } from "@react-three/fiber";
+import anime from "animejs";
 
 import toolVisualsData from "@/config/game/toolVisuals.json" with { type: "json" };
 import { useGameStore } from "@/game/stores/gameStore";
@@ -39,14 +40,19 @@ interface BobConfig {
   readonly bobFrequency: number;
 }
 
+interface SwapConfig {
+  readonly lowerY: number;
+  readonly duration: number;
+}
+
 /**
- * Index-signature type covering tool entries and the top-level "sway"/"bob" config keys.
+ * Index-signature type covering tool entries and the top-level "sway"/"bob"/"swap" config keys.
  * The union value type lets TypeScript accept toolVisuals.json directly.
  */
-type ToolVisualsConfig = { readonly [toolId: string]: ToolVisualEntry | SwayConfig | BobConfig | undefined };
+type ToolVisualsConfig = { readonly [toolId: string]: ToolVisualEntry | SwayConfig | BobConfig | SwapConfig | undefined };
 
-/** Narrows a config value to ToolVisualEntry (excludes SwayConfig, BobConfig, and undefined). */
-function isToolVisualEntry(v: ToolVisualEntry | SwayConfig | BobConfig): v is ToolVisualEntry {
+/** Narrows a config value to ToolVisualEntry (excludes SwayConfig, BobConfig, SwapConfig, and undefined). */
+function isToolVisualEntry(v: ToolVisualEntry | SwayConfig | BobConfig | SwapConfig): v is ToolVisualEntry {
   return "glbPath" in v;
 }
 
@@ -102,6 +108,39 @@ export function computeWalkBob(
 }
 
 /**
+ * Builds anime.js params for the tool-lower phase of a swap animation (Spec §11).
+ *
+ * Returned object is a plain record — testable without WebGL or anime.js mocks.
+ * Pass to `anime()` at the call site to trigger the actual tween.
+ *
+ * @param target      Mutable ref object with a `y` property that anime.js will animate
+ * @param lowerY      How far down to lower the tool (positive value, applied as -lowerY)
+ * @param duration    Tween duration in milliseconds
+ * @param onComplete  Called when the lower phase ends — swap the displayed tool here
+ */
+export function buildSwapDownParams(
+  target: { y: number },
+  lowerY: number,
+  duration: number,
+  onComplete: () => void,
+): { targets: { y: number }; y: number; duration: number; easing: string; complete: () => void } {
+  return { targets: target, y: -lowerY, duration, easing: "easeInQuad", complete: onComplete };
+}
+
+/**
+ * Builds anime.js params for the tool-raise phase of a swap animation (Spec §11).
+ *
+ * @param target    The same mutable ref animated in the lower phase
+ * @param duration  Tween duration in milliseconds (typically same as lower phase)
+ */
+export function buildSwapUpParams(
+  target: { y: number },
+  duration: number,
+): { targets: { y: number }; y: number; duration: number; easing: string } {
+  return { targets: target, y: 0, duration, easing: "easeOutQuad" };
+}
+
+/**
  * Returns the GLB path for a tool, or null if no model exists in the config (Spec §11).
  * Tools without a GLB mapping are not rendered — no placeholder fallbacks.
  */
@@ -139,6 +178,8 @@ interface ToolGLBModelProps {
   lerpFactor: number;
   bobHeight: number;
   bobFrequency: number;
+  /** Ref animated by the swap tween — y is added to group.position.y each frame. */
+  swapAnimRef: React.MutableRefObject<{ y: number }>;
 }
 
 /**
@@ -151,7 +192,7 @@ interface ToolGLBModelProps {
  * This is a separate component so useGLTF is only called when a valid GLB path
  * is known (satisfies Rules of Hooks — parent conditionally mounts this).
  */
-const ToolGLBModel = ({ glbPath, offset, scale, moveDirection, swayAmount, lerpFactor, bobHeight, bobFrequency }: ToolGLBModelProps) => {
+const ToolGLBModel = ({ glbPath, offset, scale, moveDirection, swayAmount, lerpFactor, bobHeight, bobFrequency, swapAnimRef }: ToolGLBModelProps) => {
   const { scene } = useGLTF(glbPath);
   const { camera } = useThree();
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
@@ -168,7 +209,7 @@ const ToolGLBModel = ({ glbPath, offset, scale, moveDirection, swayAmount, lerpF
     const bob = computeWalkBob(bobTimeRef.current, bobHeight, bobFrequency, speed);
     group.position.set(
       (offset[0] ?? 0) + swayRef.current.x,
-      (offset[1] ?? 0) + swayRef.current.y + bob,
+      (offset[1] ?? 0) + swayRef.current.y + bob + swapAnimRef.current.y,
       offset[2] ?? 0,
     );
   });
@@ -203,15 +244,42 @@ const ZERO_DIRECTION = { x: 0, z: 0 };
  * - Resolves the GLB path, offset, and sway config from config/game/toolVisuals.json.
  * - Portals the GLB group into the camera so it is fixed to the player's view.
  * - Applies velocity-based sway via moveDirection prop (lerped each frame).
+ * - Animates tool swap: lowers current → swaps model → raises new (anime.js tween).
  * - Returns null for tools with no GLB mapping (watering-can, almanac, etc.).
  */
 export const ToolViewModel = ({ moveDirection = ZERO_DIRECTION }: ToolViewModelProps) => {
   const selectedTool = useGameStore((s) => s.selectedTool);
+  const [displayedToolId, setDisplayedToolId] = useState(selectedTool);
+  const swapAnimRef = useRef({ y: 0 });
+  const activeAnimRef = useRef<anime.AnimeInstance | null>(null);
+
   const config = toolVisualsData as ToolVisualsConfig;
-  const glbPath = resolveToolGLBPath(selectedTool, config);
-  const visual = resolveToolVisual(selectedTool, config);
   const swayConfig = (toolVisualsData as { sway?: SwayConfig }).sway;
   const bobConfig = (toolVisualsData as { bob?: BobConfig }).bob;
+  const swapConfig = (toolVisualsData as { swap?: SwapConfig }).swap;
+
+  // Animate tool swap: lower current → swap model at nadir → raise new (Spec §11).
+  useEffect(() => {
+    if (selectedTool === displayedToolId) return;
+    if (!swapConfig) {
+      setDisplayedToolId(selectedTool);
+      return;
+    }
+
+    activeAnimRef.current?.pause();
+    const capturedTool = selectedTool;
+
+    activeAnimRef.current = anime(
+      buildSwapDownParams(swapAnimRef.current, swapConfig.lowerY, swapConfig.duration, () => {
+        setDisplayedToolId(capturedTool);
+        activeAnimRef.current = anime(buildSwapUpParams(swapAnimRef.current, swapConfig.duration));
+      }),
+    );
+    // biome-ignore lint/react-hooks/exhaustiveDepsList: intentionally omit displayedToolId — only re-trigger on user tool selection, not on internal swap completion
+  }, [selectedTool]);
+
+  const glbPath = resolveToolGLBPath(displayedToolId, config);
+  const visual = resolveToolVisual(displayedToolId, config);
 
   if (!glbPath || !visual || !swayConfig || !bobConfig) return null;
 
@@ -225,6 +293,7 @@ export const ToolViewModel = ({ moveDirection = ZERO_DIRECTION }: ToolViewModelP
       lerpFactor={swayConfig.lerpFactor}
       bobHeight={bobConfig.bobHeight}
       bobFrequency={bobConfig.bobFrequency}
+      swapAnimRef={swapAnimRef}
     />
   );
 };

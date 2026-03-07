@@ -1,0 +1,116 @@
+# Iteration 61 Log
+
+## Metadata
+
+- **Task ID**: US-061
+- **Task Title**: Implement walk bob
+- **Description**: As a player, I want my held tool to bob vertically when walking so that footsteps feel grounded. Vertical sine wave: bobHeight * sin(time * bobFrequency). See GAME_SPEC.md §11.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T12:30:24.201Z
+- **Ended At**: 2026-03-07T12:35:31.657Z
+- **Duration**: 5m 7s
+- **Input Tokens**: 133
+- **Output Tokens**: 15355
+- **Total Tokens**: 15488
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/ToolViewModel*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/useHandSway*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m
+Now let me check the spec and config file:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mwalk bob|walkBob|bob|bobHeight|bobFrequency[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolVisuals.json[0m
+Let me look at §11 in the spec:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|## 11\.|### 11\.|walk bob|walkBob|bobHeight|bobFrequency[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mool View Model|oolViewModel|first.person.*tool|held tool|bob.*tool|tool.*bob|sway|hand sway|walk bob[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mTool View|ToolView|camera space|view model|viewmodel[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mP2|11\.\d|bob|sway|walk[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mbobHeight|bobFrequency|walk bob|footstep|vertical.*sine|sine.*vertical[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mUS-061|US-060|hand sway|walk bob[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/plans/2026-03-06-fps-perspective-design.md[0m
+`★ Insight ─────────────────────────────────────`
+- The walk bob is additive with the existing sway — both modify the tool's Y position, so they can be combined cleanly in the same `group.position.set()` call.
+- The canonical formula `bobHeight * sin(time * bobFrequency) * speed` means: full amplitude when walking at full speed, zero bob when standing still (no need for separate lerp-back logic).
+- `bobTimeRef` should accumulate unconditionally every frame (not just when moving), so the phase stays consistent — the speed factor controls amplitude.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolVisuals.json[0m edit: "{
+  "sway": {
+    "swayAmount": 0.06,
+    "lerpFac..." → "{
+  "sway": {
+    "swayAmount": 0.06,
+    "lerpFac..."
+[94m[TodoWrite][0m
+Now update `ToolViewModel.tsx` — add the `BobConfig` interface, widen the type union, export `computeWalkBob`, thread bob props through `ToolGLBModel`, and wire into `useFrame`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "interface SwayConfig {
+  readonly swayAmount: numb..." → "interface SwayConfig {
+  readonly swayAmount: numb..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "/**
+ * Returns the GLB path for a tool, or null if..." → "/**
+ * Computes vertical walk bob for the held too..."
+Now add `bobHeight` and `bobFrequency` to `ToolGLBModelProps` and wire them into `useFrame`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "interface ToolGLBModelProps {
+  glbPath: string;
+ ..." → "interface ToolGLBModelProps {
+  glbPath: string;
+ ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "const ToolGLBModel = ({ glbPath, offset, scale, mo..." → "const ToolGLBModel = ({ glbPath, offset, scale, mo..."
+Now thread `bobConfig` through `ToolViewModel`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "  const swayConfig = (toolVisualsData as { sway?: ..." → "  const swayConfig = (toolVisualsData as { sway?: ..."
+[94m[TodoWrite][0m
+Now add the `computeWalkBob` tests to the test file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m edit: "import toolVisuals from "@/config/game/toolVisuals..." → "import toolVisuals from "@/config/game/toolVisuals..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m edit: "describe("computeSwayOffset (Spec §11)", () => {" → "describe("computeWalkBob (Spec §11)", () => {
+  it..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+
+[91m[Error: Exit code 2
+components/player/ToolViewModel.tsx(113,36): error TS2345: Argument of type 'ToolVisualEntry | SwayConfig | BobConfig' is not assignable to parameter of type 'ToolVisualEntry | SwayConfig'.
+  Type 'BobConfig' is not assignable to type 'ToolVisualEntry | SwayConfig'.
+components/player/ToolViewModel.tsx(125,36): error TS2345: Argument of type 'ToolVisualEntry | SwayConfig | BobConfig' is not assignable to parameter of type 'ToolVisualEntry | SwayConfig'.
+  Type 'BobConfig' is not assignable to type 'ToolVisualEntry | SwayConfig'.][0m
+The `isToolVisualEntry` guard parameter needs updating to match the widened union:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "/** Narrows a config value to ToolVisualEntry (exc..." → "/** Narrows a config value to ToolVisualEntry (exc..."
+[94m[Bash][0m TypeScript type check after fix $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run ToolViewModel tests only $ npx jest --no-coverage --testPathPattern="ToolViewModel" 2>&1
+All 27 tests pass (21 existing + 6 new). Now run the full suite:
+[94m[Bash][0m Full Jest suite $ npx jest --no-coverage 2>&1 | tail -20
+1983 tests, 0 failures. Let me verify the final file looks right:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m
+230 lines — well under the 300-line limit. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-060" → "## 2026-03-07 - US-061
+- Implemented `computeWalkB..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Speed-factor amplitude gating** (`* speed`) is the cleanest way to scale walk bob: when `moveDirection = {0,0}`, `speed = 0`, so `sin(...) * 0 = 0`. No phase discontinuity when movement resumes because `bobTimeRef` kept accumulating.
+- **`bobTimeRef` vs. reset-on-stop**: Resetting the bob time when standing would cause a pop (phase jump) the moment you start moving again. Unconditional accumulation + amplitude gating avoids this entirely.
+- **Index-signature union + type guard coupling**: The `ToolVisualsConfig` union and `isToolVisualEntry` guard's parameter type must stay in sync — TypeScript narrows through the guard's declared input, so a stale narrow parameter silently blocks new union members at the call sites.
+`─────────────────────────────────────────────────`
+
+**Summary of changes:**
+
+| File | Change |
+|------|--------|
+| `config/game/toolVisuals.json` | Added `bob: { bobHeight: 0.02, bobFrequency: 8.0 }` |
+| `components/player/ToolViewModel.tsx` | `BobConfig` interface, `computeWalkBob` pure export, widened union+guard, `bobTimeRef`, speed calc, bob wired into `group.position.set()` |
+| `components/player/ToolViewModel.test.ts` | 6 new `computeWalkBob` tests |
+
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → **1983 tests, 0 failures**
+
+<promise>COMPLETE</promise>

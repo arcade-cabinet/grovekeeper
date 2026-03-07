@@ -1157,3 +1157,31 @@ after each iteration and it's included in prompts for context.
   - **GLSL math testing strategy**: GPU shader math (Gerstner displacement formula) cannot run in Jest. Test it via two seams: (1) shader string structure checks (does the GLSL declare the right uniforms and constants?), and (2) pure TS uniform-builder function (`buildGerstnerUniforms`) that maps the data model to shader inputs. This covers data pipeline correctness without WebGL.
   - **"Write tests for X" stories**: When prior stories followed docs>tests>code, the tests are already written. Verify against acceptance criteria rather than writing duplicates.
 ---
+
+## 2026-03-07 - US-062
+- Implemented tool swap animation: lower current tool → swap model at nadir → raise new tool (Spec §11)
+- Installed `animejs@^3.2.2` + `@types/animejs` (pnpm add animejs / pnpm add -D @types/animejs)
+- Added `swap: { lowerY: 0.4, duration: 150 }` to `config/game/toolVisuals.json`
+- Added `SwapConfig` interface and extended `ToolVisualsConfig` union + `isToolVisualEntry` guard
+- Added `buildSwapDownParams` and `buildSwapUpParams` pure exports — return plain objects, testable without WebGL or anime.js mocks
+- `ToolViewModel` now holds `useState(selectedTool)` for `displayedToolId` + `useRef({ y: 0 })` for `swapAnimRef` + `useRef<anime.AnimeInstance | null>` for active animation tracking
+- `useEffect([selectedTool])`: on tool change, pause any active animation, start DOWN tween; in `complete` callback call `setDisplayedToolId(capturedTool)` then start UP tween
+- `swapAnimRef` passed as prop to `ToolGLBModel`; its `.current.y` added to `group.position.y` in `useFrame` alongside sway and bob
+- New `ToolGLBModel` mounts at `-lowerY` (DOWN tween already ran); UP tween is already in progress — the new model rises naturally
+- Added 10 tests (6 for `buildSwapDownParams`, 4 for `buildSwapUpParams`); total 1993 tests, 0 failures
+- **Files changed:**
+  - `package.json` — added `animejs`, `@types/animejs`
+  - `config/game/toolVisuals.json` — added `swap` top-level config block
+  - `components/player/ToolViewModel.tsx` — SwapConfig, buildSwapDownParams, buildSwapUpParams, swapAnimRef, useEffect, displayedToolId state
+  - `components/player/ToolViewModel.test.ts` — animejs mock, 10 new tests
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 1993 tests, 0 failures (105 suites, +10 new tests)
+- **Learnings:**
+  - **`useState` for displayed tool ID, not selectedTool**: `displayedToolId` controls which GLB is mounted. Setting it inside anime.js `complete` callback triggers React re-render that swaps the model at the animation nadir. The new GLB inherits `swapAnimRef.current.y = -lowerY` and the UP tween raises it.
+  - **`swapAnimRef` persists across child remounts**: Defined in `ToolViewModel`, passed as prop — survives `ToolGLBModel` unmount/remount when `displayedToolId` changes. The new child reads `swapAnimRef.current.y` immediately on its first `useFrame`.
+  - **`buildSwapDown/UpParams` as testable seams**: Return plain object `{ targets, y, duration, easing, complete }` — no anime.js or React imports needed. Tests call the functions directly and assert on each field without mocking anything.
+  - **anime.js `complete` callback type**: anime.js types `complete` as `(anim: AnimeInstance) => void`, but TypeScript allows `() => void` as the callback (fewer params is assignable). No cast needed.
+  - **Mock animejs in Jest**: `jest.mock("animejs", () => ({ __esModule: true, default: jest.fn(() => ({ pause: jest.fn() })) }))`. The `__esModule: true` flag is required so `import anime from "animejs"` resolves the `default` export correctly in Jest's CommonJS transform.
+  - **Effect deps `[selectedTool]` only**: Intentionally omit `displayedToolId` — the effect should only re-trigger when the user selects a new tool, not when the internal swap completes. Biome-ignore comment added for lint compliance.
+---

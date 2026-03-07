@@ -1,4 +1,8 @@
 {
+  "swap": {
+    "lowerY": 0.4,
+    "duration": 150
+  },
   "sway": {
     "swayAmount": 0.06,
     "lerpFactor": 8.0
