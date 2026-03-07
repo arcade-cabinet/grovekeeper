@@ -24,7 +24,7 @@ export type PieceType =
   | "pipe";
 
 /** Material type for visual style and durability tier. */
-export type MaterialType = "wood" | "stone" | "metal" | "thatch";
+export type MaterialType = "wood" | "stone" | "metal" | "thatch" | "reinforced";
 
 /** Structure category for base value and gameplay effects. */
 export type StructureCategory =

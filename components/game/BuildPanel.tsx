@@ -27,6 +27,7 @@ export {
   getBuildCost,
   getPiecesForCategory,
   getPieceUnlockLevel,
+  getTier,
   isPieceLocked,
 } from "./buildPanelUtils";
 
@@ -41,11 +42,11 @@ const PIECE_LABELS: Record<PieceType, string> = {
 };
 
 const MATERIAL_LABELS: Record<MaterialType, string> = {
-  thatch: "Thatch", wood: "Wood", stone: "Stone", metal: "Metal",
+  thatch: "Thatch", wood: "Wood", stone: "Stone", metal: "Metal", reinforced: "Reinforced",
 };
 
 const MATERIAL_COLORS: Record<MaterialType, string> = {
-  thatch: "#D4A017", wood: "#8B6340", stone: "#9E9E9E", metal: "#607D8B",
+  thatch: "#D4A017", wood: "#8B6340", stone: "#9E9E9E", metal: "#607D8B", reinforced: "#455A64",
 };
 
 // ---------------------------------------------------------------------------

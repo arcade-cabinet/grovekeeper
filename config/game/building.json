@@ -30,20 +30,21 @@
     "thatch": 1,
     "wood": 5,
     "stone": 10,
-    "metal": 15
+    "metal": 15,
+    "reinforced": 16
   },
   "buildCosts": {
-    "wall": { "wood": { "wood": 4 }, "stone": { "stone": 6 }, "metal": { "metal_scrap": 5 }, "thatch": { "fiber": 3 } },
-    "floor": { "wood": { "wood": 3 }, "stone": { "stone": 5 }, "metal": { "metal_scrap": 4 }, "thatch": { "fiber": 2 } },
-    "roof": { "wood": { "wood": 5 }, "stone": { "stone": 7 }, "metal": { "metal_scrap": 6 }, "thatch": { "fiber": 4 } },
-    "stairs": { "wood": { "wood": 6 }, "stone": { "stone": 8 }, "metal": { "metal_scrap": 7 } },
-    "foundation": { "wood": { "wood": 3 }, "stone": { "stone": 4 }, "metal": { "metal_scrap": 3 } },
-    "door": { "wood": { "wood": 2 }, "stone": { "stone": 3 }, "metal": { "metal_scrap": 4 } },
-    "window": { "wood": { "wood": 2 }, "stone": { "stone": 2 }, "metal": { "metal_scrap": 2 } },
-    "pillar": { "wood": { "wood": 3 }, "stone": { "stone": 5 }, "metal": { "metal_scrap": 4 } },
-    "platform": { "wood": { "wood": 4 }, "metal": { "metal_scrap": 5 } },
-    "beam": { "wood": { "wood": 2 }, "metal": { "metal_scrap": 3 } },
-    "pipe": { "metal": { "metal_scrap": 2 } }
+    "wall": { "wood": { "wood": 4 }, "stone": { "stone": 6 }, "metal": { "metal_scrap": 5 }, "thatch": { "fiber": 3 }, "reinforced": { "stone": 4, "metal_scrap": 6 } },
+    "floor": { "wood": { "wood": 3 }, "stone": { "stone": 5 }, "metal": { "metal_scrap": 4 }, "thatch": { "fiber": 2 }, "reinforced": { "stone": 3, "metal_scrap": 5 } },
+    "roof": { "wood": { "wood": 5 }, "stone": { "stone": 7 }, "metal": { "metal_scrap": 6 }, "thatch": { "fiber": 4 }, "reinforced": { "stone": 5, "metal_scrap": 8 } },
+    "stairs": { "wood": { "wood": 6 }, "stone": { "stone": 8 }, "metal": { "metal_scrap": 7 }, "reinforced": { "stone": 5, "metal_scrap": 7 } },
+    "foundation": { "wood": { "wood": 3 }, "stone": { "stone": 4 }, "metal": { "metal_scrap": 3 }, "reinforced": { "stone": 3, "metal_scrap": 4 } },
+    "door": { "wood": { "wood": 2 }, "stone": { "stone": 3 }, "metal": { "metal_scrap": 4 }, "reinforced": { "stone": 2, "metal_scrap": 5 } },
+    "window": { "wood": { "wood": 2 }, "stone": { "stone": 2 }, "metal": { "metal_scrap": 2 }, "reinforced": { "stone": 2, "metal_scrap": 3 } },
+    "pillar": { "wood": { "wood": 3 }, "stone": { "stone": 5 }, "metal": { "metal_scrap": 4 }, "reinforced": { "stone": 3, "metal_scrap": 5 } },
+    "platform": { "wood": { "wood": 4 }, "metal": { "metal_scrap": 5 }, "reinforced": { "stone": 3, "metal_scrap": 6 } },
+    "beam": { "wood": { "wood": 2 }, "metal": { "metal_scrap": 3 }, "reinforced": { "stone": 1, "metal_scrap": 4 } },
+    "pipe": { "metal": { "metal_scrap": 2 }, "reinforced": { "metal_scrap": 4 } }
   },
   "snapPointTemplates": {
     "wall": [

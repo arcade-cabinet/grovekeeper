@@ -13,6 +13,7 @@ import {
   canAffordPiece,
   getPieceUnlockLevel,
   isPieceLocked,
+  getTier,
 } from "./buildPanelUtils";
 
 // ---------------------------------------------------------------------------
@@ -172,5 +173,63 @@ describe("isPieceLocked (Spec §35.4)", () => {
   it("locks stone material until level 10", () => {
     expect(isPieceLocked("floor", "stone", 9)).toBe(true);
     expect(isPieceLocked("floor", "stone", 10)).toBe(false);
+  });
+
+  // Tier 3: reinforced (L16+)
+  it("locks reinforced material until level 16 (Tier 3)", () => {
+    expect(isPieceLocked("wall", "reinforced", 15)).toBe(true);
+    expect(isPieceLocked("wall", "reinforced", 16)).toBe(false);
+  });
+
+  it("locks all piece types with reinforced material until L16", () => {
+    expect(isPieceLocked("roof", "reinforced", 15)).toBe(true);
+    expect(isPieceLocked("foundation", "reinforced", 16)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getTier (Spec §35.2)
+// ---------------------------------------------------------------------------
+
+describe("getTier (Spec §35.2)", () => {
+  it("returns 1 for level 1 (Tier 1: wood pieces)", () => {
+    expect(getTier(1)).toBe(1);
+  });
+
+  it("returns 1 for level 5 (Tier 1 upper bound)", () => {
+    expect(getTier(5)).toBe(1);
+  });
+
+  it("returns 2 for level 6 (Tier 2: stone/metal pieces)", () => {
+    expect(getTier(6)).toBe(2);
+  });
+
+  it("returns 2 for level 15 (Tier 2 upper bound)", () => {
+    expect(getTier(15)).toBe(2);
+  });
+
+  it("returns 3 for level 16 (Tier 3: advanced reinforced pieces)", () => {
+    expect(getTier(16)).toBe(3);
+  });
+
+  it("returns 3 for high level (Tier 3)", () => {
+    expect(getTier(30)).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tier 3 build costs (Spec §35.4)
+// ---------------------------------------------------------------------------
+
+describe("getBuildCost Tier 3 reinforced (Spec §35.4)", () => {
+  it("returns stone + metal_scrap cost for wall+reinforced", () => {
+    const cost = getBuildCost("wall", "reinforced");
+    expect(cost).toHaveProperty("stone");
+    expect(cost).toHaveProperty("metal_scrap");
+  });
+
+  it("returns metal_scrap cost for pipe+reinforced", () => {
+    const cost = getBuildCost("pipe", "reinforced");
+    expect(cost).toHaveProperty("metal_scrap");
   });
 });

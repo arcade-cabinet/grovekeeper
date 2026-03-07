@@ -171,6 +171,16 @@ describe("Kitbashing System", () => {
       const materials = getUnlockedMaterials(15);
       expect(materials).toContain("metal");
     });
+
+    it("should not unlock reinforced at level 15 (Tier 3 requires L16+)", () => {
+      const materials = getUnlockedMaterials(15);
+      expect(materials).not.toContain("reinforced");
+    });
+
+    it("should unlock reinforced at level 16 (Tier 3 advanced pieces)", () => {
+      const materials = getUnlockedMaterials(16);
+      expect(materials).toContain("reinforced");
+    });
   });
 });
 

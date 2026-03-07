@@ -78,6 +78,23 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-121
+- Implemented progressive piece unlocking Tier 3 (L16+: advanced reinforced pieces)
+- Files changed:
+  - `game/ecs/components/building.ts` — added `"reinforced"` to `MaterialType` union
+  - `config/game/building.json` — added `"reinforced": 16` to `materialUnlockLevels`; added `"reinforced"` build costs (stone + metal_scrap combos) to all 11 piece types
+  - `components/game/buildPanelUtils.ts` — added exported `getTier(playerLevel): 1 | 2 | 3` pure function (Tier 1: L1-5, Tier 2: L6-15, Tier 3: L16+)
+  - `components/game/BuildPanel.tsx` — added `"reinforced"` to `MATERIAL_LABELS` and `MATERIAL_COLORS`; re-exports `getTier`
+  - `components/game/BuildPanel.test.ts` — 8 new tests: `isPieceLocked` for reinforced (L15→true, L16→false), `getTier` boundaries, `getBuildCost` for reinforced
+  - `game/systems/kitbashing.test.ts` — 2 new tests: `getUnlockedMaterials(15)` not.toContain("reinforced"), `getUnlockedMaterials(16)` toContain("reinforced")
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3001 tests pass (136 suites, +10 new tests)
+- **Learnings:**
+  - **Adding a MaterialType requires 5 touch-points**: (1) type union in `building.ts`, (2) `materialUnlockLevels` in `building.json`, (3) build costs for each piece in `building.json`, (4) `MATERIAL_LABELS`/`MATERIAL_COLORS` in `BuildPanel.tsx`, (5) tests. Missing any one causes a TypeScript error.
+  - **`getTier()` as a UI-layer pure function**: Tier mapping (1/2/3 from level) belongs in `buildPanelUtils.ts`, not the ECS `unlocks.ts` subpackage — it's a UI display concept, not a game logic one. Tests it directly without any framework setup.
+  - **`export { } from` pattern doesn't need a matching import**: `export { getTier } from "./buildPanelUtils"` is a direct re-export — no `import { getTier }` needed in the same file. Adding it to the import block introduces an unused-import lint error.
+
+---
+
 ## 2026-03-07 - US-116
 - Added 16 new tests to `game/systems/kitbashing.test.ts` covering rotation handling and multi-snap (Spec §35.1)
 - New import: `rotateDirection`, `snapPointToWorld` from `./kitbashing/placement` (subpackage, not barrel)

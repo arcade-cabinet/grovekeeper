@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T18:33:43.581Z",
-  "currentIteration": 119,
+  "updatedAt": "2026-03-07T18:40:27.725Z",
+  "currentIteration": 120,
   "maxIterations": 0,
-  "tasksCompleted": 119,
+  "tasksCompleted": 120,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -730,8 +730,8 @@
       {
         "id": "US-120",
         "title": "Write Jest tests for placement",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-121",
@@ -2231,6 +2231,16 @@
       "durationMs": 908970,
       "startedAt": "2026-03-07T18:17:06.578Z",
       "endedAt": "2026-03-07T18:32:15.548Z"
+    },
+    {
+      "iteration": 120,
+      "status": "completed",
+      "taskId": "US-120",
+      "taskTitle": "Write Jest tests for placement",
+      "taskCompleted": true,
+      "durationMs": 86828,
+      "startedAt": "2026-03-07T18:32:16.752Z",
+      "endedAt": "2026-03-07T18:33:43.580Z"
     }
   ],
   "skippedTaskIds": [],

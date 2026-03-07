@@ -79,3 +79,15 @@ export function isPieceLocked(
 ): boolean {
   return playerLevel < getPieceUnlockLevel(pieceType, material);
 }
+
+/**
+ * Map a player level to a building tier.
+ * Tier 1 (L1-5): wood pieces
+ * Tier 2 (L6-15): stone/metal pieces
+ * Tier 3 (L16+): advanced reinforced pieces
+ */
+export function getTier(playerLevel: number): 1 | 2 | 3 {
+  if (playerLevel >= 16) return 3;
+  if (playerLevel >= 6) return 2;
+  return 1;
+}
