@@ -2890,3 +2890,20 @@ after each iteration and it's included in prompts for context.
   - **Fixed array size for weather particles (Rules of Hooks)**: Never vary the length of an `Array.from({ length: N })` that renders hook-bearing sub-components based on dynamic state. Derive N from `computeRainDropCount(1.0)` (max at full intensity) and scale opacity by intensity instead. WeatherParticlesLayer uses the count approach for non-hook particle Animated.Views — acceptable there since Animated.View has no hooks and React reconciles by key.
   - **Extract pure functions to `.ts` (not `.tsx`)**: Any logic testable without RN/React must live in a `.ts` file. Importing from `.tsx` pulls in JSX runtime → Appearance.getColorScheme() crash in tests.
   - **Particle counts from procedural.json**: `weather.particleCounts.rain = 500` is the 3D budget. 2D overlay uses `RAIN_DISPLAY_RATIO = 0.06` → 30 particles at intensity=1. Encode ratio as a constant, not inline math.
+
+## 2026-03-07 - US-158
+- What was implemented: Settings screen with audio volume sliders (master/SFX/ambient), graphics controls (PSX pixel ratio toggle, draw distance), touch sensitivity, and reduced motion toggle. All settings persist via `gameStore.settings` Legend State observable.
+- Files changed:
+  - `game/stores/gameStore.ts` — added `settings` object to initialState + `updateSettings()` action
+  - `components/game/settingsLogic.ts` — pure helper functions (clamps, formatters)
+  - `components/game/SettingsScreen.test.ts` — 27 unit tests (all passing)
+  - `components/game/SettingsScreen.tsx` — full modal component (bottom-sheet style)
+  - `app/settings.tsx` — added "Audio, Graphics & Controls" entry point to SettingsScreen
+  - `components/game/PauseMenu.tsx` — added `SettingsIcon` import, `onSettings?` prop, settings button in tab, and inline `SettingsScreen` modal
+- **Learnings:**
+  - **No native Slider in this project**: No `@react-native-community/slider` installed. Custom step-based +/− buttons keep 44px touch targets and zero new dependencies.
+  - **Extract settings logic to `.ts` not `.tsx`**: Pure clamp/format functions go in `settingsLogic.ts` so tests run without React Native JSX runtime overhead.
+  - **Bottom-sheet modal pattern**: `animationType="slide"` + `justifyContent: "flex-end"` + `maxHeight: "90%"` + handle-bar drag indicator creates a native-feeling bottom sheet without extra libraries.
+  - **Nested Modal in PauseMenu**: React Native supports stacked `<Modal>` components — SettingsScreen's own Modal opens on top of PauseMenu's Modal without needing a portal or navigation.
+  - **System `reducedMotion` auto-detection**: `AccessibilityInfo.isReduceMotionEnabled()` + `addEventListener("reduceMotionChanged")` already used in `MainMenu.tsx` — same hook works in SettingsScreen to override the store pref when the system says to reduce motion.
+---

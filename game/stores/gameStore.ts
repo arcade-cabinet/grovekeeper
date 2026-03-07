@@ -255,6 +255,24 @@ const initialState = {
   hapticsEnabled: true,
   soundEnabled: true,
 
+  /** Player-configurable settings. Spec §26. */
+  settings: {
+    /** Master volume multiplier 0–1. Applied to all audio channels. */
+    masterVolume: 1.0,
+    /** SFX volume multiplier 0–1. */
+    sfxVolume: 1.0,
+    /** Ambient/music volume multiplier 0–1. */
+    ambientVolume: 0.7,
+    /** PSX pixel ratio mode: true = pixelRatio 1 (PSX style), false = device ratio. */
+    psxPixelRatio: true,
+    /** Terrain chunk draw distance radius (1–5 chunks). */
+    drawDistance: 3,
+    /** Touch look sensitivity multiplier 0.5–2.0. */
+    touchSensitivity: 1.0,
+    /** Suppress all animations (respects prefers-reduced-motion). */
+    reducedMotion: false,
+  },
+
   /** Discovered campfire fast travel points. Spec §17.6 */
   discoveredCampfires: [] as FastTravelPoint[],
 
@@ -1218,7 +1236,12 @@ const actions = {
     gameState$.discoveredChunks[key].set(baseColor);
   },
 
-  // Settings actions
+  // Settings actions (Spec §26)
+  updateSettings(partial: Partial<typeof initialState.settings>) {
+    const current = gameState$.settings.peek();
+    gameState$.settings.set({ ...current, ...partial });
+  },
+
   setHasSeenRules(seen: boolean) {
     gameState$.hasSeenRules.set(seen);
   },

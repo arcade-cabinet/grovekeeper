@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { ScrollView, TouchableOpacity, View } from "react-native";
+import { SettingsScreen } from "@/components/game/SettingsScreen";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
@@ -30,9 +31,10 @@ const DIFFICULTIES: DifficultyEntry[] = (difficultyConfig as DifficultyEntry[]).
   color: d.color,
 }));
 
-export default function SettingsScreen() {
+export default function SettingsRoute() {
   const router = useRouter();
   const difficulty = useGameStore((s) => s.difficulty);
+  const [audioGraphicsOpen, setAudioGraphicsOpen] = useState(false);
 
   const handleSelectDifficulty = useCallback((id: string) => {
     useGameStore.getState().setDifficulty(id);
@@ -80,6 +82,29 @@ export default function SettingsScreen() {
           >
             DIFFICULTY
           </Text>
+
+          {/* Audio, Graphics, Controls, Accessibility */}
+          <TouchableOpacity
+            onPress={() => setAudioGraphicsOpen(true)}
+            style={{
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: `${C.forestGreen}60`,
+              backgroundColor: `${C.forestGreen}08`,
+              padding: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              minHeight: 56,
+              marginBottom: 24,
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Open audio, graphics and controls settings"
+          >
+            <Text style={{ fontSize: 15, fontWeight: "700", color: C.forestGreen, flex: 1 }}>
+              Audio, Graphics & Controls
+            </Text>
+            <Text style={{ fontSize: 18, color: C.forestGreen }}>›</Text>
+          </TouchableOpacity>
 
           <View style={{ gap: 10 }}>
             {DIFFICULTIES.map((d) => {
@@ -130,6 +155,9 @@ export default function SettingsScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
+
+      {/* Audio / Graphics / Controls modal */}
+      <SettingsScreen open={audioGraphicsOpen} onClose={() => setAudioGraphicsOpen(false)} />
     </>
   );
 }

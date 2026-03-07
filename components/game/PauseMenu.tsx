@@ -11,9 +11,10 @@
  * - Action buttons: Continue Playing, Return to Menu
  */
 
-import { BookOpenIcon, DownloadIcon, UploadIcon, XIcon } from "lucide-react-native";
+import { BookOpenIcon, DownloadIcon, SettingsIcon, UploadIcon, XIcon } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, Modal, Platform, Pressable, ScrollView, Share, View } from "react-native";
+import { SettingsScreen } from "./SettingsScreen.tsx";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -97,6 +98,8 @@ export interface PauseMenuProps {
   onOpenStats?: () => void;
   onExportSave?: () => void;
   onImportSave?: () => void;
+  /** Open the full Audio/Graphics/Controls settings screen. */
+  onSettings?: () => void;
 }
 
 type Tab = "stats" | "progress" | "settings";
@@ -179,9 +182,11 @@ export function PauseMenu({
   onOpenStats,
   onExportSave,
   onImportSave,
+  onSettings,
 }: PauseMenuProps) {
   const [activeTab, setActiveTab] = useState<Tab>("stats");
   const [confirmingPrestige, setConfirmingPrestige] = useState(false);
+  const [settingsScreenOpen, setSettingsScreenOpen] = useState(false);
 
   // Reset prestige confirm when dialog closes
   const handleClose = () => {
@@ -203,6 +208,7 @@ export function PauseMenu({
   };
 
   return (
+    <>
     <Modal visible={open} transparent animationType="fade" onRequestClose={handleClose}>
       <View className="flex-1 items-center justify-center bg-black/50 px-4">
         <View className="w-full max-w-sm rounded-2xl border-[3px] border-bark-brown bg-sky-mist">
@@ -551,6 +557,21 @@ export function PauseMenu({
             {/* ── Settings tab ── */}
             {activeTab === "settings" && (
               <View className="gap-3">
+                {/* Audio / Graphics / Controls */}
+                <Button
+                  className="min-h-[48px] w-full rounded-xl bg-forest-green"
+                  onPress={() => {
+                    if (onSettings) {
+                      onSettings();
+                    } else {
+                      setSettingsScreenOpen(true);
+                    }
+                  }}
+                >
+                  <Icon as={SettingsIcon} size={16} className="text-white" />
+                  <Text className="ml-1 font-bold text-white">Audio, Graphics & Controls</Text>
+                </Button>
+
                 {/* Sound toggle */}
                 <View className="rounded-xl bg-white p-3">
                   <ToggleSwitch
@@ -654,5 +675,7 @@ export function PauseMenu({
         </View>
       </View>
     </Modal>
+    <SettingsScreen open={settingsScreenOpen} onClose={() => setSettingsScreenOpen(false)} />
+    </>
   );
 }
