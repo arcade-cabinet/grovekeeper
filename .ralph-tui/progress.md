@@ -2918,3 +2918,30 @@ after each iteration and it's included in prompts for context.
   - **Button label bug from reusing `primaryButtonLabel` for secondary button**: When save exists, `primaryButtonLabel(n)` returns "Continue Grove" — but the secondary button (calls `onNewGrove`) should read "New Grove". Fix: use the label directly (`saveExists ? "New Grove" : primaryButtonLabel(treesPlanted)`). Don't change the pure function; fix the usage site.
   - **Pre-existing TS5097 errors are project-wide, not task-specific**: The entire codebase uses explicit `.tsx`/`.ts` extensions in imports (e.g. `from "./Logo.tsx"`). These cause TS5097 warnings codebase-wide — not introduced by US-159. Follow the existing pattern consistently.
 ---
+
+## 2026-03-07 - US-160
+- What was implemented: Decomposed `game/stores/gameStore.ts` (was 1492 lines) into a `game/stores/` subpackage with 9 focused domain files. All existing imports continue to work via backward-compat shim.
+- Files changed:
+  - `game/stores/core.ts` — 257 lines: types, XP formulas (`levelFromXp`, `xpToNext`, `totalXpForLevel`), `initialState`, `gameState$` observable, `getState()`, `initPersistence()`, `EPHEMERAL_KEYS`
+  - `game/stores/playerState.ts` — 247 lines: screen, tools, XP/level, stamina, achievements, zones, build mode, structures, resetGame, time, seasonality tracking
+  - `game/stores/progression.ts` — 124 lines: `expandGrid`, `performPrestige`, `upgradeToolTier` (split from playerState.ts to stay under 300 lines)
+  - `game/stores/survivalState.ts` — 89 lines: `startNewGame`, `setHunger`, `setHearts`, `setBodyTemp`, `setLastCampfire`, `handleDeath`, `setActiveCraftingStation`, `hydrateFromDb`
+  - `game/stores/inventory.ts` — 58 lines: `addResource`, `spendResource`, `addSeed`, `spendSeed`
+  - `game/stores/questState.ts` — 275 lines: `advanceQuestObjective`, `claimQuestStepReward`, economy (market/merchant), `tickEvents`
+  - `game/stores/settings.ts` — 261 lines: `updateSettings`, NPC relations, spirits, tutorial, fast travel, species codex
+  - `game/stores/chunkDeltas.ts` — 11 lines: re-exports `chunkDiffs$`, `clearAllChunkDiffs`, `saveChunkDiff` from `@/game/world/chunkPersistence`
+  - `game/stores/index.ts` — 92 lines: barrel assembling all domain functions into `useGameStore` + re-exports from `core` and `chunkDeltas`
+  - `game/stores/gameStore.ts` — 11 lines: backward-compat shim (`export * from "./index"`)
+  - `game/stores/playerState.test.ts` — 945 lines: all player state tests
+  - `game/stores/inventory.test.ts` — 84 lines: resource + seed tests
+  - `game/stores/questState.test.ts` — 56 lines: quest action tests
+  - `game/stores/settings.test.ts` — 66 lines: settings + spirit discovery tests
+  - `game/stores/gameStore.test.ts` — 18 lines: barrel re-export smoke test
+- **Verification:** `npx tsc --noEmit` → 0 errors in stores/; `npx jest --no-coverage` → 3838 tests, 161 suites pass (+66 new tests)
+- **Learnings:**
+  - **Legend State decomposition: one shared observable, many domain files**: Don't split the `gameState$` observable — all domain files import from `core.ts`. Functions are split by domain, the state shape is not. This avoids the Zustand "slice" pattern which doesn't apply to Legend State.
+  - **Circular imports between domain files are safe at runtime**: `inventory.ts` calls `advanceQuestObjective` from `questState.ts`; `questState.ts` calls `addResource` from `inventory.ts`. Safe because neither calls the imported function at module init — only at runtime in user-action callbacks. ES module live bindings resolve before any function runs.
+  - **300-line rule applies to source files only**: The `file-size-sentinel.sh` hook skips `*.test.ts` files. Only split source files. When a domain file still exceeds 300 lines after logical splitting, extract a sibling for a sub-domain (e.g. `progression.ts` extracted from `playerState.ts`).
+  - **`gameStore.test.ts` must contain at least one test**: Jest throws "Your test suite must contain at least one test" for empty test files. Even a backward-compat barrel needs a smoke test (assert `typeof useGameStore === "function"`).
+  - **`updateSettings` type must use `initialState.settings`**: `Partial<typeof initialState.settings>` is correct — not `Partial<GameStateData["settings"]>` (works too) and not `Partial<ReturnType<typeof getState.prototype>>` (wrong). Import `initialState` into settings.ts to reference it.
+---
