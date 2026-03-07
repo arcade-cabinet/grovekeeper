@@ -46,6 +46,26 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-065
+- Implemented `game/actions/actionDispatcher.ts` — action dispatch system (Spec §11)
+- Exports `resolveAction(toolId, targetType)` pure function: maps tool+target to DIG/CHOP/WATER/PLANT/PRUNE verb or null
+- Exports `dispatchAction(ctx)`: resolves action then calls correct GameActions function
+- `TargetEntityType` extends `RaycastEntityType` with `"soil" | "rock"` for ground interactions
+- `DispatchContext` carries: toolId, targetType, optional entity (for tree targets), optional gridX/gridZ (for terrain targets), optional speciesId (for PLANT)
+- CHOP → `harvestTree(id)` (success = result !== null, not boolean); WATER → `waterTree`; PRUNE → `pruneTree`; PLANT → `plantTree`; DIG → `clearRock`
+- **Files changed:**
+  - `game/actions/actionDispatcher.ts` — new file, 95 lines
+  - `game/actions/actionDispatcher.test.ts` — 27 tests covering all valid combos + missing-context guards
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2056 tests, 0 failures (108 suites, +27 new tests)
+- **Learnings:**
+  - **Pure resolveAction seam pattern**: Follows established codebase convention (`resolveEntityName`, `resolveToolGLBPath`) — export pure mapping function separately from side-effecting dispatch. Tests mock `GameActions` completely and test only routing logic.
+  - **harvestTree returns T[] | null, not boolean**: CHOP branch must check `result !== null` for success, unlike WATER/PRUNE/DIG/PLANT which return boolean.
+  - **TargetEntityType superset pattern**: `RaycastEntityType` only covers "tree" | "npc" | "structure". Ground interactions (DIG/PLANT) need "soil" | "rock" types derived from grid coordinates — extend with a union rather than modifying the raycast hook.
+
+---
+
 ## 2026-03-07 - US-061
 - Implemented `computeWalkBob(bobTime, bobHeight, bobFrequency, speed)` — pure export on `ToolViewModel.tsx`, no R3F context needed
 - Formula: `bobHeight * Math.sin(bobTime * bobFrequency) * speed` — speed factor (0..1 from moveDirection magnitude) gates amplitude so bob is zero when standing still
