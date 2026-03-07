@@ -59,6 +59,35 @@ after each iteration and it's included in prompts for context.
 - **Aggro hysteresis in GoalEvaluator**: `AggroEvaluator.calculateDesirability` must handle two cases: (1) initial trigger — use `aggroRange * behaviorMult`, (2) maintain chase — use `deaggroRange` while `currentMode === "aggro"`. Without the maintain case, `IdleEvaluator` wins by default while the enemy is between aggroRange and deaggroRange.
 - **Behavior-specific aggro via entity field**: Pass `behavior: "patrol"|"guard"|"swarm"|"ambush"` on the `GameEntity` subclass and read it in the evaluator. One `AggroEvaluator` handles all 4 behaviors via a `rangeMult` (swarm=1.2×, ambush=0.5×, others=1.0). No need for 4 separate evaluator classes.
 - **EnemyEntityManager as module-level registry**: A `Map<string, EnemyBrain>` + exported plain-object API (`register`, `get`, `remove`, `updateAll`, `clear`, `size`) is sufficient for chunk lifecycle management. No need to import Yuka's actual `EntityManager` class.
+- **Pure combat system pattern**: Keep combat functions (damage calc, knockback, health ops) as pure functions with zero ECS/Rapier/R3F imports. Callers translate knockback vectors to Rapier impulses. This makes the full system testable with plain objects matching component interfaces.
+- **invulnFrames as a seconds timer**: Store `invulnFrames` as a float counting down in seconds (decremented by `dt`), not a frame counter. `tickInvulnFrames(health, dt)` uses `Math.max(0, health.invulnFrames - dt)`. Decouples from frame rate and matches the rest of the tick-based systems.
+- **Config-sourced invuln window**: Import `invulnSeconds` from `config/game/combat.json` rather than inlining `0.5`. Satisfies the "no inline tuning constants" project rule. Pattern: `import combatConfig from "@/config/game/combat.json" with { type: "json" }; const { invulnSeconds } = combatConfig;`
+- **effectPower on optional tool field**: Added `effectPower?: number` to `ToolData` in `game/config/tools.ts` and populated it on combat tools in tools.json (axe=5.0, shovel=3.0, shears=2.0). Non-combat tools simply omit the field — callers treat undefined as 0.
+- **damageMultiplier + incomingDamageMultiplier in difficulty.json**: explore=0/0 (no combat), normal=1/1, hard=1.3/1.3, brutal=1.5/1.5, ultra-brutal=2/2. Added to `DifficultyConfig` interface so TypeScript validates config shape.
+
+---
+
+## 2026-03-07 - US-086
+- Created `game/systems/combat.ts` — 7 pure exported functions for combat mechanics
+  - `computePlayerDamage(effectPower, damageMultiplier)` — Spec §34.2
+  - `computeEnemyDamage(attackPower, incomingDamageMultiplier)` — Spec §34.2
+  - `applyDamageToHealth(health, amount, source)` — invuln window, clamp to 0
+  - `isDefeated(health)` — death detection
+  - `tickInvulnFrames(health, dt)` — decrement invuln timer
+  - `computeKnockback(fromX, fromZ, toX, toZ, force)` — impulse vector (caller applies via Rapier)
+  - `tickAttackCooldown(combat, dt)` — cooldown decay
+- Created `config/game/combat.json` — tuning: invulnSeconds=0.5, enemyKnockbackForce=5, playerKnockbackForce=3, playerBaseHealth=20
+- Updated `config/game/tools.json` — added `effectPower` to: axe=5.0, shovel=3.0, pruning-shears=2.0
+- Updated `config/game/difficulty.json` — added `damageMultiplier` + `incomingDamageMultiplier` to all 5 difficulties
+- Updated `game/config/difficulty.ts` — added two new fields to `DifficultyConfig` interface
+- Updated `game/config/tools.ts` — added optional `effectPower?: number` to `ToolData`
+- Created `game/systems/combat.test.ts` — 32 tests covering all functions + full combat flow
+- **Files changed:** combat.ts (new), combat.test.ts (new), combat.json (new), tools.json (+effectPower), difficulty.json (+2 fields), difficulty.ts (+2 fields), tools.ts (+1 field)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2351 tests, 0 failures (118 suites, +32 new)
+- **Learnings:**
+  - See new Codebase Patterns entries above
 
 ---
 

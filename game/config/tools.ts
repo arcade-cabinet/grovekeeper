@@ -14,6 +14,8 @@ export interface ToolData {
   /** Maximum uses before the tool breaks (0 = no durability wear). Spec §11.3 */
   maxDurability: number;
   action: string;
+  /** Melee damage power for combat tools (axe, shovel, shears). Spec §34.2 */
+  effectPower?: number;
 }
 
 export const TOOLS: ToolData[] = toolsData as ToolData[];

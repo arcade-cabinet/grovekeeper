@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T15:16:04.985Z",
-  "currentIteration": 84,
+  "updatedAt": "2026-03-07T15:23:37.782Z",
+  "currentIteration": 85,
   "maxIterations": 0,
-  "tasksCompleted": 84,
+  "tasksCompleted": 85,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -520,8 +520,8 @@
       {
         "id": "US-085",
         "title": "Update enemy AI and spawning for chunk-based world",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-086",
@@ -1881,6 +1881,16 @@
       "durationMs": 71789,
       "startedAt": "2026-03-07T15:06:32.121Z",
       "endedAt": "2026-03-07T15:07:43.910Z"
+    },
+    {
+      "iteration": 85,
+      "status": "completed",
+      "taskId": "US-085",
+      "taskTitle": "Update enemy AI and spawning for chunk-based world",
+      "taskCompleted": true,
+      "durationMs": 499944,
+      "startedAt": "2026-03-07T15:07:45.039Z",
+      "endedAt": "2026-03-07T15:16:04.983Z"
     }
   ],
   "skippedTaskIds": [],

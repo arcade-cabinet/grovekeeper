@@ -49,6 +49,10 @@ export interface DifficultyConfig {
   windstormDamageChance: number;
   rainGrowthBonus: number;
   droughtGrowthPenalty: number;
+  /** Player outgoing damage multiplier (0 = no combat, e.g. Explore). Spec §34.2 */
+  damageMultiplier: number;
+  /** Incoming enemy damage multiplier (0 = no damage, e.g. Explore). Spec §34.2 */
+  incomingDamageMultiplier: number;
 }
 
 // ---------------------------------------------------------------------------

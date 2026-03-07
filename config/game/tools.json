@@ -37,7 +37,8 @@
     "unlockLevel": 3,
     "staminaCost": 4,
     "maxDurability": 100,
-    "action": "PRUNE"
+    "action": "PRUNE",
+    "effectPower": 2.0
   },
   {
     "id": "seed-pouch",
@@ -57,7 +58,8 @@
     "unlockLevel": 5,
     "staminaCost": 8,
     "maxDurability": 100,
-    "action": "CLEAR"
+    "action": "CLEAR",
+    "effectPower": 3.0
   },
   {
     "id": "axe",
@@ -67,7 +69,8 @@
     "unlockLevel": 7,
     "staminaCost": 10,
     "maxDurability": 100,
-    "action": "CHOP"
+    "action": "CHOP",
+    "effectPower": 5.0
   },
   {
     "id": "compost-bin",

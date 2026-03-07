@@ -1,0 +1,7 @@
+{
+  "invulnSeconds": 0.5,
+  "enemyKnockbackForce": 5.0,
+  "playerKnockbackForce": 3.0,
+  "playerBaseHealth": 20,
+  "playerMaxHealth": 20
+}

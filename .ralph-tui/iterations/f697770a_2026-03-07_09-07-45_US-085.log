@@ -1,0 +1,148 @@
+# Iteration 85 Log
+
+## Metadata
+
+- **Task ID**: US-085
+- **Task Title**: Update enemy AI and spawning for chunk-based world
+- **Description**: As a developer, I want the existing enemyAI.ts (126 lines) and enemySpawning.ts (115 lines) updated to use chunk-based biome templates and Yuka AI behaviors (patrol/guard/swarm/ambush) so that Surviva...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:07:45.039Z
+- **Ended At**: 2026-03-07T15:16:04.983Z
+- **Duration**: 8m 19s
+- **Input Tokens**: 143
+- **Output Tokens**: 29740
+- **Total Tokens**: 29883
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Read,Glob,Grep[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemyAI.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemySpawning.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/enemies.json[0m
+Now let me read the spec, progress file, and related architecture files in parallel.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (49376 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§20|§ 20|section 20|Combat|Enemy|Survival[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§20|§ 20|Combat|Enemy AI|enemyAI|Survival mode|affectsGameplay[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemyAI.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemySpawning.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/combat.ts[0m
+Now let me read the GAME_SPEC.md combat section and the progress.md file.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Now let me check the Yuka setup and how it's used in the codebase, and also look at the `affectsGameplay` flag.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96myuka|EntityManager|Vehicle[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores[0m pattern: [96maffectsGameplay|affectsGameplay|survivalMode|gameMode|difficulty[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/NpcBrain.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96maffectsGameplay|gameMode|survivalMode[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/difficulty.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+Let me check how NpcBrain is tested (Yuka mock approach) and what the 5th enemy type should be.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai[0m pattern: [96myuka|EnemyBrain|NpcBrain[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/yuka.d.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/NpcBrain.test.ts[0m
+Let me check if Yuka is installed and look at the difficulty config.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json[0m pattern: [96myuka[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m
+Now I have everything I need. Let me update the todos and start implementing.
+
+`★ Insight ─────────────────────────────────────`
+The NpcBrain pattern in this codebase uses Yuka's `GoalEvaluator` + `GameEntity` but calls `calculateDesirability()` manually (never `brain.evaluate()`). This means Yuka's `Think` manager is optional — the evaluators are pure functions on the entity context, making them fully testable without any mocking.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit,Write,Bash[0m
+Now I'll implement all the changes. Starting with adding the 5th enemy type to `enemies.json`, then updating both systems.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/enemies.json[0m edit: "    "corrupted-hedge": {
+      "name": "Corrupted ..." → "    "corrupted-hedge": {
+      "name": "Corrupted ..."
+[94m[TodoWrite][0m
+Now update `enemySpawning.ts` — add `isExplorationMode` check and change the RNG scope to `"enemy"`:
+
+`★ Insight ─────────────────────────────────────`
+The codebase has two redundant guards for exploration mode: `difficultyMultipliers["explore"] = 0` in `enemies.json` AND `affectsGameplay: false` in `difficulty.json`. Adding the `isExplorationMode` check makes the intent explicit and decouples enemy spawning from the arbitrary zero-multiplier convention.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemySpawning.ts[0m edit: "import enemiesConfig from "@/config/game/enemies.j..." → "import enemiesConfig from "@/config/game/enemies.j..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemySpawning.ts[0m edit: "export function spawnEnemiesForChunk(
+  chunkX: nu..." → "export function spawnEnemiesForChunk(
+  chunkX: nu..."
+[94m[TodoWrite][0m
+Now rewrite `enemyAI.ts` to add the `EnemyBrain` class with Yuka GoalEvaluators and the `EnemyEntityManager`:
+
+`★ Insight ─────────────────────────────────────`
+The 4 behavior evaluators (`patrol`, `guard`, `swarm`, `ambush`) differ only in how aggressively they aggro: ambush cuts effective range to 50%, swarm extends it to 120%, guard = patrol = standard range. This means one `AggroEvaluator` class handles all 4 behaviors via the `entity.behavior` field — no need for 4 separate classes.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemyAI.ts[0m "import { GameEntity, GoalEvaluator } from "yuka";
+import enemiesConfig from "@/config/game/enemies.json" with { type: "json" };
+import type { Entity, Position } from "@/game/ecs/world";
+
+const { tierS... (8495 chars)"
+Now add `EnemyBrain` and `EnemyEntityManager` tests to `enemyAI.test.ts`:
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemyAI.test.ts[0m "import {
+  getScaledHealth,
+  getScaledAttack,
+  createAIState,
+  updatePatrol,
+  updateGuard,
+  checkAggro,
+  moveToward,
+  canAttack,
+  EnemyBrain,
+  EnemyEntityManager,
+  type EnemyBrainContext,
+} ... (10149 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+[94m[Bash][0m Run enemy system tests $ npx jest --no-coverage game/systems/enemyAI.test.ts game/systems/enemySpawning.test.ts 2>&1 | tail -...
+The "maintain aggro while chasing" case isn't handled — when already aggro'd and player is between `aggroRange` and `deaggroRange`, the evaluator returned 0. Fix the `AggroEvaluator`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemyAI.ts[0m edit: "// Aggro evaluator — behavior modifies effective a..." → "// Aggro evaluator — behavior modifies effective a..."
+[94m[Bash][0m Run enemy system tests again $ npx jest --no-coverage game/systems/enemyAI.test.ts game/systems/enemySpawning.test.ts 2>&1 | tail -...
+All 50 tests pass. Now run the full test suite to verify nothing regressed:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+All 2319 tests pass (2301 existing + 18 new). Now append to progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-084" → "- **Aggro hysteresis in GoalEvaluator**: `AggroEva..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-084
+- Work already complet..." → "---
+
+## 2026-03-07 - US-085
+- Updated `game/system..."
+[94m[TodoWrite][0m
+All done. Here's a summary of what was implemented:
+
+## US-085 Complete
+
+**Files changed:**
+- `config/game/enemies.json` — added 5th enemy type `thorn-sprite` (forest/meadow biomes, patrol behavior, tier 1)
+- `game/systems/enemySpawning.ts` — added explicit `isExplorationMode()` guard (affectsGameplay check), changed RNG scope `"enemies"` → `"enemy"`
+- `game/systems/enemyAI.ts` — added Yuka-backed `EnemyBrain` + `EnemyEntityManager`
+- `game/systems/enemyAI.test.ts` — +18 new tests
+
+**Architecture:**
+- `EnemyBrain` follows the `NpcBrain` pattern exactly: `GameEntity` subclass carrying transient context, evaluated by `GoalEvaluator` subclasses manually (no `Think.evaluate()`)
+- One `AggroEvaluator` handles all 4 behaviors via `rangeMult` — swarm=1.2× aggro range, ambush=0.5×, patrol/guard=1.0×. Maintains chase via deaggro hysteresis once triggered
+- `EnemyEntityManager` is a module-level Map registry — matches chunk lifecycle (register on load, remove on unload, updateAll in game loop)
+- `isExplorationMode()` is the first guard in `spawnEnemiesForChunk`, making survival-only intent explicit
+
+**Verification:** `npx tsc --noEmit` → 0 errors · `npx jest --no-coverage` → 2319 tests, 0 failures
+
+<promise>COMPLETE</promise>
