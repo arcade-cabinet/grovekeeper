@@ -1,0 +1,88 @@
+# Iteration 9 Log
+
+## Metadata
+
+- **Task ID**: US-009
+- **Task Title**: Implement FPS camera attached to player capsule
+- **Description**: As a developer, I want an FPSCamera component that follows the player capsule position with an eye height offset of 1.6 so that the player sees from first-person perspective. See GAME_SPEC.md §9 for F...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T08:34:08.701Z
+- **Ended At**: 2026-03-07T08:36:56.438Z
+- **Duration**: 2m 47s
+- **Input Tokens**: 81
+- **Output Tokens**: 8009
+- **Total Tokens**: 8090
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/player/**[0m
+Let me read the relevant files in parallel.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mFPS[Cc]amera|eye.height|§9|camera.*offset[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§9|section 9|FPS camera|eye height|1\.6[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/Camera.tsx[0m
+Let me check the GAME_SPEC.md section 9 directly for FPS camera spec.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 9|^## §9|^### 9\.|Player [Cc]apsule|capsule.*camera|RigidBody.*ref|useRigidBody[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components[0m pattern: [96museFrame|useThree|PerspectiveCamera|makeDefault[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/plans/2026-03-06-fps-perspective-design.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.test.ts[0m
+Now I have all the context I need. Let me check the jest config for module aliases.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mjest.config*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+`★ Insight ─────────────────────────────────────`
+**FPS camera with R3F**: The pattern is `PerspectiveCamera makeDefault` + `ref` from drei — `makeDefault` registers it as the scene camera while the `ref` gives imperative access to update position in `useFrame`. The existing third-person `Camera.tsx` uses this same pattern, so `FPSCamera` just needs the simpler logic of `pos.y + EYE_HEIGHT` instead of spherical offsets.
+
+**Test strategy for R3F components**: Since `@react-three/drei` and `@react-three/fiber` aren't in `transformIgnorePatterns`, they can't be parsed by Jest. The pattern (seen in `PlayerCapsule.test.ts`) is to mock them at the top and only test exported constants + component type — no rendering required.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,Bash,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.tsx[0m "/**
+ * FPSCamera — First-person camera attached to the player capsule (Spec §9).
+ *
+ * Positions the Three.js camera at eye height above the player's ECS position
+ * each frame. Look direction (yaw/pi... (1542 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m "/**
+ * Tests for FPSCamera first-person camera component (Spec §9).
+ *
+ * Tests exported constants and module structure without rendering
+ * (R3F / drei require WebGL context, mocked here).
+ */
+
+jest.... (907 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run all Jest tests $ npx jest --no-coverage 2>&1 | tail -20
+73 suites, 1249 tests, 0 failures. tsc passes. Now update progress.md.
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-008" → "---
+
+## 2026-03-07 - US-009
+- Created `components/..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+**Module-level THREE.Vector3 requires mocking**: `const DEFAULT_POSITION = new THREE.Vector3(...)` runs at import time in Jest — so mocking `three` with a `Vector3` constructor spy is necessary, not optional. The mock must return an object with the methods the component calls (`copy`, `set`) or the import itself will throw.
+
+**Eye offset is additive on ground-level position**: The player ECS `position` component stores the entity's ground contact point (y ≈ 0 for spawned entities). The camera sits at `pos.y + 1.6` — no capsule-center math needed since the ECS position is already floor-relative.
+`─────────────────────────────────────────────────`
+
+**US-009 complete.** Summary:
+
+| File | Status |
+|------|--------|
+| `components/player/FPSCamera.tsx` | Created — `EYE_HEIGHT = 1.6`, `PerspectiveCamera makeDefault`, `useFrame` updates position each frame |
+| `components/player/FPSCamera.test.ts` | Created — 2 tests (constant value + component type) |
+
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 73 suites, 1249 tests, 0 failures
+
+<promise>COMPLETE</promise>

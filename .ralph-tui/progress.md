@@ -15,6 +15,29 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-010
+- Created `game/hooks/usePhysicsMovement.ts` with:
+  - `rotateByYaw(input, yaw)` — pure math: rotates normalised XZ input by camera yaw to get world-space velocity direction
+  - `usePhysicsMovement(rigidBodyRef, moveDirection)` — `useFrame` hook that extracts camera yaw via `camera.getWorldDirection()`, calls `rotateByYaw`, applies `body.setLinvel()` at `PLAYER_SPEED`; preserves current Y velocity so gravity acts normally; zeroes horizontal velocity when no input
+- Updated `components/player/PlayerCapsule.tsx` to accept `moveDirection?: {x,z}` prop, create `useRef<RapierRigidBody>(null)` internally, and call `usePhysicsMovement` on every render
+- Updated `components/player/PlayerCapsule.test.ts` to mock `@react-three/fiber`, `three`, and `@/game/hooks/usePhysicsMovement` (new imports added by the wiring)
+- Created `game/hooks/usePhysicsMovement.test.ts` with 7 tests (all green): 6 pure-math tests for `rotateByYaw` at yaw=0, π/2, π, arbitrary, and zero-input; 1 smoke test for the hook export
+- **Files changed:**
+  - `game/hooks/usePhysicsMovement.ts`: new file
+  - `game/hooks/usePhysicsMovement.test.ts`: new file — 7 tests, all green
+  - `components/player/PlayerCapsule.tsx`: added `moveDirection` prop + `usePhysicsMovement` wiring
+  - `components/player/PlayerCapsule.test.ts`: added mocks for new dependencies
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 74 suites, 1256 tests, 0 failures
+- **Learnings:**
+  - Camera yaw from Three.js: `camera.getWorldDirection(dir)` returns `(-sin(θ), 0, -cos(θ))` → yaw = `Math.atan2(-dir.x, -dir.z)` recovers θ exactly
+  - rotateByYaw formula: `worldX = input.x * cos(yaw) - input.z * sin(yaw)`, `worldZ = -input.x * sin(yaw) - input.z * cos(yaw)` — preserves magnitude 1 for unit inputs
+  - Preserve `body.linvel().y` when applying setLinvel so gravity accumulates naturally; zero horizontal only (not Y) when input is zero
+  - `useRef(moveDirection)` + `moveRef.current = moveDirection` pattern (stable ref that captures latest closure value each render) avoids stale closures inside `useFrame`
+  - When updating `PlayerCapsule` to call `usePhysicsMovement`, its test must additionally mock `@react-three/fiber` (useFrame), `three` (Vector3), and the hook itself — otherwise module-level `new THREE.Vector3()` in `usePhysicsMovement.ts` throws at import time
+---
+
 ## 2026-03-07 - US-009
 - Created `components/player/FPSCamera.tsx` with `EYE_HEIGHT = 1.6`, `PerspectiveCamera makeDefault`, `useFrame` updating `cam.position` each frame from `playerQuery.entities[0].position + EYE_HEIGHT`
 - Created `components/player/FPSCamera.test.ts` with 2 tests verifying exported constant and component type

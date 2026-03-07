@@ -10,6 +10,18 @@ jest.mock("@react-three/rapier", () => ({
   CapsuleCollider: jest.fn(),
 }));
 
+jest.mock("@react-three/fiber", () => ({
+  useFrame: jest.fn(),
+}));
+
+jest.mock("three", () => ({
+  Vector3: jest.fn().mockImplementation((x = 0, y = 0, z = 0) => ({ x, y, z })),
+}));
+
+jest.mock("@/game/hooks/usePhysicsMovement", () => ({
+  usePhysicsMovement: jest.fn(),
+}));
+
 import {
   CAPSULE_HALF_HEIGHT,
   CAPSULE_HEIGHT,
