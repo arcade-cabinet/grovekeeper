@@ -71,6 +71,32 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-107
+- Created `game/quests/questEngine.ts` — general-purpose quest state machine
+  - `QuestState`: `"available" | "active" | "completed" | "failed"`
+  - `createQuest(def)` — factory, initializes all steps at zero progress in "available" state
+  - `startQuest(quest)` — available → active (no-op if not available)
+  - `failQuest(quest)` — active → failed (no-op if not active)
+  - `completeCurrentStep(quest)` — marks `steps[currentStepIndex].completed = true`
+  - `advanceQuestStep(quest)` — increments `currentStepIndex` or transitions to "completed" on last step
+  - `getObjectiveText(quest)` — returns current step objective text (null if not active)
+  - `isQuestActive/Completed/Failed` — boolean state query helpers
+- Created `game/quests/questEngine.test.ts` — 22 tests across 7 describe blocks
+  - `createQuest`: 4 tests (state init, step index, step progress, metadata)
+  - `startQuest`: 2 tests (transition, no-op guard)
+  - `failQuest`: 2 tests (transition, no-op guard)
+  - `completeCurrentStep`: 3 tests (marks step, doesn't affect others, guard)
+  - `advanceQuestStep`: 4 tests (index increment, completes on last, guards ×2)
+  - `getObjectiveText`: 3 tests (current step text, next step text after advance, null when inactive)
+  - State query helpers: 4 tests (isActive/Completed/Failed, all-false check)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2786 tests pass (130 suites)
+- **Learnings:**
+  - **questEngine vs questChainEngine**: Keep them separate — `questEngine.ts` is the general state machine (any quest type); `questChainEngine.ts` handles NPC narrative chains with multi-step reward logic. They compose: a chain step could use the engine's step primitives.
+  - **Same-reference no-op pattern**: Guard clauses returning `quest` (same ref) instead of `{ ...quest }` make no-op tests use `toBe(quest)` (identity), which is stronger than deep-equality assertions.
+  - **Pure factory from def**: `createQuest(def)` maps `QuestStepDef[]` → `QuestStepProgress[]`, separating the static definition from runtime mutable state. Tests only need a plain object literal for the def.
+
+---
+
 ## 2026-03-07 - US-106
 - Added 11 tests to `game/systems/dialogueBranch.test.ts` covering the missing dialogue gating cases
   - `evaluateCondition — has_relationship` (7 tests): meets threshold, exceeds, below, unknown NPC (default 0), minValue 0, negation both ways

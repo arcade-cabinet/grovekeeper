@@ -1,0 +1,98 @@
+# Iteration 106 Log
+
+## Metadata
+
+- **Task ID**: US-106
+- **Task Title**: Write Jest tests for schedules and relationships
+- **Description**: As a developer, I want tests for NPC schedules and relationships so that schedule positioning, relationship changes, and dialogue gating are verified. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:54:18.754Z
+- **Ended At**: 2026-03-07T16:57:44.400Z
+- **Duration**: 3m 25s
+- **Input Tokens**: 113
+- **Output Tokens**: 10834
+- **Total Tokens**: 10947
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+Using TDD to write tests for NPC schedules and relationships. Let me first read the existing implementations to understand what I'm testing.
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/npcs/**/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/npcs/**/*.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ai/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs/NpcManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs/types.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs/NpcManager.test.ts[0m
+Now let me look at the US-104 and US-105 implementations:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*relationship*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*schedule*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*Relationship*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*Schedule*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcRelationship.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcSchedule.ts[0m
+Now let me read the existing test files to see what's already tested:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcRelationship.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcSchedule.test.ts[0m
+Now let me check the dialogue branching system to see if relationship gating is tested there:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*dialogue*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*Dialogue*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m
+Let me check the progress file and also look at what's been done for US-106:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Now I have full context. The existing tests in `npcRelationship.test.ts` and `npcSchedule.test.ts` are comprehensive, but `dialogueBranch.test.ts` is **missing the `has_relationship` condition tests** - the key "dialogue gating" criterion. I also see `has_discovered` and `time_of_day` conditions are implemented but untested.
+
+`★ Insight ─────────────────────────────────────`
+- `evaluateCondition` in `dialogueBranch.ts` parses `has_relationship` values as `"npcId:minValue"` (e.g. `"elder-rowan:25"`) — splitting on `:` to extract both parts. This string-encoding pattern avoids needing a richer condition schema.
+- The dialogue gating chain: `filterAvailableBranches` → `evaluateCondition` → `checkRelationshipCondition` → raw relationship map. Tests at each layer verify the full pipeline without needing integration mocks.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit[0m
+[94m[TodoWrite][0m
+Now adding the missing tests. The `has_relationship` condition parses `"npcId:minValue"` strings — a subtle encoding worth testing thoroughly:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m edit: "describe("evaluateCondition — spirit_discovered (S..." → "describe("evaluateCondition — spirit_discovered (S..."
+[94m[TodoWrite][0m
+Now run the full check:
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run the three relevant test files $ npx jest --no-coverage --testPathPattern="dialogueBranch|npcRelationship|npcSchedule" 2>&1 | tail -3...
+All 118 tests pass. Let me quickly count what US-106 contributed:
+
+- **`has_relationship`**: 7 tests (meets/exceeds/below threshold, unknown NPC, zero min, negation both ways)
+- **`has_discovered`**: 2 tests
+- **`time_of_day`**: 2 tests
+- **Total new**: 11 tests
+
+`★ Insight ─────────────────────────────────────`
+- The `has_relationship` value encoding (`"elder-rowan:25"`) collapses two parameters into one `condition.value` field. Tests must cover the parsed-npcId + parsed-minValue boundary independently — the string split could silently produce `NaN` for malformed values.
+- Tests for `has_discovered` and `time_of_day` expose that *both* conditions were already fully implemented but completely untested — a hidden coverage gap that `dialogueBranch.test.ts` now closes.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-105" → "---
+
+## 2026-03-07 - US-106
+- Added 11 tests to `g..."
+[94m[TodoWrite][0m
+US-106 is complete. Here's what was done:
+
+**File changed:** `game/systems/dialogueBranch.test.ts`
+
+Added 11 tests covering the missing "dialogue gating" criterion:
+
+| Suite | Tests | What it covers |
+|---|---|---|
+| `evaluateCondition — has_relationship` | 7 | Relationship threshold gating: meets, exceeds, below, unknown NPC, zero min, negation both ways |
+| `evaluateCondition — has_discovered` | 2 | Location discovery gating |
+| `evaluateCondition — time_of_day` | 2 | Time-of-day gating |
+
+The existing `npcSchedule.test.ts` (35 tests) and `npcRelationship.test.ts` (34 tests) already covered the other two acceptance criteria (schedule position at specific hours, relationship level changes). All 118 tests pass, `tsc --noEmit` clean.
+
+<promise>COMPLETE</promise>
