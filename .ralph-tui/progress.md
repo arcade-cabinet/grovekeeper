@@ -733,3 +733,14 @@ after each iteration and it's included in prompts for context.
   - **Reusable Three.js allocations in useFrame**: Pre-allocate `THREE.Vector3/Quaternion/Matrix4` via `useMemo(() => new THREE.Foo(), [])` in the component body. Reuse in `useFrame` via `.set()` / `.compose()` — avoids per-frame GC pressure from `new Matrix4()` inside the loop.
   - **Config-sourced scatter radius**: `GRASS_SCATTER_RADIUS` exported from `vegetation.json.grassScatterRadius` satisfies the no-inline-magic-numbers rule while remaining testable (test verifies it equals the config value).
 ---
+
+## 2026-03-07 - US-040
+- Work already complete — `components/entities/GrassInstances.test.ts` was created as part of US-039 (Docs > Tests > Code workflow)
+- 28 tests covering: `resolveGrassGLBPath` (9 tests: correct paths, .glb suffix, path prefix, type embedded, unique paths, all biome types resolve), `GRASS_SCATTER_RADIUS` (2 tests: positive, matches config), `computeGrassInstanceTransforms` (16 tests: density controls instance count, density 0/1/3/5/6, deterministic same entityId+density, deterministic across multiple calls, different entityIds → different transforms, dx/dz/rotY fields present and are numbers, all within GRASS_SCATTER_RADIUS, rotY in [0,2π), instances spread around origin), `GrassInstances` component export (1 test)
+- **Files changed:** none (already done in US-039)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern GrassInstances` → 28 tests, 0 failures
+- **Learnings:**
+  - The Docs > Tests > Code mandatory workflow eliminates "write tests for X" follow-up stories — tests ship with the implementation. US-039 already shipped 28 tests covering all US-040 acceptance criteria (density controls, deterministic placement from seed).
+---

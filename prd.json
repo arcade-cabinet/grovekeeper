@@ -628,8 +628,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 40,
-      "passes": false,
-      "notes": "Phase 1-A: GLB Trees + Bushes + Grass. Tests for US-039."
+      "passes": true,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass. Tests for US-039.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-041",
@@ -2760,6 +2761,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T10:47:28.678Z"
+    "updatedAt": "2026-03-07T10:48:41.515Z"
   }
 }
