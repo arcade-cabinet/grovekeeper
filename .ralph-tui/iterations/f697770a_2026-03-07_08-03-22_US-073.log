@@ -1,0 +1,118 @@
+# Iteration 73 Log
+
+## Metadata
+
+- **Task ID**: US-073
+- **Task Title**: Create procedural path generation
+- **Description**: As a developer, I want trail splines generated between villages and landmarks that carve into the terrain heightmap so that the world has walkable paths. See GAME_SPEC.md §6.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T14:03:22.816Z
+- **Ended At**: 2026-03-07T14:11:27.829Z
+- **Duration**: 8m 5s
+- **Input Tokens**: 2395
+- **Output Tokens**: 26846
+- **Total Tokens**: 29241
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/entitySpawner.ts[0m
+Now let me read the GAME_SPEC.md section 6 and the ECS components to understand what's needed.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§6|path|trail|spline|landmark|village|PathSegment[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§6|Path.*trail|trail.*path|pathGenerator|landmark|village.*chunk[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/waterPlacer.ts[0m
+Let me check the procedural config and ECS world structure:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+Let me check the ECS world and component definitions:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural[0m
+
+[91m[Error: EISDIR: illegal operation on a directory, read '/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural'][0m
+Good — `pathSegment` is already in the Entity type and `pathSegmentsQuery` exists. Now let me look at an existing test to understand the pattern:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/waterPlacer.test.ts[0m
+Now I have everything I need. Let me set up todos and implement:
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The `waterPlacer.ts` pattern is the gold standard here: pure functions, all randomness via `scopedRNG`, config from JSON. `pathGenerator.ts` follows the same structure.
+- `PathSegmentComponent` is already in `world.ts` Entity and `pathSegmentsQuery` exists — no world.ts changes needed.
+- `carveSplineIntoHeightmap` mutates the heightmap in-place before the ECS entity is created, so the terrain mesh gets built from the already-carved heights — no dirty flag needed.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m "/**
+ * pathGenerator -- Generates trail splines between villages and landmarks.
+ *
+ * Spec §31.1: Spline-carved trails between landmarks (PathSegmentComponent).
+ *
+ * Algorithm:
+ *   1. Determine if t... (10357 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m "/**
+ * pathGenerator.test.ts
+ * Spec §31.1 — Trail splines between landmarks carved into terrain heightmap.
+ */
+
+import {
+  isLandmarkChunk,
+  getLandmarkLocalPos,
+  getLandmarkType,
+  bezierPoint,
+  ... (13677 chars)"
+[94m[TodoWrite][0m
+Now wire the path generator into `ChunkManager.loadChunk`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "import { spawnChunkEntities } from "./entitySpawne..." → "import { spawnChunkEntities } from "./entitySpawne..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "    // Spawn biome-appropriate vegetation and terr..." → "    // Generate trail paths between landmarks — ca..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run pathGenerator tests only $ npx jest --no-coverage --testPathPattern="pathGenerator" 2>&1
+28/28 tests pass. Now run the full suite to verify no regressions:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+2174 tests, 0 failures (up from 2146, +28 new tests). Zero regressions.
+[94m[TodoWrite][0m
+Now update the progress log:
+
+`★ Insight ─────────────────────────────────────`
+- `carveSplineIntoHeightmap` uses an O(V×S) scan (256 verts × ~64 samples = ~16k ops/path) — fast enough for chunk generation but could be optimized with a spatial hash if needed later.
+- The "boundary exit point" design (path always terminates on a chunk edge) means adjacent chunks each generate a half-path that meets at the boundary — no cross-chunk coordination needed, pure per-chunk computation.
+- With `LANDMARK_PROBABILITY = 0.15` and 4 neighbors, the expected number of paths from any landmark is ~0.6 (4 × 0.15). Adjusting this constant directly controls trail density worldwide.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-072" → "## 2026-03-07 - US-073
+- Created `game/world/pathG..."
+Also add the carveSplineIntoHeightmap pattern to the codebase patterns section:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **computeBlendedColor as testable seam for verte..." → "- **computeBlendedColor as testable seam for verte..."
+All done. Here's a summary of what was implemented:
+
+---
+
+## US-073: Procedural Path Generation — Complete
+
+**Files created/modified:**
+- `game/world/pathGenerator.ts` — pure path generator (200 lines)
+- `game/world/pathGenerator.test.ts` — 28 tests covering all exported functions
+- `game/world/ChunkManager.ts` — wired into `loadChunk`
+
+**Architecture:**
+- `isLandmarkChunk` — chunk (0,0) is always the tutorial village; all others stochastically seeded at 15% probability
+- `getLandmarkLocalPos` / `getLandmarkType` — seeded position near chunk center; village only at origin
+- `bezierPoint` — quadratic Bézier evaluation with seeded perpendicular control-point offset for natural-looking curves
+- `carveSplineIntoHeightmap` — O(V×S) scan with cosine falloff blend; mutates the heightmap in-place before the ECS entity is created, so carved terrain is baked at birth
+- `generatePathsForChunk` — main entry: checks 4 cardinal neighbors for landmarks, generates road paths for villages and trail paths for other landmarks, creates `PathSegmentComponent` entities
+
+**Quality:** `npx tsc --noEmit` → 0 errors | `npx jest --no-coverage` → 2174 tests, 0 failures
+
+<promise>COMPLETE</promise>

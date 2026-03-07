@@ -23,6 +23,7 @@ import { placeWaterBodies } from "./waterPlacer";
 import { placeAudioZones } from "./audioZonePlacer";
 import { spawnChunkEntities } from "./entitySpawner";
 import { generatePathsForChunk } from "./pathGenerator";
+import { generateVillage } from "./villageGenerator";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -407,6 +408,40 @@ export class ChunkManager {
           pathSegment: psp.pathSegment,
         }),
       );
+    }
+
+    // Generate village buildings, NPCs, and campfire for village landmark chunks.
+    const villagePlacements = generateVillage(this.worldSeed, chunkX, chunkZ, terrainData.heightmap);
+    if (villagePlacements) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: villagePlacements.campfire.position,
+          structure: villagePlacements.campfire.structure,
+          campfire: villagePlacements.campfire.campfire,
+        }),
+      );
+      for (const bp of villagePlacements.buildings) {
+        children.push(
+          world.add({
+            id: generateEntityId(),
+            position: bp.position,
+            rotationY: bp.rotationY,
+            structure: bp.structure,
+            renderable: { visible, scale: 1 },
+          }),
+        );
+      }
+      for (const np of villagePlacements.npcs) {
+        children.push(
+          world.add({
+            id: generateEntityId(),
+            position: np.position,
+            npc: np.npc,
+            renderable: { visible, scale: 1 },
+          }),
+        );
+      }
     }
 
     // Spawn biome-appropriate vegetation and terrain entities

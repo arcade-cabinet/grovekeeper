@@ -54,6 +54,30 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-074
+- Created `game/world/villageGenerator.ts` — pure village generator following the pathGenerator pattern
+- `generateVillage(worldSeed, chunkX, chunkZ, heightmap)` — returns `VillageGenerationResult | null`; guards internally via `getLandmarkType` check (null for non-village chunks)
+- Campfire at village center (landmark local pos) with `fastTravelId = "village-{chunkX}-{chunkZ}"`, `lit: true`, `cookingSlots: 2`
+- 3-8 buildings radially distributed (evenly spread angle + seeded jitter + seeded distance 2-6 tiles from center), clamped to chunk bounds with 1-tile margin
+- Building pool: 12 structure templates from `structures.json` (houses, barn, well, windmill, storage, coop, notice-board)
+- 2-4 NPCs with seeded name, function, personality, chibi base model, and 4-entry daily schedule (wake/work/wander/sleep)
+- ChunkManager.loadChunk wired: `generateVillage` called after path generation; campfire/building/NPC entities added as chunk children
+- Pre-placed village structures use `buildCost: []` (not player-built)
+- **Files changed:**
+  - `game/world/villageGenerator.ts` — new file (pure generator, ~250 lines)
+  - `game/world/villageGenerator.test.ts` — new test file (26 tests)
+  - `game/world/ChunkManager.ts` — import + wiring in `loadChunk`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2200 tests, 0 failures (113 suites, +26 new tests)
+- **Learnings:**
+  - **generateVillage null-guard pattern**: village generator returns `null` for non-village chunks internally, so ChunkManager can call it unconditionally — cleaner than a conditional in the caller
+  - **Pre-placed structure buildCost**: village structures spawned by procedural generation use `buildCost: []` since they're not player-built; this is important to distinguish from the config values
+  - **Campfire fastTravelId encoding**: `village-{chunkX}-{chunkZ}` is a stable string key that encodes chunk location for fast travel lookup without needing a registry
+  - **radial building layout**: evenly distributed base angles `(i / count) * 2π` with seeded jitter `(rng()-0.5)*0.8` prevents buildings from clustering while still feeling organic
+
+---
+
 ## 2026-03-07 - US-073
 - Created `game/world/pathGenerator.ts` — pure path generation following the waterPlacer pattern
 - `isLandmarkChunk(worldSeed, chunkX, chunkZ)` — chunk (0,0) always landmark; others by `scopedRNG("landmark-roll") < 0.15`
