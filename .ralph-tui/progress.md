@@ -22,6 +22,26 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-013
+- Gap analysis: 17 tests across PlayerCapsule.test.ts (4), usePhysicsMovement.test.ts (7), useJump.test.ts (6) covered capsule creation, movement vectors, and ground detection — but jump impulse was not verified (only a hook smoke test existed).
+- Exported `JUMP_IMPULSE` and `GROUND_CHECK_DISTANCE` from `game/hooks/useJump.ts` (previously unexported constants).
+- Added 5 new tests in `game/hooks/useJump.test.ts`:
+  - `JUMP_IMPULSE` matches `gridConfig.jumpImpulse`
+  - `JUMP_IMPULSE` is a positive number (upward direction)
+  - `JUMP_IMPULSE` is in physically reasonable range (1–20 N·s)
+  - `GROUND_CHECK_DISTANCE` matches `gridConfig.groundCheckDistance`
+  - `GROUND_CHECK_DISTANCE` is a positive distance
+- **Files changed:**
+  - `game/hooks/useJump.ts`: exported `JUMP_IMPULSE` and `GROUND_CHECK_DISTANCE`
+  - `game/hooks/useJump.test.ts`: added 5 jump impulse + ground check distance tests
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 76 suites, 1273 tests, 0 failures
+- **Learnings:**
+  - When a task says "verify jump impulse," the key is to export the impulse constant so it can be unit-tested against the config value — testing pure values (config round-trips) is cheaper than mocking useFrame callbacks to test hook behavior.
+  - Physics constants that need to be testable should be exported from the hook file; test by importing both the constant and the grid config JSON and asserting they match — this creates a live regression check if config values drift.
+---
+
 ## 2026-03-07 - US-012
 - Created `game/hooks/useMouseLook.ts` with:
   - `clampPitch(pitch)` — pure function, clamps to ±PITCH_CLAMP_RAD (±85°); exported for unit testing

@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T08:55:14.383Z",
-  "currentIteration": 11,
+  "updatedAt": "2026-03-07T08:58:08.353Z",
+  "currentIteration": 12,
   "maxIterations": 0,
-  "tasksCompleted": 11,
+  "tasksCompleted": 12,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -82,8 +82,8 @@
       {
         "id": "US-012",
         "title": "Add mouse look with pointer lock",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-013",
@@ -1151,6 +1151,16 @@
       "durationMs": 419228,
       "startedAt": "2026-03-07T08:43:56.729Z",
       "endedAt": "2026-03-07T08:50:55.957Z"
+    },
+    {
+      "iteration": 12,
+      "status": "completed",
+      "taskId": "US-012",
+      "taskTitle": "Add mouse look with pointer lock",
+      "taskCompleted": true,
+      "durationMs": 257306,
+      "startedAt": "2026-03-07T08:50:57.075Z",
+      "endedAt": "2026-03-07T08:55:14.381Z"
     }
   ],
   "skippedTaskIds": [],

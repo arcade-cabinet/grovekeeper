@@ -13,8 +13,10 @@ import type { RefObject } from "react";
 import type { RapierRigidBody } from "@react-three/rapier";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
-const JUMP_IMPULSE = gridConfig.jumpImpulse;
-const GROUND_CHECK_DISTANCE = gridConfig.groundCheckDistance;
+/** Upward impulse applied when the player jumps (Spec §9). Exported for tests. */
+export const JUMP_IMPULSE = gridConfig.jumpImpulse;
+/** Maximum raycast distance used to detect ground (Spec §9). Exported for tests. */
+export const GROUND_CHECK_DISTANCE = gridConfig.groundCheckDistance;
 // Distance from RigidBody centre to capsule bottom = totalHeight / 2
 const CAPSULE_BOTTOM = gridConfig.capsuleHeight / 2;
 

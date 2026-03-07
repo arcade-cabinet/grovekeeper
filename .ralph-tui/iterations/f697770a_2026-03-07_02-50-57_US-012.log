@@ -1,0 +1,116 @@
+# Iteration 12 Log
+
+## Metadata
+
+- **Task ID**: US-012
+- **Task Title**: Add mouse look with pointer lock
+- **Description**: As a player, I want to click to lock the pointer and use mouse movement to look around so that I have full first-person camera control. Clamp pitch to +-85 degrees. See GAME_SPEC.md §10 for input requ...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T08:50:57.075Z
+- **Ended At**: 2026-03-07T08:55:14.381Z
+- **Duration**: 4m 17s
+- **Input Tokens**: 115
+- **Output Tokens**: 13344
+- **Total Tokens**: 13459
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks[0m pattern: [96m**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+Now let me read the spec for §23 (Input System) to understand mouse look requirements:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 23|Input System|pointer lock|mouse look|yaw|pitch[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m
+Let me check the FPS design doc for more details:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/plans/2026-03-06-fps-perspective-design.md[0m
+Let me check the config files:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+Let me check how other hooks load config:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.test.ts[0m
+`★ Insight ─────────────────────────────────────`
+- FPS camera rotation order `"YXZ"` is critical: it applies yaw (Y) first, then pitch (X), which matches the physical intuition of "turn left/right, then look up/down" — wrong order causes gimbal lock artifacts
+- `useThree().camera` from R3F returns the same object as the `<PerspectiveCamera makeDefault>` ref since `makeDefault` registers it as the R3F scene camera — no need for two separate refs
+- Pointer lock goes on `canvas.addEventListener("click")` — NOT `document` — so the user must click the 3D canvas specifically to enter look mode
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit,Write[0m
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m edit: "  "capsuleHeight": 1.8,
+  "jumpImpulse": 5,
+  "gro..." → "  "capsuleHeight": 1.8,
+  "jumpImpulse": 5,
+  "gro..."
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.ts[0m "/**
+ * useMouseLook — Pointer lock + mouse delta camera rotation (Spec §23).
+ *
+ * Clicking the canvas requests pointer lock. While locked, mouse movement
+ * accumulates into yaw (left/right) and pitc... (2151 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.test.ts[0m "/**
+ * Tests for useMouseLook — pointer lock + mouse delta camera rotation (Spec §23).
+ *
+ * clampPitch is tested as a pure function with no R3F context required.
+ * useMouseLook is smoke-tested only ... (1717 chars)"
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.tsx[0m edit: "import { PerspectiveCamera } from "@react-three/dr..." → "import { PerspectiveCamera } from "@react-three/dr..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.tsx[0m edit: "/** FPS camera that follows the player capsule at ..." → "/** FPS camera that follows the player capsule at ..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m edit: "jest.mock("@/game/ecs/world", () => ({
+  playerQue..." → "jest.mock("@/game/ecs/world", () => ({
+  playerQue..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m edit: "jest.mock("@/game/ecs/world", () => ({
+  playerQue..." → "jest.mock("@/game/ecs/world", () => ({
+  playerQue..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run jest tests and show final summary $ npx jest --no-coverage 2>&1 | tail -20
+76 suites, 1268 tests, 0 failures. tsc clean.
+[94m[TodoWrite][0m
+Now updating progress.md:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-011" → "- **useMouseLook pointer lock pattern**: `canvas.a..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## Codebase Patterns (Study These First)
+
+- **Walk..." → "## Codebase Patterns (Study These First)
+
+- **useM..."
+Now append the US-012 entry:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-011" → "---
+
+## 2026-03-07 - US-012
+- Created `game/hooks/..."
+`★ Insight ─────────────────────────────────────`
+- The `mousemove` guard `document.pointerLockElement !== canvas` is not just a best-practice — without it, every page-level mouse movement would rotate the camera, making the game unplayable even when not in pointer lock mode
+- Mouse sensitivity `0.002` (rad/pixel) is a commonly tuned value for FPS games; it means moving the mouse 500 pixels does one full 180° sweep — configuring it in `grid.json` lets game designers tune it without touching code
+`─────────────────────────────────────────────────`
+
+All checks pass:
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 76 suites, 1268 tests, 0 failures
+
+**Summary of changes:**
+- `config/game/grid.json` — added `mouseSensitivity: 0.002`, `pitchClampDeg: 85`
+- `game/hooks/useMouseLook.ts` — new hook: pointer lock on click, mouse delta → yaw/pitch, `useFrame` applies `YXZ` rotation
+- `game/hooks/useMouseLook.test.ts` — 6 tests for `clampPitch` and `PITCH_CLAMP_RAD`
+- `components/player/FPSCamera.tsx` — wired `useMouseLook()`
+- `components/player/FPSCamera.test.ts` — added mock for the new hook
+
+<promise>COMPLETE</promise>

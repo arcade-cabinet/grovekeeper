@@ -18,8 +18,9 @@ jest.mock("@react-three/fiber", () => ({
   useFrame: jest.fn(),
 }));
 
-import { isGrounded, useJump } from "./useJump";
+import { isGrounded, useJump, JUMP_IMPULSE, GROUND_CHECK_DISTANCE } from "./useJump";
 import type { RapierRigidBody } from "@react-three/rapier";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 /** Minimal RapierRigidBody mock with translation at given y. */
 function makeBody(y: number): RapierRigidBody {
@@ -99,5 +100,30 @@ describe("isGrounded (Spec §9)", () => {
 describe("useJump (Spec §9)", () => {
   it("exports useJump as a function", () => {
     expect(typeof useJump).toBe("function");
+  });
+});
+
+describe("JUMP_IMPULSE (Spec §9)", () => {
+  it("matches jumpImpulse from grid config", () => {
+    expect(JUMP_IMPULSE).toBe(gridConfig.jumpImpulse);
+  });
+
+  it("is a positive number (impulse is upward, not downward)", () => {
+    expect(JUMP_IMPULSE).toBeGreaterThan(0);
+  });
+
+  it("is within a physically reasonable range (1–20 N·s)", () => {
+    expect(JUMP_IMPULSE).toBeGreaterThanOrEqual(1);
+    expect(JUMP_IMPULSE).toBeLessThanOrEqual(20);
+  });
+});
+
+describe("GROUND_CHECK_DISTANCE (Spec §9)", () => {
+  it("matches groundCheckDistance from grid config", () => {
+    expect(GROUND_CHECK_DISTANCE).toBe(gridConfig.groundCheckDistance);
+  });
+
+  it("is a positive distance (ray must extend downward)", () => {
+    expect(GROUND_CHECK_DISTANCE).toBeGreaterThan(0);
   });
 });
