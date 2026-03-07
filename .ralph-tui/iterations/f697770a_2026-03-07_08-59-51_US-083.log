@@ -1,0 +1,92 @@
+# Iteration 83 Log
+
+## Metadata
+
+- **Task ID**: US-083
+- **Task Title**: Implement spirit animations
+- **Description**: As a developer, I want spirits to have spawn rise, idle bob, emissive pulse, and trail particle animations so that they feel magical. See GAME_SPEC.md §19.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T14:59:51.094Z
+- **Ended At**: 2026-03-07T15:06:30.996Z
+- **Duration**: 6m 39s
+- **Input Tokens**: 90
+- **Output Tokens**: 25369
+- **Total Tokens**: 25459
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/GrovekeeperSpirit*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.test.ts[0m
+Now let me check the GAME_SPEC.md for the spirit section and the ECS spirit component:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§32|section.*32|spirit.*anim|spawn.*rise|trail.*particle[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/spirits.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§19|## 19|spirit|spawn rise|trail particle[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mspawn.*rise|trail.*particle|SpiritOrb|32\.|##.*32|spawn animation|spawnProgress[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Let me check ChunkManager and how spirits are created, and also verify the current test suite:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m pattern: [96mgrovekeeperSpirit|spiritId|trailColor|spawnProgress|spawned[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/utils/spiritColors.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/spiritColors.ts[0m
+Now let me check `seedRNG.ts` for `createRNG` and `hashString`:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+`★ Insight ─────────────────────────────────────`
+- The ECS component has `spawnProgress: 0` and `spawned: false` already set in ChunkManager — we animate by mutating these directly in `useFrame` (Miniplex allows field mutation since entities are plain objects)
+- Trail particles work by keeping a stable `Float32Array` ref that's mutated each frame with `needsUpdate = true` — this is the standard Three.js pattern for CPU-animated geometry
+- Using a `ref` to the `BufferAttribute` directly (instead of `getAttribute()`) avoids a cast through `InterleavedBufferAttribute` and is cleaner
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit,Bash[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.tsx[0m "/**
+ * GrovekeeperSpirit — renders Grovekeeper spirit orbs in the 3D scene.
+ *
+ * Navi-style floating emissive orbs found at hedge maze centers.
+ * Each spirit is a low-poly IcosahedronGeometry sphere... (9815 chars)"
+[94m[TodoWrite][0m
+Now add `computeSpawnY` to the imports and test suite:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.test.ts[0m edit: "import {
+  GrovekeeperSpirit,
+  computeBobY,
+  com..." → "import {
+  GrovekeeperSpirit,
+  computeBobY,
+  com..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.test.ts[0m edit: "// -----------------------------------------------..." → "// -----------------------------------------------..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run spirit tests only $ npx jest --no-coverage --testPathPattern="GrovekeeperSpirit" 2>&1 | tail -30
+26/26 tests pass. Let me run the full suite to confirm nothing is broken:
+[94m[Bash][0m Full test suite $ npx jest --no-coverage 2>&1 | tail -10
+2301 tests, 0 failures. Let me update the progress log:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-082" → "---
+
+## 2026-03-07 - US-083
+- Added `computeSpawnY..."
+`★ Insight ─────────────────────────────────────`
+- The `trailAttrRef` direct ref pattern is cleaner than `trailGeoRef.current.getAttribute("position")` because it avoids the `BufferAttribute | InterleavedBufferAttribute` union type issue and the `as` cast — R3F assigns the exact `BufferAttribute` instance to the ref
+- Multiplying `pulseIntensity * spawnProgress` is a zero-cost fade-in: at `spawnProgress=0` the orb is invisible, at `1.0` it pulses at full intensity — no extra branch or lerp needed
+- The trail RNG stored in a `useRef` (not `useMemo`) is intentional: `useMemo` would re-create it on re-render, losing the sequence position; `useRef` lets it evolve continuously across frames
+`─────────────────────────────────────────────────`
+
+All acceptance criteria met:
+
+- **Spawn rise**: `computeSpawnY(spawnProgress, baseY, hoverHeight)` lerps Y from floor to hover height over 2s
+- **Idle bob**: sine wave via `computeBobY` (from US-082, active after spawn completes)
+- **Emissive pulse**: `computeEmissiveIntensity * spawnProgress` fades in during spawn then pulses
+- **Trail particles**: 12 `<points>` per spirit drift upward, reset at top, seeded RNG for varied positions
+- **Spirit floats and pulses**: wired in `SpiritOrb.useFrame`
+- **tsc**: 0 errors
+- **jest**: 2301 tests, 0 failures
+
+<promise>COMPLETE</promise>

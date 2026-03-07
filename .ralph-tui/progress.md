@@ -58,6 +58,21 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-084
+- Work already complete — tests were written as part of US-083
+- `components/entities/GrovekeeperSpirit.test.ts` has 26 tests covering all animation math:
+  - `computeBobY` (6 tests) — hover height, amplitude at sin peaks/troughs, full cycle oscillation, desync, formula
+  - `computeEmissiveIntensity` (5 tests) — base at zero, peak, trough, formula, phase desync
+  - `computeSpawnY` (6 tests) — floor, fully risen, midpoint, baseY offset, formula, monotonic
+  - `resolveEmissiveColor` (7 tests) — palette membership, determinism, uniqueness, worldSeed variation, hex format, all 8 indexes
+  - `GrovekeeperSpirit` component export (2 tests)
+- **Files changed:** None (already done)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage GrovekeeperSpirit.test.ts` → 26 tests, 0 failures
+
+---
+
 ## 2026-03-07 - US-083
 - Added `computeSpawnY` pure function to `GrovekeeperSpirit.tsx` — lerps Y from floor to hover height over 2s
 - `SpiritOrb.useFrame` now handles spawn rise: mutates `spirit.spawnProgress += dt / 2.0`, marks `spirit.spawned = true` at 1.0
