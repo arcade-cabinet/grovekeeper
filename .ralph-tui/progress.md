@@ -2410,3 +2410,23 @@ after each iteration and it's included in prompts for context.
   - **New PlayerStats fields map to existing store fields**: `discoveredSpiritIds.length`, `discoveredZones.length`, `visitedZoneTypes.length` were already tracked in the store — no new actions needed to support the new achievement types.
   - **Test file stays adjacent, resolves to barrel automatically**: `game/systems/achievements.test.ts` importing `from "./achievements"` still works after the rename — TypeScript resolves the directory to its `index.ts` barrel.
 ---
+
+## 2026-03-07 - US-129
+- Installed `tone ^15.1.22` via pnpm
+- Created `config/game/audio.json` (masterVolumeDb: -6, minVolumeDb: -60, pannerPoolSize: 8, pannerModel: "HRTF")
+- Created `game/systems/audioEngine.ts` — Tone.js foundation with master volume + HRTF Panner3D pool
+- Created `game/systems/audioEngine.test.ts` — 32 tests covering init, volume, pool, dispose
+- Files changed:
+  - `package.json` — tone dependency added
+  - `pnpm-lock.yaml` — updated
+  - `config/game/audio.json` — new
+  - `game/systems/audioEngine.ts` — new
+  - `game/systems/audioEngine.test.ts` — new
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3079 tests pass (137 suites, +32 new tests)
+- **Learnings:**
+  - **Tone.js mock cast pattern for tests**: Tone.js uses AudioContext, unavailable in Node.js Jest env. Mock the whole module with `jest.mock("tone", () => ({ Volume: jest.fn().mockImplementation(...), Panner3D: jest.fn().mockImplementation(...), start: jest.fn().mockResolvedValue(undefined) }))`. Access mock internals via `(Volume as unknown as jest.Mock).mock.results[0].value` — `.results[0].value` is the actual return value of the constructor call (not `.instances[0]` which tracks `this`, not the returned object when implementation returns explicitly).
+  - **toDestination() self-return mock**: Tone `Volume.toDestination()` returns `this`. In mocks, use `vol.toDestination.mockReturnValue(vol)` so `this.masterVolume = new Volume().toDestination()` stores the same mock object that `.mock.results[0].value` references.
+  - **MockResult union includes undefined**: `.mock.results.map((r: { value: T }) => r.value)` fails TypeScript — `MockResult<any>` is a union including `MockResultIncomplete` where `value: undefined`. Fix: annotate as `(r: any) => r.value as unknown as T`.
+  - **Panner3D pool as fixed-size pre-allocated resource**: Create all Panner3D nodes at `initialize()` time. Callers acquire/release rather than create/destroy — avoids expensive AudioContext node creation per sound event.
+
+---
