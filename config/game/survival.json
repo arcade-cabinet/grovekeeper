@@ -1,0 +1,6 @@
+{
+  "baseHungerDrainPerMin": 1.0,
+  "starvationHeartDrainPerMin": 0.25,
+  "wellFedThreshold": 80,
+  "wellFedRegenBonus": 1.1
+}

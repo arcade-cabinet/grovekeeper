@@ -9,19 +9,16 @@
  */
 
 import type { HealthComponent } from "@/game/ecs/components/combat";
+import survivalConfig from "@/config/game/survival.json" with { type: "json" };
 
 // ---------------------------------------------------------------------------
-// Constants — Spec §12
+// Constants — Spec §12 (values live in config/game/survival.json)
 // ---------------------------------------------------------------------------
 
-/** Base hunger drain rate in units/minute. Spec §12.2 */
-const BASE_HUNGER_DRAIN_PER_MIN = 1.0;
-
-/** Heart drain rate when hunger is zero (starvation). Spec §12.2 */
-const STARVATION_HEART_DRAIN_PER_MIN = 0.25;
-
-/** Hunger threshold for "Well Fed" bonus. Spec §12.2 */
-const WELL_FED_THRESHOLD = 80;
+const BASE_HUNGER_DRAIN_PER_MIN: number = survivalConfig.baseHungerDrainPerMin;
+const STARVATION_HEART_DRAIN_PER_MIN: number = survivalConfig.starvationHeartDrainPerMin;
+const WELL_FED_THRESHOLD: number = survivalConfig.wellFedThreshold;
+const WELL_FED_REGEN_BONUS: number = survivalConfig.wellFedRegenBonus;
 
 // ---------------------------------------------------------------------------
 // Hunger — Spec §12.2
@@ -122,7 +119,7 @@ export function computeStaminaRegenMult(
 ): number {
   if (!affectsGameplay) return baseRegenMult;
   if (hunger <= 0) return 0;
-  if (isWellFed(hunger)) return baseRegenMult * 1.1;
+  if (isWellFed(hunger)) return baseRegenMult * WELL_FED_REGEN_BONUS;
   return baseRegenMult;
 }
 

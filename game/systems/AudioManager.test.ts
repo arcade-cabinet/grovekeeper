@@ -1,4 +1,18 @@
-import { audioManager } from "./AudioManager";
+import { audioManager, startAudio } from "./AudioManager";
+
+// Mock audioEngine so Tone.js is not required in this test module.
+// AudioManager only calls audioEngine.initialize() via startAudio().
+jest.mock("./audioEngine", () => ({
+  audioEngine: {
+    initialize: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
+// Require the mocked audioEngine for assertion access in tests.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { audioEngine: mockAudioEngine } = jest.requireMock("./audioEngine") as {
+  audioEngine: { initialize: jest.Mock };
+};
 
 // Mock AudioContext for Jest (not available in jsdom)
 class MockGainNode {
@@ -181,11 +195,11 @@ describe("AudioManager", () => {
   });
 
   describe("playMusic / stopMusic", () => {
-    it("playMusic does not throw (stub)", () => {
+    it("playMusic does not throw (no-op until music assets wired)", () => {
       expect(() => audioManager.playMusic("ambient", true)).not.toThrow();
     });
 
-    it("stopMusic does not throw (stub)", () => {
+    it("stopMusic does not throw (no-op until music assets wired)", () => {
       expect(() => audioManager.stopMusic()).not.toThrow();
     });
   });
@@ -207,5 +221,20 @@ describe("AudioManager", () => {
       // Should lazily re-create context
       expect(() => audioManager.playSound("plant")).not.toThrow();
     });
+  });
+});
+
+describe("startAudio (Spec §27 — user-gesture gate)", () => {
+  it("resolves without throwing", async () => {
+    await expect(startAudio()).resolves.toBeUndefined();
+  });
+
+  it("delegates to audioEngine.initialize()", async () => {
+    await startAudio();
+    expect(mockAudioEngine.initialize).toHaveBeenCalled();
+  });
+
+  it("is safe to call multiple times (idempotent)", async () => {
+    await expect(Promise.all([startAudio(), startAudio()])).resolves.toBeDefined();
   });
 });

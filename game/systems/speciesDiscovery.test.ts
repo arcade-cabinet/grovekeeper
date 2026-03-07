@@ -222,16 +222,16 @@ describe("checkDiscoveryProgress", () => {
   });
 
   it("computes completion percent based on legendary / total", () => {
-    // Total species = 12 base + 3 prestige = 15
+    // Total species = 17 base (12 spec-canonical + 5 legacy code-referenced) + 3 prestige = 20
     const allProgress: Record<string, SpeciesProgress> = {
       "white-oak": { ...createEmptyProgress(), discoveryTier: 4 },
       "elder-pine": { ...createEmptyProgress(), discoveryTier: 4 },
       "cherry-blossom": { ...createEmptyProgress(), discoveryTier: 4 },
     };
     const stats = checkDiscoveryProgress(allProgress);
-    expect(stats.totalSpecies).toBe(15);
+    expect(stats.totalSpecies).toBe(20);
     expect(stats.speciesLegendary).toBe(3);
-    expect(stats.completionPercent).toBe(Math.round((3 / 15) * 100));
+    expect(stats.completionPercent).toBe(Math.round((3 / 20) * 100));
   });
 });
 

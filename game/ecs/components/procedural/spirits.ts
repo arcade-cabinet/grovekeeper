@@ -36,3 +36,30 @@ export interface GrovekeeperSpiritComponent {
   /** Dialogue tree ID for this spirit's narrative. */
   dialogueTreeId: string;
 }
+
+/**
+ * Birchmother — the ancient tree of light at the heart of the world.
+ *
+ * Unique entity (one per world). Spawns at a seeded cardinal offset from
+ * world origin (~200 units). Only materialises after all 8 Grovekeeper
+ * Spirits have been discovered (main-quest-spirits complete).
+ *
+ * Spec §32.4.
+ */
+export interface BirmotherComponent {
+  /** Dialogue tree ID for the Birchmother encounter. */
+  dialogueTreeId: "birchmother-dialogue";
+  /**
+   * Awakened when all 8 spirits are discovered.
+   * Starts false; set to true by useBirmotherEncounter once
+   * main-quest-spirits is complete.
+   */
+  awakened: boolean;
+  /**
+   * Converged after the player completes the Birchmother dialogue.
+   * Fires the worldroot_reached objective and ends the final quest.
+   */
+  converged: boolean;
+  /** World seed used to determine Birchmother's placement direction. */
+  worldSeed: string;
+}

@@ -4,8 +4,11 @@
  */
 
 import { GameEntity, GoalEvaluator, Think } from "yuka";
+import { useGameStore } from "@/game/stores/gameStore";
 import { cancelNpcMovement, isNpcMoving, startNpcPath } from "@/game/systems/npcMovement";
 import type { WalkabilityGrid } from "@/game/systems/pathfinding";
+import { scopedRNG } from "@/game/utils/seedWords";
+import aiConfig from "@/config/game/ai.json" with { type: "json" };
 
 // ──────────────────────────────────────────────
 // Types
@@ -30,14 +33,14 @@ export interface NpcBrainContext {
 }
 
 // ──────────────────────────────────────────────
-// Configuration
+// Configuration (values live in config/game/ai.json)
 // ──────────────────────────────────────────────
 
-const WANDER_RANGE = 3;
-const WANDER_INTERVAL = 8;
-const NOTICE_RANGE = 6;
-const APPROACH_RANGE = 3;
-const ADJACENT_RANGE = 1.5;
+const WANDER_RANGE: number = aiConfig.npcBrain.wanderRange;
+const WANDER_INTERVAL: number = aiConfig.npcBrain.wanderInterval;
+const NOTICE_RANGE: number = aiConfig.npcBrain.noticeRange;
+const APPROACH_RANGE: number = aiConfig.npcBrain.approachRange;
+const ADJACENT_RANGE: number = aiConfig.npcBrain.adjacentRange;
 
 // ──────────────────────────────────────────────
 // Yuka Entity wrapper
@@ -136,6 +139,8 @@ export class NpcBrain {
   private currentBehavior: NpcBehavior = "idle";
   private readonly homeX: number;
   private readonly homeZ: number;
+  /** Counter for wander decisions -- used as extra seed param so each wander destination is unique. */
+  private wanderDecisionCount = 0;
 
   /** Tutorial override -- when set, normal AI is suppressed. */
   private tutorialOverride: {
@@ -153,7 +158,9 @@ export class NpcBrain {
 
     this.entity = new NpcEntity();
     // Stagger initial wander timer so NPCs don't all wander at once
-    this.entity.wanderTimer = Math.random() * WANDER_INTERVAL;
+    const worldSeed = useGameStore.getState().worldSeed;
+    const staggerRng = scopedRNG("npc-wander-stagger", worldSeed, entityId);
+    this.entity.wanderTimer = staggerRng() * WANDER_INTERVAL;
 
     const idleEval = new IdleEvaluator(1);
     const wanderEval = new WanderEvaluator(1);
@@ -270,9 +277,11 @@ export class NpcBrain {
   // ──────────────────────────────────────────────
 
   private executeWander(ctx: NpcBrainContext): void {
-    // Pick a random walkable tile within WANDER_RANGE of home
-    const offsetX = Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
-    const offsetZ = Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
+    // Pick a walkable tile within WANDER_RANGE of home -- seeded per NPC and decision index
+    const worldSeed = useGameStore.getState().worldSeed;
+    const rng = scopedRNG("npc-wander", worldSeed, this.entityId, this.wanderDecisionCount++);
+    const offsetX = Math.floor(rng() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
+    const offsetZ = Math.floor(rng() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
     const targetX = this.homeX + offsetX;
     const targetZ = this.homeZ + offsetZ;
 

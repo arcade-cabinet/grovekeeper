@@ -7,6 +7,8 @@
  *  - ChunkManager.update loads 3x3 active + 5x5 buffer ring
  *  - Chunk transitions: new chunks loaded, old chunks removed
  *  - Async generation: chunks queued after update, loaded after flushQueue
+ *  - Runtime wiring: update() is called as player position changes (FIX-01)
+ *  - applyChunkDiff wiring: player-planted trees survive chunk unload/reload (FIX-02)
  */
 
 import { world } from "@/game/ecs/world";
@@ -20,6 +22,11 @@ import {
   getChunksInRadius,
   worldToChunkCoords,
 } from "./ChunkManager";
+import {
+  clearAllChunkDiffs,
+  recordPlantedTree,
+  type PlantedTree,
+} from "./chunkPersistence";
 
 // Clean up all ECS entities between tests
 afterEach(() => {
@@ -340,5 +347,160 @@ describe("ChunkManager (Spec §17.1)", () => {
     for (const [key, entity] of firstMap) {
       expect(mgr.getLoadedChunks().get(key)).toBe(entity);
     }
+  });
+});
+
+// ─── FIX-01: update() drives streaming as player moves ────────────────────────
+//
+// These tests verify the runtime contract: calling update() with a changing
+// player position causes correct chunk transitions without any external
+// orchestration.  They simulate what ChunkStreamer does every frame.
+
+describe("FIX-01 — update() drives streaming as player position changes (Spec §17.1)", () => {
+  it("calling update() twice with different chunk coords transitions the world", () => {
+    const mgr = new ChunkManager("runtime-test");
+
+    // Frame 1: player at world origin
+    mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
+    expect(mgr.getLoadedChunks().has(getChunkKey(0, 0))).toBe(true);
+
+    // Frame N: player has walked to chunk (3, 0)
+    mgr.update({ x: 3 * CHUNK_SIZE, y: 0, z: 0 });
+    mgr.flushQueue();
+    expect(mgr.getLoadedChunks().has(getChunkKey(3, 0))).toBe(true);
+  });
+
+  it("update() with new chunk position loads 25 chunks centered on new position", () => {
+    const mgr = new ChunkManager("runtime-test");
+    mgr.update({ x: 5 * CHUNK_SIZE, y: 0, z: 5 * CHUNK_SIZE }); // chunk (5, 5)
+    mgr.flushQueue();
+    expect(mgr.getLoadedChunks().size).toBe(25);
+    // Center chunk must be loaded
+    expect(mgr.getLoadedChunks().has(getChunkKey(5, 5))).toBe(true);
+  });
+
+  it("repeated update() calls simulating player walking across chunk boundaries", () => {
+    const mgr = new ChunkManager("runtime-test");
+
+    // Simulate three sequential frame batches as player walks east
+    const positions = [
+      { x: 0, y: 0, z: 0 },           // chunk (0, 0)
+      { x: CHUNK_SIZE, y: 0, z: 0 },   // chunk (1, 0)
+      { x: 2 * CHUNK_SIZE, y: 0, z: 0 }, // chunk (2, 0)
+    ];
+
+    for (const pos of positions) {
+      mgr.update(pos);
+      mgr.flushQueue();
+    }
+
+    // After all moves, 25 chunks centred on (2, 0) must be loaded
+    expect(mgr.getLoadedChunks().size).toBe(25);
+    expect(mgr.getLoadedChunks().has(getChunkKey(2, 0))).toBe(true);
+
+    // Chunks far to the left must have been unloaded
+    expect(mgr.getLoadedChunks().has(getChunkKey(-2, 0))).toBe(false);
+  });
+
+  it("update() with the same position is a no-op after initialization", () => {
+    const mgr = new ChunkManager("runtime-test");
+    mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
+    const beforeSize = mgr.getLoadedChunks().size;
+
+    // Simulate many frames without moving
+    for (let i = 0; i < 10; i++) {
+      mgr.update({ x: 0, y: 0, z: 0 });
+    }
+
+    // No additional chunks should have been queued
+    expect(mgr.getPendingChunkCount()).toBe(0);
+    expect(mgr.getLoadedChunks().size).toBe(beforeSize);
+  });
+});
+
+// ─── FIX-02: applyChunkDiff restores player-planted trees on chunk reload ─────
+
+describe("FIX-02 — applyChunkDiff called in loadChunk restores planted trees (Spec §26.2)", () => {
+  beforeEach(() => {
+    clearAllChunkDiffs();
+    for (const entity of [...world.entities]) {
+      world.remove(entity);
+    }
+  });
+
+  it("player-planted tree survives chunk unload and reload via ChunkManager", () => {
+    const tree: PlantedTree = {
+      localX: 4,
+      localZ: 6,
+      speciesId: "white-oak",
+      stage: 1,
+      progress: 0.4,
+      plantedAt: 12345,
+      meshSeed: 99,
+    };
+
+    // Record a planted tree in chunk (0, 0)
+    recordPlantedTree("0,0", tree);
+
+    // Load chunk (0, 0) via ChunkManager — applyChunkDiff must be called inside loadChunk
+    const mgr = new ChunkManager("test-world");
+    mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
+
+    // The player-planted tree entity must be in the ECS world
+    const treeEntities = world.with("tree").entities.filter(
+      (e) => e.tree?.speciesId === "white-oak" && e.tree.wild === false,
+    );
+    expect(treeEntities.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("player-planted tree position is correct after chunk reload", () => {
+    const chunkX = 1;
+    const chunkZ = 0;
+    const chunkKey = `${chunkX},${chunkZ}`;
+    const localX = 8;
+    const localZ = 3;
+
+    const tree: PlantedTree = {
+      localX,
+      localZ,
+      speciesId: "pine",
+      stage: 0,
+      progress: 0,
+      plantedAt: 9999,
+      meshSeed: 7,
+    };
+    recordPlantedTree(chunkKey, tree);
+
+    const mgr = new ChunkManager("test-world");
+    // Position player inside chunk (1, 0) — x in [16, 31]
+    mgr.update({ x: chunkX * CHUNK_SIZE + 8, y: 0, z: 0 });
+    mgr.flushQueue();
+
+    const expectedX = chunkX * CHUNK_SIZE + localX;
+    const expectedZ = chunkZ * CHUNK_SIZE + localZ;
+
+    const planted = world.with("tree", "position").entities.find(
+      (e) =>
+        e.tree?.speciesId === "pine" &&
+        e.position?.x === expectedX &&
+        e.position?.z === expectedZ,
+    );
+    expect(planted).toBeDefined();
+  });
+
+  it("chunk with no diff spawns no extra tree entities from persistence", () => {
+    // Chunk (5, 5) has never been modified — no diff entry
+    const mgr = new ChunkManager("test-world");
+    mgr.update({ x: 5 * CHUNK_SIZE, y: 0, z: 5 * CHUNK_SIZE });
+    mgr.flushQueue();
+
+    // All trees in the ECS world should be wild (from entitySpawner), none player-planted
+    const playerTrees = world.with("tree").entities.filter(
+      (e) => e.tree?.wild === false,
+    );
+    expect(playerTrees.length).toBe(0);
   });
 });

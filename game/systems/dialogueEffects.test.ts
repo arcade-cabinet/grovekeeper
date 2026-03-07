@@ -147,16 +147,23 @@ describe("applyDialogueEffects — multiple effects (Spec §15, §17)", () => {
     expect(result.completedSteps).toHaveLength(0);
   });
 
-  it("ignores non-quest effect types (give_item, give_xp, unlock_species)", () => {
+  it("ignores non-quest, non-unlock effect types (give_item, give_xp)", () => {
     const state = initializeChainState();
     const effects: DialogueEffect[] = [
       { type: "give_item", value: "oak-seed", amount: 1 },
       { type: "give_xp", value: 50 },
-      { type: "unlock_species", value: "elder-pine" },
     ];
     const result = applyDialogueEffects(effects, state, 1);
     expect(result.state).toBe(state);
     expect(result.completedSteps).toHaveLength(0);
+    expect(result.unlockedSpecies).toHaveLength(0);
+  });
+
+  it("returns empty unlockedSpecies when no unlock_species effect present", () => {
+    const state = initializeChainState();
+    const effects: DialogueEffect[] = [{ type: "start_quest", value: "rowan-history" }];
+    const result = applyDialogueEffects(effects, state, 1);
+    expect(result.unlockedSpecies).toHaveLength(0);
   });
 
   it("collects completedSteps across multiple advance_quest effects", () => {
@@ -177,5 +184,65 @@ describe("applyDialogueEffects — multiple effects (Spec §15, §17)", () => {
     );
     const ids = result.completedSteps.map((s) => s.chainId);
     expect(ids).toContain("rowan-history");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// unlock_species (Spec §15, §17)
+// ---------------------------------------------------------------------------
+
+describe("applyDialogueEffects — unlock_species (Spec §15, §17)", () => {
+  it("returns the species id in unlockedSpecies array", () => {
+    const state = initializeChainState();
+    const effects: DialogueEffect[] = [{ type: "unlock_species", value: "elder-pine" }];
+    const result = applyDialogueEffects(effects, state, 1);
+    expect(result.unlockedSpecies).toEqual(["elder-pine"]);
+  });
+
+  it("does not mutate quest chain state for unlock_species only effect", () => {
+    const state = initializeChainState();
+    const effects: DialogueEffect[] = [{ type: "unlock_species", value: "elder-pine" }];
+    const result = applyDialogueEffects(effects, state, 1);
+    expect(result.state).toBe(state);
+    expect(result.completedSteps).toHaveLength(0);
+  });
+
+  it("deduplicates the same speciesId appearing multiple times", () => {
+    const state = initializeChainState();
+    const effects: DialogueEffect[] = [
+      { type: "unlock_species", value: "elder-pine" },
+      { type: "unlock_species", value: "elder-pine" },
+    ];
+    const result = applyDialogueEffects(effects, state, 1);
+    expect(result.unlockedSpecies).toEqual(["elder-pine"]);
+  });
+
+  it("collects multiple distinct species from multiple unlock_species effects", () => {
+    const state = initializeChainState();
+    const effects: DialogueEffect[] = [
+      { type: "unlock_species", value: "elder-pine" },
+      { type: "unlock_species", value: "silver-birch" },
+    ];
+    const result = applyDialogueEffects(effects, state, 1);
+    expect(result.unlockedSpecies).toContain("elder-pine");
+    expect(result.unlockedSpecies).toContain("silver-birch");
+    expect(result.unlockedSpecies).toHaveLength(2);
+  });
+
+  it("can combine unlock_species with quest effects in the same call", () => {
+    const state = initializeChainState();
+    const effects: DialogueEffect[] = [
+      { type: "start_quest", value: "rowan-history" },
+      { type: "unlock_species", value: "ancient-oak" },
+    ];
+    const result = applyDialogueEffects(effects, state, 1);
+    expect("rowan-history" in result.state.activeChains).toBe(true);
+    expect(result.unlockedSpecies).toEqual(["ancient-oak"]);
+  });
+
+  it("returns empty unlockedSpecies when no unlock_species effects present", () => {
+    const state = initializeChainState();
+    const result = applyDialogueEffects([], state, 1);
+    expect(result.unlockedSpecies).toHaveLength(0);
   });
 });

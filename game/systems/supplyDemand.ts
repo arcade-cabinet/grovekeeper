@@ -5,11 +5,14 @@
  * Selling a resource drops its price; buying raises it.
  * Price multiplier is clamped to [0.5, 2.5] to prevent extremes.
  *
+ * Biome supply curves provide base regional pricing before trade history.
+ *
  * Pure functions -- no side effects.
  */
 
 import type { ResourceType } from "@/game/config/resources";
 import { RESOURCE_TYPES } from "@/game/config/resources";
+import type { BiomeType } from "@/game/world/biomeMapper";
 
 // -- Types ────────────────────────────────────────────────────────────────────
 
@@ -32,6 +35,24 @@ const DEFAULT_WINDOW_DAYS = 30;
 const SCALING_FACTOR = 100;
 const MIN_MULTIPLIER = 0.5;
 const MAX_MULTIPLIER = 2.5;
+
+// -- Biome Supply Curves ───────────────────────────────────────────────────────
+//
+// Base price multipliers per biome reflecting natural resource abundance.
+// Values < 1.0 = resource is abundant here (lower price).
+// Values > 1.0 = resource is scarce here (higher price).
+// Missing entries default to 1.0 (neutral).
+
+const BIOME_SUPPLY_CURVES: Record<BiomeType, Partial<Record<ResourceType, number>>> = {
+  "starting-grove": {},
+  meadow: { fruit: 0.8, timber: 1.1 },
+  "ancient-forest": { timber: 0.7, acorns: 0.7, sap: 0.8 },
+  wetlands: { sap: 0.7, fruit: 0.9, timber: 1.2 },
+  "rocky-highlands": { timber: 1.3, sap: 1.2, fruit: 1.4 },
+  "orchard-valley": { fruit: 0.6, acorns: 0.8, timber: 1.1 },
+  "frozen-peaks": { timber: 1.5, sap: 1.4, fruit: 1.8, acorns: 1.3 },
+  "twilight-glade": { sap: 0.6, acorns: 0.9 },
+};
 
 // -- Helpers ──────────────────────────────────────────────────────────────────
 
@@ -63,6 +84,33 @@ export function initializeMarketState(): MarketState {
     priceMultipliers: defaultMultipliers(),
     lastUpdateDay: 0,
   };
+}
+
+/**
+ * Get the biome-based supply price multiplier for a specific resource.
+ *
+ * Values < 1.0 indicate abundant supply (lower price).
+ * Values > 1.0 indicate scarce supply (higher price).
+ * Returns 1.0 for resources not tracked in the biome curve.
+ *
+ * Spec §20: Regional economy — biome supply curves.
+ */
+export function getBiomeSupplyMultiplier(resource: ResourceType, biome: BiomeType): number {
+  return BIOME_SUPPLY_CURVES[biome][resource] ?? 1.0;
+}
+
+/**
+ * Compute price adjustments for all resources based on biome supply curves.
+ *
+ * Returns partial multipliers — only resources with non-neutral (≠ 1.0) values.
+ * Combine with trade-history multipliers via multiplication for effective price.
+ *
+ * Spec §20: Regional economy — biome supply curves.
+ */
+export function computeBiomePriceAdjustment(
+  biome: BiomeType,
+): Partial<Record<ResourceType, number>> {
+  return { ...BIOME_SUPPLY_CURVES[biome] };
 }
 
 /**

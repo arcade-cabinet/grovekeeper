@@ -15,7 +15,16 @@ import { Modal, Pressable, View, useWindowDimensions } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 
-import { BARK_BROWN, CAMPFIRE_LIT_COLOR, FOG_COLOR, NPC_DOT_COLOR, PLAYER_FILL, SKY_MIST } from "./colors";
+import {
+  BARK_BROWN,
+  CAMPFIRE_LIT_COLOR,
+  FOG_COLOR,
+  LABYRINTH_EXPLORED_COLOR,
+  NPC_DOT_COLOR,
+  PLAYER_FILL,
+  SKY_MIST,
+  SPIRIT_DISCOVERED_COLOR,
+} from "./colors";
 import { MinimapSVG } from "./MinimapSVG";
 import { readMinimapSnapshot } from "./snapshot";
 import type { MinimapSnapshot } from "./types";
@@ -143,6 +152,8 @@ export const MiniMapOverlay = ({ open, onClose, onCampfirePress }: MiniMapOverla
           <LegendItem color={PLAYER_FILL} label="You" shape="circle" />
           <LegendItem color={CAMPFIRE_LIT_COLOR} label="Campfire" shape="diamond" />
           <LegendItem color={NPC_DOT_COLOR} label="NPC" shape="circle" />
+          <LegendItem color={LABYRINTH_EXPLORED_COLOR} label="Labyrinth" shape="diamond" />
+          <LegendItem color={SPIRIT_DISCOVERED_COLOR} label="Spirit" shape="circle" />
           <LegendItem color={FOG_COLOR} label="Unexplored" shape="square" />
         </View>
       </View>

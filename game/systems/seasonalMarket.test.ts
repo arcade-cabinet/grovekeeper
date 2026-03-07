@@ -1,5 +1,10 @@
 import type { Season } from "./seasonalMarket";
-import { applySeasonalPrice, getResourceModifier, getSeasonalModifiers } from "./seasonalMarket";
+import {
+  applySeasonalPrice,
+  getResourceModifier,
+  getSeasonalModifiers,
+  getSeasonalModifierForAny,
+} from "./seasonalMarket";
 
 describe("seasonal market", () => {
   describe("getSeasonalModifiers", () => {
@@ -80,6 +85,33 @@ describe("seasonal market", () => {
       seasons.forEach((season, i) => {
         expect(applySeasonalPrice(10, season, "acorns")).toBe(expected[i]);
       });
+    });
+  });
+
+  describe("getSeasonalModifierForAny (Spec §20)", () => {
+    it("returns correct modifier for tracked resources", () => {
+      expect(getSeasonalModifierForAny("spring", "sap")).toBe(1.2);
+      expect(getSeasonalModifierForAny("winter", "timber")).toBe(1.5);
+      expect(getSeasonalModifierForAny("autumn", "fruit")).toBe(1.5);
+    });
+
+    it("returns 1.0 for resources not in the seasonal table", () => {
+      expect(getSeasonalModifierForAny("spring", "wood")).toBe(1.0);
+      expect(getSeasonalModifierForAny("winter", "stone")).toBe(1.0);
+      expect(getSeasonalModifierForAny("summer", "metal_scrap")).toBe(1.0);
+      expect(getSeasonalModifierForAny("autumn", "fiber")).toBe(1.0);
+    });
+
+    it("matches getResourceModifier for the four core resources", () => {
+      const seasons: Season[] = ["spring", "summer", "autumn", "winter"];
+      const coreResources = ["timber", "sap", "fruit", "acorns"] as const;
+      for (const season of seasons) {
+        for (const resource of coreResources) {
+          expect(getSeasonalModifierForAny(season, resource)).toBe(
+            getResourceModifier(season, resource),
+          );
+        }
+      }
     });
   });
 });

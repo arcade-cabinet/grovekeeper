@@ -33,6 +33,7 @@ import { playerQuery, world } from "@/game/ecs/world";
 type TileCell = { gridX: number; gridZ: number };
 
 const gridCellsQuery = world.with("gridCell", "position");
+
 import { useGameStore } from "@/game/stores/gameStore";
 import {
   advancePathFollow,
@@ -41,6 +42,7 @@ import {
 } from "@/game/systems/pathFollowing";
 import { buildWalkabilityGrid, findPath, type TileCoord } from "@/game/systems/pathfinding";
 import { BASE_TRADE_RATES, executeTrade } from "@/game/systems/trading";
+import { scopedRNG } from "@/game/utils/seedWords";
 
 // ──────────────────────────────────────────────
 // Types
@@ -218,6 +220,9 @@ export class PlayerGovernor {
     pathsFailed: 0,
   };
 
+  /** Counter for explore decisions -- used as extra seed param so each exploration is unique. */
+  private exploreDecisionCount = 0;
+
   constructor(profile: GovernorProfile = DEFAULT_PROFILE) {
     this.profile = profile;
     this.entity = new GovernorEntity();
@@ -372,8 +377,10 @@ export class PlayerGovernor {
         if (!bounds) return null;
         const rangeX = bounds.maxX - bounds.minX;
         const rangeZ = bounds.maxZ - bounds.minZ;
-        const tx = bounds.minX + Math.floor(Math.random() * rangeX);
-        const tz = bounds.minZ + Math.floor(Math.random() * rangeZ);
+        const worldSeed = useGameStore.getState().worldSeed;
+        const rng = scopedRNG("governor-explore", worldSeed, this.exploreDecisionCount++);
+        const tx = bounds.minX + Math.floor(rng() * rangeX);
+        const tz = bounds.minZ + Math.floor(rng() * rangeZ);
         return { action: "explore", tileX: tx, tileZ: tz };
       }
     }

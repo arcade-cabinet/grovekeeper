@@ -102,10 +102,9 @@
   },
   "nightSpawnMultiplier": 1.5,
   "difficultyMultipliers": {
-    "explore": 0,
-    "normal": 1.0,
-    "hard": 1.5,
-    "brutal": 2.0,
-    "ultra-brutal": 3.0
+    "seedling": 0,
+    "sapling": 1.0,
+    "hardwood": 1.5,
+    "ironwood": 3.0
   }
 }

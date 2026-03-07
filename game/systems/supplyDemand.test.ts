@@ -1,6 +1,8 @@
 import type { TradeRecord } from "./supplyDemand";
 import {
+  computeBiomePriceAdjustment,
   computePriceMultipliers,
+  getBiomeSupplyMultiplier,
   getEffectivePrice,
   initializeMarketState,
   pruneHistory,
@@ -154,6 +156,51 @@ describe("supply/demand system", () => {
       };
       const pruned = pruneHistory(withTrades, 30, 30);
       expect(pruned).toBe(withTrades);
+    });
+  });
+
+  describe("getBiomeSupplyMultiplier (Spec §20)", () => {
+    it("returns 1.0 for neutral biome", () => {
+      expect(getBiomeSupplyMultiplier("timber", "starting-grove")).toBe(1.0);
+    });
+
+    it("returns abundance multiplier < 1 for plentiful resources", () => {
+      // ancient-forest: timber = 0.7 (abundant)
+      expect(getBiomeSupplyMultiplier("timber", "ancient-forest")).toBe(0.7);
+    });
+
+    it("returns scarcity multiplier > 1 for scarce resources", () => {
+      // rocky-highlands: fruit = 1.4 (scarce)
+      expect(getBiomeSupplyMultiplier("fruit", "rocky-highlands")).toBe(1.4);
+    });
+
+    it("returns 1.0 for untracked resources in a biome", () => {
+      expect(getBiomeSupplyMultiplier("wood", "ancient-forest")).toBe(1.0);
+    });
+
+    it("returns correct frozen-peaks multipliers (highest scarcity)", () => {
+      expect(getBiomeSupplyMultiplier("timber", "frozen-peaks")).toBe(1.5);
+      expect(getBiomeSupplyMultiplier("fruit", "frozen-peaks")).toBe(1.8);
+    });
+  });
+
+  describe("computeBiomePriceAdjustment (Spec §20)", () => {
+    it("returns empty object for neutral biome", () => {
+      expect(computeBiomePriceAdjustment("starting-grove")).toEqual({});
+    });
+
+    it("returns partial record with only defined adjustments", () => {
+      const adj = computeBiomePriceAdjustment("meadow");
+      expect(adj.fruit).toBe(0.8);
+      expect(adj.timber).toBe(1.1);
+      expect(adj.sap).toBeUndefined();
+    });
+
+    it("returns a copy, not the original reference", () => {
+      const a = computeBiomePriceAdjustment("wetlands");
+      const b = computeBiomePriceAdjustment("wetlands");
+      expect(a).not.toBe(b);
+      expect(a).toEqual(b);
     });
   });
 });

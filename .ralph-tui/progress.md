@@ -2829,3 +2829,29 @@ after each iteration and it's included in prompts for context.
   - **Modal → absolute View conversion: one extra `</View>` trap**: The original Modal structure had two nested wrapper Views (Modal > flex-1-backdrop > panel). Replacing Modal with a single absoluteFillObject View + a Pressable backdrop means the old inner backdrop's closing `</View>` must be removed or the JSX is malformed. TypeScript catches this with TS1005/TS1109 "')' expected" errors at the closing lines.
   - **`awardNpcTradingXp` reads `nearbyNpcTemplateId` from GameUI props**: This prop already exists for dialogue, making it the correct vehicle for NPC identity during trade. No new prop needed — the trading relationship award flows through the same NPC-proximity signal.
 
+---
+
+## 2026-03-07 - US-155
+- Wired market systems to world economy (Spec §20).
+- Files changed:
+  - `game/systems/travelingMerchant/` — decomposed 328-line `travelingMerchant.ts` into two files:
+    - `offerPools.ts` (~120 lines): `MerchantReward`, `OfferTemplate` interfaces; `RESOURCE_OFFERS`, `SEED_OFFERS`, `XP_OFFERS`, `RECIPE_OFFERS`, `ALL_OFFER_TEMPLATES`
+    - `index.ts` (~200 lines): all existing functions + new `spawnMerchantAtVillage(state, villageId, currentDay, worldSeed)`; added `currentVillageId: string | null` to `MerchantState`
+  - `game/systems/marketEvents.ts` — added `affectedBiome?: BiomeType | "all"` to `MarketEventDef`; assigned biome affinity to all 6 event defs; added `getRegionalMarketEventModifiers(state, currentDay, biome)` returning `Partial<Record<ResourceType, number>>`
+  - `game/systems/supplyDemand.ts` — added `BIOME_SUPPLY_CURVES` (8 biomes × resource multipliers); added `getBiomeSupplyMultiplier(resource, biome)` and `computeBiomePriceAdjustment(biome)` exported functions
+  - `game/systems/seasonalMarket.ts` — added `getSeasonalModifierForAny(season, resource)` supporting any `ResourceType` (returns 1.0 for untracked resources)
+  - `game/stores/gameStore.ts` — added `spawnMerchantAtVillage(villageId)` store action: calls pure function, sets `merchantState`, queues toast notification
+  - `game/world/ChunkManager.ts` — after placing village campfire, calls `useGameStore.getState().spawnMerchantAtVillage(villageId)` on village chunk load (guarded with null check on `fastTravelId`)
+  - `game/systems/travelingMerchant.test.ts` — added 5 tests in `describe("spawnMerchantAtVillage (Spec §20)")`
+  - `game/systems/marketEvents.test.ts` — added 5 tests in `describe("getRegionalMarketEventModifiers (Spec §20)")`
+  - `game/systems/supplyDemand.test.ts` — added 5+3 tests for `getBiomeSupplyMultiplier` + `computeBiomePriceAdjustment`
+  - `game/systems/seasonalMarket.test.ts` — added 3 tests for `getSeasonalModifierForAny`
+  - `game/actions/actionDispatcher.ts` — fixed pre-existing `placeTrap`/`collectTrap` property-not-on-GameState errors with targeted casts; fixed `GameAction` → `ToolAction` mismatch at haptic call
+  - `game/hooks/useSpiritProximity.ts` — fixed pre-existing inferred type error on `grovekeeperSpiritsQuery` iteration variable (conditional infer pattern)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3759 tests, 153 suites pass
+- **Learnings:**
+  - **Subpackage decomposition pattern**: Extract constants/data to `subdirectory/offerPools.ts`, main logic to `subdirectory/index.ts` with barrel re-exports. TypeScript resolves `from "./travelingMerchant"` to `./travelingMerchant/index.ts` automatically — all consumers unchanged.
+  - **Biome supply curves belong in a module constant, not in config JSON**: Supply multipliers are structural game design (biome identity), not tuning values. Putting them in a typed `Record<BiomeType, ...>` catches missing biomes at compile time.
+  - **Optional chaining doesn't override structural typing**: `store.method?.()` still errors if `method` doesn't exist on the type — `?.` only handles runtime null/undefined. For forward-declared stub actions, a narrow cast exposes only the needed surface without widening the whole store type.
+  - **Pre-existing errors in untracked files don't appear in stash-based baseline**: Files like `TouchLookZone.tsx`, `useSpiritProximity.ts` are untracked, so `git stash` doesn't revert them. Always compare stash-before vs stash-after on the same set of files.
+

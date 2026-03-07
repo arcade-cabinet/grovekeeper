@@ -18,8 +18,9 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-
+import { useGameStore } from "@/game/stores/gameStore";
 import type { WeatherType } from "@/game/systems/weather";
+import { scopedRNG } from "@/game/utils/seedWords";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -58,9 +59,19 @@ function RainDrop({ index, total }: { index: number; total: number }) {
   const translateY = useSharedValue(-20);
   const opacity = useSharedValue(0.6);
 
-  const leftPct = useMemo(() => (index / total) * 100 + Math.random() * 3, [index, total]);
-  const _delay = useMemo(() => Math.random() * 800, []);
-  const duration = useMemo(() => 600 + Math.random() * 400, []);
+  const worldSeed = useGameStore((s) => s.worldSeed);
+  const leftPct = useMemo(() => {
+    const rng = scopedRNG("weather-rain-left", worldSeed, index);
+    return (index / total) * 100 + rng() * 3;
+  }, [index, total, worldSeed]);
+  const _delay = useMemo(() => {
+    const rng = scopedRNG("weather-rain-delay", worldSeed, index);
+    return rng() * 800;
+  }, [index, worldSeed]);
+  const duration = useMemo(() => {
+    const rng = scopedRNG("weather-rain-duration", worldSeed, index);
+    return 600 + rng() * 400;
+  }, [index, worldSeed]);
 
   useEffect(() => {
     translateY.value = withRepeat(
@@ -148,8 +159,12 @@ function WindStreak({ index, total }: { index: number; total: number }) {
   const translateX = useSharedValue(-100);
   const opacity = useSharedValue(0);
 
+  const worldSeed = useGameStore((s) => s.worldSeed);
   const topPct = useMemo(() => (index / total) * 100, [index, total]);
-  const duration = useMemo(() => 800 + Math.random() * 600, []);
+  const duration = useMemo(() => {
+    const rng = scopedRNG("weather-wind-duration", worldSeed, index);
+    return 800 + rng() * 600;
+  }, [index, worldSeed]);
 
   useEffect(() => {
     translateX.value = withRepeat(

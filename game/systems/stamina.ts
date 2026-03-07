@@ -4,8 +4,9 @@
  */
 
 import type { Entity } from "@/game/ecs/world";
+import staminaConfig from "@/config/game/stamina.json" with { type: "json" };
 
-const BASE_STAMINA_REGEN_PER_SEC = 2;
+const BASE_STAMINA_REGEN_PER_SEC: number = staminaConfig.baseStaminaRegenPerSec;
 
 /**
  * Regenerate stamina for a farmer entity at the base rate.

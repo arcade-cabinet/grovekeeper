@@ -3,12 +3,14 @@
  *
  * Events last 3-7 days and apply temporary price modifiers.
  * One event can be active at a time, with a 10-day cooldown.
+ * Events may be regional (biome-specific) or global.
  *
  * Pure functions -- no side effects.
  */
 
 import type { ResourceType } from "@/game/config/resources";
 import { createRNG, hashString } from "@/game/utils/seedRNG";
+import type { BiomeType } from "@/game/world/biomeMapper";
 
 // -- Types ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +21,11 @@ export interface MarketEventDef {
   description: string;
   durationDays: number;
   effects: Partial<Record<ResourceType, number>>;
+  /**
+   * Biome where this event applies regionally.
+   * undefined or "all" = global (all biomes).
+   */
+  affectedBiome?: BiomeType | "all";
 }
 
 export interface MarketEventState {
@@ -48,6 +55,7 @@ export const MARKET_EVENTS: MarketEventDef[] = [
     description: "Construction surge! Timber prices doubled.",
     durationDays: 5,
     effects: { timber: 2.0 },
+    affectedBiome: "ancient-forest",
   },
   {
     id: "sap-shortage",
@@ -56,6 +64,7 @@ export const MARKET_EVENTS: MarketEventDef[] = [
     description: "Rare extraction season -- sap is precious!",
     durationDays: 4,
     effects: { sap: 2.5 },
+    affectedBiome: "wetlands",
   },
   {
     id: "fruit-festival",
@@ -64,6 +73,7 @@ export const MARKET_EVENTS: MarketEventDef[] = [
     description: "Fruit glut! Buy cheap, sell high.",
     durationDays: 6,
     effects: { fruit: 1.5 },
+    affectedBiome: "orchard-valley",
   },
   {
     id: "acorn-rush",
@@ -72,6 +82,7 @@ export const MARKET_EVENTS: MarketEventDef[] = [
     description: "Squirrel migration -- acorns in high demand!",
     durationDays: 3,
     effects: { acorns: 2.0 },
+    affectedBiome: "ancient-forest",
   },
   {
     id: "merchant-holiday",
@@ -80,6 +91,7 @@ export const MARKET_EVENTS: MarketEventDef[] = [
     description: "Clearance sale -- all prices reduced!",
     durationDays: 5,
     effects: { timber: 0.7, sap: 0.7, fruit: 0.7, acorns: 0.7 },
+    affectedBiome: "all",
   },
   {
     id: "rare-influx",
@@ -88,6 +100,7 @@ export const MARKET_EVENTS: MarketEventDef[] = [
     description: "Visiting merchants drive up all prices!",
     durationDays: 4,
     effects: { timber: 1.5, sap: 1.5, fruit: 1.5, acorns: 1.5 },
+    affectedBiome: "all",
   },
 ];
 
@@ -128,6 +141,33 @@ export function getActiveMarketEventModifiers(
 
   const def = MARKET_EVENTS.find((e) => e.id === state.activeEvent?.definitionId);
   if (!def) return {};
+
+  return { ...def.effects };
+}
+
+/**
+ * Get price modifiers from the active event filtered for a specific biome region.
+ *
+ * Returns effects only when the event applies globally ("all" or undefined) OR
+ * when the event's affectedBiome matches the provided biome.
+ * Returns an empty object if the event is inactive or not relevant to the biome.
+ *
+ * Spec §20: Market events affect regional prices per biome.
+ */
+export function getRegionalMarketEventModifiers(
+  state: MarketEventState,
+  currentDay: number,
+  biome: BiomeType,
+): Partial<Record<ResourceType, number>> {
+  if (!isMarketEventActive(state, currentDay)) return {};
+
+  const def = MARKET_EVENTS.find((e) => e.id === state.activeEvent?.definitionId);
+  if (!def) return {};
+
+  const isGlobal = !def.affectedBiome || def.affectedBiome === "all";
+  const matchesBiome = def.affectedBiome === biome;
+
+  if (!isGlobal && !matchesBiome) return {};
 
   return { ...def.effects };
 }

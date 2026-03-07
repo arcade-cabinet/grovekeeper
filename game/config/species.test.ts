@@ -7,8 +7,12 @@ describe("species config", () => {
       expect(TREE_SPECIES.length).toBeGreaterThan(0);
     });
 
-    it("contains 12 base species", () => {
-      expect(TREE_SPECIES.length).toBe(12);
+    it("contains spec §9 base species plus legacy code-referenced species", () => {
+      // Spec §9 base: white-oak, birch, elm, weeping-willow, ash, maple, golden-apple,
+      // cedar, elder-pine, ironbark, redwood, ghost-birch (12 spec-canonical).
+      // Plus 5 legacy code-referenced species kept to avoid breakage:
+      // cherry-blossom, flame-maple, baobab, silver-birch, mystic-fern.
+      expect(TREE_SPECIES.length).toBe(17);
     });
 
     it("all species have required fields", () => {

@@ -16,6 +16,8 @@ const DEFAULT_PARAMS = {
   discoveredStore: {},
   campfireEntities: [],
   npcEntities: [],
+  labyrinthEntities: [],
+  spiritEntities: [],
   playerPos: null,
   chunkSize: 16,
   viewRadius: VIEW_RADIUS,
@@ -156,5 +158,139 @@ describe("buildMinimapSnapshot (Spec §17.6) — NPC dots", () => {
       npcEntities: [{ worldX: viewWorldRadius + 50, worldZ: 0 }],
     });
     expect(snap.npcs).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Labyrinth markers
+// ---------------------------------------------------------------------------
+
+describe("buildMinimapSnapshot (Spec §17.6) — labyrinth markers", () => {
+  it("includes labyrinths within view range", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      labyrinthEntities: [{ worldX: 10, worldZ: 10, explored: false }],
+    });
+    expect(snap.labyrinths).toHaveLength(1);
+    expect(snap.labyrinths[0].explored).toBe(false);
+  });
+
+  it("excludes labyrinths outside view range", () => {
+    const viewWorldRadius = VIEW_RADIUS * 16;
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      labyrinthEntities: [{ worldX: viewWorldRadius + 1, worldZ: 0, explored: true }],
+    });
+    expect(snap.labyrinths).toHaveLength(0);
+  });
+
+  it("carries explored flag correctly for an explored labyrinth", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      labyrinthEntities: [{ worldX: 5, worldZ: 5, explored: true }],
+    });
+    expect(snap.labyrinths[0].explored).toBe(true);
+  });
+
+  it("carries explored flag correctly for an unexplored labyrinth", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      labyrinthEntities: [{ worldX: 5, worldZ: 5, explored: false }],
+    });
+    expect(snap.labyrinths[0].explored).toBe(false);
+  });
+
+  it("multiple labyrinths are all included when within view", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      labyrinthEntities: [
+        { worldX: 5, worldZ: 5, explored: true },
+        { worldX: -5, worldZ: 3, explored: false },
+      ],
+    });
+    expect(snap.labyrinths).toHaveLength(2);
+  });
+
+  it("snapshot has empty labyrinths array when no labyrinth entities provided", () => {
+    const snap = buildMinimapSnapshot(DEFAULT_PARAMS);
+    expect(snap.labyrinths).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spirit markers
+// ---------------------------------------------------------------------------
+
+describe("buildMinimapSnapshot (Spec §17.6) — spirit markers", () => {
+  it("includes spirits within view range", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      spiritEntities: [{ worldX: 8, worldZ: 8, spiritId: "spirit-0", discovered: false }],
+    });
+    expect(snap.spirits).toHaveLength(1);
+    expect(snap.spirits[0].spiritId).toBe("spirit-0");
+  });
+
+  it("excludes spirits outside view range", () => {
+    const viewWorldRadius = VIEW_RADIUS * 16;
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      spiritEntities: [
+        { worldX: viewWorldRadius + 1, worldZ: 0, spiritId: "spirit-far", discovered: true },
+      ],
+    });
+    expect(snap.spirits).toHaveLength(0);
+  });
+
+  it("carries discovered=false for undiscovered spirit", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      spiritEntities: [{ worldX: 4, worldZ: 4, spiritId: "spirit-1", discovered: false }],
+    });
+    expect(snap.spirits[0].discovered).toBe(false);
+  });
+
+  it("carries discovered=true for discovered spirit", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      spiritEntities: [{ worldX: 4, worldZ: 4, spiritId: "spirit-2", discovered: true }],
+    });
+    expect(snap.spirits[0].discovered).toBe(true);
+  });
+
+  it("spiritId is preserved from entity", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      spiritEntities: [{ worldX: 0, worldZ: 0, spiritId: "spirit-maze-3", discovered: false }],
+    });
+    expect(snap.spirits[0].spiritId).toBe("spirit-maze-3");
+  });
+
+  it("snapshot has empty spirits array when no spirit entities provided", () => {
+    const snap = buildMinimapSnapshot(DEFAULT_PARAMS);
+    expect(snap.spirits).toHaveLength(0);
+  });
+
+  it("multiple spirits are all included when within view", () => {
+    const snap = buildMinimapSnapshot({
+      ...DEFAULT_PARAMS,
+      playerPos: { x: 0, z: 0 },
+      spiritEntities: [
+        { worldX: 3, worldZ: 3, spiritId: "spirit-a", discovered: true },
+        { worldX: -3, worldZ: 3, spiritId: "spirit-b", discovered: false },
+        { worldX: 0, worldZ: -3, spiritId: "spirit-c", discovered: true },
+      ],
+    });
+    expect(snap.spirits).toHaveLength(3);
   });
 });

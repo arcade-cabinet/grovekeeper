@@ -11,6 +11,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { NpcBrain, type NpcBrainContext } from "@/game/ai/NpcBrain";
+import { getDifficultyById } from "@/game/config/difficulty";
 import { getSpeciesById } from "@/game/config/species";
 import { createWildTreeEntity } from "@/game/ecs/archetypes";
 import {
@@ -28,9 +29,17 @@ import { checkAchievements, type PlayerStats } from "@/game/systems/achievements
 import { tickCropGrowth } from "@/game/systems/cropGrowth";
 import { calcGrowthRate, MAX_STAGE } from "@/game/systems/growth";
 import { harvestCooldownTick, initHarvestable } from "@/game/systems/harvest";
+import { advanceNpcAnimation } from "@/game/systems/npcAnimation";
 import { updateNpcMovement } from "@/game/systems/npcMovement";
+import { tickNpcSchedule } from "@/game/systems/npcSchedule";
 import { buildWalkabilityGrid, type WalkabilityGrid } from "@/game/systems/pathfinding";
 import { regenStamina } from "@/game/systems/stamina";
+import {
+  isPlayerDead,
+  tickHeartsFromExposure,
+  tickHeartsFromStarvation,
+  tickHunger,
+} from "@/game/systems/survival";
 import {
   advanceTime,
   MICROSECONDS_PER_GAME_SECOND,
@@ -48,6 +57,7 @@ import {
   initializeRegrowthState,
   type RegrowthState,
 } from "@/game/systems/wildTreeRegrowth";
+import { hashString } from "@/game/utils/seedRNG";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -152,13 +162,17 @@ export function useGameLoop(): void {
       weatherRef.current = initializeWeather(gameTimeSec);
     }
 
-    const rngSeed = store.worldSeed ? store.worldSeed.length : Date.now() % 10000;
+    const rngSeed = store.worldSeed ? hashString(store.worldSeed) : Date.now() % 10000;
 
     weatherRef.current = updateWeather(weatherRef.current, gameTimeSec, timeState.season, rngSeed);
 
     const weatherGrowthMult = getWeatherGrowthMultiplier(weatherRef.current.current.type);
 
     // ── 3. Growth System ─────────────────────────────────────────────────
+
+    // FIX-07: Read difficulty multipliers (used in growth and survival ticks)
+    const frameDiffConfig = getDifficultyById(store.difficulty);
+    const growthSpeedMult = frameDiffConfig?.growthSpeedMult ?? 1.0;
 
     for (const entity of treesQuery) {
       const tree = entity.tree;
@@ -180,9 +194,9 @@ export function useGameLoop(): void {
 
       if (growthRate <= 0) continue;
 
-      // Apply weather multiplier and fertilized bonus
+      // Apply weather multiplier, fertilized bonus, and difficulty growthSpeedMult
       const fertilizedMult = tree.fertilized ? 2.0 : 1.0;
-      const progressDelta = growthRate * weatherGrowthMult * fertilizedMult * dt;
+      const progressDelta = growthRate * weatherGrowthMult * fertilizedMult * growthSpeedMult * dt;
       tree.progress += progressDelta;
       tree.totalGrowthTime += dt;
 
@@ -238,6 +252,50 @@ export function useGameLoop(): void {
       }
     }
 
+    // ── 4b. Survival Tick (hunger, starvation, exposure) ─────────────────
+
+    {
+      const hungerDrainMult = frameDiffConfig?.hungerDrainRate ?? 0;
+      const exposureDriftRate = frameDiffConfig?.exposureDriftRate ?? 0;
+      const exposureEnabled = frameDiffConfig?.exposureEnabled ?? false;
+      const affectsGameplay = frameDiffConfig?.affectsGameplay ?? false;
+
+      // FIX-06: Drain hunger
+      const newHunger = tickHunger(
+        store.hunger,
+        store.maxHunger,
+        dt,
+        hungerDrainMult,
+        affectsGameplay,
+      );
+      if (newHunger !== store.hunger) {
+        store.setHunger(newHunger);
+      }
+
+      // FIX-06: Drain hearts from starvation and exposure
+      // Build a minimal HealthComponent bridging store.hearts
+      const healthBridge = { current: store.hearts, max: store.maxHearts, invulnFrames: 0, lastDamageSource: null };
+      tickHeartsFromStarvation(healthBridge, newHunger, dt, affectsGameplay);
+      tickHeartsFromExposure(healthBridge, dt, exposureDriftRate, exposureEnabled, affectsGameplay);
+      if (healthBridge.current !== store.hearts) {
+        store.setHearts(healthBridge.current);
+      }
+
+      // FIX-08: Death detection
+      if (isPlayerDead(healthBridge)) {
+        const storeAny = store as Record<string, unknown>;
+        if (typeof storeAny.handleDeath === "function") {
+          (storeAny.handleDeath as () => void)();
+        } else {
+          // handleDeath not yet in store — log a warning until it is added
+          console.warn("[useGameLoop] Player died but store.handleDeath is not implemented");
+        }
+      }
+
+      // FIX-29: Tutorial — dispatch signal for any active gameplay
+      store.advanceTutorial("action:look");
+    }
+
     // ── 5. Harvest Cooldowns ─────────────────────────────────────────────
 
     for (const entity of harvestableQuery) {
@@ -254,6 +312,29 @@ export function useGameLoop(): void {
       if (!result.done) {
         entity.position.x = result.x;
         entity.position.z = result.z;
+      }
+
+      // FIX-31: Advance NPC animation progress
+      advanceNpcAnimation(entity.npc, dt);
+    }
+
+    // FIX-31: NPC Schedule ticks (throttled via walkability grid availability)
+    if (walkGridRef.current) {
+      const currentHour = (timeState.totalMicroseconds / (MICROSECONDS_PER_GAME_SECOND * 3600)) % 24;
+      for (const entity of npcsQuery) {
+        if (!entity.position || !entity.npc || !entity.npc.schedule?.length) continue;
+        const schedResult = tickNpcSchedule(
+          entity.npc.schedule,
+          entity.id,
+          entity.position.x,
+          entity.position.z,
+          currentHour,
+          walkGridRef.current,
+        );
+        // Apply the new animation state from the schedule
+        if (schedResult.animState !== entity.npc.currentAnim) {
+          entity.npc.currentAnim = schedResult.animState;
+        }
       }
     }
 
@@ -375,10 +456,10 @@ export function useGameLoop(): void {
         currentGridSize: store.gridSize,
         prestigeCount: store.prestigeCount,
         questsCompleted: store.questChainState.completedChainIds.length,
-        recipesUnlocked: 0, // TODO: wire when recipe store is available
+        recipesUnlocked: (store as Record<string, unknown>).recipesUnlocked as number ?? 0,
         structuresPlaced: store.placedStructures.length,
         oldGrowthCount,
-        npcsFriended: 0, // TODO: wire when NPC friendship store is available
+        npcsFriended: (store as Record<string, unknown>).npcsFriended as number ?? 0,
         totalDaysPlayed: timeState.dayNumber,
         tradeCount: store.marketState.tradeHistory.length,
         festivalCount: store.eventState.completedFestivalIds.length,

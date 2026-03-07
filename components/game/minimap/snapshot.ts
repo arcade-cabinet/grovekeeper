@@ -11,18 +11,22 @@
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import {
   campfiresQuery,
+  grovekeeperSpiritsQuery,
   npcsQuery,
   playerQuery,
   terrainChunksQuery,
 } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
+import { isLabyrinthChunk } from "@/game/world/mazeGenerator";
 
 import { DISCOVERED_FALLBACK_COLOR } from "./colors";
 import type {
   MinimapCampfire,
   MinimapChunk,
+  MinimapLabyrinth,
   MinimapNpc,
   MinimapSnapshot,
+  MinimapSpirit,
 } from "./types";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
@@ -48,6 +52,10 @@ export interface BuildSnapshotParams {
   }>;
   /** NPC entities from ECS. */
   npcEntities: Array<{ worldX: number; worldZ: number }>;
+  /** Labyrinth center positions within view. */
+  labyrinthEntities: Array<{ worldX: number; worldZ: number; explored: boolean }>;
+  /** Grovekeeper Spirit entities from ECS. */
+  spiritEntities: Array<{ worldX: number; worldZ: number; spiritId: string; discovered: boolean }>;
   /** Player world position; null if no player entity. */
   playerPos: { x: number; z: number } | null;
   chunkSize: number;
@@ -55,8 +63,17 @@ export interface BuildSnapshotParams {
 }
 
 export function buildMinimapSnapshot(params: BuildSnapshotParams): MinimapSnapshot {
-  const { activeChunks, discoveredStore, campfireEntities, npcEntities, playerPos, chunkSize, viewRadius } =
-    params;
+  const {
+    activeChunks,
+    discoveredStore,
+    campfireEntities,
+    npcEntities,
+    labyrinthEntities,
+    spiritEntities,
+    playerPos,
+    chunkSize,
+    viewRadius,
+  } = params;
 
   // Derive player chunk coords
   const playerChunkX = playerPos ? Math.floor(playerPos.x / chunkSize) : 0;
@@ -104,10 +121,22 @@ export function buildMinimapSnapshot(params: BuildSnapshotParams): MinimapSnapsh
     (n) => Math.abs(n.worldX - px) <= viewWorldRadius && Math.abs(n.worldZ - pz) <= viewWorldRadius,
   );
 
+  // Filter labyrinths within view bounds
+  const labyrinths: MinimapLabyrinth[] = labyrinthEntities.filter(
+    (l) => Math.abs(l.worldX - px) <= viewWorldRadius && Math.abs(l.worldZ - pz) <= viewWorldRadius,
+  );
+
+  // Filter spirits within view bounds
+  const spirits: MinimapSpirit[] = spiritEntities.filter(
+    (s) => Math.abs(s.worldX - px) <= viewWorldRadius && Math.abs(s.worldZ - pz) <= viewWorldRadius,
+  );
+
   return {
     chunks,
     campfires,
     npcs,
+    labyrinths,
+    spirits,
     player: playerPos,
     playerChunkX,
     playerChunkZ,
@@ -159,6 +188,37 @@ export function readMinimapSnapshot(): MinimapSnapshot {
     npcEntities.push({ worldX: pos.x, worldZ: pos.z });
   }
 
+  // Collect labyrinth center positions from terrain chunk scan.
+  // isLabyrinthChunk() determines whether a chunk hosts a labyrinth based on
+  // worldSeed + chunk coords (no additional ECS component needed).
+  const labyrinthEntities: Array<{ worldX: number; worldZ: number; explored: boolean }> = [];
+  const worldSeed = store.worldSeed || "default";
+  for (const entity of terrainChunksQuery) {
+    const ch = entity.chunk;
+    if (!ch) continue;
+    if (!isLabyrinthChunk(worldSeed, ch.chunkX, ch.chunkZ)) continue;
+    // Center of maze chunk in world space
+    const worldX = ch.chunkX * CHUNK_SIZE + CHUNK_SIZE / 2;
+    const worldZ = ch.chunkZ * CHUNK_SIZE + CHUNK_SIZE / 2;
+    const key = `${ch.chunkX},${ch.chunkZ}`;
+    const explored = key in store.discoveredChunks;
+    labyrinthEntities.push({ worldX, worldZ, explored });
+  }
+
+  // Collect Grovekeeper Spirit entities
+  const spiritEntities: Array<{ worldX: number; worldZ: number; spiritId: string; discovered: boolean }> = [];
+  for (const entity of grovekeeperSpiritsQuery) {
+    const spirit = entity.grovekeeperSpirit;
+    const pos = entity.position;
+    if (!spirit || !pos) continue;
+    spiritEntities.push({
+      worldX: pos.x,
+      worldZ: pos.z,
+      spiritId: spirit.spiritId,
+      discovered: store.discoveredSpiritIds.includes(spirit.spiritId),
+    });
+  }
+
   // Player position
   let playerPos: { x: number; z: number } | null = null;
   for (const entity of playerQuery) {
@@ -173,6 +233,8 @@ export function readMinimapSnapshot(): MinimapSnapshot {
     discoveredStore: store.discoveredChunks,
     campfireEntities,
     npcEntities,
+    labyrinthEntities,
+    spiritEntities,
     playerPos,
     chunkSize: CHUNK_SIZE,
     viewRadius: VIEW_RADIUS,

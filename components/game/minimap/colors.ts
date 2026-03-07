@@ -34,3 +34,15 @@ export const SOIL_DARK = "#3E2723";
 
 /** Overlay sky mist text color. */
 export const SKY_MIST = "#E8F5E9";
+
+/** Labyrinth marker color when unexplored. */
+export const LABYRINTH_UNEXPLORED_COLOR = "#9E9E9E";
+
+/** Labyrinth marker color when explored. */
+export const LABYRINTH_EXPLORED_COLOR = "#FFD700";
+
+/** Spirit marker color when undiscovered. */
+export const SPIRIT_UNDISCOVERED_COLOR = "#5C6BC0";
+
+/** Spirit marker color when discovered. */
+export const SPIRIT_DISCOVERED_COLOR = "#E040FB";

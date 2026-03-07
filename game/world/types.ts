@@ -77,4 +77,11 @@ export interface WorldDefinition {
   version: number;
   zones: ZoneDefinition[];
   playerSpawn: { zoneId: string; localX: number; localZ: number };
+  /**
+   * World-space position of the Birchmother entity.
+   * Determined by worldSeed: ~200 units from origin in a seeded cardinal
+   * direction. Present on every world definition; the encounter hook gates
+   * visibility on quest completion.
+   */
+  birmotherSpawn: { x: number; z: number };
 }

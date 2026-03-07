@@ -22,13 +22,31 @@ import {
 } from "@/game/actions/GameActions";
 import { getToolById } from "@/game/config/tools";
 import type { Entity } from "@/game/ecs/world";
-import { npcsQuery, playerQuery, rocksQuery, treesQuery } from "@/game/ecs/world";
+import {
+  campfiresQuery,
+  npcsQuery,
+  playerQuery,
+  rocksQuery,
+  structuresQuery,
+  trapsQuery,
+  treesQuery,
+  waterBodiesQuery,
+} from "@/game/ecs/world";
+import { dispatchAction } from "@/game/actions/actionDispatcher";
 import { useGameStore } from "@/game/stores/gameStore";
 import { showToast } from "@/game/ui/Toast";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-export type SelectionType = "tile" | "tree" | "npc" | null;
+export type SelectionType =
+  | "tile"
+  | "tree"
+  | "npc"
+  | "campfire"
+  | "forge"
+  | "water"
+  | "trap"
+  | null;
 
 export interface InteractionSelection {
   type: SelectionType;
@@ -126,6 +144,63 @@ function findNpcNear(gridX: number, gridZ: number): Entity | null {
   return closest;
 }
 
+/** Find a campfire entity at a given grid position. */
+function findCampfireAtGrid(gridX: number, gridZ: number): Entity | null {
+  for (const e of campfiresQuery) {
+    if (
+      e.position &&
+      Math.round(e.position.x) === gridX &&
+      Math.round(e.position.z) === gridZ
+    ) {
+      return e;
+    }
+  }
+  return null;
+}
+
+/** Find a forge structure entity at a given grid position (effectType === "forging"). */
+function findForgeAtGrid(gridX: number, gridZ: number): Entity | null {
+  for (const e of structuresQuery) {
+    if (
+      e.structure?.effectType === "forging" &&
+      e.position &&
+      Math.round(e.position.x) === gridX &&
+      Math.round(e.position.z) === gridZ
+    ) {
+      return e;
+    }
+  }
+  return null;
+}
+
+/** Find a water body entity at a given grid position. */
+function findWaterAtGrid(gridX: number, gridZ: number): Entity | null {
+  for (const e of waterBodiesQuery) {
+    if (
+      e.position &&
+      Math.round(e.position.x) === gridX &&
+      Math.round(e.position.z) === gridZ
+    ) {
+      return e;
+    }
+  }
+  return null;
+}
+
+/** Find a trap entity at a given grid position. */
+function findTrapAtGrid(gridX: number, gridZ: number): Entity | null {
+  for (const e of trapsQuery) {
+    if (
+      e.position &&
+      Math.round(e.position.x) === gridX &&
+      Math.round(e.position.z) === gridZ
+    ) {
+      return e;
+    }
+  }
+  return null;
+}
+
 /** Check if the player is within interaction range of a position. */
 function _isPlayerInRange(gridX: number, gridZ: number, range: number): boolean {
   const player = playerQuery.first;
@@ -169,12 +244,35 @@ export function useInteraction() {
     // Check if there's a tree at this position first
     const tree = findTreeAtGrid(gridX, gridZ);
     if (tree) {
-      setSelection({
-        type: "tree",
-        gridX,
-        gridZ,
-        entityId: tree.id,
-      });
+      setSelection({ type: "tree", gridX, gridZ, entityId: tree.id });
+      return;
+    }
+
+    // Check for campfire (cooking station)
+    const campfire = findCampfireAtGrid(gridX, gridZ);
+    if (campfire) {
+      setSelection({ type: "campfire", gridX, gridZ, entityId: campfire.id });
+      return;
+    }
+
+    // Check for forge structure
+    const forge = findForgeAtGrid(gridX, gridZ);
+    if (forge) {
+      setSelection({ type: "forge", gridX, gridZ, entityId: forge.id });
+      return;
+    }
+
+    // Check for water body (fishing)
+    const water = findWaterAtGrid(gridX, gridZ);
+    if (water) {
+      setSelection({ type: "water", gridX, gridZ, entityId: water.id });
+      return;
+    }
+
+    // Check for placed trap entity
+    const trap = findTrapAtGrid(gridX, gridZ);
+    if (trap) {
+      setSelection({ type: "trap", gridX, gridZ, entityId: trap.id });
       return;
     }
 
@@ -191,12 +289,7 @@ export function useInteraction() {
     }
 
     // Otherwise select the tile
-    setSelection({
-      type: "tile",
-      gridX,
-      gridZ,
-      entityId: null,
-    });
+    setSelection({ type: "tile", gridX, gridZ, entityId: null });
   }, []);
 
   // ── Tree tap handler ────────────────────────────────────────────────────
@@ -355,8 +448,154 @@ export function useInteraction() {
         break;
       }
 
-      default:
+      // ── Crafting station interactions ──────────────────────────────────
+
+      case "pick": {
+        // Mining: pick on a rock entity → MINE verb
+        if (selection.type === "tile" && selection.entityId === null) {
+          const rockEntity = findRockAtGrid(selection.gridX, selection.gridZ);
+          if (rockEntity) {
+            const success = dispatchAction({
+              toolId: "pick",
+              targetType: "rock",
+              entity: rockEntity,
+              gridX: selection.gridX,
+              gridZ: selection.gridZ,
+              biome: store.currentZoneId,
+            });
+            if (success) {
+              showToast("Mined rock!", "success");
+            } else {
+              const toolData = getToolById(tool);
+              if (toolData) store.setStamina(store.stamina + toolData.staminaCost);
+              showToast("Not enough stamina to mine", "info");
+            }
+          }
+        }
         break;
+      }
+
+      case "fishing-rod": {
+        // Fishing: fishing-rod on a water body entity
+        if (selection.type === "water" && selection.entityId) {
+          const waterEntity = (() => {
+            for (const e of waterBodiesQuery) {
+              if (e.id === selection.entityId) return e;
+            }
+            return null;
+          })();
+          const waterBodyType = waterEntity?.waterBody?.waterType ?? "pond";
+          const success = dispatchAction({
+            toolId: "fishing-rod",
+            targetType: "water",
+            entity: waterEntity ?? undefined,
+            waterBodyType,
+          });
+          if (success) {
+            showToast("Fishing...", "info");
+          } else {
+            const toolData = getToolById(tool);
+            if (toolData) store.setStamina(store.stamina + toolData.staminaCost);
+            showToast("Can't fish here", "info");
+          }
+        }
+        break;
+      }
+
+      case "trap": {
+        // Trap placement: trap item on empty ground
+        if ((selection.type === "tile" || selection.type === null) && selection.entityId === null) {
+          const selectedTrapType = store.selectedTool; // trap sub-type from tool selection
+          const success = dispatchAction({
+            toolId: "trap",
+            targetType: "soil",
+            gridX: selection.gridX,
+            gridZ: selection.gridZ,
+            trapType: selectedTrapType,
+          });
+          if (success) {
+            showToast("Trap placed!", "success");
+          } else {
+            const toolData = getToolById(tool);
+            if (toolData) store.setStamina(store.stamina + toolData.staminaCost);
+            showToast("Can't place trap here", "info");
+          }
+        }
+        break;
+      }
+
+      case "hammer": {
+        // Kitbash build mode: hammer on any ground target opens the build panel
+        const success = dispatchAction({
+          toolId: "hammer",
+          targetType: selection.type === "tile" ? "soil" : null,
+          gridX: selection.gridX,
+          gridZ: selection.gridZ,
+        });
+        if (success) {
+          showToast("Build mode opened", "info");
+        }
+        break;
+      }
+
+      default: {
+        // Campfire and forge activate regardless of held tool
+        if (selection.type === "campfire" && selection.entityId) {
+          const campfireEnt = (() => {
+            for (const e of campfiresQuery) {
+              if (e.id === selection.entityId) return e;
+            }
+            return null;
+          })();
+          const success = dispatchAction({
+            toolId: tool,
+            targetType: "campfire",
+            entity: campfireEnt ?? undefined,
+          });
+          if (success) {
+            showToast("Cooking station opened", "info");
+          } else {
+            showToast("Light the campfire first", "info");
+          }
+        } else if (selection.type === "forge" && selection.entityId) {
+          const forgeEnt = (() => {
+            for (const e of structuresQuery) {
+              if (e.id === selection.entityId) return e;
+            }
+            return null;
+          })();
+          // Wrap as ForgeEntity shape for the dispatcher
+          const forgeWrapped = forgeEnt
+            ? { ...forgeEnt, forge: { active: forgeEnt.structure !== undefined } }
+            : undefined;
+          const success = dispatchAction({
+            toolId: tool,
+            targetType: "forge",
+            entity: forgeWrapped as unknown as Entity,
+          });
+          if (success) {
+            showToast("Forge opened", "info");
+          } else {
+            showToast("Light the forge first", "info");
+          }
+        } else if (selection.type === "trap" && selection.entityId) {
+          const trapEnt = (() => {
+            for (const e of trapsQuery) {
+              if (e.id === selection.entityId) return e;
+            }
+            return null;
+          })();
+          const success = dispatchAction({
+            toolId: tool,
+            targetType: "trap",
+            entity: trapEnt ?? undefined,
+          });
+          if (success) {
+            showToast("Trap checked!", "success");
+          }
+        }
+        break;
+      }
     }
   }, [selection]);
 

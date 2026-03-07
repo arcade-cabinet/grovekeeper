@@ -8,9 +8,13 @@
  *   - Filtered noise for weather and tools
  *
  * Usage:
+ *   await startAudio();   // call once on first user interaction
  *   audioManager.playSound("plant");
  *   audioManager.setMuted(true);
  */
+
+import { createRNG } from "@/game/utils/seedRNG";
+import { audioEngine } from "./audioEngine";
 
 export type SoundId =
   | "click"
@@ -31,6 +35,8 @@ class AudioManagerImpl {
   private muted = false;
   private volume = 0.3;
   private masterGain: GainNode | null = null;
+  /** Monotonically increasing counter used as RNG seed for noise buffers. */
+  private noiseCallIndex = 0;
 
   /** Lazily create AudioContext (must happen after user gesture on mobile). */
   private ensureContext(): AudioContext | null {
@@ -150,16 +156,17 @@ class AudioManagerImpl {
     }
   }
 
-  /** Play background music. Stub for future implementation. */
-  playMusic(_trackId: string, _loop?: boolean): void {
-    // Background music will be added when audio assets are available.
-    // For now, all audio is procedurally synthesized SFX.
-  }
+  /**
+   * Play background music by track id.
+   * No-op until Tone.js music playback is wired — audio assets pending.
+   */
+  playMusic(_trackId: string, _loop?: boolean): void {}
 
-  /** Stop background music. Stub for future implementation. */
-  stopMusic(): void {
-    // No-op until music playback is implemented.
-  }
+  /**
+   * Stop background music.
+   * No-op until Tone.js music playback is wired — audio assets pending.
+   */
+  stopMusic(): void {}
 
   /** Set master volume (0-1). */
   setVolume(volume: number): void {
@@ -299,8 +306,12 @@ class AudioManagerImpl {
     const bufferSize = Math.floor(ctx.sampleRate * duration);
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
+    // Use a deterministic PRNG seeded by a monotonic call index.
+    // Each call gets a unique seed so noise varies per invocation,
+    // while remaining reproducible (no raw Math.random — Spec §hard-rules).
+    const rng = createRNG(this.noiseCallIndex++);
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
+      data[i] = rng() * 2 - 1;
     }
 
     const source = ctx.createBufferSource();
@@ -326,3 +337,19 @@ class AudioManagerImpl {
 
 /** Singleton audio manager instance. */
 export const audioManager = new AudioManagerImpl();
+
+/**
+ * Start the Tone.js audio context after a user gesture.
+ *
+ * Web Audio and Tone.js require a user interaction before audio can play
+ * (browser autoplay policy). Call this once on the first tap or click in
+ * the game screen, then audio is unblocked for the session.
+ *
+ * Safe to call multiple times — audioEngine.initialize() is idempotent.
+ *
+ * Example (game screen):
+ *   <View onTouchStart={startAudio} ...>
+ */
+export async function startAudio(): Promise<void> {
+  await audioEngine.initialize();
+}

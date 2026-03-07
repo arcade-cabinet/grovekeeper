@@ -90,7 +90,7 @@ export function placeModularPiece(
   }
 
   // Step 2 & 3: Resource check + deduction (skipped in Exploration mode)
-  if (store.difficulty !== "explore") {
+  if (store.difficulty !== "seedling") {
     const cost = getBuildCostForPiece(piece.pieceType, piece.materialType);
     const entries = Object.entries(cost);
 

@@ -967,6 +967,131 @@ describe("Game Store", () => {
     });
   });
 
+  describe("Survival state — initial values (Spec §12)", () => {
+    it("starts with hunger=100 for default state", () => {
+      expect(useGameStore.getState().hunger).toBe(100);
+    });
+
+    it("starts with maxHunger=100 for default state", () => {
+      expect(useGameStore.getState().maxHunger).toBe(100);
+    });
+
+    it("starts with lastCampfireId=null", () => {
+      expect(useGameStore.getState().lastCampfireId).toBeNull();
+    });
+
+    it("starts with lastCampfirePosition=null", () => {
+      expect(useGameStore.getState().lastCampfirePosition).toBeNull();
+    });
+
+    it("starts with bodyTemp=37.0", () => {
+      expect(useGameStore.getState().bodyTemp).toBe(37.0);
+    });
+  });
+
+  describe("startNewGame — difficulty-based heart initialization (Spec §12.3)", () => {
+    it("seedling difficulty: hunger=100, hearts=maxHearts=7", () => {
+      useGameStore.getState().startNewGame("seedling");
+      const state = useGameStore.getState();
+      expect(state.hunger).toBe(100);
+      expect(state.hearts).toBe(7);
+      expect(state.maxHearts).toBe(7);
+    });
+
+    it("sapling difficulty: hunger=100, hearts=maxHearts=5", () => {
+      useGameStore.getState().startNewGame("sapling");
+      const state = useGameStore.getState();
+      expect(state.hunger).toBe(100);
+      expect(state.hearts).toBe(5);
+      expect(state.maxHearts).toBe(5);
+    });
+
+    it("hardwood difficulty: hunger=100, hearts=maxHearts=4", () => {
+      useGameStore.getState().startNewGame("hardwood");
+      const state = useGameStore.getState();
+      expect(state.hunger).toBe(100);
+      expect(state.hearts).toBe(4);
+      expect(state.maxHearts).toBe(4);
+    });
+
+    it("ironwood difficulty: hunger=100, hearts=maxHearts=3", () => {
+      useGameStore.getState().startNewGame("ironwood");
+      const state = useGameStore.getState();
+      expect(state.hunger).toBe(100);
+      expect(state.hearts).toBe(3);
+      expect(state.maxHearts).toBe(3);
+    });
+
+    it("startNewGame resets lastCampfireId to null", () => {
+      useGameStore.getState().setLastCampfire("camp-1", { x: 10, y: 0, z: 10 });
+      useGameStore.getState().startNewGame("sapling");
+      expect(useGameStore.getState().lastCampfireId).toBeNull();
+    });
+
+    it("startNewGame resets bodyTemp to 37.0", () => {
+      useGameStore.getState().setBodyTemp(34.0);
+      useGameStore.getState().startNewGame("sapling");
+      expect(useGameStore.getState().bodyTemp).toBe(37.0);
+    });
+
+    it("unknown difficulty falls back to maxHearts=3", () => {
+      useGameStore.getState().startNewGame("not-a-real-difficulty");
+      expect(useGameStore.getState().maxHearts).toBe(3);
+      expect(useGameStore.getState().hearts).toBe(3);
+    });
+  });
+
+  describe("Survival actions (Spec §12)", () => {
+    it("setHunger updates hunger", () => {
+      useGameStore.getState().setHunger(50);
+      expect(useGameStore.getState().hunger).toBe(50);
+    });
+
+    it("setHearts updates hearts", () => {
+      useGameStore.getState().setHearts(2);
+      expect(useGameStore.getState().hearts).toBe(2);
+    });
+
+    it("setMaxHearts updates maxHearts", () => {
+      useGameStore.getState().setMaxHearts(5);
+      expect(useGameStore.getState().maxHearts).toBe(5);
+    });
+
+    it("setBodyTemp updates bodyTemp", () => {
+      useGameStore.getState().setBodyTemp(35.5);
+      expect(useGameStore.getState().bodyTemp).toBe(35.5);
+    });
+
+    it("setLastCampfire stores campfire id and position", () => {
+      useGameStore.getState().setLastCampfire("camp-42", { x: 5, y: 0, z: 8 });
+      const state = useGameStore.getState();
+      expect(state.lastCampfireId).toBe("camp-42");
+      expect(state.lastCampfirePosition).toEqual({ x: 5, y: 0, z: 8 });
+    });
+
+    it("setLastCampfire can clear campfire to null", () => {
+      useGameStore.getState().setLastCampfire("camp-1", { x: 1, y: 0, z: 1 });
+      useGameStore.getState().setLastCampfire(null, null);
+      const state = useGameStore.getState();
+      expect(state.lastCampfireId).toBeNull();
+      expect(state.lastCampfirePosition).toBeNull();
+    });
+
+    it("resetGame clears survival state to defaults", () => {
+      useGameStore.getState().setHunger(20);
+      useGameStore.getState().setHearts(1);
+      useGameStore.getState().setBodyTemp(34.0);
+      useGameStore.getState().setLastCampfire("camp-1", { x: 1, y: 0, z: 1 });
+      useGameStore.getState().resetGame();
+      const state = useGameStore.getState();
+      expect(state.hunger).toBe(100);
+      expect(state.hearts).toBe(3);
+      expect(state.bodyTemp).toBe(37.0);
+      expect(state.lastCampfireId).toBeNull();
+      expect(state.lastCampfirePosition).toBeNull();
+    });
+  });
+
   describe("discoverSpirit (Spec §32.3)", () => {
     it("starts with no discovered spirits", () => {
       expect(useGameStore.getState().discoveredSpiritIds).toEqual([]);

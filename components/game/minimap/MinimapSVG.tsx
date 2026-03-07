@@ -16,14 +16,19 @@ import Svg, {
   Circle as SvgCircle,
   Polygon as SvgPolygon,
   Rect as SvgRect,
+  Text as SvgText,
 } from "react-native-svg";
 
 import {
   CAMPFIRE_LIT_COLOR,
   CAMPFIRE_UNLIT_COLOR,
   FOG_COLOR,
+  LABYRINTH_EXPLORED_COLOR,
+  LABYRINTH_UNEXPLORED_COLOR,
   NPC_DOT_COLOR,
   SOIL_DARK,
+  SPIRIT_DISCOVERED_COLOR,
+  SPIRIT_UNDISCOVERED_COLOR,
 } from "./colors";
 import { PulsingPlayerDot } from "./PulsingPlayerDot";
 import type { MinimapSnapshot } from "./types";
@@ -39,7 +44,7 @@ export interface MinimapSVGProps {
 }
 
 export function MinimapSVG({ snapshot, size, onCampfirePress }: MinimapSVGProps) {
-  const { chunks, campfires, npcs, player, playerChunkX, playerChunkZ } = snapshot;
+  const { chunks, campfires, npcs, labyrinths, spirits, player, playerChunkX, playerChunkZ } = snapshot;
 
   const cellSize = size / VIEW_DIAMETER;
   const halfCell = cellSize / 2;
@@ -67,7 +72,7 @@ export function MinimapSVG({ snapshot, size, onCampfirePress }: MinimapSVGProps)
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      accessibilityLabel="Minimap showing biome terrain, campfires, NPCs, and player position"
+      accessibilityLabel="Minimap showing biome terrain, campfires, NPCs, labyrinths, spirits, and player position"
     >
       {/* Background */}
       <SvgRect width={size} height={size} fill={SOIL_DARK} rx={8} />
@@ -132,6 +137,48 @@ export function MinimapSVG({ snapshot, size, onCampfirePress }: MinimapSVGProps)
             fill={NPC_DOT_COLOR}
             opacity={0.85}
           />
+        );
+      })}
+
+      {/* Labyrinth markers — ◆ diamond shape (grey if unexplored, gold if explored) */}
+      {labyrinths.map((lab, i) => {
+        const APPROX_CHUNK_SIZE = 16;
+        const { x, y } = worldToSvg(lab.worldX, lab.worldZ, APPROX_CHUNK_SIZE);
+        const d = 4.5; // half-size of diamond
+        const points = `${x},${y - d} ${x + d},${y} ${x},${y + d} ${x - d},${y}`;
+        const fill = lab.explored ? LABYRINTH_EXPLORED_COLOR : LABYRINTH_UNEXPLORED_COLOR;
+
+        return (
+          <SvgPolygon
+            key={`labyrinth-${i}`}
+            points={points}
+            fill={fill}
+            stroke={lab.explored ? "#B8860B" : "#616161"}
+            strokeWidth={0.8}
+            opacity={lab.explored ? 1 : 0.6}
+          />
+        );
+      })}
+
+      {/* Spirit markers — ✦ four-pointed star (dim if undiscovered, bright if discovered) */}
+      {spirits.map((spirit, i) => {
+        const APPROX_CHUNK_SIZE = 16;
+        const { x, y } = worldToSvg(spirit.worldX, spirit.worldZ, APPROX_CHUNK_SIZE);
+        const fill = spirit.discovered ? SPIRIT_DISCOVERED_COLOR : SPIRIT_UNDISCOVERED_COLOR;
+        const opacity = spirit.discovered ? 1 : 0.5;
+
+        return (
+          <SvgText
+            key={`spirit-${i}`}
+            x={x}
+            y={y + 3.5}
+            fontSize={8}
+            fill={fill}
+            opacity={opacity}
+            textAnchor="middle"
+          >
+            ✦
+          </SvgText>
         );
       })}
 

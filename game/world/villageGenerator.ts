@@ -28,15 +28,22 @@ import structuresData from "@/config/game/structures.json" with { type: "json" }
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Constants (tuning values from config/game/structures.json villageGeneration) ──
 
-const MIN_BUILDINGS = 3;
-const MAX_BUILDINGS = 8;
-const MIN_NPC_COUNT = 2;
-const MAX_NPC_COUNT = 4;
-const BUILDING_MIN_DISTANCE = 2;
-const BUILDING_MAX_DISTANCE = 6;
-const NPC_BASE_MODEL_COUNT = 7;
+const vg = structuresData.villageGeneration;
+const MIN_BUILDINGS: number = vg.minBuildings;
+const MAX_BUILDINGS: number = vg.maxBuildings;
+const MIN_NPC_COUNT: number = vg.minNpcCount;
+const MAX_NPC_COUNT: number = vg.maxNpcCount;
+const BUILDING_MIN_DISTANCE: number = vg.buildingMinDistance;
+const BUILDING_MAX_DISTANCE: number = vg.buildingMaxDistance;
+const BUILDING_ANGLE_JITTER: number = vg.buildingAngleJitter;
+const NPC_BASE_MODEL_COUNT: number = vg.npcBaseModelCount;
+const NPC_SPAWN_RADIUS: number = vg.npcSpawnRadius;
+const NPC_SPAWN_MIN_DISTANCE: number = vg.npcSpawnMinDistance;
+const SCHEDULE_HOME_OFFSET: number = vg.scheduleHomeOffset;
+const SCHEDULE_WORK_OFFSET: number = vg.scheduleWorkOffset;
+const SCHEDULE_HOURS = vg.scheduleHours;
 
 /** Structure template IDs eligible for procedural village placement. */
 const VILLAGE_BUILDING_IDS: readonly string[] = [
@@ -187,17 +194,17 @@ function buildNpcSchedule(
   centerLocalZ: number,
   rng: () => number,
 ): NpcScheduleEntry[] {
-  const homeX = clampToChunk(centerLocalX + (rng() - 0.5) * 6);
-  const homeZ = clampToChunk(centerLocalZ + (rng() - 0.5) * 6);
-  const workX = clampToChunk(centerLocalX + (rng() - 0.5) * 8);
-  const workZ = clampToChunk(centerLocalZ + (rng() - 0.5) * 8);
+  const homeX = clampToChunk(centerLocalX + (rng() - 0.5) * SCHEDULE_HOME_OFFSET);
+  const homeZ = clampToChunk(centerLocalZ + (rng() - 0.5) * SCHEDULE_HOME_OFFSET);
+  const workX = clampToChunk(centerLocalX + (rng() - 0.5) * SCHEDULE_WORK_OFFSET);
+  const workZ = clampToChunk(centerLocalZ + (rng() - 0.5) * SCHEDULE_WORK_OFFSET);
   const wX = chunkX * CHUNK_SIZE;
   const wZ = chunkZ * CHUNK_SIZE;
   return [
-    { hour: 6,  activity: "wake",   position: { x: wX + homeX, z: wZ + homeZ } },
-    { hour: 9,  activity: "work",   position: { x: wX + workX, z: wZ + workZ } },
-    { hour: 18, activity: "wander", position: { x: wX + centerLocalX, z: wZ + centerLocalZ } },
-    { hour: 21, activity: "sleep",  position: { x: wX + homeX, z: wZ + homeZ } },
+    { hour: SCHEDULE_HOURS.wake,   activity: "wake",   position: { x: wX + homeX, z: wZ + homeZ } },
+    { hour: SCHEDULE_HOURS.work,   activity: "work",   position: { x: wX + workX, z: wZ + workZ } },
+    { hour: SCHEDULE_HOURS.wander, activity: "wander", position: { x: wX + centerLocalX, z: wZ + centerLocalZ } },
+    { hour: SCHEDULE_HOURS.sleep,  activity: "sleep",  position: { x: wX + homeX, z: wZ + homeZ } },
   ];
 }
 
@@ -256,7 +263,7 @@ export function generateVillage(
 
   for (let i = 0; i < buildingCount; i++) {
     // Evenly spread angles with seeded jitter so buildings don't cluster.
-    const angle = (i / buildingCount) * Math.PI * 2 + (rng() - 0.5) * 0.8;
+    const angle = (i / buildingCount) * Math.PI * 2 + (rng() - 0.5) * BUILDING_ANGLE_JITTER;
     const distance =
       BUILDING_MIN_DISTANCE + rng() * (BUILDING_MAX_DISTANCE - BUILDING_MIN_DISTANCE);
     const lx = clampToChunk(localX + Math.cos(angle) * distance);
@@ -280,7 +287,7 @@ export function generateVillage(
 
   for (let i = 0; i < npcCount; i++) {
     const angle = rng() * Math.PI * 2;
-    const distance = 1 + rng() * 3;
+    const distance = NPC_SPAWN_MIN_DISTANCE + rng() * NPC_SPAWN_RADIUS;
     const lx = clampToChunk(localX + Math.cos(angle) * distance);
     const lz = clampToChunk(localZ + Math.sin(angle) * distance);
     const y = heightAt(heightmap, lx, lz);

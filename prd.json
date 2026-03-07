@@ -2579,8 +2579,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 155,
-      "passes": false,
-      "notes": "Phase 6 (late). All 4 market system files exist. travelingMerchant.ts is 328 lines — MUST decompose."
+      "passes": true,
+      "notes": "Phase 6 (late). All 4 market system files exist. travelingMerchant.ts is 328 lines — MUST decompose.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-156",
@@ -2875,6 +2876,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T21:57:31.902Z"
+    "updatedAt": "2026-03-07T22:21:27.502Z"
   }
 }

@@ -23,34 +23,34 @@ function makeEntity(stage: number, progress = 0): TreeScaleEntity {
 // ---------------------------------------------------------------------------
 
 describe("applyTreeScale (Spec §8)", () => {
-  it("stage 0 → scale 0.2 at progress 0", () => {
+  it("stage 0 → scale 0.1 at progress 0 (Spec §8: Seed)", () => {
     const entity = makeEntity(0, 0);
     applyTreeScale(entity);
-    expect(entity.renderable.scale).toBeCloseTo(0.2, 6);
+    expect(entity.renderable.scale).toBeCloseTo(0.1, 6);
   });
 
-  it("stage 1 → scale 0.4 at progress 0", () => {
+  it("stage 1 → scale 0.3 at progress 0 (Spec §8: Sprout)", () => {
     const entity = makeEntity(1, 0);
     applyTreeScale(entity);
-    expect(entity.renderable.scale).toBeCloseTo(0.4, 6);
+    expect(entity.renderable.scale).toBeCloseTo(0.3, 6);
   });
 
-  it("stage 2 → scale 0.6 at progress 0", () => {
+  it("stage 2 → scale 0.5 at progress 0 (Spec §8: Sapling)", () => {
     const entity = makeEntity(2, 0);
     applyTreeScale(entity);
-    expect(entity.renderable.scale).toBeCloseTo(0.6, 6);
+    expect(entity.renderable.scale).toBeCloseTo(0.5, 6);
   });
 
-  it("stage 3 → scale 0.8 at progress 0", () => {
+  it("stage 3 → scale 1.0 at progress 0 (Spec §8: Mature)", () => {
     const entity = makeEntity(3, 0);
     applyTreeScale(entity);
-    expect(entity.renderable.scale).toBeCloseTo(0.8, 6);
+    expect(entity.renderable.scale).toBeCloseTo(1.0, 6);
   });
 
-  it("stage 4 → scale 1.0 at progress 0", () => {
+  it("stage 4 → scale 1.3 at progress 0 (Spec §8: Old Growth)", () => {
     const entity = makeEntity(4, 0);
     applyTreeScale(entity);
-    expect(entity.renderable.scale).toBeCloseTo(1.0, 6);
+    expect(entity.renderable.scale).toBeCloseTo(1.3, 6);
   });
 
   it("stage 0 trees are visibly smaller than stage 4 trees", () => {
@@ -107,9 +107,9 @@ describe("treeScaleSystem (Spec §8)", () => {
     const entities = [makeEntity(0, 0), makeEntity(2, 0), makeEntity(4, 0)];
     treeScaleSystem({ entities });
 
-    expect(entities[0].renderable.scale).toBeCloseTo(0.2, 6);
-    expect(entities[1].renderable.scale).toBeCloseTo(0.6, 6);
-    expect(entities[2].renderable.scale).toBeCloseTo(1.0, 6);
+    expect(entities[0].renderable.scale).toBeCloseTo(0.1, 6);
+    expect(entities[1].renderable.scale).toBeCloseTo(0.5, 6);
+    expect(entities[2].renderable.scale).toBeCloseTo(1.3, 6);
   });
 
   it("handles an empty query without error", () => {
@@ -126,6 +126,6 @@ describe("treeScaleSystem (Spec §8)", () => {
     treeScaleSystem({ entities: [entity] });
 
     expect(entity.renderable.scale).toBeGreaterThan(scaleBefore);
-    expect(entity.renderable.scale).toBeCloseTo(0.8, 6);
+    expect(entity.renderable.scale).toBeCloseTo(1.0, 6);
   });
 });

@@ -672,11 +672,11 @@ describe("placeModularPiece (Spec §35.4)", () => {
     expect(store.spendResource).not.toHaveBeenCalled();
   });
 
-  it("skips resource deduction in explore difficulty (Spec §37)", () => {
+  it("skips resource deduction in seedling difficulty (Spec §37)", () => {
     const { world: rapierWorld, rapier } = makeGroundedRapier();
     const ecsWorld = makeCommitWorld();
     // Player has zero resources — should still succeed in explore mode
-    const store = makeCommitStore({ wood: 0, stone: 0, metal_scrap: 0, fiber: 0 }, "explore");
+    const store = makeCommitStore({ wood: 0, stone: 0, metal_scrap: 0, fiber: 0 }, "seedling");
     const piece = makePiece({ pieceType: "wall", materialType: "wood" });
 
     const result = placeModularPiece(piece, [], rapierWorld, rapier, ecsWorld, () => "id-1", store);

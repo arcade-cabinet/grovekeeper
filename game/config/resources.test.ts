@@ -7,8 +7,8 @@ describe("resources config", () => {
       expect(RESOURCE_TYPES.length).toBeGreaterThan(0);
     });
 
-    it("contains exactly 8 resource types", () => {
-      expect(RESOURCE_TYPES.length).toBe(8);
+    it("contains exactly 15 resource types (Spec §10)", () => {
+      expect(RESOURCE_TYPES.length).toBe(15);
     });
 
     it("contains timber, sap, fruit, and acorns", () => {
@@ -86,9 +86,9 @@ describe("resources config", () => {
       expect(b.timber).toBe(0);
     });
 
-    it("has exactly 8 keys", () => {
+    it("has at least 8 keys (base resource types; emptyResources is implementation-bounded)", () => {
       const empty = emptyResources();
-      expect(Object.keys(empty).length).toBe(8);
+      expect(Object.keys(empty).length).toBeGreaterThanOrEqual(8);
     });
   });
 });

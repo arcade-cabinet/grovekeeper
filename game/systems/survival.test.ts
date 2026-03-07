@@ -311,34 +311,28 @@ describe("computeStaminaRegenMult (Spec §12.1, §12.2)", () => {
 // ---------------------------------------------------------------------------
 
 describe("hunger drain rates match difficulty config (Spec §12.2)", () => {
-  it("Explore tier: hungerDrainRate is 0 — no hunger drain", () => {
-    const explore = difficultyConfig.find((d) => d.id === "explore")!;
-    expect(explore.hungerDrainRate).toBe(0);
+  it("Seedling tier: hungerDrainRate is 0 — no hunger drain", () => {
+    const seedling = difficultyConfig.find((d) => d.id === "seedling")!;
+    expect(seedling.hungerDrainRate).toBe(0);
     // With rate=0, no drain even over a full minute
-    expect(tickHunger(100, 100, 60, explore.hungerDrainRate)).toBe(100);
+    expect(tickHunger(100, 100, 60, seedling.hungerDrainRate)).toBe(100);
   });
 
-  it("Normal tier: hungerDrainRate is 1.0 — 1 unit/min", () => {
-    const normal = difficultyConfig.find((d) => d.id === "normal")!;
-    expect(normal.hungerDrainRate).toBe(1.0);
-    expect(tickHunger(100, 100, 60, normal.hungerDrainRate)).toBeCloseTo(99.0);
+  it("Sapling tier: hungerDrainRate is 1.0 — 1 unit/min", () => {
+    const sapling = difficultyConfig.find((d) => d.id === "sapling")!;
+    expect(sapling.hungerDrainRate).toBe(1.0);
+    expect(tickHunger(100, 100, 60, sapling.hungerDrainRate)).toBeCloseTo(99.0);
   });
 
-  it("Hard tier: hungerDrainRate is 1.5 — 1.5 units/min", () => {
-    const hard = difficultyConfig.find((d) => d.id === "hard")!;
-    expect(hard.hungerDrainRate).toBe(1.5);
-    expect(tickHunger(100, 100, 60, hard.hungerDrainRate)).toBeCloseTo(98.5);
+  it("Hardwood tier: hungerDrainRate is 1.5 — 1.5 units/min", () => {
+    const hardwood = difficultyConfig.find((d) => d.id === "hardwood")!;
+    expect(hardwood.hungerDrainRate).toBe(1.5);
+    expect(tickHunger(100, 100, 60, hardwood.hungerDrainRate)).toBeCloseTo(98.5);
   });
 
-  it("Brutal tier: hungerDrainRate is 2.0 — 2 units/min", () => {
-    const brutal = difficultyConfig.find((d) => d.id === "brutal")!;
-    expect(brutal.hungerDrainRate).toBe(2.0);
-    expect(tickHunger(100, 100, 60, brutal.hungerDrainRate)).toBeCloseTo(98.0);
-  });
-
-  it("Ultra-brutal tier: hungerDrainRate is 2.0 — same max drain as Brutal", () => {
-    const ultraBrutal = difficultyConfig.find((d) => d.id === "ultra-brutal")!;
-    expect(ultraBrutal.hungerDrainRate).toBe(2.0);
-    expect(tickHunger(100, 100, 60, ultraBrutal.hungerDrainRate)).toBeCloseTo(98.0);
+  it("Ironwood tier: hungerDrainRate is 2.0 — 2 units/min", () => {
+    const ironwood = difficultyConfig.find((d) => d.id === "ironwood")!;
+    expect(ironwood.hungerDrainRate).toBe(2.0);
+    expect(tickHunger(100, 100, 60, ironwood.hungerDrainRate)).toBeCloseTo(98.0);
   });
 });

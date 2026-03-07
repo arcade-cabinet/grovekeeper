@@ -294,6 +294,26 @@
       ]
     }
   ],
+  "villageGeneration": {
+    "minBuildings": 3,
+    "maxBuildings": 8,
+    "minNpcCount": 2,
+    "maxNpcCount": 4,
+    "buildingMinDistance": 2,
+    "buildingMaxDistance": 6,
+    "buildingAngleJitter": 0.8,
+    "npcBaseModelCount": 7,
+    "npcSpawnRadius": 3,
+    "npcSpawnMinDistance": 1,
+    "scheduleHomeOffset": 6,
+    "scheduleWorkOffset": 8,
+    "scheduleHours": {
+      "wake": 6,
+      "work": 9,
+      "wander": 18,
+      "sleep": 21
+    }
+  },
   "biomeTemplates": {
     "starting-grove": { "probability": 0.3, "allowedIds": ["water-post", "bird-house", "campfire-1"] },
     "meadow":         { "probability": 0.2, "allowedIds": ["notice-board", "water-post", "bird-house"] },

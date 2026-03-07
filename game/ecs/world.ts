@@ -75,6 +75,7 @@ import type {
   ParticleEmitterComponent,
   SoundscapeComponent,
   GrovekeeperSpiritComponent,
+  BirmotherComponent,
 } from "./components/procedural";
 
 import type {
@@ -151,6 +152,7 @@ export interface Entity {
   particleEmitter?: ParticleEmitterComponent;
   ambientZone?: SoundscapeComponent;
   grovekeeperSpirit?: GrovekeeperSpiritComponent;
+  birchmother?: BirmotherComponent;
 
   // Dialogue & quest branching
   dialogue?: DialogueComponent;
@@ -222,6 +224,7 @@ export const fogVolumesQuery = world.with("fogVolume", "position");
 export const particleEmittersQuery = world.with("particleEmitter", "position");
 export const ambientZonesQuery = world.with("ambientZone", "position");
 export const grovekeeperSpiritsQuery = world.with("grovekeeperSpirit", "position");
+export const birmotherQuery = world.with("birchmother", "position");
 
 // Dialogue & quest branching
 export const dialogueQuery = world.with("dialogue");

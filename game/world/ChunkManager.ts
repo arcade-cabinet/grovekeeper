@@ -30,6 +30,7 @@ import { scopedRNG } from "@/game/utils/seedWords";
 import { useGameStore } from "@/game/stores/gameStore";
 import { spawnChunkStructures } from "@/game/systems/structurePlacement";
 import { spawnChunkVegetation } from "@/game/systems/vegetationPlacement";
+import { applyChunkDiff } from "./chunkPersistence";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -465,6 +466,12 @@ export class ChunkManager {
           }),
         );
       }
+
+      // Spawn traveling merchant at newly discovered villages. Spec §20.
+      const villageId = villagePlacements.campfire.campfire.fastTravelId;
+      if (villageId) {
+        useGameStore.getState().spawnMerchantAtVillage(villageId);
+      }
     }
 
     // Generate hedge labyrinth and Grovekeeper spirit for labyrinth chunks.
@@ -641,5 +648,10 @@ export class ChunkManager {
     if (children.length > 0) {
       this.chunkChildEntities.set(key, children);
     }
+
+    // Restore player-planted trees and crops from persisted diff (Spec §26.2).
+    // Must run after all procedural entities are spawned so player changes overlay
+    // on top of the regenerated world.
+    applyChunkDiff(key, chunkX, chunkZ);
   }
 }

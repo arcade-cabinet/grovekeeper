@@ -1,7 +1,8 @@
 /**
  * Seasonal Market -- price modifiers based on the current season.
- * NO external imports.
  */
+
+import type { ResourceType } from "@/game/config/resources";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,4 +46,18 @@ export function applySeasonalPrice(
   resource: keyof SeasonalPriceModifiers,
 ): number {
   return Math.round(basePrice * SEASONAL_MODIFIERS[season][resource] * 10) / 10;
+}
+
+/**
+ * Get the seasonal modifier for any ResourceType.
+ *
+ * Unlike getResourceModifier (which only accepts the four core seasonal resources),
+ * this function accepts any ResourceType and returns 1.0 for resources not tracked
+ * in the seasonal modifier table (wood, stone, metal_scrap, fiber, etc.).
+ *
+ * Spec §20: Seasonal price modifiers extend to all traded resource types.
+ */
+export function getSeasonalModifierForAny(season: Season, resource: ResourceType): number {
+  const mods = SEASONAL_MODIFIERS[season] as unknown as Partial<Record<string, number>>;
+  return mods[resource] ?? 1.0;
 }

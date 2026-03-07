@@ -36,6 +36,23 @@ export interface MinimapPlayer {
   z: number;
 }
 
+/** A labyrinth (hedge maze) center marker on the minimap. */
+export interface MinimapLabyrinth {
+  worldX: number;
+  worldZ: number;
+  /** True if the player has discovered/entered this labyrinth's chunk. */
+  explored: boolean;
+}
+
+/** A Grovekeeper Spirit marker on the minimap. */
+export interface MinimapSpirit {
+  worldX: number;
+  worldZ: number;
+  spiritId: string;
+  /** True if the spirit has been discovered (added to discoveredSpiritIds). */
+  discovered: boolean;
+}
+
 /**
  * Full minimap snapshot — consumed by MinimapSVG.
  *
@@ -49,6 +66,10 @@ export interface MinimapSnapshot {
   campfires: MinimapCampfire[];
   /** NPC dots within view range. */
   npcs: MinimapNpc[];
+  /** Labyrinth center markers within view. */
+  labyrinths: MinimapLabyrinth[];
+  /** Grovekeeper Spirit markers within view. */
+  spirits: MinimapSpirit[];
   /** Player world-space position; null until player entity exists. */
   player: MinimapPlayer | null;
   /** Player's current chunk X coordinate (grid center). */

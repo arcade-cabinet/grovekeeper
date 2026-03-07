@@ -24,5 +24,7 @@ export type {
   MinimapCampfire,
   MinimapNpc,
   MinimapPlayer,
+  MinimapLabyrinth,
+  MinimapSpirit,
   MinimapSnapshot,
 } from "./types";

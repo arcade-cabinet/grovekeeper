@@ -1,8 +1,9 @@
 /**
- * actionDispatcher -- Action dispatch system (Spec §11).
+ * actionDispatcher -- Action dispatch system (Spec §11, §22, §35).
  *
- * Maps tool type + target entity type to a game verb (DIG/CHOP/WATER/PLANT/PRUNE)
- * and executes the corresponding system function from GameActions.
+ * Maps tool type + target entity type to a game verb (DIG/CHOP/WATER/PLANT/PRUNE
+ * plus crafting: COOK/FORGE/MINE/FISH/PLACE_TRAP/CHECK_TRAP/BUILD) and executes
+ * the corresponding system function.
  *
  * Pure `resolveAction` is exported as a testable seam separate from side-effecting
  * `dispatchAction`, following the pattern established in TargetInfo.tsx and ToolViewModel.tsx.
@@ -11,16 +12,52 @@
 import { clearRock, harvestTree, plantTree, pruneTree, waterTree } from "@/game/actions/GameActions";
 import type { Entity } from "@/game/ecs/world";
 import type { RaycastEntityType } from "@/game/hooks/useRaycast";
-import { triggerActionHaptic } from "@/game/systems/haptics";
+import { triggerActionHaptic, type ToolAction } from "@/game/systems/haptics";
+import { resolveCampfireInteraction } from "@/game/systems/cooking";
+import { resolveForgeInteraction } from "@/game/systems/forging";
+import { resolveMiningInteraction, mineRock } from "@/game/systems/mining";
+import type { RockComponent } from "@/game/ecs/components/terrain";
+import type { BiomeType } from "@/game/world/biomeMapper";
+import { isWaterFishable } from "@/game/systems/fishing";
+import { createTrapComponent } from "@/game/systems/traps";
+import { useGameStore } from "@/game/stores/gameStore";
+import { scopedRNG } from "@/game/utils/seedWords";
+import type { ResourceType } from "@/game/config/resources";
 
-/** The five core game verbs mapped by the dispatcher. */
-export type GameAction = "DIG" | "CHOP" | "WATER" | "PLANT" | "PRUNE";
+// Re-export interaction resolvers so callers (useInteraction, TargetInfo) can import
+// from a single dispatcher module rather than each crafting system file.
+export { resolveCampfireInteraction } from "@/game/systems/cooking";
+export { resolveForgeInteraction } from "@/game/systems/forging";
+export { resolveMiningInteraction } from "@/game/systems/mining";
+
+/** The full set of game verbs mapped by the dispatcher (Spec §11, §22, §35). */
+export type GameAction =
+  | "DIG"
+  | "CHOP"
+  | "WATER"
+  | "PLANT"
+  | "PRUNE"
+  | "COOK"
+  | "FORGE"
+  | "MINE"
+  | "FISH"
+  | "PLACE_TRAP"
+  | "CHECK_TRAP"
+  | "BUILD";
 
 /**
  * Superset of RaycastEntityType — includes terrain surface types for ground
- * interactions (DIG/PLANT) that are resolved from hit point grid coordinates.
+ * interactions (DIG/PLANT) that are resolved from hit point grid coordinates,
+ * plus crafting station and resource node types.
  */
-export type TargetEntityType = RaycastEntityType | "soil" | "rock";
+export type TargetEntityType =
+  | RaycastEntityType
+  | "soil"
+  | "rock"
+  | "campfire"
+  | "forge"
+  | "water"
+  | "trap";
 
 /** Full context for a dispatched action. */
 export interface DispatchContext {
@@ -28,14 +65,29 @@ export interface DispatchContext {
   toolId: string;
   /** Category of the thing the player is looking at. null = empty ground. */
   targetType: TargetEntityType | null;
-  /** The ECS entity at the crosshair — required for tree/npc/structure targets. */
+  /** The ECS entity at the crosshair — required for tree/npc/structure/crafting targets. */
   entity?: Entity;
-  /** Grid X coordinate — required for PLANT and DIG. */
+  /** Grid X coordinate — required for PLANT, DIG, MINE, PLACE_TRAP. */
   gridX?: number;
-  /** Grid Z coordinate — required for PLANT and DIG. */
+  /** Grid Z coordinate — required for PLANT, DIG, MINE, PLACE_TRAP. */
   gridZ?: number;
   /** Species to plant — required for PLANT. */
   speciesId?: string;
+  /**
+   * Water body type string (e.g. "ocean", "river", "pond") — required for FISH.
+   * Resolved from the WaterBodyComponent of the targeted water entity.
+   */
+  waterBodyType?: string;
+  /**
+   * Biome of the chunk containing the target — required for MINE.
+   * Resolved from the chunk's BiomeType at dispatch time.
+   */
+  biome?: string;
+  /**
+   * Trap type string (e.g. "spike", "net") — required for PLACE_TRAP.
+   * Resolved from the player's selected trap item.
+   */
+  trapType?: string;
 }
 
 /**
@@ -44,37 +96,77 @@ export interface DispatchContext {
  * Returns null when the combination is not a valid interaction
  * (e.g. axe + npc, almanac + tree).
  *
- * Priority order:
- *   axe   + tree  -> CHOP
- *   can   + tree  -> WATER
- *   shears + tree -> PRUNE
- *   trowel + soil -> PLANT
- *   trowel + null -> PLANT  (empty ground)
- *   shovel + rock -> DIG
+ * Priority order (core grove-tending):
+ *   axe          + tree     -> CHOP
+ *   watering-can + tree     -> WATER
+ *   pruning-shears + tree   -> PRUNE
+ *   trowel       + soil     -> PLANT
+ *   trowel       + null     -> PLANT  (empty ground)
+ *   shovel       + rock     -> DIG
+ *
+ * Crafting / resource (Spec §22):
+ *   any          + campfire -> COOK
+ *   any          + forge    -> FORGE
+ *   pick         + rock     -> MINE
+ *   fishing-rod  + water    -> FISH
+ *   trap         + soil     -> PLACE_TRAP  (deploy from inventory)
+ *   any          + trap     -> CHECK_TRAP  (collect or inspect placed trap)
+ *
+ * Build mode (Spec §35):
+ *   hammer       + null     -> BUILD  (open kitbash panel on empty ground)
  */
 export function resolveAction(toolId: string, targetType: TargetEntityType | null): GameAction | null {
+  // Core grove verbs
   if (toolId === "axe" && targetType === "tree") return "CHOP";
   if (toolId === "watering-can" && targetType === "tree") return "WATER";
   if (toolId === "pruning-shears" && targetType === "tree") return "PRUNE";
   if (toolId === "trowel" && (targetType === "soil" || targetType === null)) return "PLANT";
   if (toolId === "shovel" && targetType === "rock") return "DIG";
+
+  // Crafting station verbs (Spec §22.1, §22.2)
+  if (targetType === "campfire") return "COOK";
+  if (targetType === "forge") return "FORGE";
+
+  // Mining — pick on rock (Spec §22, distinct from shovel+rock=DIG)
+  if (toolId === "pick" && targetType === "rock") return "MINE";
+
+  // Fishing — fishing-rod on water (Spec §22)
+  if (toolId === "fishing-rod" && targetType === "water") return "FISH";
+
+  // Traps — deploy from inventory on ground; collect placed trap (Spec §22)
+  if (toolId === "trap" && (targetType === "soil" || targetType === null)) return "PLACE_TRAP";
+  if (targetType === "trap") return "CHECK_TRAP";
+
+  // Kitbash build mode — hammer on empty ground (Spec §35)
+  if (toolId === "hammer" && (targetType === null || targetType === "soil")) return "BUILD";
+
   return null;
 }
 
 /**
  * Dispatches the action resolved from `ctx.toolId` + `ctx.targetType`,
- * calling the correct system function from GameActions.
+ * calling the correct system function.
  *
  * Returns true on success, false if the combo has no mapping or required
- * context fields are missing (entity id, grid coords, speciesId).
+ * context fields are missing (entity id, grid coords, speciesId, etc.).
+ *
+ * Side effects:
+ *   COOK / FORGE / BUILD  — sets store.activeCraftingStation to open the UI panel.
+ *   FISH                  — sets store.activeCraftingStation with type "fishing".
+ *   PLACE_TRAP            — creates a trap ECS entity via store.placeTrap (if available).
+ *   MINE                  — deducts stamina + credits ore to inventory via store.
+ *   All successes          — fires triggerActionHaptic.
  */
 export function dispatchAction(ctx: DispatchContext): boolean {
   const action = resolveAction(ctx.toolId, ctx.targetType);
   if (!action) return false;
 
   let success = false;
+  const store = useGameStore.getState();
 
   switch (action) {
+    // ── Core grove verbs ───────────────────────────────────────────────────
+
     case "CHOP": {
       if (!ctx.entity?.id) return false;
       success = harvestTree(ctx.entity.id) !== null;
@@ -100,8 +192,128 @@ export function dispatchAction(ctx: DispatchContext): boolean {
       success = clearRock(ctx.gridX, ctx.gridZ);
       break;
     }
+
+    // ── Crafting station verbs (Spec §22.1, §22.2) ─────────────────────────
+
+    case "COOK": {
+      // Verify the entity is a valid, lit campfire before opening UI.
+      const campfireCheck = resolveCampfireInteraction(ctx.entity as unknown);
+      if (!campfireCheck.isCampfire) return false;
+      if (!campfireCheck.canCookNow) {
+        // Campfire is unlit — still "succeed" so the caller shows "Light Campfire"
+        store.setActiveCraftingStation(null);
+        success = true;
+        break;
+      }
+      store.setActiveCraftingStation({
+        type: "cooking",
+        entityId: ctx.entity?.id ?? "",
+      });
+      success = true;
+      break;
+    }
+
+    case "FORGE": {
+      // Verify the entity is a valid, active forge before opening UI.
+      const forgeCheck = resolveForgeInteraction(ctx.entity as unknown);
+      if (!forgeCheck.isForge) return false;
+      if (!forgeCheck.canForgeNow) {
+        store.setActiveCraftingStation(null);
+        success = true;
+        break;
+      }
+      store.setActiveCraftingStation({
+        type: "forging",
+        entityId: ctx.entity?.id ?? "",
+      });
+      success = true;
+      break;
+    }
+
+    // ── Mining (Spec §22) ──────────────────────────────────────────────────
+
+    case "MINE": {
+      if (!ctx.entity) return false;
+      const miningCheck = resolveMiningInteraction(ctx.entity as unknown);
+      if (!miningCheck.isRock) return false;
+
+      // Deduct stamina for the mine hit
+      const staminaCost = miningCheck.staminaCost;
+      if (store.stamina < staminaCost) return false;
+      store.setStamina(store.stamina - staminaCost);
+
+      // Determine ore yield using seeded RNG
+      const biome = (ctx.biome ?? "starting-grove") as BiomeType;
+      const rngFn = scopedRNG("mine", store.worldSeed, ctx.entity.id ?? "");
+      const result = mineRock(
+        { rockType: miningCheck.rockType } as RockComponent,
+        biome,
+        rngFn(),
+      );
+
+      // Credit ore to inventory
+      store.addResource(result.oreType as ResourceType, result.amount);
+      store.incrementToolUse("pick");
+      success = true;
+      break;
+    }
+
+    // ── Fishing (Spec §22) ─────────────────────────────────────────────────
+
+    case "FISH": {
+      // Verify the targeted water body is fishable
+      const waterType = ctx.waterBodyType ?? "";
+      if (!isWaterFishable(waterType)) return false;
+
+      // Open the fishing minigame panel in the store
+      store.setActiveCraftingStation({
+        type: "fishing",
+        entityId: ctx.entity?.id ?? "",
+      });
+      success = true;
+      break;
+    }
+
+    // ── Traps (Spec §22) ───────────────────────────────────────────────────
+
+    case "PLACE_TRAP": {
+      if (ctx.gridX === undefined || ctx.gridZ === undefined || !ctx.trapType) return false;
+
+      // Create the trap component (pure function validates trapType)
+      try {
+        createTrapComponent(ctx.trapType);
+      } catch {
+        return false;
+      }
+
+      // Signal the store/ECS to spawn a trap entity at this position.
+      // The store action is injected here; ECS entity creation happens in the
+      // game loop's structure placement handler.
+      (store as unknown as { placeTrap?: (t: string, x: number, z: number) => void }).placeTrap?.(ctx.trapType, ctx.gridX, ctx.gridZ);
+      success = true;
+      break;
+    }
+
+    case "CHECK_TRAP": {
+      if (!ctx.entity?.id) return false;
+      // Signal the store to collect/inspect this trap entity.
+      (store as unknown as { collectTrap?: (id: string) => void }).collectTrap?.(ctx.entity.id);
+      success = true;
+      break;
+    }
+
+    // ── Kitbash build mode (Spec §35) ──────────────────────────────────────
+
+    case "BUILD": {
+      store.setActiveCraftingStation({
+        type: "kitbash",
+        entityId: "",
+      });
+      success = true;
+      break;
+    }
   }
 
-  if (success) void triggerActionHaptic(action);
+  if (success) void triggerActionHaptic(action as unknown as ToolAction);
   return success;
 }

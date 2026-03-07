@@ -17,6 +17,47 @@ import type {
 } from "./types";
 
 // ============================================
+// Birchmother placement
+// ============================================
+
+/**
+ * The fixed distance from world origin at which the Birchmother spawns.
+ * Far enough to be a journey, close enough to feel part of the same world.
+ */
+export const BIRCHMOTHER_DISTANCE = 200;
+
+/**
+ * Compute Birchmother's world-space spawn position from the world seed.
+ *
+ * Cardinal direction is determined by the seed: one of north (+Z), south (-Z),
+ * east (+X), or west (-X). The position is fixed per seed so the same seed
+ * always leads to the same Birchmother.
+ *
+ * @param seed  World seed string.
+ * @returns World-space { x, z } position.
+ */
+export function computeBirmotherSpawn(seed: string): { x: number; z: number } {
+  const rng = createRNG(hashString(`birchmother-${seed}`));
+  const directionRoll = rng();
+
+  // Four cardinal directions: north, south, east, west
+  if (directionRoll < 0.25) {
+    // North: +Z
+    return { x: 0, z: BIRCHMOTHER_DISTANCE };
+  }
+  if (directionRoll < 0.5) {
+    // South: -Z
+    return { x: 0, z: -BIRCHMOTHER_DISTANCE };
+  }
+  if (directionRoll < 0.75) {
+    // East: +X
+    return { x: BIRCHMOTHER_DISTANCE, z: 0 };
+  }
+  // West: -X
+  return { x: -BIRCHMOTHER_DISTANCE, z: 0 };
+}
+
+// ============================================
 // Helpers
 // ============================================
 
@@ -349,6 +390,10 @@ export function generateWorld(
     version: 1,
     zones,
     playerSpawn: { zoneId: startingGrove.id, localX: spawnX, localZ: spawnZ },
+    // Birchmother: unique ancient tree of light, seeded cardinal direction
+    // ~200 units from origin. The encounter hook gates visibility on quest
+    // completion so she exists in the world definition regardless of progress.
+    birmotherSpawn: computeBirmotherSpawn(seed),
   };
 }
 

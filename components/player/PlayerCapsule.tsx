@@ -8,10 +8,12 @@
  */
 
 import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import { CapsuleCollider, RigidBody } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
 import { usePhysicsMovement } from "@/game/hooks/usePhysicsMovement";
 import { useJump } from "@/game/hooks/useJump";
+import { playerQuery } from "@/game/ecs/world";
 
 /** Total capsule height in meters (Spec §9). */
 export const CAPSULE_HEIGHT = 1.8;
@@ -31,11 +33,23 @@ export interface PlayerCapsuleProps {
   moveDirection?: { x: number; z: number };
 }
 
-/** Player physics capsule with dynamic RigidBody, WASD velocity, and jump (Spec §9, §23). */
+/** Player physics capsule with dynamic RigidBody, WASD velocity, jump, and ECS sync (Spec §9, §23). */
 export const PlayerCapsule = ({ moveDirection = { x: 0, z: 0 } }: PlayerCapsuleProps) => {
   const rigidBodyRef = useRef<RapierRigidBody>(null);
   usePhysicsMovement(rigidBodyRef, moveDirection);
   useJump(rigidBodyRef);
+
+  // Sync Rapier body translation back to ECS so FPSCamera and all systems tracking
+  // playerQuery.entities[0].position receive accurate world-space coordinates (Spec §9).
+  useFrame(() => {
+    const body = rigidBodyRef.current;
+    const playerEntity = playerQuery.entities[0];
+    if (!body || !playerEntity) return;
+    const translation = body.translation();
+    playerEntity.position.x = translation.x;
+    playerEntity.position.y = translation.y;
+    playerEntity.position.z = translation.z;
+  });
 
   return (
     <RigidBody ref={rigidBodyRef} type="dynamic" lockRotations>

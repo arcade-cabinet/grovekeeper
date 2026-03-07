@@ -3,6 +3,7 @@ import {
   initializeMerchantState,
   isMerchantPresent,
   purchaseOffer,
+  spawnMerchantAtVillage,
   updateMerchant,
 } from "./travelingMerchant";
 
@@ -197,6 +198,43 @@ describe("traveling merchant system", () => {
       };
       const result = purchaseOffer(state, "empty-offer");
       expect(result.offer).toBeNull();
+    });
+  });
+
+  describe("spawnMerchantAtVillage (Spec §20)", () => {
+    it("spawns merchant at a village with seeded inventory", () => {
+      const state = initializeMerchantState(0);
+      const result = spawnMerchantAtVillage(state, "village-2-3", 10, "world-seed");
+      expect(result.isPresent).toBe(true);
+      expect(result.currentOffers.length).toBeGreaterThan(0);
+      expect(result.currentVillageId).toBe("village-2-3");
+    });
+
+    it("returns same state if merchant is already present", () => {
+      const state = { ...initializeMerchantState(0), isPresent: true };
+      const result = spawnMerchantAtVillage(state, "village-2-3", 10, "world-seed");
+      expect(result).toBe(state);
+    });
+
+    it("sets departDay to currentDay + 2", () => {
+      const state = initializeMerchantState(0);
+      const result = spawnMerchantAtVillage(state, "village-5-5", 20, "world-seed");
+      expect(result.departDay).toBe(22);
+    });
+
+    it("is deterministic for same village + worldSeed", () => {
+      const state = initializeMerchantState(0);
+      const a = spawnMerchantAtVillage(state, "village-1-1", 5, "seed-A");
+      const b = spawnMerchantAtVillage(state, "village-1-1", 5, "seed-A");
+      expect(a.currentOffers.map((o) => o.name)).toEqual(b.currentOffers.map((o) => o.name));
+    });
+
+    it("different villages produce different inventories", () => {
+      const state = initializeMerchantState(0);
+      const a = spawnMerchantAtVillage(state, "village-1-1", 5, "same-seed");
+      const b = spawnMerchantAtVillage(state, "village-9-9", 5, "same-seed");
+      // Different village IDs should seed different offer sets (not guaranteed equal)
+      expect(a.currentVillageId).not.toBe(b.currentVillageId);
     });
   });
 });

@@ -279,6 +279,121 @@
         "canopySegments": 12,
         "color": { "trunk": "#4E342E", "canopy": "#69F0AE" }
       }
+    },
+    {
+      "id": "birch",
+      "name": "Birch",
+      "glbPath": "assets/models/trees/birch.glb",
+      "difficulty": 1,
+      "unlockLevel": 2,
+      "biome": "Starting Grove",
+      "baseGrowthTimes": [8, 12, 16, 20, 26],
+      "yield": [{ "resource": "sap", "amount": 2 }, { "resource": "timber", "amount": 1 }],
+      "harvestCycleSec": 40,
+      "seedCost": { "sap": 3 },
+      "special": "Fast growth",
+      "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
+      "meshParams": {
+        "trunkHeight": 1.9,
+        "trunkRadius": 0.1,
+        "canopyRadius": 0.8,
+        "canopySegments": 8,
+        "color": { "trunk": "#E8E8E8", "canopy": "#A5D6A7" }
+      }
+    },
+    {
+      "id": "elm",
+      "name": "Elm",
+      "glbPath": "assets/models/trees/elm.glb",
+      "difficulty": 2,
+      "unlockLevel": 4,
+      "biome": "Meadow",
+      "baseGrowthTimes": [11, 16, 22, 28, 34],
+      "yield": [{ "resource": "timber", "amount": 2 }, { "resource": "fruit", "amount": 1 }],
+      "harvestCycleSec": 50,
+      "seedCost": { "timber": 4 },
+      "special": "Hardy — resists drought",
+      "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
+      "meshParams": {
+        "trunkHeight": 2.0,
+        "trunkRadius": 0.14,
+        "canopyRadius": 1.0,
+        "canopySegments": 8,
+        "color": { "trunk": "#5D4037", "canopy": "#43A047" }
+      }
+    },
+    {
+      "id": "ash",
+      "name": "Ash",
+      "glbPath": "assets/models/trees/ash.glb",
+      "difficulty": 2,
+      "unlockLevel": 5,
+      "biome": "Wetlands",
+      "baseGrowthTimes": [12, 17, 23, 30, 38],
+      "yield": [{ "resource": "sap", "amount": 3 }],
+      "harvestCycleSec": 55,
+      "seedCost": { "sap": 5 },
+      "special": "Sap producer — bonus near water",
+      "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
+      "meshParams": {
+        "trunkHeight": 2.1,
+        "trunkRadius": 0.13,
+        "canopyRadius": 0.95,
+        "canopySegments": 8,
+        "color": { "trunk": "#6D4C41", "canopy": "#558B2F" }
+      }
+    },
+    {
+      "id": "maple",
+      "name": "Maple",
+      "glbPath": "assets/models/trees/maple.glb",
+      "difficulty": 3,
+      "unlockLevel": 7,
+      "biome": "Orchard Valley",
+      "baseGrowthTimes": [14, 20, 28, 36, 44],
+      "yield": [{ "resource": "fruit", "amount": 2 }, { "resource": "sap", "amount": 1 }],
+      "harvestCycleSec": 65,
+      "seedCost": { "fruit": 6 },
+      "special": "Autumn 2x yield",
+      "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
+      "meshParams": {
+        "trunkHeight": 1.8,
+        "trunkRadius": 0.13,
+        "canopyRadius": 1.05,
+        "canopySegments": 10,
+        "color": { "trunk": "#5D4037", "canopy": "#E65100" }
+      }
+    },
+    {
+      "id": "cedar",
+      "name": "Cedar",
+      "glbPath": "assets/models/trees/cedar.glb",
+      "difficulty": 3,
+      "unlockLevel": 9,
+      "biome": "Rocky Highlands",
+      "baseGrowthTimes": [14, 20, 28, 38, 48],
+      "yield": [{ "resource": "timber", "amount": 3 }],
+      "harvestCycleSec": 80,
+      "seedCost": { "timber": 8 },
+      "special": "Wind resistant — immune to windstorm damage",
+      "evergreen": true,
+      "winterModel": "assets/models/trees/cedar-winter.glb",
+      "useWinterModel": true,
+      "meshParams": {
+        "trunkHeight": 2.3,
+        "trunkRadius": 0.16,
+        "canopyRadius": 0.85,
+        "canopySegments": 6,
+        "color": { "trunk": "#4E342E", "canopy": "#1B5E20" }
+      }
     }
   ],
   "prestige": [

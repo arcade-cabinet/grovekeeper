@@ -5,6 +5,9 @@
  * rates and stamina costs. Weather transitions are deterministic via
  * seeded RNG.
  *
+ * All tuning values (probabilities, durations, multipliers) are loaded
+ * from config/game/weather.json — no inline constants.
+ *
  * Weather types:
  * - Clear   : normal conditions (default)
  * - Rain    : +30% growth rate, lasts 60-120 game seconds
@@ -13,6 +16,7 @@
  */
 
 import { createRNG, hashString } from "@/game/utils/seedRNG";
+import weatherConfig from "@/config/game/weather.json";
 
 // ============================================
 // Public Types
@@ -32,42 +36,36 @@ export interface WeatherState {
 }
 
 // ============================================
-// Constants
+// Config-derived constants
 // ============================================
 
-const WEATHER_CHECK_INTERVAL = 300; // 5 game minutes
+const WEATHER_CHECK_INTERVAL: number = weatherConfig.checkIntervalSec;
 
 const DURATION_RANGES: Record<Exclude<WeatherType, "clear">, [number, number]> = {
-  rain: [60, 120],
-  drought: [90, 180],
-  windstorm: [30, 60],
+  rain: weatherConfig.durationRanges.rain as [number, number],
+  drought: weatherConfig.durationRanges.drought as [number, number],
+  windstorm: weatherConfig.durationRanges.windstorm as [number, number],
 };
 
-const SEASON_PROBABILITIES: Record<string, { rain: number; drought: number; windstorm: number }> = {
-  spring: { rain: 0.3, drought: 0.05, windstorm: 0.1 },
-  summer: { rain: 0.15, drought: 0.25, windstorm: 0.05 },
-  autumn: { rain: 0.2, drought: 0.1, windstorm: 0.2 },
-  winter: { rain: 0.05, drought: 0.15, windstorm: 0.15 },
-};
+const SEASON_PROBABILITIES: Record<string, { rain: number; drought: number; windstorm: number }> =
+  weatherConfig.seasonProbabilities;
 
-// Default multipliers when no difficulty system is available
-const DEFAULT_RAIN_GROWTH_BONUS = 1.3;
-const DEFAULT_DROUGHT_GROWTH_PENALTY = 0.5;
-const DEFAULT_WINDSTORM_DAMAGE_CHANCE = 0.1;
+const STAMINA_MULTIPLIERS: Record<string, number> = weatherConfig.staminaMultipliers;
+
+const GROWTH_MULTIPLIERS: Record<string, number> = weatherConfig.growthMultipliers;
+
+const WINDSTORM_DAMAGE_CHANCE: number = weatherConfig.windstormDamageChance;
 
 // ============================================
 // Growth & Stamina Multipliers
 // ============================================
 
 export function getWeatherGrowthMultiplier(weather: WeatherType): number {
-  if (weather === "rain") return DEFAULT_RAIN_GROWTH_BONUS;
-  if (weather === "drought") return DEFAULT_DROUGHT_GROWTH_PENALTY;
-  return 1.0;
+  return GROWTH_MULTIPLIERS[weather] ?? 1.0;
 }
 
 export function getWeatherStaminaMultiplier(weather: WeatherType): number {
-  if (weather === "drought") return 1.5;
-  return 1.0;
+  return STAMINA_MULTIPLIERS[weather] ?? 1.0;
 }
 
 // ============================================
@@ -142,7 +140,7 @@ export function updateWeather(
 // ============================================
 
 export function rollWindstormDamage(rngValue: number): boolean {
-  return rngValue < DEFAULT_WINDSTORM_DAMAGE_CHANCE;
+  return rngValue < WINDSTORM_DAMAGE_CHANCE;
 }
 
 // ============================================
@@ -150,7 +148,7 @@ export function rollWindstormDamage(rngValue: number): boolean {
 // ============================================
 
 function rollWeatherType(roll: number, season: string): WeatherType {
-  const probs = SEASON_PROBABILITIES[season] ?? SEASON_PROBABILITIES.spring;
+  const probs = SEASON_PROBABILITIES[season] ?? SEASON_PROBABILITIES["spring"];
 
   if (roll < probs.rain) return "rain";
   if (roll < probs.rain + probs.drought) return "drought";

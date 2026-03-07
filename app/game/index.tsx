@@ -5,13 +5,14 @@ import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { GrassInstances } from "@/components/entities/GrassInstances";
 import { NpcMeshes } from "@/components/entities/NpcMeshes";
-import { Player } from "@/components/entities/Player";
 import { TreeInstances } from "@/components/entities/TreeInstances";
 import { ActionButton } from "@/components/game/ActionButton";
 import { HUD } from "@/components/game/HUD";
 import { PauseMenu } from "@/components/game/PauseMenu";
 import { SeedSelect } from "@/components/game/SeedSelect";
-import { Camera } from "@/components/scene/Camera";
+import { FPSCamera } from "@/components/player/FPSCamera";
+import { PlayerCapsule } from "@/components/player/PlayerCapsule";
+import { TouchLookZone } from "@/components/player/TouchLookZone";
 import { Ground } from "@/components/scene/Ground";
 import { Lighting } from "@/components/scene/Lighting";
 import { Sky } from "@/components/scene/Sky";
@@ -23,7 +24,9 @@ import { useGameLoop } from "@/game/hooks/useGameLoop";
 import { useInput } from "@/game/hooks/useInput";
 import { useInteraction } from "@/game/hooks/useInteraction";
 import { useRaycast } from "@/game/hooks/useRaycast";
-import { useWorldLoader } from "@/game/hooks/useWorldLoader";
+import { useBirmotherEncounter } from "@/game/hooks/useBirmotherEncounter";
+import { useSpiritProximity } from "@/game/hooks/useSpiritProximity";
+import { useWorldLoader, ChunkStreamer } from "@/game/hooks/useWorldLoader";
 import { useGameStore } from "@/game/stores/gameStore";
 import { ACHIEVEMENTS } from "@/game/systems/achievements";
 import {
@@ -43,7 +46,10 @@ import { computeTimeState, getLightIntensity, getSkyColors } from "@/game/system
 function GameSystems() {
   useGameLoop();
   useRaycast();
-  return null;
+  useSpiritProximity();
+  // ChunkStreamer calls ChunkManager.update(playerPos) every frame to drive
+  // open-world chunk streaming (Spec §17.1). Must be inside Canvas for useFrame.
+  return <ChunkStreamer />;
 }
 
 const SCREEN_OPTIONS = { headerShown: false, gestureEnabled: false };
@@ -166,7 +172,7 @@ export default function GameScreen() {
   useWorldLoader();
 
   // Input hook (keyboard on web, touch gestures on native)
-  useInput();
+  const { moveDirection } = useInput();
 
   // Interaction hook (tile/tree/NPC selection and game actions)
   const { tileState, onGroundTap, onTreeTap, onNpcTap, executeAction } = useInteraction();
@@ -198,7 +204,7 @@ export default function GameScreen() {
         <Canvas shadows style={styles.canvas}>
           <Physics>
             <GameSystems />
-            <Camera />
+            <FPSCamera />
             <Lighting
               timeOfDay={timeVisuals.timeOfDay}
               season={currentSeason}
@@ -218,7 +224,7 @@ export default function GameScreen() {
               season={currentSeason}
               onPointerDown={onGroundTap}
             />
-            <Player />
+            <PlayerCapsule moveDirection={moveDirection} />
             <TreeInstances onTreeTap={onTreeTap} />
             <GrassInstances />
             <NpcMeshes onNpcTap={onNpcTap} />
@@ -230,6 +236,10 @@ export default function GameScreen() {
           onOpenMenu={() => setScreen("paused")}
           onOpenSeedSelect={() => setSeedSelectOpen(true)}
         />
+
+        {/* Touch look zone — right-half swipe area driving FPS camera look on mobile (Spec §23).
+            Mounted below HUD so HUD touch targets (left-side, top bar) are not captured by this zone. */}
+        <TouchLookZone />
 
         {/* Action button overlay (bottom-right) — executes current tool action */}
         <View style={styles.actionOverlay} pointerEvents="box-none">

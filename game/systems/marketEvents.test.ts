@@ -1,5 +1,6 @@
 import {
   getActiveMarketEventModifiers,
+  getRegionalMarketEventModifiers,
   initializeMarketEventState,
   isMarketEventActive,
   MARKET_EVENTS,
@@ -170,6 +171,51 @@ describe("market events system", () => {
         expect(result.state.eventHistory.length).toBe(1);
         expect(result.state.activeEvent).not.toBeNull();
       }
+    });
+  });
+
+  describe("getRegionalMarketEventModifiers (Spec §20)", () => {
+    it("returns empty when no event is active", () => {
+      const state = initializeMarketEventState();
+      expect(getRegionalMarketEventModifiers(state, 5, "meadow")).toEqual({});
+    });
+
+    it("returns effects for a global event (affectedBiome 'all') in any biome", () => {
+      const state = {
+        ...initializeMarketEventState(),
+        activeEvent: { definitionId: "merchant-holiday", startDay: 1 },
+      };
+      const modifiers = getRegionalMarketEventModifiers(state, 3, "meadow");
+      expect(modifiers).toEqual({ timber: 0.7, sap: 0.7, fruit: 0.7, acorns: 0.7 });
+    });
+
+    it("returns effects for a regional event when biome matches", () => {
+      // timber-boom is affectedBiome: "ancient-forest"
+      const state = {
+        ...initializeMarketEventState(),
+        activeEvent: { definitionId: "timber-boom", startDay: 10 },
+      };
+      const modifiers = getRegionalMarketEventModifiers(state, 12, "ancient-forest");
+      expect(modifiers).toEqual({ timber: 2.0 });
+    });
+
+    it("returns empty for a regional event when biome does not match", () => {
+      // timber-boom is affectedBiome: "ancient-forest" -- not relevant to "meadow"
+      const state = {
+        ...initializeMarketEventState(),
+        activeEvent: { definitionId: "timber-boom", startDay: 10 },
+      };
+      const modifiers = getRegionalMarketEventModifiers(state, 12, "meadow");
+      expect(modifiers).toEqual({});
+    });
+
+    it("returns empty after event expires", () => {
+      const state = {
+        ...initializeMarketEventState(),
+        activeEvent: { definitionId: "acorn-rush", startDay: 10 },
+      };
+      // acorn-rush lasts 3 days
+      expect(getRegionalMarketEventModifiers(state, 13, "ancient-forest")).toEqual({});
     });
   });
 });

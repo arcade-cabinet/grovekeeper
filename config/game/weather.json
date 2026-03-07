@@ -18,5 +18,12 @@
     "drought": 1.5,
     "windstorm": 1.0
   },
+  "growthMultipliers": {
+    "clear": 1.0,
+    "rain": 1.3,
+    "drought": 0.5,
+    "windstorm": 1.0
+  },
+  "windstormDamageChance": 0.1,
   "windstormVulnerableStages": [0, 1]
 }

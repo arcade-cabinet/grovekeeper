@@ -4,7 +4,12 @@
  * Pure functions operating on a module-level accumulator. The game loop
  * calls advanceTime(deltaMicroseconds) each frame; UI reads the computed
  * TimeState.
+ *
+ * Authoritative day length is sourced from config/game/dayNight.json
+ * (secondsPerDay / dayLengthSeconds = 600s = 10 real minutes per game day).
  */
+
+import dayNightConfig from "@/config/game/dayNight.json";
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 export type TimePhase = "night" | "dawn" | "day" | "dusk";
@@ -21,8 +26,11 @@ export interface TimeState {
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-/** Real seconds per in-game day. 1 game day = 5 real minutes. */
-const REAL_SECONDS_PER_GAME_DAY = 300;
+/**
+ * Real seconds per in-game day.
+ * Authoritative value: config/game/dayNight.json#dayLengthSeconds = 600s (10 real minutes).
+ */
+const REAL_SECONDS_PER_GAME_DAY: number = dayNightConfig.dayLengthSeconds;
 
 /** Microseconds per real second. */
 const MICROSECONDS_PER_REAL_SECOND = 1_000_000;

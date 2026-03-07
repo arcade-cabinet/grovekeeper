@@ -31,8 +31,15 @@ export const player = sqliteTable("player", {
   gridSize: integer("grid_size").notNull().default(12),
   prestigeCount: integer("prestige_count").notNull().default(0),
   activeBorderCosmetic: text("active_border_cosmetic"),
-  // Forward-compatible: PR 2 exposure system
+  // Survival state — Spec §12
   bodyTemp: real("body_temp").notNull().default(37),
+  hunger: real("hunger").notNull().default(100),
+  hearts: integer("hearts").notNull().default(3),
+  maxHearts: integer("max_hearts").notNull().default(3),
+  lastCampfireId: text("last_campfire_id"),
+  lastCampfireX: real("last_campfire_x"),
+  lastCampfireY: real("last_campfire_y"),
+  lastCampfireZ: real("last_campfire_z"),
 });
 
 // --- resources ---

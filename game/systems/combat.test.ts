@@ -59,7 +59,7 @@ describe("Combat System (Spec §34)", () => {
       expect(computeEnemyDamage(8.0, 1.0)).toBe(8.0);
     });
 
-    it("doubles on ultra-brutal (×2.0)", () => {
+    it("doubles on ironwood (×2.0)", () => {
       expect(computeEnemyDamage(8.0, 2.0)).toBe(16.0);
     });
 

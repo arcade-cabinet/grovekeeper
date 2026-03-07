@@ -128,5 +128,614 @@
         "branches": []
       }
     ]
+  },
+  {
+    "treeId": "spirit-dialogue-0",
+    "entryNodeId": "s0-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "s0-open",
+        "speaker": "spirit-dialogue-0",
+        "text": "...You found me. After all this time. I have waited here since before the valley had a name.",
+        "branches": [
+          { "label": "Who are you?", "targetNodeId": "s0-identity", "seedBias": 0.5 },
+          { "label": "What do you guard?", "targetNodeId": "s0-purpose", "seedBias": 0.3 },
+          { "label": "I'll leave you in peace.", "targetNodeId": "s0-dismiss", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s0-identity",
+        "speaker": "spirit-dialogue-0",
+        "text": "I am the first. A keeper from an age before your kind walked here. I watched the Worldtree grow from a seed no larger than your thumbnail.",
+        "branches": [
+          { "label": "What happened to the Worldtree?", "targetNodeId": "s0-lore", "seedBias": 0.7 },
+          { "label": "Will you help me?", "targetNodeId": "s0-gift", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s0-purpose",
+        "speaker": "spirit-dialogue-0",
+        "text": "A memory. The shape of what this forest was. Roots older than your oldest stories. Come closer — I will show you a ghost of what remains.",
+        "branches": [
+          { "label": "Show me.", "targetNodeId": "s0-lore", "seedBias": 0.8 },
+          { "label": "Not today.", "targetNodeId": "s0-dismiss", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s0-lore",
+        "speaker": "spirit-dialogue-0",
+        "text": "It fell slowly. Centuries of silence as the roots shrank and the canopy thinned. We eight could not stop it. But you — you are still alive. That means something.",
+        "branches": [
+          { "label": "I want to restore it.", "targetNodeId": "s0-gift", "seedBias": 0.7 },
+          { "label": "How do I find the others?", "targetNodeId": "s0-compass", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 25 }]
+      },
+      {
+        "nodeId": "s0-gift",
+        "speaker": "spirit-dialogue-0",
+        "text": "Take this knowing. The Ghost Birch grows where the land remembers winter. Plant one. Tend it. The cold will sharpen you.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "ghost-birch" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      },
+      {
+        "nodeId": "s0-compass",
+        "speaker": "spirit-dialogue-0",
+        "text": "Seven more lights, scattered across the labyrinth places of this world. Your compass knows the way when you are close enough to feel them.",
+        "branches": [
+          { "label": "I'll find them all.", "targetNodeId": "s0-gift", "seedBias": 1.0 }
+        ]
+      },
+      {
+        "nodeId": "s0-dismiss",
+        "speaker": "spirit-dialogue-0",
+        "text": "I will be here. I have been here a very long time.",
+        "branches": []
+      }
+    ]
+  },
+  {
+    "treeId": "spirit-dialogue-1",
+    "entryNodeId": "s1-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "s1-open",
+        "speaker": "spirit-dialogue-1",
+        "text": "Oh! Oh! A visitor! Do you know how BORING it is to float in a hedge maze alone? Do you play games?",
+        "branches": [
+          { "label": "What kind of games?", "targetNodeId": "s1-game", "seedBias": 0.5 },
+          { "label": "I'm on a serious quest.", "targetNodeId": "s1-serious", "seedBias": 0.3 },
+          { "label": "Tell me something useful.", "targetNodeId": "s1-useful", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s1-game",
+        "speaker": "spirit-dialogue-1",
+        "text": "I used to race the seedlings to see which would sprout first! The cherry trees always won. They're impatient, like me. I love that about them.",
+        "branches": [
+          { "label": "Cherry trees sound wonderful.", "targetNodeId": "s1-gift", "seedBias": 0.7 },
+          { "label": "What else do you know?", "targetNodeId": "s1-useful", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 15 }]
+      },
+      {
+        "nodeId": "s1-serious",
+        "speaker": "spirit-dialogue-1",
+        "text": "SERIOUS? Oh. OH. You're one of those. Fine. Serious. I'll be serious. Ahem. The forest needs keepers. There. Serious. Are we done?",
+        "branches": [
+          { "label": "I appreciate the effort.", "targetNodeId": "s1-gift", "seedBias": 0.6 },
+          { "label": "Tell me more about the forest.", "targetNodeId": "s1-useful", "seedBias": 0.4 }
+        ]
+      },
+      {
+        "nodeId": "s1-useful",
+        "speaker": "spirit-dialogue-1",
+        "text": "Useful! Right! Okay: flowers attract butterflies, butterflies spread pollen, pollen means more fruit. Plant beautiful things and the beautiful things multiply. That's the whole secret.",
+        "branches": [
+          { "label": "Will you share a gift with me?", "targetNodeId": "s1-gift", "seedBias": 0.8 },
+          { "label": "Thank you.", "targetNodeId": "s1-farewell", "seedBias": 0.2 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s1-gift",
+        "speaker": "spirit-dialogue-1",
+        "text": "Take this! Cherry Blossom seeds, still warm from the spirit-light. They bloom pink in spring and make the whole grove smell like something worth protecting.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "cherry-blossom" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      },
+      {
+        "nodeId": "s1-farewell",
+        "speaker": "spirit-dialogue-1",
+        "text": "Come back and visit! I promise I'll think of something even more useful. Maybe. Probably not.",
+        "branches": []
+      }
+    ]
+  },
+  {
+    "treeId": "spirit-dialogue-2",
+    "entryNodeId": "s2-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "s2-open",
+        "speaker": "spirit-dialogue-2",
+        "text": "...Oh. You came. I had stopped thinking anyone would. The maze is long and most turn back.",
+        "branches": [
+          { "label": "Why do you sound so sad?", "targetNodeId": "s2-grief", "seedBias": 0.5 },
+          { "label": "I don't give up easily.", "targetNodeId": "s2-resolve", "seedBias": 0.3 },
+          { "label": "What happened here?", "targetNodeId": "s2-history", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s2-grief",
+        "speaker": "spirit-dialogue-2",
+        "text": "I watched over a river grove once. Willows that trailed their fingers in the current, drinking deep. When the river changed course, they died one by one. I couldn't stop it.",
+        "branches": [
+          { "label": "I'm sorry.", "targetNodeId": "s2-comfort", "seedBias": 0.5 },
+          { "label": "Can those trees grow again?", "targetNodeId": "s2-hope", "seedBias": 0.5 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s2-resolve",
+        "speaker": "spirit-dialogue-2",
+        "text": "That is good. This forest needs someone who does not turn back. I lost hope, once. I am still recovering from it.",
+        "branches": [
+          { "label": "What do you need?", "targetNodeId": "s2-hope", "seedBias": 0.7 },
+          { "label": "What can I do?", "targetNodeId": "s2-hope", "seedBias": 0.3 }
+        ]
+      },
+      {
+        "nodeId": "s2-history",
+        "speaker": "spirit-dialogue-2",
+        "text": "There was a wetland here. Dense and dark and alive. The hedges grew up around my grief and I let them. The maze is my mourning made into walls.",
+        "branches": [
+          { "label": "Can we bring it back?", "targetNodeId": "s2-hope", "seedBias": 0.8 },
+          { "label": "I'm sorry.", "targetNodeId": "s2-comfort", "seedBias": 0.2 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s2-comfort",
+        "speaker": "spirit-dialogue-2",
+        "text": "Kindness. I had almost forgotten. Perhaps it is not too late. Here — take what I have left of the willows. Plant them near water. Let them weep for what was, and grow for what can be.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "weeping-willow" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      },
+      {
+        "nodeId": "s2-hope",
+        "speaker": "spirit-dialogue-2",
+        "text": "Plant willows near water and they will remember the old wetland. That memory is not lost — it is waiting. Here. Take the seeds. Give them a place to weep and grow.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "weeping-willow" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      }
+    ]
+  },
+  {
+    "treeId": "spirit-dialogue-3",
+    "entryNodeId": "s3-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "s3-open",
+        "speaker": "spirit-dialogue-3",
+        "text": "You have found your way through the maze. Most do not. Tell me — did you map it, or did you feel your way?",
+        "branches": [
+          { "label": "I felt my way.", "targetNodeId": "s3-feel", "seedBias": 0.5 },
+          { "label": "I mapped it carefully.", "targetNodeId": "s3-map", "seedBias": 0.3 },
+          { "label": "Bit of both.", "targetNodeId": "s3-wisdom", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s3-feel",
+        "speaker": "spirit-dialogue-3",
+        "text": "Good. The forest cannot be read, only felt. Knowledge without intuition is a map with no territory. You understand this, even if you don't know it yet.",
+        "branches": [
+          { "label": "What should I know about the forest?", "targetNodeId": "s3-wisdom", "seedBias": 0.7 },
+          { "label": "What can you teach me?", "targetNodeId": "s3-lesson", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s3-map",
+        "speaker": "spirit-dialogue-3",
+        "text": "Discipline. That is rare. But do not let the map replace the territory. The wisest keepers I have known eventually put their charts away.",
+        "branches": [
+          { "label": "What did they find without the map?", "targetNodeId": "s3-wisdom", "seedBias": 0.8 },
+          { "label": "I'll keep my map, thank you.", "targetNodeId": "s3-lesson", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s3-wisdom",
+        "speaker": "spirit-dialogue-3",
+        "text": "The Elder Pine survives because it knows when to hold and when to let the snow slide off. Resistance is not strength. Yielding at the right moment — that is strength.",
+        "branches": [
+          { "label": "I want to grow the Elder Pine.", "targetNodeId": "s3-gift", "seedBias": 0.7 },
+          { "label": "Tell me more.", "targetNodeId": "s3-lesson", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 25 }]
+      },
+      {
+        "nodeId": "s3-lesson",
+        "speaker": "spirit-dialogue-3",
+        "text": "The grove teaches slowly. Water what needs water. Prune what needs pruning. Leave what does not need your hands. The hardest lesson for a keeper is restraint.",
+        "branches": [
+          { "label": "I understand.", "targetNodeId": "s3-gift", "seedBias": 1.0 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s3-gift",
+        "speaker": "spirit-dialogue-3",
+        "text": "The Elder Pine grows in mountain soil and holds through winter when all else sleeps. Take its seed. It will outlast your doubt.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "elder-pine" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      }
+    ]
+  },
+  {
+    "treeId": "spirit-dialogue-4",
+    "entryNodeId": "s4-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "s4-open",
+        "speaker": "spirit-dialogue-4",
+        "text": "Oh interesting — you're here! I've been cataloguing the lichen patterns on these walls for decades. Did you notice the way the hedge corners absorb sound differently depending on moisture?",
+        "branches": [
+          { "label": "I hadn't noticed that.", "targetNodeId": "s4-curious-a", "seedBias": 0.4 },
+          { "label": "Tell me more about this place.", "targetNodeId": "s4-curious-b", "seedBias": 0.4 },
+          { "label": "Are you one of the eight spirits?", "targetNodeId": "s4-identity", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s4-curious-a",
+        "speaker": "spirit-dialogue-4",
+        "text": "Most people don't! They're looking for treasure or shortcuts. The lichen is the treasure. Thousands of years old in some patches. Older than the hedges themselves.",
+        "branches": [
+          { "label": "What else is hidden here?", "targetNodeId": "s4-curious-b", "seedBias": 0.7 },
+          { "label": "Can you teach me to notice more?", "targetNodeId": "s4-lesson", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 15 }]
+      },
+      {
+        "nodeId": "s4-curious-b",
+        "speaker": "spirit-dialogue-4",
+        "text": "The birch trees outside — did you know their roots communicate with the soil fungi? Each one is sending chemical messages right now. The whole forest is a conversation you can't quite hear.",
+        "branches": [
+          { "label": "I want to grow birch trees.", "targetNodeId": "s4-gift", "seedBias": 0.6 },
+          { "label": "How do I listen?", "targetNodeId": "s4-lesson", "seedBias": 0.4 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s4-identity",
+        "speaker": "spirit-dialogue-4",
+        "text": "Yes! Spirit number four. I got assigned this maze because I asked too many questions and they figured I'd be occupied for centuries. They were right. This place is endlessly interesting.",
+        "branches": [
+          { "label": "What have you learned?", "targetNodeId": "s4-curious-b", "seedBias": 0.7 },
+          { "label": "Do you have a gift for me?", "targetNodeId": "s4-gift", "seedBias": 0.3 }
+        ]
+      },
+      {
+        "nodeId": "s4-lesson",
+        "speaker": "spirit-dialogue-4",
+        "text": "Plant near water and watch what changes. Study the growth rings of old stumps. Ask why the same seed grows differently in different soil. Curiosity is your most powerful tool.",
+        "branches": [
+          { "label": "I'll keep watching.", "targetNodeId": "s4-gift", "seedBias": 1.0 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s4-gift",
+        "speaker": "spirit-dialogue-4",
+        "text": "Silver Birch — graceful, fast-growing, thrives near water just like its cousin the lichen thrives on these stones. Plant it and it will tell you things about the soil that nothing else will.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "silver-birch" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      }
+    ]
+  },
+  {
+    "treeId": "spirit-dialogue-5",
+    "entryNodeId": "s5-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "s5-open",
+        "speaker": "spirit-dialogue-5",
+        "text": "Halt. Before you come any closer — are you a keeper? A true keeper? Not a harvester, not a cutter. A keeper.",
+        "branches": [
+          { "label": "I am a keeper.", "targetNodeId": "s5-affirm", "seedBias": 0.5 },
+          { "label": "I'm still learning.", "targetNodeId": "s5-learning", "seedBias": 0.3 },
+          { "label": "What's the difference?", "targetNodeId": "s5-explain", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s5-affirm",
+        "speaker": "spirit-dialogue-5",
+        "text": "Good. I have sent back three harvesters this season alone. They came for timber and left empty. The grove is not a mine.",
+        "branches": [
+          { "label": "I agree. Tell me how to protect it.", "targetNodeId": "s5-lesson", "seedBias": 0.7 },
+          { "label": "What do you guard here?", "targetNodeId": "s5-guard", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s5-learning",
+        "speaker": "spirit-dialogue-5",
+        "text": "Honest. I respect honesty more than bravado. Every keeper started learning. The question is whether they finish learning or decide they know enough.",
+        "branches": [
+          { "label": "What should I learn next?", "targetNodeId": "s5-lesson", "seedBias": 0.7 },
+          { "label": "What do you guard?", "targetNodeId": "s5-guard", "seedBias": 0.3 }
+        ]
+      },
+      {
+        "nodeId": "s5-explain",
+        "speaker": "spirit-dialogue-5",
+        "text": "A harvester takes. A keeper gives back more than they take. They plant when they cut. They water without being asked. They care about what this grove looks like in a century, not tomorrow.",
+        "branches": [
+          { "label": "Then I want to be a keeper.", "targetNodeId": "s5-lesson", "seedBias": 0.8 },
+          { "label": "I have more to think about.", "targetNodeId": "s5-dismiss", "seedBias": 0.2 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s5-guard",
+        "speaker": "spirit-dialogue-5",
+        "text": "I guard the memory of the ironbark stands that once grew here. Nothing bent them. Not drought, not storm. The harvesters took them eventually — but the memory holds.",
+        "branches": [
+          { "label": "Can I grow ironbark again?", "targetNodeId": "s5-gift", "seedBias": 1.0 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s5-lesson",
+        "speaker": "spirit-dialogue-5",
+        "text": "Plant ironbark. It grows slowly but storms cannot touch it. At full growth it stands three times the height of anything else. A true sentinel. The grove deserves sentinels.",
+        "branches": [
+          { "label": "I'll plant one.", "targetNodeId": "s5-gift", "seedBias": 1.0 }
+        ]
+      },
+      {
+        "nodeId": "s5-gift",
+        "speaker": "spirit-dialogue-5",
+        "text": "Ironbark seed. Storm-immune, mountain-rooted, patient as stone. It will outlast you. That's not a warning — it's the highest compliment I know.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "ironbark" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      },
+      {
+        "nodeId": "s5-dismiss",
+        "speaker": "spirit-dialogue-5",
+        "text": "Think well, then. Return when you are certain. The grove will wait.",
+        "branches": []
+      }
+    ]
+  },
+  {
+    "treeId": "spirit-dialogue-6",
+    "entryNodeId": "s6-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "s6-open",
+        "speaker": "spirit-dialogue-6",
+        "text": "Psst. Yes, you. Come in quietly. Don't let the hedges know you're looking for me — they get jealous.",
+        "branches": [
+          { "label": "Do the hedges actually get jealous?", "targetNodeId": "s6-trick", "seedBias": 0.4 },
+          { "label": "I'll play along.", "targetNodeId": "s6-game", "seedBias": 0.4 },
+          { "label": "Are you the spirit here?", "targetNodeId": "s6-identity", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s6-trick",
+        "speaker": "spirit-dialogue-6",
+        "text": "Of COURSE not. But you hesitated, didn't you? That's the point. The forest is full of things that seem impossible. A good keeper stays curious enough to check.",
+        "branches": [
+          { "label": "Point taken. What else should I question?", "targetNodeId": "s6-lesson", "seedBias": 0.7 },
+          { "label": "Fair enough. What's your gift?", "targetNodeId": "s6-gift", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 15 }]
+      },
+      {
+        "nodeId": "s6-game",
+        "speaker": "spirit-dialogue-6",
+        "text": "Ha! I like you. Most people get annoyed. The serious ones are the worst — 'stop playing, give me your wisdom, I have a quest.' But the game IS the wisdom, you see.",
+        "branches": [
+          { "label": "What's the wisdom in games?", "targetNodeId": "s6-lesson", "seedBias": 0.7 },
+          { "label": "Then play me something.", "targetNodeId": "s6-gift", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s6-identity",
+        "speaker": "spirit-dialogue-6",
+        "text": "Spirit number six, keeper of the autumn section of the old forest. Also responsible for 47% of the confusing path intersections in this maze. Guilty as charged.",
+        "branches": [
+          { "label": "You made the maze worse on purpose?", "targetNodeId": "s6-trick", "seedBias": 0.6 },
+          { "label": "Do you have something for me?", "targetNodeId": "s6-gift", "seedBias": 0.4 }
+        ]
+      },
+      {
+        "nodeId": "s6-lesson",
+        "speaker": "spirit-dialogue-6",
+        "text": "The Flame Maple turns bright as fire in autumn — and doubles its fruit yield doing it. It tricks you into thinking it's dying when it's actually at its best. The forest loves a good misdirection.",
+        "branches": [
+          { "label": "I want to grow the Flame Maple.", "targetNodeId": "s6-gift", "seedBias": 1.0 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 25 }]
+      },
+      {
+        "nodeId": "s6-gift",
+        "speaker": "spirit-dialogue-6",
+        "text": "Flame Maple seed. Looks like it's on fire, smells like autumn forever, gives twice the fruit when the leaves drop. Plant it somewhere you can see it from far away — it earns the view.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "flame-maple" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      }
+    ]
+  },
+  {
+    "treeId": "spirit-dialogue-7",
+    "entryNodeId": "s7-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "s7-open",
+        "speaker": "spirit-dialogue-7",
+        "text": "You are here. Good. Sit with me a moment before we speak. The maze makes people hurry. There is no hurrying here.",
+        "branches": [
+          { "label": "I'll sit.", "targetNodeId": "s7-sit", "seedBias": 0.5 },
+          { "label": "I don't have long.", "targetNodeId": "s7-gently", "seedBias": 0.3 },
+          { "label": "What are you?", "targetNodeId": "s7-identity", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "s7-sit",
+        "speaker": "spirit-dialogue-7",
+        "text": "...Good. Do you hear it? The very low hum beneath the soil. That is the mycorrhizal network breathing. It has been breathing since before this continent had its current name.",
+        "branches": [
+          { "label": "I think I hear it.", "targetNodeId": "s7-deep", "seedBias": 0.6 },
+          { "label": "What does it mean?", "targetNodeId": "s7-meaning", "seedBias": 0.4 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }]
+      },
+      {
+        "nodeId": "s7-gently",
+        "speaker": "spirit-dialogue-7",
+        "text": "That feeling — urgency — is what drives keepers to overharvest and under-tend. The grove does not work at human speed. Neither do I. But I will be brief, for your sake.",
+        "branches": [
+          { "label": "Thank you.", "targetNodeId": "s7-meaning", "seedBias": 0.7 },
+          { "label": "I want to learn to slow down.", "targetNodeId": "s7-deep", "seedBias": 0.3 }
+        ]
+      },
+      {
+        "nodeId": "s7-identity",
+        "speaker": "spirit-dialogue-7",
+        "text": "The last of the eight. The one who was placed deepest in the longest maze. I chose this. Quiet suits me. If you made it here, you have more patience than most.",
+        "branches": [
+          { "label": "What do you know that the others don't?", "targetNodeId": "s7-deep", "seedBias": 0.7 },
+          { "label": "What gift do you carry?", "targetNodeId": "s7-gift", "seedBias": 0.3 }
+        ]
+      },
+      {
+        "nodeId": "s7-deep",
+        "speaker": "spirit-dialogue-7",
+        "text": "The Mystic Fern does not grow like other plants. It grows toward other plants. Each neighbor adds to its speed, until it fills the grove with green light and quiet. It is the forest's way of saying: together.",
+        "branches": [
+          { "label": "I want to plant it.", "targetNodeId": "s7-gift", "seedBias": 0.8 },
+          { "label": "Tell me more about the fern.", "targetNodeId": "s7-meaning", "seedBias": 0.2 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 25 }]
+      },
+      {
+        "nodeId": "s7-meaning",
+        "speaker": "spirit-dialogue-7",
+        "text": "Nothing in the grove grows alone. That is the only lesson. All eight of us were placed apart — but we are still one. As you are still part of everything you have ever tended.",
+        "branches": [
+          { "label": "I understand.", "targetNodeId": "s7-gift", "seedBias": 1.0 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 25 }]
+      },
+      {
+        "nodeId": "s7-gift",
+        "speaker": "spirit-dialogue-7",
+        "text": "The Mystic Fern. It grows faster with every neighbor it has — up to sixty percent faster in a full grove. Plant it last, when the grove is ready. It will thank you.",
+        "branches": [],
+        "effects": [
+          { "type": "unlock_species", "value": "mystic-fern" },
+          { "type": "give_xp", "value": 50 }
+        ]
+      }
+    ]
+  },
+  {
+    "treeId": "birchmother-dialogue",
+    "entryNodeId": "birch-open",
+    "maxDepth": 4,
+    "nodes": [
+      {
+        "nodeId": "birch-open",
+        "speaker": "Birchmother",
+        "text": "You found them all. Eight lights in eight labyrinths, and you walked to every one. I have been here since before the valley had a name, waiting for someone patient enough. Welcome, Grovekeeper. I am what the forest remembers of itself.",
+        "branches": [
+          { "label": "Tend the grove", "targetNodeId": "birch-tend", "seedBias": 0.45 },
+          { "label": "Ask what comes next", "targetNodeId": "birch-next", "seedBias": 0.35 },
+          { "label": "Offer the seeds you carry", "targetNodeId": "birch-seeds", "seedBias": 0.2 }
+        ]
+      },
+      {
+        "nodeId": "birch-tend",
+        "speaker": "Birchmother",
+        "text": "To tend. Yes. That is the oldest answer and still the truest. Every root I grow, I grow toward something I cannot see. Every keeper who stayed to tend rather than harvest gave the world another century. I will give you this: the growth you coax from now on will be swifter. The forest already knows your hands.",
+        "branches": [
+          { "label": "I understand now.", "targetNodeId": "birch-convergence", "seedBias": 1.0 }
+        ],
+        "effects": [
+          { "type": "give_xp", "value": 200 },
+          { "type": "advance_quest", "value": "worldroots-dream", "amount": 1 }
+        ]
+      },
+      {
+        "nodeId": "birch-next",
+        "speaker": "Birchmother",
+        "text": "What comes next is what always comes next: the work continues. I will not promise you rest or arrival. I will tell you that your heart is larger now than when you entered the first maze. More roots. More sky. More of yourself distributed through living things that will outlast you. That is what comes next. Your stamina will grow with what you have given.",
+        "branches": [
+          { "label": "I understand now.", "targetNodeId": "birch-convergence", "seedBias": 1.0 }
+        ],
+        "effects": [
+          { "type": "give_xp", "value": 200 },
+          { "type": "advance_quest", "value": "worldroots-dream", "amount": 1 }
+        ]
+      },
+      {
+        "nodeId": "birch-seeds",
+        "speaker": "Birchmother",
+        "text": "You offer seeds. Do you know how rare that is? Everyone who comes to me wants something. You bring something back. The grove accepts this. Carry these seeds with you -- they are the last of a species that grew only here, before the valley had a name. The seed bag you carry will never empty of them.",
+        "branches": [
+          { "label": "I understand now.", "targetNodeId": "birch-convergence", "seedBias": 1.0 }
+        ],
+        "effects": [
+          { "type": "give_xp", "value": 200 },
+          { "type": "advance_quest", "value": "worldroots-dream", "amount": 1 }
+        ]
+      },
+      {
+        "nodeId": "birch-convergence",
+        "speaker": "Birchmother",
+        "text": "Go now. The forest is awake. Every tree you have ever planted remembers you. The eight spirits are no longer alone. Neither are you. This is the Worldroot's dream -- not a place, but a keeper. You.",
+        "branches": [],
+        "effects": [
+          { "type": "complete_quest", "value": "worldroots-dream" },
+          { "type": "achievement", "value": "the-last-grove" }
+        ]
+      }
+    ]
   }
 ]

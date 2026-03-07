@@ -60,6 +60,7 @@ import {
 import { clearAllChunkDiffs } from "@/game/world/chunkPersistence";
 import type { ActiveQuest } from "@/game/systems/quests";
 import growthConfig from "@/config/game/growth.json" with { type: "json" };
+import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
 import {
   computeDiscoveryTier,
   createEmptyProgress,
@@ -82,6 +83,7 @@ import {
   initializeMerchantState,
   type MerchantState,
   purchaseOffer,
+  spawnMerchantAtVillage as spawnMerchantAtVillagePure,
   updateMerchant,
 } from "@/game/systems/travelingMerchant";
 import {
@@ -269,6 +271,37 @@ const initialState = {
 
   /** Tutorial state — persists so tutorial does not repeat on reload. Spec §25.1 */
   tutorialState: initialTutorialState() as TutorialState,
+
+  // ---------------------------------------------------------------------------
+  // Survival state — Spec §12
+  // ---------------------------------------------------------------------------
+
+  /** Current hunger level. 0–100; 100 = full, 0 = starving. Spec §12.2 */
+  hunger: 100,
+  /** Maximum hunger capacity. Always 100. Spec §12.2 */
+  maxHunger: 100,
+  /** Current heart count (player health). Spec §12.3 */
+  hearts: 3,
+  /** Maximum heart count; set from difficulty config on startNewGame. Spec §12.3 */
+  maxHearts: 3,
+  /** Player body temperature in °C. 37.0 = normal, <35 = cold, >39 = hot. Spec §2.2 */
+  bodyTemp: 37.0,
+  /** ID of the last campfire the player rested at. Null if never rested. Spec §12.5 */
+  lastCampfireId: null as string | null,
+  /** World-space position of the last campfire. Null if never rested. Spec §12.5 */
+  lastCampfirePosition: null as { x: number; y: number; z: number } | null,
+
+  // ---------------------------------------------------------------------------
+  // Crafting station state — Spec §22
+  // ---------------------------------------------------------------------------
+
+  /**
+   * The crafting station currently open in the UI.
+   * Null when no station is active.
+   * type: "cooking" | "forging" | "kitbash"
+   * Spec §22.1 (cooking), §22.2 (forging), §35 (kitbash)
+   */
+  activeCraftingStation: null as { type: string; entityId: string } | null,
 };
 
 type GameStateData = typeof initialState;
@@ -284,7 +317,7 @@ export const gameState$ = observable(structuredClone(initialState));
 // ---------------------------------------------------------------------------
 
 // Fields that should NOT be persisted (ephemeral runtime state)
-const EPHEMERAL_KEYS = new Set(["screen", "groveData", "buildMode", "buildTemplateId"]);
+const EPHEMERAL_KEYS = new Set(["screen", "groveData", "buildMode", "buildTemplateId", "activeCraftingStation"]);
 
 let persistenceInitialized = false;
 
@@ -749,7 +782,7 @@ const actions = {
 
   /**
    * Apply dialogue effects from a visited dialogue node.
-   * Handles 'start_quest' and 'advance_quest' effect types.
+   * Handles 'start_quest', 'advance_quest', and 'unlock_species' effect types.
    * Other types (give_item, give_xp, etc.) are the caller's responsibility.
    */
   applyDialogueNodeEffects(effects: DialogueEffect[]): { chainId: string; stepId: string }[] {
@@ -757,6 +790,12 @@ const actions = {
     const result = applyDialogueEffects(effects, state.questChainState, state.currentDay);
     if (result.state !== state.questChainState) {
       gameState$.questChainState.set(result.state);
+    }
+    for (const speciesId of result.unlockedSpecies) {
+      actions.unlockSpecies(speciesId);
+      queueMicrotask(() => {
+        showToast(`Unlocked ${speciesId}!`, "reward");
+      });
     }
     return result.completedSteps;
   },
@@ -934,6 +973,29 @@ const actions = {
     });
 
     return true;
+  },
+
+  /**
+   * Spawn the traveling merchant at a discovered village.
+   * Called from ChunkManager when a village chunk is first loaded.
+   * No-op if the merchant is already present.
+   *
+   * Spec §20: Traveling merchants spawn at discovered villages.
+   */
+  spawnMerchantAtVillage(villageId: string) {
+    const state = getState();
+    const newMerchantState = spawnMerchantAtVillagePure(
+      state.merchantState,
+      villageId,
+      state.currentDay,
+      state.worldSeed || "default",
+    );
+    if (newMerchantState !== state.merchantState) {
+      gameState$.merchantState.set(newMerchantState);
+      queueMicrotask(() => {
+        showToast("A merchant has arrived at the village!", "success");
+      });
+    }
   },
 
   // Event scheduler actions
@@ -1242,6 +1304,76 @@ const actions = {
    */
   completeTutorialSkip() {
     gameState$.tutorialState.set(skipTutorialPure(getState().tutorialState));
+  },
+
+  // ---------------------------------------------------------------------------
+  // Survival actions — Spec §12
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Start a new game with the given difficulty ID.
+   * Sets hearts and maxHearts from the difficulty config.
+   * Resets hunger to 100 and bodyTemp to 37.0. Spec §12.
+   */
+  startNewGame(difficultyId: string) {
+    const tier = (difficultyConfig as Array<{ id: string; maxHearts: number }>).find(
+      (d) => d.id === difficultyId,
+    );
+    const maxHearts = tier?.maxHearts ?? 3;
+    batch(() => {
+      gameState$.difficulty.set(difficultyId);
+      gameState$.hearts.set(maxHearts);
+      gameState$.maxHearts.set(maxHearts);
+      gameState$.hunger.set(100);
+      gameState$.maxHunger.set(100);
+      gameState$.bodyTemp.set(37.0);
+      gameState$.lastCampfireId.set(null);
+      gameState$.lastCampfirePosition.set(null);
+    });
+  },
+
+  /** Set current hunger value. Clamped to [0, maxHunger] by callers. Spec §12.2 */
+  setHunger(value: number) {
+    gameState$.hunger.set(value);
+  },
+
+  /** Set current hearts. Spec §12.3 */
+  setHearts(value: number) {
+    gameState$.hearts.set(value);
+  },
+
+  /** Set max hearts (e.g. after difficulty change or prestige bonus). Spec §12.3 */
+  setMaxHearts(value: number) {
+    gameState$.maxHearts.set(value);
+  },
+
+  /** Set player body temperature in °C. Spec §2.2 */
+  setBodyTemp(value: number) {
+    gameState$.bodyTemp.set(value);
+  },
+
+  /**
+   * Record the campfire the player most recently rested at.
+   * Used as respawn anchor on death. Spec §12.5
+   */
+  setLastCampfire(id: string | null, position: { x: number; y: number; z: number } | null) {
+    batch(() => {
+      gameState$.lastCampfireId.set(id);
+      gameState$.lastCampfirePosition.set(position);
+    });
+  },
+
+  // ---------------------------------------------------------------------------
+  // Crafting station actions — Spec §22, §35
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Open a crafting station panel. Pass null to close any open station.
+   * type: "cooking" | "forging" | "kitbash"
+   * Spec §22.1 (cooking), §22.2 (forging), §35 (kitbash)
+   */
+  setActiveCraftingStation(station: { type: string; entityId: string } | null) {
+    gameState$.activeCraftingStation.set(station);
   },
 
   // Database hydration -- bulk-set state from SQLite
