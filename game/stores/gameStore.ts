@@ -258,6 +258,9 @@ const initialState = {
   /** Discovered campfire fast travel points. Spec §17.6 */
   discoveredCampfires: [] as FastTravelPoint[],
 
+  /** Chunk fog-of-war discovery map. key = "cx,cz", value = baseColor hex. Spec §17.6 */
+  discoveredChunks: {} as Record<string, string>,
+
   /** Trust/friendship levels per NPC. Spec §15. Persists across sessions. */
   npcRelationships: {} as Record<string, number>,
 
@@ -1145,6 +1148,13 @@ const actions = {
     if (filtered.length === state.discoveredCampfires.length) return false;
     gameState$.discoveredCampfires.set(filtered);
     return true;
+  },
+
+  /** Record a chunk as visited for minimap fog-of-war. Idempotent. Spec §17.6 */
+  discoverChunk(cx: number, cz: number, baseColor: string): void {
+    const key = `${cx},${cz}`;
+    if (getState().discoveredChunks[key]) return;
+    gameState$.discoveredChunks[key].set(baseColor);
   },
 
   // Settings actions

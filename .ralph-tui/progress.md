@@ -2723,3 +2723,29 @@ after each iteration and it's included in prompts for context.
   - **Non-React class can import useGameStore**: `ChunkManager` is a plain class (not a React hook). `useGameStore.getState()` works imperatively from non-React code — same pattern as other game loop systems.
 
 ---
+## 2026-03-07 - US-150
+- Decomposed `components/game/MiniMap.tsx` (421 lines) into `components/game/minimap/` subpackage (7 files, all < 200 lines each)
+- Updated minimap to show procedural open world with biome colors, fog of war, campfire markers, and NPC dots
+- Added `discoveredChunks: Record<string, string>` + `discoverChunk()` action to game store for persistent fog of war
+- Files created:
+  - `components/game/minimap/types.ts` — MinimapChunk, MinimapCampfire, MinimapNpc, MinimapSnapshot interfaces
+  - `components/game/minimap/colors.ts` — Color constants (biome fallback, fog, campfire, NPC, player)
+  - `components/game/minimap/snapshot.ts` — Pure `buildMinimapSnapshot()` + ECS adapter `readMinimapSnapshot()`
+  - `components/game/minimap/snapshot.test.ts` — 12 tests: player chunk derivation, fog of war, campfire/NPC filtering
+  - `components/game/minimap/PulsingPlayerDot.tsx` — Animated gold dot via react-native-reanimated
+  - `components/game/minimap/MinimapSVG.tsx` — SVG renderer: chunk grid + campfire diamonds (pressable) + NPC dots + player
+  - `components/game/minimap/Overlay.tsx` — Fullscreen modal overlay with legend (was MiniMapOverlay.tsx)
+  - `components/game/minimap/MiniMap.tsx` — Main component (desktop always-visible, mobile toggle)
+  - `components/game/minimap/index.ts` — Barrel exports
+- Files modified:
+  - `components/game/MiniMap.tsx` — Now a 7-line re-export barrel → `./minimap/index`
+  - `components/game/MiniMapOverlay.tsx` — Now a 7-line re-export barrel → `./minimap/index`
+  - `game/stores/gameStore.ts` — Added `discoveredChunks` state + `discoverChunk()` action
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3488 tests, 148 suites pass
+- **Learnings:**
+  - **Case-insensitive path collision on macOS**: `MiniMap.tsx` importing `"./minimap"` (the directory) causes TypeScript to see `minimap.tsx` which case-insensitively matches `MiniMap.tsx` → circular definition error. Fix: use `"./minimap/index"` (explicit) in the barrel files.
+  - **buildMinimapSnapshot as testable seam**: Extract the full snapshot-building logic into a pure function that takes plain POJOs — no ECS, no React, no store. Tests pass data directly; the ECS adapter `readMinimapSnapshot()` wires it to the live world. Exactly 0 mocks needed for 12 tests.
+  - **Chunk fog-of-war = VIEW_RADIUS×2+1 fixed grid**: Generate a (2R+1)^2 grid of chunk positions centered on the player chunk. Each position is "discovered" if its key exists in `terrainChunksQuery` (active) or `discoveredChunks` store (visited). Undiscovered positions render as `FOG_COLOR`. No sparse data structures needed.
+  - **CampfireComponent.fastTravelId as minimap bridge**: Campfire ECS entities carry `fastTravelId` linking them to the `discoveredCampfires` store. The minimap diamond renders as pressable; `onCampfirePress(fastTravelId)` lets the parent wire up fast travel without the minimap knowing the store shape.
+
+---

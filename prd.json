@@ -2485,8 +2485,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 150,
-      "passes": false,
-      "notes": "Phase 3 (late). MiniMap.tsx is 421 lines — MUST decompose. MiniMapOverlay.tsx (156 lines) also exists."
+      "passes": true,
+      "notes": "Phase 3 (late). MiniMap.tsx is 421 lines — MUST decompose. MiniMapOverlay.tsx (156 lines) also exists.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-151",
@@ -2870,6 +2871,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T21:03:48.090Z"
+    "updatedAt": "2026-03-07T21:16:27.376Z"
   }
 }
