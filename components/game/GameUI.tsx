@@ -24,7 +24,7 @@ import {
   PRESTIGE_COSMETICS,
   PRESTIGE_MIN_LEVEL,
 } from "@/game/systems/prestige";
-import { getTradeRates } from "@/game/systems/trading";
+import { BASE_TRADE_RATES, getEffectiveTradeRates } from "@/game/systems/trading";
 import type { GameTime } from "./TimeDisplay";
 import type { WeatherType } from "@/game/systems/weather";
 import type { TileState } from "./ActionButton";
@@ -133,6 +133,7 @@ export function GameUI({
   const treesPlanted = useGameStore((s) => s.treesPlanted);
   const treesMatured = useGameStore((s) => s.treesMatured);
   const coins = useGameStore((s) => s.coins);
+  const marketState = useGameStore((s) => s.marketState);
 
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
   const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
@@ -168,8 +169,11 @@ export function GameUI({
     [],
   );
 
-  // Trade rates
-  const tradeRates = useMemo(() => getTradeRates(), []);
+  // Trade rates adjusted by supply/demand (Spec §20.2)
+  const tradeRates = useMemo(
+    () => getEffectiveTradeRates(BASE_TRADE_RATES, marketState.priceMultipliers),
+    [marketState.priceMultipliers],
+  );
 
   // PauseMenu: stats
   const pauseStats = useMemo(
@@ -370,12 +374,18 @@ export function GameUI({
         open={tradeDialogOpen}
         resources={resources}
         rates={tradeRates}
+        npcName={nearbyNpcTemplateId ?? undefined}
         onExecuteTrade={(rate, quantity) => {
           const store = useGameStore.getState();
           const totalCost = rate.fromAmount * quantity;
           const totalGain = rate.toAmount * quantity;
           if (store.spendResource(rate.from, totalCost)) {
             store.addResource(rate.to, totalGain);
+            store.recordMarketTrade(rate.from, "sell", totalCost);
+            store.recordMarketTrade(rate.to, "buy", totalGain);
+            if (nearbyNpcTemplateId) {
+              store.awardNpcTradingXp(nearbyNpcTemplateId);
+            }
           }
         }}
         onClose={() => setTradeDialogOpen(false)}

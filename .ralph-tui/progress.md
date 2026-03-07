@@ -2812,3 +2812,20 @@ after each iteration and it's included in prompts for context.
   - **PlantedCrop.watered preserved in diff**: Watering state persists across chunk unload so crops don't silently lose their watered bonus on reload.
 
 ---
+
+---
+
+## 2026-03-07 - US-154
+- Wired trading + TradeDialog to NPC economy (Spec §20, §19.4).
+- Files changed:
+  - `game/systems/trading.ts` — added `getEffectiveTradeRate(rate, priceMultipliers)` and `getEffectiveTradeRates(rates, priceMultipliers)`: apply supply/demand multiplier to the output resource's `toAmount`, round, clamp to min 1.
+  - `game/systems/trading.test.ts` — 13 new tests for `getEffectiveTradeRate` (multiplier=1.0/2.0/0.5/1.5/0.0, preserves from/fromAmount, default 1.0) and `getEffectiveTradeRates` (all rates, count, identity).
+  - `components/game/TradeDialog.tsx` — converted from system `Modal` to absolute-positioned `View` (FPS HUD overlay); added `npcName?: string` prop shown in header as "Trade with [NpcName]"; `StyleSheet` replaces `Modal` in imports.
+  - `components/game/GameUI.tsx` — reads `marketState` from store; `tradeRates` computed via `getEffectiveTradeRates(BASE_TRADE_RATES, marketState.priceMultipliers)`; `onExecuteTrade` now calls `store.recordMarketTrade` (sell spend / buy gain) and `store.awardNpcTradingXp(nearbyNpcTemplateId)` after successful trade; passes `npcName` to `TradeDialog`.
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3539 tests, 148 suites pass (+13 new tests)
+- **Learnings:**
+  - **Supply/demand wiring belongs at the orchestrator (GameUI), not the leaf component (TradeDialog)**: GameUI computes effective rates via `getEffectiveTradeRates(BASE_TRADE_RATES, marketState.priceMultipliers)` and passes them as the `rates` prop. TradeDialog renders what it receives — zero business logic inside. This keeps TradeDialog free of store imports and supply/demand knowledge.
+  - **`marketState.priceMultipliers` is already current**: `recordTrade()` updates `priceMultipliers` in-place on every trade. No need to call `computePriceMultipliers()` separately at read time — just use `marketState.priceMultipliers` directly.
+  - **Modal → absolute View conversion: one extra `</View>` trap**: The original Modal structure had two nested wrapper Views (Modal > flex-1-backdrop > panel). Replacing Modal with a single absoluteFillObject View + a Pressable backdrop means the old inner backdrop's closing `</View>` must be removed or the JSX is malformed. TypeScript catches this with TS1005/TS1109 "')' expected" errors at the closing lines.
+  - **`awardNpcTradingXp` reads `nearbyNpcTemplateId` from GameUI props**: This prop already exists for dialogue, making it the correct vehicle for NPC identity during trade. No new prop needed — the trading relationship award flows through the same NPC-proximity signal.
+

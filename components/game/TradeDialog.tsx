@@ -1,12 +1,13 @@
 /**
- * TradeDialog -- Modal for trading resources at exchange rates.
+ * TradeDialog -- FPS HUD overlay for trading resources with an NPC.
  *
- * Shows available trade rates, lets the player select one, adjust quantity
- * with +/- buttons, and execute the trade.
+ * Shows available trade rates (supply/demand adjusted by caller), lets the
+ * player select one, adjust quantity with +/- buttons, and execute the trade.
+ * Renders as an absolute-positioned HUD overlay, not a system Modal.
  */
 
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import type { ResourceType } from "@/game/config/resources";
@@ -18,6 +19,8 @@ export interface TradeDialogProps {
   rates: TradeRate[];
   onExecuteTrade: (rate: TradeRate, quantity: number) => void;
   onClose: () => void;
+  /** NPC name shown in the dialog header. */
+  npcName?: string;
 }
 
 export function TradeDialog({
@@ -26,6 +29,7 @@ export function TradeDialog({
   rates,
   onExecuteTrade,
   onClose,
+  npcName,
 }: TradeDialogProps) {
   const [selectedRate, setSelectedRate] = useState<TradeRate | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -58,27 +62,31 @@ export function TradeDialog({
   if (!open) return null;
 
   return (
-    <Modal
-      visible
-      transparent
-      animationType="fade"
-      onRequestClose={handleClose}
-    >
-      <View className="flex-1 items-center justify-center bg-black/50 px-4">
-        <View
-          className="w-full max-w-sm rounded-2xl border-[3px] border-bark-brown bg-parchment"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.15,
-            shadowRadius: 16,
-            elevation: 12,
-          }}
-        >
+    <View style={StyleSheet.absoluteFillObject} className="items-center justify-center px-4">
+      {/* Backdrop — tap to close */}
+      <Pressable
+        style={StyleSheet.absoluteFillObject}
+        className="bg-black/50"
+        onPress={handleClose}
+        accessibilityLabel="Close trade dialog"
+      />
+
+      {/* Trade panel */}
+      <View
+        className="w-full max-w-sm rounded-2xl border-[3px] border-bark-brown bg-parchment"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.15,
+          shadowRadius: 16,
+          elevation: 12,
+          zIndex: 1,
+        }}
+      >
           {/* Header */}
           <View className="flex-row items-center justify-between border-b border-bark-brown/30 px-4 py-3">
             <Text className="font-heading text-lg font-bold text-soil-dark">
-              Trading Post
+              {npcName ? `Trade with ${npcName}` : "Trading Post"}
             </Text>
             <Pressable
               className="min-h-[44px] min-w-[44px] items-center justify-center"
@@ -187,7 +195,6 @@ export function TradeDialog({
             </Button>
           </View>
         </View>
-      </View>
-    </Modal>
+    </View>
   );
 }

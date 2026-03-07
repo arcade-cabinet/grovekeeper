@@ -35,6 +35,33 @@ export function calculateTradeOutput(rate: TradeRate, inputAmount: number): numb
 }
 
 /**
+ * Compute an effective trade rate adjusted by supply/demand price multipliers.
+ * The output amount is scaled by the multiplier for the output resource.
+ * Result is rounded and clamped to a minimum of 1 unit.
+ */
+export function getEffectiveTradeRate(
+  rate: TradeRate,
+  priceMultipliers: Record<ResourceType, number>,
+): TradeRate {
+  const multiplier = priceMultipliers[rate.to] ?? 1.0;
+  return {
+    ...rate,
+    toAmount: Math.max(1, Math.round(rate.toAmount * multiplier)),
+  };
+}
+
+/**
+ * Apply supply/demand multipliers to a list of trade rates.
+ * Use this to get NPC-economy-adjusted rates before displaying or executing trades.
+ */
+export function getEffectiveTradeRates(
+  rates: TradeRate[],
+  priceMultipliers: Record<ResourceType, number>,
+): TradeRate[] {
+  return rates.map((r) => getEffectiveTradeRate(r, priceMultipliers));
+}
+
+/**
  * Execute a trade. Returns the amounts to deduct and add, or null if invalid.
  */
 export function executeTrade(

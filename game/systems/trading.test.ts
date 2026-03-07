@@ -1,6 +1,29 @@
 import type { ResourceType } from "@/game/config/resources";
 import { emptyResources } from "@/game/config/resources";
-import { BASE_TRADE_RATES, calculateTradeOutput, executeTrade, getTradeRates } from "./trading";
+import {
+  BASE_TRADE_RATES,
+  calculateTradeOutput,
+  executeTrade,
+  getEffectiveTradeRate,
+  getEffectiveTradeRates,
+  getTradeRates,
+} from "./trading";
+
+function makeMultipliers(
+  overrides: Partial<Record<ResourceType, number>> = {},
+): Record<ResourceType, number> {
+  return {
+    timber: 1.0,
+    sap: 1.0,
+    fruit: 1.0,
+    acorns: 1.0,
+    wood: 1.0,
+    stone: 1.0,
+    metal_scrap: 1.0,
+    fiber: 1.0,
+    ...overrides,
+  };
+}
 
 describe("trading system", () => {
   describe("getTradeRates", () => {
@@ -101,6 +124,65 @@ describe("trading system", () => {
       const result = executeTrade(timberToSap, 10, makeResources({ timber: 10 }));
       expect(result).not.toBeNull();
       expect(result!.spend.amount).toBe(10);
+    });
+  });
+
+  describe("getEffectiveTradeRate (Spec §20.2)", () => {
+    const timberToSap = BASE_TRADE_RATES[0]; // 10 timber -> 5 sap
+
+    it("returns base toAmount when multiplier is 1.0", () => {
+      expect(getEffectiveTradeRate(timberToSap, makeMultipliers({ sap: 1.0 })).toAmount).toBe(5);
+    });
+
+    it("scales toAmount up by multiplier > 1.0", () => {
+      expect(getEffectiveTradeRate(timberToSap, makeMultipliers({ sap: 2.0 })).toAmount).toBe(10);
+    });
+
+    it("scales toAmount down by multiplier < 1.0", () => {
+      // 5 * 0.5 = 2.5 -> rounds to 3
+      expect(getEffectiveTradeRate(timberToSap, makeMultipliers({ sap: 0.5 })).toAmount).toBe(3);
+    });
+
+    it("rounds fractional toAmount", () => {
+      // 5 * 1.5 = 7.5 -> rounds to 8
+      expect(getEffectiveTradeRate(timberToSap, makeMultipliers({ sap: 1.5 })).toAmount).toBe(8);
+    });
+
+    it("clamps effective toAmount to minimum of 1", () => {
+      expect(getEffectiveTradeRate(timberToSap, makeMultipliers({ sap: 0.0 })).toAmount).toBe(1);
+    });
+
+    it("preserves fromAmount, from, and to unchanged", () => {
+      const result = getEffectiveTradeRate(timberToSap, makeMultipliers({ sap: 2.0 }));
+      expect(result.from).toBe("timber");
+      expect(result.fromAmount).toBe(10);
+      expect(result.to).toBe("sap");
+    });
+
+    it("defaults to multiplier 1.0 when resource not in multipliers", () => {
+      expect(getEffectiveTradeRate(timberToSap, makeMultipliers()).toAmount).toBe(5);
+    });
+  });
+
+  describe("getEffectiveTradeRates (Spec §20.2)", () => {
+    it("applies multipliers to all rates", () => {
+      const multipliers = makeMultipliers({ sap: 2.0, fruit: 0.5 });
+      const result = getEffectiveTradeRates(BASE_TRADE_RATES, multipliers);
+      expect(result[0].toAmount).toBe(10); // timber->sap: 5*2.0=10
+      expect(result[1].toAmount).toBe(2);  // sap->fruit: 3*0.5=1.5 -> rounds to 2
+      expect(result[2].toAmount).toBe(5);  // fruit->acorns: 5*1.0=5
+      expect(result[3].toAmount).toBe(10); // acorns->timber: 10*1.0=10
+    });
+
+    it("returns same number of rates as input", () => {
+      expect(getEffectiveTradeRates(BASE_TRADE_RATES, makeMultipliers())).toHaveLength(4);
+    });
+
+    it("returns identity rates when all multipliers are 1.0", () => {
+      const result = getEffectiveTradeRates(BASE_TRADE_RATES, makeMultipliers());
+      result.forEach((r, i) => {
+        expect(r.toAmount).toBe(BASE_TRADE_RATES[i].toAmount);
+      });
     });
   });
 });
