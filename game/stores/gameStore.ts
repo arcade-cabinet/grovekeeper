@@ -72,6 +72,12 @@ import {
   purchaseOffer,
   updateMerchant,
 } from "@/game/systems/travelingMerchant";
+import {
+  awardGiftXp as awardGiftXpPure,
+  awardQuestCompletionXp as awardQuestCompletionXpPure,
+  awardTradingXp as awardTradingXpPure,
+  setRelationship as setRelationshipPure,
+} from "@/game/systems/npcRelationship";
 import { showToast } from "@/game/ui/Toast";
 
 // ---------------------------------------------------------------------------
@@ -239,6 +245,9 @@ const initialState = {
 
   /** Discovered campfire fast travel points. Spec §17.6 */
   discoveredCampfires: [] as FastTravelPoint[],
+
+  /** Trust/friendship levels per NPC. Spec §15. Persists across sessions. */
+  npcRelationships: {} as Record<string, number>,
 };
 
 type GameStateData = typeof initialState;
@@ -1076,6 +1085,33 @@ const actions = {
 
   setSoundEnabled(enabled: boolean) {
     gameState$.soundEnabled.set(enabled);
+  },
+
+  // NPC Relationship actions (Spec §15)
+  awardNpcTradingXp(npcId: string): void {
+    const state = getState();
+    gameState$.npcRelationships.set(awardTradingXpPure(state.npcRelationships, npcId));
+  },
+
+  awardNpcQuestCompletionXp(npcId: string): void {
+    const state = getState();
+    gameState$.npcRelationships.set(
+      awardQuestCompletionXpPure(state.npcRelationships, npcId),
+    );
+  },
+
+  awardNpcGiftXp(npcId: string, giftMultiplier: number = 1.0): void {
+    const state = getState();
+    gameState$.npcRelationships.set(
+      awardGiftXpPure(state.npcRelationships, npcId, giftMultiplier),
+    );
+  },
+
+  setNpcRelationship(npcId: string, value: number): void {
+    const state = getState();
+    gameState$.npcRelationships.set(
+      setRelationshipPure(state.npcRelationships, npcId, value),
+    );
   },
 
   // Database hydration -- bulk-set state from SQLite

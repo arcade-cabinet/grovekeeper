@@ -18,6 +18,7 @@ import type {
   DialogueCondition,
   DialogueContext,
 } from "@/game/ecs/components/dialogue";
+import { checkRelationshipCondition } from "@/game/systems/npcRelationship";
 
 // ---------------------------------------------------------------------------
 // Weight normalization
@@ -131,6 +132,14 @@ export function evaluateCondition(
     case "spirit_discovered":
       result = context.discoveredSpirits.includes(String(condition.value));
       break;
+    case "has_relationship": {
+      // value format: "npcId:minValue" e.g. "elder-rowan:25"
+      const parts = String(condition.value).split(":");
+      const npcId = parts[0] ?? "";
+      const minValue = parts[1] !== undefined ? Number(parts[1]) : 0;
+      result = checkRelationshipCondition(context.npcRelationships, npcId, minValue);
+      break;
+    }
     default:
       result = false;
   }

@@ -229,6 +229,7 @@ function makeContext(overrides: Partial<DialogueContext> = {}): DialogueContext 
     discoveredSpirits: [],
     currentSeason: "spring",
     timeOfDay: "morning",
+    npcRelationships: {},
     ...overrides,
   };
 }

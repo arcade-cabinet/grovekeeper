@@ -47,7 +47,8 @@ export type DialogueConditionType =
   | "quest_complete"
   | "season"
   | "time_of_day"
-  | "spirit_discovered";
+  | "spirit_discovered"
+  | "has_relationship";
 
 /** Condition for gating dialogue branches. */
 export interface DialogueCondition {
@@ -121,6 +122,8 @@ export interface DialogueContext {
   currentSeason: string;
   /** Current time of day: "dawn" | "morning" | "afternoon" | "evening" | "night". */
   timeOfDay: string;
+  /** NPC relationship values (npcId -> 0-100). Used by "has_relationship" conditions. */
+  npcRelationships: Record<string, number>;
 }
 
 /** Quest state driven by dialogue branching. */

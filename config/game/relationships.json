@@ -1,0 +1,13 @@
+{
+  "tradingXp": 5,
+  "questCompletionXp": 20,
+  "giftXp": 10,
+  "maxRelationship": 100,
+  "levelThresholds": {
+    "stranger": 0,
+    "acquaintance": 10,
+    "friendly": 25,
+    "trusted": 50,
+    "beloved": 75
+  }
+}

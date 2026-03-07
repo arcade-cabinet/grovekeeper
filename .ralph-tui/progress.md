@@ -1983,3 +1983,22 @@ after each iteration and it's included in prompts for context.
   - **Graph validation via Set<string>**: Build `Set` of all `nodeId`s in O(n), then check each `branch.targetNodeId` in O(1). Linear in nodes+branches — clean and testable as a pure function with no ECS imports.
   - **Terminal nodes (empty branches) need no special case** — the loop over `node.branches` simply has zero iterations; they're valid by construction.
 ---
+
+## 2026-03-07 - US-104
+- **What was implemented:** NPC relationship tracking system — trust/friendship per NPC, increasing from trading/quests/gifts, affecting available dialogue via a new `has_relationship` condition type.
+- **Files changed:**
+  - `config/game/relationships.json` (new) — tuning values: tradingXp=5, questCompletionXp=20, giftXp=10, maxRelationship=100, level thresholds (stranger/acquaintance/friendly/trusted/beloved)
+  - `game/systems/npcRelationship.ts` (new) — pure functions: getRelationship, getRelationshipLevel, checkRelationshipCondition, awardTradingXp, awardQuestCompletionXp, awardGiftXp, setRelationship
+  - `game/systems/npcRelationship.test.ts` (new) — 34 tests, all passing
+  - `game/stores/gameStore.ts` — added `npcRelationships: Record<string, number>` to initial state + 4 actions: awardNpcTradingXp, awardNpcQuestCompletionXp, awardNpcGiftXp, setNpcRelationship
+  - `game/ecs/components/dialogue.ts` — added `"has_relationship"` to `DialogueConditionType`, added `npcRelationships: Record<string, number>` to `DialogueContext`
+  - `game/systems/dialogueBranch.ts` — imported `checkRelationshipCondition`, handled `"has_relationship"` condition in `evaluateCondition` (value format: `"npcId:threshold"`)
+  - `game/systems/dialogueBranch.test.ts` — added `npcRelationships: {}` to `makeContext()` fixture (required by new field on `DialogueContext`)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2717 tests, 128 suites, 0 failures
+- **Learnings:**
+  - **DialogueContext field addition breaks existing test fixtures**: Adding a required field to an interface causes TS errors in all `makeContext()` helpers that don't include it. Fix: add `npcRelationships: {}` to the helper default — discovered via `npx tsc --noEmit`.
+  - **Condition value encoding as "npcId:threshold"**: The `DialogueCondition.value` field is `string | number`. For compound conditions (npcId + threshold), encode as `"elder-rowan:25"` and split on `:` in the evaluator. Simple and avoids widening the interface.
+  - **Pure system + store split**: The system (`npcRelationship.ts`) is fully engine-agnostic pure functions. The store holds the mutable state and delegates to the pure functions. This makes all 34 relationship tests run in <0.3s with zero mocking.
+---
