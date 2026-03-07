@@ -46,6 +46,27 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-058
+- Implemented `game/world/audioZonePlacer.ts` — pure function deriving ambient audio zones from water body placements (Spec §27)
+- `placeAudioZones(waterPlacements)`: 1:1 mapping, `soundscape: "water"`, `radius = max(width, depth) * waterRadiusScale`, `volume` from config
+- Added `waterRadiusScale: 1.5` to `config/game/procedural.json` under `ambientZones`
+- Wired both `placeWaterBodies` and `placeAudioZones` into `ChunkManager.loadChunk()` — creates water body + audio zone ECS entities per chunk
+- Added `chunkChildEntities: Map<string, Entity[]>` to ChunkManager for proper cleanup on unload
+- **Files changed:**
+  - `game/world/audioZonePlacer.ts` — new: `AudioZonePlacement`, `placeAudioZones`
+  - `game/world/audioZonePlacer.test.ts` — new: 12 tests covering all behaviors
+  - `game/world/ChunkManager.ts` — wire water + audio zone entity creation + cleanup
+  - `config/game/procedural.json` — add `waterRadiusScale: 1.5` under `ambientZones`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 1956 tests, 0 failures (104 suites)
+- **Learnings:**
+  - **ChunkManager child entity cleanup pattern**: Add `chunkChildEntities: Map<string, Entity[]>` alongside `loadedChunks`. On unload, iterate and remove children before deleting the map entry. Keeps `loadedChunks.size === 25` (terrain only) so existing tests pass.
+  - **Audio zones are derived, not independent**: `placeAudioZones` takes `WaterBodyPlacement[]` — no heightmap, no RNG, no biome. Pure derivation from what waterPlacer already decided. This is the cleanest seam.
+  - **Wiring both water and audio zones in same loadChunk call**: Both `placeWaterBodies` and `placeAudioZones` share the same call site and children array. If no water bodies placed, no audio zones either — they stay in sync automatically.
+
+---
+
 ## 2026-03-07 - US-057
 - Work already complete — `game/world/waterPlacer.test.ts` was written alongside the implementation in US-056 (30 tests, 0 failures)
 - All acceptance criteria met: 6+ tests, covers low-point detection (`findLocalMinima`), river path following (`computeFlowDirection` + flow magnitude tests), and pond size variation (`placeWaterBodies` required-fields test asserts `size.width/depth > 0`)

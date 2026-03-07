@@ -16,6 +16,9 @@ import { hashString } from "@/game/utils/seedRNG";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import { generateHeightmap } from "./terrainGenerator";
 import { assignBiome, getBiomeColor } from "./biomeMapper";
+import type { BiomeType } from "./biomeMapper";
+import { placeWaterBodies } from "./waterPlacer";
+import { placeAudioZones } from "./audioZonePlacer";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -112,6 +115,8 @@ export function getChunkBiome(worldSeed: string, chunkX: number, chunkZ: number)
 export class ChunkManager {
   private readonly worldSeed: string;
   private readonly loadedChunks: Map<string, Entity> = new Map();
+  /** Child entities (water bodies + audio zones) keyed by chunk key. */
+  private readonly chunkChildEntities: Map<string, Entity[]> = new Map();
   private playerChunkX = 0;
   private playerChunkZ = 0;
   /** True until the first update() call forces a full load. */
@@ -156,6 +161,10 @@ export class ChunkManager {
     for (const key of toUnload) {
       world.remove(this.loadedChunks.get(key)!);
       this.loadedChunks.delete(key);
+      for (const child of this.chunkChildEntities.get(key) ?? []) {
+        world.remove(child);
+      }
+      this.chunkChildEntities.delete(key);
     }
 
     // Load new chunks + update visibility for existing ones
@@ -192,5 +201,40 @@ export class ChunkManager {
     });
 
     this.loadedChunks.set(key, entity);
+
+    // Place water bodies and co-located audio zones
+    const waterPlacements = placeWaterBodies(
+      this.worldSeed,
+      chunkX,
+      chunkZ,
+      terrainData.heightmap,
+      biome as BiomeType,
+    );
+    const audioZonePlacements = placeAudioZones(waterPlacements);
+    const children: Entity[] = [];
+
+    for (const wp of waterPlacements) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: wp.position,
+          waterBody: wp.waterBody,
+        }),
+      );
+    }
+
+    for (const azp of audioZonePlacements) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: azp.position,
+          ambientZone: azp.ambientZone,
+        }),
+      );
+    }
+
+    if (children.length > 0) {
+      this.chunkChildEntities.set(key, children);
+    }
   }
 }
