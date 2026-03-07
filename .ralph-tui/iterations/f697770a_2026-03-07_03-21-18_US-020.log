@@ -1,0 +1,111 @@
+# Iteration 20 Log
+
+## Metadata
+
+- **Task ID**: US-020
+- **Task Title**: Implement biome assignment
+- **Description**: As a developer, I want a biome mapper that uses temperature + moisture noise to assign one of 8 biome types per chunk so that the world has diverse environments. See GAME_SPEC.md §6 for biome requirem...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:21:18.511Z
+- **Ended At**: 2026-03-07T09:25:25.620Z
+- **Duration**: 4m 7s
+- **Input Tokens**: 105
+- **Output Tokens**: 14015
+- **Total Tokens**: 14120
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*[0m
+Let me read the relevant files to understand the current state:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/terrain.ts[0m
+Now let me check the GAME_SPEC.md for biome requirements:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mbiome|Biome|BIOME[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.test.ts[0m
+Let me check the ECS component definitions for ChunkComponent and TerrainChunkComponent:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs[0m pattern: [96mChunkComponent|TerrainChunkComponent[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+Now I have a complete picture. The biome logic currently lives inline in `ChunkManager.ts` with only 6 biomes covered. I need to:
+
+1. Create `game/world/biomeMapper.ts` extracting and expanding to all 8 biomes
+2. Create `game/world/biomeMapper.test.ts` 
+3. Update `ChunkManager.ts` to import from biomeMapper
+
+`★ Insight ─────────────────────────────────────`
+The spec's Twilight Glade is **distance-gated** (≥20 chunks from origin) — this means `assignBiome` needs chunk coords, not just temperature/moisture. Passing `distanceFromOrigin` as a parameter keeps the function pure and testable without knowledge of the noise system.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/biomeMapper.ts[0m "/**
+ * Biome mapper — assigns one of 8 biome types per chunk from temperature + moisture noise.
+ *
+ * Spec §17.3: biomes are derived from two independent noise axes:
+ *   - temperature: cold (0) → war... (3114 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The biome assignment uses **priority order** (first match wins) rather than overlapping range checks. This avoids ambiguity in the spec's slightly overlapping boundary values (e.g. temp=0.5 sits at the edge of multiple biomes) and makes the decision tree deterministic and testable.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/biomeMapper.test.ts[0m "/**
+ * biomeMapper tests (Spec §17.3)
+ *
+ * Covers:
+ *  - All 8 biome types produced for appropriate temperature + moisture inputs
+ *  - Twilight Glade distance gate (>= 20 chunks from origin)
+ *  - D... (5296 chars)"
+[94m[TodoWrite][0m
+Now update `ChunkManager.ts` to import from `biomeMapper` and remove the inline duplicate logic:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "import { generateEntityId, world } from "@/game/ec..." → "import { generateEntityId, world } from "@/game/ec..."
+Now update the two functions in ChunkManager.ts that called `determineBiome` and used `BIOME_COLORS` directly to use the new imports:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "  const tempNoise = new SeededNoise(hashString(`${..." → "  const tempNoise = new SeededNoise(hashString(`${..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "/** Determine biome string for a chunk — exported ..." → "/** Determine biome string for a chunk — exported ..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run biomeMapper tests only $ npx jest --no-coverage --testPathPattern biomeMapper 2>&1
+18 tests passing. Now run the full suite to confirm nothing regressed:
+[94m[Bash][0m Run full Jest suite $ npx jest --no-coverage 2>&1 | tail -20
+80 suites, 1372 tests, 0 failures. tsc clean.
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Using Chebyshev distance (`Math.max(|chunkX|, |chunkZ|)`) for the Twilight Glade gate matches the chunk ring system's own square topology — a player 20 chunks away in any cardinal or diagonal direction sees the biome. Euclidean distance would create a circular exclusion zone that doesn't align with the square buffer rings.
+`─────────────────────────────────────────────────`
+
+Now updating progress.md:
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-019" → "---
+
+## 2026-03-07 - US-020
+- Created `game/world/..."
+Also add the reusable pattern to the top of progress.md:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **ECS entity tracking in ChunkManager**: Store `..." → "- **ECS entity tracking in ChunkManager**: Store `..."
+All done. Here's a summary of what was implemented:
+
+---
+
+**US-020: Biome Assignment**
+
+**New file: `game/world/biomeMapper.ts`**
+- `BiomeType` — union of all 8 biome IDs from Spec §17.3
+- `BIOME_COLORS` — hex base colors for terrain vertex coloring
+- `assignBiome(temperature, moisture, distanceFromOrigin?)` — priority-order dispatch to all 8 biomes; Twilight Glade is distance-gated (≥20 chunks, Chebyshev metric)
+- `getBiomeColor(biome)` — lookup for TerrainChunkComponent.baseColor
+
+**Updated: `game/world/ChunkManager.ts`**
+- Removed the inline 6-biome `determineBiome` + `BIOME_COLORS`
+- Both `generateChunkData` and `getChunkBiome` now delegate to `assignBiome` with chunk distance computed
+
+**New file: `game/world/biomeMapper.test.ts`** — 18 tests covering all 8 biomes, distance gate, priority rule, determinism, color coverage
+
+**Results:** `tsc --noEmit` → 0 errors | `jest --no-coverage` → 80 suites, 1372 tests, 0 failures
+
+<promise>COMPLETE</promise>

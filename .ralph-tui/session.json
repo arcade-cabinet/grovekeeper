@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T09:25:25.622Z",
-  "currentIteration": 19,
+  "updatedAt": "2026-03-07T09:26:40.401Z",
+  "currentIteration": 20,
   "maxIterations": 0,
-  "tasksCompleted": 19,
+  "tasksCompleted": 20,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -130,8 +130,8 @@
       {
         "id": "US-020",
         "title": "Implement biome assignment",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-021",
@@ -1231,6 +1231,16 @@
       "durationMs": 208092,
       "startedAt": "2026-03-07T09:17:49.297Z",
       "endedAt": "2026-03-07T09:21:17.389Z"
+    },
+    {
+      "iteration": 20,
+      "status": "completed",
+      "taskId": "US-020",
+      "taskTitle": "Implement biome assignment",
+      "taskCompleted": true,
+      "durationMs": 247109,
+      "startedAt": "2026-03-07T09:21:18.511Z",
+      "endedAt": "2026-03-07T09:25:25.620Z"
     }
   ],
   "skippedTaskIds": [],

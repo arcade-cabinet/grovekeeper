@@ -26,6 +26,17 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-021
+- Work already complete — `game/world/biomeMapper.test.ts` was created as part of US-020 (Docs > Tests > Code workflow)
+- 18 tests covering: all 8 biome types produced for representative temp+moisture inputs, Twilight Glade distance gate (≥20 chunks assigned, <20 not assigned, default=0 not assigned), priority rule (frozen-peaks beats wetlands), determinism (8 input combos called twice, both equal), BIOME_COLORS (all 8 entries, valid 6-char hex, all distinct), getBiomeColor (consistent with BIOME_COLORS record)
+- **Files changed:** none (already done in US-020)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern biomeMapper` → 18 tests, 0 failures
+- **Learnings:**
+  - The Docs > Tests > Code mandatory workflow eliminates "write tests for X" follow-up stories — tests ship with the implementation. When US-021 arrives, US-020 already shipped 18 tests covering all acceptance criteria.
+---
+
 ## 2026-03-07 - US-020
 - Created `game/world/biomeMapper.ts` with exported `BiomeType`, `BIOME_COLORS`, `assignBiome`, `getBiomeColor`
   - All 8 biomes from Spec §17.3: starting-grove, meadow, ancient-forest, wetlands, rocky-highlands, orchard-valley, frozen-peaks, twilight-glade
