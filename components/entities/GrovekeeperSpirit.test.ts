@@ -28,6 +28,7 @@ import {
   GrovekeeperSpirit,
   computeBobY,
   computeEmissiveIntensity,
+  computeSpawnY,
 } from "./GrovekeeperSpirit";
 import { resolveEmissiveColor, SPIRIT_COLORS } from "@/game/utils/spiritColors";
 
@@ -166,6 +167,43 @@ describe("resolveEmissiveColor (Spec §32.1)", () => {
         resolveEmissiveColor(i, "TestSeed");
       }
     }).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeSpawnY
+// ---------------------------------------------------------------------------
+
+describe("computeSpawnY (Spec §32.2)", () => {
+  it("returns baseY when spawnProgress is 0 (spirit at floor)", () => {
+    expect(computeSpawnY(0, 0, 1.5)).toBe(0);
+  });
+
+  it("returns baseY + hoverHeight when spawnProgress is 1 (fully risen)", () => {
+    expect(computeSpawnY(1, 0, 1.5)).toBeCloseTo(1.5);
+  });
+
+  it("returns midpoint at spawnProgress 0.5", () => {
+    expect(computeSpawnY(0.5, 0, 1.5)).toBeCloseTo(0.75);
+  });
+
+  it("respects non-zero baseY offset", () => {
+    expect(computeSpawnY(0.5, 1.0, 1.5)).toBeCloseTo(1.75);
+  });
+
+  it("matches formula: baseY + spawnProgress * hoverHeight", () => {
+    const sp = 0.73;
+    const base = 0.5;
+    const hover = 1.2;
+    expect(computeSpawnY(sp, base, hover)).toBeCloseTo(base + sp * hover);
+  });
+
+  it("is monotonically increasing as spawnProgress goes 0→1", () => {
+    const steps = [0, 0.25, 0.5, 0.75, 1.0];
+    const ys = steps.map((p) => computeSpawnY(p, 0, 1.5));
+    for (let i = 1; i < ys.length; i++) {
+      expect(ys[i]).toBeGreaterThanOrEqual(ys[i - 1]);
+    }
   });
 });
 

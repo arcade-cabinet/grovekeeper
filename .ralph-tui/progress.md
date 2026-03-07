@@ -58,6 +58,27 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-083
+- Added `computeSpawnY` pure function to `GrovekeeperSpirit.tsx` — lerps Y from floor to hover height over 2s
+- `SpiritOrb.useFrame` now handles spawn rise: mutates `spirit.spawnProgress += dt / 2.0`, marks `spirit.spawned = true` at 1.0
+- Emissive intensity fades in during spawn: `pulseIntensity * spawnProgress`
+- Trail particle system: 12 `<points>` per spirit, initialized with seeded RNG, drift upward each frame, reset at top of travel range
+- Trail positions in `Float32Array` mutated in-place; `trailAttrRef.current.needsUpdate = true` uploads changes to GPU each frame
+- Seeded trail RNG: `createRNG(hashString(\`trail-reset-${spiritId}\`))` stored in `useRef` so resets are varied but deterministic
+- Added 6 tests for `computeSpawnY` (floor/fully-risen/midpoint/offset/formula/monotonic)
+- **Files changed:**
+  - `components/entities/GrovekeeperSpirit.tsx` — added spawn rise + trail particles (~240 lines, under 300)
+  - `components/entities/GrovekeeperSpirit.test.ts` — +6 computeSpawnY tests (26 total)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2301 tests, 0 failures (117 suites, +6 new tests)
+- **Learnings:**
+  - **bufferAttribute ref pattern for animated GPU buffers**: use `useRef<THREE.BufferAttribute>(null)` + `ref={trailAttrRef}` on `<bufferAttribute>` JSX, then `trailAttrRef.current.needsUpdate = true` after mutating the Float32Array each frame. Avoids `getAttribute()` cast issues.
+  - **Spawn animation via ECS mutation**: `spirit.spawnProgress` and `spirit.spawned` are mutated directly inside `useFrame` — Miniplex entities are plain objects, field mutation is the correct pattern for animation state.
+  - **Trail RNG as evolving ref**: `useRef(() => number)` storing a `createRNG(...)` result evolves across frames, producing varied reset positions each cycle without storing any per-particle state.
+
+---
+
 ## 2026-03-07 - US-082
 - Created `components/entities/GrovekeeperSpirit.tsx` — Navi-style floating emissive orb renderer
 - IcosahedronGeometry + MeshStandardMaterial with emissive color (no GLB, purely procedural)
