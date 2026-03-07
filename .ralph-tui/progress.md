@@ -2548,3 +2548,12 @@ after each iteration and it's included in prompts for context.
   - **Shuffle button uses `generateSeedPhrase(Date.now())`**: This is the right call for a new random phrase. `scopedRNG` is for deterministic subsystem streams within a seed, not for picking a new seed.
   - **`worldSeed` prop stays optional in SeedSelect**: The species picker is used in-game where the world seed is always available via the store, but keeping it optional means zero migration cost for existing call sites.
 ---
+
+## 2026-03-07 - US-139
+- Work was already complete: `game/utils/seedWords.test.ts` (13 tests) and `components/game/NewGameModal.test.ts` (9 tests, 3 of which cover seed phrase integration) were written as part of US-138.
+- Total: 21 tests across 2 files, all passing. `npx tsc --noEmit` passes clean.
+- Files changed: none (already implemented)
+- **Learnings:**
+  - **Test stories that follow implementation stories should always check stop condition first**: US-138 included tests as part of the work (consistent with the docs > tests > code mandate). US-139 simply verifies the criteria are met.
+  - **seedWords.test.ts covers all three acceptance criteria**: phrase format (3 words, title-cased, different adjectives), seed-to-world determinism (same entropy → same phrase), shuffle variation (different entropy → different phrase). NewGameModal.test.ts adds integration coverage.
+---

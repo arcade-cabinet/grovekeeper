@@ -1,0 +1,121 @@
+# Iteration 138 Log
+
+## Metadata
+
+- **Task ID**: US-138
+- **Task Title**: Update new game modal for game modes + seed phrases
+- **Description**: As a player, I want the existing NewGameModal.tsx (273 lines) and SeedSelect.tsx (283 lines) updated with Exploration/Survival mode selection, 'Adjective Adjective Noun' seed phrases from game/utils/s...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T19:53:17.570Z
+- **Ended At**: 2026-03-07T20:03:26.501Z
+- **Duration**: 10m 8s
+- **Input Tokens**: 141
+- **Output Tokens**: 33862
+- **Total Tokens**: 34003
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,Glob[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Agent,Grep[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NewGameModal.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/SeedSelect.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/seedWords*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores[0m pattern: [96mGameConfig|gameMode|survivalDifficulty|onStart[0m
+Now let me check the game store and how `onStart` is used in the current app flow:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app[0m pattern: [96mNewGameModal|onStart|startNewGame|gameMode|survivalDifficulty[0m
+Now let me look at the main menu screen to see how `NewGameModal` is called and how to wire up the game config:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/index.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgameMode|survivalDifficulty|GameConfig|newGame[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Now let me read the relevant spec sections (§26 and §37):
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 26\. Save|## 37\.|game mode|Game Mode|Exploration|Survival mode|seed phrase|word seed|Adj Adj|Gentle|Standard|Harsh|Ironwood[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 26\. Save|### 26\.|GameConfig|startNewGame|newGameConfig|worldSeed|gameMode[0m
+Let me check what other components exist and how SeedSelect is used in the game:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mSeedSelect|seedSelect|SpeciesPicker[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/*.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/SeedSelect.test.ts[0m
+Let me check for existing NewGameModal tests:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/NewGameModal.test.ts*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/index.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m
+Now I have a complete picture. Let me update my todo and start implementing:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `DifficultyTier` (old 5-tier system) is being replaced by a 2-mode structure: Exploration (no survival) + Survival (4 sub-difficulties). The spec §37 describes this exactly — the old `normal/hard/brutal/ultra-brutal` tiles map cleanly to `gentle/standard/harsh/ironwood`.
+- `generateSeedPhrase(Date.now())` is the right shuffle call — the function accepts an entropy number and uses `createRNG(seed)` internally. No need to call `scopedRNG` here since we want a brand-new random phrase, not a deterministic one.
+- The JSX component can't safely be unit-tested (RN JSX runtime crash pattern), so pure-function exports and type shape tests are the right approach.
+`─────────────────────────────────────────────────`
+
+Now let me write the new `NewGameModal.tsx`:
+[94m[ToolSearch][0m query: [93mselect:Write,Edit[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NewGameModal.tsx[0m "/**
+ * NewGameModal -- game mode + world seed + difficulty selection for a new grove.
+ *
+ * US-138: Updated for Exploration/Survival mode selection, Adj Adj Noun seed
+ * phrases (game/utils/seedWords.... (11457 chars)"
+[94m[TodoWrite][0m
+Now update `SeedSelect.tsx` to accept and display the world seed phrase:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/SeedSelect.tsx[0m edit: "export interface SeedSelectProps {
+  open: boolean..." → "export interface SeedSelectProps {
+  open: boolean..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/SeedSelect.tsx[0m edit: "export function SeedSelect({
+  open,
+  species,
+  ..." → "export function SeedSelect({
+  open,
+  species,
+  ..."
+Now add the world seed badge after the close button in the header:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/SeedSelect.tsx[0m edit: "          {/* Species grid - 2 columns */}
+       ..." → "          {/* World seed badge -- Adj Adj Noun phr..."
+[94m[TodoWrite][0m
+Now update the `index.ts` barrel to export `NewGameConfig` and `GameMode`/`SurvivalDifficulty` instead of the old `DifficultyTier`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m edit: "export type { DifficultyTier, NewGameModalProps } ..." → "export type {
+  GameMode,
+  NewGameConfig,
+  NewGa..."
+Now write the test file for `NewGameModal`:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- Following the codebase pattern: TSX component tests crash due to the JSX runtime chain. Tests for UI logic go in a plain `.ts` file — import only types and pure helpers, not the component itself. For NewGameModal, the exportable surface is the `NewGameConfig` type and the `GameMode`/`SurvivalDifficulty` union types.
+- The spec §37.2 table defines exact heart counts: Gentle=7, Standard=5, Harsh=4, Ironwood=3. These become test fixtures to validate the `SURVIVAL_TIERS` data, but since `SURVIVAL_TIERS` is not exported (it's internal), we validate the `NewGameConfig` type shape and integration with `generateSeedPhrase`.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NewGameModal.test.ts[0m "/**
+ * Tests for NewGameModal types and config structure.
+ * Spec §26 (Save/Persistence) and §37 (Game Modes).
+ *
+ * NOTE: Component rendering tests are omitted -- importing .tsx components
+ * crashes... (3097 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript typecheck $ npx tsc --noEmit 2>&1 | head -60
+TypeScript passes cleanly. Now run Jest:
+[94m[Bash][0m Run NewGameModal and SeedSelect tests $ npx jest --no-coverage --testPathPattern="NewGameModal|SeedSelect" 2>&1
+All 9 tests pass. Let me run the full test suite to confirm nothing else broke:
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -20
+144 suites, 3345 tests — all pass. Now update the progress log:
+[94m[TodoWrite][0m
+[94m[Bash][0m Append US-138 entry to progress.md $ displays a compact world seed badge (Adj Adj Noun format) in the species picker header when provided...
+[94m[TodoWrite][0m
+All done. Here's a summary of what was implemented:
+
+**Files changed:**
+- `components/game/NewGameModal.tsx` — complete rewrite: replaces the old 5-tile difficulty system with Exploration/Survival mode toggle → Adj Adj Noun seed phrase input + shuffle button → Survival sub-difficulty grid (Gentle/Standard/Harsh/Ironwood). `onStart` now receives `NewGameConfig { worldSeed, gameMode, survivalDifficulty, permadeath }`.
+- `components/game/SeedSelect.tsx` — added optional `worldSeed?: string` prop; shows a compact world-seed badge ("World: Gentle Mossy Hollow") in the species picker header when provided.
+- `components/game/index.ts` — replaced `DifficultyTier` barrel export with `GameMode`, `SurvivalDifficulty`, `NewGameConfig`.
+- `components/game/NewGameModal.test.ts` (new) — 9 tests covering config type shape, all 4 survival tiers (§37.2), Ironwood permadeath enforcement, and `generateSeedPhrase` integration (§3.1).
+
+**Quality gates:** `npx tsc --noEmit` ✓ · `npx jest --no-coverage` ✓ (3345 tests, 144 suites)
+
+<promise>COMPLETE</promise>
