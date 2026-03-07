@@ -44,15 +44,15 @@ jest.mock("@/game/ui/Toast", () => ({
 }));
 
 import {
-  computeDistanceXZ,
-  shouldTriggerBirchmother,
-  isSpiritQuestComplete,
-  useBirmotherEncounter,
-  BIRCHMOTHER_TRIGGER_RADIUS,
   BIRCHMOTHER_COOLDOWN_MS,
+  BIRCHMOTHER_TRIGGER_RADIUS,
   type BirmotherSnapshot,
+  computeDistanceXZ,
+  isSpiritQuestComplete,
   type PlayerPositionXZ,
-} from "./useBirmotherEncounter";
+  shouldTriggerBirchmother,
+  useBirmotherEncounter,
+} from "./useBirmotherEncounter.ts";
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -115,21 +115,14 @@ describe("computeDistanceXZ (Spec §32.4)", () => {
 
 describe("shouldTriggerBirchmother (Spec §32.4)", () => {
   const RADIUS = BIRCHMOTHER_TRIGGER_RADIUS; // 3.0m
-  const COOLDOWN = BIRCHMOTHER_COOLDOWN_MS;  // 10_000ms
+  const COOLDOWN = BIRCHMOTHER_COOLDOWN_MS; // 10_000ms
   const NOW = 2_000_000;
 
   it("triggers when awakened, not converged, within radius, no cooldown", () => {
     const player = makePlayer(0, 0);
     const birchmother = makeBirchmother(2.0, 0, true, false);
 
-    const result = shouldTriggerBirchmother(
-      player,
-      birchmother,
-      0,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = shouldTriggerBirchmother(player, birchmother, 0, NOW, RADIUS, COOLDOWN);
 
     expect(result).toBe(true);
   });
@@ -138,14 +131,7 @@ describe("shouldTriggerBirchmother (Spec §32.4)", () => {
     const player = makePlayer(0, 0);
     const birchmother = makeBirchmother(2.0, 0, false, false);
 
-    const result = shouldTriggerBirchmother(
-      player,
-      birchmother,
-      0,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = shouldTriggerBirchmother(player, birchmother, 0, NOW, RADIUS, COOLDOWN);
 
     expect(result).toBe(false);
   });
@@ -154,14 +140,7 @@ describe("shouldTriggerBirchmother (Spec §32.4)", () => {
     const player = makePlayer(0, 0);
     const birchmother = makeBirchmother(2.0, 0, true, true);
 
-    const result = shouldTriggerBirchmother(
-      player,
-      birchmother,
-      0,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = shouldTriggerBirchmother(player, birchmother, 0, NOW, RADIUS, COOLDOWN);
 
     expect(result).toBe(false);
   });
@@ -170,14 +149,7 @@ describe("shouldTriggerBirchmother (Spec §32.4)", () => {
     const player = makePlayer(0, 0);
     const birchmother = makeBirchmother(3.1, 0, true, false);
 
-    const result = shouldTriggerBirchmother(
-      player,
-      birchmother,
-      0,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = shouldTriggerBirchmother(player, birchmother, 0, NOW, RADIUS, COOLDOWN);
 
     expect(result).toBe(false);
   });
@@ -186,14 +158,7 @@ describe("shouldTriggerBirchmother (Spec §32.4)", () => {
     const player = makePlayer(0, 0);
     const birchmother = makeBirchmother(3.0, 0, true, false);
 
-    const result = shouldTriggerBirchmother(
-      player,
-      birchmother,
-      0,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = shouldTriggerBirchmother(player, birchmother, 0, NOW, RADIUS, COOLDOWN);
 
     expect(result).toBe(false);
   });
@@ -236,14 +201,7 @@ describe("shouldTriggerBirchmother (Spec §32.4)", () => {
     const player = makePlayer(0, 0);
     const birchmother = makeBirchmother(2.9, 0, true, false);
 
-    const result = shouldTriggerBirchmother(
-      player,
-      birchmother,
-      0,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = shouldTriggerBirchmother(player, birchmother, 0, NOW, RADIUS, COOLDOWN);
 
     expect(result).toBe(true);
   });
@@ -268,11 +226,7 @@ describe("isSpiritQuestComplete (Spec §32.4)", () => {
 
   it("returns true when main-quest-spirits is among multiple completed chains", () => {
     expect(
-      isSpiritQuestComplete([
-        "worldtree-restoration",
-        "main-quest-spirits",
-        "worldroots-dream",
-      ]),
+      isSpiritQuestComplete(["worldtree-restoration", "main-quest-spirits", "worldroots-dream"]),
     ).toBe(true);
   });
 });

@@ -3,16 +3,16 @@
  * Spec §31.2 — Water body placement from heightmap low points and biome.
  */
 
+import type { BiomeWaterRule } from "./waterPlacer.ts";
 import {
-  findLocalMinima,
   computeFlowDirection,
+  findLocalMinima,
   getBiomeWaterRule,
-  selectWaterType,
-  placeWaterBodies,
   LOW_POINT_THRESHOLD,
   MAX_WATER_BODIES_PER_CHUNK,
-} from "./waterPlacer";
-import type { BiomeWaterRule } from "./waterPlacer";
+  placeWaterBodies,
+  selectWaterType,
+} from "./waterPlacer.ts";
 
 const SIZE = 16;
 
@@ -223,7 +223,14 @@ describe("placeWaterBodies (Spec §31.2)", () => {
   it("different seeds produce different results", () => {
     // Use many minima to make placements highly likely
     const hm = flatHeightmap(SIZE, 0.1);
-    for (const [x, z] of [[3, 3],[7, 3],[11, 3],[3, 9],[7, 9],[11, 9]]) {
+    for (const [x, z] of [
+      [3, 3],
+      [7, 3],
+      [11, 3],
+      [3, 9],
+      [7, 9],
+      [11, 9],
+    ]) {
       hm[z * SIZE + x] = -0.5;
     }
     const r1 = placeWaterBodies("seed-A", 0, 0, hm, "wetlands");
@@ -235,7 +242,14 @@ describe("placeWaterBodies (Spec §31.2)", () => {
   it("never exceeds MAX_WATER_BODIES_PER_CHUNK", () => {
     // Dense minima grid — many candidates
     const hm = flatHeightmap(SIZE, 0.1);
-    for (const [x, z] of [[3, 3],[7, 3],[11, 3],[3, 9],[7, 9],[11, 9]]) {
+    for (const [x, z] of [
+      [3, 3],
+      [7, 3],
+      [11, 3],
+      [3, 9],
+      [7, 9],
+      [11, 9],
+    ]) {
       hm[z * SIZE + x] = -0.5;
     }
     const placements = placeWaterBodies("seed", 0, 0, hm, "wetlands");
@@ -257,7 +271,14 @@ describe("placeWaterBodies (Spec §31.2)", () => {
 
   it("rocky-highlands placements are always streams", () => {
     const hm = flatHeightmap(SIZE, 0.1);
-    for (const [x, z] of [[3, 3],[7, 3],[11, 3],[3, 9],[7, 9],[11, 9]]) {
+    for (const [x, z] of [
+      [3, 3],
+      [7, 3],
+      [11, 3],
+      [3, 9],
+      [7, 9],
+      [11, 9],
+    ]) {
       hm[z * SIZE + x] = -0.5;
     }
     const placements = placeWaterBodies("seed", 0, 0, hm, "rocky-highlands");

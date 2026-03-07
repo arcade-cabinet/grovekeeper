@@ -18,9 +18,9 @@ jest.mock("@react-three/fiber", () => ({
   useFrame: jest.fn(),
 }));
 
-import { isGrounded, useJump, JUMP_IMPULSE, GROUND_CHECK_DISTANCE } from "./useJump";
 import type { RapierRigidBody } from "@react-three/rapier";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import { GROUND_CHECK_DISTANCE, isGrounded, JUMP_IMPULSE, useJump } from "./useJump.ts";
 
 /** Minimal RapierRigidBody mock with translation at given y. */
 function makeBody(y: number): RapierRigidBody {

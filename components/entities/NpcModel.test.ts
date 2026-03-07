@@ -15,11 +15,11 @@ jest.mock("@react-three/fiber", () => ({}));
 
 import {
   NpcModel,
-  resolveBaseModelPath,
   resolveBaseModelEmissionPath,
+  resolveBaseModelPath,
   resolveItemPath,
   resolveNpcAppearance,
-} from "./NpcModel";
+} from "./NpcModel.tsx";
 
 // ---------------------------------------------------------------------------
 // resolveBaseModelPath
@@ -27,33 +27,23 @@ import {
 
 describe("resolveBaseModelPath (Spec §15)", () => {
   it("returns the correct path for basemesh", () => {
-    expect(resolveBaseModelPath("basemesh")).toBe(
-      "assets/models/npcs/base/basemesh.glb",
-    );
+    expect(resolveBaseModelPath("basemesh")).toBe("assets/models/npcs/base/basemesh.glb");
   });
 
   it("returns the correct path for archer", () => {
-    expect(resolveBaseModelPath("archer")).toBe(
-      "assets/models/npcs/base/archer.glb",
-    );
+    expect(resolveBaseModelPath("archer")).toBe("assets/models/npcs/base/archer.glb");
   });
 
   it("returns the correct path for knight", () => {
-    expect(resolveBaseModelPath("knight")).toBe(
-      "assets/models/npcs/base/knight.glb",
-    );
+    expect(resolveBaseModelPath("knight")).toBe("assets/models/npcs/base/knight.glb");
   });
 
   it("returns the correct path for merchant", () => {
-    expect(resolveBaseModelPath("merchant")).toBe(
-      "assets/models/npcs/base/merchant.glb",
-    );
+    expect(resolveBaseModelPath("merchant")).toBe("assets/models/npcs/base/merchant.glb");
   });
 
   it("returns the correct path for allinone", () => {
-    expect(resolveBaseModelPath("allinone")).toBe(
-      "assets/models/npcs/base/allinone.glb",
-    );
+    expect(resolveBaseModelPath("allinone")).toBe("assets/models/npcs/base/allinone.glb");
   });
 
   it("all base model paths end in .glb", () => {
@@ -76,9 +66,7 @@ describe("resolveBaseModelPath (Spec §15)", () => {
   });
 
   it("throws for an empty string baseModelId", () => {
-    expect(() => resolveBaseModelPath("")).toThrow(
-      "[NpcModel] Unknown baseModelId",
-    );
+    expect(() => resolveBaseModelPath("")).toThrow("[NpcModel] Unknown baseModelId");
   });
 });
 
@@ -94,9 +82,7 @@ describe("resolveBaseModelEmissionPath (Spec §15)", () => {
   });
 
   it("returns the emission path for archer", () => {
-    expect(resolveBaseModelEmissionPath("archer")).toBe(
-      "assets/models/npcs/base/archer-pr.glb",
-    );
+    expect(resolveBaseModelEmissionPath("archer")).toBe("assets/models/npcs/base/archer-pr.glb");
   });
 
   it("emission paths differ from base paths", () => {
@@ -125,27 +111,19 @@ describe("resolveBaseModelEmissionPath (Spec §15)", () => {
 
 describe("resolveItemPath (Spec §15)", () => {
   it("returns the correct path for hairone", () => {
-    expect(resolveItemPath("hairone")).toBe(
-      "assets/models/npcs/items/hairone.glb",
-    );
+    expect(resolveItemPath("hairone")).toBe("assets/models/npcs/items/hairone.glb");
   });
 
   it("returns the correct path for shirt", () => {
-    expect(resolveItemPath("shirt")).toBe(
-      "assets/models/npcs/items/shirt.glb",
-    );
+    expect(resolveItemPath("shirt")).toBe("assets/models/npcs/items/shirt.glb");
   });
 
   it("returns the correct path for pants", () => {
-    expect(resolveItemPath("pants")).toBe(
-      "assets/models/npcs/items/pants.glb",
-    );
+    expect(resolveItemPath("pants")).toBe("assets/models/npcs/items/pants.glb");
   });
 
   it("returns the correct path for bag", () => {
-    expect(resolveItemPath("bag")).toBe(
-      "assets/models/npcs/items/bag.glb",
-    );
+    expect(resolveItemPath("bag")).toBe("assets/models/npcs/items/bag.glb");
   });
 
   it("all item paths end in .glb", () => {

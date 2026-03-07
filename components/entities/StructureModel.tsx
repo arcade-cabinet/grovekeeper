@@ -7,8 +7,8 @@
  * See GAME_SPEC.md §14.
  */
 
-import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useMemo } from "react";
 import structuresConfig from "@/config/game/structures.json" with { type: "json" };
 
 // ---------------------------------------------------------------------------

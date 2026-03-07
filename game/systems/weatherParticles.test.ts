@@ -5,19 +5,19 @@
  * driven by WeatherComponent state.
  */
 import { World } from "miniplex";
+import type { WeatherComponent } from "@/game/ecs/components/procedural/atmosphere";
 import {
   buildRainEmitter,
   buildSnowEmitter,
   buildWindEmitter,
-  resolveParticleCategory,
-  tickWeatherParticles,
   RAIN_MAX_PARTICLES,
+  resolveParticleCategory,
   SNOW_MAX_PARTICLES,
-  WIND_MAX_PARTICLES,
+  tickWeatherParticles,
   type WeatherParticleEntity,
   type WeatherParticlesState,
-} from "./weatherParticles";
-import type { WeatherComponent } from "@/game/ecs/components/procedural/atmosphere";
+  WIND_MAX_PARTICLES,
+} from "./weatherParticles.ts";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

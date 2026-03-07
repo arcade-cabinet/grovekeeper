@@ -7,14 +7,14 @@
  * - All config trees load without graph errors
  */
 
-import {
-  getDialogueTrees,
-  getDialogueTreeById,
-  validateDialogueTree,
-  validateAllDialogueTrees,
-  loadAndValidateDialogueTrees,
-} from "./dialogueLoader";
 import type { DialogueTree } from "@/game/ecs/components/dialogue";
+import {
+  getDialogueTreeById,
+  getDialogueTrees,
+  loadAndValidateDialogueTrees,
+  validateAllDialogueTrees,
+  validateDialogueTree,
+} from "./dialogueLoader.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -144,9 +144,7 @@ describe("Dialogue Loader — Invalid Tree Validation (Spec §33)", () => {
           nodeId: "node-a",
           speaker: "NPC",
           text: "Choose wisely.",
-          branches: [
-            { label: "Go somewhere", targetNodeId: "does-not-exist", seedBias: 1.0 },
-          ],
+          branches: [{ label: "Go somewhere", targetNodeId: "does-not-exist", seedBias: 1.0 }],
         },
       ],
     });

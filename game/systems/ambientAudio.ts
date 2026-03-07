@@ -23,8 +23,8 @@
  */
 
 import ambientConfig from "@/config/game/ambientAudio.json" with { type: "json" };
-import type { AmbientSoundscape } from "@/game/ecs/components/procedural/audio";
 import type { TimeOfDay } from "@/game/ecs/components/procedural/atmosphere";
+import type { AmbientSoundscape } from "@/game/ecs/components/procedural/audio";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,7 +64,12 @@ export interface AmbientAudioState {
 const ALL_LAYERS: LayerName[] = ["wind", "birds", "insects", "crickets", "water", "vegetation"];
 
 const ZERO_LAYERS: LayerVolumes = {
-  wind: 0, birds: 0, insects: 0, crickets: 0, water: 0, vegetation: 0,
+  wind: 0,
+  birds: 0,
+  insects: 0,
+  crickets: 0,
+  water: 0,
+  vegetation: 0,
 };
 
 /**
@@ -161,10 +166,7 @@ export function initAmbientLayers(
  * Apply a pre-computed ambient mix to the 6 layer nodes.
  * Call each frame after computeAmbientMix.
  */
-export function tickAmbientAudio(
-  state: AmbientAudioState,
-  mix: LayerVolumes,
-): void {
+export function tickAmbientAudio(state: AmbientAudioState, mix: LayerVolumes): void {
   for (const layer of ALL_LAYERS) {
     state.layerNodes[layer].setVolume(mix[layer]);
   }

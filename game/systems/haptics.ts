@@ -47,6 +47,8 @@ export async function triggerHaptic(type: HapticType): Promise<void> {
  * No-op on non-native platforms (web, desktop).
  */
 export async function triggerActionHaptic(action: ToolAction): Promise<void> {
-  const pattern = (hapticsConfig.toolActions as Record<string, string>)[action] as HapticType | undefined;
+  const pattern = (hapticsConfig.toolActions as Record<string, string>)[action] as
+    | HapticType
+    | undefined;
   if (pattern) await triggerHaptic(pattern);
 }

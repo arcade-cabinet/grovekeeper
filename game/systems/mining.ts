@@ -7,8 +7,8 @@
  */
 
 import miningConfig from "@/config/game/mining.json" with { type: "json" };
-import type { BiomeType } from "@/game/world/biomeMapper";
 import type { RockComponent } from "@/game/ecs/components/terrain";
+import type { BiomeType } from "@/game/world/biomeMapper";
 
 // ---------------------------------------------------------------------------
 // Ore yield types (loaded from config)
@@ -78,11 +78,7 @@ export interface MineResult {
  * Pure function — does not mutate rock or ECS state.
  * Callers remove the rock entity and credit inventory.
  */
-export function mineRock(
-  _rock: RockComponent,
-  biome: BiomeType,
-  rngValue: number,
-): MineResult {
+export function mineRock(_rock: RockComponent, biome: BiomeType, rngValue: number): MineResult {
   const oreYield = getOreForBiome(biome);
   const range = oreYield.maxAmount - oreYield.minAmount;
   const amount = Math.min(

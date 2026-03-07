@@ -9,8 +9,8 @@
  */
 
 import { useEffect, useState } from "react";
-import { hydrateGameStore } from "@/game/db/queries";
 import { migrateFromLocalStorage } from "@/game/db/migrate-localStorage";
+import { hydrateGameStore } from "@/game/db/queries";
 import { useGameStore } from "@/game/stores/gameStore";
 import {
   calculateAllOfflineGrowth,

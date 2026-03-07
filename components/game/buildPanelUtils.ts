@@ -6,8 +6,8 @@
  * Both BuildPanel.tsx and BuildPanel.test.ts import from here.
  */
 
+import buildingConfig from "@/config/game/building.json" with { type: "json" };
 import type { MaterialType, PieceType } from "@/game/ecs/components/building";
-import buildingConfig from "@/config/game/building.json";
 
 // ---------------------------------------------------------------------------
 // Config accessors
@@ -32,7 +32,12 @@ export interface PieceCategory {
 }
 
 export const CATEGORIES: PieceCategory[] = [
-  { id: "foundation", label: "Foundation", icon: "🪨", pieces: ["foundation", "floor", "platform"] },
+  {
+    id: "foundation",
+    label: "Foundation",
+    icon: "🪨",
+    pieces: ["foundation", "floor", "platform"],
+  },
   { id: "walls", label: "Walls", icon: "🧱", pieces: ["wall", "window", "pillar"] },
   { id: "roofs", label: "Roofs", icon: "🏠", pieces: ["roof", "beam"] },
   { id: "doors", label: "Doors", icon: "🚪", pieces: ["door"] },
@@ -49,10 +54,7 @@ export function getPiecesForCategory(categoryId: string): PieceType[] {
   return cat ? cat.pieces : [];
 }
 
-export function getBuildCost(
-  pieceType: PieceType,
-  material: MaterialType,
-): Record<string, number> {
+export function getBuildCost(pieceType: PieceType, material: MaterialType): Record<string, number> {
   return (buildCosts[pieceType]?.[material] ?? {}) as Record<string, number>;
 }
 

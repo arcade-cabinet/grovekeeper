@@ -177,7 +177,15 @@ export const resolveWorldQuest = (
     const targetType = taskOption?.targetType ?? step.targetType ?? "trees_planted";
     const targetAmount = taskOption?.targetAmount ?? step.targetAmount ?? 1;
 
-    return { id: step.id, name: step.name, description: step.description, npcId, dialogueId, targetType, targetAmount };
+    return {
+      id: step.id,
+      name: step.name,
+      description: step.description,
+      npcId,
+      dialogueId,
+      targetType,
+      targetAmount,
+    };
   });
 
   return {

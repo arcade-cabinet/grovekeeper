@@ -8,7 +8,8 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
-import React, { useCallback, useEffect, useRef } from "react";
+import type React from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import * as THREE from "three";
 
@@ -21,10 +22,10 @@ import {
   validatePlacementWithRapier,
 } from "@/game/systems/kitbashing";
 import { GRID_SIZE } from "@/game/systems/kitbashing/placement";
-import { buildGhostPiece, rotateIncrement, snapToGrid } from "./PlacementGhostUtils";
+import { buildGhostPiece, rotateIncrement, snapToGrid } from "./PlacementGhostUtils.ts";
 
 // Re-export pure helpers for consumers
-export { buildGhostPiece, rotateIncrement, snapToGrid } from "./PlacementGhostUtils";
+export { buildGhostPiece, rotateIncrement, snapToGrid } from "./PlacementGhostUtils.ts";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -166,10 +167,7 @@ interface PlacementGhostUIProps {
 
 function PlacementGhostUI({ onConfirm, onCancel, onRotateCW, onRotateCCW }: PlacementGhostUIProps) {
   return (
-    <View
-      className="absolute bottom-48 flex-row gap-2 self-center"
-      pointerEvents="box-none"
-    >
+    <View className="absolute bottom-48 flex-row gap-2 self-center" pointerEvents="box-none">
       <Pressable
         className="rounded-lg px-3 py-2 active:scale-95"
         style={{ backgroundColor: "#607D8B" }}
@@ -256,7 +254,9 @@ export const PlacementGhostMeshLayer = ({
   rotationRef: React.MutableRefObject<0 | 90 | 180 | 270>;
 }) => {
   if (!template) return null;
-  return <PlacementGhostMesh template={template} gridPosRef={gridPosRef} rotationRef={rotationRef} />;
+  return (
+    <PlacementGhostMesh template={template} gridPosRef={gridPosRef} rotationRef={rotationRef} />
+  );
 };
 
 /**

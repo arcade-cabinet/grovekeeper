@@ -6,7 +6,7 @@
  */
 
 import { createRNG, hashString } from "@/game/utils/seedRNG";
-import { ZONE_ARCHETYPES, type ZoneArchetype } from "./archetypes";
+import { ZONE_ARCHETYPES, type ZoneArchetype } from "./archetypes.ts";
 import type {
   ConnectionDirection,
   PropPlacement,
@@ -14,7 +14,7 @@ import type {
   WorldDefinition,
   ZoneConnection,
   ZoneDefinition,
-} from "./types";
+} from "./types.ts";
 
 // ============================================
 // Birchmother placement

@@ -4,9 +4,10 @@
  * Re-exports all procedural component types from domain-specific files.
  * Each file can grow independently with its own systems alongside.
  */
-export * from "./terrain";
-export * from "./water";
-export * from "./atmosphere";
-export * from "./particles";
-export * from "./spirits";
-export * from "./audio";
+
+export * from "./atmosphere.ts";
+export * from "./audio.ts";
+export * from "./particles.ts";
+export * from "./spirits.ts";
+export * from "./terrain.ts";
+export * from "./water.ts";

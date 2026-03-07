@@ -15,7 +15,7 @@ import type * as React from "react";
 import { useRef, useState } from "react";
 
 import { structuresQuery } from "@/game/ecs/world";
-import { type StaticEntityInput, StaticModelInstances } from "./StaticInstances";
+import { type StaticEntityInput, StaticModelInstances } from "./StaticInstances.tsx";
 
 /**
  * Renders all ECS structure entities as batched InstancedMeshes grouped by modelPath.
@@ -26,14 +26,12 @@ import { type StaticEntityInput, StaticModelInstances } from "./StaticInstances"
  * See GAME_SPEC.md §28.
  */
 export const StructureInstances = () => {
-  const [modelCapacities, setModelCapacities] = useState<
-    ReadonlyMap<string, number>
-  >(new Map());
+  const [modelCapacities, setModelCapacities] = useState<ReadonlyMap<string, number>>(new Map());
   const prevModelsRef = useRef<Set<string>>(new Set());
   const capacitiesRef = useRef<Map<string, number>>(new Map());
-  const entityRefsMapRef = useRef<
-    Map<string, React.MutableRefObject<StaticEntityInput[]>>
-  >(new Map());
+  const entityRefsMapRef = useRef<Map<string, React.MutableRefObject<StaticEntityInput[]>>>(
+    new Map(),
+  );
 
   useFrame(() => {
     const current = new Set<string>();
@@ -87,8 +85,7 @@ export const StructureInstances = () => {
   return (
     <>
       {[...modelCapacities.entries()].map(([modelPath, capacity]) => {
-        const entitiesRef =
-          entityRefsMapRef.current.get(modelPath) ?? { current: [] };
+        const entitiesRef = entityRefsMapRef.current.get(modelPath) ?? { current: [] };
         return (
           <StaticModelInstances
             key={modelPath}

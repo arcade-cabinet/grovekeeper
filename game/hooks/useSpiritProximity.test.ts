@@ -28,15 +28,19 @@ jest.mock("@/game/ui/Toast", () => ({
   showToast: jest.fn(),
 }));
 
+jest.mock("@/game/ui/dialogueBridge", () => ({
+  openDialogueSession: jest.fn(),
+}));
+
 import {
   checkSpiritProximity,
   computeDistance3D,
+  type PlayerSnapshot,
   SPIRIT_COOLDOWN_MS,
   SPIRIT_DETECTION_RADIUS,
-  useSpiritProximity,
-  type PlayerSnapshot,
   type SpiritSnapshot,
-} from "./useSpiritProximity";
+  useSpiritProximity,
+} from "./useSpiritProximity.ts";
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -97,21 +101,14 @@ describe("computeDistance3D (Spec §32.3)", () => {
 describe("checkSpiritProximity (Spec §32.3)", () => {
   const NOW = 1_000_000;
   const RADIUS = SPIRIT_DETECTION_RADIUS; // 2.0m
-  const COOLDOWN = SPIRIT_COOLDOWN_MS;    // 5000ms
+  const COOLDOWN = SPIRIT_COOLDOWN_MS; // 5000ms
 
   it("triggers spirit at distance < 2.0m from player (1.9m)", () => {
     const player = makePlayer(0, 0, 0);
     const spirit = makeSpirit("spirit-0", 1.9, 0, 0);
     const cooldowns = new Map<string, number>();
 
-    const result = checkSpiritProximity(
-      player,
-      [spirit],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [spirit], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).toContain("spirit-0");
   });
@@ -121,14 +118,7 @@ describe("checkSpiritProximity (Spec §32.3)", () => {
     const spirit = makeSpirit("spirit-0", 2.1, 0, 0);
     const cooldowns = new Map<string, number>();
 
-    const result = checkSpiritProximity(
-      player,
-      [spirit],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [spirit], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).not.toContain("spirit-0");
   });
@@ -138,14 +128,7 @@ describe("checkSpiritProximity (Spec §32.3)", () => {
     const spirit = makeSpirit("spirit-0", 2.0, 0, 0);
     const cooldowns = new Map<string, number>();
 
-    const result = checkSpiritProximity(
-      player,
-      [spirit],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [spirit], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).not.toContain("spirit-0");
   });
@@ -156,14 +139,7 @@ describe("checkSpiritProximity (Spec §32.3)", () => {
     const spirit = makeSpirit("spirit-1", 0.5, 0, 0, true);
     const cooldowns = new Map<string, number>();
 
-    const result = checkSpiritProximity(
-      player,
-      [spirit],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [spirit], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).toHaveLength(0);
   });
@@ -174,14 +150,7 @@ describe("checkSpiritProximity (Spec §32.3)", () => {
     // Last trigger was 3s ago — still within 5s cooldown
     const cooldowns = new Map<string, number>([["spirit-2", NOW - 3000]]);
 
-    const result = checkSpiritProximity(
-      player,
-      [spirit],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [spirit], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).toHaveLength(0);
   });
@@ -192,14 +161,7 @@ describe("checkSpiritProximity (Spec §32.3)", () => {
     // Last trigger was 6s ago — cooldown expired
     const cooldowns = new Map<string, number>([["spirit-2", NOW - 6000]]);
 
-    const result = checkSpiritProximity(
-      player,
-      [spirit],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [spirit], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).toContain("spirit-2");
   });
@@ -208,14 +170,7 @@ describe("checkSpiritProximity (Spec §32.3)", () => {
     const player = makePlayer(0, 0, 0);
     const cooldowns = new Map<string, number>();
 
-    const result = checkSpiritProximity(
-      player,
-      [],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).toHaveLength(0);
   });
@@ -226,14 +181,7 @@ describe("checkSpiritProximity (Spec §32.3)", () => {
     const far = makeSpirit("spirit-far", 10.0, 0, 0);
     const cooldowns = new Map<string, number>();
 
-    const result = checkSpiritProximity(
-      player,
-      [near, far],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [near, far], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).toContain("spirit-near");
     expect(result).not.toContain("spirit-far");
@@ -245,14 +193,7 @@ describe("checkSpiritProximity (Spec §32.3)", () => {
     const s2 = makeSpirit("spirit-b", 0, 0, 0.5);
     const cooldowns = new Map<string, number>();
 
-    const result = checkSpiritProximity(
-      player,
-      [s1, s2],
-      cooldowns,
-      NOW,
-      RADIUS,
-      COOLDOWN,
-    );
+    const result = checkSpiritProximity(player, [s1, s2], cooldowns, NOW, RADIUS, COOLDOWN);
 
     expect(result).toContain("spirit-a");
     expect(result).toContain("spirit-b");

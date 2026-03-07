@@ -19,7 +19,7 @@ import {
   getBuildCost,
   getPieceUnlockLevel,
   isPieceLocked,
-} from "./buildPanelUtils";
+} from "./buildPanelUtils.ts";
 
 // Re-export pure functions for callers who import from this module
 export {
@@ -29,24 +29,40 @@ export {
   getPieceUnlockLevel,
   getTier,
   isPieceLocked,
-} from "./buildPanelUtils";
+} from "./buildPanelUtils.ts";
 
 // ---------------------------------------------------------------------------
 // Display maps
 // ---------------------------------------------------------------------------
 
 const PIECE_LABELS: Record<PieceType, string> = {
-  wall: "Wall", floor: "Floor", roof: "Roof", stairs: "Stairs",
-  foundation: "Foundation", door: "Door", window: "Window",
-  pillar: "Pillar", platform: "Platform", beam: "Beam", pipe: "Pipe",
+  wall: "Wall",
+  floor: "Floor",
+  roof: "Roof",
+  stairs: "Stairs",
+  foundation: "Foundation",
+  door: "Door",
+  window: "Window",
+  pillar: "Pillar",
+  platform: "Platform",
+  beam: "Beam",
+  pipe: "Pipe",
 };
 
 const MATERIAL_LABELS: Record<MaterialType, string> = {
-  thatch: "Thatch", wood: "Wood", stone: "Stone", metal: "Metal", reinforced: "Reinforced",
+  thatch: "Thatch",
+  wood: "Wood",
+  stone: "Stone",
+  metal: "Metal",
+  reinforced: "Reinforced",
 };
 
 const MATERIAL_COLORS: Record<MaterialType, string> = {
-  thatch: "#D4A017", wood: "#8B6340", stone: "#9E9E9E", metal: "#607D8B", reinforced: "#455A64",
+  thatch: "#D4A017",
+  wood: "#8B6340",
+  stone: "#9E9E9E",
+  metal: "#607D8B",
+  reinforced: "#455A64",
 };
 
 // ---------------------------------------------------------------------------
@@ -72,11 +88,7 @@ const BUTTON_SIZE = 52;
 // CategoryWheel sub-component
 // ---------------------------------------------------------------------------
 
-function CategoryWheel({
-  onSelect,
-}: {
-  onSelect: (categoryId: string) => void;
-}) {
+function CategoryWheel({ onSelect }: { onSelect: (categoryId: string) => void }) {
   const count = CATEGORIES.length;
   return (
     <View style={{ height: 180, alignItems: "center", justifyContent: "center" }}>
@@ -302,7 +314,12 @@ export function BuildPanel({
           >
             {selectedCategory ? (
               <Pressable
-                style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+                style={{
+                  minWidth: 44,
+                  minHeight: 44,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 onPress={() => setSelectedCategory(null)}
                 accessibilityLabel="Back to categories"
               >
@@ -317,7 +334,12 @@ export function BuildPanel({
             </Text>
 
             <Pressable
-              style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+              style={{
+                minWidth: 44,
+                minHeight: 44,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
               onPress={handleClose}
               accessibilityLabel="Close"
             >
@@ -331,9 +353,7 @@ export function BuildPanel({
           ) : (
             <ScrollView style={{ paddingHorizontal: 12, paddingTop: 8 }}>
               {activeCat?.pieces.map((pieceType) => {
-                const materials = Object.keys(
-                  buildCosts[pieceType] ?? {},
-                ) as MaterialType[];
+                const materials = Object.keys(buildCosts[pieceType] ?? {}) as MaterialType[];
                 return materials.map((material) => (
                   <PieceRow
                     key={`${pieceType}-${material}`}

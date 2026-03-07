@@ -5,7 +5,7 @@ import {
   purchaseOffer,
   spawnMerchantAtVillage,
   updateMerchant,
-} from "./travelingMerchant";
+} from "./travelingMerchant/index.ts";
 
 describe("traveling merchant system", () => {
   describe("initializeMerchantState", () => {

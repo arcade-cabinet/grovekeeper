@@ -1,6 +1,6 @@
 import { world } from "@/game/ecs/world";
-import type { ZoneDefinition } from "./types";
-import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";
+import type { ZoneDefinition } from "./types.ts";
+import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader.ts";
 
 // Helper to create a minimal zone definition
 function makeZone(overrides: Partial<ZoneDefinition> = {}): ZoneDefinition {

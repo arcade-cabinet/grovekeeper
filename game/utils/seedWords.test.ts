@@ -1,4 +1,4 @@
-import { generateSeedPhrase, rngFromSeedPhrase, scopedRNG } from "./seedWords";
+import { generateSeedPhrase, rngFromSeedPhrase, scopedRNG } from "./seedWords.ts";
 
 describe("seedWords", () => {
   describe("generateSeedPhrase", () => {

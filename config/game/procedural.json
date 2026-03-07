@@ -28,9 +28,27 @@
   "water": {
     "oceanWaves": [
       { "amplitude": 0.15, "wavelength": 8.0, "speed": 1.2, "steepness": 0.4, "direction": [1, 0] },
-      { "amplitude": 0.08, "wavelength": 4.0, "speed": 0.8, "steepness": 0.3, "direction": [0.7, 0.7] },
-      { "amplitude": 0.04, "wavelength": 2.0, "speed": 1.5, "steepness": 0.5, "direction": [-0.3, 0.9] },
-      { "amplitude": 0.02, "wavelength": 1.0, "speed": 2.0, "steepness": 0.6, "direction": [0.5, -0.5] }
+      {
+        "amplitude": 0.08,
+        "wavelength": 4.0,
+        "speed": 0.8,
+        "steepness": 0.3,
+        "direction": [0.7, 0.7]
+      },
+      {
+        "amplitude": 0.04,
+        "wavelength": 2.0,
+        "speed": 1.5,
+        "steepness": 0.5,
+        "direction": [-0.3, 0.9]
+      },
+      {
+        "amplitude": 0.02,
+        "wavelength": 1.0,
+        "speed": 2.0,
+        "steepness": 0.6,
+        "direction": [0.5, -0.5]
+      }
     ],
     "pondWaves": [
       { "amplitude": 0.02, "wavelength": 3.0, "speed": 0.3, "steepness": 0.1, "direction": [1, 0] },
@@ -38,7 +56,13 @@
     ],
     "riverWaves": [
       { "amplitude": 0.05, "wavelength": 3.0, "speed": 1.0, "steepness": 0.3, "direction": [1, 0] },
-      { "amplitude": 0.03, "wavelength": 1.5, "speed": 1.5, "steepness": 0.2, "direction": [0.8, 0.2] }
+      {
+        "amplitude": 0.03,
+        "wavelength": 1.5,
+        "speed": 1.5,
+        "steepness": 0.2,
+        "direction": [0.8, 0.2]
+      }
     ],
     "colors": {
       "ocean": "#1a5276",

@@ -5,7 +5,7 @@ import {
   encounterWildSpecies,
   getVisibleCodexFields,
   type SpeciesProgress,
-} from "./speciesDiscovery";
+} from "./speciesDiscovery.ts";
 
 describe("computeDiscoveryTier (Spec §8, §25)", () => {
   it("returns tier 0 for never-seen species", () => {
@@ -139,7 +139,11 @@ describe("encounterWildSpecies (Spec §8, §25)", () => {
   });
 
   it("returns isNew=false when already seen in wild", () => {
-    const progress: SpeciesProgress = { ...createEmptyProgress(), seenInWild: true, discoveryTier: 1 };
+    const progress: SpeciesProgress = {
+      ...createEmptyProgress(),
+      seenInWild: true,
+      discoveryTier: 1,
+    };
     const result = encounterWildSpecies(progress);
     expect(result.isNew).toBe(false);
     expect(result.updated).toBe(progress); // same reference -- no copy

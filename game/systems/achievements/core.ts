@@ -3,7 +3,7 @@
  * Spec §25.1
  */
 
-import type { Achievement } from "./types";
+import type { Achievement } from "./types.ts";
 
 // All 12 base species that must be planted for the collector achievement
 const ALL_BASE_SPECIES = [

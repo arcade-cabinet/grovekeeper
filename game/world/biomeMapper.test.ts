@@ -9,12 +9,7 @@
  *  - getBiomeColor returns the correct color per biome
  */
 
-import {
-  BIOME_COLORS,
-  type BiomeType,
-  assignBiome,
-  getBiomeColor,
-} from "./biomeMapper";
+import { assignBiome, BIOME_COLORS, type BiomeType, getBiomeColor } from "./biomeMapper.ts";
 
 const ALL_BIOMES: BiomeType[] = [
   "starting-grove",

@@ -8,7 +8,7 @@ import {
   resetGameTime,
   SKY_COLORS,
   setGameTime,
-} from "./time";
+} from "./time.ts";
 
 beforeEach(() => {
   resetGameTime();

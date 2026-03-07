@@ -4,7 +4,7 @@ import {
   getAllCodexEntries,
   getBiomeEntry,
   getCodexEntry,
-} from "./codex";
+} from "./codex.ts";
 
 describe("DISCOVERY_TIERS", () => {
   it("defines 5 tiers (0-4)", () => {

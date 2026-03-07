@@ -19,7 +19,7 @@ import {
 import { useGameStore } from "@/game/stores/gameStore";
 import { isLabyrinthChunk } from "@/game/world/mazeGenerator";
 
-import { DISCOVERED_FALLBACK_COLOR } from "./colors";
+import { DISCOVERED_FALLBACK_COLOR } from "./colors.ts";
 import type {
   MinimapCampfire,
   MinimapChunk,
@@ -27,7 +27,7 @@ import type {
   MinimapNpc,
   MinimapSnapshot,
   MinimapSpirit,
-} from "./types";
+} from "./types.ts";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -206,7 +206,12 @@ export function readMinimapSnapshot(): MinimapSnapshot {
   }
 
   // Collect Grovekeeper Spirit entities
-  const spiritEntities: Array<{ worldX: number; worldZ: number; spiritId: string; discovered: boolean }> = [];
+  const spiritEntities: Array<{
+    worldX: number;
+    worldZ: number;
+    spiritId: string;
+    discovered: boolean;
+  }> = [];
   for (const entity of grovekeeperSpiritsQuery) {
     const spirit = entity.grovekeeperSpirit;
     const pos = entity.position;

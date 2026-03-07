@@ -13,18 +13,18 @@
  * produces identical village data. All randomness via scopedRNG.
  */
 
-import type { StructureComponent, CampfireComponent } from "@/game/ecs/components/structures";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import structuresData from "@/config/game/structures.json" with { type: "json" };
 import type {
+  NpcAnimState,
   NpcComponent,
   NpcFunction,
   NpcPersonalityType,
-  NpcAnimState,
   NpcScheduleEntry,
 } from "@/game/ecs/components/npc";
+import type { CampfireComponent, StructureComponent } from "@/game/ecs/components/structures";
 import { scopedRNG } from "@/game/utils/seedWords";
-import { getLandmarkLocalPos, getLandmarkType } from "./pathGenerator";
-import gridConfig from "@/config/game/grid.json" with { type: "json" };
-import structuresData from "@/config/game/structures.json" with { type: "json" };
+import { getLandmarkLocalPos, getLandmarkType } from "./pathGenerator.ts";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -61,14 +61,7 @@ const VILLAGE_BUILDING_IDS: readonly string[] = [
   "notice-board",
 ];
 
-const NPC_FUNCTIONS: NpcFunction[] = [
-  "trading",
-  "quests",
-  "tips",
-  "seeds",
-  "crafting",
-  "lore",
-];
+const NPC_FUNCTIONS: NpcFunction[] = ["trading", "quests", "tips", "seeds", "crafting", "lore"];
 
 const NPC_PERSONALITIES: NpcPersonalityType[] = [
   "cheerful",
@@ -201,10 +194,14 @@ function buildNpcSchedule(
   const wX = chunkX * CHUNK_SIZE;
   const wZ = chunkZ * CHUNK_SIZE;
   return [
-    { hour: SCHEDULE_HOURS.wake,   activity: "wake",   position: { x: wX + homeX, z: wZ + homeZ } },
-    { hour: SCHEDULE_HOURS.work,   activity: "work",   position: { x: wX + workX, z: wZ + workZ } },
-    { hour: SCHEDULE_HOURS.wander, activity: "wander", position: { x: wX + centerLocalX, z: wZ + centerLocalZ } },
-    { hour: SCHEDULE_HOURS.sleep,  activity: "sleep",  position: { x: wX + homeX, z: wZ + homeZ } },
+    { hour: SCHEDULE_HOURS.wake, activity: "wake", position: { x: wX + homeX, z: wZ + homeZ } },
+    { hour: SCHEDULE_HOURS.work, activity: "work", position: { x: wX + workX, z: wZ + workZ } },
+    {
+      hour: SCHEDULE_HOURS.wander,
+      activity: "wander",
+      position: { x: wX + centerLocalX, z: wZ + centerLocalZ },
+    },
+    { hour: SCHEDULE_HOURS.sleep, activity: "sleep", position: { x: wX + homeX, z: wZ + homeZ } },
   ];
 }
 
@@ -257,8 +254,7 @@ export function generateVillage(
   };
 
   // ── Buildings radially distributed around center ───────────────────────────
-  const buildingCount =
-    MIN_BUILDINGS + Math.floor(rng() * (MAX_BUILDINGS - MIN_BUILDINGS + 1));
+  const buildingCount = MIN_BUILDINGS + Math.floor(rng() * (MAX_BUILDINGS - MIN_BUILDINGS + 1));
   const buildings: BuildingPlacement[] = [];
 
   for (let i = 0; i < buildingCount; i++) {
@@ -268,8 +264,7 @@ export function generateVillage(
       BUILDING_MIN_DISTANCE + rng() * (BUILDING_MAX_DISTANCE - BUILDING_MIN_DISTANCE);
     const lx = clampToChunk(localX + Math.cos(angle) * distance);
     const lz = clampToChunk(localZ + Math.sin(angle) * distance);
-    const templateId =
-      VILLAGE_BUILDING_IDS[Math.floor(rng() * VILLAGE_BUILDING_IDS.length)];
+    const templateId = VILLAGE_BUILDING_IDS[Math.floor(rng() * VILLAGE_BUILDING_IDS.length)];
     const rotationY = rng() * Math.PI * 2;
     const y = heightAt(heightmap, lx, lz);
 
@@ -281,8 +276,7 @@ export function generateVillage(
   }
 
   // ── NPCs near village center ───────────────────────────────────────────────
-  const npcCount =
-    MIN_NPC_COUNT + Math.floor(rng() * (MAX_NPC_COUNT - MIN_NPC_COUNT + 1));
+  const npcCount = MIN_NPC_COUNT + Math.floor(rng() * (MAX_NPC_COUNT - MIN_NPC_COUNT + 1));
   const npcs: NpcPlacement[] = [];
 
   for (let i = 0; i < npcCount; i++) {

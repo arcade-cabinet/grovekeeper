@@ -9,11 +9,11 @@
  * Tools with no model are silently hidden (no placeholder boxes — Spec §11).
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import { createPortal, useFrame, useThree } from "@react-three/fiber";
 import anime from "animejs";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type * as THREE from "three";
 
 import toolVisualsData from "@/config/game/toolVisuals.json" with { type: "json" };
 import { useGameStore } from "@/game/stores/gameStore";
@@ -49,10 +49,14 @@ interface SwapConfig {
  * Index-signature type covering tool entries and the top-level "sway"/"bob"/"swap" config keys.
  * The union value type lets TypeScript accept toolVisuals.json directly.
  */
-type ToolVisualsConfig = { readonly [toolId: string]: ToolVisualEntry | SwayConfig | BobConfig | SwapConfig | undefined };
+type ToolVisualsConfig = {
+  readonly [toolId: string]: ToolVisualEntry | SwayConfig | BobConfig | SwapConfig | undefined;
+};
 
 /** Narrows a config value to ToolVisualEntry (excludes SwayConfig, BobConfig, SwapConfig, and undefined). */
-function isToolVisualEntry(v: ToolVisualEntry | SwayConfig | BobConfig | SwapConfig): v is ToolVisualEntry {
+function isToolVisualEntry(
+  v: ToolVisualEntry | SwayConfig | BobConfig | SwapConfig,
+): v is ToolVisualEntry {
   return "glbPath" in v;
 }
 
@@ -144,10 +148,7 @@ export function buildSwapUpParams(
  * Returns the GLB path for a tool, or null if no model exists in the config (Spec §11).
  * Tools without a GLB mapping are not rendered — no placeholder fallbacks.
  */
-export function resolveToolGLBPath(
-  toolId: string,
-  config: ToolVisualsConfig,
-): string | null {
+export function resolveToolGLBPath(toolId: string, config: ToolVisualsConfig): string | null {
   const entry = config[toolId];
   if (!entry || !isToolVisualEntry(entry)) return null;
   return entry.glbPath;
@@ -192,7 +193,17 @@ interface ToolGLBModelProps {
  * This is a separate component so useGLTF is only called when a valid GLB path
  * is known (satisfies Rules of Hooks — parent conditionally mounts this).
  */
-const ToolGLBModel = ({ glbPath, offset, scale, moveDirection, swayAmount, lerpFactor, bobHeight, bobFrequency, swapAnimRef }: ToolGLBModelProps) => {
+const ToolGLBModel = ({
+  glbPath,
+  offset,
+  scale,
+  moveDirection,
+  swayAmount,
+  lerpFactor,
+  bobHeight,
+  bobFrequency,
+  swapAnimRef,
+}: ToolGLBModelProps) => {
   const { scene } = useGLTF(glbPath);
   const { camera } = useThree();
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
@@ -203,7 +214,13 @@ const ToolGLBModel = ({ glbPath, offset, scale, moveDirection, swayAmount, lerpF
   useFrame((_state, delta) => {
     const group = groupRef.current;
     if (!group) return;
-    swayRef.current = computeSwayOffset(moveDirection, swayRef.current, swayAmount, lerpFactor, delta);
+    swayRef.current = computeSwayOffset(
+      moveDirection,
+      swayRef.current,
+      swayAmount,
+      lerpFactor,
+      delta,
+    );
     bobTimeRef.current += delta;
     const speed = Math.min(1, Math.sqrt(moveDirection.x ** 2 + moveDirection.z ** 2));
     const bob = computeWalkBob(bobTimeRef.current, bobHeight, bobFrequency, speed);

@@ -9,22 +9,22 @@
  * Mobile-first: all touch targets >= 44px, no overlap with virtual joystick zone.
  */
 
-import { useMemo, useState } from "react";
 import { MenuIcon, ScrollIcon } from "lucide-react-native";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Icon } from "@/components/ui/icon";
 import { TargetInfo } from "@/components/player/TargetInfo";
+import { Icon } from "@/components/ui/icon";
 import { TOOLS } from "@/game/config/tools";
 import { grovekeeperSpiritsQuery, playerQuery } from "@/game/ecs/world";
 import { totalXpForLevel, useGameStore, xpToNext } from "@/game/stores/gameStore";
 import { computeTimeState } from "@/game/systems/time";
-import { ConnectedQuestPanel } from "./QuestPanel";
-import { ResourceBar } from "./ResourceBar";
-import { StaminaGauge } from "./StaminaGauge";
-import { TimeDisplayCompact, type GameTime } from "./TimeDisplay";
-import { ToolBelt } from "./ToolBelt";
-import { XPBar } from "./XPBar";
+import { ConnectedQuestPanel } from "./QuestPanel.tsx";
+import { ResourceBar } from "./ResourceBar.tsx";
+import { StaminaGauge } from "./StaminaGauge.tsx";
+import { type GameTime, TimeDisplayCompact } from "./TimeDisplay.tsx";
+import { ToolBelt } from "./ToolBelt.tsx";
+import { XPBar } from "./XPBar.tsx";
 
 // ── Pure exports (testable seams) ────────────────────────────────────────────
 
@@ -174,11 +174,7 @@ export function HUD({ onOpenMenu, onOpenSeedSelect }: HUDProps) {
           >
             <Icon as={ScrollIcon} size={22} className="text-white" />
           </Pressable>
-          <Pressable
-            style={styles.menuButton}
-            onPress={onOpenMenu}
-            accessibilityLabel="Open menu"
-          >
+          <Pressable style={styles.menuButton} onPress={onOpenMenu} accessibilityLabel="Open menu">
             <Icon as={MenuIcon} size={22} className="text-white" />
           </Pressable>
         </View>

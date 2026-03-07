@@ -11,10 +11,10 @@
  */
 
 import { observable } from "@legendapp/state";
-import { generateEntityId, world } from "@/game/ecs/world";
-import type { CropId, CropStage } from "@/game/ecs/components/structures";
 import cropsConfig from "@/config/game/crops.json" with { type: "json" };
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import type { CropId, CropStage } from "@/game/ecs/components/structures";
+import { generateEntityId, world } from "@/game/ecs/world";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -118,9 +118,7 @@ export function updateCropInDiff(
   if (!diff?.plantedCrops) return;
 
   const updated = diff.plantedCrops.map((c) =>
-    c.localX === localX && c.localZ === localZ
-      ? { ...c, stage, progress, watered }
-      : c,
+    c.localX === localX && c.localZ === localZ ? { ...c, stage, progress, watered } : c,
   );
   saveChunkDiff(chunkKey, { ...diff, plantedCrops: updated });
 }
@@ -152,11 +150,7 @@ export function clearAllChunkDiffs(): void {
  * @param chunkX    - chunk grid X coordinate
  * @param chunkZ    - chunk grid Z coordinate
  */
-export function applyChunkDiff(
-  chunkKey: string,
-  chunkX: number,
-  chunkZ: number,
-): void {
+export function applyChunkDiff(chunkKey: string, chunkX: number, chunkZ: number): void {
   const diff = loadChunkDiff(chunkKey);
   if (!diff) return;
 
@@ -189,10 +183,7 @@ export function applyChunkDiff(
   }
 
   const cropLookup = new Map(
-    (cropsConfig.crops as Array<{ id: string; modelPath: string }>).map((c) => [
-      c.id,
-      c.modelPath,
-    ]),
+    (cropsConfig.crops as Array<{ id: string; modelPath: string }>).map((c) => [c.id, c.modelPath]),
   );
 
   for (const planted of diff.plantedCrops ?? []) {

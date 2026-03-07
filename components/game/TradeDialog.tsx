@@ -35,12 +35,7 @@ export function TradeDialog({
   const [quantity, setQuantity] = useState(1);
 
   const maxQuantity = selectedRate
-    ? Math.max(
-        1,
-        Math.floor(
-          (resources[selectedRate.from] ?? 0) / selectedRate.fromAmount,
-        ),
-      )
+    ? Math.max(1, Math.floor((resources[selectedRate.from] ?? 0) / selectedRate.fromAmount))
     : 1;
 
   const handleTrade = () => {
@@ -83,118 +78,112 @@ export function TradeDialog({
           zIndex: 1,
         }}
       >
-          {/* Header */}
-          <View className="flex-row items-center justify-between border-b border-bark-brown/30 px-4 py-3">
-            <Text className="font-heading text-lg font-bold text-soil-dark">
-              {npcName ? `Trade with ${npcName}` : "Trading Post"}
-            </Text>
-            <Pressable
-              className="min-h-[44px] min-w-[44px] items-center justify-center"
-              onPress={handleClose}
-              accessibilityLabel="Close"
-            >
-              <Text className="text-lg font-bold text-soil-dark">X</Text>
-            </Pressable>
+        {/* Header */}
+        <View className="flex-row items-center justify-between border-b border-bark-brown/30 px-4 py-3">
+          <Text className="font-heading text-lg font-bold text-soil-dark">
+            {npcName ? `Trade with ${npcName}` : "Trading Post"}
+          </Text>
+          <Pressable
+            className="min-h-[44px] min-w-[44px] items-center justify-center"
+            onPress={handleClose}
+            accessibilityLabel="Close"
+          >
+            <Text className="text-lg font-bold text-soil-dark">X</Text>
+          </Pressable>
+        </View>
+
+        {/* Trade rates list */}
+        <ScrollView className="px-4 py-3">
+          <View className="gap-2">
+            {rates.map((rate) => {
+              const isSelected = selectedRate === rate;
+              return (
+                <Pressable
+                  key={`${rate.from}-${rate.to}`}
+                  className={`rounded-lg border p-3 ${
+                    isSelected
+                      ? "border-forest-green bg-leaf-light/20"
+                      : "border-bark-brown/30 bg-white/50"
+                  }`}
+                  onPress={() => handleSelectRate(rate)}
+                  accessibilityLabel={`Trade ${rate.fromAmount} ${rate.from} for ${rate.toAmount} ${rate.to}`}
+                >
+                  <Text className="text-sm text-soil-dark">
+                    <Text className="font-medium capitalize">
+                      {rate.fromAmount} {rate.from}
+                    </Text>
+                    {"  \u2192  "}
+                    <Text className="font-medium capitalize">
+                      {rate.toAmount} {rate.to}
+                    </Text>
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
 
-          {/* Trade rates list */}
-          <ScrollView className="px-4 py-3">
-            <View className="gap-2">
-              {rates.map((rate) => {
-                const isSelected = selectedRate === rate;
-                return (
-                  <Pressable
-                    key={`${rate.from}-${rate.to}`}
-                    className={`rounded-lg border p-3 ${
-                      isSelected
-                        ? "border-forest-green bg-leaf-light/20"
-                        : "border-bark-brown/30 bg-white/50"
-                    }`}
-                    onPress={() => handleSelectRate(rate)}
-                    accessibilityLabel={`Trade ${rate.fromAmount} ${rate.from} for ${rate.toAmount} ${rate.to}`}
-                  >
-                    <Text className="text-sm text-soil-dark">
-                      <Text className="font-medium capitalize">
-                        {rate.fromAmount} {rate.from}
-                      </Text>
-                      {"  \u2192  "}
-                      <Text className="font-medium capitalize">
-                        {rate.toAmount} {rate.to}
-                      </Text>
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+          {/* Quantity selector + execute */}
+          {selectedRate && (
+            <View className="mt-4 gap-3">
+              {/* Quantity row */}
+              <View className="flex-row items-center gap-3">
+                <Text className="text-sm text-soil-dark">Qty:</Text>
 
-            {/* Quantity selector + execute */}
-            {selectedRate && (
-              <View className="mt-4 gap-3">
-                {/* Quantity row */}
-                <View className="flex-row items-center gap-3">
-                  <Text className="text-sm text-soil-dark">Qty:</Text>
+                {/* Minus button */}
+                <Pressable
+                  className="min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-bark-brown/30 bg-white"
+                  onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                  accessibilityLabel="Decrease quantity"
+                >
+                  <Text className="text-lg font-bold text-forest-green">-</Text>
+                </Pressable>
 
-                  {/* Minus button */}
-                  <Pressable
-                    className="min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-bark-brown/30 bg-white"
-                    onPress={() => setQuantity((q) => Math.max(1, q - 1))}
-                    disabled={quantity <= 1}
-                    accessibilityLabel="Decrease quantity"
-                  >
-                    <Text className="text-lg font-bold text-forest-green">
-                      -
-                    </Text>
-                  </Pressable>
-
-                  {/* Quantity display */}
-                  <Text className="min-w-[32px] text-center text-lg font-bold tabular-nums text-forest-green">
-                    {quantity}
-                  </Text>
-
-                  {/* Plus button */}
-                  <Pressable
-                    className="min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-bark-brown/30 bg-white"
-                    onPress={() =>
-                      setQuantity((q) => Math.min(maxQuantity, q + 1))
-                    }
-                    disabled={quantity >= maxQuantity}
-                    accessibilityLabel="Increase quantity"
-                  >
-                    <Text className="text-lg font-bold text-forest-green">
-                      +
-                    </Text>
-                  </Pressable>
-                </View>
-
-                {/* Trade summary */}
-                <Text className="text-xs text-soil-dark">
-                  Pay: {quantity * selectedRate.fromAmount} {selectedRate.from}
-                  {"  \u2192  "}
-                  Get: {quantity * selectedRate.toAmount} {selectedRate.to}
+                {/* Quantity display */}
+                <Text className="min-w-[32px] text-center text-lg font-bold tabular-nums text-forest-green">
+                  {quantity}
                 </Text>
 
-                {/* Trade button */}
-                <Button
-                  className="min-h-[44px] w-full rounded-xl bg-forest-green"
-                  onPress={handleTrade}
+                {/* Plus button */}
+                <Pressable
+                  className="min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-bark-brown/30 bg-white"
+                  onPress={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+                  disabled={quantity >= maxQuantity}
+                  accessibilityLabel="Increase quantity"
                 >
-                  <Text className="font-bold text-white">Trade</Text>
-                </Button>
+                  <Text className="text-lg font-bold text-forest-green">+</Text>
+                </Pressable>
               </View>
-            )}
-          </ScrollView>
 
-          {/* Close action */}
-          <View className="border-t border-bark-brown/20 px-4 py-3">
-            <Button
-              className="min-h-[44px] w-full rounded-xl border-2 border-bark-brown bg-transparent"
-              variant="outline"
-              onPress={handleClose}
-            >
-              <Text className="font-bold text-bark-brown">Close</Text>
-            </Button>
-          </View>
+              {/* Trade summary */}
+              <Text className="text-xs text-soil-dark">
+                Pay: {quantity * selectedRate.fromAmount} {selectedRate.from}
+                {"  \u2192  "}
+                Get: {quantity * selectedRate.toAmount} {selectedRate.to}
+              </Text>
+
+              {/* Trade button */}
+              <Button
+                className="min-h-[44px] w-full rounded-xl bg-forest-green"
+                onPress={handleTrade}
+              >
+                <Text className="font-bold text-white">Trade</Text>
+              </Button>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Close action */}
+        <View className="border-t border-bark-brown/20 px-4 py-3">
+          <Button
+            className="min-h-[44px] w-full rounded-xl border-2 border-bark-brown bg-transparent"
+            variant="outline"
+            onPress={handleClose}
+          >
+            <Text className="font-bold text-bark-brown">Close</Text>
+          </Button>
         </View>
+      </View>
     </View>
   );
 }

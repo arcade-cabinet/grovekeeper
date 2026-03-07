@@ -8,8 +8,8 @@ import {
   startNpcPath,
   updateNpcEntityManager,
   updateNpcMovement,
-} from "./npcMovement";
-import type { WalkabilityGrid } from "./pathfinding";
+} from "./npcMovement.ts";
+import type { WalkabilityGrid } from "./pathfinding.ts";
 
 // Helper to create a simple open walkability grid
 function makeOpenGrid(size: number, originX = 0, originZ = 0): WalkabilityGrid {

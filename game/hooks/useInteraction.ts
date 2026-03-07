@@ -11,6 +11,7 @@
 import type { ThreeEvent } from "@react-three/fiber";
 import { useCallback, useRef, useSyncExternalStore } from "react";
 import type { TileState } from "@/components/game/ActionButton";
+import { dispatchAction } from "@/game/actions/actionDispatcher";
 import {
   clearRock,
   fertilizeTree,
@@ -32,7 +33,6 @@ import {
   treesQuery,
   waterBodiesQuery,
 } from "@/game/ecs/world";
-import { dispatchAction } from "@/game/actions/actionDispatcher";
 import { useGameStore } from "@/game/stores/gameStore";
 import { showToast } from "@/game/ui/Toast";
 
@@ -147,11 +147,7 @@ function findNpcNear(gridX: number, gridZ: number): Entity | null {
 /** Find a campfire entity at a given grid position. */
 function findCampfireAtGrid(gridX: number, gridZ: number): Entity | null {
   for (const e of campfiresQuery) {
-    if (
-      e.position &&
-      Math.round(e.position.x) === gridX &&
-      Math.round(e.position.z) === gridZ
-    ) {
+    if (e.position && Math.round(e.position.x) === gridX && Math.round(e.position.z) === gridZ) {
       return e;
     }
   }
@@ -176,11 +172,7 @@ function findForgeAtGrid(gridX: number, gridZ: number): Entity | null {
 /** Find a water body entity at a given grid position. */
 function findWaterAtGrid(gridX: number, gridZ: number): Entity | null {
   for (const e of waterBodiesQuery) {
-    if (
-      e.position &&
-      Math.round(e.position.x) === gridX &&
-      Math.round(e.position.z) === gridZ
-    ) {
+    if (e.position && Math.round(e.position.x) === gridX && Math.round(e.position.z) === gridZ) {
       return e;
     }
   }
@@ -190,11 +182,7 @@ function findWaterAtGrid(gridX: number, gridZ: number): Entity | null {
 /** Find a trap entity at a given grid position. */
 function findTrapAtGrid(gridX: number, gridZ: number): Entity | null {
   for (const e of trapsQuery) {
-    if (
-      e.position &&
-      Math.round(e.position.x) === gridX &&
-      Math.round(e.position.z) === gridZ
-    ) {
+    if (e.position && Math.round(e.position.x) === gridX && Math.round(e.position.z) === gridZ) {
       return e;
     }
   }

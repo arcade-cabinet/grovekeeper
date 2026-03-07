@@ -1,7 +1,7 @@
-import { Pressable, View } from "react-native";
-import Animated, { Layout, SlideInUp, SlideOutUp } from "react-native-reanimated";
 import { observable } from "@legendapp/state";
 import { useSelector } from "@legendapp/state/react";
+import { Pressable, View } from "react-native";
+import Animated, { Layout, SlideInUp, SlideOutUp } from "react-native-reanimated";
 import { Text } from "@/components/ui/text";
 
 // ---------------------------------------------------------------------------
@@ -70,8 +70,14 @@ function removeToast(id: string) {
 // Hook -- selector-compatible API for consumers
 // ---------------------------------------------------------------------------
 
-export function useToastStore<T = { toasts: ToastItem[]; addToast: typeof addToast; removeToast: typeof removeToast }>(
-  selector?: (state: { toasts: ToastItem[]; addToast: typeof addToast; removeToast: typeof removeToast }) => T,
+export function useToastStore<
+  T = { toasts: ToastItem[]; addToast: typeof addToast; removeToast: typeof removeToast },
+>(
+  selector?: (state: {
+    toasts: ToastItem[];
+    addToast: typeof addToast;
+    removeToast: typeof removeToast;
+  }) => T,
 ): T {
   const toasts = useSelector(() => toastState$.toasts.get());
   const state = { toasts, addToast, removeToast };

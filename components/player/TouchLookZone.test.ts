@@ -16,14 +16,14 @@ jest.mock("@/game/input/TouchProvider", () => ({
   })),
 }));
 
+import type { LookZoneProvider, LookZoneRefs } from "./TouchLookZone.tsx";
 import {
   buildLookZoneHandlers,
   computeLookDelta,
   LOOK_DEAD_ZONE,
   LOOK_SENSITIVITY,
   TouchLookZone,
-} from "./TouchLookZone";
-import type { LookZoneRefs, LookZoneProvider } from "./TouchLookZone";
+} from "./TouchLookZone.tsx";
 
 // ── computeLookDelta unit tests ──────────────────────────────────────────────
 
@@ -168,11 +168,7 @@ describe("buildLookZoneHandlers (Spec §23)", () => {
     };
   }
 
-  function makeGestureEvent(overrides: {
-    identifier?: number;
-    pageX?: number;
-    pageY?: number;
-  }) {
+  function makeGestureEvent(overrides: { identifier?: number; pageX?: number; pageY?: number }) {
     return {
       nativeEvent: {
         identifier: overrides.identifier ?? 0,

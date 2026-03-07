@@ -12,13 +12,13 @@
  * Multiplied across all trees → enormous per-seed narrative diversity.
  */
 
-import { scopedRNG } from "@/game/utils/seedWords";
 import type {
   DialogueBranch,
   DialogueCondition,
   DialogueContext,
 } from "@/game/ecs/components/dialogue";
 import { checkRelationshipCondition } from "@/game/systems/npcRelationship";
+import { scopedRNG } from "@/game/utils/seedWords";
 
 // ---------------------------------------------------------------------------
 // Weight normalization
@@ -105,10 +105,7 @@ export function selectDefaultBranchNode(
  *
  * Returns true if the condition is satisfied (after applying negation).
  */
-export function evaluateCondition(
-  condition: DialogueCondition,
-  context: DialogueContext,
-): boolean {
+export function evaluateCondition(condition: DialogueCondition, context: DialogueContext): boolean {
   let result: boolean;
   switch (condition.type) {
     case "has_item":

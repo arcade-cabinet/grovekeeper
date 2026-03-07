@@ -22,6 +22,7 @@ import type { DialogueComponent } from "@/game/ecs/components/dialogue";
 import { grovekeeperSpiritsQuery, playerQuery, world } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
 import { showToast } from "@/game/ui/Toast";
+import { openDialogueSession } from "@/game/ui/dialogueBridge";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -110,14 +111,7 @@ export function checkSpiritProximity(
     const lastTrigger = cooldowns.get(spirit.spiritId);
     if (lastTrigger !== undefined && now - lastTrigger < cooldownMs) continue;
 
-    const dist = computeDistance3D(
-      player.x,
-      player.y,
-      player.z,
-      spirit.x,
-      spirit.y,
-      spirit.z,
-    );
+    const dist = computeDistance3D(player.x, player.y, player.z, spirit.x, spirit.y, spirit.z);
 
     if (dist < detectionRadius) {
       triggered.push(spirit.spiritId);
@@ -214,7 +208,9 @@ export function useSpiritProximity(): ReturnType<typeof useRef<string | null>> {
       _spiritCooldowns.set(spiritId, now);
 
       // Find the matching ECS entity
-      let targetEntity: ((typeof grovekeeperSpiritsQuery) extends Iterable<infer E> ? E : never) | null = null;
+      let targetEntity:
+        | (typeof grovekeeperSpiritsQuery extends Iterable<infer E> ? E : never)
+        | null = null;
       for (const entity of grovekeeperSpiritsQuery) {
         if (entity.grovekeeperSpirit?.spiritId === spiritId) {
           targetEntity = entity;
@@ -239,7 +235,10 @@ export function useSpiritProximity(): ReturnType<typeof useRef<string | null>> {
         makeDialogueComponent(targetEntity.grovekeeperSpirit!.dialogueTreeId),
       );
 
-      // 4. Show toast (only on genuine first discovery to avoid spam)
+      // 4. Open the NpcDialogue panel via the bridge (wires ECS state to React Native UI)
+      openDialogueSession(targetEntity.id, store.worldSeed ?? "default");
+
+      // 5. Show toast (only on genuine first discovery to avoid spam)
       if (isNew) {
         showToast("A Grovekeeper spirit stirs...", "info");
       }

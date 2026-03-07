@@ -12,22 +12,22 @@
  * system in isolation; integration tests cover the joints between systems.
  */
 
-import { useGameStore } from "@/game/stores/gameStore";
 import { world } from "@/game/ecs/world";
 import {
-  recordPlantedTree,
-  applyChunkDiff,
-  clearAllChunkDiffs,
-  loadChunkDiff,
-  isChunkModified,
-} from "@/game/world/chunkPersistence";
-import { TUTORIAL_STEPS } from "@/game/systems/tutorial";
-import {
-  initializeChainState,
-  startChain,
   advanceObjectives,
   claimStepReward,
+  initializeChainState,
+  startChain,
 } from "@/game/quests/questChainEngine";
+import { useGameStore } from "@/game/stores/gameStore";
+import { TUTORIAL_STEPS } from "@/game/systems/tutorial";
+import {
+  applyChunkDiff,
+  clearAllChunkDiffs,
+  isChunkModified,
+  loadChunkDiff,
+  recordPlantedTree,
+} from "@/game/world/chunkPersistence";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -352,12 +352,22 @@ describe("Integration: Chunk Load → Chunk Unload → Chunk Reload (Spec §26.2
 
   it("multiple chunks can each hold independent diffs that apply independently", () => {
     recordPlantedTree("0,0", {
-      localX: 1, localZ: 1, speciesId: "white-oak",
-      stage: 0, progress: 0, plantedAt: 100, meshSeed: 1,
+      localX: 1,
+      localZ: 1,
+      speciesId: "white-oak",
+      stage: 0,
+      progress: 0,
+      plantedAt: 100,
+      meshSeed: 1,
     });
     recordPlantedTree("1,0", {
-      localX: 2, localZ: 2, speciesId: "elder-pine",
-      stage: 1, progress: 0.2, plantedAt: 200, meshSeed: 2,
+      localX: 2,
+      localZ: 2,
+      speciesId: "elder-pine",
+      stage: 1,
+      progress: 0.2,
+      plantedAt: 200,
+      meshSeed: 2,
     });
 
     applyChunkDiff("0,0", 0, 0);
@@ -369,7 +379,8 @@ describe("Integration: Chunk Load → Chunk Unload → Chunk Reload (Spec §26.2
   it("unload (clear ECS) then reload (apply diff) round-trip preserves stage and progress", () => {
     const chunkKey = "3,5";
     recordPlantedTree(chunkKey, {
-      localX: 7, localZ: 3,
+      localX: 7,
+      localZ: 3,
       speciesId: "ghost-birch",
       stage: 2,
       progress: 0.75,
@@ -397,12 +408,22 @@ describe("Integration: Chunk Load → Chunk Unload → Chunk Reload (Spec §26.2
 
   it("clearAllChunkDiffs removes all persisted chunk data", () => {
     recordPlantedTree("0,0", {
-      localX: 1, localZ: 1, speciesId: "white-oak",
-      stage: 0, progress: 0, plantedAt: 100, meshSeed: 1,
+      localX: 1,
+      localZ: 1,
+      speciesId: "white-oak",
+      stage: 0,
+      progress: 0,
+      plantedAt: 100,
+      meshSeed: 1,
     });
     recordPlantedTree("5,5", {
-      localX: 2, localZ: 2, speciesId: "pine",
-      stage: 0, progress: 0, plantedAt: 200, meshSeed: 2,
+      localX: 2,
+      localZ: 2,
+      speciesId: "pine",
+      stage: 0,
+      progress: 0,
+      plantedAt: 200,
+      meshSeed: 2,
     });
 
     clearAllChunkDiffs();
@@ -413,8 +434,13 @@ describe("Integration: Chunk Load → Chunk Unload → Chunk Reload (Spec §26.2
 
   it("new game resets chunk diffs via clearAllChunkDiffs called in prestige/reset", () => {
     recordPlantedTree("0,0", {
-      localX: 5, localZ: 5, speciesId: "white-oak",
-      stage: 1, progress: 0.5, plantedAt: 1000, meshSeed: 77,
+      localX: 5,
+      localZ: 5,
+      speciesId: "white-oak",
+      stage: 1,
+      progress: 0.5,
+      plantedAt: 1000,
+      meshSeed: 77,
     });
 
     // Simulate what a new game does: reset game state + clear all chunk diffs
@@ -434,7 +460,26 @@ describe("Integration: ECS queries return expected entities after state transiti
   it("world.with('tree') returns only entities with the tree component", () => {
     // A chunk entity (no tree component) should not appear in tree queries
     world.add({ id: "chunk-1", chunk: { chunkX: 0, chunkZ: 0, biome: "meadow" } });
-    world.add({ id: "tree-1", position: { x: 1, y: 0, z: 1 }, tree: { speciesId: "white-oak", stage: 0, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
+    world.add({
+      id: "tree-1",
+      position: { x: 1, y: 0, z: 1 },
+      tree: {
+        speciesId: "white-oak",
+        stage: 0,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
 
     const trees = world.with("tree").entities;
     const chunks = world.with("chunk").entities;
@@ -446,8 +491,45 @@ describe("Integration: ECS queries return expected entities after state transiti
   });
 
   it("world.with('tree', 'position') excludes entities missing position", () => {
-    world.add({ id: "tree-no-pos", tree: { speciesId: "pine", stage: 0, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
-    world.add({ id: "tree-with-pos", position: { x: 5, y: 0, z: 5 }, tree: { speciesId: "pine", stage: 0, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
+    world.add({
+      id: "tree-no-pos",
+      tree: {
+        speciesId: "pine",
+        stage: 0,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
+    world.add({
+      id: "tree-with-pos",
+      position: { x: 5, y: 0, z: 5 },
+      tree: {
+        speciesId: "pine",
+        stage: 0,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
 
     const query = world.with("tree", "position").entities;
     expect(query.length).toBe(1);
@@ -455,7 +537,26 @@ describe("Integration: ECS queries return expected entities after state transiti
   });
 
   it("removing an entity removes it from all queries", () => {
-    const entity = world.add({ id: "removable-tree", position: { x: 0, y: 0, z: 0 }, tree: { speciesId: "pine", stage: 0, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
+    const entity = world.add({
+      id: "removable-tree",
+      position: { x: 0, y: 0, z: 0 },
+      tree: {
+        speciesId: "pine",
+        stage: 0,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
 
     expect(world.with("tree").entities.length).toBe(1);
     world.remove(entity);
@@ -463,9 +564,66 @@ describe("Integration: ECS queries return expected entities after state transiti
   });
 
   it("filtering by stage after query: mature trees (stage >= 3) subset", () => {
-    world.add({ id: "sapling", position: { x: 0, y: 0, z: 0 }, tree: { speciesId: "pine", stage: 1, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
-    world.add({ id: "mature", position: { x: 1, y: 0, z: 1 }, tree: { speciesId: "pine", stage: 3, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
-    world.add({ id: "old-growth", position: { x: 2, y: 0, z: 2 }, tree: { speciesId: "white-oak", stage: 4, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
+    world.add({
+      id: "sapling",
+      position: { x: 0, y: 0, z: 0 },
+      tree: {
+        speciesId: "pine",
+        stage: 1,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
+    world.add({
+      id: "mature",
+      position: { x: 1, y: 0, z: 1 },
+      tree: {
+        speciesId: "pine",
+        stage: 3,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
+    world.add({
+      id: "old-growth",
+      position: { x: 2, y: 0, z: 2 },
+      tree: {
+        speciesId: "white-oak",
+        stage: 4,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
 
     const allTrees = world.with("tree").entities;
     const harvestable = allTrees.filter((e) => (e.tree?.stage ?? 0) >= 3);
@@ -476,14 +634,76 @@ describe("Integration: ECS queries return expected entities after state transiti
   });
 
   it("world remains consistent after a mix of add and remove operations", () => {
-    const a = world.add({ id: "a", position: { x: 0, y: 0, z: 0 }, tree: { speciesId: "pine", stage: 0, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
-    const b = world.add({ id: "b", position: { x: 1, y: 0, z: 0 }, tree: { speciesId: "pine", stage: 1, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
-    const c = world.add({ id: "c", position: { x: 2, y: 0, z: 0 }, tree: { speciesId: "pine", stage: 2, progress: 0, watered: false, totalGrowthTime: 0, plantedAt: 0, meshSeed: 0, wild: false, pruned: false, fertilized: false, baseModel: "", winterModel: "", useWinterModel: false, seasonTint: "#ffffff" } });
+    const a = world.add({
+      id: "a",
+      position: { x: 0, y: 0, z: 0 },
+      tree: {
+        speciesId: "pine",
+        stage: 0,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
+    const b = world.add({
+      id: "b",
+      position: { x: 1, y: 0, z: 0 },
+      tree: {
+        speciesId: "pine",
+        stage: 1,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
+    const c = world.add({
+      id: "c",
+      position: { x: 2, y: 0, z: 0 },
+      tree: {
+        speciesId: "pine",
+        stage: 2,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#ffffff",
+      },
+    });
 
     expect(world.with("tree").entities.length).toBe(3);
     world.remove(b);
     expect(world.with("tree").entities.length).toBe(2);
-    expect(world.with("tree").entities.map((e) => e.id).sort()).toEqual(["a", "c"].sort());
+    expect(
+      world
+        .with("tree")
+        .entities.map((e) => e.id)
+        .sort(),
+    ).toEqual(["a", "c"].sort());
 
     world.remove(a);
     world.remove(c);
@@ -492,10 +712,13 @@ describe("Integration: ECS queries return expected entities after state transiti
 
   it("applyChunkDiff adds ECS entities that are immediately queryable", () => {
     recordPlantedTree("0,0", {
-      localX: 8, localZ: 8,
+      localX: 8,
+      localZ: 8,
       speciesId: "silver-maple",
-      stage: 2, progress: 0.3,
-      plantedAt: 1000, meshSeed: 42,
+      stage: 2,
+      progress: 0.3,
+      plantedAt: 1000,
+      meshSeed: 42,
     });
 
     expect(world.with("tree").entities.length).toBe(0);

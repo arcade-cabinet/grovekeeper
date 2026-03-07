@@ -1,5 +1,5 @@
-import { createGridCellEntity, createPlayerEntity, createTreeEntity } from "./archetypes";
-import { generateEntityId, playerQuery, treesQuery, world } from "./world";
+import { createGridCellEntity, createPlayerEntity, createTreeEntity } from "./archetypes.ts";
+import { generateEntityId, playerQuery, treesQuery, world } from "./world.ts";
 
 describe("ECS World", () => {
   beforeEach(() => {
@@ -78,6 +78,5 @@ describe("ECS World", () => {
       expect(players.length).toBe(1);
       expect(players[0].id).toBe("player");
     });
-
   });
 });

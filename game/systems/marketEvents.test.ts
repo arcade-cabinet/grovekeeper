@@ -5,7 +5,7 @@ import {
   isMarketEventActive,
   MARKET_EVENTS,
   updateMarketEvents,
-} from "./marketEvents";
+} from "./marketEvents.ts";
 
 describe("market events system", () => {
   describe("MARKET_EVENTS", () => {

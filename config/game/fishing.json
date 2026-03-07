@@ -6,7 +6,7 @@
   "timingBarSpeed": 0.8,
   "zoneWidth": 0.25,
   "baseYield": 1,
-  "fishingDockYieldBonus": 0.30,
+  "fishingDockYieldBonus": 0.3,
   "biomeSpecies": {
     "starting-grove": ["perch", "carp"],
     "meadow": ["perch", "carp"],

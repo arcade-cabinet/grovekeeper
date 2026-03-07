@@ -11,9 +11,10 @@
  *     - 3 walls (T-junction)  → "triangle" fill (rotated toward absent wall)
  *     - 4 walls (X-junction)  → "triangle" fill (rotation 0)
  */
+
+import hedgeMazeConfig from "@/config/game/hedgeMaze.json" with { type: "json" };
 import { createRNG } from "@/game/utils/seedRNG";
-import hedgeMazeConfig from "@/config/game/hedgeMaze.json";
-import type { MazeCell, MazeResult, HedgePiece } from "./types";
+import type { HedgePiece, MazeCell, MazeResult } from "./types.ts";
 
 const ROUND_FRACTION = 0.2;
 const DIAGONAL_FRACTION = 0.1;
@@ -35,12 +36,7 @@ interface VertexWalls {
  *   south = west wall of cell  (vx, vz)   | east wall of cell (vx-1, vz) at boundary
  *   north = west wall of cell  (vx, vz-1) | east wall of cell (vx-1, vz-1) at boundary
  */
-function getVertexWalls(
-  grid: MazeCell[][],
-  vx: number,
-  vz: number,
-  size: number,
-): VertexWalls {
+function getVertexWalls(grid: MazeCell[][], vx: number, vz: number, size: number): VertexWalls {
   const east =
     (vz < size && vx < size && grid[vx][vz].walls.north) ||
     (vz === size && vx < size && grid[vx][size - 1].walls.south);
@@ -77,24 +73,39 @@ function tJunctionRotation(w: VertexWalls): number {
 }
 
 /** Select a wall-segment piece (basic, round, or diagonal) at the given rotation. */
-function pickWallPiece(
-  rng: () => number,
-  rotation: number,
-): Omit<HedgePiece, "x" | "z"> {
+function pickWallPiece(rng: () => number, rotation: number): Omit<HedgePiece, "x" | "z"> {
   const roll = rng();
   if (roll < ROUND_FRACTION) {
     const sizes: string[] = hedgeMazeConfig.pieceWeights.round;
     const sz = sizes[Math.floor(rng() * sizes.length)];
-    return { modelPath: `hedges/round/round_${sz}.glb`, rotation, pieceType: "round", sizeClass: sz, junction: "" };
+    return {
+      modelPath: `hedges/round/round_${sz}.glb`,
+      rotation,
+      pieceType: "round",
+      sizeClass: sz,
+      junction: "",
+    };
   }
   if (roll < ROUND_FRACTION + DIAGONAL_FRACTION) {
     const sizes: string[] = hedgeMazeConfig.pieceWeights.diagonal;
     const sz = sizes[Math.floor(rng() * sizes.length)];
-    return { modelPath: `hedges/diagonal/diagonal_${sz}.glb`, rotation, pieceType: "diagonal", sizeClass: sz, junction: "" };
+    return {
+      modelPath: `hedges/diagonal/diagonal_${sz}.glb`,
+      rotation,
+      pieceType: "diagonal",
+      sizeClass: sz,
+      junction: "",
+    };
   }
   const sizes: string[] = hedgeMazeConfig.pieceWeights.basic;
   const sz = sizes[Math.floor(rng() * sizes.length)];
-  return { modelPath: `hedges/basic/basic_${sz}.glb`, rotation, pieceType: "basic", sizeClass: sz, junction: "" };
+  return {
+    modelPath: `hedges/basic/basic_${sz}.glb`,
+    rotation,
+    pieceType: "basic",
+    sizeClass: sz,
+    junction: "",
+  };
 }
 
 /**

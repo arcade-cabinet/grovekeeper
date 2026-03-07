@@ -1,5 +1,5 @@
-import { Physics } from "@react-three/rapier";
 import { Canvas } from "@react-three/fiber";
+import { Physics } from "@react-three/rapier";
 import { Stack } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -10,29 +10,27 @@ import { ActionButton } from "@/components/game/ActionButton";
 import { HUD } from "@/components/game/HUD";
 import { PauseMenu } from "@/components/game/PauseMenu";
 import { SeedSelect } from "@/components/game/SeedSelect";
+import { TutorialOverlay } from "@/components/game/TutorialOverlay";
 import { FPSCamera } from "@/components/player/FPSCamera";
 import { PlayerCapsule } from "@/components/player/PlayerCapsule";
 import { TouchLookZone } from "@/components/player/TouchLookZone";
+import { BirmotherMesh } from "@/components/scene/BirmotherMesh";
 import { Ground } from "@/components/scene/Ground";
 import { Lighting } from "@/components/scene/Lighting";
 import { Sky } from "@/components/scene/Sky";
 import { TerrainChunks } from "@/components/scene/TerrainChunk";
-import { TutorialOverlay } from "@/components/game/TutorialOverlay";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
+import { useBirmotherEncounter } from "@/game/hooks/useBirmotherEncounter";
 import { useGameLoop } from "@/game/hooks/useGameLoop";
 import { useInput } from "@/game/hooks/useInput";
 import { useInteraction } from "@/game/hooks/useInteraction";
 import { useRaycast } from "@/game/hooks/useRaycast";
-import { useBirmotherEncounter } from "@/game/hooks/useBirmotherEncounter";
 import { useSpiritProximity } from "@/game/hooks/useSpiritProximity";
-import { useWorldLoader, ChunkStreamer } from "@/game/hooks/useWorldLoader";
+import { ChunkStreamer, useWorldLoader } from "@/game/hooks/useWorldLoader";
 import { useGameStore } from "@/game/stores/gameStore";
 import { ACHIEVEMENTS } from "@/game/systems/achievements";
-import {
-  canAffordExpansion,
-  getNextExpansionTier,
-} from "@/game/systems/gridExpansion";
+import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import {
   calculatePrestigeBonus,
   canPrestige as checkCanPrestige,
@@ -47,6 +45,7 @@ function GameSystems() {
   useGameLoop();
   useRaycast();
   useSpiritProximity();
+  useBirmotherEncounter();
   // ChunkStreamer calls ChunkManager.update(playerPos) every frame to drive
   // open-world chunk streaming (Spec §17.1). Must be inside Canvas for useFrame.
   return <ChunkStreamer />;
@@ -100,7 +99,9 @@ export default function GameScreen() {
     const meetsLevel = level >= nextTier.requiredLevel;
     const costLabel = Object.entries(nextTier.cost)
       .filter(([, amount]) => amount > 0)
-      .map(([resource, amount]) => `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`)
+      .map(
+        ([resource, amount]) => `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`,
+      )
       .join(", ");
     return {
       nextSize: nextTier.size,
@@ -228,6 +229,7 @@ export default function GameScreen() {
             <TreeInstances onTreeTap={onTreeTap} />
             <GrassInstances />
             <NpcMeshes onNpcTap={onNpcTap} />
+            <BirmotherMesh />
           </Physics>
         </Canvas>
 

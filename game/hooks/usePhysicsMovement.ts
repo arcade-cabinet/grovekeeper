@@ -8,10 +8,10 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
-import type { RefObject } from "react";
-import * as THREE from "three";
 import type { RapierRigidBody } from "@react-three/rapier";
+import type { RefObject } from "react";
+import { useRef } from "react";
+import * as THREE from "three";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 const PLAYER_SPEED = gridConfig.playerSpeed;

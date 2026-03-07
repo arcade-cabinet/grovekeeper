@@ -52,9 +52,7 @@ export function WeatherForecast({
       <Text className="text-sm">{WEATHER_ICONS[currentWeather]}</Text>
 
       {/* Weather label */}
-      <Text className="text-xs font-medium text-soil-dark">
-        {WEATHER_LABELS[currentWeather]}
-      </Text>
+      <Text className="text-xs font-medium text-soil-dark">{WEATHER_LABELS[currentWeather]}</Text>
 
       {/* Time remaining (only for active weather events) */}
       {currentWeather !== "clear" && (

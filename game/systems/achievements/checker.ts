@@ -3,9 +3,9 @@
  * Spec §25
  */
 
-import type { Achievement, PlayerStats } from "./types";
-import { CORE_ACHIEVEMENTS } from "./core";
-import { WORLD_ACHIEVEMENTS } from "./world";
+import { CORE_ACHIEVEMENTS } from "./core.ts";
+import type { Achievement, PlayerStats } from "./types.ts";
+import { WORLD_ACHIEVEMENTS } from "./world.ts";
 
 /** Combined catalog of all 45 achievements. */
 export const ACHIEVEMENTS: Achievement[] = [...CORE_ACHIEVEMENTS, ...WORLD_ACHIEVEMENTS];

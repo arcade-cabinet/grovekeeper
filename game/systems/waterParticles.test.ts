@@ -6,25 +6,19 @@
  */
 import { World } from "miniplex";
 import {
-  detectWaterState,
-  buildSplashEmitter,
   buildBubblesEmitter,
-  tickWaterParticles,
-  SPLASH_PARTICLE_COUNT,
+  buildSplashEmitter,
+  detectWaterState,
   SPLASH_LIFETIME,
+  SPLASH_PARTICLE_COUNT,
+  tickWaterParticles,
   type WaterBodyRef,
   type WaterEntity,
   type WaterParticlesState,
-} from "./waterParticles";
+} from "./waterParticles.ts";
 
 // Helper: build a minimal water body ref for tests
-const makeWaterBody = (
-  x = 0,
-  y = 0,
-  z = 0,
-  width = 10,
-  depth = 10,
-): WaterBodyRef => ({
+const makeWaterBody = (x = 0, y = 0, z = 0, width = 10, depth = 10): WaterBodyRef => ({
   position: { x, y, z },
   waterBody: { size: { width, depth } },
 });

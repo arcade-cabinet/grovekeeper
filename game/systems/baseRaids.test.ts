@@ -6,15 +6,15 @@
  * Spec §18.5, §34.
  */
 
-import type { DayNightComponent } from "../ecs/components/procedural";
+import type { DayNightComponent } from "../ecs/components/procedural/index.ts";
 import {
+  calculateRaidLoot,
   calculateRaidProbability,
   generateRaidWave,
-  getRaidWarning,
-  calculateRaidLoot,
-  shouldTriggerRaid,
   getApproachDirections,
-} from "./baseRaids";
+  getRaidWarning,
+  shouldTriggerRaid,
+} from "./baseRaids.ts";
 
 // Minimal DayNightComponent fixture for tests
 const nightDayNight: DayNightComponent = {
@@ -107,9 +107,7 @@ describe("Base Raids System (Spec §18.5, §34)", () => {
 
     it("should include enemies appropriate to base value", () => {
       const raid = generateRaidWave(50, 1, "test-seed");
-      const enemyTypes = raid.waves.flatMap((w) =>
-        w.enemies.map((e) => e.enemyType),
-      );
+      const enemyTypes = raid.waves.flatMap((w) => w.enemies.map((e) => e.enemyType));
       expect(enemyTypes).toContain("grove_pest");
     });
 

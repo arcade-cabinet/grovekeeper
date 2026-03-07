@@ -8,7 +8,7 @@ import {
   getToolUpgradeTier,
   requiresForgeForUpgrade,
   TOOL_UPGRADE_TIERS,
-} from "./toolUpgrades";
+} from "./toolUpgrades.ts";
 
 describe("tool upgrades system", () => {
   describe("TOOL_UPGRADE_TIERS", () => {

@@ -1,12 +1,17 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, Animated as RNAnimated, Dimensions, View } from "react-native";
+import { AccessibilityInfo, Dimensions, Animated as RNAnimated, View } from "react-native";
 import Svg, { Ellipse, Rect } from "react-native-svg";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { FarmerMascot } from "./FarmerMascot";
-import { Logo } from "./Logo";
-import { hasSave, primaryButtonLabel, showNewGroveButton, treeSummaryText } from "./mainMenuLogic";
+import { FarmerMascot } from "./FarmerMascot.tsx";
+import { Logo } from "./Logo.tsx";
+import {
+  hasSave,
+  primaryButtonLabel,
+  showNewGroveButton,
+  treeSummaryText,
+} from "./mainMenuLogic.ts";
 
 /**
  * Game-specific color constants matching the original BabylonJS project.
@@ -181,8 +186,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
         <RightTreeSilhouette />
 
         {/* Floating leaf particles */}
-        {!reduceMotion &&
-          leaves.map((leaf, i) => <FloatingLeaf key={`leaf-${i}`} config={leaf} />)}
+        {!reduceMotion && leaves.map((leaf, i) => <FloatingLeaf key={`leaf-${i}`} config={leaf} />)}
       </View>
 
       {/* Card */}
@@ -236,10 +240,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
         </View>
 
         {/* Tagline */}
-        <Text
-          className="z-10 text-center text-sm italic"
-          style={{ color: C.barkBrown }}
-        >
+        <Text className="z-10 text-center text-sm italic" style={{ color: C.barkBrown }}>
           "Every forest begins with a single seed."
         </Text>
 
@@ -263,9 +264,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
           )}
 
           <Button
-            className={`min-h-[48px] w-full rounded-xl ${
-              saveExists ? "bg-white" : ""
-            }`}
+            className={`min-h-[48px] w-full rounded-xl ${saveExists ? "bg-white" : ""}`}
             variant={saveExists ? "outline" : "default"}
             style={
               saveExists
@@ -294,11 +293,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
           </Button>
 
           {/* Settings — always visible */}
-          <Button
-            className="min-h-[44px] w-full rounded-xl"
-            variant="ghost"
-            onPress={onSettings}
-          >
+          <Button className="min-h-[44px] w-full rounded-xl" variant="ghost" onPress={onSettings}>
             <Text className="text-sm font-medium" style={{ color: C.barkBrown }}>
               Settings
             </Text>

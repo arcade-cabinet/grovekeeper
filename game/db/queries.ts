@@ -9,10 +9,11 @@
  * All functions are async and call getDb(), returning early / no-op if null
  * (web fallback where expo-sqlite may not be available).
  */
-import { getDb } from "./client";
-import * as schema from "./schema";
+
 import type { ResourceType } from "@/game/config/resources";
 import type { Season } from "@/game/systems/time";
+import { getDb } from "./client.ts";
+import * as schema from "./schema.ts";
 
 // --- Types ---
 

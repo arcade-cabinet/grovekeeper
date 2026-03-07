@@ -9,7 +9,7 @@
  * (secondsPerDay / dayLengthSeconds = 600s = 10 real minutes per game day).
  */
 
-import dayNightConfig from "@/config/game/dayNight.json";
+import dayNightConfig from "@/config/game/dayNight.json" with { type: "json" };
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 export type TimePhase = "night" | "dawn" | "day" | "dusk";

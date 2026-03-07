@@ -19,7 +19,7 @@
  * See docs/architecture/input-system.md for full spec.
  */
 
-import { type IInputProvider, type InputFrame } from "@/game/input/InputManager";
+import type { IInputProvider, InputFrame } from "@/game/input/InputManager";
 
 /** Minimum stick deflection magnitude before input is registered. */
 const DEAD_ZONE = 0.12;

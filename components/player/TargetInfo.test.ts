@@ -22,9 +22,9 @@ jest.mock("@/game/config/species", () => ({
   }),
 }));
 
-import { resolveActionPrompt, resolveEntityName, TargetInfo } from "./TargetInfo";
-import type { RaycastHit } from "@/game/hooks/useRaycast";
 import type { Entity } from "@/game/ecs/world";
+import type { RaycastHit } from "@/game/hooks/useRaycast";
+import { resolveActionPrompt, resolveEntityName, TargetInfo } from "./TargetInfo.tsx";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

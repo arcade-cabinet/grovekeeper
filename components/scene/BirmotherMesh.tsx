@@ -12,12 +12,10 @@
  * Spec §32.4.
  */
 
-import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { useRef } from "react";
 import type * as THREE from "three";
-
-import { birmotherQuery } from "@/game/ecs/world";
-import { playerQuery } from "@/game/ecs/world";
+import { birmotherQuery, playerQuery } from "@/game/ecs/world";
 
 // ---------------------------------------------------------------------------
 // Animation constants

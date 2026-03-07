@@ -3,7 +3,8 @@
  *
  * Consumers import from "@/game/systems/hedgePlacement" (resolves to this file).
  */
-export type { MazeCell, MazeResult, HedgePiece, MazeDecoration } from "./types";
-export { generateMaze } from "./mazeGen";
-export { mazeToHedgePieces } from "./wallPieces";
-export { placeMazeDecorations } from "./decorations";
+
+export { placeMazeDecorations } from "./decorations.ts";
+export { generateMaze } from "./mazeGen.ts";
+export type { HedgePiece, MazeCell, MazeDecoration, MazeResult } from "./types.ts";
+export { mazeToHedgePieces } from "./wallPieces.ts";

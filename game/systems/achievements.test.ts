@@ -1,5 +1,5 @@
-import type { PlayerStats } from "./achievements";
-import { ACHIEVEMENTS, checkAchievements, getAchievementById } from "./achievements";
+import type { PlayerStats } from "./achievements/index.ts";
+import { ACHIEVEMENTS, checkAchievements, getAchievementById } from "./achievements/index.ts";
 
 function makeStats(overrides: Partial<PlayerStats> = {}): PlayerStats {
   return {
@@ -256,7 +256,9 @@ describe("achievements system (Spec §25)", () => {
       expect(checkAchievements(makeStats({ prestigeCount: 2 }), [])).toContain("twice-born");
       expect(checkAchievements(makeStats({ prestigeCount: 2 }), [])).not.toContain("thrice-born");
       expect(checkAchievements(makeStats({ prestigeCount: 3 }), [])).toContain("thrice-born");
-      expect(checkAchievements(makeStats({ prestigeCount: 3 }), [])).not.toContain("eternal-keeper");
+      expect(checkAchievements(makeStats({ prestigeCount: 3 }), [])).not.toContain(
+        "eternal-keeper",
+      );
       expect(checkAchievements(makeStats({ prestigeCount: 5 }), [])).toContain("eternal-keeper");
     });
 

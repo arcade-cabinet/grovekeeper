@@ -6,7 +6,7 @@
  * prop placement, and wild tree populations.
  */
 
-import type { GroundMaterial, ZoneType } from "./types";
+import type { GroundMaterial, ZoneType } from "./types.ts";
 
 export interface ZoneArchetype {
   id: string;

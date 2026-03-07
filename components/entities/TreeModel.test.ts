@@ -13,13 +13,13 @@ jest.mock("@react-three/drei", () => ({
 jest.mock("@react-three/fiber", () => ({}));
 
 import {
+  getSpeciesUseWinterModel,
   PROCEDURAL_STAGE_MAX,
-  STAGE_SCALES,
-  TreeModel,
   resolveGLBPath,
   resolveModelPath,
-  getSpeciesUseWinterModel,
-} from "./TreeModel";
+  STAGE_SCALES,
+  TreeModel,
+} from "./TreeModel.tsx";
 
 // ---------------------------------------------------------------------------
 // resolveGLBPath — species config lookup
@@ -68,9 +68,18 @@ describe("resolveGLBPath (Spec §8.1)", () => {
 
   it("returns a path ending in .glb for all base species", () => {
     const baseIds = [
-      "white-oak", "weeping-willow", "elder-pine", "cherry-blossom", "ghost-birch",
-      "redwood", "flame-maple", "baobab", "silver-birch", "ironbark",
-      "golden-apple", "mystic-fern",
+      "white-oak",
+      "weeping-willow",
+      "elder-pine",
+      "cherry-blossom",
+      "ghost-birch",
+      "redwood",
+      "flame-maple",
+      "baobab",
+      "silver-birch",
+      "ironbark",
+      "golden-apple",
+      "mystic-fern",
     ];
     for (const id of baseIds) {
       expect(resolveGLBPath(id)).toMatch(/\.glb$/);
@@ -86,9 +95,21 @@ describe("resolveGLBPath (Spec §8.1)", () => {
 
   it("each speciesId maps to a unique glbPath", () => {
     const allIds = [
-      "white-oak", "weeping-willow", "elder-pine", "cherry-blossom", "ghost-birch",
-      "redwood", "flame-maple", "baobab", "silver-birch", "ironbark",
-      "golden-apple", "mystic-fern", "crystal-oak", "moonwood-ash", "worldtree",
+      "white-oak",
+      "weeping-willow",
+      "elder-pine",
+      "cherry-blossom",
+      "ghost-birch",
+      "redwood",
+      "flame-maple",
+      "baobab",
+      "silver-birch",
+      "ironbark",
+      "golden-apple",
+      "mystic-fern",
+      "crystal-oak",
+      "moonwood-ash",
+      "worldtree",
     ];
     const paths = allIds.map(resolveGLBPath);
     const uniquePaths = new Set(paths);
@@ -178,9 +199,18 @@ describe("resolveModelPath (Spec §6.3)", () => {
 
   it("non-winter path always ends in .glb for all base species", () => {
     const baseIds = [
-      "white-oak", "weeping-willow", "elder-pine", "cherry-blossom", "ghost-birch",
-      "redwood", "flame-maple", "baobab", "silver-birch", "ironbark",
-      "golden-apple", "mystic-fern",
+      "white-oak",
+      "weeping-willow",
+      "elder-pine",
+      "cherry-blossom",
+      "ghost-birch",
+      "redwood",
+      "flame-maple",
+      "baobab",
+      "silver-birch",
+      "ironbark",
+      "golden-apple",
+      "mystic-fern",
     ];
     for (const id of baseIds) {
       expect(resolveModelPath(id, false)).toMatch(/\.glb$/);

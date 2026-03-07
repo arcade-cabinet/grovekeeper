@@ -9,8 +9,8 @@ import {
   isFestivalActive,
   resolveEncounter,
   updateEvents,
-} from "./eventScheduler";
-import type { EventState } from "./types";
+} from "./eventScheduler.ts";
+import type { EventState } from "./types.ts";
 
 describe("eventScheduler", () => {
   describe("initializeEventState", () => {

@@ -44,9 +44,7 @@ export function FastTravelMenu({ open, onTeleport, onClose }: FastTravelMenuProp
         <View className="mx-3 mb-6 rounded-2xl border-2 border-bark-brown bg-parchment shadow-lg">
           {/* Header */}
           <View className="flex-row items-center border-b border-bark-brown/30 px-4 py-3">
-            <Text className="font-heading text-lg font-bold text-soil-dark">
-              Fast Travel
-            </Text>
+            <Text className="font-heading text-lg font-bold text-soil-dark">Fast Travel</Text>
             <Text className="ml-2 text-sm text-soil-dark/60">
               ({discoveredCampfires.length}/8 campfires)
             </Text>

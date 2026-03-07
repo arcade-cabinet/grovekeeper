@@ -2,17 +2,17 @@
  * Survival system tests — Spec §12 Stamina & Survival, §2.2 Survival Systems.
  */
 
+import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
 import type { HealthComponent } from "@/game/ecs/components/combat";
 import {
-  tickHunger,
-  isWellFed,
-  tickHeartsFromStarvation,
-  tickHeartsFromExposure,
-  tickStaminaDrain,
-  isPlayerDead,
   computeStaminaRegenMult,
+  isPlayerDead,
+  isWellFed,
+  tickHeartsFromExposure,
+  tickHeartsFromStarvation,
+  tickHunger,
+  tickStaminaDrain,
 } from "@/game/systems/survival";
-import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
 
 function makeHealth(current: number, max: number): HealthComponent {
   return { current, max, invulnFrames: 0, lastDamageSource: null };

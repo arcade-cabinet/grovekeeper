@@ -11,16 +11,16 @@
  * produces identical maze data. All randomness via scopedRNG / seeded derivation.
  */
 
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import hedgeMazeConfig from "@/config/game/hedgeMaze.json" with { type: "json" };
 import type { HedgeComponent, HedgeDecorationComponent } from "@/game/ecs/components/terrain";
-import { scopedRNG } from "@/game/utils/seedWords";
-import { hashString } from "@/game/utils/seedRNG";
 import {
   generateMaze,
   mazeToHedgePieces,
   placeMazeDecorations,
 } from "@/game/systems/hedgePlacement";
-import gridConfig from "@/config/game/grid.json" with { type: "json" };
-import hedgeMazeConfig from "@/config/game/hedgeMaze.json" with { type: "json" };
+import { hashString } from "@/game/utils/seedRNG";
+import { scopedRNG } from "@/game/utils/seedWords";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -71,11 +71,7 @@ export interface MazeGenerationResult {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function heightAt(
-  heightmap: Float32Array,
-  localX: number,
-  localZ: number,
-): number {
+function heightAt(heightmap: Float32Array, localX: number, localZ: number): number {
   const ix = Math.min(Math.max(Math.floor(localX), 0), CHUNK_SIZE - 1);
   const iz = Math.min(Math.max(Math.floor(localZ), 0), CHUNK_SIZE - 1);
   return heightmap[iz * CHUNK_SIZE + ix];
@@ -103,11 +99,7 @@ function extractItemId(modelPath: string): string {
  *
  * Pure function — deterministic from worldSeed + chunk coords.
  */
-export function isLabyrinthChunk(
-  worldSeed: string,
-  chunkX: number,
-  chunkZ: number,
-): boolean {
+export function isLabyrinthChunk(worldSeed: string, chunkX: number, chunkZ: number): boolean {
   if (chunkX === 0 && chunkZ === 0) return false;
   const rng = scopedRNG("labyrinth-roll", worldSeed, chunkX, chunkZ);
   return rng() < LABYRINTH_PROBABILITY;

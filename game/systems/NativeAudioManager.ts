@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
-import type { SoundId } from "./AudioManager";
-import { audioManager } from "./AudioManager";
+import type { SoundId } from "./AudioManager.ts";
+import { audioManager } from "./AudioManager.ts";
 
 /**
  * NativeAudioManager -- Cross-platform audio that delegates to

@@ -5,7 +5,7 @@ import {
   createTreeEntity,
   getStageScale,
   restoreTreeEntity,
-} from "./archetypes";
+} from "./archetypes.ts";
 
 describe("archetypes", () => {
   describe("createTreeEntity", () => {

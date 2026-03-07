@@ -1,4 +1,4 @@
-import type { TradeRecord } from "./supplyDemand";
+import type { TradeRecord } from "./supplyDemand.ts";
 import {
   computeBiomePriceAdjustment,
   computePriceMultipliers,
@@ -7,7 +7,7 @@ import {
   initializeMarketState,
   pruneHistory,
   recordTrade,
-} from "./supplyDemand";
+} from "./supplyDemand.ts";
 
 describe("supply/demand system", () => {
   describe("initializeMarketState", () => {

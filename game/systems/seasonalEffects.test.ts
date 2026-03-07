@@ -4,18 +4,19 @@
  * Covers: terrain vertex color palette per season, 5-day transition blend,
  * vegetation tint/scale updates, bush GLB swaps, and season-change detection.
  */
+
+import type { BushComponent, TreeComponent } from "@/game/ecs/components/vegetation";
 import {
-  getSeasonalTerrainColors,
-  computeSeasonTransitionBlend,
-  blendHexColors,
-  detectSeasonChange,
-  applySeasonToTree,
   applySeasonToBush,
+  applySeasonToTree,
+  blendHexColors,
+  computeSeasonTransitionBlend,
+  detectSeasonChange,
   getBlendedTerrainPalette,
+  getSeasonalTerrainColors,
   type SeasonalTerrainColors,
-} from "./seasonalEffects";
-import type { Season } from "./time";
-import type { TreeComponent, BushComponent } from "@/game/ecs/components/vegetation";
+} from "./seasonalEffects.ts";
+import type { Season } from "./time.ts";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

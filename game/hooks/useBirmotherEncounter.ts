@@ -19,12 +19,7 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 
 import type { DialogueComponent } from "@/game/ecs/components/dialogue";
-import {
-  birmotherQuery,
-  generateEntityId,
-  playerQuery,
-  world,
-} from "@/game/ecs/world";
+import { birmotherQuery, generateEntityId, playerQuery, world } from "@/game/ecs/world";
 import { isMainQuestComplete } from "@/game/quests/mainQuestSystem";
 import { useGameStore } from "@/game/stores/gameStore";
 import { showToast } from "@/game/ui/Toast";
@@ -50,12 +45,7 @@ export const BIRCHMOTHER_COOLDOWN_MS = 10_000;
  * Y axis is excluded: Birchmother is a large tree and the player may be at
  * any height relative to her base.
  */
-export function computeDistanceXZ(
-  ax: number,
-  az: number,
-  bx: number,
-  bz: number,
-): number {
+export function computeDistanceXZ(ax: number, az: number, bx: number, bz: number): number {
   const dx = ax - bx;
   const dz = az - bz;
   return Math.sqrt(dx * dx + dz * dz);

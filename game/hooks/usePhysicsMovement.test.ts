@@ -20,7 +20,7 @@ jest.mock("three", () => ({
   })),
 }));
 
-import { rotateByYaw, usePhysicsMovement } from "./usePhysicsMovement";
+import { rotateByYaw, usePhysicsMovement } from "./usePhysicsMovement.ts";
 
 describe("rotateByYaw (Spec §23)", () => {
   it("maps W-forward to -Z world at yaw=0 (camera faces -Z)", () => {

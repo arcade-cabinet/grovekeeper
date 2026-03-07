@@ -1,4 +1,4 @@
-import { type GridTile, generateGrid, type TileType } from "./gridGeneration";
+import { type GridTile, generateGrid, type TileType } from "./gridGeneration.ts";
 
 function countByType(tiles: GridTile[], type: TileType): number {
   return tiles.filter((t) => t.type === type).length;

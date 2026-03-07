@@ -12,7 +12,7 @@ import {
   isChainActive,
   isChainCompleted,
   startChain,
-} from "./questChainEngine";
+} from "./questChainEngine.ts";
 
 describe("questChainEngine", () => {
   describe("initializeChainState", () => {

@@ -12,7 +12,7 @@
  */
 
 import combatConfig from "@/config/game/combat.json" with { type: "json" };
-import type { HealthComponent, CombatComponent } from "@/game/ecs/components/combat";
+import type { CombatComponent, HealthComponent } from "@/game/ecs/components/combat";
 
 const { invulnSeconds } = combatConfig;
 
@@ -25,10 +25,7 @@ const { invulnSeconds } = combatConfig;
  * Spec §34.2: Damage = tool.effectPower × difficulty.damageMultiplier
  * Returns 0 in Explore mode (damageMultiplier = 0).
  */
-export function computePlayerDamage(
-  effectPower: number,
-  damageMultiplier: number,
-): number {
+export function computePlayerDamage(effectPower: number, damageMultiplier: number): number {
   return effectPower * damageMultiplier;
 }
 
@@ -37,10 +34,7 @@ export function computePlayerDamage(
  * Spec §34.2: Player damage = enemy.attackPower × difficulty.incomingDamageMultiplier
  * Returns 0 in Explore mode (incomingDamageMultiplier = 0).
  */
-export function computeEnemyDamage(
-  attackPower: number,
-  incomingDamageMultiplier: number,
-): number {
+export function computeEnemyDamage(attackPower: number, incomingDamageMultiplier: number): number {
   return attackPower * incomingDamageMultiplier;
 }
 
@@ -53,11 +47,7 @@ export function computeEnemyDamage(
  * Skips if the entity is still within the invulnerability window.
  * Mutates health in place.
  */
-export function applyDamageToHealth(
-  health: HealthComponent,
-  amount: number,
-  source: string,
-): void {
+export function applyDamageToHealth(health: HealthComponent, amount: number, source: string): void {
   if (health.invulnFrames > 0) return;
 
   health.current = Math.max(0, health.current - amount);

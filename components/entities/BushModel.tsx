@@ -8,11 +8,11 @@
  * See GAME_SPEC.md §6.3, §8.
  */
 
-import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useMemo } from "react";
 import { Mesh, MeshStandardMaterial } from "three";
-import type { VegetationSeason } from "@/game/ecs/components/vegetation";
 import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
+import type { VegetationSeason } from "@/game/ecs/components/vegetation";
 
 // ---------------------------------------------------------------------------
 // Constants (Spec §6.3)
@@ -28,8 +28,7 @@ export const VALID_SEASONS: readonly VegetationSeason[] = [
 ];
 
 /** All valid bush shape identifiers from vegetation.json (Spec §8). */
-export const VALID_BUSH_SHAPES: readonly string[] =
-  vegetationConfig.bushShapes as string[];
+export const VALID_BUSH_SHAPES: readonly string[] = vegetationConfig.bushShapes as string[];
 
 // ---------------------------------------------------------------------------
 // Pure mapping functions (exported for testing)
@@ -39,10 +38,7 @@ export const VALID_BUSH_SHAPES: readonly string[] =
  * Build the model key for a given bushShape + season combination.
  * Pattern: `{bushShape}_{season}` (Spec §8).
  */
-export function buildModelKey(
-  bushShape: string,
-  season: VegetationSeason,
-): string {
+export function buildModelKey(bushShape: string, season: VegetationSeason): string {
   return `${bushShape}_${season}`;
 }
 
@@ -52,10 +48,7 @@ export function buildModelKey(
  * Throws if the bushShape is unknown — no silent fallbacks (Spec §8 hard rule).
  * Path convention: `assets/models/bushes/{bushShape}_{season}.glb`
  */
-export function resolveBushGLBPath(
-  bushShape: string,
-  season: VegetationSeason,
-): string {
+export function resolveBushGLBPath(bushShape: string, season: VegetationSeason): string {
   if (!VALID_BUSH_SHAPES.includes(bushShape)) {
     throw new Error(
       `[BushModel] Unknown bushShape: "${bushShape}". Check config/game/vegetation.json bushShapes.`,

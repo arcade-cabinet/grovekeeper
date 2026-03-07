@@ -9,20 +9,26 @@
  * `dispatchAction`, following the pattern established in TargetInfo.tsx and ToolViewModel.tsx.
  */
 
-import { clearRock, harvestTree, plantTree, pruneTree, waterTree } from "@/game/actions/GameActions";
+import {
+  clearRock,
+  harvestTree,
+  plantTree,
+  pruneTree,
+  waterTree,
+} from "@/game/actions/GameActions";
+import type { ResourceType } from "@/game/config/resources";
+import type { RockComponent } from "@/game/ecs/components/terrain";
 import type { Entity } from "@/game/ecs/world";
 import type { RaycastEntityType } from "@/game/hooks/useRaycast";
-import { triggerActionHaptic, type ToolAction } from "@/game/systems/haptics";
-import { resolveCampfireInteraction } from "@/game/systems/cooking";
-import { resolveForgeInteraction } from "@/game/systems/forging";
-import { resolveMiningInteraction, mineRock } from "@/game/systems/mining";
-import type { RockComponent } from "@/game/ecs/components/terrain";
-import type { BiomeType } from "@/game/world/biomeMapper";
-import { isWaterFishable } from "@/game/systems/fishing";
-import { createTrapComponent } from "@/game/systems/traps";
 import { useGameStore } from "@/game/stores/gameStore";
+import { resolveCampfireInteraction } from "@/game/systems/cooking";
+import { isWaterFishable } from "@/game/systems/fishing";
+import { resolveForgeInteraction } from "@/game/systems/forging";
+import { type ToolAction, triggerActionHaptic } from "@/game/systems/haptics";
+import { mineRock, resolveMiningInteraction } from "@/game/systems/mining";
+import { createTrapComponent } from "@/game/systems/traps";
 import { scopedRNG } from "@/game/utils/seedWords";
-import type { ResourceType } from "@/game/config/resources";
+import type { BiomeType } from "@/game/world/biomeMapper";
 
 // Re-export interaction resolvers so callers (useInteraction, TargetInfo) can import
 // from a single dispatcher module rather than each crafting system file.
@@ -115,7 +121,10 @@ export interface DispatchContext {
  * Build mode (Spec §35):
  *   hammer       + null     -> BUILD  (open kitbash panel on empty ground)
  */
-export function resolveAction(toolId: string, targetType: TargetEntityType | null): GameAction | null {
+export function resolveAction(
+  toolId: string,
+  targetType: TargetEntityType | null,
+): GameAction | null {
   // Core grove verbs
   if (toolId === "axe" && targetType === "tree") return "CHOP";
   if (toolId === "watering-can" && targetType === "tree") return "WATER";
@@ -245,11 +254,7 @@ export function dispatchAction(ctx: DispatchContext): boolean {
       // Determine ore yield using seeded RNG
       const biome = (ctx.biome ?? "starting-grove") as BiomeType;
       const rngFn = scopedRNG("mine", store.worldSeed, ctx.entity.id ?? "");
-      const result = mineRock(
-        { rockType: miningCheck.rockType } as RockComponent,
-        biome,
-        rngFn(),
-      );
+      const result = mineRock({ rockType: miningCheck.rockType } as RockComponent, biome, rngFn());
 
       // Credit ore to inventory
       store.addResource(result.oreType as ResourceType, result.amount);
@@ -289,7 +294,11 @@ export function dispatchAction(ctx: DispatchContext): boolean {
       // Signal the store/ECS to spawn a trap entity at this position.
       // The store action is injected here; ECS entity creation happens in the
       // game loop's structure placement handler.
-      (store as unknown as { placeTrap?: (t: string, x: number, z: number) => void }).placeTrap?.(ctx.trapType, ctx.gridX, ctx.gridZ);
+      (store as unknown as { placeTrap?: (t: string, x: number, z: number) => void }).placeTrap?.(
+        ctx.trapType,
+        ctx.gridX,
+        ctx.gridZ,
+      );
       success = true;
       break;
     }

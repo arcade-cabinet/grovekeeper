@@ -21,8 +21,8 @@ jest.mock("@react-three/fiber", () => ({
   }),
 }));
 
-import { clampPitch, PITCH_CLAMP_RAD, MOUSE_SENSITIVITY, useMouseLook } from "./useMouseLook";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import { clampPitch, MOUSE_SENSITIVITY, PITCH_CLAMP_RAD, useMouseLook } from "./useMouseLook.ts";
 
 describe("clampPitch (Spec §23)", () => {
   it("returns pitch unchanged when within ±85°", () => {

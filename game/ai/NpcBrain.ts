@@ -4,11 +4,11 @@
  */
 
 import { GameEntity, GoalEvaluator, Think } from "yuka";
+import aiConfig from "@/config/game/ai.json" with { type: "json" };
 import { useGameStore } from "@/game/stores/gameStore";
 import { cancelNpcMovement, isNpcMoving, startNpcPath } from "@/game/systems/npcMovement";
 import type { WalkabilityGrid } from "@/game/systems/pathfinding";
 import { scopedRNG } from "@/game/utils/seedWords";
-import aiConfig from "@/config/game/ai.json" with { type: "json" };
 
 // ──────────────────────────────────────────────
 // Types

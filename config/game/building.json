@@ -34,83 +34,274 @@
     "reinforced": 16
   },
   "buildCosts": {
-    "wall": { "wood": { "wood": 4 }, "stone": { "stone": 6 }, "metal": { "metal_scrap": 5 }, "thatch": { "fiber": 3 }, "reinforced": { "stone": 4, "metal_scrap": 6 } },
-    "floor": { "wood": { "wood": 3 }, "stone": { "stone": 5 }, "metal": { "metal_scrap": 4 }, "thatch": { "fiber": 2 }, "reinforced": { "stone": 3, "metal_scrap": 5 } },
-    "roof": { "wood": { "wood": 5 }, "stone": { "stone": 7 }, "metal": { "metal_scrap": 6 }, "thatch": { "fiber": 4 }, "reinforced": { "stone": 5, "metal_scrap": 8 } },
-    "stairs": { "wood": { "wood": 6 }, "stone": { "stone": 8 }, "metal": { "metal_scrap": 7 }, "reinforced": { "stone": 5, "metal_scrap": 7 } },
-    "foundation": { "wood": { "wood": 3 }, "stone": { "stone": 4 }, "metal": { "metal_scrap": 3 }, "reinforced": { "stone": 3, "metal_scrap": 4 } },
-    "door": { "wood": { "wood": 2 }, "stone": { "stone": 3 }, "metal": { "metal_scrap": 4 }, "reinforced": { "stone": 2, "metal_scrap": 5 } },
-    "window": { "wood": { "wood": 2 }, "stone": { "stone": 2 }, "metal": { "metal_scrap": 2 }, "reinforced": { "stone": 2, "metal_scrap": 3 } },
-    "pillar": { "wood": { "wood": 3 }, "stone": { "stone": 5 }, "metal": { "metal_scrap": 4 }, "reinforced": { "stone": 3, "metal_scrap": 5 } },
-    "platform": { "wood": { "wood": 4 }, "metal": { "metal_scrap": 5 }, "reinforced": { "stone": 3, "metal_scrap": 6 } },
-    "beam": { "wood": { "wood": 2 }, "metal": { "metal_scrap": 3 }, "reinforced": { "stone": 1, "metal_scrap": 4 } },
+    "wall": {
+      "wood": { "wood": 4 },
+      "stone": { "stone": 6 },
+      "metal": { "metal_scrap": 5 },
+      "thatch": { "fiber": 3 },
+      "reinforced": { "stone": 4, "metal_scrap": 6 }
+    },
+    "floor": {
+      "wood": { "wood": 3 },
+      "stone": { "stone": 5 },
+      "metal": { "metal_scrap": 4 },
+      "thatch": { "fiber": 2 },
+      "reinforced": { "stone": 3, "metal_scrap": 5 }
+    },
+    "roof": {
+      "wood": { "wood": 5 },
+      "stone": { "stone": 7 },
+      "metal": { "metal_scrap": 6 },
+      "thatch": { "fiber": 4 },
+      "reinforced": { "stone": 5, "metal_scrap": 8 }
+    },
+    "stairs": {
+      "wood": { "wood": 6 },
+      "stone": { "stone": 8 },
+      "metal": { "metal_scrap": 7 },
+      "reinforced": { "stone": 5, "metal_scrap": 7 }
+    },
+    "foundation": {
+      "wood": { "wood": 3 },
+      "stone": { "stone": 4 },
+      "metal": { "metal_scrap": 3 },
+      "reinforced": { "stone": 3, "metal_scrap": 4 }
+    },
+    "door": {
+      "wood": { "wood": 2 },
+      "stone": { "stone": 3 },
+      "metal": { "metal_scrap": 4 },
+      "reinforced": { "stone": 2, "metal_scrap": 5 }
+    },
+    "window": {
+      "wood": { "wood": 2 },
+      "stone": { "stone": 2 },
+      "metal": { "metal_scrap": 2 },
+      "reinforced": { "stone": 2, "metal_scrap": 3 }
+    },
+    "pillar": {
+      "wood": { "wood": 3 },
+      "stone": { "stone": 5 },
+      "metal": { "metal_scrap": 4 },
+      "reinforced": { "stone": 3, "metal_scrap": 5 }
+    },
+    "platform": {
+      "wood": { "wood": 4 },
+      "metal": { "metal_scrap": 5 },
+      "reinforced": { "stone": 3, "metal_scrap": 6 }
+    },
+    "beam": {
+      "wood": { "wood": 2 },
+      "metal": { "metal_scrap": 3 },
+      "reinforced": { "stone": 1, "metal_scrap": 4 }
+    },
     "pipe": { "metal": { "metal_scrap": 2 }, "reinforced": { "metal_scrap": 4 } }
   },
   "snapPointTemplates": {
     "wall": [
-      { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["wall", "pillar", "door", "window"] },
-      { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["wall", "pillar", "door", "window"] },
-      { "localPosition": { "x": 0, "y": 0.5, "z": 0 }, "direction": "up", "accepts": ["wall", "roof", "floor", "beam"] },
-      { "localPosition": { "x": 0, "y": -0.5, "z": 0 }, "direction": "down", "accepts": ["wall", "foundation", "floor"] }
+      {
+        "localPosition": { "x": -0.5, "y": 0, "z": 0 },
+        "direction": "west",
+        "accepts": ["wall", "pillar", "door", "window"]
+      },
+      {
+        "localPosition": { "x": 0.5, "y": 0, "z": 0 },
+        "direction": "east",
+        "accepts": ["wall", "pillar", "door", "window"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0.5, "z": 0 },
+        "direction": "up",
+        "accepts": ["wall", "roof", "floor", "beam"]
+      },
+      {
+        "localPosition": { "x": 0, "y": -0.5, "z": 0 },
+        "direction": "down",
+        "accepts": ["wall", "foundation", "floor"]
+      }
     ],
     "floor": [
-      { "localPosition": { "x": 0, "y": 0.5, "z": 0 }, "direction": "up", "accepts": ["wall", "pillar", "door", "window", "stairs"] },
-      { "localPosition": { "x": 0, "y": -0.5, "z": 0 }, "direction": "down", "accepts": ["wall", "pillar", "foundation"] },
-      { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["floor", "platform"] },
-      { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["floor", "platform"] },
-      { "localPosition": { "x": 0, "y": 0, "z": 0.5 }, "direction": "south", "accepts": ["floor", "platform"] },
-      { "localPosition": { "x": 0, "y": 0, "z": -0.5 }, "direction": "north", "accepts": ["floor", "platform"] }
+      {
+        "localPosition": { "x": 0, "y": 0.5, "z": 0 },
+        "direction": "up",
+        "accepts": ["wall", "pillar", "door", "window", "stairs"]
+      },
+      {
+        "localPosition": { "x": 0, "y": -0.5, "z": 0 },
+        "direction": "down",
+        "accepts": ["wall", "pillar", "foundation"]
+      },
+      {
+        "localPosition": { "x": 0.5, "y": 0, "z": 0 },
+        "direction": "east",
+        "accepts": ["floor", "platform"]
+      },
+      {
+        "localPosition": { "x": -0.5, "y": 0, "z": 0 },
+        "direction": "west",
+        "accepts": ["floor", "platform"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0, "z": 0.5 },
+        "direction": "south",
+        "accepts": ["floor", "platform"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0, "z": -0.5 },
+        "direction": "north",
+        "accepts": ["floor", "platform"]
+      }
     ],
     "roof": [
-      { "localPosition": { "x": 0, "y": -0.5, "z": 0 }, "direction": "down", "accepts": ["wall", "pillar", "beam"] },
+      {
+        "localPosition": { "x": 0, "y": -0.5, "z": 0 },
+        "direction": "down",
+        "accepts": ["wall", "pillar", "beam"]
+      },
       { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["roof"] },
       { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["roof"] },
       { "localPosition": { "x": 0, "y": 0, "z": 0.5 }, "direction": "south", "accepts": ["roof"] },
       { "localPosition": { "x": 0, "y": 0, "z": -0.5 }, "direction": "north", "accepts": ["roof"] }
     ],
     "pillar": [
-      { "localPosition": { "x": 0, "y": 0.5, "z": 0 }, "direction": "up", "accepts": ["pillar", "beam", "floor", "roof"] },
-      { "localPosition": { "x": 0, "y": -0.5, "z": 0 }, "direction": "down", "accepts": ["pillar", "foundation", "floor"] },
-      { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["wall", "beam"] },
-      { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["wall", "beam"] },
-      { "localPosition": { "x": 0, "y": 0, "z": 0.5 }, "direction": "south", "accepts": ["wall", "beam"] },
-      { "localPosition": { "x": 0, "y": 0, "z": -0.5 }, "direction": "north", "accepts": ["wall", "beam"] }
+      {
+        "localPosition": { "x": 0, "y": 0.5, "z": 0 },
+        "direction": "up",
+        "accepts": ["pillar", "beam", "floor", "roof"]
+      },
+      {
+        "localPosition": { "x": 0, "y": -0.5, "z": 0 },
+        "direction": "down",
+        "accepts": ["pillar", "foundation", "floor"]
+      },
+      {
+        "localPosition": { "x": 0.5, "y": 0, "z": 0 },
+        "direction": "east",
+        "accepts": ["wall", "beam"]
+      },
+      {
+        "localPosition": { "x": -0.5, "y": 0, "z": 0 },
+        "direction": "west",
+        "accepts": ["wall", "beam"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0, "z": 0.5 },
+        "direction": "south",
+        "accepts": ["wall", "beam"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0, "z": -0.5 },
+        "direction": "north",
+        "accepts": ["wall", "beam"]
+      }
     ],
     "foundation": [
-      { "localPosition": { "x": 0, "y": 0.5, "z": 0 }, "direction": "up", "accepts": ["wall", "pillar", "floor", "door"] },
-      { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["foundation"] },
-      { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["foundation"] },
-      { "localPosition": { "x": 0, "y": 0, "z": 0.5 }, "direction": "south", "accepts": ["foundation"] },
-      { "localPosition": { "x": 0, "y": 0, "z": -0.5 }, "direction": "north", "accepts": ["foundation"] }
+      {
+        "localPosition": { "x": 0, "y": 0.5, "z": 0 },
+        "direction": "up",
+        "accepts": ["wall", "pillar", "floor", "door"]
+      },
+      {
+        "localPosition": { "x": 0.5, "y": 0, "z": 0 },
+        "direction": "east",
+        "accepts": ["foundation"]
+      },
+      {
+        "localPosition": { "x": -0.5, "y": 0, "z": 0 },
+        "direction": "west",
+        "accepts": ["foundation"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0, "z": 0.5 },
+        "direction": "south",
+        "accepts": ["foundation"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0, "z": -0.5 },
+        "direction": "north",
+        "accepts": ["foundation"]
+      }
     ],
     "door": [
       { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["wall"] },
       { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["wall"] },
-      { "localPosition": { "x": 0, "y": 0.5, "z": 0 }, "direction": "up", "accepts": ["wall", "beam"] },
-      { "localPosition": { "x": 0, "y": -0.5, "z": 0 }, "direction": "down", "accepts": ["foundation", "floor"] }
+      {
+        "localPosition": { "x": 0, "y": 0.5, "z": 0 },
+        "direction": "up",
+        "accepts": ["wall", "beam"]
+      },
+      {
+        "localPosition": { "x": 0, "y": -0.5, "z": 0 },
+        "direction": "down",
+        "accepts": ["foundation", "floor"]
+      }
     ],
     "window": [
       { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["wall"] },
       { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["wall"] }
     ],
     "platform": [
-      { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["platform", "floor"] },
-      { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["platform", "floor"] },
-      { "localPosition": { "x": 0, "y": 0, "z": 0.5 }, "direction": "south", "accepts": ["platform", "floor"] },
-      { "localPosition": { "x": 0, "y": 0, "z": -0.5 }, "direction": "north", "accepts": ["platform", "floor"] },
-      { "localPosition": { "x": 0, "y": -0.5, "z": 0 }, "direction": "down", "accepts": ["pillar", "wall"] }
+      {
+        "localPosition": { "x": 0.5, "y": 0, "z": 0 },
+        "direction": "east",
+        "accepts": ["platform", "floor"]
+      },
+      {
+        "localPosition": { "x": -0.5, "y": 0, "z": 0 },
+        "direction": "west",
+        "accepts": ["platform", "floor"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0, "z": 0.5 },
+        "direction": "south",
+        "accepts": ["platform", "floor"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0, "z": -0.5 },
+        "direction": "north",
+        "accepts": ["platform", "floor"]
+      },
+      {
+        "localPosition": { "x": 0, "y": -0.5, "z": 0 },
+        "direction": "down",
+        "accepts": ["pillar", "wall"]
+      }
     ],
     "beam": [
-      { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["pillar", "wall"] },
-      { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["pillar", "wall"] }
+      {
+        "localPosition": { "x": -0.5, "y": 0, "z": 0 },
+        "direction": "west",
+        "accepts": ["pillar", "wall"]
+      },
+      {
+        "localPosition": { "x": 0.5, "y": 0, "z": 0 },
+        "direction": "east",
+        "accepts": ["pillar", "wall"]
+      }
     ],
     "stairs": [
-      { "localPosition": { "x": 0, "y": -0.5, "z": 0 }, "direction": "down", "accepts": ["floor", "foundation"] },
-      { "localPosition": { "x": 0, "y": 0.5, "z": 0 }, "direction": "up", "accepts": ["floor", "platform"] }
+      {
+        "localPosition": { "x": 0, "y": -0.5, "z": 0 },
+        "direction": "down",
+        "accepts": ["floor", "foundation"]
+      },
+      {
+        "localPosition": { "x": 0, "y": 0.5, "z": 0 },
+        "direction": "up",
+        "accepts": ["floor", "platform"]
+      }
     ],
     "pipe": [
-      { "localPosition": { "x": -0.5, "y": 0, "z": 0 }, "direction": "west", "accepts": ["pipe", "wall"] },
-      { "localPosition": { "x": 0.5, "y": 0, "z": 0 }, "direction": "east", "accepts": ["pipe", "wall"] },
+      {
+        "localPosition": { "x": -0.5, "y": 0, "z": 0 },
+        "direction": "west",
+        "accepts": ["pipe", "wall"]
+      },
+      {
+        "localPosition": { "x": 0.5, "y": 0, "z": 0 },
+        "direction": "east",
+        "accepts": ["pipe", "wall"]
+      },
       { "localPosition": { "x": 0, "y": 0.5, "z": 0 }, "direction": "up", "accepts": ["pipe"] },
       { "localPosition": { "x": 0, "y": -0.5, "z": 0 }, "direction": "down", "accepts": ["pipe"] }
     ]

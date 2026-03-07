@@ -4,14 +4,13 @@
  * Spec §31.2: "Splash particles: 12 particles on player water entry, lifetime 0.8s"
  * Spec §36.1: Splash (gravity 0.5, no wind, 30 max) + Bubbles (gravity -0.3, no wind, 20 max)
  */
-import { World } from "miniplex";
-import type { ParticleEmitterComponent } from "@/game/ecs/components/procedural/particles";
+import type { World } from "miniplex";
 import proceduralConfig from "@/config/game/procedural.json" with { type: "json" };
+import type { ParticleEmitterComponent } from "@/game/ecs/components/procedural/particles";
 
 // ── Constants from config ────────────────────────────────────────────────────
 
-export const SPLASH_PARTICLE_COUNT: number =
-  proceduralConfig.water.splashParticleCount;
+export const SPLASH_PARTICLE_COUNT: number = proceduralConfig.water.splashParticleCount;
 export const SPLASH_LIFETIME: number = proceduralConfig.water.splashLifetime;
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -57,8 +56,7 @@ export function detectWaterState(
     const halfW = wb.waterBody.size.width / 2;
     const halfD = wb.waterBody.size.depth / 2;
     const inBounds =
-      Math.abs(playerX - wb.position.x) <= halfW &&
-      Math.abs(playerZ - wb.position.z) <= halfD;
+      Math.abs(playerX - wb.position.x) <= halfW && Math.abs(playerZ - wb.position.z) <= halfD;
     if (inBounds && playerY <= wb.position.y) {
       return "submerged";
     }
@@ -132,12 +130,7 @@ export function tickWaterParticles(
 ): void {
   if (!playerPos) return;
 
-  const currentState = detectWaterState(
-    playerPos.x,
-    playerPos.y,
-    playerPos.z,
-    waterBodies,
-  );
+  const currentState = detectWaterState(playerPos.x, playerPos.y, playerPos.z, waterBodies);
   const prevState = state.prevWaterState;
 
   // Water entry transition: above → submerged — one-shot splash burst

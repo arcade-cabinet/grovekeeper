@@ -15,12 +15,8 @@ jest.mock("three", () => ({
     vertexShader: params?.vertexShader,
     fragmentShader: params?.fragmentShader,
   })),
-  Color: jest
-    .fn()
-    .mockImplementation((hex: string) => ({ isColor: true, hex, set: jest.fn() })),
-  Vector2: jest
-    .fn()
-    .mockImplementation((x = 0, y = 0) => ({ x, y, isVector2: true })),
+  Color: jest.fn().mockImplementation((hex: string) => ({ isColor: true, hex, set: jest.fn() })),
+  Vector2: jest.fn().mockImplementation((x = 0, y = 0) => ({ x, y, isVector2: true })),
   DoubleSide: 2,
   AdditiveBlending: 2,
   IUniform: undefined,
@@ -29,27 +25,25 @@ jest.mock("three", () => ({
 import * as THREE from "three";
 import type { WaterBodyComponent } from "@/game/ecs/components/procedural/water";
 import {
-  MAX_WAVE_LAYERS,
-  GERSTNER_VERTEX_SHADER,
-  GERSTNER_FRAGMENT_SHADER,
   buildGerstnerUniforms,
-  createGerstnerMaterial,
-  updateGerstnerTime,
-  CAUSTICS_UV_SCALE,
-  CAUSTICS_SPEED,
-  CAUSTICS_VERTEX_SHADER,
   CAUSTICS_FRAGMENT_SHADER,
+  CAUSTICS_SPEED,
+  CAUSTICS_UV_SCALE,
+  CAUSTICS_VERTEX_SHADER,
   createCausticsMaterial,
+  createGerstnerMaterial,
+  GERSTNER_FRAGMENT_SHADER,
+  GERSTNER_VERTEX_SHADER,
+  MAX_WAVE_LAYERS,
   updateCausticsTime,
+  updateGerstnerTime,
 } from "@/game/shaders/gerstnerWater";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 const pondWaterBody: WaterBodyComponent = {
   waterType: "pond",
-  waveLayers: [
-    { amplitude: 0.02, wavelength: 3, speed: 0.3, steepness: 0.1, direction: [1, 0] },
-  ],
+  waveLayers: [{ amplitude: 0.02, wavelength: 3, speed: 0.3, steepness: 0.1, direction: [1, 0] }],
   color: "#3d9ea0",
   opacity: 0.7,
   size: { width: 5, depth: 5 },
@@ -269,9 +263,7 @@ describe("buildGerstnerUniforms — clamping to MAX_WAVE_LAYERS", () => {
     expect(uniforms.uWaveCount.value).toBe(MAX_WAVE_LAYERS);
     expect(uniforms.uAmplitude.value).toHaveLength(MAX_WAVE_LAYERS);
     // Only first MAX_WAVE_LAYERS layers should be used
-    expect(uniforms.uAmplitude.value[MAX_WAVE_LAYERS - 1]).toBe(
-      0.1 * MAX_WAVE_LAYERS,
-    );
+    expect(uniforms.uAmplitude.value[MAX_WAVE_LAYERS - 1]).toBe(0.1 * MAX_WAVE_LAYERS);
   });
 });
 
@@ -405,51 +397,65 @@ describe("createCausticsMaterial", () => {
 
   it("passes CAUSTICS_VERTEX_SHADER as vertexShader", () => {
     createCausticsMaterial();
-    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock
-      .calls[0][0] as Record<string, unknown>;
+    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(params.vertexShader).toBe(CAUSTICS_VERTEX_SHADER);
   });
 
   it("passes CAUSTICS_FRAGMENT_SHADER as fragmentShader", () => {
     createCausticsMaterial();
-    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock
-      .calls[0][0] as Record<string, unknown>;
+    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(params.fragmentShader).toBe(CAUSTICS_FRAGMENT_SHADER);
   });
 
   it("is transparent with AdditiveBlending", () => {
     createCausticsMaterial();
-    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock
-      .calls[0][0] as Record<string, unknown>;
+    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(params.transparent).toBe(true);
     expect(params.blending).toBe(THREE.AdditiveBlending);
   });
 
   it("disables depth writing", () => {
     createCausticsMaterial();
-    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock
-      .calls[0][0] as Record<string, unknown>;
+    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(params.depthWrite).toBe(false);
   });
 
   it("initialises uTime to 0", () => {
     createCausticsMaterial();
-    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock
-      .calls[0][0] as Record<string, { value: unknown }>;
+    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock.calls[0][0] as Record<
+      string,
+      { value: unknown }
+    >;
     expect((params.uniforms as Record<string, { value: unknown }>).uTime.value).toBe(0);
   });
 
   it("sets uCausticsScale to CAUSTICS_UV_SCALE", () => {
     createCausticsMaterial();
-    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock
-      .calls[0][0] as Record<string, Record<string, { value: unknown }>>;
+    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock.calls[0][0] as Record<
+      string,
+      Record<string, { value: unknown }>
+    >;
     expect(params.uniforms.uCausticsScale.value).toBe(CAUSTICS_UV_SCALE);
   });
 
   it("sets uCausticsSpeed to CAUSTICS_SPEED", () => {
     createCausticsMaterial();
-    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock
-      .calls[0][0] as Record<string, Record<string, { value: unknown }>>;
+    const params = (THREE.ShaderMaterial as unknown as jest.Mock).mock.calls[0][0] as Record<
+      string,
+      Record<string, { value: unknown }>
+    >;
     expect(params.uniforms.uCausticsSpeed.value).toBe(CAUSTICS_SPEED);
   });
 });

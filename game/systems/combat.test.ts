@@ -5,22 +5,18 @@
  * Tests reference GAME_SPEC.md §34.2 (Combat Mechanics).
  */
 
+import type { CombatComponent, HealthComponent } from "@/game/ecs/components/combat";
 import {
-  computePlayerDamage,
-  computeEnemyDamage,
   applyDamageToHealth,
-  isDefeated,
-  tickInvulnFrames,
+  computeEnemyDamage,
   computeKnockback,
+  computePlayerDamage,
+  isDefeated,
   tickAttackCooldown,
-} from "./combat";
-import type { HealthComponent, CombatComponent } from "@/game/ecs/components/combat";
+  tickInvulnFrames,
+} from "./combat.ts";
 
-function makeHealth(
-  current: number,
-  max: number,
-  invulnFrames = 0,
-): HealthComponent {
+function makeHealth(current: number, max: number, invulnFrames = 0): HealthComponent {
   return { current, max, invulnFrames, lastDamageSource: null };
 }
 

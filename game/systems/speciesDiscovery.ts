@@ -77,9 +77,10 @@ export function createEmptyProgress(): SpeciesProgress {
  * Returns isNew=false (no-op) if already seen.
  * PURE -- no side effects.
  */
-export function encounterWildSpecies(
-  progress: SpeciesProgress,
-): { isNew: boolean; updated: SpeciesProgress } {
+export function encounterWildSpecies(progress: SpeciesProgress): {
+  isNew: boolean;
+  updated: SpeciesProgress;
+} {
   if (progress.seenInWild) {
     return { isNew: false, updated: progress };
   }

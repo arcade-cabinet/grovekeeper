@@ -13,17 +13,13 @@
  * See GAME_SPEC.md §18.
  */
 
-import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import type * as React from "react";
-import { useRef, useState, useMemo } from "react";
-
-import { hedgesQuery, hedgeDecorationsQuery } from "@/game/ecs/world";
-import type {
-  HedgeComponent,
-  HedgeDecorationComponent,
-} from "@/game/ecs/components/terrain";
-import { type StaticEntityInput, StaticModelInstances } from "./StaticInstances";
+import { useMemo, useRef, useState } from "react";
+import type { HedgeComponent, HedgeDecorationComponent } from "@/game/ecs/components/terrain";
+import { hedgeDecorationsQuery, hedgesQuery } from "@/game/ecs/world";
+import { type StaticEntityInput, StaticModelInstances } from "./StaticInstances.tsx";
 
 // ---------------------------------------------------------------------------
 // Pure functions (exported for testing)
@@ -51,9 +47,7 @@ export function resolveHedgeGLBPath(hedge: HedgeComponent): string {
  * The maze generator pre-computes modelPath on each DecorationPlacement.
  * Throws on missing path — no silent fallbacks (Spec §14 hard rule).
  */
-export function resolveDecorationGLBPath(
-  decoration: HedgeDecorationComponent,
-): string {
+export function resolveDecorationGLBPath(decoration: HedgeDecorationComponent): string {
   if (!decoration.modelPath) {
     throw new Error(
       `[HedgeMaze] HedgeDecorationComponent missing modelPath for itemId="${decoration.itemId}"`,
@@ -88,11 +82,7 @@ interface DecorationGLBModelProps {
  * Separate sub-component so useGLTF is only called when mounted — Rules of Hooks.
  * Clones the scene to avoid mutating the shared GLTF cache.
  */
-const DecorationGLBModel = ({
-  glbPath,
-  position,
-  rotationY,
-}: DecorationGLBModelProps) => {
+const DecorationGLBModel = ({ glbPath, position, rotationY }: DecorationGLBModelProps) => {
   const { scene } = useGLTF(glbPath);
   const cloned = useMemo(() => scene.clone(true), [scene]);
   return (
@@ -130,14 +120,12 @@ interface DecorationEntry {
  */
 export const HedgeMaze = () => {
   // ── Hedge wall pieces (batched by modelPath) ────────────────────────────
-  const [hedgeCapacities, setHedgeCapacities] = useState<
-    ReadonlyMap<string, number>
-  >(new Map());
+  const [hedgeCapacities, setHedgeCapacities] = useState<ReadonlyMap<string, number>>(new Map());
   const prevHedgeModelsRef = useRef<Set<string>>(new Set());
   const hedgeCapacitiesRef = useRef<Map<string, number>>(new Map());
-  const hedgeRefsMapRef = useRef<
-    Map<string, React.MutableRefObject<StaticEntityInput[]>>
-  >(new Map());
+  const hedgeRefsMapRef = useRef<Map<string, React.MutableRefObject<StaticEntityInput[]>>>(
+    new Map(),
+  );
 
   // ── Decorations (individual GLBs) ──────────────────────────────────────
   const [decorations, setDecorations] = useState<DecorationEntry[]>([]);
@@ -172,10 +160,7 @@ export const HedgeMaze = () => {
 
     // Detect new modelPaths
     const prev = prevHedgeModelsRef.current;
-    if (
-      currentModels.size !== prev.size ||
-      [...currentModels].some((m) => !prev.has(m))
-    ) {
+    if (currentModels.size !== prev.size || [...currentModels].some((m) => !prev.has(m))) {
       hedgeChanged = true;
       prevHedgeModelsRef.current = currentModels;
     }
@@ -216,8 +201,7 @@ export const HedgeMaze = () => {
     <>
       {/* Hedge wall pieces — batched InstancedMeshes, grouped by modelPath */}
       {[...hedgeCapacities.entries()].map(([modelPath, capacity]) => {
-        const entitiesRef =
-          hedgeRefsMapRef.current.get(modelPath) ?? { current: [] };
+        const entitiesRef = hedgeRefsMapRef.current.get(modelPath) ?? { current: [] };
         return (
           <StaticModelInstances
             key={modelPath}
@@ -229,12 +213,7 @@ export const HedgeMaze = () => {
       })}
       {/* Decorations — individual GLBs: fountain, benches, flowers, columns */}
       {decorations.map(({ id, glbPath, position, rotationY }) => (
-        <DecorationGLBModel
-          key={id}
-          glbPath={glbPath}
-          position={position}
-          rotationY={rotationY}
-        />
+        <DecorationGLBModel key={id} glbPath={glbPath} position={position} rotationY={rotationY} />
       ))}
     </>
   );

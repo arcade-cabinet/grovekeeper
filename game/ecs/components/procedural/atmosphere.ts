@@ -23,7 +23,15 @@ export interface SkyComponent {
   cloudSpeed: number;
 }
 
-export type TimeOfDay = "dawn" | "morning" | "noon" | "afternoon" | "dusk" | "evening" | "night" | "midnight";
+export type TimeOfDay =
+  | "dawn"
+  | "morning"
+  | "noon"
+  | "afternoon"
+  | "dusk"
+  | "evening"
+  | "night"
+  | "midnight";
 
 /** Day/night cycle state — drives sky, lighting, NPC schedules. */
 export interface DayNightComponent {

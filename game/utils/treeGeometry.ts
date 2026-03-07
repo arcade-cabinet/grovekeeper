@@ -19,7 +19,7 @@ import * as THREE from "three";
 import growthConfig from "@/config/game/growth.json" with { type: "json" };
 import speciesConfig from "@/config/game/species.json" with { type: "json" };
 
-import { createRNG } from "./seedRNG";
+import { createRNG } from "./seedRNG.ts";
 
 // ---------------------------------------------------------------------------
 // Inline mergeGeometries — avoids importing from three/examples/jsm which

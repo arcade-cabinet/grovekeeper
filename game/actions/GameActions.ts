@@ -15,10 +15,18 @@ import { getToolById } from "@/game/config/tools";
 import { createTreeEntity } from "@/game/ecs/archetypes";
 import type { Entity } from "@/game/ecs/world";
 
-type TileCell = { gridX: number; gridZ: number; type: "soil" | "water" | "rock" | "path"; occupied: boolean; treeEntityId: string | null };
+type TileCell = {
+  gridX: number;
+  gridZ: number;
+  type: "soil" | "water" | "rock" | "path";
+  occupied: boolean;
+  treeEntityId: string | null;
+};
+
 import { generateEntityId, playerQuery, treesQuery, world } from "@/game/ecs/world";
 
 const gridCellsQuery = world.with("gridCell", "position");
+
 import { useGameStore } from "@/game/stores/gameStore";
 import { canPlace, getTemplate } from "@/game/structures/StructureManager";
 import { collectHarvest, initHarvestable } from "@/game/systems/harvest";

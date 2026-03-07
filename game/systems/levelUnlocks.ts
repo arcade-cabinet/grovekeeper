@@ -18,8 +18,7 @@ export interface UnlockSet {
   tools: string[];
 }
 
-export const LEVEL_UNLOCKS: readonly LevelUnlockEntry[] =
-  levelUnlocksData as LevelUnlockEntry[];
+export const LEVEL_UNLOCKS: readonly LevelUnlockEntry[] = levelUnlocksData as LevelUnlockEntry[];
 
 export function getUnlocksForLevel(level: number): UnlockSet {
   const entry = LEVEL_UNLOCKS.find((e) => e.level === level);

@@ -12,7 +12,7 @@
  * Registers on window events. Requires pointer lock for mouse look.
  */
 
-import { type IInputProvider, type InputFrame } from "@/game/input/InputManager";
+import type { IInputProvider, InputFrame } from "@/game/input/InputManager";
 
 /** Radians per pixel of mouse movement (pointer-locked). */
 const LOOK_SENSITIVITY = 0.002;
@@ -65,14 +65,10 @@ export class KeyboardMouseProvider implements IInputProvider {
   // ── IInputProvider ───────────────────────────────
 
   poll(_dt: number): Partial<InputFrame> {
-    const right =
-      (this.heldKeys.has("KeyD") ? 1 : 0) + (this.heldKeys.has("ArrowRight") ? 1 : 0);
-    const left =
-      (this.heldKeys.has("KeyA") ? 1 : 0) + (this.heldKeys.has("ArrowLeft") ? 1 : 0);
-    const forward =
-      (this.heldKeys.has("KeyW") ? 1 : 0) + (this.heldKeys.has("ArrowUp") ? 1 : 0);
-    const back =
-      (this.heldKeys.has("KeyS") ? 1 : 0) + (this.heldKeys.has("ArrowDown") ? 1 : 0);
+    const right = (this.heldKeys.has("KeyD") ? 1 : 0) + (this.heldKeys.has("ArrowRight") ? 1 : 0);
+    const left = (this.heldKeys.has("KeyA") ? 1 : 0) + (this.heldKeys.has("ArrowLeft") ? 1 : 0);
+    const forward = (this.heldKeys.has("KeyW") ? 1 : 0) + (this.heldKeys.has("ArrowUp") ? 1 : 0);
+    const back = (this.heldKeys.has("KeyS") ? 1 : 0) + (this.heldKeys.has("ArrowDown") ? 1 : 0);
 
     return {
       moveX: Math.sign(right - left),

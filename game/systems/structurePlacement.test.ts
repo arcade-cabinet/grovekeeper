@@ -111,25 +111,15 @@ describe("Structure Placement System", () => {
     });
 
     it("should reject if not enough resources", () => {
-      const result = canPlace(
-        "campfire-1",
-        { x: 10, z: 10 },
-        5,
-        { timber: 0 },
-        [],
-      );
+      const result = canPlace("campfire-1", { x: 10, z: 10 }, 5, { timber: 0 }, []);
       expect(result.valid).toBe(false);
       expect(result.reason).toContain("Not enough");
     });
 
     it("should reject if too close to existing structure", () => {
-      const result = canPlace(
-        "campfire-1",
-        { x: 1, z: 1 },
-        5,
-        { timber: 100 },
-        [{ templateId: "barn", worldX: 0, worldZ: 0 }],
-      );
+      const result = canPlace("campfire-1", { x: 1, z: 1 }, 5, { timber: 100 }, [
+        { templateId: "barn", worldX: 0, worldZ: 0 },
+      ]);
       expect(result.valid).toBe(false);
       expect(result.reason).toContain("Too close");
     });

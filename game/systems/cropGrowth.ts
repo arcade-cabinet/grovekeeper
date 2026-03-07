@@ -6,11 +6,7 @@
  */
 
 import cropsConfig from "@/config/game/crops.json" with { type: "json" };
-import type {
-  CropComponent,
-  CropId,
-  CropStage,
-} from "@/game/ecs/components/structures";
+import type { CropComponent, CropId, CropStage } from "@/game/ecs/components/structures";
 
 // ---------------------------------------------------------------------------
 // Crop definition (loaded from config)
@@ -142,10 +138,7 @@ export function calculateHarvestYield(
   const def = getCropById(crop.cropId);
   if (!def) return null;
 
-  const amount = Math.max(
-    1,
-    Math.floor(def.baseYield * (1 + toolTierBonus + fertilizerBonus)),
-  );
+  const amount = Math.max(1, Math.floor(def.baseYield * (1 + toolTierBonus + fertilizerBonus)));
 
   return { cropId: crop.cropId, amount };
 }
@@ -197,13 +190,7 @@ export function tickCropGrowth(
     const prevStage = crop.stage;
 
     // advanceCropGrowth expects CropState — CropComponent is a structural superset
-    const next = advanceCropGrowth(
-      crop,
-      dt * weatherMultiplier,
-      season,
-      0,
-      0,
-    );
+    const next = advanceCropGrowth(crop, dt * weatherMultiplier, season, 0, 0);
 
     crop.stage = next.stage;
     crop.progress = next.progress;
@@ -221,10 +208,7 @@ export function tickCropGrowth(
  *
  * Caller is responsible for calling addResource() with the returned amount.
  */
-export function harvestCropEntity(
-  entity: CropTickEntity,
-  toolTierBonus = 0,
-): HarvestResult | null {
+export function harvestCropEntity(entity: CropTickEntity, toolTierBonus = 0): HarvestResult | null {
   const { crop } = entity;
 
   const result = calculateHarvestYield(crop, toolTierBonus, 0);

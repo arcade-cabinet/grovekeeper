@@ -5,16 +5,16 @@
  * Runtime layer management tests use Tone.js mock (same pattern as audioEngine.test.ts).
  */
 
-import type { AmbientSoundscape } from "@/game/ecs/components/procedural/audio";
 import type { TimeOfDay } from "@/game/ecs/components/procedural/atmosphere";
+import type { AmbientSoundscape } from "@/game/ecs/components/procedural/audio";
 import {
-  computeZoneGain,
-  layersForBiome,
   applyTimeGate,
   computeAmbientMix,
+  computeZoneGain,
   type LayerName,
+  layersForBiome,
   type ZoneInput,
-} from "./ambientAudio";
+} from "./ambientAudio.ts";
 
 // ---------------------------------------------------------------------------
 // computeZoneGain (Spec §27.2 — distance-based crossfade)
@@ -73,7 +73,14 @@ describe("layersForBiome (Spec §27.2)", () => {
 
   it("all biomes activate wind layer (wind is universal)", () => {
     const biomes: AmbientSoundscape[] = [
-      "forest", "meadow", "water", "cave", "village", "night", "storm", "wind",
+      "forest",
+      "meadow",
+      "water",
+      "cave",
+      "village",
+      "night",
+      "storm",
+      "wind",
     ];
     for (const b of biomes) {
       expect(layersForBiome(b).wind).toBeGreaterThan(0);
@@ -100,7 +107,12 @@ describe("layersForBiome (Spec §27.2)", () => {
 
 describe("applyTimeGate (Spec §27.2)", () => {
   const fullLayers = (): Record<LayerName, number> => ({
-    wind: 0.5, birds: 0.6, insects: 0.4, crickets: 0.8, water: 0.3, vegetation: 0.7,
+    wind: 0.5,
+    birds: 0.6,
+    insects: 0.4,
+    crickets: 0.8,
+    water: 0.3,
+    vegetation: 0.7,
   });
 
   it("night time gates out birds layer", () => {
@@ -135,14 +147,32 @@ describe("applyTimeGate (Spec §27.2)", () => {
   });
 
   it("wind layer is never gated", () => {
-    const times: TimeOfDay[] = ["dawn", "morning", "noon", "afternoon", "dusk", "evening", "night", "midnight"];
+    const times: TimeOfDay[] = [
+      "dawn",
+      "morning",
+      "noon",
+      "afternoon",
+      "dusk",
+      "evening",
+      "night",
+      "midnight",
+    ];
     for (const t of times) {
       expect(applyTimeGate(fullLayers(), t).wind).toBeGreaterThan(0);
     }
   });
 
   it("water layer is never gated by time", () => {
-    const times: TimeOfDay[] = ["dawn", "morning", "noon", "afternoon", "dusk", "evening", "night", "midnight"];
+    const times: TimeOfDay[] = [
+      "dawn",
+      "morning",
+      "noon",
+      "afternoon",
+      "dusk",
+      "evening",
+      "night",
+      "midnight",
+    ];
     for (const t of times) {
       expect(applyTimeGate(fullLayers(), t).water).toBeGreaterThan(0);
     }

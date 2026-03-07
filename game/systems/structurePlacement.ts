@@ -6,11 +6,15 @@
  * (Spec §18, §17.1).
  */
 
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import structuresConfig from "@/config/game/structures.json" with { type: "json" };
 import type { ResourceType } from "@/game/config/resources";
-import type { FarmStructureCategory, StructureComponent, StructureEffectType } from "@/game/ecs/components/structures";
+import type {
+  FarmStructureCategory,
+  StructureComponent,
+  StructureEffectType,
+} from "@/game/ecs/components/structures";
 import { scopedRNG } from "@/game/utils/seedWords";
-import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -31,8 +35,7 @@ export interface StructureDefinition {
   buildCost: { resource: string; amount: number }[];
 }
 
-const STRUCTURES: StructureDefinition[] =
-  structuresConfig.structures as StructureDefinition[];
+const STRUCTURES: StructureDefinition[] = structuresConfig.structures as StructureDefinition[];
 
 // ---------------------------------------------------------------------------
 // Config accessors
@@ -46,9 +49,7 @@ export function getStructures(): StructureDefinition[] {
   return [...STRUCTURES];
 }
 
-export function getStructuresByCategory(
-  category: FarmStructureCategory,
-): StructureDefinition[] {
+export function getStructuresByCategory(category: FarmStructureCategory): StructureDefinition[] {
   return STRUCTURES.filter((s) => s.category === category);
 }
 
@@ -218,8 +219,7 @@ export function spawnChunkStructures(
 ): StructureChunkPlacement[] {
   const biomeTemplates = structuresConfig.biomeTemplates;
   const template =
-    biomeTemplates[biome as keyof typeof biomeTemplates] ??
-    biomeTemplates["starting-grove"];
+    biomeTemplates[biome as keyof typeof biomeTemplates] ?? biomeTemplates["starting-grove"];
 
   const rng = scopedRNG("structure", worldSeed, chunkX, chunkZ);
 

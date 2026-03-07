@@ -4,8 +4,12 @@
  * US-034: TreeComponent.stage (0-4) maps to scale (0.2, 0.4, 0.6, 0.8, 1.0).
  */
 
-import { applyTreeScale, treeScaleSystem, type TreeScaleEntity } from "@/game/systems/treeScaleSystem";
-import { STAGE_VISUALS, MAX_STAGE } from "@/game/systems/growth";
+import { MAX_STAGE, STAGE_VISUALS } from "@/game/systems/growth";
+import {
+  applyTreeScale,
+  type TreeScaleEntity,
+  treeScaleSystem,
+} from "@/game/systems/treeScaleSystem";
 
 // ---------------------------------------------------------------------------
 // Helpers

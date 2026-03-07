@@ -1,7 +1,7 @@
-import type { SerializedTree } from "./gameStore";
-import { levelFromXp, totalXpForLevel, useGameStore, xpToNext } from "./gameStore";
 import { emptyResources } from "@/game/config/resources";
 import { chunkDiffs$, saveChunkDiff } from "@/game/world/chunkPersistence";
+import type { SerializedTree } from "./gameStore.ts";
+import { levelFromXp, totalXpForLevel, useGameStore, xpToNext } from "./gameStore.ts";
 
 describe("Game Store", () => {
   beforeEach(() => {
@@ -437,7 +437,13 @@ describe("Game Store", () => {
       useGameStore.setState({
         level: 25,
         xp: 99999,
-        lifetimeResources: { ...emptyResources(), timber: 5000, sap: 3000, fruit: 2000, acorns: 1000 },
+        lifetimeResources: {
+          ...emptyResources(),
+          timber: 5000,
+          sap: 3000,
+          fruit: 2000,
+          acorns: 1000,
+        },
       });
       useGameStore.getState().performPrestige();
       expect(useGameStore.getState().lifetimeResources.timber).toBe(5000);
@@ -504,7 +510,19 @@ describe("Game Store", () => {
     });
 
     it("clears all chunk diffs on prestige", () => {
-      saveChunkDiff("0,0", { plantedTrees: [{ localX: 0, localZ: 0, speciesId: "white-oak", stage: 1, progress: 0.5, plantedAt: 0, meshSeed: 1 }] });
+      saveChunkDiff("0,0", {
+        plantedTrees: [
+          {
+            localX: 0,
+            localZ: 0,
+            speciesId: "white-oak",
+            stage: 1,
+            progress: 0.5,
+            plantedAt: 0,
+            meshSeed: 1,
+          },
+        ],
+      });
       saveChunkDiff("1,0", { plantedTrees: [] });
       expect(Object.keys(chunkDiffs$.peek())).toHaveLength(2);
 

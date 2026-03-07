@@ -1,4 +1,4 @@
-import { getArchetype, ZONE_ARCHETYPES } from "./archetypes";
+import { getArchetype, ZONE_ARCHETYPES } from "./archetypes.ts";
 
 describe("ZONE_ARCHETYPES", () => {
   it("defines 5 archetypes", () => {

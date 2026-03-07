@@ -8,9 +8,9 @@
  * Pure function — given the same water placements, always produces identical zones.
  */
 
-import type { SoundscapeComponent } from "@/game/ecs/components/procedural/audio";
-import type { WaterBodyPlacement } from "./waterPlacer";
 import proceduralConfig from "@/config/game/procedural.json" with { type: "json" };
+import type { SoundscapeComponent } from "@/game/ecs/components/procedural/audio";
+import type { WaterBodyPlacement } from "./waterPlacer.ts";
 
 const cfg = proceduralConfig.ambientZones;
 const WATER_VOLUME: number = cfg.soundscapeVolumes.water;
@@ -40,9 +40,7 @@ export interface AudioZonePlacement {
  * @param waterPlacements  Water bodies returned by placeWaterBodies().
  * @returns                One AudioZonePlacement per water body.
  */
-export function placeAudioZones(
-  waterPlacements: WaterBodyPlacement[],
-): AudioZonePlacement[] {
+export function placeAudioZones(waterPlacements: WaterBodyPlacement[]): AudioZonePlacement[] {
   return waterPlacements.map((wp) => {
     const { size } = wp.waterBody;
     const radius = Math.max(size.width, size.depth) * WATER_RADIUS_SCALE;

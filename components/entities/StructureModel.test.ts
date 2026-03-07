@@ -13,7 +13,7 @@ jest.mock("@react-three/drei", () => ({
 
 jest.mock("@react-three/fiber", () => ({}));
 
-import { StructureModel, resolveStructureGLBPath } from "./StructureModel";
+import { resolveStructureGLBPath, StructureModel } from "./StructureModel.tsx";
 
 // All template IDs defined in config/game/structures.json
 const ALL_TEMPLATE_IDS = [
@@ -45,15 +45,11 @@ const ALL_TEMPLATE_IDS = [
 
 describe("resolveStructureGLBPath (Spec §14)", () => {
   it("returns the correct path for barn", () => {
-    expect(resolveStructureGLBPath("barn")).toBe(
-      "assets/models/structures/farm/barn.glb",
-    );
+    expect(resolveStructureGLBPath("barn")).toBe("assets/models/structures/farm/barn.glb");
   });
 
   it("returns the correct path for windmill", () => {
-    expect(resolveStructureGLBPath("windmill")).toBe(
-      "assets/models/structures/farm/windmill.glb",
-    );
+    expect(resolveStructureGLBPath("windmill")).toBe("assets/models/structures/farm/windmill.glb");
   });
 
   it("returns the correct path for water-well", () => {
@@ -63,15 +59,11 @@ describe("resolveStructureGLBPath (Spec §14)", () => {
   });
 
   it("returns the correct path for house-1", () => {
-    expect(resolveStructureGLBPath("house-1")).toBe(
-      "assets/models/structures/farm/house-1.glb",
-    );
+    expect(resolveStructureGLBPath("house-1")).toBe("assets/models/structures/farm/house-1.glb");
   });
 
   it("returns the correct path for house-5", () => {
-    expect(resolveStructureGLBPath("house-5")).toBe(
-      "assets/models/structures/farm/house-5.glb",
-    );
+    expect(resolveStructureGLBPath("house-5")).toBe("assets/models/structures/farm/house-5.glb");
   });
 
   it("returns the correct path for campfire-1", () => {
@@ -117,9 +109,7 @@ describe("resolveStructureGLBPath (Spec §14)", () => {
 
   it("all structure paths are under assets/models/structures/farm/", () => {
     for (const id of ALL_TEMPLATE_IDS) {
-      expect(resolveStructureGLBPath(id)).toMatch(
-        /^assets\/models\/structures\/farm\//,
-      );
+      expect(resolveStructureGLBPath(id)).toMatch(/^assets\/models\/structures\/farm\//);
     }
   });
 
@@ -138,9 +128,7 @@ describe("resolveStructureGLBPath (Spec §14)", () => {
   });
 
   it("throws for an empty string templateId", () => {
-    expect(() => resolveStructureGLBPath("")).toThrow(
-      "[StructureModel] Unknown templateId",
-    );
+    expect(() => resolveStructureGLBPath("")).toThrow("[StructureModel] Unknown templateId");
   });
 
   it("throws for a partial match (chicken-coop without suffix)", () => {

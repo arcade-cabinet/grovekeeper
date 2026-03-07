@@ -6,14 +6,11 @@
  * every targetNodeId in every branch must exist as a nodeId in the same tree.
  */
 
-import dialogueTreesConfig from "@/config/game/dialogue-trees.json" with {
-  type: "json",
-};
+import dialogueTreesConfig from "@/config/game/dialogue-trees.json" with { type: "json" };
 import type { DialogueTree } from "@/game/ecs/components/dialogue";
 
 // Cast needed: JSON imports are typed as `any` at the module boundary.
-const CONFIG_TREES: DialogueTree[] =
-  dialogueTreesConfig as unknown as DialogueTree[];
+const CONFIG_TREES: DialogueTree[] = dialogueTreesConfig as unknown as DialogueTree[];
 
 // ---------------------------------------------------------------------------
 // Config accessors
@@ -47,9 +44,7 @@ export function validateDialogueTree(tree: DialogueTree): string[] {
   const nodeIds = new Set(tree.nodes.map((n) => n.nodeId));
 
   if (!nodeIds.has(tree.entryNodeId)) {
-    errors.push(
-      `Tree "${tree.treeId}": entryNodeId "${tree.entryNodeId}" not found in nodes`,
-    );
+    errors.push(`Tree "${tree.treeId}": entryNodeId "${tree.entryNodeId}" not found in nodes`);
   }
 
   for (const node of tree.nodes) {
@@ -71,9 +66,7 @@ export function validateDialogueTree(tree: DialogueTree): string[] {
  * Returns a Map from treeId to error messages.
  * Only trees with errors are included in the result.
  */
-export function validateAllDialogueTrees(
-  trees: DialogueTree[],
-): Map<string, string[]> {
+export function validateAllDialogueTrees(trees: DialogueTree[]): Map<string, string[]> {
   const result = new Map<string, string[]>();
   for (const tree of trees) {
     const errors = validateDialogueTree(tree);
@@ -97,9 +90,7 @@ export function loadAndValidateDialogueTrees(): DialogueTree[] {
     for (const errs of errorMap.values()) {
       messages.push(...errs);
     }
-    throw new Error(
-      `Dialogue tree validation failed:\n${messages.join("\n")}`,
-    );
+    throw new Error(`Dialogue tree validation failed:\n${messages.join("\n")}`);
   }
 
   return trees;

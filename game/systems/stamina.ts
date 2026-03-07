@@ -3,8 +3,8 @@
  * Pure functions operating on entity state.
  */
 
-import type { Entity } from "@/game/ecs/world";
 import staminaConfig from "@/config/game/stamina.json" with { type: "json" };
+import type { Entity } from "@/game/ecs/world";
 
 const BASE_STAMINA_REGEN_PER_SEC: number = staminaConfig.baseStaminaRegenPerSec;
 

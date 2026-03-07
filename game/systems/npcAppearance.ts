@@ -11,13 +11,12 @@ import type { NpcComponent, NpcItemSlot } from "@/game/ecs/components/npc";
 
 /** Appearance subset of NpcComponent returned by generateNpcAppearance. */
 type NpcAppearance = Pick<NpcComponent, "baseModel" | "useEmission" | "items" | "colorPalette">;
+
+import npcAssets from "@/config/game/npcAssets.json" with { type: "json" };
 import { scopedRNG } from "@/game/utils/seedWords";
-import npcAssets from "@/config/game/npcAssets.json";
 
 /** Base model IDs available for NPC generation (excludes "allinone" composite). */
-const BASE_MODELS = npcAssets.base
-  .filter((b) => b.id !== "allinone")
-  .map((b) => b.id);
+const BASE_MODELS = npcAssets.base.filter((b) => b.id !== "allinone").map((b) => b.id);
 
 /** Items grouped by slot for quick lookup. */
 const ITEMS_BY_SLOT: Record<NpcItemSlot, string[]> = {
@@ -46,35 +45,34 @@ const ROLE_BASE_AFFINITY: Record<string, string[]> = {
 };
 
 /** Role-to-item-set: which item categories are favored per role. */
-const ROLE_ITEM_RULES: Record<string, Partial<Record<NpcItemSlot, string[]>>> =
-  {
-    trading: {
-      torso: ["shirt", "chemise", "greenoutfit"],
-      accessory: ["bag", "ceinture"],
-    },
-    quests: {
-      torso: ["greenoutfit", "greenoutfitbelt", "greenoutfitneckless"],
-      legs: ["pants", "armorthigh"],
-    },
-    tips: {
-      head: ["hat", "hairone", "hairtail"],
-      torso: ["shirt", "chemise"],
-    },
-    seeds: {
-      head: ["hat", "hairone", "hairvariant"],
-      torso: ["chemise", "greenoutfit"],
-      accessory: ["bag"],
-    },
-    crafting: {
-      torso: ["amorplastron", "amorarm", "shirt"],
-      legs: ["pants", "armorlegs"],
-      feet: ["bottes", "shoe"],
-    },
-    lore: {
-      head: ["hat", "hairT", "hairvariant-001"],
-      torso: ["chemise", "shirt"],
-    },
-  };
+const ROLE_ITEM_RULES: Record<string, Partial<Record<NpcItemSlot, string[]>>> = {
+  trading: {
+    torso: ["shirt", "chemise", "greenoutfit"],
+    accessory: ["bag", "ceinture"],
+  },
+  quests: {
+    torso: ["greenoutfit", "greenoutfitbelt", "greenoutfitneckless"],
+    legs: ["pants", "armorthigh"],
+  },
+  tips: {
+    head: ["hat", "hairone", "hairtail"],
+    torso: ["shirt", "chemise"],
+  },
+  seeds: {
+    head: ["hat", "hairone", "hairvariant"],
+    torso: ["chemise", "greenoutfit"],
+    accessory: ["bag"],
+  },
+  crafting: {
+    torso: ["amorplastron", "amorarm", "shirt"],
+    legs: ["pants", "armorlegs"],
+    feet: ["bottes", "shoe"],
+  },
+  lore: {
+    head: ["hat", "hairT", "hairvariant-001"],
+    torso: ["chemise", "shirt"],
+  },
+};
 
 /** Incompatible item sets -- wearing one excludes the other. */
 const INCOMPATIBLE_SETS: string[][] = [

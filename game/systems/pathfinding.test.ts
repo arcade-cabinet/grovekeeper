@@ -1,11 +1,11 @@
 import {
   buildMultiChunkWalkabilityGrid,
   buildWalkabilityGrid,
-  findPath,
   type ChunkWalkabilityInput,
+  findPath,
   type WalkabilityCell,
   type WalkabilityGrid,
-} from "./pathfinding";
+} from "./pathfinding.ts";
 
 // Helper to create a simple walkability grid from a 2D array
 // 0 = walkable, 1 = blocked
@@ -38,9 +38,7 @@ describe("buildWalkabilityGrid", () => {
   });
 
   it("marks walkable=false cells as blocked", () => {
-    const cells: WalkabilityCell[] = [
-      { x: 0, z: 0, walkable: false },
-    ];
+    const cells: WalkabilityCell[] = [{ x: 0, z: 0, walkable: false }];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
       minZ: 0,
@@ -51,9 +49,7 @@ describe("buildWalkabilityGrid", () => {
   });
 
   it("marks water-equivalent (walkable=false) cells as blocked", () => {
-    const cells: WalkabilityCell[] = [
-      { x: 0, z: 0, walkable: false },
-    ];
+    const cells: WalkabilityCell[] = [{ x: 0, z: 0, walkable: false }];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
       minZ: 0,
@@ -64,9 +60,7 @@ describe("buildWalkabilityGrid", () => {
   });
 
   it("marks rock-equivalent (walkable=false) cells as blocked", () => {
-    const cells: WalkabilityCell[] = [
-      { x: 0, z: 0, walkable: false },
-    ];
+    const cells: WalkabilityCell[] = [{ x: 0, z: 0, walkable: false }];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
       minZ: 0,
@@ -78,9 +72,7 @@ describe("buildWalkabilityGrid", () => {
 
   it("defaults unknown positions to blocked", () => {
     // Only provide cell at (0,0), position (1,0) should be blocked
-    const cells: WalkabilityCell[] = [
-      { x: 0, z: 0, walkable: true },
-    ];
+    const cells: WalkabilityCell[] = [{ x: 0, z: 0, walkable: true }];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
       minZ: 0,
@@ -103,9 +95,7 @@ describe("buildWalkabilityGrid", () => {
   });
 
   it("handles offset origins correctly", () => {
-    const cells: WalkabilityCell[] = [
-      { x: 5, z: 5, walkable: true },
-    ];
+    const cells: WalkabilityCell[] = [{ x: 5, z: 5, walkable: true }];
     const grid = buildWalkabilityGrid(cells, {
       minX: 5,
       minZ: 5,
@@ -120,9 +110,7 @@ describe("buildWalkabilityGrid", () => {
   });
 
   it("ignores cells outside bounds", () => {
-    const cells: WalkabilityCell[] = [
-      { x: 10, z: 10, walkable: true },
-    ];
+    const cells: WalkabilityCell[] = [{ x: 10, z: 10, walkable: true }];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
       minZ: 0,

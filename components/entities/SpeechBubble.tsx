@@ -12,17 +12,16 @@
  * See GAME_SPEC.md §33.5.
  */
 
-import { useRef } from "react";
 import { Billboard, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { useRef } from "react";
 import type * as THREE from "three";
 
 // Font file resolved by Metro/webpack bundler to a URL at runtime.
 // In Jest tests, @react-three/drei is mocked so the font value is never used.
 // biome-ignore lint/style/noCommaOperator: asset require — bundler resolves to URL
-const FREDOKA_FONT = require(
-  "@expo-google-fonts/fredoka/400Regular/Fredoka_400Regular.ttf",
-) as string;
+const FREDOKA_FONT =
+  require("@expo-google-fonts/fredoka/400Regular/Fredoka_400Regular.ttf") as string;
 
 // ---------------------------------------------------------------------------
 // Visual constants
@@ -64,9 +63,7 @@ export function computeOpacity(
   fadeDuration: number,
 ): number {
   const rate = dt / fadeDuration;
-  return visible
-    ? Math.min(1, currentOpacity + rate)
-    : Math.max(0, currentOpacity - rate);
+  return visible ? Math.min(1, currentOpacity + rate) : Math.max(0, currentOpacity - rate);
 }
 
 /**
@@ -120,12 +117,7 @@ export const SpeechBubble = ({ x, y, z, text, visible }: SpeechBubbleProps) => {
   const textRef = useRef<any>(null);
 
   useFrame((_, dt) => {
-    opacityRef.current = computeOpacity(
-      visible,
-      opacityRef.current,
-      dt,
-      FADE_DURATION,
-    );
+    opacityRef.current = computeOpacity(visible, opacityRef.current, dt, FADE_DURATION);
     const opacity = opacityRef.current;
 
     if (bgMaterialRef.current) {

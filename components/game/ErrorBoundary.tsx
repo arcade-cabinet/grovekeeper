@@ -89,9 +89,7 @@ export class GameErrorBoundary extends Component<Props, State> {
               <Text className="font-semibold text-white">Return to Menu</Text>
             </Pressable>
           </View>
-          <Text className="mt-4 max-w-md text-center text-xs text-gray-600">
-            {msg}
-          </Text>
+          <Text className="mt-4 max-w-md text-center text-xs text-gray-600">{msg}</Text>
         </View>
       );
     }

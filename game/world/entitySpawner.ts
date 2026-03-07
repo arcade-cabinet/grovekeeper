@@ -8,12 +8,16 @@
  * identical placements. All randomness via scopedRNG.
  */
 
-import type { BiomeType } from "./biomeMapper";
-import type { TreeComponent, BushComponent, GrassComponent } from "@/game/ecs/components/vegetation";
-import type { RockComponent } from "@/game/ecs/components/terrain";
-import { scopedRNG } from "@/game/utils/seedWords";
-import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
+import type { RockComponent } from "@/game/ecs/components/terrain";
+import type {
+  BushComponent,
+  GrassComponent,
+  TreeComponent,
+} from "@/game/ecs/components/vegetation";
+import { scopedRNG } from "@/game/utils/seedWords";
+import type { BiomeType } from "./biomeMapper.ts";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -82,7 +86,10 @@ interface SpeciesModelEntry {
   winterModel: string;
   pack: string;
 }
-const speciesModelMapping = vegetationConfig.speciesModelMapping as Record<string, SpeciesModelEntry>;
+const speciesModelMapping = vegetationConfig.speciesModelMapping as Record<
+  string,
+  SpeciesModelEntry
+>;
 
 interface GrassTypeEntry {
   grassType: string;
@@ -99,14 +106,22 @@ const biomeGrass = vegetationConfig.biomeGrass as Record<string, { types: GrassT
  */
 export function biomeToVegetationKey(biome: BiomeType): VegetationDensityKey {
   switch (biome) {
-    case "starting-grove": return "temperate";
-    case "meadow": return "savanna";
-    case "ancient-forest": return "enchanted";
-    case "wetlands": return "wetland";
-    case "rocky-highlands": return "highland";
-    case "orchard-valley": return "temperate";
-    case "frozen-peaks": return "tundra";
-    case "twilight-glade": return "enchanted";
+    case "starting-grove":
+      return "temperate";
+    case "meadow":
+      return "savanna";
+    case "ancient-forest":
+      return "enchanted";
+    case "wetlands":
+      return "wetland";
+    case "rocky-highlands":
+      return "highland";
+    case "orchard-valley":
+      return "temperate";
+    case "frozen-peaks":
+      return "tundra";
+    case "twilight-glade":
+      return "enchanted";
   }
 }
 
@@ -116,9 +131,9 @@ export function biomeToVegetationKey(biome: BiomeType): VegetationDensityKey {
  */
 const BIOME_SPECIES_POOL: Record<BiomeType, string[]> = {
   "starting-grove": ["white-oak", "cherry-blossom", "silver-birch"],
-  "meadow": ["white-oak", "baobab", "silver-birch"],
+  meadow: ["white-oak", "baobab", "silver-birch"],
   "ancient-forest": ["mystic-fern", "white-oak", "silver-birch"],
-  "wetlands": ["weeping-willow", "redwood"],
+  wetlands: ["weeping-willow", "redwood"],
   "rocky-highlands": ["elder-pine", "flame-maple", "ironbark"],
   "orchard-valley": ["golden-apple", "white-oak", "cherry-blossom"],
   "frozen-peaks": ["elder-pine", "ghost-birch"],
@@ -347,7 +362,14 @@ export function spawnChunkEntities(
   return {
     trees: spawnTrees(worldSeed, chunkX, chunkZ, density.treesPerChunk, speciesPool, heightmap),
     bushes: spawnBushes(worldSeed, chunkX, chunkZ, density.bushesPerChunk, heightmap),
-    grass: spawnGrass(worldSeed, chunkX, chunkZ, densityKey, density.grassPatchesPerChunk, heightmap),
+    grass: spawnGrass(
+      worldSeed,
+      chunkX,
+      chunkZ,
+      densityKey,
+      density.grassPatchesPerChunk,
+      heightmap,
+    ),
     rocks: spawnRocks(worldSeed, chunkX, chunkZ, density.rocksPerChunk, heightmap),
   };
 }

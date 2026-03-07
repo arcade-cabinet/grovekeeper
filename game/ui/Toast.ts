@@ -24,6 +24,9 @@ export interface Toast {
 /** Current active toasts. Mutated in-place; subscribers notified via callbacks. */
 let toasts: Toast[] = [];
 
+/** Monotonic counter for unique toast IDs — no Math.random() per hard rule. */
+let _toastCounter = 0;
+
 type Listener = (toasts: Toast[]) => void;
 const listeners = new Set<Listener>();
 
@@ -44,11 +47,8 @@ function notify(): void {
  * @param message - Text to display.
  * @param type    - Visual style variant.
  */
-export function showToast(
-  message: string,
-  type: ToastType = "info",
-): void {
-  const id = `toast-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+export function showToast(message: string, type: ToastType = "info"): void {
+  const id = `toast-${Date.now()}-${++_toastCounter}`;
   const toast: Toast = { id, message, type, timestamp: Date.now() };
 
   toasts = [...toasts, toast];

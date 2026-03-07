@@ -10,8 +10,8 @@
  * This is the standard FPS camera order and prevents gimbal lock artifacts.
  */
 
-import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 /** Mouse sensitivity in radians per pixel. Exported for unit testing (Spec §23). */

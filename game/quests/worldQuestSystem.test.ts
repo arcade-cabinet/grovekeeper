@@ -6,17 +6,17 @@
  */
 
 import {
-  TOTAL_WORLD_QUESTS,
-  VARIANT_SLOTS_COUNT,
-  VARIANT_OPTIONS_COUNT,
-  TOTAL_VARIANT_COMBINATIONS,
   getAllWorldQuestTemplates,
+  getUnlockedWorldQuests,
   getWorldQuestTemplate,
+  isWorldQuestUnlocked,
   resolveVariantSelections,
   resolveWorldQuest,
-  isWorldQuestUnlocked,
-  getUnlockedWorldQuests,
-} from "./worldQuestSystem";
+  TOTAL_VARIANT_COMBINATIONS,
+  TOTAL_WORLD_QUESTS,
+  VARIANT_OPTIONS_COUNT,
+  VARIANT_SLOTS_COUNT,
+} from "./worldQuestSystem.ts";
 
 describe("World Quest System (Spec §30)", () => {
   // -- Template structure --

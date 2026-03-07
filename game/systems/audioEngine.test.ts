@@ -6,9 +6,9 @@
  * `as unknown as jest.Mock` to access .mock.* in TypeScript.
  */
 
+import { Panner3D, start, Volume } from "tone";
 import audioConfig from "@/config/game/audio.json" with { type: "json" };
-import { Panner3D, Volume, start } from "tone";
-import { audioEngine, clampVolumeDb } from "./audioEngine";
+import { audioEngine, clampVolumeDb } from "./audioEngine.ts";
 
 // ---------------------------------------------------------------------------
 // Tone.js mock — replaces AudioContext-dependent nodes with plain objects

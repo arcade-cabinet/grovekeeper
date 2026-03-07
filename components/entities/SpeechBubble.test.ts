@@ -23,12 +23,12 @@ jest.mock("three", () => ({
 }));
 
 import {
-  SpeechBubble,
-  computeOpacity,
-  computeBubbleY,
-  FADE_DURATION,
   BUBBLE_OFFSET,
-} from "./SpeechBubble";
+  computeBubbleY,
+  computeOpacity,
+  FADE_DURATION,
+  SpeechBubble,
+} from "./SpeechBubble.tsx";
 
 // ---------------------------------------------------------------------------
 // computeOpacity

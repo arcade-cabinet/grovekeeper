@@ -3,27 +3,27 @@
  * Tests modular base building: snap validation, placement, base value, unlocks.
  */
 
+import type { ModularPieceComponent, SnapPoint } from "../ecs/components/building.ts";
+import type { Entity } from "../ecs/world.ts";
+import type {
+  KitbashCommitStore,
+  KitbashPlacementWorld,
+  KitbashRapierModule,
+  KitbashRapierWorld,
+} from "./kitbashing/index.ts";
 import {
-  getAvailableSnapPoints,
-  validatePlacement,
   calculateBaseValue,
-  getUnlockedPieces,
-  getUnlockedMaterials,
-  checkSnapDirectionMatch,
   checkClearance,
   checkGroundContact,
-  validatePlacementWithRapier,
+  checkSnapDirectionMatch,
+  getAvailableSnapPoints,
+  getUnlockedMaterials,
+  getUnlockedPieces,
   placeModularPiece,
-} from "./kitbashing";
-import type {
-  KitbashRapierWorld,
-  KitbashRapierModule,
-  KitbashPlacementWorld,
-  KitbashCommitStore,
-} from "./kitbashing";
-import { rotateDirection, snapPointToWorld } from "./kitbashing/placement";
-import type { Entity } from "../ecs/world";
-import type { ModularPieceComponent, SnapPoint } from "../ecs/components/building";
+  validatePlacement,
+  validatePlacementWithRapier,
+} from "./kitbashing/index.ts";
+import { rotateDirection, snapPointToWorld } from "./kitbashing/placement.ts";
 
 function makePiece(overrides: Partial<ModularPieceComponent> = {}): ModularPieceComponent {
   return {
@@ -35,10 +35,26 @@ function makePiece(overrides: Partial<ModularPieceComponent> = {}): ModularPiece
     gridZ: 0,
     rotation: 0,
     snapPoints: [
-      { localPosition: { x: -0.5, y: 0, z: 0 }, direction: "west", accepts: ["wall", "pillar", "door", "window"] },
-      { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall", "pillar", "door", "window"] },
-      { localPosition: { x: 0, y: 0.5, z: 0 }, direction: "up", accepts: ["wall", "roof", "floor", "beam"] },
-      { localPosition: { x: 0, y: -0.5, z: 0 }, direction: "down", accepts: ["wall", "foundation", "floor"] },
+      {
+        localPosition: { x: -0.5, y: 0, z: 0 },
+        direction: "west",
+        accepts: ["wall", "pillar", "door", "window"],
+      },
+      {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall", "pillar", "door", "window"],
+      },
+      {
+        localPosition: { x: 0, y: 0.5, z: 0 },
+        direction: "up",
+        accepts: ["wall", "roof", "floor", "beam"],
+      },
+      {
+        localPosition: { x: 0, y: -0.5, z: 0 },
+        direction: "down",
+        accepts: ["wall", "foundation", "floor"],
+      },
     ],
     materialType: "wood",
     ...overrides,
@@ -207,7 +223,19 @@ describe("Unlock state persistence (Spec §35.2)", () => {
     });
 
     it("level 20 unlocks all piece types", () => {
-      const allTypes = ["wall", "floor", "roof", "stairs", "foundation", "door", "window", "pillar", "platform", "beam", "pipe"];
+      const allTypes = [
+        "wall",
+        "floor",
+        "roof",
+        "stairs",
+        "foundation",
+        "door",
+        "window",
+        "pillar",
+        "platform",
+        "beam",
+        "pipe",
+      ];
       const atTwenty = getUnlockedPieces(20);
       expect(atTwenty).toEqual(expect.arrayContaining(allTypes));
     });
@@ -238,10 +266,9 @@ describe("Unlock state persistence (Spec §35.2)", () => {
 // Rapier physics snap validation -- Spec §35.1
 // ---------------------------------------------------------------------------
 
-function makeRapierWorld(overrides: {
-  castRay?: jest.Mock;
-  intersectionsWithShape?: jest.Mock;
-} = {}): KitbashRapierWorld {
+function makeRapierWorld(
+  overrides: { castRay?: jest.Mock; intersectionsWithShape?: jest.Mock } = {},
+): KitbashRapierWorld {
   return {
     castRay: overrides.castRay ?? jest.fn().mockReturnValue(null),
     intersectionsWithShape: overrides.intersectionsWithShape ?? jest.fn().mockReturnValue(false),
@@ -260,32 +287,64 @@ describe("Kitbashing Rapier Physics (Spec §35.1)", () => {
     it("returns true for east<->west opposing directions at adjacent positions", () => {
       const placed = makePiece({ gridX: 0 });
       const newPiece = makePiece({ gridX: 1 });
-      const placedSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
-      const newSnap: SnapPoint = { localPosition: { x: -0.5, y: 0, z: 0 }, direction: "west", accepts: ["wall"] };
+      const placedSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
+      const newSnap: SnapPoint = {
+        localPosition: { x: -0.5, y: 0, z: 0 },
+        direction: "west",
+        accepts: ["wall"],
+      };
       expect(checkSnapDirectionMatch(placedSnap, placed, newSnap, newPiece, 0.1)).toBe(true);
     });
 
     it("returns false for non-opposing directions (both east)", () => {
       const placed = makePiece({ gridX: 0 });
       const newPiece = makePiece({ gridX: 1 });
-      const placedSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
-      const newSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
+      const placedSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
+      const newSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
       expect(checkSnapDirectionMatch(placedSnap, placed, newSnap, newPiece, 0.1)).toBe(false);
     });
 
     it("returns true for up<->down opposing directions", () => {
       const placed = makePiece({ gridY: 0 });
       const newPiece = makePiece({ gridY: 1 });
-      const placedSnap: SnapPoint = { localPosition: { x: 0, y: 0.5, z: 0 }, direction: "up", accepts: ["wall", "roof", "floor", "beam"] };
-      const newSnap: SnapPoint = { localPosition: { x: 0, y: -0.5, z: 0 }, direction: "down", accepts: ["wall", "foundation", "floor"] };
+      const placedSnap: SnapPoint = {
+        localPosition: { x: 0, y: 0.5, z: 0 },
+        direction: "up",
+        accepts: ["wall", "roof", "floor", "beam"],
+      };
+      const newSnap: SnapPoint = {
+        localPosition: { x: 0, y: -0.5, z: 0 },
+        direction: "down",
+        accepts: ["wall", "foundation", "floor"],
+      };
       expect(checkSnapDirectionMatch(placedSnap, placed, newSnap, newPiece, 0.1)).toBe(true);
     });
 
     it("returns false when positions are too far apart", () => {
       const placed = makePiece({ gridX: 0 });
       const newPiece = makePiece({ gridX: 5 });
-      const placedSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
-      const newSnap: SnapPoint = { localPosition: { x: -0.5, y: 0, z: 0 }, direction: "west", accepts: ["wall"] };
+      const placedSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
+      const newSnap: SnapPoint = {
+        localPosition: { x: -0.5, y: 0, z: 0 },
+        direction: "west",
+        accepts: ["wall"],
+      };
       expect(checkSnapDirectionMatch(placedSnap, placed, newSnap, newPiece, 0.1)).toBe(false);
     });
   });
@@ -376,7 +435,9 @@ describe("Kitbashing Rapier Physics (Spec §35.1)", () => {
       const newPiece = makePiece({ gridX: 1 });
       const world = makeRapierWorld({ intersectionsWithShape: jest.fn().mockReturnValue(false) });
       const rapier = makeRapierModule();
-      expect(validatePlacementWithRapier(newPiece, [makeEntity(existing)], world, rapier)).toBe(true);
+      expect(validatePlacementWithRapier(newPiece, [makeEntity(existing)], world, rapier)).toBe(
+        true,
+      );
     });
 
     it("rejects piece with no snap connection to existing pieces", () => {
@@ -384,7 +445,9 @@ describe("Kitbashing Rapier Physics (Spec §35.1)", () => {
       const newPiece = makePiece({ gridX: 5 });
       const world = makeRapierWorld({ intersectionsWithShape: jest.fn().mockReturnValue(false) });
       const rapier = makeRapierModule();
-      expect(validatePlacementWithRapier(newPiece, [makeEntity(existing)], world, rapier)).toBe(false);
+      expect(validatePlacementWithRapier(newPiece, [makeEntity(existing)], world, rapier)).toBe(
+        false,
+      );
     });
   });
 });
@@ -425,7 +488,11 @@ describe("Rotation Handling (Spec §35.1)", () => {
     it("rotates east snap 90° so x offset becomes z offset in world space", () => {
       // cos(90)=0, sin(90)=1: worldX = 0.5*0 - 0*1 = 0, worldZ = 0.5*1 + 0*0 = 0.5
       const piece = makePiece({ gridX: 0, gridZ: 0, rotation: 90 });
-      const snap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
+      const snap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
       const world = snapPointToWorld(snap, piece);
       expect(world.x).toBeCloseTo(0);
       expect(world.z).toBeCloseTo(0.5);
@@ -434,7 +501,11 @@ describe("Rotation Handling (Spec §35.1)", () => {
     it("rotates east snap 180° so x offset is negated in world space", () => {
       // cos(180)=-1, sin(180)=0: worldX = 0.5*(-1) = -0.5, worldZ = 0
       const piece = makePiece({ gridX: 0, gridZ: 0, rotation: 180 });
-      const snap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
+      const snap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
       const world = snapPointToWorld(snap, piece);
       expect(world.x).toBeCloseTo(-0.5);
       expect(world.z).toBeCloseTo(0);
@@ -442,7 +513,11 @@ describe("Rotation Handling (Spec §35.1)", () => {
 
     it("y snap offsets are unaffected by horizontal rotation", () => {
       const piece = makePiece({ gridX: 0, gridY: 0, rotation: 90 });
-      const snap: SnapPoint = { localPosition: { x: 0, y: 0.5, z: 0 }, direction: "up", accepts: ["wall"] };
+      const snap: SnapPoint = {
+        localPosition: { x: 0, y: 0.5, z: 0 },
+        direction: "up",
+        accepts: ["wall"],
+      };
       const world = snapPointToWorld(snap, piece);
       expect(world.y).toBeCloseTo(0.5);
     });
@@ -454,9 +529,17 @@ describe("Rotation Handling (Spec §35.1)", () => {
       // new (1,0,0) rot=180 east snap: cos(180)=-1 → worldX=1-0.5=0.5, rotatedDir="west"
       // OPPOSITE["east"]="west" ✓, positions match ✓
       const placed = makePiece({ gridX: 0, rotation: 0 });
-      const placedSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
+      const placedSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
       const newPiece = makePiece({ gridX: 1, rotation: 180 });
-      const newSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
+      const newSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
       expect(checkSnapDirectionMatch(placedSnap, placed, newSnap, newPiece, 0.1)).toBe(true);
     });
 
@@ -465,9 +548,17 @@ describe("Rotation Handling (Spec §35.1)", () => {
       // new (0,0,1) rot=0 north snap: world(0,0,0.5), dir="north"
       // OPPOSITE["south"]="north" ✓, positions match ✓
       const placed = makePiece({ gridX: 0, gridZ: 0, rotation: 90 });
-      const placedSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
+      const placedSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
       const newPiece = makePiece({ gridX: 0, gridZ: 1, rotation: 0 });
-      const newSnap: SnapPoint = { localPosition: { x: 0, y: 0, z: -0.5 }, direction: "north", accepts: ["wall"] };
+      const newSnap: SnapPoint = {
+        localPosition: { x: 0, y: 0, z: -0.5 },
+        direction: "north",
+        accepts: ["wall"],
+      };
       expect(checkSnapDirectionMatch(placedSnap, placed, newSnap, newPiece, 0.1)).toBe(true);
     });
 
@@ -475,9 +566,17 @@ describe("Rotation Handling (Spec §35.1)", () => {
       // placed (0,0,0) rot=0 east snap: world(0.5,0,0)
       // new (1,0,0) rot=90 east snap: cos(90)=0,sin(90)=1 → worldX=1, worldZ=0.5 → positions don't match
       const placed = makePiece({ gridX: 0, rotation: 0 });
-      const placedSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
+      const placedSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
       const newPiece = makePiece({ gridX: 1, rotation: 90 });
-      const newSnap: SnapPoint = { localPosition: { x: 0.5, y: 0, z: 0 }, direction: "east", accepts: ["wall"] };
+      const newSnap: SnapPoint = {
+        localPosition: { x: 0.5, y: 0, z: 0 },
+        direction: "east",
+        accepts: ["wall"],
+      };
       expect(checkSnapDirectionMatch(placedSnap, placed, newSnap, newPiece, 0.1)).toBe(false);
     });
   });
@@ -511,7 +610,14 @@ describe("Multi-Snap (Spec §35.1)", () => {
     const newPiece = makePiece({ gridX: 0 });
     const world = makeRapierWorld({ intersectionsWithShape: jest.fn().mockReturnValue(false) });
     const rapier = makeRapierModule();
-    expect(validatePlacementWithRapier(newPiece, [makeEntity(westPiece), makeEntity(eastPiece)], world, rapier)).toBe(true);
+    expect(
+      validatePlacementWithRapier(
+        newPiece,
+        [makeEntity(westPiece), makeEntity(eastPiece)],
+        world,
+        rapier,
+      ),
+    ).toBe(true);
   });
 
   it("validatePlacement rejects when adjacent pieces only accept incompatible types", () => {
@@ -522,7 +628,9 @@ describe("Multi-Snap (Spec §35.1)", () => {
     });
     const eastPiece = makePiece({
       gridX: 1,
-      snapPoints: [{ localPosition: { x: -0.5, y: 0, z: 0 }, direction: "west", accepts: ["roof"] }],
+      snapPoints: [
+        { localPosition: { x: -0.5, y: 0, z: 0 }, direction: "west", accepts: ["roof"] },
+      ],
     });
     const newPiece = makePiece({ gridX: 0 }); // pieceType: "wall" — not accepted by roof-only snaps
     expect(validatePlacement(newPiece, [makeEntity(westPiece), makeEntity(eastPiece)])).toBe(false);

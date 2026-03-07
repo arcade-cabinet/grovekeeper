@@ -75,9 +75,27 @@ export function computeBlendedColor(
   const wW = biomeBlend[3] * proxW;
 
   const total = 1 + wN + wE + wS + wW;
-  const r = (baseR + wN * neighborRGB[0][0] + wE * neighborRGB[1][0] + wS * neighborRGB[2][0] + wW * neighborRGB[3][0]) / total;
-  const g = (baseG + wN * neighborRGB[0][1] + wE * neighborRGB[1][1] + wS * neighborRGB[2][1] + wW * neighborRGB[3][1]) / total;
-  const b = (baseB + wN * neighborRGB[0][2] + wE * neighborRGB[1][2] + wS * neighborRGB[2][2] + wW * neighborRGB[3][2]) / total;
+  const r =
+    (baseR +
+      wN * neighborRGB[0][0] +
+      wE * neighborRGB[1][0] +
+      wS * neighborRGB[2][0] +
+      wW * neighborRGB[3][0]) /
+    total;
+  const g =
+    (baseG +
+      wN * neighborRGB[0][1] +
+      wE * neighborRGB[1][1] +
+      wS * neighborRGB[2][1] +
+      wW * neighborRGB[3][1]) /
+    total;
+  const b =
+    (baseB +
+      wN * neighborRGB[0][2] +
+      wE * neighborRGB[1][2] +
+      wS * neighborRGB[2][2] +
+      wW * neighborRGB[3][2]) /
+    total;
   return [r, g, b];
 }
 
@@ -114,7 +132,12 @@ export function buildTerrainGeometry(
   // Parse hex colors to linear RGB
   const base = new THREE.Color(baseColor);
   const nColors = neighborColors.map((hex) => new THREE.Color(hex));
-  const neighborRGB: [[number, number, number], [number, number, number], [number, number, number], [number, number, number]] = [
+  const neighborRGB: [
+    [number, number, number],
+    [number, number, number],
+    [number, number, number],
+    [number, number, number],
+  ] = [
     [nColors[0].r, nColors[0].g, nColors[0].b],
     [nColors[1].r, nColors[1].g, nColors[1].b],
     [nColors[2].r, nColors[2].g, nColors[2].b],
@@ -130,7 +153,17 @@ export function buildTerrainGeometry(
       positions[vi * 3 + 1] = height; // Y: height-displaced
       positions[vi * 3 + 2] = iz; // Z: 0..CHUNK_SIZE-1 (local)
 
-      const [r, g, b] = computeBlendedColor(ix, iz, n, base.r, base.g, base.b, biomeBlend, neighborRGB, BLEND_ZONE);
+      const [r, g, b] = computeBlendedColor(
+        ix,
+        iz,
+        n,
+        base.r,
+        base.g,
+        base.b,
+        biomeBlend,
+        neighborRGB,
+        BLEND_ZONE,
+      );
       colors[vi * 3 + 0] = r;
       colors[vi * 3 + 1] = g;
       colors[vi * 3 + 2] = b;
@@ -194,8 +227,12 @@ export function buildTrimeshArgs(heightmap: Float32Array): {
       const b = iz * n + ix + 1;
       const c = (iz + 1) * n + ix;
       const d = (iz + 1) * n + ix + 1;
-      indices[i++] = a; indices[i++] = c; indices[i++] = b;
-      indices[i++] = b; indices[i++] = c; indices[i++] = d;
+      indices[i++] = a;
+      indices[i++] = c;
+      indices[i++] = b;
+      indices[i++] = b;
+      indices[i++] = c;
+      indices[i++] = d;
     }
   }
 

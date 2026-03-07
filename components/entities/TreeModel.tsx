@@ -8,8 +8,8 @@
  * See GAME_SPEC.md §8.1, §6.3.
  */
 
-import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useMemo } from "react";
 import { Mesh, MeshStandardMaterial } from "three";
 import speciesConfig from "@/config/game/species.json" with { type: "json" };
 
@@ -216,9 +216,7 @@ export const TreeModel = ({
     <group position={position}>
       {stage === 0 && <TreeSeedMesh scale={scale} />}
       {stage === 1 && <TreeSproutMesh scale={scale} />}
-      {stage >= 2 && (
-        <TreeGLBModel glbPath={glbPath} scale={scale} tintColor={seasonTint} />
-      )}
+      {stage >= 2 && <TreeGLBModel glbPath={glbPath} scale={scale} tintColor={seasonTint} />}
     </group>
   );
 };

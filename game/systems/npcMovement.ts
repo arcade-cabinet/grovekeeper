@@ -11,8 +11,8 @@
  *     `updateNpcMovement` for each individual NPC.
  */
 
+import { EntityManager, type GameEntity } from "yuka";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
-import { EntityManager, GameEntity } from "yuka";
 import {
   advancePathFollow,
   createPathFollow,

@@ -3,16 +3,16 @@
  * Clearance and ground contact checks via physics raycasts. Spec §35.1.
  */
 
-import type { Entity } from "../../ecs/world";
-import type { ModularPieceComponent, SnapPoint } from "../../ecs/components/building";
+import type { ModularPieceComponent, SnapPoint } from "../../ecs/components/building.ts";
+import type { Entity } from "../../ecs/world.ts";
 import {
   GRID_SIZE,
   OPPOSITE_DIRECTION,
-  snapPointToWorld,
-  rotateDirection,
   positionsMatch,
+  rotateDirection,
+  snapPointToWorld,
   validatePlacement,
-} from "./placement";
+} from "./placement.ts";
 
 /** Minimal Rapier world API for kitbashing snap physics (Spec §35.1). */
 export interface KitbashRapierWorld {

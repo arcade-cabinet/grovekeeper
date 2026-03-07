@@ -4,7 +4,7 @@
  */
 
 import type { NpcComponent } from "@/game/ecs/components/npc";
-import { advanceNpcAnimation, computeNpcLimbRotations } from "./npcAnimation";
+import { advanceNpcAnimation, computeNpcLimbRotations } from "./npcAnimation.ts";
 
 function makeNpc(overrides: Partial<NpcComponent> = {}): NpcComponent {
   return {

@@ -22,10 +22,34 @@
   "waveComposition": [
     { "enemyType": "grove_pest", "minBaseValue": 0, "baseCount": 3, "countVariance": 2, "tier": 1 },
     { "enemyType": "wild_boar", "minBaseValue": 50, "baseCount": 2, "countVariance": 1, "tier": 1 },
-    { "enemyType": "shadow_sprite", "minBaseValue": 100, "baseCount": 2, "countVariance": 2, "tier": 2 },
-    { "enemyType": "blight_crawler", "minBaseValue": 200, "baseCount": 1, "countVariance": 1, "tier": 2 },
-    { "enemyType": "corrupted_ent", "minBaseValue": 350, "baseCount": 1, "countVariance": 1, "tier": 3 },
-    { "enemyType": "storm_elemental", "minBaseValue": 500, "baseCount": 1, "countVariance": 0, "tier": 3 }
+    {
+      "enemyType": "shadow_sprite",
+      "minBaseValue": 100,
+      "baseCount": 2,
+      "countVariance": 2,
+      "tier": 2
+    },
+    {
+      "enemyType": "blight_crawler",
+      "minBaseValue": 200,
+      "baseCount": 1,
+      "countVariance": 1,
+      "tier": 2
+    },
+    {
+      "enemyType": "corrupted_ent",
+      "minBaseValue": 350,
+      "baseCount": 1,
+      "countVariance": 1,
+      "tier": 3
+    },
+    {
+      "enemyType": "storm_elemental",
+      "minBaseValue": 500,
+      "baseCount": 1,
+      "countVariance": 0,
+      "tier": 3
+    }
   ],
   "warnings": {
     "ominousSoundsThreshold": 120,

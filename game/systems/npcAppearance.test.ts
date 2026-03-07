@@ -3,7 +3,7 @@
  * Spec: NPC appearance assembly via scopedRNG (GAME_SPEC.md NPC section).
  */
 
-import { generateNpcAppearance } from "./npcAppearance";
+import { generateNpcAppearance } from "./npcAppearance.ts";
 
 describe("generateNpcAppearance", () => {
   it("should return deterministic appearance for same inputs", () => {
@@ -34,31 +34,16 @@ describe("generateNpcAppearance", () => {
   });
 
   it("should always have a valid base model", () => {
-    const validBases = [
-      "basemesh",
-      "archer",
-      "knight",
-      "merchant",
-      "ninja",
-      "student",
-    ];
+    const validBases = ["basemesh", "archer", "knight", "merchant", "ninja", "student"];
     for (let i = 0; i < 20; i++) {
-      const appearance = generateNpcAppearance(
-        `npc-${i}`,
-        "TestSeed",
-        "trading",
-      );
+      const appearance = generateNpcAppearance(`npc-${i}`, "TestSeed", "trading");
       expect(validBases).toContain(appearance.baseModel);
     }
   });
 
   it("should never include allinone as base model", () => {
     for (let i = 0; i < 50; i++) {
-      const appearance = generateNpcAppearance(
-        `npc-${i}`,
-        "TestSeed",
-        "crafting",
-      );
+      const appearance = generateNpcAppearance(`npc-${i}`, "TestSeed", "crafting");
       expect(appearance.baseModel).not.toBe("allinone");
     }
   });
@@ -76,11 +61,7 @@ describe("generateNpcAppearance", () => {
   it("should only assign items to valid slots", () => {
     const validSlots = ["head", "torso", "legs", "feet", "accessory"];
     for (let i = 0; i < 20; i++) {
-      const appearance = generateNpcAppearance(
-        `npc-${i}`,
-        "TestSeed",
-        "quests",
-      );
+      const appearance = generateNpcAppearance(`npc-${i}`, "TestSeed", "quests");
       for (const slot of Object.keys(appearance.items)) {
         expect(validSlots).toContain(slot);
       }
@@ -96,11 +77,7 @@ describe("generateNpcAppearance", () => {
     ];
 
     for (let i = 0; i < 50; i++) {
-      const appearance = generateNpcAppearance(
-        `npc-${i}`,
-        "TestSeed",
-        "crafting",
-      );
+      const appearance = generateNpcAppearance(`npc-${i}`, "TestSeed", "crafting");
       const itemIds = Object.values(appearance.items) as string[];
       for (const set of incompatibleSets) {
         const matches = itemIds.filter((id) => set.includes(id));
@@ -126,11 +103,7 @@ describe("generateNpcAppearance", () => {
   it("should favor role-appropriate base models", () => {
     const tradingBases: string[] = [];
     for (let i = 0; i < 100; i++) {
-      const appearance = generateNpcAppearance(
-        `trader-${i}`,
-        "TestSeed",
-        "trading",
-      );
+      const appearance = generateNpcAppearance(`trader-${i}`, "TestSeed", "trading");
       tradingBases.push(appearance.baseModel);
     }
     const merchantCount = tradingBases.filter((b) => b === "merchant").length;

@@ -9,9 +9,21 @@
         "speaker": "Elder Rowan",
         "text": "Ah, young grovekeeper! The forest grows stronger with your care. What wisdom can I share today?",
         "branches": [
-          { "label": "Tell me about growing trees", "targetNodeId": "rowan-growth", "seedBias": 0.4 },
-          { "label": "Any advice for a new keeper?", "targetNodeId": "rowan-general", "seedBias": 0.3 },
-          { "label": "Tell me about the valley's history", "targetNodeId": "rowan-history", "seedBias": 0.2 },
+          {
+            "label": "Tell me about growing trees",
+            "targetNodeId": "rowan-growth",
+            "seedBias": 0.4
+          },
+          {
+            "label": "Any advice for a new keeper?",
+            "targetNodeId": "rowan-general",
+            "seedBias": 0.3
+          },
+          {
+            "label": "Tell me about the valley's history",
+            "targetNodeId": "rowan-history",
+            "seedBias": 0.2
+          },
           { "label": "Goodbye", "targetNodeId": "rowan-farewell", "seedBias": 0.1 }
         ]
       },
@@ -20,7 +32,11 @@
         "speaker": "Elder Rowan",
         "text": "Water your saplings regularly — it boosts their growth speed significantly. Rain does the watering for you, if you're patient.",
         "branches": [
-          { "label": "What about different seasons?", "targetNodeId": "rowan-seasons", "seedBias": 0.5 },
+          {
+            "label": "What about different seasons?",
+            "targetNodeId": "rowan-seasons",
+            "seedBias": 0.5
+          },
           { "label": "Thanks for the tip!", "targetNodeId": "rowan-farewell", "seedBias": 0.5 }
         ],
         "effects": [{ "type": "give_xp", "value": 10 }]
@@ -39,8 +55,16 @@
         "speaker": "Elder Rowan",
         "text": "Long ago, a great Worldtree stood at the heart of this valley. Its roots connected every living thing. When it fell, the forest began to wither. That's why we need grovekeepers like you — to restore what was lost.",
         "branches": [
-          { "label": "How can I help restore the forest?", "targetNodeId": "rowan-restore", "seedBias": 0.7 },
-          { "label": "That's a beautiful story.", "targetNodeId": "rowan-farewell", "seedBias": 0.3 }
+          {
+            "label": "How can I help restore the forest?",
+            "targetNodeId": "rowan-restore",
+            "seedBias": 0.7
+          },
+          {
+            "label": "That's a beautiful story.",
+            "targetNodeId": "rowan-farewell",
+            "seedBias": 0.3
+          }
         ],
         "effects": [{ "type": "give_xp", "value": 15 }]
       },
@@ -60,7 +84,10 @@
         "branches": [
           { "label": "I'll do my part.", "targetNodeId": "rowan-farewell", "seedBias": 1.0 }
         ],
-        "effects": [{ "type": "give_xp", "value": 20 }, { "type": "start_quest", "value": "worldtree-restoration" }]
+        "effects": [
+          { "type": "give_xp", "value": 20 },
+          { "type": "start_quest", "value": "worldtree-restoration" }
+        ]
       },
       {
         "nodeId": "rowan-farewell",
@@ -89,7 +116,10 @@
         "speaker": "spirit-worldroot",
         "text": "Then seek the eight lights. Where they converge, the Worldroot stirs.",
         "branches": [],
-        "effects": [{ "type": "reveal_location", "value": "worldroot-anchor" }, { "type": "give_xp", "value": 50 }]
+        "effects": [
+          { "type": "reveal_location", "value": "worldroot-anchor" },
+          { "type": "give_xp", "value": 50 }
+        ]
       },
       {
         "nodeId": "spirit-dismiss",
@@ -109,7 +139,11 @@
         "speaker": "Hazel",
         "text": "Welcome to my trading post! I deal in timber, seeds, and all the finest forest goods. What are you after?",
         "branches": [
-          { "label": "What do you have for trade?", "targetNodeId": "hazel-inventory", "seedBias": 0.6 },
+          {
+            "label": "What do you have for trade?",
+            "targetNodeId": "hazel-inventory",
+            "seedBias": 0.6
+          },
           { "label": "Just browsing.", "targetNodeId": "hazel-farewell", "seedBias": 0.4 }
         ]
       },
@@ -149,7 +183,11 @@
         "speaker": "spirit-dialogue-0",
         "text": "I am the first. A keeper from an age before your kind walked here. I watched the Worldtree grow from a seed no larger than your thumbnail.",
         "branches": [
-          { "label": "What happened to the Worldtree?", "targetNodeId": "s0-lore", "seedBias": 0.7 },
+          {
+            "label": "What happened to the Worldtree?",
+            "targetNodeId": "s0-lore",
+            "seedBias": 0.7
+          },
           { "label": "Will you help me?", "targetNodeId": "s0-gift", "seedBias": 0.3 }
         ],
         "effects": [{ "type": "give_xp", "value": 20 }]
@@ -187,9 +225,7 @@
         "nodeId": "s0-compass",
         "speaker": "spirit-dialogue-0",
         "text": "Seven more lights, scattered across the labyrinth places of this world. Your compass knows the way when you are close enough to feel them.",
-        "branches": [
-          { "label": "I'll find them all.", "targetNodeId": "s0-gift", "seedBias": 1.0 }
-        ]
+        "branches": [{ "label": "I'll find them all.", "targetNodeId": "s0-gift", "seedBias": 1.0 }]
       },
       {
         "nodeId": "s0-dismiss",
@@ -230,7 +266,11 @@
         "text": "SERIOUS? Oh. OH. You're one of those. Fine. Serious. I'll be serious. Ahem. The forest needs keepers. There. Serious. Are we done?",
         "branches": [
           { "label": "I appreciate the effort.", "targetNodeId": "s1-gift", "seedBias": 0.6 },
-          { "label": "Tell me more about the forest.", "targetNodeId": "s1-useful", "seedBias": 0.4 }
+          {
+            "label": "Tell me more about the forest.",
+            "targetNodeId": "s1-useful",
+            "seedBias": 0.4
+          }
         ]
       },
       {
@@ -347,7 +387,11 @@
         "speaker": "spirit-dialogue-3",
         "text": "Good. The forest cannot be read, only felt. Knowledge without intuition is a map with no territory. You understand this, even if you don't know it yet.",
         "branches": [
-          { "label": "What should I know about the forest?", "targetNodeId": "s3-wisdom", "seedBias": 0.7 },
+          {
+            "label": "What should I know about the forest?",
+            "targetNodeId": "s3-wisdom",
+            "seedBias": 0.7
+          },
           { "label": "What can you teach me?", "targetNodeId": "s3-lesson", "seedBias": 0.3 }
         ],
         "effects": [{ "type": "give_xp", "value": 20 }]
@@ -357,7 +401,11 @@
         "speaker": "spirit-dialogue-3",
         "text": "Discipline. That is rare. But do not let the map replace the territory. The wisest keepers I have known eventually put their charts away.",
         "branches": [
-          { "label": "What did they find without the map?", "targetNodeId": "s3-wisdom", "seedBias": 0.8 },
+          {
+            "label": "What did they find without the map?",
+            "targetNodeId": "s3-wisdom",
+            "seedBias": 0.8
+          },
           { "label": "I'll keep my map, thank you.", "targetNodeId": "s3-lesson", "seedBias": 0.2 }
         ]
       },
@@ -375,9 +423,7 @@
         "nodeId": "s3-lesson",
         "speaker": "spirit-dialogue-3",
         "text": "The grove teaches slowly. Water what needs water. Prune what needs pruning. Leave what does not need your hands. The hardest lesson for a keeper is restraint.",
-        "branches": [
-          { "label": "I understand.", "targetNodeId": "s3-gift", "seedBias": 1.0 }
-        ],
+        "branches": [{ "label": "I understand.", "targetNodeId": "s3-gift", "seedBias": 1.0 }],
         "effects": [{ "type": "give_xp", "value": 20 }]
       },
       {
@@ -403,8 +449,16 @@
         "text": "Oh interesting — you're here! I've been cataloguing the lichen patterns on these walls for decades. Did you notice the way the hedge corners absorb sound differently depending on moisture?",
         "branches": [
           { "label": "I hadn't noticed that.", "targetNodeId": "s4-curious-a", "seedBias": 0.4 },
-          { "label": "Tell me more about this place.", "targetNodeId": "s4-curious-b", "seedBias": 0.4 },
-          { "label": "Are you one of the eight spirits?", "targetNodeId": "s4-identity", "seedBias": 0.2 }
+          {
+            "label": "Tell me more about this place.",
+            "targetNodeId": "s4-curious-b",
+            "seedBias": 0.4
+          },
+          {
+            "label": "Are you one of the eight spirits?",
+            "targetNodeId": "s4-identity",
+            "seedBias": 0.2
+          }
         ]
       },
       {
@@ -413,7 +467,11 @@
         "text": "Most people don't! They're looking for treasure or shortcuts. The lichen is the treasure. Thousands of years old in some patches. Older than the hedges themselves.",
         "branches": [
           { "label": "What else is hidden here?", "targetNodeId": "s4-curious-b", "seedBias": 0.7 },
-          { "label": "Can you teach me to notice more?", "targetNodeId": "s4-lesson", "seedBias": 0.3 }
+          {
+            "label": "Can you teach me to notice more?",
+            "targetNodeId": "s4-lesson",
+            "seedBias": 0.3
+          }
         ],
         "effects": [{ "type": "give_xp", "value": 15 }]
       },
@@ -477,7 +535,11 @@
         "speaker": "spirit-dialogue-5",
         "text": "Good. I have sent back three harvesters this season alone. They came for timber and left empty. The grove is not a mine.",
         "branches": [
-          { "label": "I agree. Tell me how to protect it.", "targetNodeId": "s5-lesson", "seedBias": 0.7 },
+          {
+            "label": "I agree. Tell me how to protect it.",
+            "targetNodeId": "s5-lesson",
+            "seedBias": 0.7
+          },
           { "label": "What do you guard here?", "targetNodeId": "s5-guard", "seedBias": 0.3 }
         ],
         "effects": [{ "type": "give_xp", "value": 20 }]
@@ -514,9 +576,7 @@
         "nodeId": "s5-lesson",
         "speaker": "spirit-dialogue-5",
         "text": "Plant ironbark. It grows slowly but storms cannot touch it. At full growth it stands three times the height of anything else. A true sentinel. The grove deserves sentinels.",
-        "branches": [
-          { "label": "I'll plant one.", "targetNodeId": "s5-gift", "seedBias": 1.0 }
-        ]
+        "branches": [{ "label": "I'll plant one.", "targetNodeId": "s5-gift", "seedBias": 1.0 }]
       },
       {
         "nodeId": "s5-gift",
@@ -546,7 +606,11 @@
         "speaker": "spirit-dialogue-6",
         "text": "Psst. Yes, you. Come in quietly. Don't let the hedges know you're looking for me — they get jealous.",
         "branches": [
-          { "label": "Do the hedges actually get jealous?", "targetNodeId": "s6-trick", "seedBias": 0.4 },
+          {
+            "label": "Do the hedges actually get jealous?",
+            "targetNodeId": "s6-trick",
+            "seedBias": 0.4
+          },
           { "label": "I'll play along.", "targetNodeId": "s6-game", "seedBias": 0.4 },
           { "label": "Are you the spirit here?", "targetNodeId": "s6-identity", "seedBias": 0.2 }
         ]
@@ -556,7 +620,11 @@
         "speaker": "spirit-dialogue-6",
         "text": "Of COURSE not. But you hesitated, didn't you? That's the point. The forest is full of things that seem impossible. A good keeper stays curious enough to check.",
         "branches": [
-          { "label": "Point taken. What else should I question?", "targetNodeId": "s6-lesson", "seedBias": 0.7 },
+          {
+            "label": "Point taken. What else should I question?",
+            "targetNodeId": "s6-lesson",
+            "seedBias": 0.7
+          },
           { "label": "Fair enough. What's your gift?", "targetNodeId": "s6-gift", "seedBias": 0.3 }
         ],
         "effects": [{ "type": "give_xp", "value": 15 }]
@@ -576,7 +644,11 @@
         "speaker": "spirit-dialogue-6",
         "text": "Spirit number six, keeper of the autumn section of the old forest. Also responsible for 47% of the confusing path intersections in this maze. Guilty as charged.",
         "branches": [
-          { "label": "You made the maze worse on purpose?", "targetNodeId": "s6-trick", "seedBias": 0.6 },
+          {
+            "label": "You made the maze worse on purpose?",
+            "targetNodeId": "s6-trick",
+            "seedBias": 0.6
+          },
           { "label": "Do you have something for me?", "targetNodeId": "s6-gift", "seedBias": 0.4 }
         ]
       },
@@ -640,7 +712,11 @@
         "speaker": "spirit-dialogue-7",
         "text": "The last of the eight. The one who was placed deepest in the longest maze. I chose this. Quiet suits me. If you made it here, you have more patience than most.",
         "branches": [
-          { "label": "What do you know that the others don't?", "targetNodeId": "s7-deep", "seedBias": 0.7 },
+          {
+            "label": "What do you know that the others don't?",
+            "targetNodeId": "s7-deep",
+            "seedBias": 0.7
+          },
           { "label": "What gift do you carry?", "targetNodeId": "s7-gift", "seedBias": 0.3 }
         ]
       },
@@ -658,9 +734,7 @@
         "nodeId": "s7-meaning",
         "speaker": "spirit-dialogue-7",
         "text": "Nothing in the grove grows alone. That is the only lesson. All eight of us were placed apart — but we are still one. As you are still part of everything you have ever tended.",
-        "branches": [
-          { "label": "I understand.", "targetNodeId": "s7-gift", "seedBias": 1.0 }
-        ],
+        "branches": [{ "label": "I understand.", "targetNodeId": "s7-gift", "seedBias": 1.0 }],
         "effects": [{ "type": "give_xp", "value": 25 }]
       },
       {

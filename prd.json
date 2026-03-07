@@ -2598,8 +2598,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 156,
-      "passes": false,
-      "notes": "Phase 6 (late). NpcDialogue.tsx (171 lines) already exists — update for ECS dialogue system."
+      "passes": true,
+      "notes": "Phase 6 (late). NpcDialogue.tsx (171 lines) already exists — update for ECS dialogue system.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-157",
@@ -2876,6 +2877,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T22:21:27.502Z"
+    "updatedAt": "2026-03-07T22:35:11.177Z"
   }
 }

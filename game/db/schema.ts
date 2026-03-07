@@ -14,7 +14,9 @@ export const saveConfig = sqliteTable("save_config", {
   difficulty: text("difficulty").notNull().default("normal"),
   permadeath: integer("permadeath", { mode: "boolean" }).notNull().default(false),
   version: integer("version").notNull().default(1),
-  createdAt: integer("created_at").notNull().$defaultFn(() => Date.now()),
+  createdAt: integer("created_at")
+    .notNull()
+    .$defaultFn(() => Date.now()),
 });
 
 // --- player ---
@@ -88,7 +90,9 @@ export const trees = sqliteTable("trees", {
   fertilized: integer("fertilized", { mode: "boolean" }).notNull().default(false),
   pruned: integer("pruned", { mode: "boolean" }).notNull().default(false),
   totalGrowthTime: real("total_growth_time").notNull().default(0),
-  plantedAt: integer("planted_at").notNull().$defaultFn(() => Date.now()),
+  plantedAt: integer("planted_at")
+    .notNull()
+    .$defaultFn(() => Date.now()),
   meshSeed: integer("mesh_seed").notNull().default(0),
   harvestCooldownElapsed: real("harvest_cooldown_elapsed").notNull().default(0),
   harvestReady: integer("harvest_ready", { mode: "boolean" }).notNull().default(false),

@@ -13,10 +13,9 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-
+import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
 import { grassQuery } from "@/game/ecs/world";
 import { createRNG, hashString } from "@/game/utils/seedRNG";
-import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
 
 // ---------------------------------------------------------------------------
 // Constants (loaded from config — no inline magic numbers)
@@ -122,9 +121,7 @@ const GrassTypeInstances = ({ grassType, capacity }: GrassTypeInstancesProps) =>
   const _yAxis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
 
   // Extract geometry + material from the first Mesh in the GLB scene
-  const [geometry, material] = useMemo<
-    [THREE.BufferGeometry | null, THREE.Material | null]
-  >(() => {
+  const [geometry, material] = useMemo<[THREE.BufferGeometry | null, THREE.Material | null]>(() => {
     let geo: THREE.BufferGeometry | null = null;
     let mat: THREE.Material | null = null;
     scene.traverse((obj) => {
@@ -165,13 +162,7 @@ const GrassTypeInstances = ({ grassType, capacity }: GrassTypeInstancesProps) =>
 
   if (!geometry || !material || capacity === 0) return null;
 
-  return (
-    <instancedMesh
-      ref={meshRef}
-      args={[geometry, material, capacity]}
-      castShadow
-    />
-  );
+  return <instancedMesh ref={meshRef} args={[geometry, material, capacity]} castShadow />;
 };
 
 // ---------------------------------------------------------------------------
@@ -188,9 +179,7 @@ const GrassTypeInstances = ({ grassType, capacity }: GrassTypeInstancesProps) =>
  */
 export const GrassInstances = () => {
   // Map of grassType -> allocated InstancedMesh capacity
-  const [typeCapacities, setTypeCapacities] = useState<
-    ReadonlyMap<string, number>
-  >(new Map());
+  const [typeCapacities, setTypeCapacities] = useState<ReadonlyMap<string, number>>(new Map());
 
   // Refs track mutable state without triggering re-renders mid-frame
   const prevTypesRef = useRef<Set<string>>(new Set());
@@ -206,10 +195,7 @@ export const GrassInstances = () => {
 
     // Detect new grassTypes (appear as chunks load)
     const prev = prevTypesRef.current;
-    if (
-      current.size !== prev.size ||
-      [...current].some((t) => !prev.has(t))
-    ) {
+    if (current.size !== prev.size || [...current].some((t) => !prev.has(t))) {
       changed = true;
       prevTypesRef.current = current;
     }
@@ -232,11 +218,7 @@ export const GrassInstances = () => {
   return (
     <>
       {[...typeCapacities.entries()].map(([grassType, capacity]) => (
-        <GrassTypeInstances
-          key={grassType}
-          grassType={grassType}
-          capacity={capacity}
-        />
+        <GrassTypeInstances key={grassType} grassType={grassType} capacity={capacity} />
       ))}
     </>
   );

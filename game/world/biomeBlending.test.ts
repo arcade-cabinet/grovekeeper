@@ -9,11 +9,8 @@
  *  - Blend weights are deterministic
  */
 
-import {
-  computeNeighborBiomes,
-  generateChunkData,
-} from "./ChunkManager";
-import { BIOME_COLORS } from "./biomeMapper";
+import { BIOME_COLORS } from "./biomeMapper.ts";
+import { computeNeighborBiomes, generateChunkData } from "./ChunkManager.ts";
 
 // ─── computeNeighborBiomes ────────────────────────────────────────────────────
 
@@ -86,7 +83,11 @@ describe("generateChunkData biomeBlend (Spec §31.1)", () => {
     for (let cx = -2; cx <= 2; cx++) {
       for (let cz = -2; cz <= 2; cz++) {
         const data = generateChunkData("test", cx, cz);
-        const [northBiome, eastBiome, southBiome, westBiome] = computeNeighborBiomes("test", cx, cz);
+        const [northBiome, eastBiome, southBiome, westBiome] = computeNeighborBiomes(
+          "test",
+          cx,
+          cz,
+        );
         const centerBiome = data.baseColor; // indirect: same biome → same color
 
         const neighborColors = data.neighborColors;

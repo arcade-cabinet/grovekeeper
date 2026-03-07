@@ -13,7 +13,7 @@
 
 import rawConfig from "@/config/game/proceduralQuests.json" with { type: "json" };
 import { scopedRNG } from "@/game/utils/seedWords";
-import { createQuest, type Quest, type QuestDef } from "./questEngine";
+import { createQuest, type Quest, type QuestDef } from "./questEngine.ts";
 
 // -- Types --
 

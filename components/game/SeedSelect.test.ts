@@ -3,7 +3,7 @@
  * (Component rendering tests require @testing-library/react-native)
  */
 
-import type { SeedSelectSpecies } from "./SeedSelect";
+import type { SeedSelectSpecies } from "./SeedSelect.tsx";
 
 describe("SeedSelectSpecies type", () => {
   it("accepts a valid species object", () => {

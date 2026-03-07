@@ -15,7 +15,9 @@ jest.mock("@react-three/fiber", () => ({
 
 jest.mock("three", () => ({
   PerspectiveCamera: jest.fn(),
-  Vector3: jest.fn().mockImplementation((x = 0, y = 0, z = 0) => ({ x, y, z, copy: jest.fn(), set: jest.fn() })),
+  Vector3: jest
+    .fn()
+    .mockImplementation((x = 0, y = 0, z = 0) => ({ x, y, z, copy: jest.fn(), set: jest.fn() })),
 }));
 
 jest.mock("@/game/ecs/world", () => ({
@@ -26,7 +28,7 @@ jest.mock("@/game/hooks/useMouseLook", () => ({
   useMouseLook: jest.fn(),
 }));
 
-import { EYE_HEIGHT, FPSCamera, getCameraPosition } from "./FPSCamera";
+import { EYE_HEIGHT, FPSCamera, getCameraPosition } from "./FPSCamera.tsx";
 
 describe("FPSCamera (Spec §9)", () => {
   it("exports EYE_HEIGHT as 1.6m above ground", () => {
@@ -52,7 +54,11 @@ describe("getCameraPosition (Spec §9)", () => {
   });
 
   it("returns player z position unchanged", () => {
-    const result = getCameraPosition([{ position: { x: 0, y: 0, z: -5 } }], EYE_HEIGHT, DEFAULT_POS);
+    const result = getCameraPosition(
+      [{ position: { x: 0, y: 0, z: -5 } }],
+      EYE_HEIGHT,
+      DEFAULT_POS,
+    );
     expect(result.z).toBe(-5);
   });
 
@@ -64,17 +70,18 @@ describe("getCameraPosition (Spec §9)", () => {
   });
 
   it("handles negative player coordinates correctly", () => {
-    const result = getCameraPosition([{ position: { x: -3, y: -1, z: -8 } }], EYE_HEIGHT, DEFAULT_POS);
+    const result = getCameraPosition(
+      [{ position: { x: -3, y: -1, z: -8 } }],
+      EYE_HEIGHT,
+      DEFAULT_POS,
+    );
     expect(result.x).toBe(-3);
     expect(result.y).toBeCloseTo(-1 + EYE_HEIGHT);
     expect(result.z).toBe(-8);
   });
 
   it("uses first entity when multiple player entities exist", () => {
-    const entities = [
-      { position: { x: 1, y: 0, z: 2 } },
-      { position: { x: 99, y: 99, z: 99 } },
-    ];
+    const entities = [{ position: { x: 1, y: 0, z: 2 } }, { position: { x: 99, y: 99, z: 99 } }];
     const result = getCameraPosition(entities, EYE_HEIGHT, DEFAULT_POS);
     expect(result.x).toBe(1);
     expect(result.z).toBe(2);

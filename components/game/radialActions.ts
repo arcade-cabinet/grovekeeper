@@ -36,9 +36,7 @@ export function getActionsForTile(ctx: TileContext): RadialAction[] {
 
   // Water tile -- inspect only
   if (ctx.cellType === "water") {
-    return [
-      { id: "inspect", icon: "\u{1F4D6}", label: "Inspect", color: "#90CAF9" },
-    ];
+    return [{ id: "inspect", icon: "\u{1F4D6}", label: "Inspect", color: "#90CAF9" }];
   }
 
   // Rock tile

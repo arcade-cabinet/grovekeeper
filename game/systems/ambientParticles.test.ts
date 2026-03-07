@@ -11,24 +11,24 @@
 
 import { World } from "miniplex";
 import {
-  isNightTime,
-  isNearWater,
-  isPollenSeason,
-  isLeafCondition,
-  buildFireflyEmitter,
-  buildPollenEmitter,
-  buildLeavesEmitter,
-  initAmbientParticlesState,
-  tickAmbientParticles,
-  FIREFLY_WATER_PROXIMITY_RADIUS,
-  FIREFLY_NIGHT_START,
-  FIREFLY_NIGHT_END,
-  LEAVES_MIN_WIND_SPEED,
-  type WaterRef,
   type ActiveChunk,
   type AmbientEntity,
   type AmbientParticlesState,
-} from "./ambientParticles";
+  buildFireflyEmitter,
+  buildLeavesEmitter,
+  buildPollenEmitter,
+  FIREFLY_NIGHT_END,
+  FIREFLY_NIGHT_START,
+  FIREFLY_WATER_PROXIMITY_RADIUS,
+  initAmbientParticlesState,
+  isLeafCondition,
+  isNearWater,
+  isNightTime,
+  isPollenSeason,
+  LEAVES_MIN_WIND_SPEED,
+  tickAmbientParticles,
+  type WaterRef,
+} from "./ambientParticles.ts";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -310,7 +310,9 @@ describe("tickAmbientParticles (Spec §36.1)", () => {
 
     it("positions firefly emitter at chunk center", () => {
       const chunk = makeChunk("2,3", 32, 48);
-      tickAmbientParticles(world, [chunk], state, NIGHT_HOUR, SPRING, NO_WIND, [makeWaterRef(32, 48)]);
+      tickAmbientParticles(world, [chunk], state, NIGHT_HOUR, SPRING, NO_WIND, [
+        makeWaterRef(32, 48),
+      ]);
 
       const entity = state.emitters.get("2,3")?.fireflyEntity;
       expect(entity?.position?.x).toBe(32);
@@ -446,7 +448,10 @@ describe("tickAmbientParticles (Spec §36.1)", () => {
       const pondAtB = makeWaterRef(16, 0);
 
       // Both chunks near water at night
-      tickAmbientParticles(world, [chunkA, chunkB], state, NIGHT_HOUR, SPRING, NO_WIND, [pond, pondAtB]);
+      tickAmbientParticles(world, [chunkA, chunkB], state, NIGHT_HOUR, SPRING, NO_WIND, [
+        pond,
+        pondAtB,
+      ]);
 
       expect(state.emitters.get("0,0")?.fireflyEntity).not.toBeNull();
       expect(state.emitters.get("1,0")?.fireflyEntity).not.toBeNull();
@@ -457,7 +462,10 @@ describe("tickAmbientParticles (Spec §36.1)", () => {
       const chunkB = makeChunk("1,0", 16, 0);
       const pondAtB = makeWaterRef(16, 0);
 
-      tickAmbientParticles(world, [chunkA, chunkB], state, NIGHT_HOUR, SPRING, NO_WIND, [pond, pondAtB]);
+      tickAmbientParticles(world, [chunkA, chunkB], state, NIGHT_HOUR, SPRING, NO_WIND, [
+        pond,
+        pondAtB,
+      ]);
 
       // Unload chunkA only
       tickAmbientParticles(world, [chunkB], state, NIGHT_HOUR, SPRING, NO_WIND, [pondAtB]);

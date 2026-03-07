@@ -7,10 +7,10 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useRapier } from "@react-three/rapier";
-import { useEffect, useRef } from "react";
-import type { RefObject } from "react";
 import type { RapierRigidBody } from "@react-three/rapier";
+import { useRapier } from "@react-three/rapier";
+import type { RefObject } from "react";
+import { useEffect, useRef } from "react";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 /** Upward impulse applied when the player jumps (Spec §9). Exported for tests. */

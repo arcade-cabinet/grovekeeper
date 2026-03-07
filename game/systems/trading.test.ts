@@ -7,7 +7,7 @@ import {
   getEffectiveTradeRate,
   getEffectiveTradeRates,
   getTradeRates,
-} from "./trading";
+} from "./trading.ts";
 
 function makeMultipliers(
   overrides: Partial<Record<ResourceType, number>> = {},
@@ -169,8 +169,8 @@ describe("trading system", () => {
       const multipliers = makeMultipliers({ sap: 2.0, fruit: 0.5 });
       const result = getEffectiveTradeRates(BASE_TRADE_RATES, multipliers);
       expect(result[0].toAmount).toBe(10); // timber->sap: 5*2.0=10
-      expect(result[1].toAmount).toBe(2);  // sap->fruit: 3*0.5=1.5 -> rounds to 2
-      expect(result[2].toAmount).toBe(5);  // fruit->acorns: 5*1.0=5
+      expect(result[1].toAmount).toBe(2); // sap->fruit: 3*0.5=1.5 -> rounds to 2
+      expect(result[2].toAmount).toBe(5); // fruit->acorns: 5*1.0=5
       expect(result[3].toAmount).toBe(10); // acorns->timber: 10*1.0=10
     });
 

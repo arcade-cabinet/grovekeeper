@@ -13,9 +13,9 @@
  * Config: config/game/procedural.json (particles section).
  */
 
-import { World } from "miniplex";
-import type { ParticleEmitterComponent } from "@/game/ecs/components/procedural/particles";
+import type { World } from "miniplex";
 import proceduralConfig from "@/config/game/procedural.json" with { type: "json" };
+import type { ParticleEmitterComponent } from "@/game/ecs/components/procedural/particles";
 
 // ── Constants from config ─────────────────────────────────────────────────────
 
@@ -28,8 +28,7 @@ export const FIREFLY_NIGHT_START: number = FIREFLY_CFG.activeHours[0];
 /** Night window end hour (exclusive). */
 export const FIREFLY_NIGHT_END: number = FIREFLY_CFG.activeHours[1];
 /** Radius within which a chunk is considered "near water" for fireflies. */
-export const FIREFLY_WATER_PROXIMITY_RADIUS: number =
-  FIREFLY_CFG.waterProximityRadius;
+export const FIREFLY_WATER_PROXIMITY_RADIUS: number = FIREFLY_CFG.waterProximityRadius;
 /** Minimum wind speed for autumn leaves to fall. */
 export const LEAVES_MIN_WIND_SPEED: number = LEAVES_CFG.minWindSpeed;
 
@@ -86,11 +85,7 @@ export function isNightTime(gameHour: number): boolean {
  * of any water body.
  * Spec §36.1: Fireflies near water.
  */
-export function isNearWater(
-  worldX: number,
-  worldZ: number,
-  waterBodies: WaterRef[],
-): boolean {
+export function isNearWater(worldX: number, worldZ: number, waterBodies: WaterRef[]): boolean {
   const r = FIREFLY_WATER_PROXIMITY_RADIUS;
   for (const wb of waterBodies) {
     const dx = worldX - wb.position.x;

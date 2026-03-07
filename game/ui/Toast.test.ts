@@ -8,7 +8,7 @@
  * - getToasts returns snapshot
  */
 
-import { showToast, getToasts, subscribeToasts, _resetToastsForTesting } from "./Toast";
+import { _resetToastsForTesting, getToasts, showToast, subscribeToasts } from "./Toast.ts";
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -105,9 +105,7 @@ describe("subscribeToasts (Spec §UI)", () => {
     showToast("Subscribed toast", "success");
 
     expect(listener).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ message: "Subscribed toast" }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ message: "Subscribed toast" })]),
     );
 
     unsub();

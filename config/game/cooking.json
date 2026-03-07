@@ -107,10 +107,7 @@
     {
       "id": "pumpkin-pie",
       "name": "Pumpkin Pie",
-      "ingredients": [
-        { "cropId": "pumpkin", "amount": 2 },
-        { "cropId": "apple", "amount": 1 }
-      ],
+      "ingredients": [{ "cropId": "pumpkin", "amount": 2 }, { "cropId": "apple", "amount": 1 }],
       "cookingTimeSec": 55,
       "output": {
         "foodId": "pumpkin-pie",

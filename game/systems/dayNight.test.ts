@@ -4,6 +4,7 @@
  * All tests operate on pure functions — no Three.js, R3F, or ECS needed.
  */
 
+import type { DayNightComponent, SkyComponent } from "@/game/ecs/components/procedural/atmosphere";
 import {
   classifyTimeOfDay,
   computeGameHour,
@@ -14,7 +15,6 @@ import {
   initDayNight,
   tickDayNight,
 } from "@/game/systems/dayNight";
-import type { DayNightComponent, SkyComponent } from "@/game/ecs/components/procedural/atmosphere";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -266,7 +266,16 @@ describe("computeLighting (Spec §31.3)", () => {
   });
 
   it("returns non-empty color strings for all slots", () => {
-    const slots = ["dawn", "morning", "noon", "afternoon", "dusk", "evening", "night", "midnight"] as const;
+    const slots = [
+      "dawn",
+      "morning",
+      "noon",
+      "afternoon",
+      "dusk",
+      "evening",
+      "night",
+      "midnight",
+    ] as const;
     for (const slot of slots) {
       const l = computeLighting(slot);
       expect(l.ambientColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
@@ -275,7 +284,9 @@ describe("computeLighting (Spec §31.3)", () => {
   });
 
   it("night has lower ambient intensity than noon", () => {
-    expect(computeLighting("night").ambientIntensity).toBeLessThan(computeLighting("noon").ambientIntensity);
+    expect(computeLighting("night").ambientIntensity).toBeLessThan(
+      computeLighting("noon").ambientIntensity,
+    );
   });
 });
 

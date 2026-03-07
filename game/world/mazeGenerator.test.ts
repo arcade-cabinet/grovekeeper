@@ -4,12 +4,12 @@
  */
 
 import {
-  isLabyrinthChunk,
   generateLabyrinth,
-  LABYRINTH_PROBABILITY,
   type HedgePlacement,
+  isLabyrinthChunk,
+  LABYRINTH_PROBABILITY,
   type MazeGenerationResult,
-} from "./mazeGenerator";
+} from "./mazeGenerator.ts";
 
 const CHUNK_SIZE = 16;
 
@@ -23,9 +23,7 @@ function flatHeightmap(value = 0): Float32Array {
  * Find the first labyrinth chunk in a 30×30 scan (excluding origin).
  * Returns null if none found (should not happen at 3% probability in 900 chunks).
  */
-function findLabyrinthChunk(
-  seed: string,
-): { chunkX: number; chunkZ: number } | null {
+function findLabyrinthChunk(seed: string): { chunkX: number; chunkZ: number } | null {
   for (let x = 1; x <= 30; x++) {
     for (let z = 1; z <= 30; z++) {
       if (isLabyrinthChunk(seed, x, z)) return { chunkX: x, chunkZ: z };
@@ -62,9 +60,7 @@ describe("isLabyrinthChunk (Spec §17.5)", () => {
     for (let x = 1; x <= 10; x++) {
       for (let z = 1; z <= 10; z++) {
         total++;
-        if (
-          isLabyrinthChunk(seed1, x, z) === isLabyrinthChunk(seed2, x, z)
-        ) {
+        if (isLabyrinthChunk(seed1, x, z) === isLabyrinthChunk(seed2, x, z)) {
           sameCount++;
         }
       }
@@ -130,16 +126,12 @@ describe("generateLabyrinth — result structure (Spec §17.5)", () => {
   });
 
   it("includes a fountain decoration at center", () => {
-    const fountain = result.decorations.find((d) =>
-      d.decoration.modelPath.includes("fountain"),
-    );
+    const fountain = result.decorations.find((d) => d.decoration.modelPath.includes("fountain"));
     expect(fountain).toBeDefined();
   });
 
   it("includes bench decorations", () => {
-    const benches = result.decorations.filter((d) =>
-      d.decoration.modelPath.includes("bench"),
-    );
+    const benches = result.decorations.filter((d) => d.decoration.modelPath.includes("bench"));
     expect(benches.length).toBeGreaterThanOrEqual(2);
   });
 

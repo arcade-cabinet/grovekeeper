@@ -9,27 +9,20 @@
  * - Heavily-weighted branch wins more often across node indices
  */
 
+import type { DialogueBranch, DialogueContext } from "@/game/ecs/components/dialogue";
 import {
+  evaluateCondition,
+  filterAvailableBranches,
   normalizeSeedBias,
   selectDefaultBranch,
   selectDefaultBranchNode,
-  evaluateCondition,
-  filterAvailableBranches,
-} from "./dialogueBranch";
-import type {
-  DialogueBranch,
-  DialogueContext,
-} from "@/game/ecs/components/dialogue";
+} from "./dialogueBranch.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeBranch(
-  label: string,
-  targetNodeId: string,
-  seedBias: number,
-): DialogueBranch {
+function makeBranch(label: string, targetNodeId: string, seedBias: number): DialogueBranch {
   return { label, targetNodeId, seedBias };
 }
 
@@ -73,11 +66,7 @@ describe("normalizeSeedBias (Spec §33.2)", () => {
   });
 
   it("treats all-zero seedBias as uniform distribution", () => {
-    const branches = [
-      makeBranch("A", "n1", 0),
-      makeBranch("B", "n2", 0),
-      makeBranch("C", "n3", 0),
-    ];
+    const branches = [makeBranch("A", "n1", 0), makeBranch("B", "n2", 0), makeBranch("C", "n3", 0)];
     const weights = normalizeSeedBias(branches);
     expect(weights[0]).toBeCloseTo(1 / 3);
     expect(weights[1]).toBeCloseTo(1 / 3);
@@ -147,10 +136,7 @@ describe("selectDefaultBranch (Spec §33.2)", () => {
 
   it("a heavily-weighted branch wins more often across node indices", () => {
     // Branch 0 has 90% weight, branch 1 has 10%
-    const branches = [
-      makeBranch("Heavy", "n1", 9.0),
-      makeBranch("Light", "n2", 1.0),
-    ];
+    const branches = [makeBranch("Heavy", "n1", 9.0), makeBranch("Light", "n2", 1.0)];
     let heavyCount = 0;
     for (let i = 0; i < 100; i++) {
       if (selectDefaultBranch(branches, WORLD_SEED, ENTITY_ID, i) === 0) {
@@ -183,9 +169,7 @@ describe("selectDefaultBranchNode (Spec §33.2)", () => {
   const ENTITY_ID = "spirit-1";
 
   it("returns undefined for empty branches", () => {
-    expect(
-      selectDefaultBranchNode([], WORLD_SEED, ENTITY_ID, 0),
-    ).toBeUndefined();
+    expect(selectDefaultBranchNode([], WORLD_SEED, ENTITY_ID, 0)).toBeUndefined();
   });
 
   it("returns the branch object for a single-branch node", () => {
@@ -197,19 +181,13 @@ describe("selectDefaultBranchNode (Spec §33.2)", () => {
   });
 
   it("returned branch is one of the input branch objects", () => {
-    const branches = [
-      makeBranch("A", "n1", 0.5),
-      makeBranch("B", "n2", 0.5),
-    ];
+    const branches = [makeBranch("A", "n1", 0.5), makeBranch("B", "n2", 0.5)];
     const result = selectDefaultBranchNode(branches, WORLD_SEED, ENTITY_ID, 3);
     expect(branches).toContain(result);
   });
 
   it("returns same branch object on repeated calls with same inputs", () => {
-    const branches = [
-      makeBranch("A", "n1", 0.4),
-      makeBranch("B", "n2", 0.6),
-    ];
+    const branches = [makeBranch("A", "n1", 0.4), makeBranch("B", "n2", 0.6)];
     const r1 = selectDefaultBranchNode(branches, WORLD_SEED, ENTITY_ID, 5);
     const r2 = selectDefaultBranchNode(branches, WORLD_SEED, ENTITY_ID, 5);
     expect(r1).toBe(r2);
@@ -248,26 +226,19 @@ function makeBranchWithConditions(
 describe("evaluateCondition — has_item (Spec §33.4)", () => {
   it("passes when player has the required item", () => {
     const ctx = makeContext({ inventory: ["golden-seed", "axe"] });
-    expect(
-      evaluateCondition({ type: "has_item", value: "golden-seed" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "has_item", value: "golden-seed" }, ctx)).toBe(true);
   });
 
   it("fails when player does not have the required item", () => {
     const ctx = makeContext({ inventory: [] });
-    expect(
-      evaluateCondition({ type: "has_item", value: "golden-seed" }, ctx),
-    ).toBe(false);
+    expect(evaluateCondition({ type: "has_item", value: "golden-seed" }, ctx)).toBe(false);
   });
 
   it("negation inverts has_item — true when item is absent", () => {
     const ctx = makeContext({ inventory: [] });
-    expect(
-      evaluateCondition(
-        { type: "has_item", value: "golden-seed", negate: true },
-        ctx,
-      ),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "has_item", value: "golden-seed", negate: true }, ctx)).toBe(
+      true,
+    );
   });
 });
 
@@ -289,94 +260,80 @@ describe("evaluateCondition — has_level (Spec §33.4)", () => {
 
   it("negation inverts has_level — true when level is insufficient", () => {
     const ctx = makeContext({ playerLevel: 2 });
-    expect(
-      evaluateCondition({ type: "has_level", value: 5, negate: true }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "has_level", value: 5, negate: true }, ctx)).toBe(true);
   });
 });
 
 describe("evaluateCondition — quest_complete (Spec §33.4)", () => {
   it("passes when the quest is completed", () => {
     const ctx = makeContext({ completedQuests: ["find-rowan", "clear-maze"] });
-    expect(
-      evaluateCondition({ type: "quest_complete", value: "find-rowan" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "quest_complete", value: "find-rowan" }, ctx)).toBe(true);
   });
 
   it("fails when the quest is not completed", () => {
     const ctx = makeContext({ completedQuests: [] });
-    expect(
-      evaluateCondition({ type: "quest_complete", value: "find-rowan" }, ctx),
-    ).toBe(false);
+    expect(evaluateCondition({ type: "quest_complete", value: "find-rowan" }, ctx)).toBe(false);
   });
 });
 
 describe("evaluateCondition — season (Spec §33.4)", () => {
   it("passes when current season matches", () => {
     const ctx = makeContext({ currentSeason: "winter" });
-    expect(
-      evaluateCondition({ type: "season", value: "winter" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "season", value: "winter" }, ctx)).toBe(true);
   });
 
   it("fails when current season does not match", () => {
     const ctx = makeContext({ currentSeason: "summer" });
-    expect(
-      evaluateCondition({ type: "season", value: "winter" }, ctx),
-    ).toBe(false);
+    expect(evaluateCondition({ type: "season", value: "winter" }, ctx)).toBe(false);
   });
 });
 
 describe("evaluateCondition — spirit_discovered (Spec §33.4)", () => {
   it("passes when the spirit has been discovered", () => {
     const ctx = makeContext({ discoveredSpirits: ["spirit-moss", "spirit-flame"] });
-    expect(
-      evaluateCondition({ type: "spirit_discovered", value: "spirit-moss" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "spirit_discovered", value: "spirit-moss" }, ctx)).toBe(true);
   });
 
   it("fails when the spirit has not been discovered", () => {
     const ctx = makeContext({ discoveredSpirits: [] });
-    expect(
-      evaluateCondition({ type: "spirit_discovered", value: "spirit-moss" }, ctx),
-    ).toBe(false);
+    expect(evaluateCondition({ type: "spirit_discovered", value: "spirit-moss" }, ctx)).toBe(false);
   });
 });
 
 describe("evaluateCondition — has_relationship (Spec §33.4, §15)", () => {
   it("passes when NPC relationship meets the required minimum", () => {
     const ctx = makeContext({ npcRelationships: { "elder-rowan": 25 } });
-    expect(
-      evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx)).toBe(
+      true,
+    );
   });
 
   it("passes when NPC relationship exceeds the required minimum", () => {
     const ctx = makeContext({ npcRelationships: { "elder-rowan": 60 } });
-    expect(
-      evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx)).toBe(
+      true,
+    );
   });
 
   it("fails when NPC relationship is below the required minimum", () => {
     const ctx = makeContext({ npcRelationships: { "elder-rowan": 10 } });
-    expect(
-      evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx),
-    ).toBe(false);
+    expect(evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx)).toBe(
+      false,
+    );
   });
 
   it("fails for unknown NPC (defaults to 0) when minValue > 0", () => {
     const ctx = makeContext({ npcRelationships: {} });
-    expect(
-      evaluateCondition({ type: "has_relationship", value: "stranger-npc:1" }, ctx),
-    ).toBe(false);
+    expect(evaluateCondition({ type: "has_relationship", value: "stranger-npc:1" }, ctx)).toBe(
+      false,
+    );
   });
 
   it("passes when minValue is 0, even for unknown NPC", () => {
     const ctx = makeContext({ npcRelationships: {} });
-    expect(
-      evaluateCondition({ type: "has_relationship", value: "stranger-npc:0" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "has_relationship", value: "stranger-npc:0" }, ctx)).toBe(
+      true,
+    );
   });
 
   it("negation inverts has_relationship — true when relationship is insufficient", () => {
@@ -397,32 +354,24 @@ describe("evaluateCondition — has_relationship (Spec §33.4, §15)", () => {
 describe("evaluateCondition — has_discovered (Spec §33.4)", () => {
   it("passes when location has been discovered", () => {
     const ctx = makeContext({ discoveredLocations: ["maze-north", "waterfall"] });
-    expect(
-      evaluateCondition({ type: "has_discovered", value: "maze-north" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "has_discovered", value: "maze-north" }, ctx)).toBe(true);
   });
 
   it("fails when location has not been discovered", () => {
     const ctx = makeContext({ discoveredLocations: [] });
-    expect(
-      evaluateCondition({ type: "has_discovered", value: "maze-north" }, ctx),
-    ).toBe(false);
+    expect(evaluateCondition({ type: "has_discovered", value: "maze-north" }, ctx)).toBe(false);
   });
 });
 
 describe("evaluateCondition — time_of_day (Spec §33.4)", () => {
   it("passes when current time of day matches", () => {
     const ctx = makeContext({ timeOfDay: "evening" });
-    expect(
-      evaluateCondition({ type: "time_of_day", value: "evening" }, ctx),
-    ).toBe(true);
+    expect(evaluateCondition({ type: "time_of_day", value: "evening" }, ctx)).toBe(true);
   });
 
   it("fails when current time of day does not match", () => {
     const ctx = makeContext({ timeOfDay: "morning" });
-    expect(
-      evaluateCondition({ type: "time_of_day", value: "evening" }, ctx),
-    ).toBe(false);
+    expect(evaluateCondition({ type: "time_of_day", value: "evening" }, ctx)).toBe(false);
   });
 });
 
@@ -432,10 +381,7 @@ describe("evaluateCondition — time_of_day (Spec §33.4)", () => {
 
 describe("filterAvailableBranches (Spec §33.4)", () => {
   it("returns all branches when none have conditions", () => {
-    const branches = [
-      makeBranch("A", "n1", 1.0),
-      makeBranch("B", "n2", 1.0),
-    ];
+    const branches = [makeBranch("A", "n1", 1.0), makeBranch("B", "n2", 1.0)];
     const ctx = makeContext();
     expect(filterAvailableBranches(branches, ctx)).toHaveLength(2);
   });

@@ -1,9 +1,9 @@
 import {
-  getEnemyTypesForBiome,
   calculateTier,
   encounterChance,
+  getEnemyTypesForBiome,
   spawnEnemiesForChunk,
-} from "./enemySpawning";
+} from "./enemySpawning.ts";
 
 describe("Enemy Spawning System", () => {
   describe("getEnemyTypesForBiome", () => {

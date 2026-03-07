@@ -14,7 +14,7 @@
  */
 
 import { createRNG } from "@/game/utils/seedRNG";
-import { audioEngine } from "./audioEngine";
+import { audioEngine } from "./audioEngine.ts";
 
 export type SoundId =
   | "click"

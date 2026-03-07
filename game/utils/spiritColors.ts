@@ -7,7 +7,7 @@
  * Spec §32.1: warm greens, teals, golds, soft violets — grove-aligned, never harsh.
  */
 
-import { scopedRNG } from "./seedWords";
+import { scopedRNG } from "./seedWords.ts";
 
 /**
  * Grove-aligned palette for spirit emissive color.
@@ -33,10 +33,7 @@ export const SPIRIT_COLORS = [
  * @param mazeIndex  Spirit index in [0, 7].
  * @param worldSeed  World seed string.
  */
-export function resolveEmissiveColor(
-  mazeIndex: number,
-  worldSeed: string,
-): string {
+export function resolveEmissiveColor(mazeIndex: number, worldSeed: string): string {
   const rng = scopedRNG("spirit", worldSeed, mazeIndex);
   const index = Math.floor(rng() * SPIRIT_COLORS.length);
   return SPIRIT_COLORS[index];

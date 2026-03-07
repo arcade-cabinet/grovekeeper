@@ -5,12 +5,13 @@
  * All storage functions are async.
  */
 
-import { saveGroveToDb, loadGroveFromDb } from "@/game/db/queries";
 import type { SerializedTreeDb } from "@/game/db/queries";
+import { loadGroveFromDb, saveGroveToDb } from "@/game/db/queries";
 import { createGridCellEntity, createTreeEntity } from "@/game/ecs/archetypes";
 import { treesQuery, world } from "@/game/ecs/world";
 
 const gridCellsQuery = world.with("gridCell", "position");
+
 import { getStageScale } from "@/game/systems/growth";
 
 export interface TreeSave {

@@ -2,16 +2,17 @@
  * Tests for vegetation placement system.
  * References GAME_SPEC.md tree/bush/grass placement sections.
  */
+
+import type { BushComponent } from "@/game/ecs/components/vegetation";
 import {
-  speciesToTreeModel,
-  resolveTreeModelPath,
   getSeasonalTreeTint,
   resolveBushModelKey,
-  updateBushSeason,
+  resolveTreeModelPath,
   selectGrassForBiome,
   selectRandomBushShape,
-} from "./vegetationPlacement";
-import type { BushComponent } from "@/game/ecs/components/vegetation";
+  speciesToTreeModel,
+  updateBushSeason,
+} from "./vegetationPlacement.ts";
 
 describe("vegetationPlacement", () => {
   describe("speciesToTreeModel", () => {
@@ -24,10 +25,21 @@ describe("vegetationPlacement", () => {
 
     it("maps all 15 species to valid models", () => {
       const species = [
-        "white-oak", "weeping-willow", "elder-pine", "cherry-blossom",
-        "ghost-birch", "redwood", "flame-maple", "baobab",
-        "silver-birch", "ironbark", "golden-apple", "mystic-fern",
-        "crystal-oak", "moonwood-ash", "worldtree",
+        "white-oak",
+        "weeping-willow",
+        "elder-pine",
+        "cherry-blossom",
+        "ghost-birch",
+        "redwood",
+        "flame-maple",
+        "baobab",
+        "silver-birch",
+        "ironbark",
+        "golden-apple",
+        "mystic-fern",
+        "crystal-oak",
+        "moonwood-ash",
+        "worldtree",
       ];
       for (const id of species) {
         const result = speciesToTreeModel(id);
@@ -182,7 +194,7 @@ describe("vegetationPlacement", () => {
 // Chunk-based vegetation placement (Spec §6, §17.1)
 // ---------------------------------------------------------------------------
 
-import { spawnChunkVegetation } from "./vegetationPlacement";
+import { spawnChunkVegetation } from "./vegetationPlacement.ts";
 
 const CHUNK_SIZE = 16;
 

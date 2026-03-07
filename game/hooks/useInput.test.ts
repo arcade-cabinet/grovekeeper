@@ -1,4 +1,4 @@
-import { keysToWorld } from "./useInput";
+import { keysToWorld } from "./useInput.ts";
 
 describe("keysToWorld", () => {
   it("returns zero movement when no keys pressed", () => {

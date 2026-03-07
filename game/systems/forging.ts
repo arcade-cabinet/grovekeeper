@@ -20,8 +20,7 @@ export interface SmeltRecipe {
   smeltTimeSec: number;
 }
 
-const SMELT_RECIPES: SmeltRecipe[] =
-  forgingConfig.smeltRecipes as unknown as SmeltRecipe[];
+const SMELT_RECIPES: SmeltRecipe[] = forgingConfig.smeltRecipes as unknown as SmeltRecipe[];
 
 // ---------------------------------------------------------------------------
 // Config accessors
@@ -40,10 +39,7 @@ export function getSmeltRecipeById(id: string): SmeltRecipe | undefined {
 // ---------------------------------------------------------------------------
 
 /** Returns true if the inventory has enough of every input for this recipe. */
-export function canSmelt(
-  recipe: SmeltRecipe,
-  inventory: Record<string, number>,
-): boolean {
+export function canSmelt(recipe: SmeltRecipe, inventory: Record<string, number>): boolean {
   return Object.entries(recipe.inputs).every(
     ([resource, amount]) => (inventory[resource] ?? 0) >= amount,
   );
@@ -93,10 +89,7 @@ export function startSmelting(recipe: SmeltRecipe): SmeltSlotState {
 }
 
 /** Advance smelting by delta seconds. Does nothing for non-smelting slots. */
-export function advanceSmelting(
-  slot: SmeltSlotState,
-  deltaSec: number,
-): SmeltSlotState {
+export function advanceSmelting(slot: SmeltSlotState, deltaSec: number): SmeltSlotState {
   if (slot.status !== "smelting") return slot;
 
   const newElapsed = Math.min(slot.elapsed + deltaSec, slot.totalTime);
@@ -137,17 +130,12 @@ const TOOL_TIER_UPGRADES: ToolTierUpgrade[] =
   forgingConfig.toolTierUpgrades as unknown as ToolTierUpgrade[];
 
 /** Returns the upgrade config for advancing from currentTier, or null if at max. */
-export function getToolTierUpgrade(
-  currentTier: ToolTier,
-): ToolTierUpgrade | null {
+export function getToolTierUpgrade(currentTier: ToolTier): ToolTierUpgrade | null {
   return TOOL_TIER_UPGRADES.find((u) => u.fromTier === currentTier) ?? null;
 }
 
 /** Returns true if the inventory can cover the upgrade cost for currentTier. */
-export function canUpgradeTool(
-  currentTier: ToolTier,
-  inventory: Record<string, number>,
-): boolean {
+export function canUpgradeTool(currentTier: ToolTier, inventory: Record<string, number>): boolean {
   const upgrade = getToolTierUpgrade(currentTier);
   if (!upgrade) return false;
   return Object.entries(upgrade.cost).every(

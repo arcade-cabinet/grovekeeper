@@ -6,7 +6,7 @@
  * never raw events.
  */
 
-import { InputManager, type InputFrame, type IInputProvider } from "@/game/input/InputManager";
+import { type IInputProvider, type InputFrame, InputManager } from "@/game/input/InputManager";
 
 describe("InputFrame (Spec §23)", () => {
   it("getFrame returns an object with all required fields", () => {

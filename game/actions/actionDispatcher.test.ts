@@ -6,9 +6,9 @@
  */
 
 import {
+  type DispatchContext,
   dispatchAction,
   resolveAction,
-  type DispatchContext,
   type TargetEntityType,
 } from "@/game/actions/actionDispatcher";
 
@@ -53,7 +53,12 @@ jest.mock("@/game/systems/cooking", () => ({
   resolveCampfireInteraction: jest.fn((entity: unknown) => {
     if (entity && typeof entity === "object" && "campfire" in entity) {
       const e = entity as { campfire: { lit: boolean } };
-      return { isCampfire: true, isLit: e.campfire.lit, canCookNow: e.campfire.lit, interactionLabel: e.campfire.lit ? "Cook" : "Light Campfire" };
+      return {
+        isCampfire: true,
+        isLit: e.campfire.lit,
+        canCookNow: e.campfire.lit,
+        interactionLabel: e.campfire.lit ? "Cook" : "Light Campfire",
+      };
     }
     return { isCampfire: false, isLit: false, canCookNow: false, interactionLabel: "" };
   }),
@@ -63,7 +68,12 @@ jest.mock("@/game/systems/forging", () => ({
   resolveForgeInteraction: jest.fn((entity: unknown) => {
     if (entity && typeof entity === "object" && "forge" in entity) {
       const e = entity as { forge: { active: boolean } };
-      return { isForge: true, isActive: e.forge.active, canForgeNow: e.forge.active, interactionLabel: e.forge.active ? "Forge" : "Light Forge" };
+      return {
+        isForge: true,
+        isActive: e.forge.active,
+        canForgeNow: e.forge.active,
+        interactionLabel: e.forge.active ? "Forge" : "Light Forge",
+      };
     }
     return { isForge: false, isActive: false, canForgeNow: false, interactionLabel: "" };
   }),
@@ -72,7 +82,13 @@ jest.mock("@/game/systems/forging", () => ({
 jest.mock("@/game/systems/mining", () => ({
   resolveMiningInteraction: jest.fn((entity: unknown) => {
     if (entity && typeof entity === "object" && "rock" in entity) {
-      return { isRock: true, rockType: "granite", hardness: 2, staminaCost: 10, interactionLabel: "Mine" };
+      return {
+        isRock: true,
+        rockType: "granite",
+        hardness: 2,
+        staminaCost: 10,
+        interactionLabel: "Mine",
+      };
     }
     return { isRock: false, rockType: "", hardness: 0, staminaCost: 0, interactionLabel: "" };
   }),
@@ -95,11 +111,11 @@ jest.mock("@/game/utils/seedWords", () => ({
 }));
 
 import {
-  harvestTree,
-  waterTree,
-  pruneTree,
-  plantTree,
   clearRock,
+  harvestTree,
+  plantTree,
+  pruneTree,
+  waterTree,
 } from "@/game/actions/GameActions";
 import { triggerActionHaptic } from "@/game/systems/haptics";
 
@@ -414,8 +430,14 @@ describe("dispatchAction haptics (Spec §11)", () => {
 // ── dispatchAction crafting verbs (Spec §22, §35) ─────────────────────────────
 
 describe("dispatchAction COOK — campfire interaction (Spec §22.1)", () => {
-  const litCampfireEntity = { id: "campfire_001", campfire: { lit: true, fastTravelId: null, cookingSlots: 2 } };
-  const unlitCampfireEntity = { id: "campfire_002", campfire: { lit: false, fastTravelId: null, cookingSlots: 2 } };
+  const litCampfireEntity = {
+    id: "campfire_001",
+    campfire: { lit: true, fastTravelId: null, cookingSlots: 2 },
+  };
+  const unlitCampfireEntity = {
+    id: "campfire_002",
+    campfire: { lit: false, fastTravelId: null, cookingSlots: 2 },
+  };
 
   it("opens cooking UI when campfire is lit", () => {
     const result = dispatchAction({

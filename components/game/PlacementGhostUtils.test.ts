@@ -4,8 +4,8 @@
  * Pure .ts file -- no React/RN imports, no JSX runtime chain.
  */
 
-import { snapToGrid, rotateIncrement, buildGhostPiece } from "./PlacementGhostUtils";
 import type { ModularPieceComponent } from "@/game/ecs/components/building";
+import { buildGhostPiece, rotateIncrement, snapToGrid } from "./PlacementGhostUtils.ts";
 
 function makePiece(overrides: Partial<ModularPieceComponent> = {}): ModularPieceComponent {
   return {

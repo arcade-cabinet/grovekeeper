@@ -1,3 +1,4 @@
+import { emptyResources } from "@/game/config/resources";
 import {
   calculatePrestigeBonus,
   canPrestige,
@@ -8,8 +9,7 @@ import {
   getUnlockedCosmetics,
   getUnlockedPrestigeSpecies,
   PRESTIGE_MIN_LEVEL,
-} from "./prestige";
-import { emptyResources } from "@/game/config/resources";
+} from "./prestige.ts";
 
 describe("prestige system", () => {
   describe("canPrestige", () => {

@@ -56,13 +56,28 @@ export default function SettingsScreen() {
             <Button variant="ghost" onPress={handleBack} style={{ marginRight: 12 }}>
               <Text style={{ color: C.forestGreen, fontSize: 16, fontWeight: "600" }}>← Back</Text>
             </Button>
-            <Text style={{ fontSize: 24, fontWeight: "700", color: C.forestGreen, fontFamily: "Fredoka" }}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "700",
+                color: C.forestGreen,
+                fontFamily: "Fredoka",
+              }}
+            >
               Settings
             </Text>
           </View>
 
           {/* Difficulty section */}
-          <Text style={{ fontSize: 14, fontWeight: "600", color: C.barkBrown, marginBottom: 12, letterSpacing: 0.5 }}>
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "600",
+              color: C.barkBrown,
+              marginBottom: 12,
+              letterSpacing: 0.5,
+            }}
+          >
             DIFFICULTY
           </Text>
 
@@ -96,7 +111,13 @@ export default function SettingsScreen() {
                     }}
                   />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 15, fontWeight: "700", color: selected ? d.color : C.barkBrown }}>
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: "700",
+                        color: selected ? d.color : C.barkBrown,
+                      }}
+                    >
                       {d.name}
                     </Text>
                     <Text style={{ fontSize: 12, color: `${C.barkBrown}99`, marginTop: 2 }}>

@@ -1,10 +1,4 @@
-import Svg, {
-  Circle,
-  Ellipse,
-  Line,
-  Path,
-  Text as SvgText,
-} from "react-native-svg";
+import Svg, { Circle, Ellipse, Line, Path, Text as SvgText } from "react-native-svg";
 
 /**
  * Game-specific color constants used by the logo SVG.
@@ -38,24 +32,8 @@ export function Logo({ size = 200 }: LogoProps) {
         fill={C.barkBrown}
       />
       {/* Bark detail lines */}
-      <Line
-        x1="98"
-        y1="70"
-        x2="97"
-        y2="95"
-        stroke={C.soilDark}
-        strokeWidth="0.5"
-        opacity="0.4"
-      />
-      <Line
-        x1="102"
-        y1="72"
-        x2="103"
-        y2="92"
-        stroke={C.soilDark}
-        strokeWidth="0.5"
-        opacity="0.4"
-      />
+      <Line x1="98" y1="70" x2="97" y2="95" stroke={C.soilDark} strokeWidth="0.5" opacity="0.4" />
+      <Line x1="102" y1="72" x2="103" y2="92" stroke={C.soilDark} strokeWidth="0.5" opacity="0.4" />
 
       {/* Canopy layers -- bottom to top for natural overlap */}
       <Ellipse cx="100" cy="52" rx="42" ry="28" fill={C.forestGreen} />

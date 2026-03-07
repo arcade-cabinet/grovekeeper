@@ -10,7 +10,7 @@ import {
   getTemplate,
   getUpgradeCost,
   getUpgradeTarget,
-} from "./StructureManager";
+} from "./StructureManager.ts";
 
 function makeCell(gridX: number, gridZ: number, type: string = "soil", occupied = false) {
   return {

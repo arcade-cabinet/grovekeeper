@@ -61,11 +61,7 @@ jest.mock("./TimeDisplay", () => ({ TimeDisplayCompact: () => null }));
 
 // ── Imports ───────────────────────────────────────────────────────────────────
 
-import {
-  findNearestUndiscoveredSpirit,
-  HUD,
-  resolveCompassBearing,
-} from "./HUD";
+import { findNearestUndiscoveredSpirit, HUD, resolveCompassBearing } from "./HUD.tsx";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -131,8 +127,8 @@ describe("findNearestUndiscoveredSpirit (Spec §24)", () => {
 
   it("skips discovered spirits regardless of proximity", () => {
     const spirits = [
-      makeSpirit(1, 0, true),   // discovered and closest — must be ignored
-      makeSpirit(50, 0, false),  // undiscovered — expected result
+      makeSpirit(1, 0, true), // discovered and closest — must be ignored
+      makeSpirit(50, 0, false), // undiscovered — expected result
     ];
     expect(findNearestUndiscoveredSpirit(spirits, 0, 0)).toEqual({ x: 50, z: 0 });
   });

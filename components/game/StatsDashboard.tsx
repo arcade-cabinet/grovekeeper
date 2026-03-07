@@ -69,7 +69,10 @@ export function StatsDashboard({ open, onClose }: StatsDashboardProps) {
           }}
         >
           {/* Header */}
-          <View className="flex-row items-center justify-between border-b px-4 py-3" style={{ borderBottomColor: `${BARK_BROWN}30` }}>
+          <View
+            className="flex-row items-center justify-between border-b px-4 py-3"
+            style={{ borderBottomColor: `${BARK_BROWN}30` }}
+          >
             <Text className="font-heading text-lg font-bold" style={{ color: SOIL_DARK }}>
               Grove Statistics
             </Text>
@@ -89,10 +92,7 @@ export function StatsDashboard({ open, onClose }: StatsDashboardProps) {
           >
             {/* Activity section */}
             <View className="mb-4">
-              <Text
-                className="mb-2 text-sm font-bold"
-                style={{ color: FOREST_GREEN }}
-              >
+              <Text className="mb-2 text-sm font-bold" style={{ color: FOREST_GREEN }}>
                 Activity
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -104,16 +104,10 @@ export function StatsDashboard({ open, onClose }: StatsDashboardProps) {
                   >
                     <Text className="text-lg">{s.icon}</Text>
                     <View>
-                      <Text
-                        className="text-xs opacity-60"
-                        style={{ color: SOIL_DARK }}
-                      >
+                      <Text className="text-xs opacity-60" style={{ color: SOIL_DARK }}>
                         {s.label}
                       </Text>
-                      <Text
-                        className="text-sm font-bold"
-                        style={{ color: SOIL_DARK }}
-                      >
+                      <Text className="text-sm font-bold" style={{ color: SOIL_DARK }}>
                         {s.value}
                       </Text>
                     </View>
@@ -124,10 +118,7 @@ export function StatsDashboard({ open, onClose }: StatsDashboardProps) {
 
             {/* Lifetime Resources section */}
             <View>
-              <Text
-                className="mb-2 text-sm font-bold"
-                style={{ color: FOREST_GREEN }}
-              >
+              <Text className="mb-2 text-sm font-bold" style={{ color: FOREST_GREEN }}>
                 Lifetime Resources
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -139,16 +130,10 @@ export function StatsDashboard({ open, onClose }: StatsDashboardProps) {
                   >
                     <Text className="text-lg">{r.icon}</Text>
                     <View>
-                      <Text
-                        className="text-xs opacity-60"
-                        style={{ color: SOIL_DARK }}
-                      >
+                      <Text className="text-xs opacity-60" style={{ color: SOIL_DARK }}>
                         {r.label}
                       </Text>
-                      <Text
-                        className="text-sm font-bold"
-                        style={{ color: SOIL_DARK }}
-                      >
+                      <Text className="text-sm font-bold" style={{ color: SOIL_DARK }}>
                         {r.value.toLocaleString()}
                       </Text>
                     </View>

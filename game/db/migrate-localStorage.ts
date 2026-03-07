@@ -7,8 +7,8 @@
  * existing Zustand persist data into the relational SQLite tables.
  */
 import { Platform } from "react-native";
-import { getDb } from "./client";
-import * as schema from "./schema";
+import { getDb } from "./client.ts";
+import * as schema from "./schema.ts";
 
 const ZUSTAND_KEY = "grove-keeper-save";
 const GROVE_KEY = "grovekeeper-grove";

@@ -68,8 +68,7 @@ function formatSeedCost(cost: Record<string, number>): string | null {
   if (entries.length === 0) return null;
   return entries
     .map(
-      ([resource, amount]) =>
-        `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`,
+      ([resource, amount]) => `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`,
     )
     .join(", ");
 }
@@ -78,27 +77,14 @@ function formatSeedCost(cost: Record<string, number>): string | null {
 // Tree preview SVG
 // ---------------------------------------------------------------------------
 
-function TreePreview({
-  trunkColor,
-  canopyColor,
-}: {
-  trunkColor: string;
-  canopyColor: string;
-}) {
+function TreePreview({ trunkColor, canopyColor }: { trunkColor: string; canopyColor: string }) {
   return (
     <Svg width={36} height={48} viewBox="0 0 36 48" fill="none">
       {/* Trunk */}
       <Rect x={15} y={28} width={6} height={16} rx={1.5} fill={trunkColor} />
       {/* Canopy layers */}
       <Ellipse cx={18} cy={22} rx={14} ry={12} fill={canopyColor} />
-      <Ellipse
-        cx={18}
-        cy={16}
-        rx={10}
-        ry={10}
-        fill={canopyColor}
-        opacity={0.7}
-      />
+      <Ellipse cx={18} cy={16} rx={10} ry={10} fill={canopyColor} opacity={0.7} />
       {/* Highlight */}
       <Ellipse cx={14} cy={16} rx={4} ry={3} fill="white" opacity={0.15} />
     </Svg>
@@ -134,9 +120,7 @@ export function SeedSelect({
         <View className="max-h-[80%] rounded-t-2xl border-t-2 border-forest-green/40 bg-sky-mist pb-8">
           {/* Header */}
           <View className="flex-row items-center justify-between border-b border-bark-brown/20 px-4 py-3">
-            <Text className="font-heading text-lg font-bold text-soil-dark">
-              Select a Seed
-            </Text>
+            <Text className="font-heading text-lg font-bold text-soil-dark">Select a Seed</Text>
             <Pressable
               className="min-h-[44px] min-w-[44px] items-center justify-center"
               onPress={onClose}
@@ -189,18 +173,11 @@ export function SeedSelect({
                     >
                       {isUnlocked ? (
                         <View className="mb-1 items-center">
-                          <TreePreview
-                            trunkColor={sp.trunkColor}
-                            canopyColor={sp.canopyColor}
-                          />
+                          <TreePreview trunkColor={sp.trunkColor} canopyColor={sp.canopyColor} />
                         </View>
                       ) : (
                         <View className="mb-2 items-center self-center">
-                          <Icon
-                            as={LockIcon}
-                            size={32}
-                            className="text-gray-400"
-                          />
+                          <Icon as={LockIcon} size={32} className="text-gray-400" />
                         </View>
                       )}
 
@@ -209,9 +186,7 @@ export function SeedSelect({
                         <View
                           className="absolute right-1 top-1 rounded-full px-1.5 py-0.5"
                           style={{
-                            backgroundColor: hasSeeds
-                              ? "#2D5A27"
-                              : "#8D6E63",
+                            backgroundColor: hasSeeds ? "#2D5A27" : "#8D6E63",
                             minWidth: 20,
                           }}
                         >
@@ -223,52 +198,39 @@ export function SeedSelect({
                     </View>
 
                     {/* Species name */}
-                    <Text className="text-sm font-bold text-soil-dark">
-                      {sp.name}
-                    </Text>
+                    <Text className="text-sm font-bold text-soil-dark">{sp.name}</Text>
 
                     {/* Difficulty + unlock level */}
                     <View className="mt-1 flex-row items-center gap-2">
                       <View
                         className="rounded px-1.5 py-0.5"
                         style={{
-                          backgroundColor:
-                            DIFFICULTY_COLORS[sp.difficulty] ?? "#9E9E9E",
+                          backgroundColor: DIFFICULTY_COLORS[sp.difficulty] ?? "#9E9E9E",
                         }}
                       >
                         <Text
                           className="text-xs"
                           style={{
-                            color:
-                              sp.difficulty <= 2 ? "#3E2723" : "white",
+                            color: sp.difficulty <= 2 ? "#3E2723" : "white",
                           }}
                         >
                           {"*".repeat(sp.difficulty)}
                         </Text>
                       </View>
-                      <Text className="text-xs text-gray-500">
-                        Lv.{sp.unlockLevel}
-                      </Text>
+                      <Text className="text-xs text-gray-500">Lv.{sp.unlockLevel}</Text>
                     </View>
 
                     {/* Seed cost */}
                     {isUnlocked && costStr && (
-                      <Text className="mt-1 text-[10px] text-red-400">
-                        Cost: {costStr}
-                      </Text>
+                      <Text className="mt-1 text-[10px] text-red-400">Cost: {costStr}</Text>
                     )}
                     {isUnlocked && !costStr && (
-                      <Text className="mt-1 text-[10px] text-leaf-light">
-                        Free
-                      </Text>
+                      <Text className="mt-1 text-[10px] text-leaf-light">Free</Text>
                     )}
 
                     {/* Special trait */}
                     {isUnlocked && (
-                      <Text
-                        className="mt-1 text-xs text-gray-500"
-                        numberOfLines={2}
-                      >
+                      <Text className="mt-1 text-xs text-gray-500" numberOfLines={2}>
                         {sp.special}
                       </Text>
                     )}

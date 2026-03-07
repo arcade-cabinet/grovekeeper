@@ -13,8 +13,8 @@
  * Spec: GAME_SPEC.md §15 — NPC Animation
  */
 
-import type { NpcComponent } from "@/game/ecs/components/npc";
 import npcAnimConfig from "@/config/game/npcAnimation.json" with { type: "json" };
+import type { NpcComponent } from "@/game/ecs/components/npc";
 
 const { animations, bodyParts } = npcAnimConfig;
 
@@ -59,11 +59,7 @@ const ZERO_ROTATIONS: NpcLimbRotations = {
  * @param dt - Delta time in seconds.
  */
 export function advanceNpcAnimation(npc: NpcComponent, dt: number): void {
-  if (
-    npc.currentAnim === "walk" ||
-    npc.currentAnim === "idle" ||
-    npc.currentAnim === "talk"
-  ) {
+  if (npc.currentAnim === "walk" || npc.currentAnim === "idle" || npc.currentAnim === "talk") {
     npc.animProgress += dt * npc.animSpeed;
   }
 }
@@ -91,18 +87,12 @@ export function computeNpcLimbRotations(npc: NpcComponent): NpcLimbRotations {
   if (npc.currentAnim === "walk") {
     const { armSwing, legSwing, bodyBob } = animations.walk;
     return {
-      leftArm:
-        Math.sin(t * armSwing.frequency + bodyParts.leftArm.phaseOffset) *
-        armSwing.maxAngle,
+      leftArm: Math.sin(t * armSwing.frequency + bodyParts.leftArm.phaseOffset) * armSwing.maxAngle,
       rightArm:
-        Math.sin(t * armSwing.frequency + bodyParts.rightArm.phaseOffset) *
-        armSwing.maxAngle,
-      leftLeg:
-        Math.sin(t * legSwing.frequency + bodyParts.leftLeg.phaseOffset) *
-        legSwing.maxAngle,
+        Math.sin(t * armSwing.frequency + bodyParts.rightArm.phaseOffset) * armSwing.maxAngle,
+      leftLeg: Math.sin(t * legSwing.frequency + bodyParts.leftLeg.phaseOffset) * legSwing.maxAngle,
       rightLeg:
-        Math.sin(t * legSwing.frequency + bodyParts.rightLeg.phaseOffset) *
-        legSwing.maxAngle,
+        Math.sin(t * legSwing.frequency + bodyParts.rightLeg.phaseOffset) * legSwing.maxAngle,
       bounceY: Math.abs(Math.sin(t * bodyBob.frequency)) * bodyBob.amplitude,
       torsoY: 0,
       headSway: 0,

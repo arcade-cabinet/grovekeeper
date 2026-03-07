@@ -11,26 +11,26 @@
  *     (or setTimeout fallback) to avoid frame drops during chunk loading
  */
 
-import { generateEntityId, world } from "@/game/ecs/world";
-import type { Entity } from "@/game/ecs/world";
-import { SeededNoise } from "@/game/utils/seededNoise";
-import { hashString } from "@/game/utils/seedRNG";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
-import { generateHeightmap } from "./terrainGenerator";
-import { assignBiome, getBiomeColor } from "./biomeMapper";
-import type { BiomeType } from "./biomeMapper";
-import { placeWaterBodies } from "./waterPlacer";
-import { placeAudioZones } from "./audioZonePlacer";
-import { spawnChunkEntities } from "./entitySpawner";
-import { generatePathsForChunk, generateSignpostForChunk } from "./pathGenerator";
-import { generateVillage } from "./villageGenerator";
-import { generateLabyrinth } from "./mazeGenerator";
-import { resolveEmissiveColor } from "@/game/utils/spiritColors";
-import { scopedRNG } from "@/game/utils/seedWords";
+import type { Entity } from "@/game/ecs/world";
+import { generateEntityId, world } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
 import { spawnChunkStructures } from "@/game/systems/structurePlacement";
 import { spawnChunkVegetation } from "@/game/systems/vegetationPlacement";
-import { applyChunkDiff } from "./chunkPersistence";
+import { SeededNoise } from "@/game/utils/seededNoise";
+import { hashString } from "@/game/utils/seedRNG";
+import { scopedRNG } from "@/game/utils/seedWords";
+import { resolveEmissiveColor } from "@/game/utils/spiritColors";
+import { placeAudioZones } from "./audioZonePlacer.ts";
+import type { BiomeType } from "./biomeMapper.ts";
+import { assignBiome, getBiomeColor } from "./biomeMapper.ts";
+import { applyChunkDiff } from "./chunkPersistence.ts";
+import { spawnChunkEntities } from "./entitySpawner.ts";
+import { generateLabyrinth } from "./mazeGenerator.ts";
+import { generatePathsForChunk, generateSignpostForChunk } from "./pathGenerator.ts";
+import { generateHeightmap } from "./terrainGenerator.ts";
+import { generateVillage } from "./villageGenerator.ts";
+import { placeWaterBodies } from "./waterPlacer.ts";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -406,7 +406,12 @@ export class ChunkManager {
     }
 
     // Generate trail paths between landmarks — carves heightmap in-place.
-    const pathPlacements = generatePathsForChunk(this.worldSeed, chunkX, chunkZ, terrainData.heightmap);
+    const pathPlacements = generatePathsForChunk(
+      this.worldSeed,
+      chunkX,
+      chunkZ,
+      terrainData.heightmap,
+    );
     for (const psp of pathPlacements) {
       children.push(
         world.add({
@@ -435,7 +440,12 @@ export class ChunkManager {
     }
 
     // Generate village buildings, NPCs, and campfire for village landmark chunks.
-    const villagePlacements = generateVillage(this.worldSeed, chunkX, chunkZ, terrainData.heightmap);
+    const villagePlacements = generateVillage(
+      this.worldSeed,
+      chunkX,
+      chunkZ,
+      terrainData.heightmap,
+    );
     if (villagePlacements) {
       children.push(
         world.add({
@@ -512,11 +522,11 @@ export class ChunkManager {
       const rng = scopedRNG("spirit", this.worldSeed, mazeIndex);
       const emissiveColor = resolveEmissiveColor(mazeIndex, this.worldSeed);
       rng(); // advance past the color roll consumed by resolveEmissiveColor
-      const orbRadius = 0.15 + rng() * 0.1;    // 0.15–0.25 units
-      const bobAmplitude = 0.15 + rng() * 0.1;  // 0.15–0.25 units
-      const bobSpeed = 1.5 + rng() * 1.0;       // 1.5–2.5 rad/s
+      const orbRadius = 0.15 + rng() * 0.1; // 0.15–0.25 units
+      const bobAmplitude = 0.15 + rng() * 0.1; // 0.15–0.25 units
+      const bobSpeed = 1.5 + rng() * 1.0; // 1.5–2.5 rad/s
       const bobPhase = rng() * Math.PI * 2;
-      const hoverHeight = 0.8 + rng() * 0.4;    // 0.8–1.2 units
+      const hoverHeight = 0.8 + rng() * 0.4; // 0.8–1.2 units
 
       children.push(
         world.add({
@@ -542,7 +552,13 @@ export class ChunkManager {
     }
 
     // Spawn biome-appropriate vegetation and terrain entities
-    const spawned = spawnChunkEntities(this.worldSeed, chunkX, chunkZ, biome as BiomeType, terrainData.heightmap);
+    const spawned = spawnChunkEntities(
+      this.worldSeed,
+      chunkX,
+      chunkZ,
+      biome as BiomeType,
+      terrainData.heightmap,
+    );
 
     // Trigger species discovery for unique wild species in visible chunks (Spec §8, §25)
     if (visible && spawned.trees.length > 0) {
@@ -604,7 +620,13 @@ export class ChunkManager {
     }
 
     // Spawn supplemental vegetation via model-resolution pipeline (Spec §6, §17.1)
-    const vegPlacements = spawnChunkVegetation(this.worldSeed, chunkX, chunkZ, biome, terrainData.heightmap);
+    const vegPlacements = spawnChunkVegetation(
+      this.worldSeed,
+      chunkX,
+      chunkZ,
+      biome,
+      terrainData.heightmap,
+    );
 
     for (const tp of vegPlacements.trees) {
       children.push(
@@ -631,7 +653,13 @@ export class ChunkManager {
     }
 
     // Spawn world-gen structures based on biome template (Spec §18, §17.1)
-    const structurePlacements = spawnChunkStructures(this.worldSeed, chunkX, chunkZ, biome, terrainData.heightmap);
+    const structurePlacements = spawnChunkStructures(
+      this.worldSeed,
+      chunkX,
+      chunkZ,
+      biome,
+      terrainData.heightmap,
+    );
 
     for (const sp of structurePlacements) {
       children.push(

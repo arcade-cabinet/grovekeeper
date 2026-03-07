@@ -12,8 +12,8 @@
  * See GAME_SPEC.md §14.
  */
 
-import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useMemo } from "react";
 import propAssetsConfig from "@/config/game/propAssets.json" with { type: "json" };
 
 // ---------------------------------------------------------------------------
@@ -49,14 +49,10 @@ const ALL_PROP_ENTRIES: PropEntry[] = [
   ...cfg.misc,
 ];
 
-const PROP_MAP = new Map<string, string>(
-  ALL_PROP_ENTRIES.map((e) => [e.id, e.path]),
-);
+const PROP_MAP = new Map<string, string>(ALL_PROP_ENTRIES.map((e) => [e.id, e.path]));
 
 // Food items are raw crops — keyed by cropId (same as foodId for raw items)
-const FOOD_MAP = new Map<string, string>(
-  cfg.crops.map((e) => [e.id, e.path]),
-);
+const FOOD_MAP = new Map<string, string>(cfg.crops.map((e) => [e.id, e.path]));
 
 // ---------------------------------------------------------------------------
 // Pure mapping functions (exported for testing)
@@ -71,9 +67,7 @@ const FOOD_MAP = new Map<string, string>(
 export function resolvePropGLBPath(propId: string): string {
   const path = PROP_MAP.get(propId);
   if (!path) {
-    throw new Error(
-      `[PropModel] Unknown propId: "${propId}". Check config/game/propAssets.json.`,
-    );
+    throw new Error(`[PropModel] Unknown propId: "${propId}". Check config/game/propAssets.json.`);
   }
   return path;
 }
@@ -136,11 +130,7 @@ export interface PropModelProps {
  *
  * See GAME_SPEC.md §14.
  */
-export const PropModel = ({
-  modelPath,
-  position = [0, 0, 0],
-  rotationY = 0,
-}: PropModelProps) => {
+export const PropModel = ({ modelPath, position = [0, 0, 0], rotationY = 0 }: PropModelProps) => {
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
       <PropGLBModel glbPath={modelPath} />

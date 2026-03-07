@@ -19,7 +19,7 @@ import type {
   QuestChainDef,
   QuestChainState,
   QuestChainStepDef,
-} from "./types";
+} from "./types.ts";
 
 // -- Data Loading --
 

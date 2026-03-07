@@ -36,10 +36,7 @@ export const AUTO_ADVANCE_DURATION = 3;
  * @param duration Total seconds before auto-advance fires
  * @returns        Progress clamped to [0, 1]: 0 = just started, 1 = ready
  */
-export function computeAutoAdvanceProgress(
-  elapsed: number,
-  duration: number,
-): number {
+export function computeAutoAdvanceProgress(elapsed: number, duration: number): number {
   if (duration <= 0) return 1;
   return Math.min(1, Math.max(0, elapsed / duration));
 }
@@ -99,12 +96,7 @@ export const DialogueChoices = ({
     if (!visible || branches.length === 0) return;
 
     timerRef.current = setTimeout(() => {
-      const branch = selectDefaultBranchNode(
-        branches,
-        worldSeed,
-        entityId,
-        nodeIndex,
-      );
+      const branch = selectDefaultBranchNode(branches, worldSeed, entityId, nodeIndex);
       if (branch) {
         onBranchSelect(branch);
       }
@@ -138,9 +130,7 @@ export const DialogueChoices = ({
           accessibilityLabel={branch.label}
           accessibilityRole="button"
         >
-          <Text className="text-sm font-medium text-forest-green">
-            {branch.label}
-          </Text>
+          <Text className="text-sm font-medium text-forest-green">{branch.label}</Text>
         </Pressable>
       ))}
     </View>

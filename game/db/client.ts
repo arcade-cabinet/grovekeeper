@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import * as schema from "./schema";
+import * as schema from "./schema.ts";
 
 type DrizzleDb = ReturnType<typeof import("drizzle-orm/expo-sqlite").drizzle>;
 

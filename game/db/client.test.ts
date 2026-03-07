@@ -1,22 +1,22 @@
 import { getTableColumns, getTableName } from "drizzle-orm";
 import {
-  saveConfig,
-  player,
-  resources,
-  seeds,
-  unlocks,
   achievements,
-  trees,
   gridCells,
-  structures,
-  quests,
+  player,
   questGoals,
-  worldState,
-  timeState,
-  tracking,
+  quests,
+  resources,
+  saveConfig,
+  seeds,
   settings,
+  structures,
+  timeState,
   toolUpgrades,
-} from "./schema";
+  tracking,
+  trees,
+  unlocks,
+  worldState,
+} from "./schema.ts";
 
 describe("db schema", () => {
   describe("save_config table", () => {
@@ -194,9 +194,22 @@ describe("db schema", () => {
 
   it("exports all 16 tables", () => {
     const tables = [
-      saveConfig, player, resources, seeds, unlocks, achievements,
-      trees, gridCells, structures, quests, questGoals, worldState,
-      timeState, tracking, settings, toolUpgrades,
+      saveConfig,
+      player,
+      resources,
+      seeds,
+      unlocks,
+      achievements,
+      trees,
+      gridCells,
+      structures,
+      quests,
+      questGoals,
+      worldState,
+      timeState,
+      tracking,
+      settings,
+      toolUpgrades,
     ];
     expect(tables).toHaveLength(16);
     for (const table of tables) {

@@ -7,7 +7,7 @@
 
 import dialogueData from "./data/dialogues.json" with { type: "json" };
 import npcData from "./data/npcs.json" with { type: "json" };
-import type { DialogueNode, NpcTemplate } from "./types";
+import type { DialogueNode, NpcTemplate } from "./types.ts";
 
 const npcTemplates: NpcTemplate[] = npcData as NpcTemplate[];
 const dialogueNodes: DialogueNode[] = dialogueData as DialogueNode[];

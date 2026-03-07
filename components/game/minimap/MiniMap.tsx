@@ -9,16 +9,16 @@
 
 import { MapIcon } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
-import { Platform, Pressable, View, useWindowDimensions } from "react-native";
+import { Platform, Pressable, useWindowDimensions, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 
-import { BARK_BROWN, SOIL_DARK } from "./colors";
-import { MinimapSVG } from "./MinimapSVG";
-import { MiniMapOverlay } from "./Overlay";
-import { readMinimapSnapshot } from "./snapshot";
-import type { MinimapSnapshot } from "./types";
+import { BARK_BROWN, SOIL_DARK } from "./colors.ts";
+import { MinimapSVG } from "./MinimapSVG.tsx";
+import { MiniMapOverlay } from "./Overlay.tsx";
+import { readMinimapSnapshot } from "./snapshot.ts";
+import type { MinimapSnapshot } from "./types.ts";
 
 const MINIMAP_SIZE = 160;
 
@@ -28,9 +28,7 @@ export interface MiniMapProps {
 }
 
 export const MiniMap = ({ onCampfirePress }: MiniMapProps = {}) => {
-  const [snapshot, setSnapshot] = useState<MinimapSnapshot>(() =>
-    readMinimapSnapshot(),
-  );
+  const [snapshot, setSnapshot] = useState<MinimapSnapshot>(() => readMinimapSnapshot());
   const [overlayOpen, setOverlayOpen] = useState(false);
   const { width: screenWidth } = useWindowDimensions();
 
@@ -71,11 +69,7 @@ export const MiniMap = ({ onCampfirePress }: MiniMapProps = {}) => {
             }),
           }}
         >
-          <MinimapSVG
-            snapshot={snapshot}
-            size={MINIMAP_SIZE}
-            onCampfirePress={onCampfirePress}
-          />
+          <MinimapSVG snapshot={snapshot} size={MINIMAP_SIZE} onCampfirePress={onCampfirePress} />
           <Text
             className="mt-1 text-center text-[10px] font-bold uppercase tracking-wider"
             style={{ color: SOIL_DARK }}

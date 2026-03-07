@@ -24,13 +24,13 @@ jest.mock("@/game/ecs/world", () => ({
   grovekeeperSpiritsQuery: { entities: [] },
 }));
 
+import { resolveEmissiveColor, SPIRIT_COLORS } from "@/game/utils/spiritColors";
 import {
-  GrovekeeperSpirit,
   computeBobY,
   computeEmissiveIntensity,
   computeSpawnY,
-} from "./GrovekeeperSpirit";
-import { resolveEmissiveColor, SPIRIT_COLORS } from "@/game/utils/spiritColors";
+  GrovekeeperSpirit,
+} from "./GrovekeeperSpirit.tsx";
 
 // ---------------------------------------------------------------------------
 // computeBobY
@@ -56,7 +56,7 @@ describe("computeBobY (Spec §32.2)", () => {
     const amplitude = 0.2;
     const speed = 2.0;
     const phase = 0;
-    const quarter = (Math.PI / 2) / speed; // t where sin(t*speed) = 1
+    const quarter = Math.PI / 2 / speed; // t where sin(t*speed) = 1
 
     const peak = computeBobY(quarter, hoverHeight, amplitude, speed, phase);
     const trough = computeBobY(quarter * 3, hoverHeight, amplitude, speed, phase);

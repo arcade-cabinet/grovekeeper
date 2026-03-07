@@ -1,17 +1,17 @@
-import {
-  getScaledHealth,
-  getScaledAttack,
-  createAIState,
-  updatePatrol,
-  updateGuard,
-  checkAggro,
-  moveToward,
-  canAttack,
-  EnemyBrain,
-  EnemyEntityManager,
-  type EnemyBrainContext,
-} from "./enemyAI";
 import type { Entity, Position } from "@/game/ecs/world";
+import {
+  canAttack,
+  checkAggro,
+  createAIState,
+  EnemyBrain,
+  type EnemyBrainContext,
+  EnemyEntityManager,
+  getScaledAttack,
+  getScaledHealth,
+  moveToward,
+  updateGuard,
+  updatePatrol,
+} from "./enemyAI.ts";
 
 function makeEntity(x: number, z: number): Entity {
   return {
@@ -78,55 +78,29 @@ describe("Enemy AI System", () => {
       const entity = makeEntity(10, 10);
       const ai = createAIState(10, 10);
       updateGuard(entity, ai, 0.5, 2.0);
-      const dist = Math.sqrt(
-        (entity.position!.x - 10) ** 2 + (entity.position!.z - 10) ** 2,
-      );
+      const dist = Math.sqrt((entity.position!.x - 10) ** 2 + (entity.position!.z - 10) ** 2);
       expect(dist).toBeLessThan(1);
     });
   });
 
   describe("checkAggro", () => {
     it("switches to aggro when player is within range", () => {
-      const result = checkAggro(
-        { x: 0, y: 0, z: 0 },
-        { x: 3, y: 0, z: 0 },
-        5,
-        8,
-        "idle",
-      );
+      const result = checkAggro({ x: 0, y: 0, z: 0 }, { x: 3, y: 0, z: 0 }, 5, 8, "idle");
       expect(result).toBe("aggro");
     });
 
     it("stays idle when player is out of aggro range", () => {
-      const result = checkAggro(
-        { x: 0, y: 0, z: 0 },
-        { x: 10, y: 0, z: 0 },
-        5,
-        8,
-        "idle",
-      );
+      const result = checkAggro({ x: 0, y: 0, z: 0 }, { x: 10, y: 0, z: 0 }, 5, 8, "idle");
       expect(result).toBe("idle");
     });
 
     it("returns to idle when player exits deaggro range", () => {
-      const result = checkAggro(
-        { x: 0, y: 0, z: 0 },
-        { x: 9, y: 0, z: 0 },
-        5,
-        8,
-        "aggro",
-      );
+      const result = checkAggro({ x: 0, y: 0, z: 0 }, { x: 9, y: 0, z: 0 }, 5, 8, "aggro");
       expect(result).toBe("returning");
     });
 
     it("stays aggro when player is within deaggro range", () => {
-      const result = checkAggro(
-        { x: 0, y: 0, z: 0 },
-        { x: 7, y: 0, z: 0 },
-        5,
-        8,
-        "aggro",
-      );
+      const result = checkAggro({ x: 0, y: 0, z: 0 }, { x: 7, y: 0, z: 0 }, 5, 8, "aggro");
       expect(result).toBe("aggro");
     });
   });
@@ -200,7 +174,10 @@ describe("EnemyBrain (Yuka GoalEvaluator-backed)", () => {
       // First update: trigger aggro
       brain.update(0.016, makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8, deaggroRange: 12 }));
       // Second update: player still within deaggro range (dist=10, deaggro=12)
-      const mode = brain.update(0.016, makeCtx({ playerX: 10, playerZ: 0, aggroRange: 8, deaggroRange: 12 }));
+      const mode = brain.update(
+        0.016,
+        makeCtx({ playerX: 10, playerZ: 0, aggroRange: 8, deaggroRange: 12 }),
+      );
       expect(mode).toBe("aggro");
     });
 
@@ -209,7 +186,10 @@ describe("EnemyBrain (Yuka GoalEvaluator-backed)", () => {
       // Trigger aggro first
       brain.update(0.016, makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8, deaggroRange: 12 }));
       // Player now beyond deaggro range
-      const mode = brain.update(0.016, makeCtx({ playerX: 15, playerZ: 0, aggroRange: 8, deaggroRange: 12 }));
+      const mode = brain.update(
+        0.016,
+        makeCtx({ playerX: 15, playerZ: 0, aggroRange: 8, deaggroRange: 12 }),
+      );
       expect(mode).toBe("returning");
     });
   });
@@ -293,9 +273,7 @@ describe("EnemyEntityManager", () => {
   it("updateAll calls update on registered brains", () => {
     const brain = new EnemyBrain("m5", "knight", "patrol");
     EnemyEntityManager.register(brain);
-    EnemyEntityManager.updateAll(0.016, () =>
-      makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8 }),
-    );
+    EnemyEntityManager.updateAll(0.016, () => makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8 }));
     expect(brain.getMode()).toBe("aggro");
   });
 

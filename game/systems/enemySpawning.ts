@@ -1,6 +1,6 @@
 import enemiesConfig from "@/config/game/enemies.json" with { type: "json" };
-import { scopedRNG } from "@/game/utils/seedWords";
 import { isExplorationMode } from "@/game/config/difficulty";
+import { scopedRNG } from "@/game/utils/seedWords";
 
 export interface EnemySpawnEntry {
   enemyType: string;
@@ -13,12 +13,8 @@ export interface EnemySpawnEntry {
 const { types, spawnRules, tierScaling, difficultyMultipliers, nightSpawnMultiplier } =
   enemiesConfig;
 
-export function getEnemyTypesForBiome(
-  biome: string,
-  difficulty: string,
-): string[] {
-  const diffMult =
-    difficultyMultipliers[difficulty as keyof typeof difficultyMultipliers] ?? 1;
+export function getEnemyTypesForBiome(biome: string, difficulty: string): string[] {
+  const diffMult = difficultyMultipliers[difficulty as keyof typeof difficultyMultipliers] ?? 1;
   if (diffMult === 0) return [];
 
   return Object.entries(types)
@@ -26,14 +22,9 @@ export function getEnemyTypesForBiome(
     .map(([id]) => id);
 }
 
-export function calculateTier(
-  chunkDistance: number,
-  difficultyId: string,
-): number {
+export function calculateTier(chunkDistance: number, difficultyId: string): number {
   const baseTier = Math.floor(chunkDistance / tierScaling.distancePerTier) + 1;
-  const diffMult =
-    difficultyMultipliers[difficultyId as keyof typeof difficultyMultipliers] ??
-    1;
+  const diffMult = difficultyMultipliers[difficultyId as keyof typeof difficultyMultipliers] ?? 1;
   const scaled = Math.round(baseTier * diffMult);
   return Math.max(1, Math.min(scaled, tierScaling.maxTier));
 }
@@ -44,16 +35,15 @@ export function encounterChance(
   biome: string,
   difficultyId: string,
 ): number {
-  const diffMult =
-    difficultyMultipliers[difficultyId as keyof typeof difficultyMultipliers] ??
-    1;
+  const diffMult = difficultyMultipliers[difficultyId as keyof typeof difficultyMultipliers] ?? 1;
   if (diffMult === 0) return 0;
 
-  const rules = biome === "labyrinth"
-    ? spawnRules.labyrinthChunk
-    : biome === "ruins"
-      ? spawnRules.ruinsChunk
-      : spawnRules.normalChunk;
+  const rules =
+    biome === "labyrinth"
+      ? spawnRules.labyrinthChunk
+      : biome === "ruins"
+        ? spawnRules.ruinsChunk
+        : spawnRules.normalChunk;
 
   let chance = rules.spawnChanceBase * diffMult;
   if (isNight) chance *= nightSpawnMultiplier;
@@ -72,9 +62,7 @@ export function spawnEnemiesForChunk(
   // Enemies only spawn in Survival mode (affectsGameplay: true)
   if (isExplorationMode(difficultyId)) return [];
 
-  const diffMult =
-    difficultyMultipliers[difficultyId as keyof typeof difficultyMultipliers] ??
-    1;
+  const diffMult = difficultyMultipliers[difficultyId as keyof typeof difficultyMultipliers] ?? 1;
   if (diffMult === 0) return [];
 
   const rng = scopedRNG("enemy", worldSeed, chunkX, chunkZ);
@@ -83,18 +71,17 @@ export function spawnEnemiesForChunk(
   const chance = encounterChance(chunkDistance, isNight, biome, difficultyId);
   if (rng() > chance) return [];
 
-  const rules = biome === "labyrinth"
-    ? spawnRules.labyrinthChunk
-    : biome === "ruins"
-      ? spawnRules.ruinsChunk
-      : spawnRules.normalChunk;
+  const rules =
+    biome === "labyrinth"
+      ? spawnRules.labyrinthChunk
+      : biome === "ruins"
+        ? spawnRules.ruinsChunk
+        : spawnRules.normalChunk;
 
   const available = getEnemyTypesForBiome(biome, difficultyId);
   if (available.length === 0) return [];
 
-  const count =
-    rules.minEnemies +
-    Math.floor(rng() * (rules.maxEnemies - rules.minEnemies + 1));
+  const count = rules.minEnemies + Math.floor(rng() * (rules.maxEnemies - rules.minEnemies + 1));
 
   const tier = calculateTier(chunkDistance, difficultyId);
   const results: EnemySpawnEntry[] = [];

@@ -6,13 +6,7 @@
  * Animation uses anime.js rigid-body rotation (Lego-style, no skeletal rigs).
  */
 
-export type NpcFunction =
-  | "trading"
-  | "quests"
-  | "tips"
-  | "seeds"
-  | "crafting"
-  | "lore";
+export type NpcFunction = "trading" | "quests" | "tips" | "seeds" | "crafting" | "lore";
 
 export type NpcItemSlot = "head" | "torso" | "legs" | "feet" | "accessory";
 

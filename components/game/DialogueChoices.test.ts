@@ -16,10 +16,10 @@ jest.mock("@/components/ui/text", () => ({
 // ── Imports ───────────────────────────────────────────────────────────────────
 
 import {
-  DialogueChoices,
-  computeAutoAdvanceProgress,
   AUTO_ADVANCE_DURATION,
-} from "./DialogueChoices";
+  computeAutoAdvanceProgress,
+  DialogueChoices,
+} from "./DialogueChoices.tsx";
 
 // ---------------------------------------------------------------------------
 // computeAutoAdvanceProgress

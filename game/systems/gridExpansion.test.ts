@@ -4,7 +4,7 @@ import {
   getMaxGridSizeForLevel,
   getNewCellPositions,
   getNextExpansionTier,
-} from "./gridExpansion";
+} from "./gridExpansion.ts";
 
 describe("grid expansion system", () => {
   describe("GRID_EXPANSION_TIERS", () => {

@@ -2,9 +2,9 @@
  * Kitbashing unlock and value calculations. Spec §35.2, §35.3.
  */
 
-import type { Entity } from "../../ecs/world";
-import type { PieceType } from "../../ecs/components/building";
-import buildingConfig from "../../../config/game/building.json";
+import buildingConfig from "../../../config/game/building.json" with { type: "json" };
+import type { PieceType } from "../../ecs/components/building.ts";
+import type { Entity } from "../../ecs/world.ts";
 
 /**
  * Calculate the total base value of all pieces in a structure.

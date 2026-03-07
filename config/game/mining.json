@@ -7,13 +7,13 @@
     "obsidian": 4
   },
   "oreTable": {
-    "starting-grove":  { "oreType": "stone", "minAmount": 1, "maxAmount": 2 },
-    "meadow":          { "oreType": "stone", "minAmount": 1, "maxAmount": 2 },
-    "ancient-forest":  { "oreType": "stone", "minAmount": 2, "maxAmount": 3 },
-    "wetlands":        { "oreType": "stone", "minAmount": 1, "maxAmount": 2 },
-    "rocky-highlands": { "oreType": "ore",   "minAmount": 1, "maxAmount": 2 },
-    "orchard-valley":  { "oreType": "stone", "minAmount": 1, "maxAmount": 2 },
-    "frozen-peaks":    { "oreType": "ore",   "minAmount": 1, "maxAmount": 3 },
-    "twilight-glade":  { "oreType": "ore",   "minAmount": 2, "maxAmount": 3 }
+    "starting-grove": { "oreType": "stone", "minAmount": 1, "maxAmount": 2 },
+    "meadow": { "oreType": "stone", "minAmount": 1, "maxAmount": 2 },
+    "ancient-forest": { "oreType": "stone", "minAmount": 2, "maxAmount": 3 },
+    "wetlands": { "oreType": "stone", "minAmount": 1, "maxAmount": 2 },
+    "rocky-highlands": { "oreType": "ore", "minAmount": 1, "maxAmount": 2 },
+    "orchard-valley": { "oreType": "stone", "minAmount": 1, "maxAmount": 2 },
+    "frozen-peaks": { "oreType": "ore", "minAmount": 1, "maxAmount": 3 },
+    "twilight-glade": { "oreType": "ore", "minAmount": 2, "maxAmount": 3 }
   }
 }

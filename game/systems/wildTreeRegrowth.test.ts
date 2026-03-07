@@ -3,7 +3,7 @@ import {
   checkRegrowth,
   initializeRegrowthState,
   scheduleRegrowth,
-} from "./wildTreeRegrowth";
+} from "./wildTreeRegrowth.ts";
 
 describe("initializeRegrowthState", () => {
   it("creates state with empty timers array", () => {

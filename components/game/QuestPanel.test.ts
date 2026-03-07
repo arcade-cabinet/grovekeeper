@@ -18,26 +18,24 @@ jest.mock("./Toast", () => ({ showToast: jest.fn() }));
 
 // ── Imports ───────────────────────────────────────────────────────────────────
 
+import type { QuestBranchComponent } from "@/game/ecs/components/dialogue";
 import {
   advanceObjectives,
   initializeChainState,
   startChain,
 } from "@/game/quests/questChainEngine";
 import type { QuestChainState } from "@/game/quests/types";
-import type { QuestBranchComponent } from "@/game/ecs/components/dialogue";
 import {
-  mapQuestBranchToDisplay,
   type ActiveQuestDisplay,
+  mapQuestBranchToDisplay,
   type QuestObjectiveDisplay,
-} from "./QuestPanel";
+} from "./QuestPanel.tsx";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeQuestBranch(
-  overrides: Partial<QuestBranchComponent> = {},
-): QuestBranchComponent {
+function makeQuestBranch(overrides: Partial<QuestBranchComponent> = {}): QuestBranchComponent {
   return {
     questChainId: "test-chain",
     branchPath: [],

@@ -8,9 +8,9 @@
  * - Non-quest effect types are ignored
  */
 
-import { applyDialogueEffects } from "./dialogueEffects";
-import { initializeChainState } from "@/game/quests/questChainEngine";
 import type { DialogueEffect } from "@/game/ecs/components/dialogue";
+import { initializeChainState } from "@/game/quests/questChainEngine";
+import { applyDialogueEffects } from "./dialogueEffects.ts";
 
 // ---------------------------------------------------------------------------
 // start_quest (Spec §15, §17)
@@ -63,11 +63,7 @@ describe("applyDialogueEffects — start_quest (Spec §15, §17)", () => {
 describe("applyDialogueEffects — advance_quest (Spec §15, §17)", () => {
   function startedState() {
     const state = initializeChainState();
-    return applyDialogueEffects(
-      [{ type: "start_quest", value: "rowan-history" }],
-      state,
-      1,
-    ).state;
+    return applyDialogueEffects([{ type: "start_quest", value: "rowan-history" }], state, 1).state;
   }
 
   it("advances quest objective progress by the given amount", () => {

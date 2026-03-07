@@ -5,8 +5,8 @@
  * Displays a red badge with the ready count in the top-right corner.
  */
 
-import { Pressable, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 
 export interface BatchHarvestButtonProps {
@@ -14,10 +14,7 @@ export interface BatchHarvestButtonProps {
   onBatchHarvest: () => void;
 }
 
-export function BatchHarvestButton({
-  readyCount,
-  onBatchHarvest,
-}: BatchHarvestButtonProps) {
+export function BatchHarvestButton({ readyCount, onBatchHarvest }: BatchHarvestButtonProps) {
   // Only show when 2+ trees are ready
   if (readyCount < 2) return null;
 

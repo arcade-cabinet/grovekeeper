@@ -158,17 +158,11 @@ export function ToolWheel({
                       className="mb-1"
                       color={isUnlocked ? COLORS.forestGreen : COLORS.barkBrown}
                     />
-                    <Text
-                      className="text-center text-xs"
-                      style={{ color: COLORS.soilDark }}
-                    >
+                    <Text className="text-center text-xs" style={{ color: COLORS.soilDark }}>
                       {tool.name}
                     </Text>
                     {!isUnlocked && (
-                      <Text
-                        className="text-xs"
-                        style={{ color: COLORS.autumnGold }}
-                      >
+                      <Text className="text-xs" style={{ color: COLORS.autumnGold }}>
                         Lv.{tool.unlockLevel}
                       </Text>
                     )}

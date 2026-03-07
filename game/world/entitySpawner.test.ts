@@ -11,13 +11,9 @@
  *  - Sparse biomes produce fewer trees than dense biomes
  */
 
-import {
-  biomeToVegetationKey,
-  getBiomeSpeciesPool,
-  spawnChunkEntities,
-} from "./entitySpawner";
-import type { BiomeType } from "./biomeMapper";
-import { CHUNK_SIZE } from "./ChunkManager";
+import type { BiomeType } from "./biomeMapper.ts";
+import { CHUNK_SIZE } from "./ChunkManager.ts";
+import { biomeToVegetationKey, getBiomeSpeciesPool, spawnChunkEntities } from "./entitySpawner.ts";
 
 /** Flat zero heightmap for chunk testing. */
 function makeHeightmap(size = CHUNK_SIZE): Float32Array {
@@ -218,12 +214,8 @@ describe("spawnChunkEntities (Spec §6)", () => {
   it("is deterministic — same seed + coords + biome → same trees", () => {
     const a = spawnChunkEntities(seed, 2, -3, "meadow", heightmap);
     const b = spawnChunkEntities(seed, 2, -3, "meadow", heightmap);
-    expect(a.trees.map((t) => t.tree.speciesId)).toEqual(
-      b.trees.map((t) => t.tree.speciesId),
-    );
-    expect(a.trees.map((t) => t.position)).toEqual(
-      b.trees.map((t) => t.position),
-    );
+    expect(a.trees.map((t) => t.tree.speciesId)).toEqual(b.trees.map((t) => t.tree.speciesId));
+    expect(a.trees.map((t) => t.position)).toEqual(b.trees.map((t) => t.position));
   });
 
   it("different chunks produce different tree positions", () => {

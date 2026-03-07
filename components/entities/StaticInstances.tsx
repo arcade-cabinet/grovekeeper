@@ -46,9 +46,7 @@ export interface StaticEntityInput {
  *
  * See GAME_SPEC.md §28.
  */
-export function groupByModelPath(
-  entities: StaticEntityInput[],
-): Map<string, StaticEntityInput[]> {
+export function groupByModelPath(entities: StaticEntityInput[]): Map<string, StaticEntityInput[]> {
   const result = new Map<string, StaticEntityInput[]>();
   for (const entity of entities) {
     const group = result.get(entity.modelPath);
@@ -97,9 +95,7 @@ export const StaticModelInstances = ({
   const { scene } = useGLTF(glbPath);
 
   /** All Mesh children extracted from the GLB scene, with their geometry + material. */
-  const meshInfos = useMemo<
-    Array<{ geo: THREE.BufferGeometry; mat: THREE.Material }>
-  >(() => {
+  const meshInfos = useMemo<Array<{ geo: THREE.BufferGeometry; mat: THREE.Material }>>(() => {
     const result: Array<{ geo: THREE.BufferGeometry; mat: THREE.Material }> = [];
     scene.traverse((obj) => {
       if (obj instanceof THREE.Mesh && obj.geometry) {

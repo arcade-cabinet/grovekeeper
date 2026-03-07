@@ -17,7 +17,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Circle as SvgCircle } from "react-native-svg";
 
-import { PLAYER_FILL, PLAYER_STROKE } from "./colors";
+import { PLAYER_FILL, PLAYER_STROKE } from "./colors.ts";
 
 const AnimatedSvgCircle = Animated.createAnimatedComponent(SvgCircle);
 

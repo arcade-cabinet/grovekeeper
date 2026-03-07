@@ -16,7 +16,11 @@
  */
 
 import dayNightConfig from "@/config/game/dayNight.json" with { type: "json" };
-import type { DayNightComponent, SkyComponent, TimeOfDay } from "@/game/ecs/components/procedural/atmosphere";
+import type {
+  DayNightComponent,
+  SkyComponent,
+  TimeOfDay,
+} from "@/game/ecs/components/procedural/atmosphere";
 
 // ---------------------------------------------------------------------------
 // Derived constants from config

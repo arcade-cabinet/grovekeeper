@@ -15,8 +15,8 @@
  * - Windstorm: 10% chance to damage seedling/sprout trees, lasts 30-60 game seconds
  */
 
+import weatherConfig from "@/config/game/weather.json" with { type: "json" };
 import { createRNG, hashString } from "@/game/utils/seedRNG";
-import weatherConfig from "@/config/game/weather.json";
 
 // ============================================
 // Public Types

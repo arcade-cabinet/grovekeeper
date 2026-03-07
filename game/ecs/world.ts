@@ -1,87 +1,67 @@
 import { World } from "miniplex";
 
+export * from "./components/building.ts";
+export * from "./components/combat.ts";
 // Re-export all component types for backward compatibility
-export * from "./components/core";
-export * from "./components/npc";
-export * from "./components/combat";
-export * from "./components/building";
-export * from "./components/structures";
-export * from "./components/items";
-export * from "./components/vegetation";
-export * from "./components/terrain";
-export * from "./components/procedural";
-export * from "./components/dialogue";
+export * from "./components/core.ts";
+export * from "./components/dialogue.ts";
+export * from "./components/items.ts";
+export * from "./components/npc.ts";
+export * from "./components/procedural/index.ts";
+export * from "./components/structures.ts";
+export * from "./components/terrain.ts";
+export * from "./components/vegetation.ts";
 
 import type {
-  Position,
-  Renderable,
-  PlayerComponent,
-  PropComponent,
-  RainCatcherComponent,
-  ScarecrowComponent,
-  Harvestable,
-  ChunkComponent,
-} from "./components/core";
-
-import type { NpcComponent } from "./components/npc";
-
-import type {
-  EnemyComponent,
-  HealthComponent,
-  CombatComponent,
-  LootDropComponent,
-} from "./components/combat";
-
-import type {
-  ModularPieceComponent,
   BuildableComponent,
   LightSourceComponent,
-} from "./components/building";
-
+  ModularPieceComponent,
+} from "./components/building.ts";
 import type {
-  StructureComponent,
-  CampfireComponent,
-  CropComponent,
-} from "./components/structures";
-
+  CombatComponent,
+  EnemyComponent,
+  HealthComponent,
+  LootDropComponent,
+} from "./components/combat.ts";
 import type {
-  FoodComponent,
-  ToolComponent,
-  TrapComponent,
-} from "./components/items";
-
+  ChunkComponent,
+  Harvestable,
+  PlayerComponent,
+  Position,
+  PropComponent,
+  RainCatcherComponent,
+  Renderable,
+  ScarecrowComponent,
+} from "./components/core.ts";
+import type { DialogueComponent, QuestBranchComponent } from "./components/dialogue.ts";
+import type { FoodComponent, ToolComponent, TrapComponent } from "./components/items.ts";
+import type { NpcComponent } from "./components/npc.ts";
 import type {
-  TreeComponent,
-  BushComponent,
-  GrassComponent,
-} from "./components/vegetation";
-
-import type {
-  FenceComponent,
-  RockComponent,
-  HedgeComponent,
-  HedgeDecorationComponent,
-} from "./components/terrain";
-
-import type {
-  TerrainChunkComponent,
+  BirmotherComponent,
+  DayNightComponent,
+  FogVolumeComponent,
+  GrovekeeperSpiritComponent,
+  ParticleEmitterComponent,
   PathSegmentComponent,
   SignpostComponent,
-  WaterBodyComponent,
   SkyComponent,
-  DayNightComponent,
-  WeatherComponent,
-  FogVolumeComponent,
-  ParticleEmitterComponent,
   SoundscapeComponent,
-  GrovekeeperSpiritComponent,
-  BirmotherComponent,
-} from "./components/procedural";
-
+  TerrainChunkComponent,
+  WaterBodyComponent,
+  WeatherComponent,
+} from "./components/procedural/index.ts";
 import type {
-  DialogueComponent,
-  QuestBranchComponent,
-} from "./components/dialogue";
+  CampfireComponent,
+  CropComponent,
+  StructureComponent,
+} from "./components/structures.ts";
+import type {
+  FenceComponent,
+  HedgeComponent,
+  HedgeDecorationComponent,
+  RockComponent,
+} from "./components/terrain.ts";
+import type { BushComponent, GrassComponent, TreeComponent } from "./components/vegetation.ts";
 
 /** Unified entity definition — all components optional. */
 export interface Entity {
@@ -128,7 +108,13 @@ export interface Entity {
   rock?: RockComponent;
   hedge?: HedgeComponent;
   hedgeDecoration?: HedgeDecorationComponent;
-  gridCell?: { gridX: number; gridZ: number; type: "soil" | "water" | "rock" | "path"; occupied: boolean; treeEntityId: string | null };
+  gridCell?: {
+    gridX: number;
+    gridZ: number;
+    type: "soil" | "water" | "rock" | "path";
+    occupied: boolean;
+    treeEntityId: string | null;
+  };
 
   // Items
   food?: FoodComponent;
@@ -230,4 +216,3 @@ export const birmotherQuery = world.with("birchmother", "position");
 export const dialogueQuery = world.with("dialogue");
 export const activeDialogueQuery = world.with("dialogue", "position");
 export const questBranchQuery = world.with("questBranch");
-

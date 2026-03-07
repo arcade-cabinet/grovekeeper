@@ -7,9 +7,9 @@
  * Spec §31.1: "Heightmap: AdvancedSeededNoise (Perlin + fBm + ridged multifractal + domain warping)"
  */
 
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import { SeededNoise } from "@/game/utils/seededNoise";
 import { hashString } from "@/game/utils/seedRNG";
-import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -25,11 +25,7 @@ const CHUNK_SIZE: number = gridConfig.chunkSize;
  * @param chunkZ     Chunk Z grid coordinate
  * @returns          Float32Array of length CHUNK_SIZE * CHUNK_SIZE, values in [-1, 1]
  */
-export function generateHeightmap(
-  worldSeed: string,
-  chunkX: number,
-  chunkZ: number,
-): Float32Array {
+export function generateHeightmap(worldSeed: string, chunkX: number, chunkZ: number): Float32Array {
   // Single instance from worldSeed — seamless global terrain (Spec §31.1, codebase pattern)
   const noise = new SeededNoise(hashString(worldSeed));
   const heightmap = new Float32Array(CHUNK_SIZE * CHUNK_SIZE);

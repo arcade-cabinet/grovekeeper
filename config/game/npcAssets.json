@@ -1,46 +1,319 @@
 {
   "base": [
-    { "id": "basemesh", "path": "assets/models/npcs/base/basemesh.glb", "emissionPath": "assets/models/npcs/base/basemesh-pr.glb", "category": "base", "sizeKB": 1843 },
-    { "id": "archer", "path": "assets/models/npcs/base/archer.glb", "emissionPath": "assets/models/npcs/base/archer-pr.glb", "category": "base", "sizeKB": 3584 },
-    { "id": "knight", "path": "assets/models/npcs/base/knight.glb", "emissionPath": "assets/models/npcs/base/knight-pr.glb", "category": "base", "sizeKB": 6861 },
-    { "id": "merchant", "path": "assets/models/npcs/base/merchant.glb", "emissionPath": "assets/models/npcs/base/merchant-pr.glb", "category": "base", "sizeKB": 3379 },
-    { "id": "ninja", "path": "assets/models/npcs/base/ninja.glb", "emissionPath": "assets/models/npcs/base/ninja-pr.glb", "category": "base", "sizeKB": 3277 },
-    { "id": "student", "path": "assets/models/npcs/base/student.glb", "emissionPath": "assets/models/npcs/base/student-pr.glb", "category": "base", "sizeKB": 3686 },
-    { "id": "allinone", "path": "assets/models/npcs/base/allinone.glb", "emissionPath": "assets/models/npcs/base/allinone-pr.glb", "category": "base", "sizeKB": 14336 }
+    {
+      "id": "basemesh",
+      "path": "assets/models/npcs/base/basemesh.glb",
+      "emissionPath": "assets/models/npcs/base/basemesh-pr.glb",
+      "category": "base",
+      "sizeKB": 1843
+    },
+    {
+      "id": "archer",
+      "path": "assets/models/npcs/base/archer.glb",
+      "emissionPath": "assets/models/npcs/base/archer-pr.glb",
+      "category": "base",
+      "sizeKB": 3584
+    },
+    {
+      "id": "knight",
+      "path": "assets/models/npcs/base/knight.glb",
+      "emissionPath": "assets/models/npcs/base/knight-pr.glb",
+      "category": "base",
+      "sizeKB": 6861
+    },
+    {
+      "id": "merchant",
+      "path": "assets/models/npcs/base/merchant.glb",
+      "emissionPath": "assets/models/npcs/base/merchant-pr.glb",
+      "category": "base",
+      "sizeKB": 3379
+    },
+    {
+      "id": "ninja",
+      "path": "assets/models/npcs/base/ninja.glb",
+      "emissionPath": "assets/models/npcs/base/ninja-pr.glb",
+      "category": "base",
+      "sizeKB": 3277
+    },
+    {
+      "id": "student",
+      "path": "assets/models/npcs/base/student.glb",
+      "emissionPath": "assets/models/npcs/base/student-pr.glb",
+      "category": "base",
+      "sizeKB": 3686
+    },
+    {
+      "id": "allinone",
+      "path": "assets/models/npcs/base/allinone.glb",
+      "emissionPath": "assets/models/npcs/base/allinone-pr.glb",
+      "category": "base",
+      "sizeKB": 14336
+    }
   ],
   "items": [
-    { "id": "hairone", "path": "assets/models/npcs/items/hairone.glb", "emissionPath": "assets/models/npcs/items/hairone-emission.glb", "category": "item", "slot": "head", "sizeKB": 290 },
-    { "id": "hairtail", "path": "assets/models/npcs/items/hairtail.glb", "emissionPath": "assets/models/npcs/items/hairtail-emission.glb", "category": "item", "slot": "head", "sizeKB": 535 },
-    { "id": "hairtailknight", "path": "assets/models/npcs/items/hairtailknight.glb", "emissionPath": "assets/models/npcs/items/hairtailknight-emission.glb", "category": "item", "slot": "head", "sizeKB": 114 },
-    { "id": "hairT", "path": "assets/models/npcs/items/hairT.glb", "emissionPath": "assets/models/npcs/items/hairT-emission.glb", "category": "item", "slot": "head", "sizeKB": 605 },
-    { "id": "hairvariant", "path": "assets/models/npcs/items/hairvariant.glb", "emissionPath": "assets/models/npcs/items/hairvariant-emission.glb", "category": "item", "slot": "head", "sizeKB": 606 },
-    { "id": "hairvariant-001", "path": "assets/models/npcs/items/hairvariant-001.glb", "emissionPath": "assets/models/npcs/items/hairvariant-001-emission.glb", "category": "item", "slot": "head", "sizeKB": 600 },
-    { "id": "hat", "path": "assets/models/npcs/items/hat.glb", "emissionPath": "assets/models/npcs/items/hat-emission.glb", "category": "item", "slot": "head", "sizeKB": 205 },
-    { "id": "armorhelmet", "path": "assets/models/npcs/items/armorhelmet.glb", "emissionPath": "assets/models/npcs/items/armorhelmet-emission.glb", "category": "item", "slot": "head", "sizeKB": 902 },
-    { "id": "ninjassuitmask", "path": "assets/models/npcs/items/ninjassuitmask.glb", "emissionPath": "assets/models/npcs/items/ninjassuitmask-emission.glb", "category": "item", "slot": "head", "sizeKB": 677 },
-    { "id": "shirt", "path": "assets/models/npcs/items/shirt.glb", "emissionPath": "assets/models/npcs/items/shirt-emission.glb", "category": "item", "slot": "torso", "sizeKB": 501 },
-    { "id": "chemise", "path": "assets/models/npcs/items/chemise.glb", "emissionPath": "assets/models/npcs/items/chemise-emission.glb", "category": "item", "slot": "torso", "sizeKB": 615 },
-    { "id": "greenoutfit", "path": "assets/models/npcs/items/greenoutfit.glb", "emissionPath": "assets/models/npcs/items/greenoutfit-emission.glb", "category": "item", "slot": "torso", "sizeKB": 957 },
-    { "id": "greenoutfitbelt", "path": "assets/models/npcs/items/greenoutfitbelt.glb", "emissionPath": "assets/models/npcs/items/greenoutfitbelt-emission.glb", "category": "item", "slot": "torso", "sizeKB": 921 },
-    { "id": "greenoutfitneckless", "path": "assets/models/npcs/items/greenoutfitneckless.glb", "emissionPath": "assets/models/npcs/items/greenoutfitneckless-emission.glb", "category": "item", "slot": "torso", "sizeKB": 924 },
-    { "id": "ninjassuit", "path": "assets/models/npcs/items/ninjassuit.glb", "emissionPath": "assets/models/npcs/items/ninjassuit-emission.glb", "category": "item", "slot": "torso", "sizeKB": 697 },
-    { "id": "amorplastron", "path": "assets/models/npcs/items/amorplastron.glb", "emissionPath": "assets/models/npcs/items/amorplastron-emission.glb", "category": "item", "slot": "torso", "sizeKB": 655 },
-    { "id": "amorarm", "path": "assets/models/npcs/items/amorarm.glb", "emissionPath": "assets/models/npcs/items/amorarm-emission.glb", "category": "item", "slot": "torso", "sizeKB": 941 },
-    { "id": "pants", "path": "assets/models/npcs/items/pants.glb", "emissionPath": "assets/models/npcs/items/pants-emission.glb", "category": "item", "slot": "legs", "sizeKB": 217 },
-    { "id": "skirt", "path": "assets/models/npcs/items/skirt.glb", "emissionPath": "assets/models/npcs/items/skirt-emission.glb", "category": "item", "slot": "legs", "sizeKB": 134 },
-    { "id": "armorskirt", "path": "assets/models/npcs/items/armorskirt.glb", "emissionPath": "assets/models/npcs/items/armorskirt-emission.glb", "category": "item", "slot": "legs", "sizeKB": 138 },
-    { "id": "armorthigh", "path": "assets/models/npcs/items/armorthigh.glb", "emissionPath": "assets/models/npcs/items/armorthigh-emission.glb", "category": "item", "slot": "legs", "sizeKB": 959 },
-    { "id": "armorlegs", "path": "assets/models/npcs/items/armorlegs.glb", "emissionPath": "assets/models/npcs/items/armorlegs-emission.glb", "category": "item", "slot": "legs", "sizeKB": 886 },
-    { "id": "armorknees", "path": "assets/models/npcs/items/armorknees.glb", "emissionPath": "assets/models/npcs/items/armorknees-emission.glb", "category": "item", "slot": "legs", "sizeKB": 886 },
-    { "id": "armorceinturethighs", "path": "assets/models/npcs/items/armorceinturethighs.glb", "emissionPath": "assets/models/npcs/items/armorceinturethighs-emission.glb", "category": "item", "slot": "legs", "sizeKB": 875 },
-    { "id": "ninjassuitthigh", "path": "assets/models/npcs/items/ninjassuitthigh.glb", "emissionPath": "assets/models/npcs/items/ninjassuitthigh-emission.glb", "category": "item", "slot": "legs", "sizeKB": 679 },
-    { "id": "ninjasuitshort", "path": "assets/models/npcs/items/ninjasuitshort.glb", "emissionPath": "assets/models/npcs/items/ninjasuitshort-emission.glb", "category": "item", "slot": "legs", "sizeKB": 91 },
-    { "id": "shoe", "path": "assets/models/npcs/items/shoe.glb", "emissionPath": "assets/models/npcs/items/shoe-emission.glb", "category": "item", "slot": "feet", "sizeKB": 358 },
-    { "id": "bottes", "path": "assets/models/npcs/items/bottes.glb", "emissionPath": "assets/models/npcs/items/bottes-emission.glb", "category": "item", "slot": "feet", "sizeKB": 229 },
-    { "id": "bottesgreen", "path": "assets/models/npcs/items/bottesgreen.glb", "emissionPath": "assets/models/npcs/items/bottesgreen-emission.glb", "category": "item", "slot": "feet", "sizeKB": 155 },
-    { "id": "armorshoe", "path": "assets/models/npcs/items/armorshoe.glb", "emissionPath": "assets/models/npcs/items/armorshoe-emission.glb", "category": "item", "slot": "feet", "sizeKB": 202 },
-    { "id": "ninjassuitshoe", "path": "assets/models/npcs/items/ninjassuitshoe.glb", "emissionPath": "assets/models/npcs/items/ninjassuitshoe-emission.glb", "category": "item", "slot": "feet", "sizeKB": 697 },
-    { "id": "bag", "path": "assets/models/npcs/items/bag.glb", "emissionPath": "assets/models/npcs/items/bag-emission.glb", "category": "item", "slot": "accessory", "sizeKB": 515 },
-    { "id": "ceinture", "path": "assets/models/npcs/items/ceinture.glb", "emissionPath": "assets/models/npcs/items/ceinture-emission.glb", "category": "item", "slot": "accessory", "sizeKB": 168 }
+    {
+      "id": "hairone",
+      "path": "assets/models/npcs/items/hairone.glb",
+      "emissionPath": "assets/models/npcs/items/hairone-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 290
+    },
+    {
+      "id": "hairtail",
+      "path": "assets/models/npcs/items/hairtail.glb",
+      "emissionPath": "assets/models/npcs/items/hairtail-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 535
+    },
+    {
+      "id": "hairtailknight",
+      "path": "assets/models/npcs/items/hairtailknight.glb",
+      "emissionPath": "assets/models/npcs/items/hairtailknight-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 114
+    },
+    {
+      "id": "hairT",
+      "path": "assets/models/npcs/items/hairT.glb",
+      "emissionPath": "assets/models/npcs/items/hairT-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 605
+    },
+    {
+      "id": "hairvariant",
+      "path": "assets/models/npcs/items/hairvariant.glb",
+      "emissionPath": "assets/models/npcs/items/hairvariant-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 606
+    },
+    {
+      "id": "hairvariant-001",
+      "path": "assets/models/npcs/items/hairvariant-001.glb",
+      "emissionPath": "assets/models/npcs/items/hairvariant-001-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 600
+    },
+    {
+      "id": "hat",
+      "path": "assets/models/npcs/items/hat.glb",
+      "emissionPath": "assets/models/npcs/items/hat-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 205
+    },
+    {
+      "id": "armorhelmet",
+      "path": "assets/models/npcs/items/armorhelmet.glb",
+      "emissionPath": "assets/models/npcs/items/armorhelmet-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 902
+    },
+    {
+      "id": "ninjassuitmask",
+      "path": "assets/models/npcs/items/ninjassuitmask.glb",
+      "emissionPath": "assets/models/npcs/items/ninjassuitmask-emission.glb",
+      "category": "item",
+      "slot": "head",
+      "sizeKB": 677
+    },
+    {
+      "id": "shirt",
+      "path": "assets/models/npcs/items/shirt.glb",
+      "emissionPath": "assets/models/npcs/items/shirt-emission.glb",
+      "category": "item",
+      "slot": "torso",
+      "sizeKB": 501
+    },
+    {
+      "id": "chemise",
+      "path": "assets/models/npcs/items/chemise.glb",
+      "emissionPath": "assets/models/npcs/items/chemise-emission.glb",
+      "category": "item",
+      "slot": "torso",
+      "sizeKB": 615
+    },
+    {
+      "id": "greenoutfit",
+      "path": "assets/models/npcs/items/greenoutfit.glb",
+      "emissionPath": "assets/models/npcs/items/greenoutfit-emission.glb",
+      "category": "item",
+      "slot": "torso",
+      "sizeKB": 957
+    },
+    {
+      "id": "greenoutfitbelt",
+      "path": "assets/models/npcs/items/greenoutfitbelt.glb",
+      "emissionPath": "assets/models/npcs/items/greenoutfitbelt-emission.glb",
+      "category": "item",
+      "slot": "torso",
+      "sizeKB": 921
+    },
+    {
+      "id": "greenoutfitneckless",
+      "path": "assets/models/npcs/items/greenoutfitneckless.glb",
+      "emissionPath": "assets/models/npcs/items/greenoutfitneckless-emission.glb",
+      "category": "item",
+      "slot": "torso",
+      "sizeKB": 924
+    },
+    {
+      "id": "ninjassuit",
+      "path": "assets/models/npcs/items/ninjassuit.glb",
+      "emissionPath": "assets/models/npcs/items/ninjassuit-emission.glb",
+      "category": "item",
+      "slot": "torso",
+      "sizeKB": 697
+    },
+    {
+      "id": "amorplastron",
+      "path": "assets/models/npcs/items/amorplastron.glb",
+      "emissionPath": "assets/models/npcs/items/amorplastron-emission.glb",
+      "category": "item",
+      "slot": "torso",
+      "sizeKB": 655
+    },
+    {
+      "id": "amorarm",
+      "path": "assets/models/npcs/items/amorarm.glb",
+      "emissionPath": "assets/models/npcs/items/amorarm-emission.glb",
+      "category": "item",
+      "slot": "torso",
+      "sizeKB": 941
+    },
+    {
+      "id": "pants",
+      "path": "assets/models/npcs/items/pants.glb",
+      "emissionPath": "assets/models/npcs/items/pants-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 217
+    },
+    {
+      "id": "skirt",
+      "path": "assets/models/npcs/items/skirt.glb",
+      "emissionPath": "assets/models/npcs/items/skirt-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 134
+    },
+    {
+      "id": "armorskirt",
+      "path": "assets/models/npcs/items/armorskirt.glb",
+      "emissionPath": "assets/models/npcs/items/armorskirt-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 138
+    },
+    {
+      "id": "armorthigh",
+      "path": "assets/models/npcs/items/armorthigh.glb",
+      "emissionPath": "assets/models/npcs/items/armorthigh-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 959
+    },
+    {
+      "id": "armorlegs",
+      "path": "assets/models/npcs/items/armorlegs.glb",
+      "emissionPath": "assets/models/npcs/items/armorlegs-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 886
+    },
+    {
+      "id": "armorknees",
+      "path": "assets/models/npcs/items/armorknees.glb",
+      "emissionPath": "assets/models/npcs/items/armorknees-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 886
+    },
+    {
+      "id": "armorceinturethighs",
+      "path": "assets/models/npcs/items/armorceinturethighs.glb",
+      "emissionPath": "assets/models/npcs/items/armorceinturethighs-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 875
+    },
+    {
+      "id": "ninjassuitthigh",
+      "path": "assets/models/npcs/items/ninjassuitthigh.glb",
+      "emissionPath": "assets/models/npcs/items/ninjassuitthigh-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 679
+    },
+    {
+      "id": "ninjasuitshort",
+      "path": "assets/models/npcs/items/ninjasuitshort.glb",
+      "emissionPath": "assets/models/npcs/items/ninjasuitshort-emission.glb",
+      "category": "item",
+      "slot": "legs",
+      "sizeKB": 91
+    },
+    {
+      "id": "shoe",
+      "path": "assets/models/npcs/items/shoe.glb",
+      "emissionPath": "assets/models/npcs/items/shoe-emission.glb",
+      "category": "item",
+      "slot": "feet",
+      "sizeKB": 358
+    },
+    {
+      "id": "bottes",
+      "path": "assets/models/npcs/items/bottes.glb",
+      "emissionPath": "assets/models/npcs/items/bottes-emission.glb",
+      "category": "item",
+      "slot": "feet",
+      "sizeKB": 229
+    },
+    {
+      "id": "bottesgreen",
+      "path": "assets/models/npcs/items/bottesgreen.glb",
+      "emissionPath": "assets/models/npcs/items/bottesgreen-emission.glb",
+      "category": "item",
+      "slot": "feet",
+      "sizeKB": 155
+    },
+    {
+      "id": "armorshoe",
+      "path": "assets/models/npcs/items/armorshoe.glb",
+      "emissionPath": "assets/models/npcs/items/armorshoe-emission.glb",
+      "category": "item",
+      "slot": "feet",
+      "sizeKB": 202
+    },
+    {
+      "id": "ninjassuitshoe",
+      "path": "assets/models/npcs/items/ninjassuitshoe.glb",
+      "emissionPath": "assets/models/npcs/items/ninjassuitshoe-emission.glb",
+      "category": "item",
+      "slot": "feet",
+      "sizeKB": 697
+    },
+    {
+      "id": "bag",
+      "path": "assets/models/npcs/items/bag.glb",
+      "emissionPath": "assets/models/npcs/items/bag-emission.glb",
+      "category": "item",
+      "slot": "accessory",
+      "sizeKB": 515
+    },
+    {
+      "id": "ceinture",
+      "path": "assets/models/npcs/items/ceinture.glb",
+      "emissionPath": "assets/models/npcs/items/ceinture-emission.glb",
+      "category": "item",
+      "slot": "accessory",
+      "sizeKB": 168
+    }
   ]
 }

@@ -11,7 +11,7 @@ import {
   getTip,
   LOADING_TIPS,
   tipCount,
-} from "./loadingScreenLogic";
+} from "./loadingScreenLogic.ts";
 
 describe("LoadingScreen logic (Spec §1.3)", () => {
   describe("getPhaseLabel", () => {

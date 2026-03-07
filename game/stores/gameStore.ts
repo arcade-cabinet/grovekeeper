@@ -11,13 +11,14 @@
  *   - useGameStore.subscribe(listener)   -- change subscription
  */
 
-import { observable, observe, batch } from "@legendapp/state";
+import { batch, observable, observe } from "@legendapp/state";
 import { useSelector } from "@legendapp/state/react";
-import { chunkDiffs$ } from "@/game/world/chunkPersistence";
-
+import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
+import growthConfig from "@/config/game/growth.json" with { type: "json" };
 import { emptyResources, type ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
 import { getToolById } from "@/game/config/tools";
+import type { DialogueEffect } from "@/game/ecs/components/dialogue";
 import {
   advanceFestivalChallenge,
   type EventContext,
@@ -36,13 +37,10 @@ import {
 } from "@/game/quests/questChainEngine";
 import type { QuestChainState } from "@/game/quests/types";
 import { applyDialogueEffects } from "@/game/systems/dialogueEffects";
-import type { DialogueEffect } from "@/game/ecs/components/dialogue";
 import {
-  initialTutorialState,
-  skipTutorial as skipTutorialPure,
-  tickTutorial,
-  type TutorialState,
-} from "@/game/systems/tutorial";
+  discoverCampfire as discoverCampfirePure,
+  type FastTravelPoint,
+} from "@/game/systems/fastTravel";
 import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import { checkNewUnlocks } from "@/game/systems/levelUnlocks";
 import {
@@ -51,16 +49,19 @@ import {
   updateMarketEvents,
 } from "@/game/systems/marketEvents";
 import {
+  awardGiftXp as awardGiftXpPure,
+  awardQuestCompletionXp as awardQuestCompletionXpPure,
+  awardTradingXp as awardTradingXpPure,
+  setRelationship as setRelationshipPure,
+} from "@/game/systems/npcRelationship";
+import {
   calculatePrestigeBonus,
   canPrestige,
   generateNewWorldSeed,
   getPrestigeResetState,
   getUnlockedPrestigeSpecies,
 } from "@/game/systems/prestige";
-import { clearAllChunkDiffs } from "@/game/world/chunkPersistence";
 import type { ActiveQuest } from "@/game/systems/quests";
-import growthConfig from "@/config/game/growth.json" with { type: "json" };
-import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
 import {
   computeDiscoveryTier,
   createEmptyProgress,
@@ -76,10 +77,6 @@ import {
 import type { Season } from "@/game/systems/time";
 import { canAffordToolUpgrade, getToolUpgradeTier } from "@/game/systems/toolUpgrades";
 import {
-  discoverCampfire as discoverCampfirePure,
-  type FastTravelPoint,
-} from "@/game/systems/fastTravel";
-import {
   initializeMerchantState,
   type MerchantState,
   purchaseOffer,
@@ -87,12 +84,13 @@ import {
   updateMerchant,
 } from "@/game/systems/travelingMerchant";
 import {
-  awardGiftXp as awardGiftXpPure,
-  awardQuestCompletionXp as awardQuestCompletionXpPure,
-  awardTradingXp as awardTradingXpPure,
-  setRelationship as setRelationshipPure,
-} from "@/game/systems/npcRelationship";
+  initialTutorialState,
+  skipTutorial as skipTutorialPure,
+  type TutorialState,
+  tickTutorial,
+} from "@/game/systems/tutorial";
 import { showToast } from "@/game/ui/Toast";
+import { chunkDiffs$, clearAllChunkDiffs } from "@/game/world/chunkPersistence";
 
 // ---------------------------------------------------------------------------
 // Types (unchanged from BabylonJS archive)
@@ -317,7 +315,13 @@ export const gameState$ = observable(structuredClone(initialState));
 // ---------------------------------------------------------------------------
 
 // Fields that should NOT be persisted (ephemeral runtime state)
-const EPHEMERAL_KEYS = new Set(["screen", "groveData", "buildMode", "buildTemplateId", "activeCraftingStation"]);
+const EPHEMERAL_KEYS = new Set([
+  "screen",
+  "groveData",
+  "buildMode",
+  "buildTemplateId",
+  "activeCraftingStation",
+]);
 
 let persistenceInitialized = false;
 
@@ -331,9 +335,7 @@ export async function initPersistence(): Promise<void> {
   persistenceInitialized = true;
 
   const { syncObservable } = await import("@legendapp/state/sync");
-  const { observablePersistSqlite } = await import(
-    "@legendapp/state/persist-plugins/expo-sqlite"
-  );
+  const { observablePersistSqlite } = await import("@legendapp/state/persist-plugins/expo-sqlite");
   const { Storage } = await import("expo-sqlite/kv-store");
 
   syncObservable(gameState$, {
@@ -737,10 +739,7 @@ const actions = {
     gameState$.questChainState.set(newChainState);
   },
 
-  advanceQuestObjective(
-    eventType: string,
-    amount: number,
-  ): { chainId: string; stepId: string }[] {
+  advanceQuestObjective(eventType: string, amount: number): { chainId: string; stepId: string }[] {
     const state = getState();
     const result = advanceObjectives(state.questChainState, eventType, amount);
     if (result.state !== state.questChainState) {
@@ -1240,23 +1239,17 @@ const actions = {
 
   awardNpcQuestCompletionXp(npcId: string): void {
     const state = getState();
-    gameState$.npcRelationships.set(
-      awardQuestCompletionXpPure(state.npcRelationships, npcId),
-    );
+    gameState$.npcRelationships.set(awardQuestCompletionXpPure(state.npcRelationships, npcId));
   },
 
   awardNpcGiftXp(npcId: string, giftMultiplier: number = 1.0): void {
     const state = getState();
-    gameState$.npcRelationships.set(
-      awardGiftXpPure(state.npcRelationships, npcId, giftMultiplier),
-    );
+    gameState$.npcRelationships.set(awardGiftXpPure(state.npcRelationships, npcId, giftMultiplier));
   },
 
   setNpcRelationship(npcId: string, value: number): void {
     const state = getState();
-    gameState$.npcRelationships.set(
-      setRelationshipPure(state.npcRelationships, npcId, value),
-    );
+    gameState$.npcRelationships.set(setRelationshipPure(state.npcRelationships, npcId, value));
   },
 
   // Spirit discovery actions (Spec §32.3)
@@ -1361,6 +1354,33 @@ const actions = {
       gameState$.lastCampfireId.set(id);
       gameState$.lastCampfirePosition.set(position);
     });
+  },
+
+  /**
+   * Handle player death. Restores minimum hearts, resets hunger to half,
+   * teleports player to last campfire. In permadeath (ironwood) mode, resets the world.
+   * Spec §12.5, §2.1
+   */
+  handleDeath() {
+    const difficulty = gameState$.difficulty.get();
+    const isPermadeath = gameState$.permadeath.get();
+    batch(() => {
+      // Restore minimum hearts (1 for ironwood, 1 for all on death)
+      gameState$.hearts.set(1);
+      // Partial hunger restore on respawn
+      gameState$.hunger.set(50);
+      // Reset body temp to normal
+      gameState$.bodyTemp.set(37.0);
+    });
+    if (isPermadeath || difficulty === "ironwood") {
+      // Permadeath: full world reset — clear all progression except cosmetics
+      gameState$.level.set(1);
+      gameState$.xp.set(0);
+      gameState$.lastCampfireId.set(null);
+      gameState$.lastCampfirePosition.set(null);
+    }
+    // Respawn position is read by PlayerCapsule from lastCampfirePosition.
+    // If null, player spawns at world origin.
   },
 
   // ---------------------------------------------------------------------------

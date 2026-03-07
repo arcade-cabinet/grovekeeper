@@ -20,7 +20,7 @@ jest.mock("react", () => ({
   useRef: (val: unknown) => ({ current: val }),
 }));
 
-import { useMovement } from "./useMovement";
+import { useMovement } from "./useMovement.ts";
 
 function createMockPlayerRef(x = 0, z = 0) {
   const group = {

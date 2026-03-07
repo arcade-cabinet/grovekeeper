@@ -10,15 +10,15 @@
  *   - Full tickTraps integration
  */
 
+import type { EnemyTargetEntity, TrapEntity } from "./traps.ts";
 import {
+  applyTrapDamageToHealth,
   createTrapComponent,
   isEnemyInTrapRange,
-  triggerTrap,
   tickTrapCooldown,
-  applyTrapDamageToHealth,
   tickTraps,
-} from "./traps";
-import type { TrapEntity, EnemyTargetEntity } from "./traps";
+  triggerTrap,
+} from "./traps.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -271,7 +271,7 @@ describe("tickTraps (Spec §22)", () => {
   it("handles multiple traps independently", () => {
     const t1 = makeTrapEntity("spike", 0, 0);
     const t2 = makeTrapEntity("snare", 10, 10);
-    const e1 = makeEnemy(0.5, 0);   // in t1 range, not t2
+    const e1 = makeEnemy(0.5, 0); // in t1 range, not t2
     const e2 = makeEnemy(10.5, 10); // in t2 range, not t1
     tickTraps([t1, t2], [e1, e2], 0.016);
     expect(t1.trap.armed).toBe(false);

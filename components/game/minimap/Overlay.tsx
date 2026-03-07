@@ -10,7 +10,7 @@
 
 import { XIcon } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
-import { Modal, Pressable, View, useWindowDimensions } from "react-native";
+import { Modal, Pressable, useWindowDimensions, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -24,10 +24,10 @@ import {
   PLAYER_FILL,
   SKY_MIST,
   SPIRIT_DISCOVERED_COLOR,
-} from "./colors";
-import { MinimapSVG } from "./MinimapSVG";
-import { readMinimapSnapshot } from "./snapshot";
-import type { MinimapSnapshot } from "./types";
+} from "./colors.ts";
+import { MinimapSVG } from "./MinimapSVG.tsx";
+import { readMinimapSnapshot } from "./snapshot.ts";
+import type { MinimapSnapshot } from "./types.ts";
 
 const PADDING = 48;
 
@@ -44,8 +44,7 @@ function LegendItem({
   label: string;
   shape?: "circle" | "square" | "diamond";
 }) {
-  const borderRadius =
-    shape === "circle" ? 4 : shape === "diamond" ? 0 : 1;
+  const borderRadius = shape === "circle" ? 4 : shape === "diamond" ? 0 : 1;
   const transform = shape === "diamond" ? [{ rotate: "45deg" }] : undefined;
 
   return (
@@ -76,9 +75,7 @@ export interface MiniMapOverlayProps {
 }
 
 export const MiniMapOverlay = ({ open, onClose, onCampfirePress }: MiniMapOverlayProps) => {
-  const [snapshot, setSnapshot] = useState<MinimapSnapshot>(() =>
-    readMinimapSnapshot(),
-  );
+  const [snapshot, setSnapshot] = useState<MinimapSnapshot>(() => readMinimapSnapshot());
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   useEffect(() => {
@@ -140,11 +137,7 @@ export const MiniMapOverlay = ({ open, onClose, onCampfirePress }: MiniMapOverla
           className="overflow-hidden rounded-xl"
           style={{ borderWidth: 3, borderColor: BARK_BROWN }}
         >
-          <MinimapSVG
-            snapshot={snapshot}
-            size={mapSize}
-            onCampfirePress={onCampfirePress}
-          />
+          <MinimapSVG snapshot={snapshot} size={mapSize} onCampfirePress={onCampfirePress} />
         </View>
 
         {/* Legend */}

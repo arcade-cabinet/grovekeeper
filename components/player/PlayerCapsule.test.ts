@@ -37,7 +37,7 @@ import {
   CAPSULE_HEIGHT,
   CAPSULE_RADIUS,
   PlayerCapsule,
-} from "./PlayerCapsule";
+} from "./PlayerCapsule.tsx";
 
 describe("PlayerCapsule (Spec §9)", () => {
   it("exports CAPSULE_HEIGHT as 1.8m (full standing height)", () => {
@@ -93,7 +93,10 @@ describe("PlayerCapsule Rapier-to-ECS sync (Spec §9)", () => {
   it("does not mutate ECS position when no playerEntity exists", () => {
     // Verify the guard `if (!body || !playerEntity) return` prevents mutation.
     // When playerEntity is absent, the sync function must exit without touching position.
-    type SyncFn = (body: { translation: () => { x: number; y: number; z: number } } | null, entity: { position: { x: number; y: number; z: number } } | undefined) => void;
+    type SyncFn = (
+      body: { translation: () => { x: number; y: number; z: number } } | null,
+      entity: { position: { x: number; y: number; z: number } } | undefined,
+    ) => void;
     const runSync: SyncFn = (body, entity) => {
       if (!body || !entity) return;
       const t = body.translation();
@@ -109,7 +112,10 @@ describe("PlayerCapsule Rapier-to-ECS sync (Spec §9)", () => {
   it("does not mutate ECS position when body is null", () => {
     // Verify the guard `if (!body || !playerEntity) return` prevents mutation.
     // When body is null, the sync function must exit without touching position.
-    type SyncFn = (body: { translation: () => { x: number; y: number; z: number } } | null, entity: { position: { x: number; y: number; z: number } }) => void;
+    type SyncFn = (
+      body: { translation: () => { x: number; y: number; z: number } } | null,
+      entity: { position: { x: number; y: number; z: number } },
+    ) => void;
     const runSync: SyncFn = (body, entity) => {
       if (!body || !entity) return;
       const t = body.translation();

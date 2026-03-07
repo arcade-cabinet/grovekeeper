@@ -12,8 +12,8 @@ import {
   computeAvailableChains,
   getCurrentStepProgress,
   isChainCompleted,
-} from "./questChainEngine";
-import type { QuestChainState } from "./types";
+} from "./questChainEngine.ts";
+import type { QuestChainState } from "./types.ts";
 
 export const MAIN_QUEST_CHAIN_ID = "main-quest-spirits";
 export const WORLDROOTS_DREAM_CHAIN_ID = "worldroots-dream";

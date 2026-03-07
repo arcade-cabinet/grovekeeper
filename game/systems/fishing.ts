@@ -209,10 +209,7 @@ export function pressFishingAction(state: FishingState): void {
       break;
 
     case "minigame":
-      if (
-        state.timingProgress >= state.zoneStart &&
-        state.timingProgress <= state.zoneEnd
-      ) {
+      if (state.timingProgress >= state.zoneStart && state.timingProgress <= state.zoneEnd) {
         state.phase = "caught";
       } else {
         state.phase = "escaped";
@@ -255,13 +252,8 @@ export function isFishingComplete(state: FishingState): boolean {
  *   const rng = scopedRNG("fish", worldSeed, String(castCount));
  *   const species = selectFishSpecies(biome, season, rng);
  */
-export function selectFishSpecies(
-  biome: string,
-  season: string,
-  rng: () => number,
-): string | null {
-  const candidates =
-    fishingConfig.biomeSpecies[biome as keyof typeof fishingConfig.biomeSpecies];
+export function selectFishSpecies(biome: string, season: string, rng: () => number): string | null {
+  const candidates = fishingConfig.biomeSpecies[biome as keyof typeof fishingConfig.biomeSpecies];
 
   if (!candidates || candidates.length === 0) return null;
 

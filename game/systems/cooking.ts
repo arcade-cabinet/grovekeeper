@@ -6,8 +6,8 @@
  */
 
 import cookingConfig from "@/config/game/cooking.json" with { type: "json" };
-import type { CampfireComponent, CropId } from "@/game/ecs/components/structures";
 import type { FoodComponent } from "@/game/ecs/components/items";
+import type { CampfireComponent, CropId } from "@/game/ecs/components/structures";
 
 // ---------------------------------------------------------------------------
 // Cooking recipe definition (loaded from config)
@@ -33,8 +33,7 @@ export interface CookingRecipe {
   output: CookingRecipeOutput;
 }
 
-const COOKING_RECIPES: CookingRecipe[] =
-  cookingConfig.recipes as CookingRecipe[];
+const COOKING_RECIPES: CookingRecipe[] = cookingConfig.recipes as CookingRecipe[];
 
 // ---------------------------------------------------------------------------
 // Config accessors
@@ -75,19 +74,12 @@ export function createEmptyCookingSlot(): CookingSlotState {
 // ---------------------------------------------------------------------------
 
 /** Check if player has enough ingredients for a recipe. */
-export function canCook(
-  recipe: CookingRecipe,
-  inventory: Record<string, number>,
-): boolean {
-  return recipe.ingredients.every(
-    (ing) => (inventory[ing.cropId] ?? 0) >= ing.amount,
-  );
+export function canCook(recipe: CookingRecipe, inventory: Record<string, number>): boolean {
+  return recipe.ingredients.every((ing) => (inventory[ing.cropId] ?? 0) >= ing.amount);
 }
 
 /** Find all recipes that can be cooked with current inventory. */
-export function getAvailableRecipes(
-  inventory: Record<string, number>,
-): CookingRecipe[] {
+export function getAvailableRecipes(inventory: Record<string, number>): CookingRecipe[] {
   return COOKING_RECIPES.filter((r) => canCook(r, inventory));
 }
 
@@ -141,9 +133,7 @@ export function advanceCooking(
 }
 
 /** Collect finished food from a done cooking slot. Returns the food output. */
-export function collectCookedFood(
-  slot: CookingSlotState,
-): FoodComponent | null {
+export function collectCookedFood(slot: CookingSlotState): FoodComponent | null {
   if (slot.status !== "done" || !slot.recipeId) return null;
 
   const recipe = getCookingRecipeById(slot.recipeId);
@@ -217,9 +207,7 @@ export interface CampfireInteraction {
  * Pure function — no side effects. Callers open the cooking UI when
  * `canCookNow` is true.
  */
-export function resolveCampfireInteraction(
-  entity: unknown,
-): CampfireInteraction {
+export function resolveCampfireInteraction(entity: unknown): CampfireInteraction {
   if (!isCampfireEntity(entity)) {
     return {
       isCampfire: false,

@@ -5,11 +5,16 @@
  *
  * All randomness via scopedRNG. All tuning values from config JSON.
  */
+
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
+import type {
+  BushComponent,
+  TreeComponent,
+  VegetationSeason,
+} from "@/game/ecs/components/vegetation";
 import { createRNG, hashString } from "@/game/utils/seedRNG";
 import { scopedRNG } from "@/game/utils/seedWords";
-import type { BushComponent, TreeComponent, VegetationSeason } from "@/game/ecs/components/vegetation";
-import vegetationConfig from "@/config/game/vegetation.json";
-import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -51,9 +56,7 @@ export function resolveTreeModelPath(
   isWinter: boolean,
 ): string {
   if (isWinter && modelKey) {
-    return pack === "retro"
-      ? `trees/winter/${modelKey}.glb`
-      : `trees/base/${modelKey}.glb`;
+    return pack === "retro" ? `trees/winter/${modelKey}.glb` : `trees/base/${modelKey}.glb`;
   }
   if (pack === "extra") {
     return `trees/extra/${modelKey}.glb`;
@@ -100,10 +103,7 @@ export function resolveBushModelKey(
  * Updates a bush component when the season changes.
  * Returns a new modelKey pointing to the correct seasonal GLB.
  */
-export function updateBushSeason(
-  bush: BushComponent,
-  newSeason: VegetationSeason,
-): BushComponent {
+export function updateBushSeason(bush: BushComponent, newSeason: VegetationSeason): BushComponent {
   return {
     ...bush,
     season: newSeason,
@@ -201,9 +201,7 @@ export function spawnChunkVegetation(
   heightmap: Float32Array,
 ): ChunkVegetationResult {
   const templates = vegetationConfig.biomeVegetationTemplates;
-  const template =
-    templates[biome as keyof typeof templates] ??
-    templates["starting-grove"];
+  const template = templates[biome as keyof typeof templates] ?? templates["starting-grove"];
 
   const rng = scopedRNG("vegetation", worldSeed, chunkX, chunkZ);
   const trees: ChunkVegTreePlacement[] = [];

@@ -8,12 +8,12 @@
  * See GAME_SPEC.md §15.
  */
 
-import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
+import { useMemo } from "react";
 import { Mesh, MeshStandardMaterial } from "three";
-import { generateNpcAppearance } from "@/game/systems/npcAppearance";
 import npcAssets from "@/config/game/npcAssets.json" with { type: "json" };
 import type { NpcItemSlot } from "@/game/ecs/components/npc";
+import { generateNpcAppearance } from "@/game/systems/npcAppearance";
 
 // ---------------------------------------------------------------------------
 // Asset lookup maps (built from npcAssets.json)
@@ -73,9 +73,7 @@ export function resolveBaseModelEmissionPath(baseModelId: string): string {
 export function resolveItemPath(itemId: string): string {
   const entry = ITEM_ASSET_MAP.get(itemId);
   if (!entry) {
-    throw new Error(
-      `[NpcModel] Unknown itemId: "${itemId}". Check config/game/npcAssets.json.`,
-    );
+    throw new Error(`[NpcModel] Unknown itemId: "${itemId}". Check config/game/npcAssets.json.`);
   }
   return entry.path;
 }
@@ -189,11 +187,7 @@ export const NpcModel = ({
   role = "tips",
   position = [0, 0, 0],
 }: NpcModelProps) => {
-  const { baseModelPath, itemPaths, colorPalette } = resolveNpcAppearance(
-    npcId,
-    worldSeed,
-    role,
-  );
+  const { baseModelPath, itemPaths, colorPalette } = resolveNpcAppearance(npcId, worldSeed, role);
 
   return (
     <group position={position}>

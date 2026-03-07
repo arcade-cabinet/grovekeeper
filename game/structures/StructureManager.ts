@@ -7,7 +7,7 @@
 
 import type { StructureComponent } from "@/game/ecs/world";
 import structureData from "./data/structures.json" with { type: "json" };
-import type { StructureTemplate } from "./types";
+import type { StructureTemplate } from "./types.ts";
 
 // ---------------------------------------------------------------------------
 // Template registry (loaded once from JSON)

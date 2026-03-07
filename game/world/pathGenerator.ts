@@ -15,14 +15,14 @@
  * produces identical path data. All randomness via scopedRNG.
  */
 
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import proceduralConfig from "@/config/game/procedural.json" with { type: "json" };
 import type {
   PathSegmentComponent,
   SignpostComponent,
   SignpostDirection,
 } from "@/game/ecs/components/procedural/terrain";
 import { scopedRNG } from "@/game/utils/seedWords";
-import gridConfig from "@/config/game/grid.json" with { type: "json" };
-import proceduralConfig from "@/config/game/procedural.json" with { type: "json" };
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -79,11 +79,7 @@ const CARDINAL_DIRS: ReadonlyArray<{
  *
  * Pure function — deterministic from worldSeed + chunk coords.
  */
-export function isLandmarkChunk(
-  worldSeed: string,
-  chunkX: number,
-  chunkZ: number,
-): boolean {
+export function isLandmarkChunk(worldSeed: string, chunkX: number, chunkZ: number): boolean {
   if (chunkX === 0 && chunkZ === 0) return true;
   const rng = scopedRNG("landmark-roll", worldSeed, chunkX, chunkZ);
   return rng() < LANDMARK_PROBABILITY;
@@ -116,11 +112,7 @@ export function getLandmarkLocalPos(
  * Return the landmark type for a chunk.
  * Village only at origin; others cycle through shrine / ancient-tree / campfire.
  */
-export function getLandmarkType(
-  worldSeed: string,
-  chunkX: number,
-  chunkZ: number,
-): LandmarkType {
+export function getLandmarkType(worldSeed: string, chunkX: number, chunkZ: number): LandmarkType {
   if (chunkX === 0 && chunkZ === 0) return "village";
   const rng = scopedRNG("landmark-type", worldSeed, chunkX, chunkZ);
   const types: LandmarkType[] = ["shrine", "ancient-tree", "campfire"];
@@ -257,10 +249,10 @@ export function generatePathsForChunk(
     exitX: number;
     exitZ: number;
   }> = [
-    { dx: 0, dz: -1, exitX: localX, exitZ: 0 },                 // N
-    { dx: 1, dz: 0,  exitX: CHUNK_SIZE - 1, exitZ: localZ },    // E
-    { dx: 0, dz: 1,  exitX: localX, exitZ: CHUNK_SIZE - 1 },    // S
-    { dx: -1, dz: 0, exitX: 0, exitZ: localZ },                  // W
+    { dx: 0, dz: -1, exitX: localX, exitZ: 0 }, // N
+    { dx: 1, dz: 0, exitX: CHUNK_SIZE - 1, exitZ: localZ }, // E
+    { dx: 0, dz: 1, exitX: localX, exitZ: CHUNK_SIZE - 1 }, // S
+    { dx: -1, dz: 0, exitX: 0, exitZ: localZ }, // W
   ];
 
   const rng = scopedRNG("path-curve", worldSeed, chunkX, chunkZ);

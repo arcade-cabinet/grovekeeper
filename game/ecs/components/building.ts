@@ -27,12 +27,7 @@ export type PieceType =
 export type MaterialType = "wood" | "stone" | "metal" | "thatch" | "reinforced";
 
 /** Structure category for base value and gameplay effects. */
-export type StructureCategory =
-  | "shelter"
-  | "workshop"
-  | "storage"
-  | "defensive"
-  | "decorative";
+export type StructureCategory = "shelter" | "workshop" | "storage" | "defensive" | "decorative";
 
 /** Snap point for kitbashing connection between modular pieces. */
 export interface SnapPoint {

@@ -7,12 +7,16 @@
 import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { questBranchQuery } from "@/game/ecs/world";
 import type { QuestBranchComponent } from "@/game/ecs/components/dialogue";
-import { getChainDef, getCurrentStep, getCurrentStepProgress } from "@/game/quests/questChainEngine";
+import { questBranchQuery } from "@/game/ecs/world";
+import {
+  getChainDef,
+  getCurrentStep,
+  getCurrentStepProgress,
+} from "@/game/quests/questChainEngine";
 import type { QuestChainState } from "@/game/quests/types";
 import { useGameStore } from "@/game/stores/gameStore";
-import { showToast } from "./Toast";
+import { showToast } from "./Toast.tsx";
 
 // ---------------------------------------------------------------------------
 // Types

@@ -3,11 +3,8 @@
  * Spec §19.3 — Procedural village buildings, NPCs, and campfire placement.
  */
 
-import {
-  generateVillage,
-  type VillageGenerationResult,
-} from "./villageGenerator";
-import { getLandmarkType, isLandmarkChunk } from "./pathGenerator";
+import { getLandmarkType, isLandmarkChunk } from "./pathGenerator.ts";
+import { generateVillage, type VillageGenerationResult } from "./villageGenerator.ts";
 
 const SIZE = 16;
 
@@ -214,7 +211,7 @@ describe("generateVillage — determinism (Spec §19.3)", () => {
 
   it("different seeds produce different village layouts", () => {
     const r1 = generateVillage("Seed Alpha", 0, 0, flatHeightmap());
-    const r2 = generateVillage("Seed Beta",  0, 0, flatHeightmap());
+    const r2 = generateVillage("Seed Beta", 0, 0, flatHeightmap());
     if (!r1 || !r2) throw new Error("Expected non-null results");
 
     // Expect at least some difference (buildings, names, or NPC count).

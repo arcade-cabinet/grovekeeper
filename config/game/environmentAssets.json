@@ -46,8 +46,20 @@
       "count": 14,
       "path": "bushes/retro/",
       "variants": [
-        "bush01", "bush02", "bush03", "bush04", "bush05", "bush06", "bush07", "bush08",
-        "bush01_winter", "bush02_winter", "bush03_winter", "bush04_winter", "bush05_winter", "bush06_winter"
+        "bush01",
+        "bush02",
+        "bush03",
+        "bush04",
+        "bush05",
+        "bush06",
+        "bush07",
+        "bush08",
+        "bush01_winter",
+        "bush02_winter",
+        "bush03_winter",
+        "bush04_winter",
+        "bush05_winter",
+        "bush06_winter"
       ]
     }
   },
@@ -74,66 +86,233 @@
       "brick": {
         "count": 7,
         "path": "fences/brick/",
-        "variants": ["brick_wall", "brick_Wall_corner", "brick_wall_gate", "brick_wall_one_overhang", "brick_wall_one_overhang_small", "brick_wall_pole", "brick_wall_small"]
+        "variants": [
+          "brick_wall",
+          "brick_Wall_corner",
+          "brick_wall_gate",
+          "brick_wall_one_overhang",
+          "brick_wall_one_overhang_small",
+          "brick_wall_pole",
+          "brick_wall_small"
+        ]
       },
       "drystone": {
         "count": 10,
         "path": "fences/drystone/",
-        "variants": ["drystone_column", "drystone_column_capped", "drystone_column_tiles", "drystone_wall", "drystone_wall_capped", "drystone_wall_half", "drystone_wall_half_capped", "drystone_wall_half_tiles", "drystone_wall_tiles"]
+        "variants": [
+          "drystone_column",
+          "drystone_column_capped",
+          "drystone_column_tiles",
+          "drystone_wall",
+          "drystone_wall_capped",
+          "drystone_wall_half",
+          "drystone_wall_half_capped",
+          "drystone_wall_half_tiles",
+          "drystone_wall_tiles"
+        ]
       },
       "wooden": {
         "count": 16,
         "path": "fences/wooden/",
-        "variants": ["wooden_fence_beam", "wooden_fence_beam_alt", "wooden_fence_beam_alt_2", "wooden_fence_broken", "wooden_fence_broken_alt", "wooden_fence_broken_alt2", "wooden_fence_closed", "wooden_fence_oen_crossed", "wooden_fence_open", "wooden_fence_open_alt", "wooden_fence_pile", "wooden_fence_pole", "wooden_fence_pole_alt", "wooden_fence_pole_alt_2", "wooden_fence_pole_broken_large", "wooden_fence_pole_broken_small"]
+        "variants": [
+          "wooden_fence_beam",
+          "wooden_fence_beam_alt",
+          "wooden_fence_beam_alt_2",
+          "wooden_fence_broken",
+          "wooden_fence_broken_alt",
+          "wooden_fence_broken_alt2",
+          "wooden_fence_closed",
+          "wooden_fence_oen_crossed",
+          "wooden_fence_open",
+          "wooden_fence_open_alt",
+          "wooden_fence_pile",
+          "wooden_fence_pole",
+          "wooden_fence_pole_alt",
+          "wooden_fence_pole_alt_2",
+          "wooden_fence_pole_broken_large",
+          "wooden_fence_pole_broken_small"
+        ]
       },
       "metal": {
         "count": 7,
         "path": "fences/metal/",
-        "variants": ["gate", "metal_fence_gate_with_gate", "metalfence_both_sides_no_topbar", "metalfence_both_sides_topbar", "metalfence_gate_only_sides", "metalfence_one_side_no_topbar", "metalfence_one_side_topbar"]
+        "variants": [
+          "gate",
+          "metal_fence_gate_with_gate",
+          "metalfence_both_sides_no_topbar",
+          "metalfence_both_sides_topbar",
+          "metalfence_gate_only_sides",
+          "metalfence_one_side_no_topbar",
+          "metalfence_one_side_topbar"
+        ]
       },
       "plackard": {
         "count": 23,
         "path": "fences/plackard/",
-        "variants": ["plackard_broken", "plackard_broken_alt", "plackard_broken_slanted", "plackard_closed", "plackard_closed_full", "plackard_corner", "plackard_corner_closed", "plackard_corner_closed_alt", "plackard_corner_open", "plackard_corner_open_90", "plackard_corner_open_90_alt", "plackard_corner_open_alt", "plackard_open", "plackard_open_alt", "plackard_open_alt2", "plackard_open_patched", "plackard_slab_boken", "plackard_slab_broken_alt", "plackard_slab_chipped", "plackard_slab_chipped_alt", "plackard_slab_full", "plackard_slab_half", "plackard_slab_single", "plackard_slab_wood_patched"]
+        "variants": [
+          "plackard_broken",
+          "plackard_broken_alt",
+          "plackard_broken_slanted",
+          "plackard_closed",
+          "plackard_closed_full",
+          "plackard_corner",
+          "plackard_corner_closed",
+          "plackard_corner_closed_alt",
+          "plackard_corner_open",
+          "plackard_corner_open_90",
+          "plackard_corner_open_90_alt",
+          "plackard_corner_open_alt",
+          "plackard_open",
+          "plackard_open_alt",
+          "plackard_open_alt2",
+          "plackard_open_patched",
+          "plackard_slab_boken",
+          "plackard_slab_broken_alt",
+          "plackard_slab_chipped",
+          "plackard_slab_chipped_alt",
+          "plackard_slab_full",
+          "plackard_slab_half",
+          "plackard_slab_single",
+          "plackard_slab_wood_patched"
+        ]
       },
       "plaster": {
         "count": 9,
         "path": "fences/plaster/",
-        "variants": ["gate_handle", "plaster_wall", "plaster_wall_column", "plaster_wall_column_fancy", "plaster_wall_fenced", "plaster_wall_half", "plaster_wall_half_fenced", "plastic_gate_left", "plastic_gate_right"]
+        "variants": [
+          "gate_handle",
+          "plaster_wall",
+          "plaster_wall_column",
+          "plaster_wall_column_fancy",
+          "plaster_wall_fenced",
+          "plaster_wall_half",
+          "plaster_wall_half_fenced",
+          "plastic_gate_left",
+          "plastic_gate_right"
+        ]
       },
       "picket": {
         "count": 7,
         "path": "fences/picket/",
-        "variants": ["white_picket_fence_closed_left", "white_picket_fence_closed_right", "white_picket_fence_gate", "white_picket_fence_gate_poles", "white_picket_fence_open_left", "white_picket_fence_open_right", "white_picket_fence_pole"]
+        "variants": [
+          "white_picket_fence_closed_left",
+          "white_picket_fence_closed_right",
+          "white_picket_fence_gate",
+          "white_picket_fence_gate_poles",
+          "white_picket_fence_open_left",
+          "white_picket_fence_open_right",
+          "white_picket_fence_pole"
+        ]
       }
     }
   },
   "rocks": {
     "count": 1,
     "items": [
-      { "id": "rocks", "path": "rocks/rocks.glb", "sizeKB": 38, "note": "composite formation - may contain multiple meshes" }
+      {
+        "id": "rocks",
+        "path": "rocks/rocks.glb",
+        "sizeKB": 38,
+        "note": "composite formation - may contain multiple meshes"
+      }
     ]
   },
   "hedges": {
     "totalGLBs": 171,
     "modular": {
-      "basic": { "count": 24, "path": "hedges/basic/", "sizes": ["1x1","1x2","1x3","2x1","2x2","2x3","3x1","3x2","3x3","4x1","4x2","4x3","5x1","5x2","5x3"], "junctions": ["L_1","L_2","L_3","T_1","T_2","T_3","X_1","X_2","X_3"] },
-      "diagonal": { "count": 15, "path": "hedges/diagonal/", "sizes": ["1x1","1x2","1x3","2x1","2x2","2x3","3x1","3x2","3x3","4x1","4x2","4x3","5x1","5x2","5x3"] },
-      "round": { "count": 43, "path": "hedges/round/", "note": "Multiple variants per size (01, 02, 03, 04)" },
+      "basic": {
+        "count": 24,
+        "path": "hedges/basic/",
+        "sizes": [
+          "1x1",
+          "1x2",
+          "1x3",
+          "2x1",
+          "2x2",
+          "2x3",
+          "3x1",
+          "3x2",
+          "3x3",
+          "4x1",
+          "4x2",
+          "4x3",
+          "5x1",
+          "5x2",
+          "5x3"
+        ],
+        "junctions": ["L_1", "L_2", "L_3", "T_1", "T_2", "T_3", "X_1", "X_2", "X_3"]
+      },
+      "diagonal": {
+        "count": 15,
+        "path": "hedges/diagonal/",
+        "sizes": [
+          "1x1",
+          "1x2",
+          "1x3",
+          "2x1",
+          "2x2",
+          "2x3",
+          "3x1",
+          "3x2",
+          "3x3",
+          "4x1",
+          "4x2",
+          "4x3",
+          "5x1",
+          "5x2",
+          "5x3"
+        ]
+      },
+      "round": {
+        "count": 43,
+        "path": "hedges/round/",
+        "note": "Multiple variants per size (01, 02, 03, 04)"
+      },
       "slope": { "count": 1, "path": "hedges/slope/", "sizes": ["1x1"] },
-      "triangle": { "count": 12, "path": "hedges/triangle/", "sizes": ["2x1","2x2","2x3","3x1","3x2","3x3","4x1","4x2","4x3","5x1","5x2","5x3"] }
+      "triangle": {
+        "count": 12,
+        "path": "hedges/triangle/",
+        "sizes": [
+          "2x1",
+          "2x2",
+          "2x3",
+          "3x1",
+          "3x2",
+          "3x3",
+          "4x1",
+          "4x2",
+          "4x3",
+          "5x1",
+          "5x2",
+          "5x3"
+        ]
+      }
     },
     "misc": {
       "fences": { "count": 30, "path": "hedges/misc/fences/", "styles": 3 },
       "flowers": { "count": 22, "path": "hedges/misc/flowers/", "flowerbeds": 16, "vases": 6 },
-      "stone": { "count": 22, "path": "hedges/misc/stone/", "benches": 2, "fountains": 8, "columns": 3, "walls": 4, "stairs": 2, "other": 3 },
+      "stone": {
+        "count": 22,
+        "path": "hedges/misc/stone/",
+        "benches": 2,
+        "fountains": 8,
+        "columns": 3,
+        "walls": 4,
+        "stairs": 2,
+        "other": 3
+      },
       "structures": { "count": 2, "path": "hedges/misc/", "items": ["gazebo", "tower"] }
     }
   },
   "buildings": {
     "count": 1,
     "items": [
-      { "id": "Buildings", "path": "buildings/Buildings.glb", "note": "Composite GLB - needs Blender split into individual buildings", "needsSplit": true }
+      {
+        "id": "Buildings",
+        "path": "buildings/Buildings.glb",
+        "note": "Composite GLB - needs Blender split into individual buildings",
+        "needsSplit": true
+      }
     ]
   },
   "summary": {

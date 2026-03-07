@@ -8,14 +8,14 @@
  * Spec §35
  */
 
-export { getAvailableSnapPoints, validatePlacement } from "./placement";
-export { calculateBaseValue, getUnlockedPieces, getUnlockedMaterials } from "./unlocks";
-export type { KitbashRapierWorld, KitbashRapierModule } from "./rapier";
+export type { KitbashCommitStore, KitbashPlacementWorld } from "./commit.ts";
+export { placeModularPiece } from "./commit.ts";
+export { getAvailableSnapPoints, validatePlacement } from "./placement.ts";
+export type { KitbashRapierModule, KitbashRapierWorld } from "./rapier.ts";
 export {
-  checkSnapDirectionMatch,
   checkClearance,
   checkGroundContact,
+  checkSnapDirectionMatch,
   validatePlacementWithRapier,
-} from "./rapier";
-export type { KitbashPlacementWorld, KitbashCommitStore } from "./commit";
-export { placeModularPiece } from "./commit";
+} from "./rapier.ts";
+export { calculateBaseValue, getUnlockedMaterials, getUnlockedPieces } from "./unlocks.ts";

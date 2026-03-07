@@ -10,10 +10,7 @@
       "effectMagnitude": 2.0,
       "maxDurability": 200,
       "level": 5,
-      "buildCost": [
-        { "resource": "timber", "amount": 30 },
-        { "resource": "acorns", "amount": 10 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 30 }, { "resource": "acorns", "amount": 10 }]
     },
     {
       "id": "house-1",
@@ -25,10 +22,7 @@
       "effectMagnitude": 0.5,
       "maxDurability": 150,
       "level": 3,
-      "buildCost": [
-        { "resource": "timber", "amount": 20 },
-        { "resource": "sap", "amount": 5 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 20 }, { "resource": "sap", "amount": 5 }]
     },
     {
       "id": "house-2",
@@ -40,10 +34,7 @@
       "effectMagnitude": 0.75,
       "maxDurability": 175,
       "level": 7,
-      "buildCost": [
-        { "resource": "timber", "amount": 35 },
-        { "resource": "sap", "amount": 10 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 35 }, { "resource": "sap", "amount": 10 }]
     },
     {
       "id": "house-3",
@@ -120,10 +111,7 @@
       "effectMagnitude": 0.15,
       "maxDurability": 150,
       "level": 4,
-      "buildCost": [
-        { "resource": "timber", "amount": 15 },
-        { "resource": "sap", "amount": 8 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 15 }, { "resource": "sap", "amount": 8 }]
     },
     {
       "id": "campfire-1",
@@ -135,9 +123,7 @@
       "effectMagnitude": 1.0,
       "maxDurability": 50,
       "level": 1,
-      "buildCost": [
-        { "resource": "timber", "amount": 5 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 5 }]
     },
     {
       "id": "campfire-2",
@@ -149,10 +135,7 @@
       "effectMagnitude": 1.5,
       "maxDurability": 100,
       "level": 6,
-      "buildCost": [
-        { "resource": "timber", "amount": 10 },
-        { "resource": "acorns", "amount": 5 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 10 }, { "resource": "acorns", "amount": 5 }]
     },
     {
       "id": "chicken-coop-1",
@@ -164,10 +147,7 @@
       "effectMagnitude": 0.1,
       "maxDurability": 80,
       "level": 6,
-      "buildCost": [
-        { "resource": "timber", "amount": 15 },
-        { "resource": "fruit", "amount": 5 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 15 }, { "resource": "fruit", "amount": 5 }]
     },
     {
       "id": "chicken-coop-2",
@@ -195,9 +175,7 @@
       "effectMagnitude": 1.0,
       "maxDurability": 80,
       "level": 2,
-      "buildCost": [
-        { "resource": "timber", "amount": 10 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 10 }]
     },
     {
       "id": "storage-2",
@@ -209,10 +187,7 @@
       "effectMagnitude": 1.5,
       "maxDurability": 100,
       "level": 5,
-      "buildCost": [
-        { "resource": "timber", "amount": 15 },
-        { "resource": "sap", "amount": 5 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 15 }, { "resource": "sap", "amount": 5 }]
     },
     {
       "id": "storage-3",
@@ -237,9 +212,7 @@
       "modelPath": "assets/models/structures/farm/notice-board.glb",
       "maxDurability": 50,
       "level": 2,
-      "buildCost": [
-        { "resource": "timber", "amount": 5 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 5 }]
     },
     {
       "id": "lamp",
@@ -248,10 +221,7 @@
       "modelPath": "assets/models/structures/farm/lamp.glb",
       "maxDurability": 40,
       "level": 3,
-      "buildCost": [
-        { "resource": "timber", "amount": 5 },
-        { "resource": "sap", "amount": 3 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 5 }, { "resource": "sap", "amount": 3 }]
     },
     {
       "id": "bird-house",
@@ -263,9 +233,7 @@
       "effectMagnitude": 0.05,
       "maxDurability": 30,
       "level": 4,
-      "buildCost": [
-        { "resource": "timber", "amount": 8 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 8 }]
     },
     {
       "id": "water-post",
@@ -277,10 +245,7 @@
       "effectMagnitude": 0.1,
       "maxDurability": 60,
       "level": 3,
-      "buildCost": [
-        { "resource": "timber", "amount": 8 },
-        { "resource": "sap", "amount": 4 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 8 }, { "resource": "sap", "amount": 4 }]
     },
     {
       "id": "wooden-frame",
@@ -289,9 +254,7 @@
       "modelPath": "assets/models/structures/farm/wooden-frame.glb",
       "maxDurability": 60,
       "level": 2,
-      "buildCost": [
-        { "resource": "timber", "amount": 8 }
-      ]
+      "buildCost": [{ "resource": "timber", "amount": 8 }]
     }
   ],
   "villageGeneration": {
@@ -315,13 +278,19 @@
     }
   },
   "biomeTemplates": {
-    "starting-grove": { "probability": 0.3, "allowedIds": ["water-post", "bird-house", "campfire-1"] },
-    "meadow":         { "probability": 0.2, "allowedIds": ["notice-board", "water-post", "bird-house"] },
+    "starting-grove": {
+      "probability": 0.3,
+      "allowedIds": ["water-post", "bird-house", "campfire-1"]
+    },
+    "meadow": { "probability": 0.2, "allowedIds": ["notice-board", "water-post", "bird-house"] },
     "ancient-forest": { "probability": 0.15, "allowedIds": ["bird-house", "lamp"] },
-    "wetlands":       { "probability": 0.2, "allowedIds": ["water-post"] },
-    "rocky-highlands":{ "probability": 0.1, "allowedIds": ["campfire-1", "lamp"] },
-    "orchard-valley": { "probability": 0.4, "allowedIds": ["water-post", "bird-house", "notice-board"] },
-    "frozen-peaks":   { "probability": 0.05, "allowedIds": ["campfire-1"] },
+    "wetlands": { "probability": 0.2, "allowedIds": ["water-post"] },
+    "rocky-highlands": { "probability": 0.1, "allowedIds": ["campfire-1", "lamp"] },
+    "orchard-valley": {
+      "probability": 0.4,
+      "allowedIds": ["water-post", "bird-house", "notice-board"]
+    },
+    "frozen-peaks": { "probability": 0.05, "allowedIds": ["campfire-1"] },
     "twilight-glade": { "probability": 0.15, "allowedIds": ["bird-house", "lamp", "notice-board"] }
   }
 }

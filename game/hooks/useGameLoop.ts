@@ -24,6 +24,7 @@ import {
 } from "@/game/ecs/world";
 
 const gridCellsQuery = world.with("gridCell", "position");
+
 import { useGameStore } from "@/game/stores/gameStore";
 import { checkAchievements, type PlayerStats } from "@/game/systems/achievements";
 import { tickCropGrowth } from "@/game/systems/cropGrowth";
@@ -236,11 +237,7 @@ export function useGameLoop(): void {
     for (const entity of playerQuery) {
       if (!entity.player) continue;
 
-      const newStamina = regenStamina(
-        entity.player.stamina,
-        entity.player.maxStamina,
-        dt,
-      );
+      const newStamina = regenStamina(entity.player.stamina, entity.player.maxStamina, dt);
 
       if (newStamina !== entity.player.stamina) {
         entity.player.stamina = newStamina;
@@ -274,7 +271,12 @@ export function useGameLoop(): void {
 
       // FIX-06: Drain hearts from starvation and exposure
       // Build a minimal HealthComponent bridging store.hearts
-      const healthBridge = { current: store.hearts, max: store.maxHearts, invulnFrames: 0, lastDamageSource: null };
+      const healthBridge = {
+        current: store.hearts,
+        max: store.maxHearts,
+        invulnFrames: 0,
+        lastDamageSource: null,
+      };
       tickHeartsFromStarvation(healthBridge, newHunger, dt, affectsGameplay);
       tickHeartsFromExposure(healthBridge, dt, exposureDriftRate, exposureEnabled, affectsGameplay);
       if (healthBridge.current !== store.hearts) {
@@ -292,8 +294,9 @@ export function useGameLoop(): void {
         }
       }
 
-      // FIX-29: Tutorial — dispatch signal for any active gameplay
-      store.advanceTutorial("action:look");
+      // FIX-29: Tutorial — "action:look" advances when player actually looks around.
+      // Wired from useMouseLook (pointer lock delta) and TouchProvider (look zone delta).
+      // Do NOT call advanceTutorial here every frame — that floods the store.
     }
 
     // ── 5. Harvest Cooldowns ─────────────────────────────────────────────
@@ -320,7 +323,8 @@ export function useGameLoop(): void {
 
     // FIX-31: NPC Schedule ticks (throttled via walkability grid availability)
     if (walkGridRef.current) {
-      const currentHour = (timeState.totalMicroseconds / (MICROSECONDS_PER_GAME_SECOND * 3600)) % 24;
+      const currentHour =
+        (timeState.totalMicroseconds / (MICROSECONDS_PER_GAME_SECOND * 3600)) % 24;
       for (const entity of npcsQuery) {
         if (!entity.position || !entity.npc || !entity.npc.schedule?.length) continue;
         const schedResult = tickNpcSchedule(
@@ -456,10 +460,10 @@ export function useGameLoop(): void {
         currentGridSize: store.gridSize,
         prestigeCount: store.prestigeCount,
         questsCompleted: store.questChainState.completedChainIds.length,
-        recipesUnlocked: (store as Record<string, unknown>).recipesUnlocked as number ?? 0,
+        recipesUnlocked: ((store as Record<string, unknown>).recipesUnlocked as number) ?? 0,
         structuresPlaced: store.placedStructures.length,
         oldGrowthCount,
-        npcsFriended: (store as Record<string, unknown>).npcsFriended as number ?? 0,
+        npcsFriended: ((store as Record<string, unknown>).npcsFriended as number) ?? 0,
         totalDaysPlayed: timeState.dayNumber,
         tradeCount: store.marketState.tradeHistory.length,
         festivalCount: store.eventState.completedFestivalIds.length,

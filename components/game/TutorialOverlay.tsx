@@ -16,14 +16,7 @@
  */
 
 import React, { useEffect, useRef } from "react";
-import {
-  AccessibilityInfo,
-  Animated,
-  Dimensions,
-  Easing,
-  Pressable,
-  View,
-} from "react-native";
+import { AccessibilityInfo, Animated, Dimensions, Easing, Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { useGameStore } from "@/game/stores/gameStore";
 import { currentStepLabel } from "@/game/systems/tutorial";
@@ -191,10 +184,7 @@ export function TutorialOverlay({ targetRect, label: labelProp }: TutorialOverla
             elevation: 6,
           }}
         >
-          <Text
-            className="text-center text-[13px] font-semibold text-white"
-            numberOfLines={2}
-          >
+          <Text className="text-center text-[13px] font-semibold text-white" numberOfLines={2}>
             {activeLabel}
           </Text>
         </View>
@@ -225,10 +215,7 @@ export function TutorialOverlay({ targetRect, label: labelProp }: TutorialOverla
           accessibilityRole="button"
           accessibilityLabel="Skip tutorial"
         >
-          <Text
-            className="text-[13px] font-semibold"
-            style={{ color: COLORS.skipText }}
-          >
+          <Text className="text-[13px] font-semibold" style={{ color: COLORS.skipText }}>
             Skip Tutorial
           </Text>
         </Pressable>

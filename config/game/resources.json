@@ -1,23 +1,126 @@
 {
   "types": [
-    "timber", "sap", "fruit", "acorns", "wood", "stone", "metal_scrap", "fiber",
-    "ore", "berries", "herbs", "meat", "hide", "fish", "seeds"
+    "timber",
+    "sap",
+    "fruit",
+    "acorns",
+    "wood",
+    "stone",
+    "metal_scrap",
+    "fiber",
+    "ore",
+    "berries",
+    "herbs",
+    "meat",
+    "hide",
+    "fish",
+    "seeds"
   ],
   "info": {
-    "timber": { "name": "Timber", "icon": "tree", "stackable": true, "gatherTool": "axe", "scarcity": "common" },
-    "sap": { "name": "Sap", "icon": "droplet", "stackable": true, "gatherTool": "axe", "scarcity": "uncommon" },
-    "fruit": { "name": "Fruit", "icon": "apple", "stackable": true, "gatherTool": "hand", "scarcity": "seasonal" },
-    "acorns": { "name": "Acorns", "icon": "nut", "stackable": true, "gatherTool": "hand", "scarcity": "rare" },
-    "wood": { "name": "Wood", "icon": "log", "stackable": true, "gatherTool": "axe", "scarcity": "common" },
-    "stone": { "name": "Stone", "icon": "pebble", "stackable": true, "gatherTool": "pickaxe", "scarcity": "common" },
-    "metal_scrap": { "name": "Metal Scrap", "icon": "gear", "stackable": true, "gatherTool": "pickaxe", "scarcity": "uncommon" },
-    "fiber": { "name": "Fiber", "icon": "leaf", "stackable": true, "gatherTool": "hand", "scarcity": "common" },
-    "ore": { "name": "Ore", "icon": "crystal", "stackable": true, "gatherTool": "pickaxe", "scarcity": "uncommon" },
-    "berries": { "name": "Berries", "icon": "berry", "stackable": true, "gatherTool": "hand", "scarcity": "common" },
-    "herbs": { "name": "Herbs", "icon": "herb", "stackable": true, "gatherTool": "hand", "scarcity": "uncommon" },
-    "meat": { "name": "Meat", "icon": "meat", "stackable": true, "gatherTool": "hand", "scarcity": "scarce" },
-    "hide": { "name": "Hide", "icon": "hide", "stackable": true, "gatherTool": "hand", "scarcity": "scarce" },
-    "fish": { "name": "Fish", "icon": "fish", "stackable": true, "gatherTool": "fishing-rod", "scarcity": "moderate" },
-    "seeds": { "name": "Seeds", "icon": "seed", "stackable": true, "gatherTool": "hand", "scarcity": "varies" }
+    "timber": {
+      "name": "Timber",
+      "icon": "tree",
+      "stackable": true,
+      "gatherTool": "axe",
+      "scarcity": "common"
+    },
+    "sap": {
+      "name": "Sap",
+      "icon": "droplet",
+      "stackable": true,
+      "gatherTool": "axe",
+      "scarcity": "uncommon"
+    },
+    "fruit": {
+      "name": "Fruit",
+      "icon": "apple",
+      "stackable": true,
+      "gatherTool": "hand",
+      "scarcity": "seasonal"
+    },
+    "acorns": {
+      "name": "Acorns",
+      "icon": "nut",
+      "stackable": true,
+      "gatherTool": "hand",
+      "scarcity": "rare"
+    },
+    "wood": {
+      "name": "Wood",
+      "icon": "log",
+      "stackable": true,
+      "gatherTool": "axe",
+      "scarcity": "common"
+    },
+    "stone": {
+      "name": "Stone",
+      "icon": "pebble",
+      "stackable": true,
+      "gatherTool": "pickaxe",
+      "scarcity": "common"
+    },
+    "metal_scrap": {
+      "name": "Metal Scrap",
+      "icon": "gear",
+      "stackable": true,
+      "gatherTool": "pickaxe",
+      "scarcity": "uncommon"
+    },
+    "fiber": {
+      "name": "Fiber",
+      "icon": "leaf",
+      "stackable": true,
+      "gatherTool": "hand",
+      "scarcity": "common"
+    },
+    "ore": {
+      "name": "Ore",
+      "icon": "crystal",
+      "stackable": true,
+      "gatherTool": "pickaxe",
+      "scarcity": "uncommon"
+    },
+    "berries": {
+      "name": "Berries",
+      "icon": "berry",
+      "stackable": true,
+      "gatherTool": "hand",
+      "scarcity": "common"
+    },
+    "herbs": {
+      "name": "Herbs",
+      "icon": "herb",
+      "stackable": true,
+      "gatherTool": "hand",
+      "scarcity": "uncommon"
+    },
+    "meat": {
+      "name": "Meat",
+      "icon": "meat",
+      "stackable": true,
+      "gatherTool": "hand",
+      "scarcity": "scarce"
+    },
+    "hide": {
+      "name": "Hide",
+      "icon": "hide",
+      "stackable": true,
+      "gatherTool": "hand",
+      "scarcity": "scarce"
+    },
+    "fish": {
+      "name": "Fish",
+      "icon": "fish",
+      "stackable": true,
+      "gatherTool": "fishing-rod",
+      "scarcity": "moderate"
+    },
+    "seeds": {
+      "name": "Seeds",
+      "icon": "seed",
+      "stackable": true,
+      "gatherTool": "hand",
+      "scarcity": "varies"
+    }
   }
 }

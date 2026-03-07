@@ -13,13 +13,13 @@ jest.mock("@react-three/drei", () => ({
 
 jest.mock("@react-three/fiber", () => ({}));
 
+import type { FenceConnections } from "./FenceModel.tsx";
 import {
   FenceModel,
-  resolveFenceGLBPath,
-  resolveConnectedVariant,
   resolveConnectedRotation,
-} from "./FenceModel";
-import type { FenceConnections } from "./FenceModel";
+  resolveConnectedVariant,
+  resolveFenceGLBPath,
+} from "./FenceModel.tsx";
 
 // ---------------------------------------------------------------------------
 // Canonical spot-check variants per fence type
@@ -138,12 +138,13 @@ const FENCE_TYPES: Array<Parameters<typeof resolveFenceGLBPath>[0]> = [
 // ---------------------------------------------------------------------------
 
 describe("resolveFenceGLBPath (Spec §14)", () => {
-  it.each(SPOT_CHECKS)(
-    "returns correct path for $fenceType:$variant",
-    ({ fenceType, variant, expectedPath }) => {
-      expect(resolveFenceGLBPath(fenceType, variant)).toBe(expectedPath);
-    },
-  );
+  it.each(SPOT_CHECKS)("returns correct path for $fenceType:$variant", ({
+    fenceType,
+    variant,
+    expectedPath,
+  }) => {
+    expect(resolveFenceGLBPath(fenceType, variant)).toBe(expectedPath);
+  });
 
   it("all paths end in .glb", () => {
     for (const { fenceType, variant } of SPOT_CHECKS) {
@@ -153,9 +154,7 @@ describe("resolveFenceGLBPath (Spec §14)", () => {
 
   it("all paths are under assets/models/fences/", () => {
     for (const { fenceType, variant } of SPOT_CHECKS) {
-      expect(resolveFenceGLBPath(fenceType, variant)).toMatch(
-        /^assets\/models\/fences\//,
-      );
+      expect(resolveFenceGLBPath(fenceType, variant)).toMatch(/^assets\/models\/fences\//);
     }
   });
 
@@ -313,9 +312,7 @@ describe("resolveConnectedRotation (Spec §14)", () => {
   });
 
   it("E-W alignment returns PI/2", () => {
-    expect(resolveConnectedRotation({ east: true, west: true })).toBeCloseTo(
-      Math.PI / 2,
-    );
+    expect(resolveConnectedRotation({ east: true, west: true })).toBeCloseTo(Math.PI / 2);
   });
 
   it("east only returns PI/2", () => {
@@ -335,9 +332,7 @@ describe("resolveConnectedRotation (Spec §14)", () => {
   });
 
   it("all four connected returns 0", () => {
-    expect(
-      resolveConnectedRotation({ north: true, south: true, east: true, west: true }),
-    ).toBe(0);
+    expect(resolveConnectedRotation({ north: true, south: true, east: true, west: true })).toBe(0);
   });
 });
 

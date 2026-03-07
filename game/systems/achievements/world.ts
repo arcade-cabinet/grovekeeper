@@ -4,7 +4,7 @@
  * Spec §25.2, §25.3, §32.3
  */
 
-import type { Achievement } from "./types";
+import type { Achievement } from "./types.ts";
 
 export const WORLD_ACHIEVEMENTS: Achievement[] = [
   // ── Social ─────────────────────────────────────

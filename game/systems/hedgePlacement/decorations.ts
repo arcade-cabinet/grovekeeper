@@ -1,13 +1,11 @@
 /** Maze decoration placement: center reward area + dead ends + intersections. Spec §17.5. */
+
+import hedgeMazeConfig from "@/config/game/hedgeMaze.json" with { type: "json" };
 import { createRNG } from "@/game/utils/seedRNG";
-import hedgeMazeConfig from "@/config/game/hedgeMaze.json";
-import type { MazeResult, MazeDecoration } from "./types";
+import type { MazeDecoration, MazeResult } from "./types.ts";
 
 /** Places decorations at the center reward area, dead ends, and intersections. */
-export function placeMazeDecorations(
-  maze: MazeResult,
-  seed: number,
-): MazeDecoration[] {
+export function placeMazeDecorations(maze: MazeResult, seed: number): MazeDecoration[] {
   const rng = createRNG(seed);
   const decorations: MazeDecoration[] = [];
   const cellScale: number = hedgeMazeConfig.cellScale;
@@ -75,10 +73,7 @@ export function placeMazeDecorations(
       }
 
       // Intersection: 0-1 walls → occasional column.
-      if (
-        wallCount <= 1 &&
-        rng() < hedgeMazeConfig.dressing.intersectionProbability
-      ) {
+      if (wallCount <= 1 && rng() < hedgeMazeConfig.dressing.intersectionProbability) {
         const columnIdx = Math.floor(rng() * 3) + 1;
         decorations.push({
           modelPath: `hedges/misc/stone/column${columnIdx}.glb`,

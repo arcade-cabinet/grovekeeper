@@ -16,7 +16,7 @@
  * See docs/architecture/touch-controls.md for layout and sensitivity constants.
  */
 
-import { type IInputProvider, type InputFrame } from "@/game/input/InputManager";
+import type { IInputProvider, InputFrame } from "@/game/input/InputManager";
 
 /** Radians per pixel of viewport swipe for look control. */
 const LOOK_SENSITIVITY = 0.003;
@@ -160,8 +160,7 @@ export class TouchProvider implements IInputProvider {
 
   isAvailable(): boolean {
     return (
-      typeof window !== "undefined" &&
-      ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+      typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0)
     );
   }
 

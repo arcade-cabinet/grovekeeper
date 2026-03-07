@@ -10,10 +10,10 @@
  * Emitter is created/replaced/removed as weather changes each tick.
  */
 
-import { World } from "miniplex";
-import type { ParticleEmitterComponent } from "@/game/ecs/components/procedural/particles";
-import type { WeatherComponent, WeatherType } from "@/game/ecs/components/procedural/atmosphere";
+import type { World } from "miniplex";
 import proceduralConfig from "@/config/game/procedural.json" with { type: "json" };
+import type { WeatherComponent, WeatherType } from "@/game/ecs/components/procedural/atmosphere";
+import type { ParticleEmitterComponent } from "@/game/ecs/components/procedural/particles";
 
 // ── Constants from config ────────────────────────────────────────────────────
 

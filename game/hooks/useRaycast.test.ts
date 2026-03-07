@@ -28,14 +28,14 @@ jest.mock("@/game/ecs/world", () => ({
   structuresQuery: [],
 }));
 
+import type { Entity } from "@/game/ecs/world";
 import {
   findNearestStructure,
   MAX_RAYCAST_DISTANCE,
   resolveEntityById,
   STRUCTURE_SNAP_RADIUS,
   useRaycast,
-} from "./useRaycast";
-import type { Entity } from "@/game/ecs/world";
+} from "./useRaycast.ts";
 
 /** Minimal entity with optional position. */
 function makeEntity(id: string, position?: { x: number; y: number; z: number }): Entity {

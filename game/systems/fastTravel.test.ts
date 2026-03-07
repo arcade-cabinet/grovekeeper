@@ -5,12 +5,12 @@
  */
 
 import {
-  discoverCampfire,
-  isCampfireDiscovered,
   canDiscoverMore,
-  getTeleportTarget,
+  discoverCampfire,
   type FastTravelPoint,
-} from "./fastTravel";
+  getTeleportTarget,
+  isCampfireDiscovered,
+} from "./fastTravel.ts";
 
 const MAX_POINTS = 8;
 

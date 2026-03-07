@@ -9,15 +9,15 @@
  * produces identical placements. All randomness via scopedRNG.
  */
 
-import type { BiomeType } from "./biomeMapper";
-import type {
-  WaterBodyComponent,
-  WaterBodyType,
-  GerstnerWaveLayer,
-} from "@/game/ecs/components/procedural/water";
-import { scopedRNG } from "@/game/utils/seedWords";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import proceduralConfig from "@/config/game/procedural.json" with { type: "json" };
+import type {
+  GerstnerWaveLayer,
+  WaterBodyComponent,
+  WaterBodyType,
+} from "@/game/ecs/components/procedural/water";
+import { scopedRNG } from "@/game/utils/seedWords";
+import type { BiomeType } from "./biomeMapper.ts";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -162,10 +162,7 @@ export function getBiomeWaterRule(biome: BiomeType): BiomeWaterRule {
  *   - Next `streamChance` fraction  → stream
  *   - Remainder                     → pond
  */
-export function selectWaterType(
-  rule: BiomeWaterRule,
-  roll: number,
-): WaterBodyType | null {
+export function selectWaterType(rule: BiomeWaterRule, roll: number): WaterBodyType | null {
   if (rule.probability === 0 || roll >= rule.probability) return null;
   const normalized = roll / rule.probability;
   if (normalized < rule.riverChance) return "river";
@@ -175,10 +172,7 @@ export function selectWaterType(
 
 // ── WaterBodyComponent factory ─────────────────────────────────────────────────
 
-function buildWaterBody(
-  waterType: WaterBodyType,
-  flowDir: [number, number],
-): WaterBodyComponent {
+function buildWaterBody(waterType: WaterBodyType, flowDir: [number, number]): WaterBodyComponent {
   const colors = proceduralConfig.water.colors;
   const foamThreshold: number = proceduralConfig.water.foamThreshold;
 

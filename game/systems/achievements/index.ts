@@ -9,7 +9,7 @@
  *   checker.ts  -- ACHIEVEMENTS catalog + checkAchievements, getAchievementById
  */
 
-export type { Achievement, PlayerStats } from "./types";
-export { CORE_ACHIEVEMENTS } from "./core";
-export { WORLD_ACHIEVEMENTS } from "./world";
-export { ACHIEVEMENTS, checkAchievements, getAchievementById } from "./checker";
+export { ACHIEVEMENTS, checkAchievements, getAchievementById } from "./checker.ts";
+export { CORE_ACHIEVEMENTS } from "./core.ts";
+export type { Achievement, PlayerStats } from "./types.ts";
+export { WORLD_ACHIEVEMENTS } from "./world.ts";

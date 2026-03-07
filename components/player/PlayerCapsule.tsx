@@ -7,13 +7,13 @@
  * each frame via usePhysicsMovement (Spec §23).
  */
 
-import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { CapsuleCollider, RigidBody } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
-import { usePhysicsMovement } from "@/game/hooks/usePhysicsMovement";
-import { useJump } from "@/game/hooks/useJump";
+import { CapsuleCollider, RigidBody } from "@react-three/rapier";
+import { useRef } from "react";
 import { playerQuery } from "@/game/ecs/world";
+import { useJump } from "@/game/hooks/useJump";
+import { usePhysicsMovement } from "@/game/hooks/usePhysicsMovement";
 
 /** Total capsule height in meters (Spec §9). */
 export const CAPSULE_HEIGHT = 1.8;

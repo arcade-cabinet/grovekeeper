@@ -8,10 +8,10 @@
  * See GAME_SPEC.md §14.
  */
 
-import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
-import type { FenceType } from "@/game/ecs/components/terrain";
+import { useMemo } from "react";
 import fencesConfig from "@/config/game/fences.json" with { type: "json" };
+import type { FenceType } from "@/game/ecs/components/terrain";
 
 // ---------------------------------------------------------------------------
 // Config data type
@@ -25,10 +25,7 @@ interface FenceEntry {
 
 /** Map keyed by "{fenceType}:{variant}" → modelPath */
 const FENCE_MAP = new Map<string, string>(
-  (fencesConfig.fences as FenceEntry[]).map((f) => [
-    `${f.fenceType}:${f.variant}`,
-    f.modelPath,
-  ]),
+  (fencesConfig.fences as FenceEntry[]).map((f) => [`${f.fenceType}:${f.variant}`, f.modelPath]),
 );
 
 // ---------------------------------------------------------------------------
@@ -193,12 +190,8 @@ export const FenceModel = ({
   rotationY = 0,
   connections,
 }: FenceModelProps) => {
-  const resolvedVariant = connections
-    ? resolveConnectedVariant(fenceType, connections)
-    : variant;
-  const resolvedRotationY = connections
-    ? resolveConnectedRotation(connections)
-    : rotationY;
+  const resolvedVariant = connections ? resolveConnectedVariant(fenceType, connections) : variant;
+  const resolvedRotationY = connections ? resolveConnectedRotation(connections) : rotationY;
   const glbPath = resolveFenceGLBPath(fenceType, resolvedVariant);
 
   return (

@@ -106,15 +106,16 @@ export function RulesModal({ open, onClose, onStart }: RulesModalProps) {
           }}
         >
           {/* Background gradient */}
-          <LinearGradient colors={["#faf9f6", SKY_MIST]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}>
+          <LinearGradient
+            colors={["#faf9f6", SKY_MIST]}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          >
             {/* Header */}
             <View className="items-center px-5 pb-3 pt-5">
               <View className="flex-row items-center gap-2">
                 <Text className="text-xl">{"\uD83C\uDF32"}</Text>
-                <Text
-                  className="font-heading text-xl font-bold"
-                  style={{ color: FOREST_GREEN }}
-                >
+                <Text className="font-heading text-xl font-bold" style={{ color: FOREST_GREEN }}>
                   How to Play
                 </Text>
                 <Text className="text-xl">{"\uD83C\uDF32"}</Text>
@@ -167,10 +168,7 @@ export function RulesModal({ open, onClose, onStart }: RulesModalProps) {
                 >
                   {current.title}
                 </Text>
-                <Text
-                  className="text-center text-sm leading-5"
-                  style={{ color: BARK_BROWN }}
-                >
+                <Text className="text-center text-sm leading-5" style={{ color: BARK_BROWN }}>
                   {current.description}
                 </Text>
               </View>

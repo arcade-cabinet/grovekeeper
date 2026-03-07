@@ -9,9 +9,9 @@
  * Spec §18.5, §34. RNG scope: "raid" (table in Spec §36).
  */
 
-import { scopedRNG } from "../utils/seedWords";
-import type { DayNightComponent } from "../ecs/components/procedural";
-import raidsConfig from "../../config/game/raids.json";
+import raidsConfig from "../../config/game/raids.json" with { type: "json" };
+import type { DayNightComponent } from "../ecs/components/procedural/index.ts";
+import { scopedRNG } from "../utils/seedWords.ts";
 
 /** Single wave within a raid event. */
 export interface RaidWave {
@@ -56,8 +56,7 @@ export function calculateRaidProbability(
     params.defaultDifficultyMultiplier;
 
   // Base probability scales with base value (diminishing returns via sqrt)
-  const valueFactor =
-    Math.sqrt(baseValue / params.baseValueDivisor) * params.valueWeight;
+  const valueFactor = Math.sqrt(baseValue / params.baseValueDivisor) * params.valueWeight;
 
   // Day factor increases over time (slow linear ramp)
   const dayFactor = Math.min(dayNumber * params.dayWeight, params.dayFactorCap);
@@ -74,10 +73,7 @@ export function calculateRaidProbability(
  * @param dayNight - Current DayNightComponent state from ECS.
  * @param affectsGameplay - True when Survival mode is active (from WeatherComponent or game mode).
  */
-export function shouldTriggerRaid(
-  dayNight: DayNightComponent,
-  affectsGameplay: boolean,
-): boolean {
+export function shouldTriggerRaid(dayNight: DayNightComponent, affectsGameplay: boolean): boolean {
   if (!affectsGameplay) return false;
   return dayNight.timeOfDay === "night";
 }
@@ -200,14 +196,11 @@ export function getRaidWarning(raidStartsIn: number): string | null {
  * Calculate loot multiplier for defeated raid.
  * Faster clears and higher difficulty yield more loot.
  */
-export function calculateRaidLoot(
-  estimatedDifficulty: number,
-  difficulty: string,
-): number {
+export function calculateRaidLoot(estimatedDifficulty: number, difficulty: string): number {
   const baseLoot = raidsConfig.lootParams.baseLootMultiplier;
-  const diffBonus =
-    (raidsConfig.difficultyLootBonus as Record<string, number>)[difficulty] ?? 0;
-  const difficultyScaling = Math.sqrt(estimatedDifficulty) * raidsConfig.lootParams.difficultyWeight;
+  const diffBonus = (raidsConfig.difficultyLootBonus as Record<string, number>)[difficulty] ?? 0;
+  const difficultyScaling =
+    Math.sqrt(estimatedDifficulty) * raidsConfig.lootParams.difficultyWeight;
 
   return baseLoot + difficultyScaling + diffBonus;
 }

@@ -5,13 +5,13 @@
  * determinism per chunk, and quest state machine integration.
  */
 
-import proceduralQuestsConfig from "@/config/game/proceduralQuests.json";
+import proceduralQuestsConfig from "@/config/game/proceduralQuests.json" with { type: "json" };
 import {
   buildQuestContext,
   buildQuestDef,
   generateChunkQuests,
   type ProceduralQuestCategory,
-} from "./proceduralQuests";
+} from "./proceduralQuests.ts";
 
 // Controlled RNG: returns values in sequence, wrapping at end.
 function makeRng(values: number[]): () => number {

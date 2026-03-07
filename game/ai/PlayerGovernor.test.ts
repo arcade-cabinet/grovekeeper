@@ -1,6 +1,6 @@
 import { world } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
-import { PlayerGovernor } from "./PlayerGovernor";
+import { PlayerGovernor } from "./PlayerGovernor.ts";
 
 // Helper to reset world + store
 function resetWorld() {

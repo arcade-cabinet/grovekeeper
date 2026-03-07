@@ -47,9 +47,7 @@ export const CAUSTICS_DEPTH_OFFSET = 0.05;
  *
  * Exported as a pure testable seam.
  */
-export function buildWaterPlaneGeometry(
-  size: WaterBodyComponent["size"],
-): THREE.PlaneGeometry {
+export function buildWaterPlaneGeometry(size: WaterBodyComponent["size"]): THREE.PlaneGeometry {
   return new THREE.PlaneGeometry(
     size.width,
     size.depth,

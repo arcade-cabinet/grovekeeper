@@ -6,9 +6,9 @@
  * Volume comes from config/game/procedural.json ambientZones.soundscapeVolumes.water.
  */
 
-import { placeAudioZones } from "./audioZonePlacer";
-import type { AudioZonePlacement } from "./audioZonePlacer";
-import type { WaterBodyPlacement } from "./waterPlacer";
+import type { AudioZonePlacement } from "./audioZonePlacer.ts";
+import { placeAudioZones } from "./audioZonePlacer.ts";
+import type { WaterBodyPlacement } from "./waterPlacer.ts";
 
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 

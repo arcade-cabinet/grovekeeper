@@ -10,9 +10,9 @@
 
 import { useEffect, useRef } from "react";
 import { AppState, type AppStateStatus } from "react-native";
+import type { SerializedTreeDb } from "@/game/db/queries";
 import { persistGameStore, saveGroveToDb } from "@/game/db/queries";
 import { useGameStore } from "@/game/stores/gameStore";
-import type { SerializedTreeDb } from "@/game/db/queries";
 
 const DEBOUNCE_MS = 2_000;
 

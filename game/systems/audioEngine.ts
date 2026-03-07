@@ -14,8 +14,8 @@
  *   audioEngine.releasePanner(panner);
  */
 
+import { Panner3D, start, Volume } from "tone";
 import audioConfig from "@/config/game/audio.json" with { type: "json" };
-import { Panner3D, Volume, start } from "tone";
 
 interface PannerSlot {
   panner: Panner3D;

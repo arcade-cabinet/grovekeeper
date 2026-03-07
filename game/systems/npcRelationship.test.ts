@@ -14,7 +14,7 @@ import {
   getRelationshipLevel,
   RELATIONSHIP_CONFIG,
   setRelationship,
-} from "./npcRelationship";
+} from "./npcRelationship.ts";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -157,9 +157,7 @@ describe("awardQuestCompletionXp (Spec §15)", () => {
   });
 
   it("gives more XP than a single trade (quest > trade)", () => {
-    expect(RELATIONSHIP_CONFIG.questCompletionXp).toBeGreaterThan(
-      RELATIONSHIP_CONFIG.tradingXp,
-    );
+    expect(RELATIONSHIP_CONFIG.questCompletionXp).toBeGreaterThan(RELATIONSHIP_CONFIG.tradingXp);
   });
 
   it("clamps at maxRelationship", () => {

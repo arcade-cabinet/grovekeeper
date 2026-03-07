@@ -10,7 +10,7 @@
  *  - Value range: all values in [-1, 1]
  */
 
-import { generateHeightmap } from "./terrainGenerator";
+import { generateHeightmap } from "./terrainGenerator.ts";
 
 const CHUNK_SIZE = 16;
 

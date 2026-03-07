@@ -11,7 +11,7 @@
 import { createRNG, hashString } from "@/game/utils/seedRNG";
 import encountersData from "./data/encounters.json" with { type: "json" };
 import festivalsData from "./data/festivals.json" with { type: "json" };
-import type { EncounterDef, EventState, FestivalChallenge, FestivalDef, Season } from "./types";
+import type { EncounterDef, EventState, FestivalChallenge, FestivalDef, Season } from "./types.ts";
 
 // ============================================
 // Constants

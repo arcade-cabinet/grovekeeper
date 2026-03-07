@@ -3,7 +3,7 @@ import {
   getAllUnlocksUpToLevel,
   getUnlocksForLevel,
   LEVEL_UNLOCKS,
-} from "./levelUnlocks";
+} from "./levelUnlocks.ts";
 
 describe("level unlocks system", () => {
   describe("LEVEL_UNLOCKS", () => {

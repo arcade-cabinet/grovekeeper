@@ -11,15 +11,15 @@ jest.mock("@react-three/fiber", () => ({
 }));
 
 jest.mock("three", () => {
-  const PlaneGeometry = jest.fn().mockImplementation(
-    (width: number, height: number, wSeg: number, hSeg: number) => ({
+  const PlaneGeometry = jest
+    .fn()
+    .mockImplementation((width: number, height: number, wSeg: number, hSeg: number) => ({
       width,
       height,
       wSeg,
       hSeg,
       dispose: jest.fn(),
-    }),
-  );
+    }));
 
   const Mesh = jest.fn().mockImplementation(() => ({
     position: { set: jest.fn() },
@@ -46,13 +46,13 @@ jest.mock("@/game/shaders/gerstnerWater", () => ({
 }));
 
 import * as THREE from "three";
+import type { WaterBodyComponent } from "@/game/ecs/components/procedural/water";
 import {
   buildWaterPlaneGeometry,
-  WATER_PLANE_SEGMENTS,
   CAUSTICS_DEPTH_OFFSET,
+  WATER_PLANE_SEGMENTS,
   WaterBodies,
-} from "./WaterBody";
-import type { WaterBodyComponent } from "@/game/ecs/components/procedural/water";
+} from "./WaterBody.tsx";
 
 const MockPlaneGeometry = THREE.PlaneGeometry as unknown as jest.Mock;
 

@@ -9,7 +9,7 @@
  * button → action mapping, dead-zone, and availability logic.
  */
 
-import { GamepadProvider } from "./GamepadProvider";
+import { GamepadProvider } from "./GamepadProvider.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -29,7 +29,11 @@ function makeGamepad(
     mapping: "standard",
     connected: true,
     axes: opts.axes ?? [0, 0, 0, 0],
-    buttons: (opts.buttons ?? []).map((b) => ({ pressed: b.pressed, value: b.value, toJSON: () => b })),
+    buttons: (opts.buttons ?? []).map((b) => ({
+      pressed: b.pressed,
+      value: b.value,
+      toJSON: () => b,
+    })),
     timestamp: 0,
     vibrationActuator: null,
     hapticActuators: [],

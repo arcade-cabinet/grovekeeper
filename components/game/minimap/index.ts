@@ -5,26 +5,23 @@
  * "@/components/game/minimap" or "@/components/game/MiniMap" (re-export).
  */
 
-export { MiniMap } from "./MiniMap";
-export type { MiniMapProps } from "./MiniMap";
+export type { MiniMapProps } from "./MiniMap.tsx";
+export { MiniMap } from "./MiniMap.tsx";
+export type { MinimapSVGProps } from "./MinimapSVG.tsx";
+export { MinimapSVG } from "./MinimapSVG.tsx";
+export type { MiniMapOverlayProps } from "./Overlay.tsx";
+export { MiniMapOverlay } from "./Overlay.tsx";
 
-export { MiniMapOverlay } from "./Overlay";
-export type { MiniMapOverlayProps } from "./Overlay";
-
-export { MinimapSVG } from "./MinimapSVG";
-export type { MinimapSVGProps } from "./MinimapSVG";
-
-export { PulsingPlayerDot } from "./PulsingPlayerDot";
-
-export { buildMinimapSnapshot, readMinimapSnapshot, VIEW_RADIUS } from "./snapshot";
-export type { BuildSnapshotParams } from "./snapshot";
+export { PulsingPlayerDot } from "./PulsingPlayerDot.tsx";
+export type { BuildSnapshotParams } from "./snapshot.ts";
+export { buildMinimapSnapshot, readMinimapSnapshot, VIEW_RADIUS } from "./snapshot.ts";
 
 export type {
-  MinimapChunk,
   MinimapCampfire,
+  MinimapChunk,
+  MinimapLabyrinth,
   MinimapNpc,
   MinimapPlayer,
-  MinimapLabyrinth,
-  MinimapSpirit,
   MinimapSnapshot,
-} from "./types";
+  MinimapSpirit,
+} from "./types.ts";

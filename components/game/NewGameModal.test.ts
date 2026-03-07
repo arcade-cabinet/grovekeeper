@@ -7,8 +7,8 @@
  * Types and pure logic are tested here instead.
  */
 
-import type { GameMode, NewGameConfig, SurvivalDifficulty } from "./NewGameModal";
 import { generateSeedPhrase } from "@/game/utils/seedWords";
+import type { GameMode, NewGameConfig, SurvivalDifficulty } from "./NewGameModal.tsx";
 
 describe("NewGameConfig (Spec §37)", () => {
   it("accepts an Exploration config with no survival fields", () => {

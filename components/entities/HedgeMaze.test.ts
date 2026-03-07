@@ -25,13 +25,13 @@ jest.mock("./StaticInstances", () => ({
   groupByModelPath: jest.fn(() => new Map()),
 }));
 
+import type { HedgeComponent, HedgeDecorationComponent } from "@/game/ecs/components/terrain";
 import {
   HedgeMaze,
-  resolveHedgeGLBPath,
-  resolveDecorationGLBPath,
   hedgeRotationToRadians,
-} from "./HedgeMaze";
-import type { HedgeComponent, HedgeDecorationComponent } from "@/game/ecs/components/terrain";
+  resolveDecorationGLBPath,
+  resolveHedgeGLBPath,
+} from "./HedgeMaze.tsx";
 
 // ---------------------------------------------------------------------------
 // resolveHedgeGLBPath
@@ -116,9 +116,7 @@ describe("resolveDecorationGLBPath (Spec §18)", () => {
       itemId: "bench01",
       modelPath: "hedges/misc/stone/bench01.glb",
     };
-    expect(resolveDecorationGLBPath(decoration)).toBe(
-      "hedges/misc/stone/bench01.glb",
-    );
+    expect(resolveDecorationGLBPath(decoration)).toBe("hedges/misc/stone/bench01.glb");
   });
 
   it("returns a second bench variant modelPath", () => {
@@ -127,9 +125,7 @@ describe("resolveDecorationGLBPath (Spec §18)", () => {
       itemId: "bench02",
       modelPath: "hedges/misc/stone/bench02.glb",
     };
-    expect(resolveDecorationGLBPath(decoration)).toBe(
-      "hedges/misc/stone/bench02.glb",
-    );
+    expect(resolveDecorationGLBPath(decoration)).toBe("hedges/misc/stone/bench02.glb");
   });
 
   it("returns a flower bed modelPath", () => {
@@ -138,9 +134,7 @@ describe("resolveDecorationGLBPath (Spec §18)", () => {
       itemId: "flowerbed1_1x2",
       modelPath: "hedges/misc/flowers/flowerbed1_1x2.glb",
     };
-    expect(resolveDecorationGLBPath(decoration)).toBe(
-      "hedges/misc/flowers/flowerbed1_1x2.glb",
-    );
+    expect(resolveDecorationGLBPath(decoration)).toBe("hedges/misc/flowers/flowerbed1_1x2.glb");
   });
 
   it("returns a column modelPath", () => {
@@ -149,9 +143,7 @@ describe("resolveDecorationGLBPath (Spec §18)", () => {
       itemId: "column1",
       modelPath: "hedges/misc/stone/column1.glb",
     };
-    expect(resolveDecorationGLBPath(decoration)).toBe(
-      "hedges/misc/stone/column1.glb",
-    );
+    expect(resolveDecorationGLBPath(decoration)).toBe("hedges/misc/stone/column1.glb");
   });
 
   it("throws when modelPath is an empty string", () => {
@@ -169,9 +161,7 @@ describe("resolveDecorationGLBPath (Spec §18)", () => {
       itemId: "mystery_item",
       modelPath: "",
     };
-    expect(() => resolveDecorationGLBPath(decoration)).toThrow(
-      'itemId="mystery_item"',
-    );
+    expect(() => resolveDecorationGLBPath(decoration)).toThrow('itemId="mystery_item"');
   });
 });
 

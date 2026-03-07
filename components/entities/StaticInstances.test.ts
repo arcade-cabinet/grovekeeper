@@ -18,21 +18,16 @@ jest.mock("@react-three/fiber", () => ({
 }));
 
 import {
-  StaticModelInstances,
   groupByModelPath,
   type StaticEntityInput,
-} from "./StaticInstances";
+  StaticModelInstances,
+} from "./StaticInstances.tsx";
 
 // ---------------------------------------------------------------------------
 // groupByModelPath — grouping entities by modelPath (Spec §28)
 // ---------------------------------------------------------------------------
 
-const makeEntity = (
-  id: string,
-  modelPath: string,
-  x = 0,
-  z = 0,
-): StaticEntityInput => ({
+const makeEntity = (id: string, modelPath: string, x = 0, z = 0): StaticEntityInput => ({
   id,
   modelPath,
   position: { x, y: 0, z },
@@ -125,10 +120,7 @@ describe("groupByModelPath (Spec §28)", () => {
   });
 
   it("does not mutate the input array", () => {
-    const entities = [
-      makeEntity("e1", "a.glb"),
-      makeEntity("e2", "b.glb"),
-    ];
+    const entities = [makeEntity("e1", "a.glb"), makeEntity("e2", "b.glb")];
     const original = [...entities];
     groupByModelPath(entities);
     expect(entities).toEqual(original);

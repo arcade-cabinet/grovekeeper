@@ -15,14 +15,13 @@
  * See GAME_SPEC.md §32.
  */
 
-import { useState, useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef, useState } from "react";
 import type * as THREE from "three";
-
-import { createRNG, hashString } from "@/game/utils/seedRNG";
-import { grovekeeperSpiritsQuery } from "@/game/ecs/world";
-import type { GrovekeeperSpiritComponent } from "@/game/ecs/components/procedural/spirits";
 import type { Position } from "@/game/ecs/components/core";
+import type { GrovekeeperSpiritComponent } from "@/game/ecs/components/procedural/spirits";
+import { grovekeeperSpiritsQuery } from "@/game/ecs/world";
+import { createRNG, hashString } from "@/game/utils/seedRNG";
 
 // ---------------------------------------------------------------------------
 // Animation constants
@@ -84,11 +83,7 @@ export function computeEmissiveIntensity(
  * @param baseY          Ground-level Y world position
  * @param hoverHeight    Final hover height above ground
  */
-export function computeSpawnY(
-  spawnProgress: number,
-  baseY: number,
-  hoverHeight: number,
-): number {
+export function computeSpawnY(spawnProgress: number, baseY: number, hoverHeight: number): number {
   return baseY + spawnProgress * hoverHeight;
 }
 
@@ -127,9 +122,7 @@ const SpiritOrb = ({ position, spirit }: SpiritOrbProps) => {
   }, [spirit.spiritId]);
 
   // Seeded RNG for trail particle resets — evolves across frames for variety.
-  const trailRngRef = useRef<() => number>(
-    createRNG(hashString(`trail-reset-${spirit.spiritId}`)),
-  );
+  const trailRngRef = useRef<() => number>(createRNG(hashString(`trail-reset-${spirit.spiritId}`)));
 
   // Trail particle world positions — Float32Array mutated in-place each frame.
   const trailPositions = useMemo(() => {
@@ -200,10 +193,7 @@ const SpiritOrb = ({ position, spirit }: SpiritOrbProps) => {
 
   return (
     <>
-      <mesh
-        ref={meshRef}
-        position={[position.x, position.y, position.z]}
-      >
+      <mesh ref={meshRef} position={[position.x, position.y, position.z]}>
         <icosahedronGeometry args={[spirit.orbRadius, 1]} />
         <meshStandardMaterial
           ref={materialRef}

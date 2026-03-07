@@ -5,6 +5,8 @@
  * Uses react-native-reanimated for smooth 60fps animation.
  */
 
+import { observable } from "@legendapp/state";
+import { useSelector } from "@legendapp/state/react";
 import { useEffect } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -13,8 +15,6 @@ import Animated, {
   withDelay,
   withTiming,
 } from "react-native-reanimated";
-import { observable } from "@legendapp/state";
-import { useSelector } from "@legendapp/state/react";
 import { Text } from "@/components/ui/text";
 
 // ---------------------------------------------------------------------------

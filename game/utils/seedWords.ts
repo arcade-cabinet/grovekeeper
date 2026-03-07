@@ -7,7 +7,7 @@
  * All words are themed around cozy forest/nature vibes.
  */
 
-import { createRNG, hashString } from "./seedRNG";
+import { createRNG, hashString } from "./seedRNG.ts";
 
 const ADJECTIVES = [
   // Texture & feel
@@ -192,7 +192,11 @@ export function rngFromSeedPhrase(phrase: string): () => number {
  * Example: `scopedRNG("quests", "Gentle Mossy Hollow", 5)` produces
  * a deterministic RNG for quest generation on day 5.
  */
-export function scopedRNG(scope: string, worldSeed: string, ...extra: (string | number)[]): () => number {
+export function scopedRNG(
+  scope: string,
+  worldSeed: string,
+  ...extra: (string | number)[]
+): () => number {
   const key = [scope, worldSeed, ...extra.map(String)].join("-");
   return createRNG(hashString(key));
 }

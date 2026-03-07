@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { createTreeGeometry } from "./treeGeometry";
+import { createTreeGeometry } from "./treeGeometry.ts";
 
 // Three.js BufferGeometry is available in the test environment via jest-expo
 // since Three.js is pure JS math (no WebGL context needed for geometry creation).

@@ -12,10 +12,14 @@
  * Zero Three.js / ECS imports — fully unit-testable.
  */
 
-import type { Season } from "./time";
-import type { TreeComponent, BushComponent, VegetationSeason } from "@/game/ecs/components/vegetation";
-import { getSeasonalTreeTint, updateBushSeason } from "./vegetationPlacement";
 import seasonsConfig from "@/config/game/seasons.json" with { type: "json" };
+import type {
+  BushComponent,
+  TreeComponent,
+  VegetationSeason,
+} from "@/game/ecs/components/vegetation";
+import type { Season } from "./time.ts";
+import { getSeasonalTreeTint, updateBushSeason } from "./vegetationPlacement.ts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -83,10 +87,7 @@ export function blendHexColors(fromColor: string, toColor: string, t: number): s
  * Returns true if the season has changed from the previous frame.
  * Also returns true when previousSeason is null (first frame after init).
  */
-export function detectSeasonChange(
-  previousSeason: Season | null,
-  currentSeason: Season,
-): boolean {
+export function detectSeasonChange(previousSeason: Season | null, currentSeason: Season): boolean {
   return previousSeason !== currentSeason;
 }
 
@@ -111,10 +112,7 @@ export function applySeasonToTree(
  * new season. Delegates to updateBushSeason from vegetationPlacement.ts.
  * Does not mutate the input.
  */
-export function applySeasonToBush(
-  bush: BushComponent,
-  season: VegetationSeason,
-): BushComponent {
+export function applySeasonToBush(bush: BushComponent, season: VegetationSeason): BushComponent {
   return updateBushSeason(bush, season);
 }
 

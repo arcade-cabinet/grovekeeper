@@ -10,7 +10,7 @@ import {
   primaryButtonLabel,
   showNewGroveButton,
   treeSummaryText,
-} from "./mainMenuLogic";
+} from "./mainMenuLogic.ts";
 
 describe("MainMenu logic (Spec §26)", () => {
   describe("hasSave", () => {

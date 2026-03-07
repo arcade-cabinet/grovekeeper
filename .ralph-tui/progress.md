@@ -2855,3 +2855,21 @@ after each iteration and it's included in prompts for context.
   - **Optional chaining doesn't override structural typing**: `store.method?.()` still errors if `method` doesn't exist on the type — `?.` only handles runtime null/undefined. For forward-declared stub actions, a narrow cast exposes only the needed surface without widening the whole store type.
   - **Pre-existing errors in untracked files don't appear in stash-based baseline**: Files like `TouchLookZone.tsx`, `useSpiritProximity.ts` are untracked, so `git stash` doesn't revert them. Always compare stash-before vs stash-after on the same set of files.
 
+
+## 2026-03-07 - US-156
+- Updated `components/game/NpcDialogue.tsx` from prop-driven old API to self-contained ECS-driven component
+- Created `game/ui/dialogueBridge.ts` — framework-free module-level bridge (mirrors `game/ui/Toast.ts` pattern) with `openDialogueSession` / `closeDialogueSession` / `subscribeDialogueSession` / `getDialogueSession`
+- Created `components/game/NpcDialogue.logic.ts` — pure functions: `getActiveDialogueNode(tree, nodeId)` and `resolveEntityDisplayName(npc, spirit, entityId)`
+- Created `components/game/NpcDialogue.logic.test.ts` — 11 tests all passing
+- Updated `game/hooks/useSpiritProximity.ts` to call `openDialogueSession(entity.id, store.worldSeed)` after `world.addComponent(...dialogue...)` wires the ECS component
+- Updated `game/hooks/useSpiritProximity.test.ts` to mock `@/game/ui/dialogueBridge`
+- Fixed `components/game/GameUI.tsx` — replaced old prop-driven `<NpcDialogue open=... />` with self-driven `<NpcDialogue />`
+- Fixed `components/game/index.ts` — removed `NpcDialogueProps` export (type no longer exists)
+- All 3772 tests pass; no new TS errors introduced
+- **Learnings:**
+  - **dialogueBridge pattern = Toast pattern**: Framework-free module in `game/ui/` lets game hooks (useSpiritProximity, useBirmotherEncounter) and React Native components both import cleanly without circular deps. The key: `subscribeDialogueSession` goes directly to `useSyncExternalStore` in the component.
+  - **ECS → React Native bridge via useSyncExternalStore**: ECS mutations in `useFrame` don't trigger React re-renders. The module-level `_listeners` set + notify-on-write pattern (same as `useInteraction.ts` selection store) is the correct bridge.
+  - **Node effects fire on node display, not branch selection**: `DialogueEffect[]` lives on `DialogueNode`, not `DialogueBranch`. `useEffect([currentNode])` applies them when the node changes. Store's `applyDialogueNodeEffects` handles quest + species effects; other types (give_item, give_xp) are TODO for store/UI layer.
+  - **DialogueChoices handles auto-advance**: Don't re-implement the 3s timer in NpcDialogue — just pass `branches`, `entityId`, `nodeIndex`, `worldSeed` to the existing `DialogueChoices` component.
+  - **Terminal nodes need a farewell button**: When `branches.length === 0`, `DialogueChoices` renders nothing. Add an explicit close button below it.
+---

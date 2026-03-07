@@ -1,4 +1,4 @@
-import { advancePathFollow, createPathFollow, toYukaPath } from "./pathFollowing";
+import { advancePathFollow, createPathFollow, toYukaPath } from "./pathFollowing.ts";
 
 // cellSize is 1 per grid.json, so tile centers = tile coords * 1
 
@@ -130,7 +130,11 @@ describe("advancePathFollow", () => {
 
 describe("toYukaPath", () => {
   it("creates a Yuka Path with the correct number of waypoints", () => {
-    const state = createPathFollow([{ x: 0, z: 0 }, { x: 1, z: 0 }, { x: 2, z: 0 }]);
+    const state = createPathFollow([
+      { x: 0, z: 0 },
+      { x: 1, z: 0 },
+      { x: 2, z: 0 },
+    ]);
     const yukaPath = toYukaPath(state);
     // Yuka Path stores waypoints in _waypoints
     expect((yukaPath as unknown as { _waypoints: unknown[] })._waypoints).toHaveLength(3);
@@ -139,7 +143,8 @@ describe("toYukaPath", () => {
   it("sets correct x and z on each waypoint (y defaults to 0)", () => {
     const state = createPathFollow([{ x: 3, z: 7 }]);
     const yukaPath = toYukaPath(state);
-    const wps = (yukaPath as unknown as { _waypoints: { x: number; y: number; z: number }[] })._waypoints;
+    const wps = (yukaPath as unknown as { _waypoints: { x: number; y: number; z: number }[] })
+      ._waypoints;
     expect(wps[0].x).toBeCloseTo(3);
     expect(wps[0].z).toBeCloseTo(7);
     expect(wps[0].y).toBeCloseTo(0);
@@ -159,7 +164,10 @@ describe("toYukaPath", () => {
   });
 
   it("path is not finished on first call for multi-waypoint state", () => {
-    const state = createPathFollow([{ x: 0, z: 0 }, { x: 5, z: 0 }]);
+    const state = createPathFollow([
+      { x: 0, z: 0 },
+      { x: 5, z: 0 },
+    ]);
     const yukaPath = toYukaPath(state);
     // Yuka Path.finished() is false when there are unvisited waypoints
     expect(yukaPath.finished()).toBe(false);

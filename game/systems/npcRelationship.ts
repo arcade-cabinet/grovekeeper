@@ -16,12 +16,7 @@
 
 import relationshipsConfig from "@/config/game/relationships.json" with { type: "json" };
 
-export type RelationshipLevel =
-  | "stranger"
-  | "acquaintance"
-  | "friendly"
-  | "trusted"
-  | "beloved";
+export type RelationshipLevel = "stranger" | "acquaintance" | "friendly" | "trusted" | "beloved";
 
 export interface RelationshipConfig {
   tradingXp: number;
@@ -61,10 +56,7 @@ function applyXp(
  * Get the raw relationship value (0-100) for an NPC.
  * Returns 0 if no relationship has been established yet.
  */
-export function getRelationship(
-  npcRelationships: Record<string, number>,
-  npcId: string,
-): number {
+export function getRelationship(npcRelationships: Record<string, number>, npcId: string): number {
   return npcRelationships[npcId] ?? 0;
 }
 

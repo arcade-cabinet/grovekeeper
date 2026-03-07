@@ -1,3 +1,5 @@
+import { observable } from "@legendapp/state";
+import { useSelector } from "@legendapp/state/react";
 import React, { useEffect } from "react";
 import { AccessibilityInfo, Modal, Pressable, View } from "react-native";
 import Animated, {
@@ -10,8 +12,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { observable } from "@legendapp/state";
-import { useSelector } from "@legendapp/state/react";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 
@@ -106,7 +106,11 @@ export function useAchievementPopupStore<T = AchievementPopupStore>(
   selector?: (state: AchievementPopupStore) => T,
 ): T {
   const popup = useSelector(() => achievementPopupState$.popup.get());
-  const state: AchievementPopupStore = { popup, showAchievement: showAchievementAction, clearPopup };
+  const state: AchievementPopupStore = {
+    popup,
+    showAchievement: showAchievementAction,
+    clearPopup,
+  };
   if (selector) return selector(state);
   return state as unknown as T;
 }

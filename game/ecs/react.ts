@@ -6,6 +6,6 @@
  * Install with: npx expo install miniplex-react
  */
 import { createReactAPI } from "miniplex-react";
-import { world } from "./world";
+import { world } from "./world.ts";
 
 export const ECS = createReactAPI(world);

@@ -3,6 +3,8 @@
  */
 import {
   advanceCropGrowth,
+  type CropState,
+  type CropTickEntity,
   calculateHarvestYield,
   getCropById,
   getCrops,
@@ -10,8 +12,6 @@ import {
   harvestCropEntity,
   replantCrop,
   tickCropGrowth,
-  type CropState,
-  type CropTickEntity,
 } from "@/game/systems/cropGrowth";
 
 describe("Crop Growth System", () => {
@@ -78,13 +78,7 @@ describe("Crop Growth System", () => {
 
     it("should apply watering multiplier", () => {
       const dry = advanceCropGrowth(baseCrop, 5, "summer", 0, 0);
-      const wet = advanceCropGrowth(
-        { ...baseCrop, watered: true },
-        5,
-        "summer",
-        0,
-        0,
-      );
+      const wet = advanceCropGrowth({ ...baseCrop, watered: true }, 5, "summer", 0, 0);
       // Compare total progress: stage * 1 + progress
       const dryTotal = dry.stage + dry.progress;
       const wetTotal = wet.stage + wet.progress;

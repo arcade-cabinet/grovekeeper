@@ -1,5 +1,4 @@
 import type { NpcScheduleEntry } from "@/game/ecs/components/npc";
-import type { WalkabilityGrid } from "./pathfinding";
 import {
   activityToAnimState,
   clearAllScheduleStates,
@@ -7,7 +6,8 @@ import {
   isAtPosition,
   resolveScheduleEntry,
   tickNpcSchedule,
-} from "./npcSchedule";
+} from "./npcSchedule.ts";
+import type { WalkabilityGrid } from "./pathfinding.ts";
 
 // Mock npcMovement so we control startNpcPath and avoid real pathfinding
 jest.mock("./npcMovement", () => ({
@@ -16,7 +16,7 @@ jest.mock("./npcMovement", () => ({
 }));
 
 // biome-ignore lint/style/useImportType: jest.Mock cast requires value import
-import { startNpcPath } from "./npcMovement";
+import { startNpcPath } from "./npcMovement.ts";
 
 const mockStartNpcPath = startNpcPath as jest.Mock;
 
@@ -46,9 +46,7 @@ describe("resolveScheduleEntry (Spec §19.5)", () => {
   });
 
   it("returns the only entry for single-entry schedule at any hour", () => {
-    const schedule: NpcScheduleEntry[] = [
-      { hour: 8, activity: "work", position: { x: 5, z: 5 } },
-    ];
+    const schedule: NpcScheduleEntry[] = [{ hour: 8, activity: "work", position: { x: 5, z: 5 } }];
     expect(resolveScheduleEntry(schedule, 0)).toBe(schedule[0]);
     expect(resolveScheduleEntry(schedule, 12)).toBe(schedule[0]);
     expect(resolveScheduleEntry(schedule, 23)).toBe(schedule[0]);

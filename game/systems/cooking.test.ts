@@ -171,11 +171,15 @@ describe("Cooking System", () => {
 
   describe("getCampfireInteractionLabel", () => {
     it("returns 'Cook' when campfire is lit", () => {
-      expect(getCampfireInteractionLabel({ campfire: { lit: true, cookingSlots: 2 } })).toBe("Cook");
+      expect(getCampfireInteractionLabel({ campfire: { lit: true, cookingSlots: 2 } })).toBe(
+        "Cook",
+      );
     });
 
     it("returns 'Light Campfire' when campfire is unlit", () => {
-      expect(getCampfireInteractionLabel({ campfire: { lit: false, cookingSlots: 2 } })).toBe("Light Campfire");
+      expect(getCampfireInteractionLabel({ campfire: { lit: false, cookingSlots: 2 } })).toBe(
+        "Light Campfire",
+      );
     });
   });
 

@@ -1,7 +1,8 @@
 /** Maze generation via seeded recursive backtracker. Spec §17.5. */
+
+import hedgeMazeConfig from "@/config/game/hedgeMaze.json" with { type: "json" };
 import { createRNG } from "@/game/utils/seedRNG";
-import hedgeMazeConfig from "@/config/game/hedgeMaze.json";
-import type { MazeCell, MazeResult } from "./types";
+import type { MazeCell, MazeResult } from "./types.ts";
 
 /** Generates a perfect maze using the recursive backtracker algorithm. */
 export function generateMaze(seed: number, size?: number): MazeResult {
@@ -13,9 +14,11 @@ export function generateMaze(seed: number, size?: number): MazeResult {
     grid[x] = [];
     for (let z = 0; z < gridSize; z++) {
       grid[x][z] = {
-        x, z,
+        x,
+        z,
         walls: { north: true, south: true, east: true, west: true },
-        visited: false, isCenter: false,
+        visited: false,
+        isCenter: false,
       };
     }
   }
@@ -62,11 +65,7 @@ function removeCenterWalls(grid: MazeCell[][], cx: number, cz: number): void {
   grid[cx + 1][cz + 1].walls.west = false;
 }
 
-function getUnvisitedNeighbors(
-  grid: MazeCell[][],
-  cell: MazeCell,
-  size: number,
-): MazeCell[] {
+function getUnvisitedNeighbors(grid: MazeCell[][], cell: MazeCell, size: number): MazeCell[] {
   const neighbors: MazeCell[] = [];
   const { x, z } = cell;
   if (z > 0 && !grid[x][z - 1].visited) neighbors.push(grid[x][z - 1]);
@@ -79,8 +78,17 @@ function getUnvisitedNeighbors(
 function removeWallBetween(a: MazeCell, b: MazeCell): void {
   const dx = b.x - a.x;
   const dz = b.z - a.z;
-  if (dx === 1) { a.walls.east = false; b.walls.west = false; }
-  else if (dx === -1) { a.walls.west = false; b.walls.east = false; }
-  else if (dz === 1) { a.walls.south = false; b.walls.north = false; }
-  else if (dz === -1) { a.walls.north = false; b.walls.south = false; }
+  if (dx === 1) {
+    a.walls.east = false;
+    b.walls.west = false;
+  } else if (dx === -1) {
+    a.walls.west = false;
+    b.walls.east = false;
+  } else if (dz === 1) {
+    a.walls.south = false;
+    b.walls.north = false;
+  } else if (dz === -1) {
+    a.walls.north = false;
+    b.walls.south = false;
+  }
 }

@@ -1,5 +1,5 @@
-import lootConfig from "@/config/game/loot.json" with { type: "json" };
 import enemiesConfig from "@/config/game/enemies.json" with { type: "json" };
+import lootConfig from "@/config/game/loot.json" with { type: "json" };
 import type { LootDropComponent } from "@/game/ecs/components/combat";
 import { scopedRNG } from "@/game/utils/seedWords";
 
@@ -11,11 +11,7 @@ export interface LootRoll {
   amount: number;
 }
 
-export function rollLoot(
-  lootTableId: string,
-  tier: number,
-  rng: () => number,
-): LootRoll[] {
+export function rollLoot(lootTableId: string, tier: number, rng: () => number): LootRoll[] {
   const table = tables[lootTableId as keyof typeof tables];
   if (!table) return [];
 
@@ -24,8 +20,7 @@ export function rollLoot(
 
   for (const drop of table.drops) {
     if (rng() <= drop.chance) {
-      const baseAmount =
-        drop.min + Math.floor(rng() * (drop.max - drop.min + 1));
+      const baseAmount = drop.min + Math.floor(rng() * (drop.max - drop.min + 1));
       results.push({
         type: drop.resource,
         amount: Math.round(baseAmount * tierBonus),
@@ -35,8 +30,7 @@ export function rollLoot(
 
   if (table.rareDrop && rng() <= table.rareDrop.chance) {
     const baseAmount =
-      table.rareDrop.min +
-      Math.floor(rng() * (table.rareDrop.max - table.rareDrop.min + 1));
+      table.rareDrop.min + Math.floor(rng() * (table.rareDrop.max - table.rareDrop.min + 1));
     results.push({
       type: table.rareDrop.resource,
       amount: Math.round(baseAmount * tierBonus),
@@ -54,14 +48,10 @@ export function createLootDrop(rolls: LootRoll[]): LootDropComponent {
   };
 }
 
-export function updateLootDespawn(
-  loot: LootDropComponent,
-  dt: number,
-): boolean {
+export function updateLootDespawn(loot: LootDropComponent, dt: number): boolean {
   loot.despawnTimer -= dt;
   loot.floatHeight =
-    Math.sin(loot.despawnTimer * lootConfig.floatBobSpeed) *
-    lootConfig.floatBobAmplitude;
+    Math.sin(loot.despawnTimer * lootConfig.floatBobSpeed) * lootConfig.floatBobAmplitude;
   return loot.despawnTimer <= 0;
 }
 

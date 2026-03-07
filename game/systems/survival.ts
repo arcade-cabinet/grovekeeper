@@ -8,8 +8,8 @@
  * Spec §12 Stamina & Survival, §2.2 Survival Systems, §37.1 Exploration Mode.
  */
 
-import type { HealthComponent } from "@/game/ecs/components/combat";
 import survivalConfig from "@/config/game/survival.json" with { type: "json" };
+import type { HealthComponent } from "@/game/ecs/components/combat";
 
 // ---------------------------------------------------------------------------
 // Constants — Spec §12 (values live in config/game/survival.json)

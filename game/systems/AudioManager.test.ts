@@ -1,4 +1,4 @@
-import { audioManager, startAudio } from "./AudioManager";
+import { audioManager, startAudio } from "./AudioManager.ts";
 
 // Mock audioEngine so Tone.js is not required in this test module.
 // AudioManager only calls audioEngine.initialize() via startAudio().

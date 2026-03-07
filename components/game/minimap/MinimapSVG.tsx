@@ -29,9 +29,9 @@ import {
   SOIL_DARK,
   SPIRIT_DISCOVERED_COLOR,
   SPIRIT_UNDISCOVERED_COLOR,
-} from "./colors";
-import { PulsingPlayerDot } from "./PulsingPlayerDot";
-import type { MinimapSnapshot } from "./types";
+} from "./colors.ts";
+import { PulsingPlayerDot } from "./PulsingPlayerDot.tsx";
+import type { MinimapSnapshot } from "./types.ts";
 
 export const VIEW_RADIUS = 3;
 const VIEW_DIAMETER = VIEW_RADIUS * 2 + 1; // 7
@@ -44,7 +44,8 @@ export interface MinimapSVGProps {
 }
 
 export function MinimapSVG({ snapshot, size, onCampfirePress }: MinimapSVGProps) {
-  const { chunks, campfires, npcs, labyrinths, spirits, player, playerChunkX, playerChunkZ } = snapshot;
+  const { chunks, campfires, npcs, labyrinths, spirits, player, playerChunkX, playerChunkZ } =
+    snapshot;
 
   const cellSize = size / VIEW_DIAMETER;
   const halfCell = cellSize / 2;
@@ -86,7 +87,7 @@ export function MinimapSVG({ snapshot, size, onCampfirePress }: MinimapSVGProps)
           const cz = playerChunkZ + dz;
           const chunk = chunkMap.get(`${cx},${cz}`);
           const { x, y } = chunkToSvg(dx, dz);
-          const fill = chunk?.discovered ? (chunk.biomeColor || FOG_COLOR) : FOG_COLOR;
+          const fill = chunk?.discovered ? chunk.biomeColor || FOG_COLOR : FOG_COLOR;
 
           return (
             <SvgRect
@@ -129,14 +130,7 @@ export function MinimapSVG({ snapshot, size, onCampfirePress }: MinimapSVGProps)
         const APPROX_CHUNK_SIZE = 16;
         const { x, y } = worldToSvg(npc.worldX, npc.worldZ, APPROX_CHUNK_SIZE);
         return (
-          <SvgCircle
-            key={`npc-${i}`}
-            cx={x}
-            cy={y}
-            r={2.5}
-            fill={NPC_DOT_COLOR}
-            opacity={0.85}
-          />
+          <SvgCircle key={`npc-${i}`} cx={x} cy={y} r={2.5} fill={NPC_DOT_COLOR} opacity={0.85} />
         );
       })}
 
@@ -183,12 +177,7 @@ export function MinimapSVG({ snapshot, size, onCampfirePress }: MinimapSVGProps)
       })}
 
       {/* Player — always at center, pulsing gold */}
-      {player && (
-        <PulsingPlayerDot
-          cx={size / 2 + halfCell}
-          cy={size / 2 + halfCell}
-        />
-      )}
+      {player && <PulsingPlayerDot cx={size / 2 + halfCell} cy={size / 2 + halfCell} />}
     </Svg>
   );
 }

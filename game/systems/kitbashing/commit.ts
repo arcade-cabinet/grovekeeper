@@ -6,13 +6,13 @@
  * Rapier world, and game store; tests inject jest.fn() mocks.
  */
 
-import type { Entity } from "../../ecs/world";
-import type { ModularPieceComponent } from "../../ecs/components/building";
-import type { ResourceType } from "../../config/resources";
-import buildingConfig from "../../../config/game/building.json";
-import { GRID_SIZE } from "./placement";
-import type { KitbashRapierWorld, KitbashRapierModule } from "./rapier";
-import { validatePlacementWithRapier } from "./rapier";
+import buildingConfig from "../../../config/game/building.json" with { type: "json" };
+import type { ResourceType } from "../../config/resources.ts";
+import type { ModularPieceComponent } from "../../ecs/components/building.ts";
+import type { Entity } from "../../ecs/world.ts";
+import { GRID_SIZE } from "./placement.ts";
+import type { KitbashRapierModule, KitbashRapierWorld } from "./rapier.ts";
+import { validatePlacementWithRapier } from "./rapier.ts";
 
 // ---------------------------------------------------------------------------
 // Minimal interfaces (Spec §35.4)

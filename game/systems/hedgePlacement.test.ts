@@ -2,11 +2,7 @@
  * Tests for hedge maze placement system.
  * References GAME_SPEC.md Garden Labyrinth section.
  */
-import {
-  generateMaze,
-  mazeToHedgePieces,
-  placeMazeDecorations,
-} from "./hedgePlacement";
+import { generateMaze, mazeToHedgePieces, placeMazeDecorations } from "./hedgePlacement/index.ts";
 
 describe("hedgePlacement", () => {
   describe("generateMaze", () => {
@@ -168,10 +164,22 @@ describe("hedgePlacement", () => {
         while (queue.length > 0) {
           const [x, z] = queue.shift()!;
           const cell = maze.grid[x][z];
-          if (!cell.walls.north && z > 0 && !visited.has(`${x},${z - 1}`)) { visited.add(`${x},${z - 1}`); queue.push([x, z - 1]); }
-          if (!cell.walls.south && z < maze.size - 1 && !visited.has(`${x},${z + 1}`)) { visited.add(`${x},${z + 1}`); queue.push([x, z + 1]); }
-          if (!cell.walls.west && x > 0 && !visited.has(`${x - 1},${z}`)) { visited.add(`${x - 1},${z}`); queue.push([x - 1, z]); }
-          if (!cell.walls.east && x < maze.size - 1 && !visited.has(`${x + 1},${z}`)) { visited.add(`${x + 1},${z}`); queue.push([x + 1, z]); }
+          if (!cell.walls.north && z > 0 && !visited.has(`${x},${z - 1}`)) {
+            visited.add(`${x},${z - 1}`);
+            queue.push([x, z - 1]);
+          }
+          if (!cell.walls.south && z < maze.size - 1 && !visited.has(`${x},${z + 1}`)) {
+            visited.add(`${x},${z + 1}`);
+            queue.push([x, z + 1]);
+          }
+          if (!cell.walls.west && x > 0 && !visited.has(`${x - 1},${z}`)) {
+            visited.add(`${x - 1},${z}`);
+            queue.push([x - 1, z]);
+          }
+          if (!cell.walls.east && x < maze.size - 1 && !visited.has(`${x + 1},${z}`)) {
+            visited.add(`${x + 1},${z}`);
+            queue.push([x + 1, z]);
+          }
         }
         expect(visited.has(target)).toBe(true);
       }
@@ -200,8 +208,12 @@ describe("hedgePlacement", () => {
     it("includes both straight wall pieces and corner fill pieces", () => {
       const maze = generateMaze(42);
       const pieces = mazeToHedgePieces(maze, 42);
-      const hasBasicOrDiag = pieces.some((p) => p.pieceType === "basic" || p.pieceType === "diagonal");
-      const hasRoundOrTri = pieces.some((p) => p.pieceType === "round" || p.pieceType === "triangle");
+      const hasBasicOrDiag = pieces.some(
+        (p) => p.pieceType === "basic" || p.pieceType === "diagonal",
+      );
+      const hasRoundOrTri = pieces.some(
+        (p) => p.pieceType === "round" || p.pieceType === "triangle",
+      );
       expect(hasBasicOrDiag).toBe(true);
       expect(hasRoundOrTri).toBe(true);
     });
@@ -232,18 +244,14 @@ describe("hedgePlacement", () => {
     it("places center reward decorations", () => {
       const maze = generateMaze(42);
       const decorations = placeMazeDecorations(maze, 42);
-      const centerDeco = decorations.filter(
-        (d) => d.modelPath.includes("fountain"),
-      );
+      const centerDeco = decorations.filter((d) => d.modelPath.includes("fountain"));
       expect(centerDeco.length).toBeGreaterThanOrEqual(1);
     });
 
     it("places bench decorations at center", () => {
       const maze = generateMaze(42);
       const decorations = placeMazeDecorations(maze, 42);
-      const benches = decorations.filter((d) =>
-        d.modelPath.includes("bench"),
-      );
+      const benches = decorations.filter((d) => d.modelPath.includes("bench"));
       expect(benches.length).toBe(2);
     });
 
@@ -259,9 +267,7 @@ describe("hedgePlacement", () => {
       const decorations = placeMazeDecorations(maze, 42);
       for (const deco of decorations) {
         expect(deco.modelPath).toMatch(/\.glb$/);
-        expect(deco.category).toMatch(
-          /^(flowers|stone|fences|structure)$/,
-        );
+        expect(deco.category).toMatch(/^(flowers|stone|fences|structure)$/);
       }
     });
 

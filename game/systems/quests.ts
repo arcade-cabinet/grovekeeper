@@ -786,15 +786,7 @@ export const generateQuest = (
       "collection",
       "exploration",
     ],
-    hard: [
-      "planting",
-      "harvesting",
-      "growth",
-      "seasonal",
-      "economic",
-      "collection",
-      "exploration",
-    ],
+    hard: ["planting", "harvesting", "growth", "seasonal", "economic", "collection", "exploration"],
     epic: [
       "planting",
       "harvesting",
@@ -845,10 +837,7 @@ export const generateQuest = (
   const totalXp = goals.reduce((sum, goal) => {
     const template = goalTemplates.find((t) => t.id === goal.templateId);
     return (
-      sum +
-      (template
-        ? randomInRange(rng, template.rewards.xp.min, template.rewards.xp.max)
-        : 0)
+      sum + (template ? randomInRange(rng, template.rewards.xp.min, template.rewards.xp.max) : 0)
     );
   }, 0);
 
@@ -867,39 +856,21 @@ export const generateQuest = (
     }
   }
 
-  const mergedResources: GoalRewardResource[] = Array.from(
-    resourceMap.entries(),
-  ).map(([type, amount]) => ({ type, amount }));
+  const mergedResources: GoalRewardResource[] = Array.from(resourceMap.entries()).map(
+    ([type, amount]) => ({ type, amount }),
+  );
   const mergedSeeds: GoalRewardSeed[] = Array.from(seedMap.entries()).map(
     ([speciesId, amount]) => ({ speciesId, amount }),
   );
 
   const questNames: Record<GoalDifficulty, string[]> = {
     easy: ["Simple Task", "Quick Job", "Small Steps", "Easy Start"],
-    medium: [
-      "Grove Challenge",
-      "Forest Task",
-      "Growing Quest",
-      "Woodland Work",
-    ],
-    hard: [
-      "Forester's Trial",
-      "Grove Master Challenge",
-      "Ancient Task",
-      "Deep Woods Quest",
-    ],
-    epic: [
-      "Legendary Quest",
-      "Grand Challenge",
-      "Epic Undertaking",
-      "Master's Trial",
-    ],
+    medium: ["Grove Challenge", "Forest Task", "Growing Quest", "Woodland Work"],
+    hard: ["Forester's Trial", "Grove Master Challenge", "Ancient Task", "Deep Woods Quest"],
+    epic: ["Legendary Quest", "Grand Challenge", "Epic Undertaking", "Master's Trial"],
   };
 
-  const questName =
-    questNames[difficulty][
-      Math.floor(rng() * questNames[difficulty].length)
-    ];
+  const questName = questNames[difficulty][Math.floor(rng() * questNames[difficulty].length)];
 
   const questIdSuffix = Math.floor(rng() * 0xffffffff).toString(36);
 
@@ -930,10 +901,7 @@ export const updateQuestProgress = (
 ): ActiveQuest => {
   const updatedGoals = quest.goals.map((goal) => {
     if (goal.targetType === eventType && !goal.completed) {
-      const newProgress = Math.min(
-        goal.currentProgress + amount,
-        goal.targetAmount,
-      );
+      const newProgress = Math.min(goal.currentProgress + amount, goal.targetAmount);
       return {
         ...goal,
         currentProgress: newProgress,
@@ -971,7 +939,13 @@ export const generateDailyQuests = (
 
   // 1 medium quest if level >= 3
   if (playerLevel >= 3) {
-    const mediumQuest = generateQuest("medium", currentSeason, completedGoalIds, worldSeed, index++);
+    const mediumQuest = generateQuest(
+      "medium",
+      currentSeason,
+      completedGoalIds,
+      worldSeed,
+      index++,
+    );
     if (mediumQuest) quests.push(mediumQuest);
   }
 

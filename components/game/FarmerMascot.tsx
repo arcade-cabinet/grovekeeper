@@ -117,8 +117,6 @@ export function FarmerMascot({ size = 120, animate = true }: FarmerMascotProps) 
   if (!animate) return content;
 
   return (
-    <RNAnimated.View style={{ transform: [{ translateY: bounceAnim }] }}>
-      {content}
-    </RNAnimated.View>
+    <RNAnimated.View style={{ transform: [{ translateY: bounceAnim }] }}>{content}</RNAnimated.View>
   );
 }

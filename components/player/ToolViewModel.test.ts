@@ -27,7 +27,7 @@ jest.mock("@/game/stores/gameStore", () => ({
   useGameStore: jest.fn(),
 }));
 
-import toolVisuals from "@/config/game/toolVisuals.json";
+import toolVisuals from "@/config/game/toolVisuals.json" with { type: "json" };
 import {
   buildSwapDownParams,
   buildSwapUpParams,
@@ -36,7 +36,7 @@ import {
   resolveToolGLBPath,
   resolveToolVisual,
   ToolViewModel,
-} from "./ToolViewModel";
+} from "./ToolViewModel.tsx";
 
 type ToolVisualsConfig = typeof toolVisuals;
 
@@ -272,7 +272,7 @@ describe("computeSwayOffset (Spec §11)", () => {
     const velocity = { x: 1, z: 0 };
     const currentSway = { x: 0, y: 0 };
     const small = computeSwayOffset(velocity, currentSway, 0.05, 100, 1.0);
-    const large = computeSwayOffset(velocity, currentSway, 0.10, 100, 1.0);
+    const large = computeSwayOffset(velocity, currentSway, 0.1, 100, 1.0);
     expect(large.x).toBeCloseTo(small.x * 2, 5);
   });
 });

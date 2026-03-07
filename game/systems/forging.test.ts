@@ -8,25 +8,25 @@
  * - FPS forge interaction: type guard, label, resolver
  */
 
-import {
-  getSmeltRecipes,
-  getSmeltRecipeById,
-  canSmelt,
-  deductSmeltCost,
-  createEmptySmeltSlot,
-  startSmelting,
-  advanceSmelting,
-  collectSmeltedItem,
-  getToolTierUpgrade,
-  canUpgradeTool,
-  deductUpgradeCost,
-  applyTierUpgrade,
-  isForgeEntity,
-  getForgeInteractionLabel,
-  resolveForgeInteraction,
-} from "./forging";
-import type { SmeltRecipe, ToolTierUpgrade, ForgeEntity } from "./forging";
 import type { ToolComponent } from "@/game/ecs/components/items";
+import type { ForgeEntity, SmeltRecipe, ToolTierUpgrade } from "./forging.ts";
+import {
+  advanceSmelting,
+  applyTierUpgrade,
+  canSmelt,
+  canUpgradeTool,
+  collectSmeltedItem,
+  createEmptySmeltSlot,
+  deductSmeltCost,
+  deductUpgradeCost,
+  getForgeInteractionLabel,
+  getSmeltRecipeById,
+  getSmeltRecipes,
+  getToolTierUpgrade,
+  isForgeEntity,
+  resolveForgeInteraction,
+  startSmelting,
+} from "./forging.ts";
 
 // ---------------------------------------------------------------------------
 // Smelting recipes

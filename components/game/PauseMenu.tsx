@@ -11,7 +11,7 @@
  * - Action buttons: Continue Playing, Return to Menu
  */
 
-import { XIcon, BookOpenIcon, DownloadIcon, UploadIcon } from "lucide-react-native";
+import { BookOpenIcon, DownloadIcon, UploadIcon, XIcon } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, Modal, Platform, Pressable, ScrollView, Share, View } from "react-native";
 import { Button } from "@/components/ui/button";
@@ -117,9 +117,7 @@ function StatItem({
   return (
     <View className="gap-0.5">
       <Text className="text-xs text-gray-500">{label}</Text>
-      <Text className={`text-xl font-bold ${color ?? "text-forest-green"}`}>
-        {value}
-      </Text>
+      <Text className={`text-xl font-bold ${color ?? "text-forest-green"}`}>{value}</Text>
     </View>
   );
 }
@@ -144,9 +142,7 @@ function ToggleSwitch({
       <Text className="text-sm text-gray-700">{label}</Text>
       <View
         className={`h-8 w-14 items-center rounded-full px-1 ${
-          enabled
-            ? "justify-end bg-forest-green"
-            : "justify-start bg-gray-300"
+          enabled ? "justify-end bg-forest-green" : "justify-start bg-gray-300"
         } flex-row`}
       >
         <View className="h-6 w-6 rounded-full bg-white shadow" />
@@ -207,19 +203,12 @@ export function PauseMenu({
   };
 
   return (
-    <Modal
-      visible={open}
-      transparent
-      animationType="fade"
-      onRequestClose={handleClose}
-    >
+    <Modal visible={open} transparent animationType="fade" onRequestClose={handleClose}>
       <View className="flex-1 items-center justify-center bg-black/50 px-4">
         <View className="w-full max-w-sm rounded-2xl border-[3px] border-bark-brown bg-sky-mist">
           {/* Header */}
           <View className="flex-row items-center justify-between border-b border-bark-brown/20 px-4 py-3">
-            <Text className="font-heading text-lg font-bold text-soil-dark">
-              Grove Stats
-            </Text>
+            <Text className="font-heading text-lg font-bold text-soil-dark">Grove Stats</Text>
             <Pressable
               className="min-h-[44px] min-w-[44px] items-center justify-center"
               onPress={handleClose}
@@ -235,17 +224,13 @@ export function PauseMenu({
               <Pressable
                 key={tab}
                 className={`min-h-[44px] flex-1 items-center justify-center ${
-                  activeTab === tab
-                    ? "border-b-2 border-forest-green"
-                    : ""
+                  activeTab === tab ? "border-b-2 border-forest-green" : ""
                 }`}
                 onPress={() => setActiveTab(tab)}
               >
                 <Text
                   className={`text-xs font-medium capitalize ${
-                    activeTab === tab
-                      ? "text-forest-green"
-                      : "text-gray-500"
+                    activeTab === tab ? "text-forest-green" : "text-gray-500"
                   }`}
                 >
                   {tab}
@@ -263,11 +248,7 @@ export function PauseMenu({
                   <View className="flex-row flex-wrap gap-x-8 gap-y-3">
                     <StatItem label="Level" value={stats.level} />
                     <StatItem label="XP" value={stats.xp} />
-                    <StatItem
-                      label="Coins"
-                      value={stats.coins}
-                      color="text-autumn-gold"
-                    />
+                    <StatItem label="Coins" value={stats.coins} color="text-autumn-gold" />
                     <StatItem
                       label="Trees Planted"
                       value={stats.treesPlanted}
@@ -278,21 +259,16 @@ export function PauseMenu({
                       value={stats.treesMatured}
                       color="text-leaf-light"
                     />
-                    <StatItem
-                      label="Grid Size"
-                      value={`${stats.gridSize}x${stats.gridSize}`}
-                    />
+                    <StatItem label="Grid Size" value={`${stats.gridSize}x${stats.gridSize}`} />
                   </View>
                 </View>
 
                 <View className="gap-1">
                   <Text className="text-sm text-gray-600">
-                    Species: {stats.unlockedSpeciesCount}/
-                    {stats.totalSpeciesCount}
+                    Species: {stats.unlockedSpeciesCount}/{stats.totalSpeciesCount}
                   </Text>
                   <Text className="text-sm text-gray-600">
-                    Tools: {stats.unlockedToolsCount}/
-                    {stats.totalToolsCount}
+                    Tools: {stats.unlockedToolsCount}/{stats.totalToolsCount}
                   </Text>
                   {stats.prestigeCount > 0 && (
                     <Text className="text-sm text-autumn-gold">
@@ -304,17 +280,12 @@ export function PauseMenu({
                       <View
                         className="rounded-full px-2 py-0.5"
                         style={{
-                          backgroundColor:
-                            stats.difficultyColor ?? "#9E9E9E",
+                          backgroundColor: stats.difficultyColor ?? "#9E9E9E",
                         }}
                       >
-                        <Text className="text-xs font-bold text-white">
-                          {stats.difficultyName}
-                        </Text>
+                        <Text className="text-xs font-bold text-white">{stats.difficultyName}</Text>
                       </View>
-                      <Text className="text-xs text-gray-400">
-                        difficulty (locked)
-                      </Text>
+                      <Text className="text-xs text-gray-400">difficulty (locked)</Text>
                     </View>
                   )}
                 </View>
@@ -326,9 +297,7 @@ export function PauseMenu({
                     variant="outline"
                     onPress={onOpenStats}
                   >
-                    <Text className="text-sm font-bold text-soil-dark">
-                      Full Stats Dashboard
-                    </Text>
+                    <Text className="text-sm font-bold text-soil-dark">Full Stats Dashboard</Text>
                   </Button>
                 )}
               </View>
@@ -340,22 +309,15 @@ export function PauseMenu({
                 {/* Achievements */}
                 <View className="rounded-xl bg-white p-3">
                   <View className="mb-2 flex-row items-center justify-between">
-                    <Text className="text-sm font-bold text-soil-dark">
-                      Achievements
-                    </Text>
+                    <Text className="text-sm font-bold text-soil-dark">Achievements</Text>
                     <Text className="text-xs text-autumn-gold">
                       {achievements.length}/{achievementDefs.length}
                     </Text>
                   </View>
-                  <ScrollView
-                    style={{ maxHeight: 192 }}
-                    nestedScrollEnabled
-                  >
+                  <ScrollView style={{ maxHeight: 192 }} nestedScrollEnabled>
                     <View className="gap-2">
                       {achievementDefs.map((achievement) => {
-                        const isUnlocked = achievements.includes(
-                          achievement.id,
-                        );
+                        const isUnlocked = achievements.includes(achievement.id);
                         return (
                           <View
                             key={achievement.id}
@@ -367,9 +329,7 @@ export function PauseMenu({
                           >
                             <View
                               className={`h-6 w-6 items-center justify-center rounded-full ${
-                                isUnlocked
-                                  ? "bg-prestige-gold"
-                                  : "bg-gray-400"
+                                isUnlocked ? "bg-prestige-gold" : "bg-gray-400"
                               }`}
                             >
                               <Text className="text-xs text-white">
@@ -379,17 +339,13 @@ export function PauseMenu({
                             <View className="min-w-0 flex-1">
                               <Text
                                 className={`text-xs font-semibold ${
-                                  isUnlocked
-                                    ? "text-soil-dark"
-                                    : "text-gray-400"
+                                  isUnlocked ? "text-soil-dark" : "text-gray-400"
                                 }`}
                               >
                                 {achievement.name}
                               </Text>
                               <Text className="mt-0.5 text-[10px] text-gray-500">
-                                {isUnlocked
-                                  ? achievement.description
-                                  : "???"}
+                                {isUnlocked ? achievement.description : "???"}
                               </Text>
                             </View>
                           </View>
@@ -401,17 +357,14 @@ export function PauseMenu({
 
                 {/* Grid Expansion */}
                 <View className="rounded-xl bg-white p-3">
-                  <Text className="mb-2 text-sm font-bold text-soil-dark">
-                    Grid Expansion
-                  </Text>
+                  <Text className="mb-2 text-sm font-bold text-soil-dark">Grid Expansion</Text>
                   <Text className="mb-1 text-xs text-gray-500">
                     Current: {stats.gridSize}x{stats.gridSize}
                   </Text>
                   {gridExpansion ? (
                     <>
                       <Text className="mb-0.5 text-xs text-gray-600">
-                        Next: {gridExpansion.nextSize}x
-                        {gridExpansion.nextSize} (Lv.
+                        Next: {gridExpansion.nextSize}x{gridExpansion.nextSize} (Lv.
                         {gridExpansion.nextRequiredLevel})
                       </Text>
                       <Text className="mb-2 text-xs text-gray-500">
@@ -419,38 +372,30 @@ export function PauseMenu({
                       </Text>
                       <Button
                         className={`min-h-[44px] w-full rounded-xl ${
-                          gridExpansion.canAfford
-                            ? "bg-forest-green"
-                            : "bg-gray-400"
+                          gridExpansion.canAfford ? "bg-forest-green" : "bg-gray-400"
                         }`}
                         disabled={!gridExpansion.canAfford}
                         onPress={onExpandGrid}
                       >
                         <Text className="text-xs font-bold text-white">
-                          Expand to {gridExpansion.nextSize}x
-                          {gridExpansion.nextSize}
+                          Expand to {gridExpansion.nextSize}x{gridExpansion.nextSize}
                         </Text>
                       </Button>
                       {!gridExpansion.meetsLevel && (
                         <Text className="mt-1 text-center text-[10px] text-red-400">
-                          Requires Level{" "}
-                          {gridExpansion.nextRequiredLevel}
+                          Requires Level {gridExpansion.nextRequiredLevel}
                         </Text>
                       )}
                     </>
                   ) : (
-                    <Text className="text-xs italic text-gray-500">
-                      Maximum grid size reached.
-                    </Text>
+                    <Text className="text-xs italic text-gray-500">Maximum grid size reached.</Text>
                   )}
                 </View>
 
                 {/* Border Cosmetics */}
                 {unlockedCosmetics.length > 0 && (
                   <View className="rounded-xl bg-white p-3">
-                    <Text className="mb-1 text-sm font-bold text-soil-dark">
-                      Border Cosmetics
-                    </Text>
+                    <Text className="mb-1 text-sm font-bold text-soil-dark">Border Cosmetics</Text>
                     <Text className="mb-2 text-xs text-gray-500">
                       Customize your grove border (unlocked by prestige)
                     </Text>
@@ -468,9 +413,7 @@ export function PauseMenu({
                         <Text className="text-xs font-semibold text-soil-dark">
                           Default Wood Frame
                         </Text>
-                        <Text className="mt-0.5 text-xs text-gray-500">
-                          Classic wooden border
-                        </Text>
+                        <Text className="mt-0.5 text-xs text-gray-500">Classic wooden border</Text>
                       </Pressable>
 
                       {/* Unlocked cosmetics */}
@@ -482,20 +425,15 @@ export function PauseMenu({
                               ? "border-forest-green bg-forest-green/10"
                               : "border-gray-200 bg-black/5"
                           }`}
-                          onPress={() =>
-                            onSetBorderCosmetic(cosmetic.id)
-                          }
+                          onPress={() => onSetBorderCosmetic(cosmetic.id)}
                           accessibilityLabel={`Select ${cosmetic.name} border`}
                         >
                           <View className="flex-row items-center justify-between">
                             <Text className="text-xs font-semibold text-soil-dark">
                               {cosmetic.name}
                             </Text>
-                            {activeBorderCosmetic ===
-                              cosmetic.id && (
-                              <Text className="text-xs text-forest-green">
-                                {"\u2713"}
-                              </Text>
+                            {activeBorderCosmetic === cosmetic.id && (
+                              <Text className="text-xs text-forest-green">{"\u2713"}</Text>
                             )}
                           </View>
                           <Text className="mt-0.5 text-xs text-gray-500">
@@ -549,9 +487,7 @@ export function PauseMenu({
 
                 {/* Prestige */}
                 <View className="rounded-xl bg-white p-3">
-                  <Text className="mb-2 text-sm font-bold text-soil-dark">
-                    Prestige
-                  </Text>
+                  <Text className="mb-2 text-sm font-bold text-soil-dark">Prestige</Text>
                   {prestige.count > 0 && (
                     <View className="mb-2 gap-0.5">
                       <Text className="text-xs text-gray-600">
@@ -566,28 +502,23 @@ export function PauseMenu({
                     confirmingPrestige ? (
                       <View className="gap-2">
                         <Text className="text-xs text-gray-700">
-                          Prestige will reset your level, resources, seeds,
-                          and grove to start fresh. You keep achievements,
-                          lifetime stats, and gain permanent bonuses. Are
-                          you sure?
+                          Prestige will reset your level, resources, seeds, and grove to start
+                          fresh. You keep achievements, lifetime stats, and gain permanent bonuses.
+                          Are you sure?
                         </Text>
                         <View className="flex-row gap-2">
                           <Button
                             className="min-h-[44px] flex-1 rounded-xl bg-autumn-gold"
                             onPress={handlePrestige}
                           >
-                            <Text className="text-xs font-bold text-white">
-                              Confirm Prestige
-                            </Text>
+                            <Text className="text-xs font-bold text-white">Confirm Prestige</Text>
                           </Button>
                           <Button
                             className="min-h-[44px] flex-1 rounded-xl border-2 border-gray-300 bg-transparent"
                             variant="outline"
                             onPress={handleCancelPrestige}
                           >
-                            <Text className="text-xs font-bold text-gray-600">
-                              Cancel
-                            </Text>
+                            <Text className="text-xs font-bold text-gray-600">Cancel</Text>
                           </Button>
                         </View>
                       </View>
@@ -604,13 +535,11 @@ export function PauseMenu({
                   ) : (
                     <View>
                       <Text className="text-xs text-gray-500">
-                        Reach Level {prestige.minLevel} to unlock
-                        Prestige.
+                        Reach Level {prestige.minLevel} to unlock Prestige.
                       </Text>
                       {stats.level > 0 && (
                         <Text className="mt-0.5 text-xs text-red-400">
-                          Current: Lv.{stats.level} /{" "}
-                          {prestige.minLevel}
+                          Current: Lv.{stats.level} / {prestige.minLevel}
                         </Text>
                       )}
                     </View>
@@ -643,9 +572,7 @@ export function PauseMenu({
                 {/* Save management */}
                 {(onExportSave || onImportSave) && (
                   <View className="rounded-xl bg-white p-3">
-                    <Text className="mb-2 text-sm font-bold text-soil-dark">
-                      Save Management
-                    </Text>
+                    <Text className="mb-2 text-sm font-bold text-soil-dark">Save Management</Text>
                     <View className="flex-row gap-2">
                       {onExportSave && (
                         <Button
@@ -653,14 +580,8 @@ export function PauseMenu({
                           variant="outline"
                           onPress={onExportSave}
                         >
-                          <Icon
-                            as={DownloadIcon}
-                            size={14}
-                            className="text-soil-dark"
-                          />
-                          <Text className="ml-1 text-xs font-bold text-soil-dark">
-                            Export
-                          </Text>
+                          <Icon as={DownloadIcon} size={14} className="text-soil-dark" />
+                          <Text className="ml-1 text-xs font-bold text-soil-dark">Export</Text>
                         </Button>
                       )}
                       {onImportSave && (
@@ -669,14 +590,8 @@ export function PauseMenu({
                           variant="outline"
                           onPress={onImportSave}
                         >
-                          <Icon
-                            as={UploadIcon}
-                            size={14}
-                            className="text-soil-dark"
-                          />
-                          <Text className="ml-1 text-xs font-bold text-soil-dark">
-                            Import
-                          </Text>
+                          <Icon as={UploadIcon} size={14} className="text-soil-dark" />
+                          <Text className="ml-1 text-xs font-bold text-soil-dark">Import</Text>
                         </Button>
                       )}
                     </View>
@@ -690,14 +605,8 @@ export function PauseMenu({
                     variant="outline"
                     onPress={onHowToPlay}
                   >
-                    <Icon
-                      as={BookOpenIcon}
-                      size={16}
-                      className="text-forest-green"
-                    />
-                    <Text className="ml-1 font-bold text-forest-green">
-                      How to Play
-                    </Text>
+                    <Icon as={BookOpenIcon} size={16} className="text-forest-green" />
+                    <Text className="ml-1 font-bold text-forest-green">How to Play</Text>
                   </Button>
                 )}
 
@@ -720,9 +629,7 @@ export function PauseMenu({
                     );
                   }}
                 >
-                  <Text className="font-bold text-red-500">
-                    Reset All Data
-                  </Text>
+                  <Text className="font-bold text-red-500">Reset All Data</Text>
                 </Button>
               </View>
             )}
@@ -734,18 +641,14 @@ export function PauseMenu({
               className="min-h-[44px] w-full rounded-xl bg-forest-green"
               onPress={handleClose}
             >
-              <Text className="font-bold text-white">
-                Continue Playing
-              </Text>
+              <Text className="font-bold text-white">Continue Playing</Text>
             </Button>
             <Button
               className="min-h-[44px] w-full rounded-xl border-2 border-red-400 bg-transparent"
               variant="outline"
               onPress={onMainMenu}
             >
-              <Text className="font-bold text-red-500">
-                Return to Menu
-              </Text>
+              <Text className="font-bold text-red-500">Return to Menu</Text>
             </Button>
           </View>
         </View>

@@ -13,12 +13,12 @@ jest.mock("@react-three/drei", () => ({
 jest.mock("@react-three/fiber", () => ({}));
 
 import {
-  VALID_SEASONS,
-  VALID_BUSH_SHAPES,
+  BushModel,
   buildModelKey,
   resolveBushGLBPath,
-  BushModel,
-} from "./BushModel";
+  VALID_BUSH_SHAPES,
+  VALID_SEASONS,
+} from "./BushModel.tsx";
 
 // ---------------------------------------------------------------------------
 // VALID_SEASONS — all 5 seasons (Spec §6.3)
@@ -101,9 +101,7 @@ describe("VALID_BUSH_SHAPES (Spec §8)", () => {
 
 describe("buildModelKey (Spec §8)", () => {
   it("builds correct key for bush_connector + spring", () => {
-    expect(buildModelKey("bush_connector", "spring")).toBe(
-      "bush_connector_spring",
-    );
+    expect(buildModelKey("bush_connector", "spring")).toBe("bush_connector_spring");
   });
 
   it("builds correct key for bush_tall + winter", () => {
@@ -119,9 +117,7 @@ describe("buildModelKey (Spec §8)", () => {
   });
 
   it("builds correct key for bush_round_corner + summer", () => {
-    expect(buildModelKey("bush_round_corner", "summer")).toBe(
-      "bush_round_corner_summer",
-    );
+    expect(buildModelKey("bush_round_corner", "summer")).toBe("bush_round_corner_summer");
   });
 
   it("produces different keys for the same shape across all 5 seasons", () => {
@@ -131,9 +127,7 @@ describe("buildModelKey (Spec §8)", () => {
   });
 
   it("produces different keys for all shapes in the same season", () => {
-    const keys = VALID_BUSH_SHAPES.map((shape) =>
-      buildModelKey(shape, "spring"),
-    );
+    const keys = VALID_BUSH_SHAPES.map((shape) => buildModelKey(shape, "spring"));
     const uniqueKeys = new Set(keys);
     expect(uniqueKeys.size).toBe(VALID_BUSH_SHAPES.length);
   });
@@ -178,9 +172,7 @@ describe("resolveBushGLBPath (Spec §6.3, §8)", () => {
 
   it("paths include assets/models/bushes/ prefix", () => {
     for (const shape of VALID_BUSH_SHAPES) {
-      expect(resolveBushGLBPath(shape, "spring")).toMatch(
-        /^assets\/models\/bushes\//,
-      );
+      expect(resolveBushGLBPath(shape, "spring")).toMatch(/^assets\/models\/bushes\//);
     }
   });
 
@@ -224,9 +216,7 @@ describe("resolveBushGLBPath (Spec §6.3, §8)", () => {
   });
 
   it("throws for an empty string bushShape", () => {
-    expect(() => resolveBushGLBPath("", "spring")).toThrow(
-      "[BushModel] Unknown bushShape",
-    );
+    expect(() => resolveBushGLBPath("", "spring")).toThrow("[BushModel] Unknown bushShape");
   });
 
   it("throws for a partial shape name", () => {

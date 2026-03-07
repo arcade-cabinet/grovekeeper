@@ -10,13 +10,9 @@
  * - Visual: outer ring with cardinal dots + inner knob with gradient colors
  */
 
-import React, { useCallback, useRef } from "react";
-import {
-  Animated,
-  type GestureResponderEvent,
-  PanResponder,
-  View,
-} from "react-native";
+import type React from "react";
+import { useCallback, useRef } from "react";
+import { Animated, type GestureResponderEvent, PanResponder, View } from "react-native";
 import { triggerHaptic } from "@/game/systems/haptics";
 
 // ---------------------------------------------------------------------------
@@ -82,10 +78,10 @@ interface DotStyle {
 }
 
 const CARDINAL_DOT_STYLES: DotStyle[] = [
-  { top: 6, left: DOT_CENTER },        // N
-  { bottom: 6, left: DOT_CENTER },      // S
-  { left: 6, top: DOT_CENTER },         // W
-  { right: 6, top: DOT_CENTER },        // E
+  { top: 6, left: DOT_CENTER }, // N
+  { bottom: 6, left: DOT_CENTER }, // S
+  { left: 6, top: DOT_CENTER }, // W
+  { right: 6, top: DOT_CENTER }, // E
 ];
 
 // ---------------------------------------------------------------------------
@@ -273,10 +269,7 @@ export function VirtualJoystick({
           shadowOpacity: 0.2,
           shadowRadius: 8,
           elevation: 6,
-          transform: [
-            { translateX: knobX },
-            { translateY: knobY },
-          ],
+          transform: [{ translateX: knobX }, { translateY: knobY }],
         }}
         pointerEvents="none"
       />

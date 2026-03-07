@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { triggerActionHaptic, triggerHaptic } from "./haptics";
+import { triggerActionHaptic, triggerHaptic } from "./haptics.ts";
 
 // Mock expo-haptics
 const mockImpactAsync = jest.fn().mockResolvedValue(undefined);

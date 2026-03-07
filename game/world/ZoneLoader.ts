@@ -11,10 +11,11 @@ import type { Entity } from "@/game/ecs/world";
 import { npcsQuery, world } from "@/game/ecs/world";
 
 const gridCellsQuery = world.with("gridCell", "position");
+
 import { getNpcTemplate } from "@/game/npcs/NpcManager";
 import { createRNG, hashString } from "@/game/utils/seedRNG";
-import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types";
-import { pickWeighted } from "./WorldGenerator";
+import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types.ts";
+import { pickWeighted } from "./WorldGenerator.ts";
 
 /** Map zone ground material to grid cell type. */
 function materialToCellType(material: GroundMaterial): "soil" | "water" | "rock" | "path" {

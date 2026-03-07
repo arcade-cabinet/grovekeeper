@@ -1,10 +1,10 @@
-import type { Season } from "./seasonalMarket";
+import type { Season } from "./seasonalMarket.ts";
 import {
   applySeasonalPrice,
   getResourceModifier,
-  getSeasonalModifiers,
   getSeasonalModifierForAny,
-} from "./seasonalMarket";
+  getSeasonalModifiers,
+} from "./seasonalMarket.ts";
 
 describe("seasonal market", () => {
   describe("getSeasonalModifiers", () => {

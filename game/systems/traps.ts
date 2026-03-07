@@ -11,9 +11,9 @@
  */
 
 import trapsConfig from "@/config/game/traps.json" with { type: "json" };
-import { applyDamageToHealth } from "@/game/systems/combat";
-import type { TrapComponent } from "@/game/ecs/components/items";
 import type { HealthComponent } from "@/game/ecs/components/combat";
+import type { TrapComponent } from "@/game/ecs/components/items";
+import { applyDamageToHealth } from "@/game/systems/combat";
 
 // ---------------------------------------------------------------------------
 // Minimal entity interfaces — pure system tick, no ECS world import
@@ -129,10 +129,7 @@ export function tickTrapCooldown(trap: TrapComponent, dt: number): void {
  * Reuses the combat invulnerability window to prevent double-hits within 0.5s.
  * Mutates health in place.
  */
-export function applyTrapDamageToHealth(
-  health: HealthComponent,
-  trap: TrapComponent,
-): void {
+export function applyTrapDamageToHealth(health: HealthComponent, trap: TrapComponent): void {
   applyDamageToHealth(health, trap.damage, `trap:${trap.trapType}`);
 }
 
@@ -152,11 +149,7 @@ export function applyTrapDamageToHealth(
  *
  * Spec §22: one trigger per armed trap per tick (break after first hit).
  */
-export function tickTraps(
-  traps: TrapEntity[],
-  enemies: EnemyTargetEntity[],
-  dt: number,
-): void {
+export function tickTraps(traps: TrapEntity[], enemies: EnemyTargetEntity[], dt: number): void {
   for (const trapEntity of traps) {
     const { trap, position: trapPos } = trapEntity;
 

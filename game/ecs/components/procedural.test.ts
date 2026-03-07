@@ -6,18 +6,18 @@
  * pipeline as GLB model entities.
  */
 import { World } from "miniplex";
+import type { Position } from "./core.ts";
 import type {
-  TerrainChunkComponent,
-  WaterBodyComponent,
-  SkyComponent,
   DayNightComponent,
-  WeatherComponent,
   FogVolumeComponent,
   ParticleEmitterComponent,
-  SoundscapeComponent,
   PathSegmentComponent,
-} from "./procedural";
-import type { Position } from "./core";
+  SkyComponent,
+  SoundscapeComponent,
+  TerrainChunkComponent,
+  WaterBodyComponent,
+  WeatherComponent,
+} from "./procedural/index.ts";
 
 interface TestEntity {
   id: string;

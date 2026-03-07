@@ -10,16 +10,16 @@
 
 import type { ResourceType } from "@/game/config/resources";
 import { createRNG, hashString } from "@/game/utils/seedRNG";
-import { ALL_OFFER_TEMPLATES } from "./offerPools";
+import { ALL_OFFER_TEMPLATES } from "./offerPools.ts";
 
-export type { MerchantReward, OfferTemplate } from "./offerPools";
+export type { MerchantReward, OfferTemplate } from "./offerPools.ts";
 export {
   ALL_OFFER_TEMPLATES,
   RECIPE_OFFERS,
   RESOURCE_OFFERS,
   SEED_OFFERS,
   XP_OFFERS,
-} from "./offerPools";
+} from "./offerPools.ts";
 
 // -- Types ────────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
-import { audioManager } from "./AudioManager";
-import { nativeAudioManager } from "./NativeAudioManager";
+import { audioManager } from "./AudioManager.ts";
+import { nativeAudioManager } from "./NativeAudioManager.ts";
 
 // Mock AudioManager
 jest.mock("./AudioManager", () => ({

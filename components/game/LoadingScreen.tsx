@@ -14,14 +14,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Animated as RNAnimated, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { Logo } from "./Logo";
+import { Logo } from "./Logo.tsx";
 import {
   getPhaseLabel,
   getProgressPercent,
   getTip,
   type LoadingPhase,
   tipCount,
-} from "./loadingScreenLogic";
+} from "./loadingScreenLogic.ts";
 
 // ---------------------------------------------------------------------------
 // Color palette (matches the rest of the game UI)

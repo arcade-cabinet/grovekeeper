@@ -4,7 +4,7 @@
  * Uses the pure helper module (no React Native dependencies).
  */
 
-import { getDefaultMobileActions } from "./mobileActionHelpers";
+import { getDefaultMobileActions } from "./mobileActionHelpers.ts";
 
 describe("getDefaultMobileActions", () => {
   it("enables plant when empty tile exists", () => {

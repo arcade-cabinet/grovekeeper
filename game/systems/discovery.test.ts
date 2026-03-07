@@ -1,4 +1,4 @@
-import { discoverZone, isZoneDiscovered } from "./discovery";
+import { discoverZone, isZoneDiscovered } from "./discovery.ts";
 
 describe("discoverZone", () => {
   it("adds a new zone to discovered list", () => {

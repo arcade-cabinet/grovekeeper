@@ -20,8 +20,8 @@
  *   the world is always populated rather than blank.
  */
 
-import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
 import { playerQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
 import { ChunkManager } from "@/game/world/ChunkManager";
@@ -93,9 +93,7 @@ export function ChunkStreamer(): null {
 
     const players = playerQuery.entities;
     const playerPos =
-      players.length > 0 && players[0].position
-        ? players[0].position
-        : { x: 0, y: 0, z: 0 };
+      players.length > 0 && players[0].position ? players[0].position : { x: 0, y: 0, z: 0 };
 
     _chunkManager.update(playerPos);
   });

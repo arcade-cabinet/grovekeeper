@@ -21,7 +21,7 @@ import {
   recordPlantedTree,
   saveChunkDiff,
   updateCropInDiff,
-} from "./chunkPersistence";
+} from "./chunkPersistence.ts";
 
 const CHUNK_SIZE = 16; // matches config/game/grid.json chunkSize
 
@@ -244,9 +244,7 @@ describe("chunkPersistence (Spec §26.2)", () => {
     it("restores speciesId from the diff", () => {
       recordPlantedTree("0,0", makeTree({ speciesId: "silver-maple" }));
       applyChunkDiff("0,0", 0, 0);
-      const found = world.with("tree").entities.find(
-        (e) => e.tree?.speciesId === "silver-maple",
-      );
+      const found = world.with("tree").entities.find((e) => e.tree?.speciesId === "silver-maple");
       expect(found).toBeDefined();
     });
 
@@ -390,7 +388,16 @@ describe("chunkPersistence — crops (Spec §8)", () => {
     it("skips crops with unknown cropId gracefully", () => {
       saveChunkDiff("0,0", {
         plantedTrees: [],
-        plantedCrops: [{ localX: 0, localZ: 0, cropId: "banana" as never, stage: 0, progress: 0, watered: false }],
+        plantedCrops: [
+          {
+            localX: 0,
+            localZ: 0,
+            cropId: "banana" as never,
+            stage: 0,
+            progress: 0,
+            watered: false,
+          },
+        ],
       });
       const before = world.entities.length;
       expect(() => applyChunkDiff("0,0", 0, 0)).not.toThrow();

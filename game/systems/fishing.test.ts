@@ -14,17 +14,17 @@
  * - integration: full successful catch round trip
  */
 
+import fishingConfig from "@/config/game/fishing.json" with { type: "json" };
 import {
+  computeFishYield,
   createFishingState,
-  startFishing,
-  tickFishing,
+  isFishingComplete,
+  isWaterFishable,
   pressFishingAction,
   selectFishSpecies,
-  computeFishYield,
-  isWaterFishable,
-  isFishingComplete,
-} from "./fishing";
-import fishingConfig from "@/config/game/fishing.json" with { type: "json" };
+  startFishing,
+  tickFishing,
+} from "./fishing.ts";
 
 const {
   castDuration,

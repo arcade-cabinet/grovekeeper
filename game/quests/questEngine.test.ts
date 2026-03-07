@@ -15,7 +15,7 @@ import {
   isQuestCompleted,
   isQuestFailed,
   startQuest,
-} from "./questEngine";
+} from "./questEngine.ts";
 
 const SAMPLE_DEF = {
   id: "test-quest",

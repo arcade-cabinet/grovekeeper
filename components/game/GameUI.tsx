@@ -25,27 +25,27 @@ import {
   PRESTIGE_MIN_LEVEL,
 } from "@/game/systems/prestige";
 import { BASE_TRADE_RATES, getEffectiveTradeRates } from "@/game/systems/trading";
-import type { GameTime } from "./TimeDisplay";
 import type { WeatherType } from "@/game/systems/weather";
-import type { TileState } from "./ActionButton";
-import { BatchHarvestButton } from "./BatchHarvestButton";
-import { BuildPanel } from "./BuildPanel";
-import { HUD } from "./HUD";
-import { MiniMap } from "./MiniMap";
-import { MobileActionButtons } from "./MobileActionButtons";
-import { NpcDialogue } from "./NpcDialogue";
-import { PauseMenu } from "./PauseMenu";
-import { RadialActionMenu } from "./RadialActionMenu";
-import type { RadialAction } from "./radialActions";
-import { SeedSelect } from "./SeedSelect";
-import { StaminaGauge } from "./StaminaGauge";
-import { ToolBelt } from "./ToolBelt";
-import { ToolWheel } from "./ToolWheel";
-import { TradeDialog } from "./TradeDialog";
-import { TutorialOverlay, type TutorialTargetRect } from "./TutorialOverlay";
-import { VirtualJoystick } from "./VirtualJoystick";
-import { WeatherForecast } from "./WeatherForecast";
-import { WeatherOverlay } from "./WeatherOverlay";
+import type { TileState } from "./ActionButton.tsx";
+import { BatchHarvestButton } from "./BatchHarvestButton.tsx";
+import { BuildPanel } from "./BuildPanel.tsx";
+import { HUD } from "./HUD.tsx";
+import { MiniMap } from "./MiniMap/index.ts";
+import { MobileActionButtons } from "./MobileActionButtons.tsx";
+import { NpcDialogue } from "./NpcDialogue.tsx";
+import { PauseMenu } from "./PauseMenu.tsx";
+import { RadialActionMenu } from "./RadialActionMenu.tsx";
+import type { RadialAction } from "./radialActions.ts";
+import { SeedSelect } from "./SeedSelect.tsx";
+import { StaminaGauge } from "./StaminaGauge.tsx";
+import type { GameTime } from "./TimeDisplay.tsx";
+import { ToolBelt } from "./ToolBelt.tsx";
+import { ToolWheel } from "./ToolWheel.tsx";
+import { TradeDialog } from "./TradeDialog.tsx";
+import { TutorialOverlay, type TutorialTargetRect } from "./TutorialOverlay.tsx";
+import { VirtualJoystick } from "./VirtualJoystick.tsx";
+import { WeatherForecast } from "./WeatherForecast.tsx";
+import { WeatherOverlay } from "./WeatherOverlay.tsx";
 
 export interface GameUIProps {
   onAction: () => void;
@@ -190,7 +190,17 @@ export function GameUI({
       totalToolsCount: TOOLS.length,
       prestigeCount,
     }),
-    [level, xp, coins, treesPlanted, treesMatured, gridSize, unlockedSpecies.length, unlockedTools.length, prestigeCount],
+    [
+      level,
+      xp,
+      coins,
+      treesPlanted,
+      treesMatured,
+      gridSize,
+      unlockedSpecies.length,
+      unlockedTools.length,
+      prestigeCount,
+    ],
   );
 
   // PauseMenu: achievement defs
@@ -207,9 +217,17 @@ export function GameUI({
     const meetsLevel = level >= nextTier.requiredLevel;
     const costLabel = Object.entries(nextTier.cost)
       .filter(([, amount]) => amount > 0)
-      .map(([resource, amount]) => `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`)
+      .map(
+        ([resource, amount]) => `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`,
+      )
       .join(", ");
-    return { nextSize: nextTier.size, nextRequiredLevel: nextTier.requiredLevel, costLabel, canAfford, meetsLevel };
+    return {
+      nextSize: nextTier.size,
+      nextRequiredLevel: nextTier.requiredLevel,
+      costLabel,
+      canAfford,
+      meetsLevel,
+    };
   }, [gridSize, resources, level]);
 
   // PauseMenu: prestige info
@@ -224,7 +242,10 @@ export function GameUI({
   }, [prestigeCount, level]);
 
   // PauseMenu: cosmetics
-  const pauseUnlockedCosmetics = useMemo(() => getUnlockedCosmetics(prestigeCount), [prestigeCount]);
+  const pauseUnlockedCosmetics = useMemo(
+    () => getUnlockedCosmetics(prestigeCount),
+    [prestigeCount],
+  );
   const pauseLockedCosmetics = useMemo(
     () => PRESTIGE_COSMETICS.filter((c) => c.prestigeRequired > prestigeCount),
     [prestigeCount],
@@ -236,7 +257,13 @@ export function GameUI({
       { id: "plant", label: "Plant", icon: SproutIcon, toolId: "trowel", enabled: true },
       { id: "water", label: "Water", icon: DropletsIcon, toolId: "watering-can", enabled: true },
       { id: "harvest", label: "Harvest", icon: AxeIcon, toolId: "axe", enabled: true },
-      { id: "prune", label: "Prune", icon: ScissorsIcon, toolId: "pruning-shears", enabled: unlockedTools.includes("pruning-shears") },
+      {
+        id: "prune",
+        label: "Prune",
+        icon: ScissorsIcon,
+        toolId: "pruning-shears",
+        enabled: unlockedTools.includes("pruning-shears"),
+      },
     ],
     [unlockedTools],
   );
@@ -249,10 +276,7 @@ export function GameUI({
       {/* Prestige cosmetic vignette border */}
       {cosmetic && (
         <View
-          style={[
-            styles.vignette,
-            { borderWidth: 3, borderColor: cosmetic.borderColor },
-          ]}
+          style={[styles.vignette, { borderWidth: 3, borderColor: cosmetic.borderColor }]}
           pointerEvents="none"
         />
       )}
@@ -261,10 +285,7 @@ export function GameUI({
       <WeatherOverlay weatherType={currentWeather ?? "clear"} />
 
       {/* Full FPS HUD overlay — self-contained, reads from ECS + Legend State */}
-      <HUD
-        onOpenMenu={onOpenMenu}
-        onOpenSeedSelect={() => setSeedSelectOpen(true)}
-      />
+      <HUD onOpenMenu={onOpenMenu} onOpenSeedSelect={() => setSeedSelectOpen(true)} />
 
       {/* Weather forecast widget - below HUD */}
       {currentWeather && gameTime && (
@@ -307,10 +328,7 @@ export function GameUI({
 
       {/* Mobile controls -- joystick (left) + action buttons (right) */}
       {movementRef && (
-        <VirtualJoystick
-          movementRef={movementRef}
-          onActiveChange={onJoystickActiveChange}
-        />
+        <VirtualJoystick movementRef={movementRef} onActiveChange={onJoystickActiveChange} />
       )}
       <MobileActionButtons
         selectedTool={selectedTool}
@@ -390,18 +408,8 @@ export function GameUI({
         }}
         onClose={() => setTradeDialogOpen(false)}
       />
-      {setNpcDialogueOpen && (
-        <NpcDialogue
-          open={npcDialogueOpen ?? false}
-          onClose={() => setNpcDialogueOpen(false)}
-          npcName={nearbyNpcTemplateId ?? "NPC"}
-          npcIcon={"\u{1F333}"}
-          currentNode={null}
-          onChoice={() => {}}
-          overrideDialogueId={tutorialDialogueId ?? undefined}
-          onDialogueAction={onTutorialDialogueAction}
-        />
-      )}
+      {/* NpcDialogue is now self-driven from ECS via dialogueBridge */}
+      <NpcDialogue />
       <PauseMenu
         open={pauseMenuOpen}
         stats={pauseStats}
@@ -425,10 +433,7 @@ export function GameUI({
       />
 
       {/* Tutorial highlight overlay */}
-      <TutorialOverlay
-        targetRect={tutorialTargetRect ?? null}
-        label={tutorialLabel ?? null}
-      />
+      <TutorialOverlay targetRect={tutorialTargetRect ?? null} label={tutorialLabel ?? null} />
     </View>
   );
 }

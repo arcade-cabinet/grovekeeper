@@ -3,7 +3,7 @@ import {
   getZoneBonusMagnitude,
   hasZoneBonus,
   type ZoneType,
-} from "./zoneBonuses";
+} from "./zoneBonuses.ts";
 
 describe("getZoneBonuses", () => {
   it("returns growth_boost for grove", () => {

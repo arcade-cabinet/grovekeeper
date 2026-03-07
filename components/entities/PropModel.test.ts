@@ -13,7 +13,7 @@ jest.mock("@react-three/drei", () => ({
 
 jest.mock("@react-three/fiber", () => ({}));
 
-import { PropModel, resolvePropGLBPath, resolveFoodGLBPath } from "./PropModel";
+import { PropModel, resolveFoodGLBPath, resolvePropGLBPath } from "./PropModel.tsx";
 
 // ---------------------------------------------------------------------------
 // resolvePropGLBPath — spot-checks across all categories
@@ -22,21 +22,15 @@ import { PropModel, resolvePropGLBPath, resolveFoodGLBPath } from "./PropModel";
 describe("resolvePropGLBPath (Spec §14)", () => {
   // misc
   it("returns the correct path for barrel-1", () => {
-    expect(resolvePropGLBPath("barrel-1")).toBe(
-      "assets/models/props/misc/barrel-1.glb",
-    );
+    expect(resolvePropGLBPath("barrel-1")).toBe("assets/models/props/misc/barrel-1.glb");
   });
 
   it("returns the correct path for barrel-2", () => {
-    expect(resolvePropGLBPath("barrel-2")).toBe(
-      "assets/models/props/misc/barrel-2.glb",
-    );
+    expect(resolvePropGLBPath("barrel-2")).toBe("assets/models/props/misc/barrel-2.glb");
   });
 
   it("returns the correct path for haybale-1", () => {
-    expect(resolvePropGLBPath("haybale-1")).toBe(
-      "assets/models/props/misc/haybale-1.glb",
-    );
+    expect(resolvePropGLBPath("haybale-1")).toBe("assets/models/props/misc/haybale-1.glb");
   });
 
   it("returns the correct path for log", () => {
@@ -44,9 +38,7 @@ describe("resolvePropGLBPath (Spec §14)", () => {
   });
 
   it("returns the correct path for wheelbarrow", () => {
-    expect(resolvePropGLBPath("wheelbarrow")).toBe(
-      "assets/models/props/misc/wheelbarrow.glb",
-    );
+    expect(resolvePropGLBPath("wheelbarrow")).toBe("assets/models/props/misc/wheelbarrow.glb");
   });
 
   // crops
@@ -55,41 +47,29 @@ describe("resolvePropGLBPath (Spec §14)", () => {
   });
 
   it("returns the correct path for carrot crop", () => {
-    expect(resolvePropGLBPath("carrot")).toBe(
-      "assets/models/crops/carrot.glb",
-    );
+    expect(resolvePropGLBPath("carrot")).toBe("assets/models/crops/carrot.glb");
   });
 
   it("returns the correct path for pumpkin crop", () => {
-    expect(resolvePropGLBPath("pumpkin")).toBe(
-      "assets/models/crops/pumpkin.glb",
-    );
+    expect(resolvePropGLBPath("pumpkin")).toBe("assets/models/crops/pumpkin.glb");
   });
 
   // kitchen
   it("returns the correct path for beer-bottle", () => {
-    expect(resolvePropGLBPath("beer-bottle")).toBe(
-      "assets/models/props/kitchen/beer_bottle.glb",
-    );
+    expect(resolvePropGLBPath("beer-bottle")).toBe("assets/models/props/kitchen/beer_bottle.glb");
   });
 
   it("returns the correct path for bowl-01", () => {
-    expect(resolvePropGLBPath("bowl-01")).toBe(
-      "assets/models/props/kitchen/bowl_01.glb",
-    );
+    expect(resolvePropGLBPath("bowl-01")).toBe("assets/models/props/kitchen/bowl_01.glb");
   });
 
   it("returns the correct path for pan", () => {
-    expect(resolvePropGLBPath("pan")).toBe(
-      "assets/models/props/kitchen/pan.glb",
-    );
+    expect(resolvePropGLBPath("pan")).toBe("assets/models/props/kitchen/pan.glb");
   });
 
   // traps
   it("returns the correct path for spike-1", () => {
-    expect(resolvePropGLBPath("spike-1")).toBe(
-      "assets/models/props/traps/spike_variant_1.glb",
-    );
+    expect(resolvePropGLBPath("spike-1")).toBe("assets/models/props/traps/spike_variant_1.glb");
   });
 
   it("returns the correct path for blade-guillotine", () => {
@@ -100,34 +80,24 @@ describe("resolvePropGLBPath (Spec §14)", () => {
 
   // weapons
   it("returns the correct path for psx-axe", () => {
-    expect(resolvePropGLBPath("psx-axe")).toBe(
-      "assets/models/weapons/psx-axe.glb",
-    );
+    expect(resolvePropGLBPath("psx-axe")).toBe("assets/models/weapons/psx-axe.glb");
   });
 
   it("returns the correct path for psx-sword", () => {
-    expect(resolvePropGLBPath("psx-sword")).toBe(
-      "assets/models/weapons/psx-sword.glb",
-    );
+    expect(resolvePropGLBPath("psx-sword")).toBe("assets/models/weapons/psx-sword.glb");
   });
 
   it("returns the correct path for katana", () => {
-    expect(resolvePropGLBPath("katana")).toBe(
-      "assets/models/weapons/katana.glb",
-    );
+    expect(resolvePropGLBPath("katana")).toBe("assets/models/weapons/katana.glb");
   });
 
   // structures (from propAssets — distinct from structures.json)
   it("returns the correct path for barn from propAssets", () => {
-    expect(resolvePropGLBPath("barn")).toBe(
-      "assets/models/structures/farm/barn.glb",
-    );
+    expect(resolvePropGLBPath("barn")).toBe("assets/models/structures/farm/barn.glb");
   });
 
   it("returns the correct path for windmill from propAssets", () => {
-    expect(resolvePropGLBPath("windmill")).toBe(
-      "assets/models/structures/farm/windmill.glb",
-    );
+    expect(resolvePropGLBPath("windmill")).toBe("assets/models/structures/farm/windmill.glb");
   });
 
   // bulk checks
@@ -157,15 +127,11 @@ describe("resolvePropGLBPath (Spec §14)", () => {
   });
 
   it("throws for an empty propId", () => {
-    expect(() => resolvePropGLBPath("")).toThrow(
-      "[PropModel] Unknown propId",
-    );
+    expect(() => resolvePropGLBPath("")).toThrow("[PropModel] Unknown propId");
   });
 
   it("throws for a partial match (haybale without suffix)", () => {
-    expect(() => resolvePropGLBPath("haybale")).toThrow(
-      "[PropModel] Unknown propId",
-    );
+    expect(() => resolvePropGLBPath("haybale")).toThrow("[PropModel] Unknown propId");
   });
 });
 
@@ -179,27 +145,19 @@ describe("resolveFoodGLBPath (Spec §14)", () => {
   });
 
   it("returns the correct path for carrot", () => {
-    expect(resolveFoodGLBPath("carrot")).toBe(
-      "assets/models/crops/carrot.glb",
-    );
+    expect(resolveFoodGLBPath("carrot")).toBe("assets/models/crops/carrot.glb");
   });
 
   it("returns the correct path for cucumber", () => {
-    expect(resolveFoodGLBPath("cucumber")).toBe(
-      "assets/models/crops/cucumber.glb",
-    );
+    expect(resolveFoodGLBPath("cucumber")).toBe("assets/models/crops/cucumber.glb");
   });
 
   it("returns the correct path for pumpkin", () => {
-    expect(resolveFoodGLBPath("pumpkin")).toBe(
-      "assets/models/crops/pumpkin.glb",
-    );
+    expect(resolveFoodGLBPath("pumpkin")).toBe("assets/models/crops/pumpkin.glb");
   });
 
   it("returns the correct path for tomato", () => {
-    expect(resolveFoodGLBPath("tomato")).toBe(
-      "assets/models/crops/tomato.glb",
-    );
+    expect(resolveFoodGLBPath("tomato")).toBe("assets/models/crops/tomato.glb");
   });
 
   it("all 5 crop food paths end in .glb", () => {
@@ -229,9 +187,7 @@ describe("resolveFoodGLBPath (Spec §14)", () => {
   });
 
   it("throws for an unknown foodId", () => {
-    expect(() => resolveFoodGLBPath("not-a-food")).toThrow(
-      "[PropModel] Unknown foodId",
-    );
+    expect(() => resolveFoodGLBPath("not-a-food")).toThrow("[PropModel] Unknown foodId");
   });
 
   it("throws for an empty foodId", () => {

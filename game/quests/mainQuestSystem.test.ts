@@ -8,21 +8,21 @@
  */
 
 import {
+  getSpiritDiscoveryCount,
+  isMainQuestComplete,
+  isWorldrootsDreamAvailable,
+  MAIN_QUEST_CHAIN_ID,
+  TOTAL_SPIRITS,
+  WORLDROOTS_DREAM_CHAIN_ID,
+} from "./mainQuestSystem.ts";
+import {
   advanceObjectives,
   claimStepReward,
   computeAvailableChains,
   getChainDef,
   initializeChainState,
   startChain,
-} from "./questChainEngine";
-import {
-  MAIN_QUEST_CHAIN_ID,
-  TOTAL_SPIRITS,
-  WORLDROOTS_DREAM_CHAIN_ID,
-  getSpiritDiscoveryCount,
-  isMainQuestComplete,
-  isWorldrootsDreamAvailable,
-} from "./mainQuestSystem";
+} from "./questChainEngine.ts";
 
 // Helper: start the main quest chain and advance spirit_discovered N times
 function buildStateWithSpirits(count: number) {
@@ -108,7 +108,7 @@ describe("mainQuestSystem (Spec §32.3)", () => {
     });
 
     it("completedSteps is reported on 8th discovery", () => {
-      let state = buildStateWithSpirits(TOTAL_SPIRITS - 1);
+      const state = buildStateWithSpirits(TOTAL_SPIRITS - 1);
       const result = advanceObjectives(state, "spirit_discovered", 1);
       expect(result.completedSteps).toContainEqual({
         chainId: MAIN_QUEST_CHAIN_ID,

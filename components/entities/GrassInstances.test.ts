@@ -21,13 +21,13 @@ jest.mock("@/game/ecs/world", () => ({
   grassQuery: { entities: [] },
 }));
 
-import vegetationConfig from "@/config/game/vegetation.json";
+import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
 import {
+  computeGrassInstanceTransforms,
   GRASS_SCATTER_RADIUS,
   GrassInstances,
-  computeGrassInstanceTransforms,
   resolveGrassGLBPath,
-} from "./GrassInstances";
+} from "./GrassInstances.tsx";
 
 // ---------------------------------------------------------------------------
 // resolveGrassGLBPath — GLB path resolution (Spec §8)
@@ -35,15 +35,11 @@ import {
 
 describe("resolveGrassGLBPath (Spec §8)", () => {
   it("returns correct path for grass01", () => {
-    expect(resolveGrassGLBPath("grass01")).toBe(
-      "assets/models/grass/grass01.glb",
-    );
+    expect(resolveGrassGLBPath("grass01")).toBe("assets/models/grass/grass01.glb");
   });
 
   it("returns correct path for grass_bush", () => {
-    expect(resolveGrassGLBPath("grass_bush")).toBe(
-      "assets/models/grass/grass_bush.glb",
-    );
+    expect(resolveGrassGLBPath("grass_bush")).toBe("assets/models/grass/grass_bush.glb");
   });
 
   it("returns correct path for grass_patch_corner", () => {
@@ -57,9 +53,7 @@ describe("resolveGrassGLBPath (Spec §8)", () => {
   });
 
   it("path starts with assets/models/grass/", () => {
-    expect(resolveGrassGLBPath("grass03")).toMatch(
-      /^assets\/models\/grass\//,
-    );
+    expect(resolveGrassGLBPath("grass03")).toMatch(/^assets\/models\/grass\//);
   });
 
   it("embeds the grassType in the path", () => {
@@ -67,9 +61,7 @@ describe("resolveGrassGLBPath (Spec §8)", () => {
   });
 
   it("different grassTypes produce different paths", () => {
-    expect(resolveGrassGLBPath("grass01")).not.toBe(
-      resolveGrassGLBPath("grass02"),
-    );
+    expect(resolveGrassGLBPath("grass01")).not.toBe(resolveGrassGLBPath("grass02"));
   });
 
   it("all biome grass types from vegetation.json resolve without error", () => {
@@ -88,7 +80,14 @@ describe("resolveGrassGLBPath (Spec §8)", () => {
   });
 
   it("each unique grassType produces a unique path", () => {
-    const types = ["grass01", "grass02", "grass03", "grass_bush", "grass_patch", "grass_patch_corner"];
+    const types = [
+      "grass01",
+      "grass02",
+      "grass03",
+      "grass_bush",
+      "grass_patch",
+      "grass_patch_corner",
+    ];
     const paths = types.map(resolveGrassGLBPath);
     const unique = new Set(paths);
     expect(unique.size).toBe(types.length);

@@ -29,9 +29,16 @@ export interface PlayerComponent {
   maxHunger: number;
 }
 
-export interface PropComponent { propId: string; modelPath?: string; }
-export interface RainCatcherComponent { radius: number; }
-export interface ScarecrowComponent { radius: number; }
+export interface PropComponent {
+  propId: string;
+  modelPath?: string;
+}
+export interface RainCatcherComponent {
+  radius: number;
+}
+export interface ScarecrowComponent {
+  radius: number;
+}
 
 export interface Harvestable {
   resources: { type: string; amount: number }[];

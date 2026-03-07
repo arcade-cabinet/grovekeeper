@@ -4,15 +4,15 @@
  */
 
 import {
-  isLandmarkChunk,
-  getLandmarkLocalPos,
-  getLandmarkType,
   bezierPoint,
   carveSplineIntoHeightmap,
   generatePathsForChunk,
   generateSignpostForChunk,
+  getLandmarkLocalPos,
+  getLandmarkType,
+  isLandmarkChunk,
   LANDMARK_PROBABILITY,
-} from "./pathGenerator";
+} from "./pathGenerator.ts";
 
 const SIZE = 16;
 
@@ -148,7 +148,7 @@ describe("bezierPoint (Spec §31.1)", () => {
     const pt = bezierPoint(p0, p1, p2, 0.5);
     // Quadratic bezier at t=0.5: (0.25*p0 + 0.5*p1 + 0.25*p2)
     expect(pt.x).toBeCloseTo(0.25 * 0 + 0.5 * 8 + 0.25 * 16); // 8
-    expect(pt.z).toBeCloseTo(0.25 * 0 + 0.5 * 4 + 0.25 * 0);   // 2
+    expect(pt.z).toBeCloseTo(0.25 * 0 + 0.5 * 4 + 0.25 * 0); // 2
   });
 
   it("straight line (control at midpoint) produces midpoint at t=0.5", () => {
@@ -169,11 +169,11 @@ describe("carveSplineIntoHeightmap (Spec §31.1)", () => {
     // Straight N-S path through x=8
     carveSplineIntoHeightmap(
       hm,
-      { x: 8, z: 0 },   // p0
+      { x: 8, z: 0 }, // p0
       { x: 8, z: 7.5 }, // p1 (midpoint — straight line)
-      { x: 8, z: 15 },  // p2
-      1.5,               // radius
-      0.2,               // carveDepth
+      { x: 8, z: 15 }, // p2
+      1.5, // radius
+      0.2, // carveDepth
       SIZE,
     );
     // Tile on the path center should be carved below zero.
@@ -200,17 +200,9 @@ describe("carveSplineIntoHeightmap (Spec §31.1)", () => {
   it("carve is deeper at the path center than at the edges", () => {
     const hm = flatHeightmap(0);
     // Straight E-W path at z=8.
-    carveSplineIntoHeightmap(
-      hm,
-      { x: 0, z: 8 },
-      { x: 7.5, z: 8 },
-      { x: 15, z: 8 },
-      2.0,
-      0.3,
-      SIZE,
-    );
-    const centerDepth = Math.abs(hm[8 * SIZE + 8]);   // z=8, x=8 (center)
-    const edgeDepth = Math.abs(hm[9 * SIZE + 8]);     // z=9, x=8 (1 unit off)
+    carveSplineIntoHeightmap(hm, { x: 0, z: 8 }, { x: 7.5, z: 8 }, { x: 15, z: 8 }, 2.0, 0.3, SIZE);
+    const centerDepth = Math.abs(hm[8 * SIZE + 8]); // z=8, x=8 (center)
+    const edgeDepth = Math.abs(hm[9 * SIZE + 8]); // z=9, x=8 (1 unit off)
     expect(centerDepth).toBeGreaterThan(edgeDepth);
   });
 
@@ -222,7 +214,7 @@ describe("carveSplineIntoHeightmap (Spec §31.1)", () => {
       { x: 8, z: 8 },
       { x: 8, z: 8 },
       { x: 8, z: 8 },
-      0.4,  // radius < 1 tile — only (8,8) should be in range
+      0.4, // radius < 1 tile — only (8,8) should be in range
       0.5,
       SIZE,
     );
@@ -310,7 +302,10 @@ describe("generatePathsForChunk (Spec §31.1)", () => {
           isLandmarkChunk(seed, x + 1, z) ||
           isLandmarkChunk(seed, x, z + 1) ||
           isLandmarkChunk(seed, x - 1, z);
-        if (hasNeighbor) { found = { x, z }; break outer; }
+        if (hasNeighbor) {
+          found = { x, z };
+          break outer;
+        }
       }
     }
     if (!found) return; // very unlikely with 30x30 search space
@@ -343,8 +338,7 @@ describe("generatePathsForChunk (Spec §31.1)", () => {
       expect(p0.z).toBeGreaterThanOrEqual(0);
       expect(p0.z).toBeLessThan(SIZE);
       // End point must be on a chunk boundary edge.
-      const onEdge =
-        p2.x === 0 || p2.x === SIZE - 1 || p2.z === 0 || p2.z === SIZE - 1;
+      const onEdge = p2.x === 0 || p2.x === SIZE - 1 || p2.z === 0 || p2.z === SIZE - 1;
       expect(onEdge).toBe(true);
     }
   });
@@ -421,7 +415,10 @@ describe("generateSignpostForChunk (Spec §17.6)", () => {
         if (x === 0 && z === 0) continue;
         if (!isLandmarkChunk(SEED, x, z)) continue;
         const connectedCount = [
-          [0, -1], [1, 0], [0, 1], [-1, 0],
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 0],
         ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
         if (connectedCount < 2) {
           isolated = { x, z };
@@ -441,7 +438,10 @@ describe("generateSignpostForChunk (Spec §17.6)", () => {
       for (let z = -20; z <= 20; z++) {
         if (!isLandmarkChunk(SEED, x, z)) continue;
         const connectedCount = [
-          [0, -1], [1, 0], [0, 1], [-1, 0],
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 0],
         ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
         if (connectedCount >= 2) {
           intersection = { x, z };
@@ -461,7 +461,10 @@ describe("generateSignpostForChunk (Spec §17.6)", () => {
       for (let z = -20; z <= 20; z++) {
         if (!isLandmarkChunk(SEED, x, z)) continue;
         const connectedCount = [
-          [0, -1], [1, 0], [0, 1], [-1, 0],
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 0],
         ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
         if (connectedCount >= 2) {
           intersection = { x, z };
@@ -481,7 +484,10 @@ describe("generateSignpostForChunk (Spec §17.6)", () => {
       for (let z = -20; z <= 20; z++) {
         if (!isLandmarkChunk(SEED, x, z)) continue;
         const connectedCount = [
-          [0, -1], [1, 0], [0, 1], [-1, 0],
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 0],
         ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
         if (connectedCount >= 2) {
           intersection = { x, z };
@@ -517,17 +523,26 @@ describe("generateSignpostForChunk (Spec §17.6)", () => {
     const seed = "Test Village Preference Seed";
     // Find a non-origin landmark with 2+ connections where one neighbor is origin.
     let candidate: { x: number; z: number } | null = null;
-    const dirsFromOriginNeighbor = [[0,-1],[1,0],[0,1],[-1,0]] as const;
-    outer: for (const [dx, dz] of dirsFromOriginNeighbor) {
+    const dirsFromOriginNeighbor = [
+      [0, -1],
+      [1, 0],
+      [0, 1],
+      [-1, 0],
+    ] as const;
+    for (const [dx, dz] of dirsFromOriginNeighbor) {
       const nx = 0 + dx;
       const nz = 0 + dz;
       if (!isLandmarkChunk(seed, nx, nz)) continue;
       // This neighbor sees origin (0,0) as a connected landmark.
-      const connectedCount = [[0,-1],[1,0],[0,1],[-1,0]]
-        .filter(([ddx, ddz]) => isLandmarkChunk(seed, nx + ddx, nz + ddz)).length;
+      const connectedCount = [
+        [0, -1],
+        [1, 0],
+        [0, 1],
+        [-1, 0],
+      ].filter(([ddx, ddz]) => isLandmarkChunk(seed, nx + ddx, nz + ddz)).length;
       if (connectedCount >= 2) {
         candidate = { x: nx, z: nz };
-        break outer;
+        break;
       }
     }
     if (!candidate) return;
@@ -544,7 +559,10 @@ describe("generateSignpostForChunk (Spec §17.6)", () => {
       for (let z = -20; z <= 20; z++) {
         if (!isLandmarkChunk(SEED, x, z)) continue;
         const connectedCount = [
-          [0, -1], [1, 0], [0, 1], [-1, 0],
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 0],
         ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
         if (connectedCount >= 2) {
           intersection = { x, z };
@@ -569,7 +587,10 @@ describe("generateSignpostForChunk (Spec §17.6)", () => {
       for (let z = -20; z <= 20; z++) {
         if (!isLandmarkChunk(SEED, x, z)) continue;
         const connectedCount = [
-          [0, -1], [1, 0], [0, 1], [-1, 0],
+          [0, -1],
+          [1, 0],
+          [0, 1],
+          [-1, 0],
         ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
         if (connectedCount >= 2) {
           intersection = { x, z };

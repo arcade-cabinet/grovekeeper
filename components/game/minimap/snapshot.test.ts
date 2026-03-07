@@ -5,7 +5,7 @@
  * No ECS, React-Native, or store mocking required.
  */
 
-import { buildMinimapSnapshot, VIEW_RADIUS } from "./snapshot";
+import { buildMinimapSnapshot, VIEW_RADIUS } from "./snapshot.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -115,9 +115,7 @@ describe("buildMinimapSnapshot (Spec §17.6) — campfire markers", () => {
     const snap = buildMinimapSnapshot({
       ...DEFAULT_PARAMS,
       playerPos: { x: 0, z: 0 },
-      campfireEntities: [
-        { worldX: 10, worldZ: 10, fastTravelId: "cf-1", lit: true },
-      ],
+      campfireEntities: [{ worldX: 10, worldZ: 10, fastTravelId: "cf-1", lit: true }],
     });
     expect(snap.campfires).toHaveLength(1);
     expect(snap.campfires[0].fastTravelId).toBe("cf-1");

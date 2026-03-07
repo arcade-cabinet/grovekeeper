@@ -3,15 +3,15 @@
  */
 
 import {
-  initialTutorialState,
-  tickTutorial,
   advanceStep,
-  skipTutorial,
-  isTutorialComplete,
   currentStepDef,
   currentStepLabel,
+  initialTutorialState,
+  isTutorialComplete,
+  skipTutorial,
   TUTORIAL_STEPS,
-} from "./tutorial";
+  tickTutorial,
+} from "./tutorial.ts";
 
 describe("Tutorial system (Spec §25.1)", () => {
   describe("initialTutorialState", () => {

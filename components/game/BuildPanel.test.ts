@@ -8,13 +8,13 @@
  */
 
 import {
-  getPiecesForCategory,
-  getBuildCost,
   canAffordPiece,
+  getBuildCost,
+  getPiecesForCategory,
   getPieceUnlockLevel,
-  isPieceLocked,
   getTier,
-} from "./buildPanelUtils";
+  isPieceLocked,
+} from "./buildPanelUtils.ts";
 
 // ---------------------------------------------------------------------------
 // getPiecesForCategory (Spec §35.2)

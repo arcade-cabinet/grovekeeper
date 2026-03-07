@@ -1,28 +1,28 @@
-export { getDb } from "./client";
+export { getDb } from "./client.ts";
+export { migrateFromLocalStorage } from "./migrate-localStorage.ts";
+export type { HydratedGameState, SerializedTreeDb } from "./queries.ts";
 export {
   hydrateGameStore,
+  loadGroveFromDb,
   persistGameStore,
   saveGroveToDb,
-  loadGroveFromDb,
   setupNewGame,
-} from "./queries";
-export type { HydratedGameState, SerializedTreeDb } from "./queries";
+} from "./queries.ts";
 export {
-  saveConfig,
-  player,
-  resources,
-  seeds,
-  unlocks,
   achievements,
-  trees,
   gridCells,
-  structures,
-  quests,
+  player,
   questGoals,
-  worldState,
-  timeState,
-  tracking,
+  quests,
+  resources,
+  saveConfig,
+  seeds,
   settings,
+  structures,
+  timeState,
   toolUpgrades,
-} from "./schema";
-export { migrateFromLocalStorage } from "./migrate-localStorage";
+  tracking,
+  trees,
+  unlocks,
+  worldState,
+} from "./schema.ts";

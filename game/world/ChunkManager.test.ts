@@ -21,12 +21,8 @@ import {
   getChunkKey,
   getChunksInRadius,
   worldToChunkCoords,
-} from "./ChunkManager";
-import {
-  clearAllChunkDiffs,
-  recordPlantedTree,
-  type PlantedTree,
-} from "./chunkPersistence";
+} from "./ChunkManager.ts";
+import { clearAllChunkDiffs, type PlantedTree, recordPlantedTree } from "./chunkPersistence.ts";
 
 // Clean up all ECS entities between tests
 afterEach(() => {
@@ -385,8 +381,8 @@ describe("FIX-01 — update() drives streaming as player position changes (Spec 
 
     // Simulate three sequential frame batches as player walks east
     const positions = [
-      { x: 0, y: 0, z: 0 },           // chunk (0, 0)
-      { x: CHUNK_SIZE, y: 0, z: 0 },   // chunk (1, 0)
+      { x: 0, y: 0, z: 0 }, // chunk (0, 0)
+      { x: CHUNK_SIZE, y: 0, z: 0 }, // chunk (1, 0)
       { x: 2 * CHUNK_SIZE, y: 0, z: 0 }, // chunk (2, 0)
     ];
 
@@ -450,9 +446,9 @@ describe("FIX-02 — applyChunkDiff called in loadChunk restores planted trees (
     mgr.flushQueue();
 
     // The player-planted tree entity must be in the ECS world
-    const treeEntities = world.with("tree").entities.filter(
-      (e) => e.tree?.speciesId === "white-oak" && e.tree.wild === false,
-    );
+    const treeEntities = world
+      .with("tree")
+      .entities.filter((e) => e.tree?.speciesId === "white-oak" && e.tree.wild === false);
     expect(treeEntities.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -482,12 +478,14 @@ describe("FIX-02 — applyChunkDiff called in loadChunk restores planted trees (
     const expectedX = chunkX * CHUNK_SIZE + localX;
     const expectedZ = chunkZ * CHUNK_SIZE + localZ;
 
-    const planted = world.with("tree", "position").entities.find(
-      (e) =>
-        e.tree?.speciesId === "pine" &&
-        e.position?.x === expectedX &&
-        e.position?.z === expectedZ,
-    );
+    const planted = world
+      .with("tree", "position")
+      .entities.find(
+        (e) =>
+          e.tree?.speciesId === "pine" &&
+          e.position?.x === expectedX &&
+          e.position?.z === expectedZ,
+      );
     expect(planted).toBeDefined();
   });
 
@@ -498,9 +496,7 @@ describe("FIX-02 — applyChunkDiff called in loadChunk restores planted trees (
     mgr.flushQueue();
 
     // All trees in the ECS world should be wild (from entitySpawner), none player-planted
-    const playerTrees = world.with("tree").entities.filter(
-      (e) => e.tree?.wild === false,
-    );
+    const playerTrees = world.with("tree").entities.filter((e) => e.tree?.wild === false);
     expect(playerTrees.length).toBe(0);
   });
 });

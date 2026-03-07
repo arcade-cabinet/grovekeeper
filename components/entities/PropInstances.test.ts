@@ -22,7 +22,7 @@ jest.mock("./StaticInstances", () => ({
   groupByModelPath: jest.fn(() => new Map()),
 }));
 
-import { PropInstances } from "./PropInstances";
+import { PropInstances } from "./PropInstances.tsx";
 
 describe("PropInstances (Spec §28)", () => {
   it("exports PropInstances as a function component", () => {

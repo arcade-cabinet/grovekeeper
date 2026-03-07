@@ -1,5 +1,5 @@
-import { rollLoot, createLootDrop, updateLootDespawn, rollLootForEnemy } from "./lootSystem";
 import { createRNG } from "@/game/utils/seedRNG";
+import { createLootDrop, rollLoot, rollLootForEnemy, updateLootDespawn } from "./lootSystem.ts";
 
 describe("Loot System", () => {
   describe("rollLoot", () => {

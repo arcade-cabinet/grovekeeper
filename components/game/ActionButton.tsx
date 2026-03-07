@@ -9,6 +9,7 @@
  * - Context-sensitive label based on tool + tile state
  */
 
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
@@ -17,7 +18,6 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import { Text } from "@/components/ui/text";
 
 // ---------------------------------------------------------------------------
@@ -115,18 +115,15 @@ export function getActionLabel(
       return { label: "PLANT", enabled: false };
 
     case "watering-can":
-      if (occupied && treeStage >= 0 && treeStage <= 2)
-        return { label: "WATER", enabled: true };
+      if (occupied && treeStage >= 0 && treeStage <= 2) return { label: "WATER", enabled: true };
       return { label: "WATER", enabled: false };
 
     case "pruning-shears":
-      if (occupied && treeStage >= 3 && treeStage <= 4)
-        return { label: "PRUNE", enabled: true };
+      if (occupied && treeStage >= 3 && treeStage <= 4) return { label: "PRUNE", enabled: true };
       return { label: "PRUNE", enabled: false };
 
     case "axe":
-      if (occupied && treeStage >= 3)
-        return { label: "CHOP", enabled: true };
+      if (occupied && treeStage >= 3) return { label: "CHOP", enabled: true };
       return { label: "CHOP", enabled: false };
 
     case "shovel":
@@ -152,11 +149,7 @@ export function getActionLabel(
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function ActionButton({
-  selectedTool,
-  tileState,
-  onAction,
-}: ActionButtonProps) {
+export function ActionButton({ selectedTool, tileState, onAction }: ActionButtonProps) {
   const { label, enabled } = getActionLabel(selectedTool, tileState);
   const visual = TOOL_VISUALS[selectedTool] ?? DEFAULT_VISUAL;
 
@@ -231,10 +224,7 @@ export function ActionButton({
           }}
         />
         {/* Tool icon */}
-        <Text
-          style={{ fontSize: 24, marginBottom: 2 }}
-          accessibilityElementsHidden
-        >
+        <Text style={{ fontSize: 24, marginBottom: 2 }} accessibilityElementsHidden>
           {visual.icon}
         </Text>
         {/* Action label */}

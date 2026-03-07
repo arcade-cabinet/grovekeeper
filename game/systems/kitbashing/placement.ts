@@ -3,13 +3,13 @@
  * Pure functions, no physics engine dependency. Spec §35.1.
  */
 
-import type { Entity } from "../../ecs/world";
+import buildingConfig from "../../../config/game/building.json" with { type: "json" };
 import type {
   ModularPieceComponent,
   SnapDirection,
   SnapPoint,
-} from "../../ecs/components/building";
-import buildingConfig from "../../../config/game/building.json";
+} from "../../ecs/components/building.ts";
+import type { Entity } from "../../ecs/world.ts";
 
 export const GRID_SIZE: number = buildingConfig.gridSize;
 
@@ -87,8 +87,8 @@ export function getAvailableSnapPoints(
       if (!placedSnap.accepts.includes(newPiece.pieceType)) continue;
 
       const hasMatchingSnap = newPiece.snapPoints.some(
-        (newSnap) => newSnap.direction === oppositeDir &&
-          newSnap.accepts.includes(placed.pieceType),
+        (newSnap) =>
+          newSnap.direction === oppositeDir && newSnap.accepts.includes(placed.pieceType),
       );
 
       if (hasMatchingSnap) {
@@ -108,10 +108,7 @@ export function getAvailableSnapPoints(
  * 2. At least one snap connection with an existing piece (unless first piece)
  * 3. Grid position is within valid range
  */
-export function validatePlacement(
-  piece: ModularPieceComponent,
-  existingPieces: Entity[],
-): boolean {
+export function validatePlacement(piece: ModularPieceComponent, existingPieces: Entity[]): boolean {
   if (existingPieces.length === 0) return true;
 
   for (const entity of existingPieces) {

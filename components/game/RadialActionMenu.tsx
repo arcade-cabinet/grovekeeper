@@ -19,7 +19,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Text } from "@/components/ui/text";
-import type { RadialAction } from "./radialActions";
+import type { RadialAction } from "./radialActions.ts";
 
 // ---------------------------------------------------------------------------
 // Types

@@ -15,10 +15,7 @@
 
 import * as THREE from "three";
 
-import type {
-  GerstnerWaveLayer,
-  WaterBodyComponent,
-} from "@/game/ecs/components/procedural/water";
+import type { GerstnerWaveLayer, WaterBodyComponent } from "@/game/ecs/components/procedural/water";
 
 /** Maximum Gerstner wave layers the shader supports. Unused slots are zero-padded. */
 export const MAX_WAVE_LAYERS = 8;

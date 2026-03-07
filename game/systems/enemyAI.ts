@@ -15,15 +15,11 @@ function scaleStatByTier(base: number, tier: number, perTier: number): number {
 }
 
 export function getScaledHealth(baseHealth: number, tier: number): number {
-  return Math.round(
-    scaleStatByTier(baseHealth, tier, tierScaling.healthPerTier),
-  );
+  return Math.round(scaleStatByTier(baseHealth, tier, tierScaling.healthPerTier));
 }
 
 export function getScaledAttack(baseAttack: number, tier: number): number {
-  return Math.round(
-    scaleStatByTier(baseAttack, tier, tierScaling.attackPerTier),
-  );
+  return Math.round(scaleStatByTier(baseAttack, tier, tierScaling.attackPerTier));
 }
 
 export interface AIState {
@@ -54,18 +50,11 @@ export function updatePatrol(
   if (!entity.position) return;
 
   ai.patrolAngle += dt * patrolSpeed;
-  entity.position.x =
-    ai.homeX + Math.cos(ai.patrolAngle) * patrolRadius;
-  entity.position.z =
-    ai.homeZ + Math.sin(ai.patrolAngle) * patrolRadius;
+  entity.position.x = ai.homeX + Math.cos(ai.patrolAngle) * patrolRadius;
+  entity.position.z = ai.homeZ + Math.sin(ai.patrolAngle) * patrolRadius;
 }
 
-export function updateGuard(
-  entity: Entity,
-  ai: AIState,
-  dt: number,
-  guardSway: number,
-): void {
+export function updateGuard(entity: Entity, ai: AIState, dt: number, guardSway: number): void {
   if (!entity.position) return;
 
   ai.patrolAngle += dt * guardSway;
@@ -120,10 +109,7 @@ export function canAttack(
   attackRange: number,
   cooldownRemaining: number,
 ): boolean {
-  return (
-    distanceBetween(entityPos, targetPos) <= attackRange &&
-    cooldownRemaining <= 0
-  );
+  return distanceBetween(entityPos, targetPos) <= attackRange && cooldownRemaining <= 0;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -161,9 +147,7 @@ class AggroEvaluator extends GoalEvaluator<EnemyEntity> {
     const ctx = entity.ctx;
     if (!ctx) return 0;
 
-    const dist = Math.sqrt(
-      (ctx.playerX - ctx.enemyX) ** 2 + (ctx.playerZ - ctx.enemyZ) ** 2,
-    );
+    const dist = Math.sqrt((ctx.playerX - ctx.enemyX) ** 2 + (ctx.playerZ - ctx.enemyZ) ** 2);
 
     // Already aggro'd: maintain pursuit while player is within deaggro range
     if (entity.currentMode === "aggro") {
@@ -171,9 +155,7 @@ class AggroEvaluator extends GoalEvaluator<EnemyEntity> {
     }
 
     // Initial aggro trigger — behavior modifies effective range
-    const rangeMult =
-      entity.behavior === "swarm" ? 1.2 :
-      entity.behavior === "ambush" ? 0.5 : 1.0;
+    const rangeMult = entity.behavior === "swarm" ? 1.2 : entity.behavior === "ambush" ? 0.5 : 1.0;
     const effectiveRange = ctx.aggroRange * rangeMult;
 
     if (dist > effectiveRange) return 0;
@@ -189,9 +171,7 @@ class ReturnEvaluator extends GoalEvaluator<EnemyEntity> {
     if (!ctx) return 0;
     if (entity.currentMode !== "aggro") return 0;
 
-    const dist = Math.sqrt(
-      (ctx.playerX - ctx.enemyX) ** 2 + (ctx.playerZ - ctx.enemyZ) ** 2,
-    );
+    const dist = Math.sqrt((ctx.playerX - ctx.enemyX) ** 2 + (ctx.playerZ - ctx.enemyZ) ** 2);
     return dist > ctx.deaggroRange ? this.characterBias * 0.8 : 0;
   }
   setGoal(): void {}
@@ -227,11 +207,7 @@ export class EnemyBrain {
   private readonly evaluators: TaggedEval[];
   private currentMode: EnemyAIMode = "idle";
 
-  constructor(
-    entityId: string,
-    enemyType: string,
-    behavior: EnemyBehavior,
-  ) {
+  constructor(entityId: string, enemyType: string, behavior: EnemyBehavior) {
     this.entityId = entityId;
     this.enemyType = enemyType;
     this.behavior = behavior;
@@ -309,10 +285,7 @@ export const EnemyEntityManager = {
    * getCtx receives the entityId and should return current position/context,
    * or null if the entity is no longer valid.
    */
-  updateAll(
-    dt: number,
-    getCtx: (entityId: string) => EnemyBrainContext | null,
-  ): void {
+  updateAll(dt: number, getCtx: (entityId: string) => EnemyBrainContext | null): void {
     for (const [id, brain] of _registry) {
       const ctx = getCtx(id);
       if (ctx) brain.update(dt, ctx);
