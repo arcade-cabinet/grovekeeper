@@ -1,0 +1,45 @@
+# Flow: Plant tree via virtual joystick + action button
+# Verifies: joystick area interaction + PLANT action button tap
+# ActionButton is 80x80 at bottom-right (>> 44px minimum).
+# VirtualJoystick is 120x120 at bottom-left.
+# Joystick: swipe from center-bottom-left toward the 3D world to move the player.
+# Platform: iOS simulator (375px viewport portrait, 667px height)
+appId: ${APP_ID}
+url: ${APP_URL}
+---
+- launchApp
+- assertVisible: "Grovekeeper"
+
+# Navigate to game
+- tapOn:
+    text: "Start Growing"
+- assertVisible: "New Grove"
+- tapOn:
+    accessibilityLabel: "Exploration mode"
+- tapOn:
+    accessibilityLabel: "Begin Your Grove"
+
+# Game screen loaded
+- assertVisible:
+    accessibilityLabel: "Open menu"
+
+# Skip tutorial so action buttons are usable
+- tapOn:
+    accessibilityLabel: "Skip tutorial"
+
+# Virtual joystick: swipe up-right from bottom-left quadrant to move the player
+# Joystick base center is approximately (76, 575) on 375x667 screen
+# Swipe up to move the player forward
+- swipe:
+    start: "76, 575"
+    end: "76, 525"
+    duration: 800
+
+# PLANT action button is at bottom-right (approximately x=339, y=603)
+# accessibilityLabel = "PLANT action" (ActionButton, trowel tool selected by default)
+- assertVisible:
+    accessibilityLabel: "PLANT action"
+
+# Tap the PLANT action button (80x80 circle, well above 44px minimum)
+- tapOn:
+    accessibilityLabel: "PLANT action"

@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T20:22:31.552Z",
-  "currentIteration": 142,
+  "updatedAt": "2026-03-07T20:30:40.617Z",
+  "currentIteration": 143,
   "maxIterations": 0,
-  "tasksCompleted": 142,
+  "tasksCompleted": 143,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -868,8 +868,8 @@
       {
         "id": "US-143",
         "title": "Full game loop integration test",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-144",
@@ -2461,6 +2461,16 @@
       "durationMs": 78159,
       "startedAt": "2026-03-07T20:14:33.817Z",
       "endedAt": "2026-03-07T20:15:51.976Z"
+    },
+    {
+      "iteration": 143,
+      "status": "completed",
+      "taskId": "US-143",
+      "taskTitle": "Full game loop integration test",
+      "taskCompleted": true,
+      "durationMs": 398448,
+      "startedAt": "2026-03-07T20:15:53.102Z",
+      "endedAt": "2026-03-07T20:22:31.550Z"
     }
   ],
   "skippedTaskIds": [],

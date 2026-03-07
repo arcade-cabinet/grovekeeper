@@ -1,0 +1,37 @@
+# Flow: Tutorial completion via touch controls
+# Verifies: complete tutorial steps via touch controls (skip path)
+# The tutorial auto-starts on first play. Skip Tutorial button is 44px min-h.
+# Platform: iOS simulator (375px viewport portrait)
+appId: ${APP_ID}
+url: ${APP_URL}
+---
+- launchApp
+- assertVisible: "Grovekeeper"
+
+# Start a new game via NewGameModal
+- tapOn:
+    text: "Start Growing"
+- assertVisible: "New Grove"
+- tapOn:
+    accessibilityLabel: "Exploration mode"
+- tapOn:
+    accessibilityLabel: "Begin Your Grove"
+
+# Wait for game screen to settle
+- assertVisible:
+    accessibilityLabel: "Open menu"
+
+# Tutorial overlay should be active — first step label visible
+- assertVisible: "Look around"
+
+# Verify Skip Tutorial button exists and is reachable (44px touch target per component)
+- assertVisible:
+    accessibilityLabel: "Skip tutorial"
+
+# Tap Skip Tutorial — completes the tutorial immediately
+- tapOn:
+    accessibilityLabel: "Skip tutorial"
+
+# Tutorial is done — "Skip Tutorial" button should no longer be visible
+- assertNotVisible:
+    accessibilityLabel: "Skip tutorial"

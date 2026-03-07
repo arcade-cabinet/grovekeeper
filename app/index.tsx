@@ -1,6 +1,7 @@
 import { Stack, useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { MainMenu } from "@/components/game/MainMenu";
+import { NewGameModal, type NewGameConfig } from "@/components/game/NewGameModal";
 import { useGameStore } from "@/game/stores/gameStore";
 
 const SCREEN_OPTIONS = {
@@ -10,6 +11,7 @@ const SCREEN_OPTIONS = {
 export default function MainMenuScreen() {
   const router = useRouter();
   const treesPlanted = useGameStore((s) => s.treesPlanted);
+  const [newGameOpen, setNewGameOpen] = useState(false);
 
   const handleContinue = useCallback(() => {
     useGameStore.getState().setScreen("playing");
@@ -17,10 +19,18 @@ export default function MainMenuScreen() {
   }, [router]);
 
   const handleNewGrove = useCallback(() => {
-    useGameStore.getState().resetGame();
-    useGameStore.getState().setScreen("playing");
-    router.push("/game");
-  }, [router]);
+    setNewGameOpen(true);
+  }, []);
+
+  const handleNewGameStart = useCallback(
+    (config: NewGameConfig) => {
+      useGameStore.getState().resetGame(config.worldSeed);
+      useGameStore.getState().setScreen("playing");
+      setNewGameOpen(false);
+      router.push("/game");
+    },
+    [router],
+  );
 
   const handleSettings = useCallback(() => {
     router.push("/settings");
@@ -34,6 +44,11 @@ export default function MainMenuScreen() {
         onContinue={handleContinue}
         onNewGrove={handleNewGrove}
         onSettings={handleSettings}
+      />
+      <NewGameModal
+        open={newGameOpen}
+        onClose={() => setNewGameOpen(false)}
+        onStart={handleNewGameStart}
       />
     </>
   );

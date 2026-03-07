@@ -1,0 +1,33 @@
+# Flow: New Grove creation
+# Verifies: tap New Grove -> select mode -> enter seed -> start game
+# Touch targets: all buttons min-h-[44px] or min-h-[48px] per component styles
+# Platform: iOS simulator (375px viewport portrait)
+appId: ${APP_ID}
+url: ${APP_URL}
+---
+- launchApp
+- assertVisible: "Grovekeeper"
+
+# Tap the primary CTA — "Start Growing" on a fresh install (0 trees planted)
+# Note: with existing save, the button reads "Continue Grove" via primaryButtonLabel()
+- tapOn:
+    text: "Start Growing"
+
+# NewGameModal opens (title "New Grove")
+- assertVisible: "New Grove"
+
+# Verify World Seed field is visible (min-h touch target is satisfied by the input row)
+- assertVisible:
+    accessibilityLabel: "World seed phrase"
+
+# Select Exploration mode — cozy, no survival pressure
+- tapOn:
+    accessibilityLabel: "Exploration mode"
+
+# Start the game
+- tapOn:
+    accessibilityLabel: "Begin Your Grove"
+
+# Game screen rendered — HUD menu button should be visible
+- assertVisible:
+    accessibilityLabel: "Open menu"

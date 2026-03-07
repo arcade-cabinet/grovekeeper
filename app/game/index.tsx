@@ -16,6 +16,7 @@ import { Ground } from "@/components/scene/Ground";
 import { Lighting } from "@/components/scene/Lighting";
 import { Sky } from "@/components/scene/Sky";
 import { TerrainChunks } from "@/components/scene/TerrainChunk";
+import { TutorialOverlay } from "@/components/game/TutorialOverlay";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
 import { useGameLoop } from "@/game/hooks/useGameLoop";
@@ -273,6 +274,9 @@ export default function GameScreen() {
           onResetGame={handleResetGame}
           onSetBorderCosmetic={setActiveBorderCosmetic}
         />
+
+        {/* Tutorial overlay — reads tutorialState from store; null targetRect = label at top-center */}
+        <TutorialOverlay targetRect={null} />
 
         {/* Seed selector modal */}
         <SeedSelect

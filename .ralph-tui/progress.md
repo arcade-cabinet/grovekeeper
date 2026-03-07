@@ -78,6 +78,25 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-144
+- Created 4 Maestro E2E flows covering all critical mobile paths.
+- Files changed:
+  - `.maestro/new-game.yml` — new: tap New Grove → Exploration mode → Begin Your Grove → game screen
+  - `.maestro/tutorial.yml` — new: start game → assert tutorial step label → Skip Tutorial → assert dismissed
+  - `.maestro/plant-tree.yml` — new: start game → skip tutorial → joystick swipe → tap PLANT action button
+  - `.maestro/pause-menu.yml` — new: start game → Open menu → settings tab → Continue Playing → assert dismissed
+  - `app/index.tsx` — wire `NewGameModal` (was navigating directly to /game; now opens modal first)
+  - `app/game/index.tsx` — add `<TutorialOverlay targetRect={null} />` (was in GameUI only, not in game screen)
+- **Touch targets verified:** ActionButton 80x80, skip button `height: 44`, HUD menu button 44px style, PauseMenu tabs/buttons `min-h-[44px]`, NewGameModal buttons `min-h-[44px]`
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3415 tests, 147 suites pass (no new unit tests needed — flows are YAML, not TS)
+- **Learnings:**
+  - **Wire components before testing them**: `TutorialOverlay` and `NewGameModal` had unit tests but were not rendered in the app screens. Maestro flows won't pass until components are actually mounted. Check the render tree before writing flows, not after.
+  - **Maestro selectors: accessibilityLabel > text**: Use `accessibilityLabel` (explicit, stable) over `text` (can change with i18n, dynamic content). Every interactive element has one set in the codebase; use them.
+  - **Coordinate-based swipe for PanResponder components**: `VirtualJoystick` uses `PanResponder` — no `accessibilityLabel`. Use `swipe: {start: "x,y", end: "x,y"}` with approximate center coordinates (joystick base center ~76,575 on 375x667 portrait). Document the coordinate assumptions in the flow comment.
+  - **assertNotVisible after dismiss**: After tapping Skip Tutorial or Continue Playing, always assert the modal/overlay is gone with `assertNotVisible`. This catches cases where the dismiss handler isn't wired correctly.
+
+---
+
 ## 2026-03-07 - US-143
 - Created `game/systems/gameLoop.integration.test.ts` — 28 integration tests across 4 describe blocks, all passing.
 - Files changed:
