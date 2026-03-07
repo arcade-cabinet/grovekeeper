@@ -24,6 +24,18 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-018
+- Work already complete — `game/world/ChunkManager.test.ts` was created as part of US-017 (Docs > Tests > Code workflow)
+- 34 tests covering: config constants (CHUNK_SIZE=16, radii), `worldToChunkCoords` (origin, boundary, negative), `getChunksInRadius` (3x3=9, 5x5=25, center, corners, offsets), `getChunkKey` formatting, `generateChunkData` (determinism, size, dirty=false, biomeBlend, baseColor), ChunkManager (25 loaded, active=visible, buffer=hidden, terrainChunk+chunk components, transitions load/unload, entity presence in world, no-op on same chunk)
+- **Files changed:** none (already done in US-017)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern ChunkManager` → 34 tests, 0 failures
+- **Learnings:**
+  - The Docs > Tests > Code mandatory workflow eliminates "write tests for X" follow-up stories — tests ship with the implementation. When US-018 arrives, US-017 already shipped 34 tests.
+  - Chunk ring invariant test: verify `loadedChunks.size === 25` after any transition (not just initial load) — this catches off-by-one bugs in radius arithmetic `(2r+1)² = 25` for radius=2.
+---
+
 ## 2026-03-07 - US-017
 - Created `game/world/ChunkManager.ts` with:
   - Exported constants: `CHUNK_SIZE=16`, `ACTIVE_RADIUS=1`, `BUFFER_RADIUS=2` (from grid.json)
