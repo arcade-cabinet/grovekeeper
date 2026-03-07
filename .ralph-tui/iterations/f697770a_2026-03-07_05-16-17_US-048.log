@@ -1,0 +1,98 @@
+# Iteration 48 Log
+
+## Metadata
+
+- **Task ID**: US-048
+- **Task Title**: Create prop and food item rendering
+- **Description**: As a developer, I want a PropModel component that renders PropComponent and FoodComponent items with their modelPath GLBs so that world props are visible. See GAME_SPEC.md §14.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T11:16:17.042Z
+- **Ended At**: 2026-03-07T11:20:34.092Z
+- **Duration**: 4m 17s
+- **Input Tokens**: 106
+- **Output Tokens**: 14697
+- **Total Tokens**: 14803
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (26249 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/items.ts[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/items.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/*.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components[0m pattern: [96mPropComponent[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceModel.tsx[0m
+Now let me look at the GAME_SPEC §14, the PropComponent details, and existing config files:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§14|prop|food|FoodComponent|PropComponent[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/props*.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/food*.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## §14|^### §14|§ *14|## 14\.|### 14\.[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mprop\b|world prop|item.*render|render.*prop|Prop.*render|food.*item|item.*food[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/propAssets.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/cooking.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceModel.test.ts[0m
+Now I have everything I need. Let me set up todos and implement:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `propAssets.json` spans 6 categories (structures, crops, kitchen, traps, weapons, misc) — 134 total entries. A unified `PROP_MAP` keyed by `id → path` covers all of them in one lookup.
+- `FoodComponent.modelPath` is always set (required), while `PropComponent.modelPath` is optional — the `resolvePropGLBPath` function provides the hard-error seam for the optional case.
+- For food rendering, raw food items (apple, carrot, etc.) map to crop GLBs; the `resolveFoodGLBPath` function looks up the `crops` category specifically.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/PropModel.tsx[0m "/**
+ * PropModel — renders a prop or food item GLB by modelPath.
+ *
+ * Covers all world-placed props (barrels, haybales, kitchen items, traps,
+ * weapons, misc) and food items (raw crops). Both PropCo... (4678 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/PropModel.test.ts[0m "/**
+ * Tests for PropModel — prop and food item GLB path resolution (Spec §14).
+ *
+ * Tests exported pure functions without WebGL/R3F context.
+ * The component itself is verified by checking the expor... (7248 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run PropModel tests only $ npx jest --no-coverage --testPathPattern PropModel 2>&1
+All 34 tests pass. Let me also run the full suite to verify no regressions:
+[94m[Bash][0m Run full jest suite $ npx jest --no-coverage 2>&1 | tail -10
+95 suites, 1793 tests, 0 failures. Now append to progress.md:
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-047" → "---
+
+## 2026-03-07 - US-048
+- Created `components/..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Unified map over per-category maps**: Flattening all 6 propAssets.json categories into one `PROP_MAP` works because prop IDs are globally unique across categories — no compound key needed (unlike FenceModel's `{fenceType}:{variant}`).
+- **modelPath as public API, resolution functions as seams**: Since both `PropComponent` and `FoodComponent` expose `modelPath` directly, `PropModel` accepts the path rather than an ID. The `resolvePropGLBPath`/`resolveFoodGLBPath` helpers are exported for callers who need to resolve an ID to a path (e.g., when `PropComponent.modelPath` is undefined).
+- **Raw vs cooked food distinction**: `resolveFoodGLBPath` intentionally only covers raw crop items — cooked food items (pumpkin-soup, carrot-stew) are expected to have `FoodComponent.modelPath` set at entity creation time, not resolved from a catalog.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria met:
+
+- `components/entities/PropModel.tsx` created
+- Renders `PropComponent` / `FoodComponent` items via `modelPath` GLBs  
+- `resolvePropGLBPath` + `resolveFoodGLBPath` as testable seams
+- `npx tsc --noEmit` → 0 errors  
+- `npx jest --no-coverage` → 1793 tests, 0 failures (95 suites)
+
+<promise>COMPLETE</promise>

@@ -37,6 +37,19 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-049
+- Work already complete — tests existed from prior tasks (US-046, US-047, US-048 workflow)
+- `components/entities/StructureModel.test.ts` — 18 tests covering `resolveStructureGLBPath` (templateId-to-modelPath resolution): spot checks for barn/windmill/water-well/house-1/house-5/campfire/notice-board/wooden-frame, all paths end in .glb, all unique, all include templateId, all under `assets/models/structures/farm/`, throws for unknown/empty/partial match
+- `game/systems/structurePlacement.test.ts` — 19 tests covering grid snapping (`snapToGrid`), spacing conflict (`hasSpacingConflict`), placement validation (`canPlace`), build cost deduction, and effect system
+- Total: 37 tests across 2 suites, all passing
+- **Files changed:** none (work was pre-existing)
+- **Verification:**
+  - `npx jest --no-coverage --testPathPattern "StructureModel|structurePlacement"` → 37 tests, 0 failures
+- **Learnings:**
+  - US-049 acceptance criteria ("6+ tests, templateId-to-modelPath resolution, placement snapping, spacing validation") was already fully satisfied by tests created in US-046 and the existing structurePlacement.test.ts. "Stop Condition" applies when prior iterations completed the work.
+
+---
+
 ## 2026-03-07 - US-048
 - Created `components/entities/PropModel.tsx`:
   - `resolvePropGLBPath(propId)` — unified lookup across all 6 propAssets.json categories (structures, crops, kitchen, traps, weapons, misc); 134 entries total; throws for unknown (no fallback)
