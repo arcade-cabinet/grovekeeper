@@ -543,3 +543,16 @@ after each iteration and it's included in prompts for context.
   - **Look deltas use `+=` not `=`**: Accumulate touchmove deltas across multiple events per frame (same as mouse look). Using `=` would discard all but the last event in a frame.
   - **moveX/moveZ are held state**: Joystick displacement persists across `postFrame()` until `onTouchEnd()` is called. Matches the "held key" model in KeyboardMouseProvider.
 ---
+
+## 2026-03-07 - US-028
+- All input system tests already implemented in previous iterations. Verified passing.
+- **Files verified:**
+  - `game/input/InputManager.test.ts` -- 9 tests (InputFrame shape, merge rules, clamping, booleans OR, toolSwap first-wins, disabled/unregistered providers)
+  - `game/input/KeyboardMouseProvider.test.ts` -- 28 tests (WASD + arrows, opposing key cancellation, edge-triggered jump/interact/toolSwap, held sprint, pointer lock guard on mouse look, delta accumulation, postFrame reset)
+  - `game/input/TouchProvider.test.ts` -- 27 tests (joystick direction + clamping + fractional, onTouchMove/End, viewport swipe look, multi-touch isolation, action buttons, isAvailable, dispose)
+- **Total: 64 tests, all passing**
+- `npx tsc --noEmit` passes
+- `npx jest --no-coverage game/input/` passes
+- **Learnings:**
+  - No new patterns discovered -- all test approaches already captured in US-025/026/027 entries above.
+---
