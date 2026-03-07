@@ -1887,3 +1887,18 @@ after each iteration and it's included in prompts for context.
   - `npx jest --no-coverage --testPathPattern=forging` → 43 tests, 0 failures
 - **Learnings:**
   - No new patterns — test file was co-written with implementation per docs>tests>code workflow
+
+## 2026-03-07 - US-099
+- **What was implemented:** Dialogue tree data loader (`game/systems/dialogueLoader.ts`) with graph integrity validation, plus canonical `config/game/dialogue-trees.json` in the `DialogueTree[]` format defined in `game/ecs/components/dialogue.ts`.
+- **Files changed:**
+  - `config/game/dialogue-trees.json` (new) — 3 trees: rowan-greeting, spirit-worldroot, merchant-hazel
+  - `game/systems/dialogueLoader.ts` (new) — getDialogueTrees, getDialogueTreeById, validateDialogueTree, validateAllDialogueTrees, loadAndValidateDialogueTrees
+  - `game/systems/dialogueLoader.test.ts` (new) — 17 tests, all passing
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2611 tests, 0 failures
+- **Learnings:**
+  - **Existing `dialogues.json` is a legacy flat format** — uses `id`/`choices[].next` vs the spec's `nodeId`/`branches[].targetNodeId`. Created a new `dialogue-trees.json` in the correct `DialogueTree` interface format rather than adapting the legacy one.
+  - **Graph validation via Set<string>**: Build `Set` of all `nodeId`s in O(n), then check each `branch.targetNodeId` in O(1). Linear in nodes+branches — clean and testable as a pure function with no ECS imports.
+  - **Terminal nodes (empty branches) need no special case** — the loop over `node.branches` simply has zero iterations; they're valid by construction.
+---

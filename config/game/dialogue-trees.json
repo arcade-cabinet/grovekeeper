@@ -1,0 +1,132 @@
+[
+  {
+    "treeId": "rowan-greeting",
+    "entryNodeId": "rowan-start",
+    "maxDepth": 3,
+    "nodes": [
+      {
+        "nodeId": "rowan-start",
+        "speaker": "Elder Rowan",
+        "text": "Ah, young grovekeeper! The forest grows stronger with your care. What wisdom can I share today?",
+        "branches": [
+          { "label": "Tell me about growing trees", "targetNodeId": "rowan-growth", "seedBias": 0.4 },
+          { "label": "Any advice for a new keeper?", "targetNodeId": "rowan-general", "seedBias": 0.3 },
+          { "label": "Tell me about the valley's history", "targetNodeId": "rowan-history", "seedBias": 0.2 },
+          { "label": "Goodbye", "targetNodeId": "rowan-farewell", "seedBias": 0.1 }
+        ]
+      },
+      {
+        "nodeId": "rowan-growth",
+        "speaker": "Elder Rowan",
+        "text": "Water your saplings regularly — it boosts their growth speed significantly. Rain does the watering for you, if you're patient.",
+        "branches": [
+          { "label": "What about different seasons?", "targetNodeId": "rowan-seasons", "seedBias": 0.5 },
+          { "label": "Thanks for the tip!", "targetNodeId": "rowan-farewell", "seedBias": 0.5 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 10 }]
+      },
+      {
+        "nodeId": "rowan-general",
+        "speaker": "Elder Rowan",
+        "text": "Explore beyond the grove! The forest trail leads to new clearings where rare species grow wild. Harvest mature trees for timber and sap — they're the lifeblood of our village.",
+        "branches": [
+          { "label": "I'll explore right away!", "targetNodeId": "rowan-farewell", "seedBias": 1.0 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 10 }]
+      },
+      {
+        "nodeId": "rowan-history",
+        "speaker": "Elder Rowan",
+        "text": "Long ago, a great Worldtree stood at the heart of this valley. Its roots connected every living thing. When it fell, the forest began to wither. That's why we need grovekeepers like you — to restore what was lost.",
+        "branches": [
+          { "label": "How can I help restore the forest?", "targetNodeId": "rowan-restore", "seedBias": 0.7 },
+          { "label": "That's a beautiful story.", "targetNodeId": "rowan-farewell", "seedBias": 0.3 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 15 }]
+      },
+      {
+        "nodeId": "rowan-seasons",
+        "speaker": "Elder Rowan",
+        "text": "Spring is the season of growth — everything flourishes. Summer is steady. Autumn slows growth but brings the richest harvests. And winter... the forest sleeps. Use it to plan and trade.",
+        "branches": [
+          { "label": "Very helpful, thank you!", "targetNodeId": "rowan-farewell", "seedBias": 1.0 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 10 }]
+      },
+      {
+        "nodeId": "rowan-restore",
+        "speaker": "Elder Rowan",
+        "text": "Plant, tend, and protect the grove. Each tree you bring to Old Growth strengthens the land's memory of the Worldtree. When enough life returns, something ancient may stir.",
+        "branches": [
+          { "label": "I'll do my part.", "targetNodeId": "rowan-farewell", "seedBias": 1.0 }
+        ],
+        "effects": [{ "type": "give_xp", "value": 20 }, { "type": "start_quest", "value": "worldtree-restoration" }]
+      },
+      {
+        "nodeId": "rowan-farewell",
+        "speaker": "Elder Rowan",
+        "text": "May the forest grow strong, young keeper.",
+        "branches": []
+      }
+    ]
+  },
+  {
+    "treeId": "spirit-worldroot",
+    "entryNodeId": "spirit-intro",
+    "maxDepth": 2,
+    "nodes": [
+      {
+        "nodeId": "spirit-intro",
+        "speaker": "spirit-worldroot",
+        "text": "...The roots remember. Do you seek the Worldroot's dream?",
+        "branches": [
+          { "label": "Yes, show me the way", "targetNodeId": "spirit-reveal", "seedBias": 0.7 },
+          { "label": "Not yet", "targetNodeId": "spirit-dismiss", "seedBias": 0.3 }
+        ]
+      },
+      {
+        "nodeId": "spirit-reveal",
+        "speaker": "spirit-worldroot",
+        "text": "Then seek the eight lights. Where they converge, the Worldroot stirs.",
+        "branches": [],
+        "effects": [{ "type": "reveal_location", "value": "worldroot-anchor" }, { "type": "give_xp", "value": 50 }]
+      },
+      {
+        "nodeId": "spirit-dismiss",
+        "speaker": "spirit-worldroot",
+        "text": "Return when you are ready. The forest is patient.",
+        "branches": []
+      }
+    ]
+  },
+  {
+    "treeId": "merchant-hazel",
+    "entryNodeId": "hazel-start",
+    "maxDepth": 2,
+    "nodes": [
+      {
+        "nodeId": "hazel-start",
+        "speaker": "Hazel",
+        "text": "Welcome to my trading post! I deal in timber, seeds, and all the finest forest goods. What are you after?",
+        "branches": [
+          { "label": "What do you have for trade?", "targetNodeId": "hazel-inventory", "seedBias": 0.6 },
+          { "label": "Just browsing.", "targetNodeId": "hazel-farewell", "seedBias": 0.4 }
+        ]
+      },
+      {
+        "nodeId": "hazel-inventory",
+        "speaker": "Hazel",
+        "text": "I've got rare seeds from the eastern forest, fine timber planks, and some specialty tools. Come back often — my stock changes with the seasons.",
+        "branches": [
+          { "label": "I'll take a look.", "targetNodeId": "hazel-farewell", "seedBias": 1.0 }
+        ]
+      },
+      {
+        "nodeId": "hazel-farewell",
+        "speaker": "Hazel",
+        "text": "Good trading with you. Come back any time!",
+        "branches": []
+      }
+    ]
+  }
+]
