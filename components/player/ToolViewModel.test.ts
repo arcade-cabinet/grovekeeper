@@ -23,7 +23,7 @@ jest.mock("@/game/stores/gameStore", () => ({
 }));
 
 import toolVisuals from "@/config/game/toolVisuals.json";
-import { resolveToolGLBPath, resolveToolVisual, ToolViewModel } from "./ToolViewModel";
+import { computeSwayOffset, resolveToolGLBPath, resolveToolVisual, ToolViewModel } from "./ToolViewModel";
 
 type ToolVisualsConfig = typeof toolVisuals;
 
@@ -116,5 +116,55 @@ describe("resolveToolVisual (Spec §11)", () => {
 describe("ToolViewModel (Spec §11)", () => {
   it("exports ToolViewModel as a function component", () => {
     expect(typeof ToolViewModel).toBe("function");
+  });
+});
+
+describe("computeSwayOffset (Spec §11)", () => {
+  it("lerps current sway toward velocity * swayAmount", () => {
+    const velocity = { x: 1, z: 0 };
+    const currentSway = { x: 0, y: 0 };
+    const result = computeSwayOffset(velocity, currentSway, 0.1, 10, 0.016);
+    expect(result.x).toBeGreaterThan(0);
+    expect(result.x).toBeLessThanOrEqual(0.1);
+  });
+
+  it("with zero velocity, sway lerps back toward zero", () => {
+    const velocity = { x: 0, z: 0 };
+    const currentSway = { x: 0.05, y: 0.02 };
+    const result = computeSwayOffset(velocity, currentSway, 0.1, 10, 0.016);
+    expect(Math.abs(result.x)).toBeLessThan(0.05);
+    expect(Math.abs(result.y)).toBeLessThan(0.02);
+  });
+
+  it("z velocity produces y sway offset", () => {
+    const velocity = { x: 0, z: 1 };
+    const currentSway = { x: 0, y: 0 };
+    const result = computeSwayOffset(velocity, currentSway, 0.1, 10, 0.016);
+    expect(result.y).not.toBe(0);
+    expect(result.x).toBe(0);
+  });
+
+  it("higher lerpFactor converges faster than lower", () => {
+    const velocity = { x: 1, z: 0 };
+    const currentSway = { x: 0, y: 0 };
+    const slow = computeSwayOffset(velocity, currentSway, 0.1, 2, 0.016);
+    const fast = computeSwayOffset(velocity, currentSway, 0.1, 16, 0.016);
+    expect(fast.x).toBeGreaterThan(slow.x);
+  });
+
+  it("result clamps to target when lerpFactor * deltaTime >= 1", () => {
+    const velocity = { x: 1, z: 0 };
+    const currentSway = { x: 0, y: 0 };
+    // lerpFactor=100, dt=1.0 → t=min(1,100)=1 → result equals target exactly
+    const result = computeSwayOffset(velocity, currentSway, 0.1, 100, 1.0);
+    expect(result.x).toBeCloseTo(0.1, 5);
+  });
+
+  it("swayAmount scales the target offset proportionally", () => {
+    const velocity = { x: 1, z: 0 };
+    const currentSway = { x: 0, y: 0 };
+    const small = computeSwayOffset(velocity, currentSway, 0.05, 100, 1.0);
+    const large = computeSwayOffset(velocity, currentSway, 0.10, 100, 1.0);
+    expect(large.x).toBeCloseTo(small.x * 2, 5);
   });
 });

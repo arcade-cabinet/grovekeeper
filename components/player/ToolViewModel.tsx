@@ -9,9 +9,10 @@
  * Tools with no model are silently hidden (no placeholder boxes — Spec §11).
  */
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
+import type * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
-import { createPortal, useThree } from "@react-three/fiber";
+import { createPortal, useFrame, useThree } from "@react-three/fiber";
 
 import toolVisualsData from "@/config/game/toolVisuals.json" with { type: "json" };
 import { useGameStore } from "@/game/stores/gameStore";
@@ -28,12 +29,51 @@ interface ToolVisualEntry {
   readonly useDuration: number;
 }
 
-/** Index-signature type so functions can look up arbitrary tool IDs at runtime. */
-type ToolVisualsConfig = { readonly [toolId: string]: ToolVisualEntry | undefined };
+interface SwayConfig {
+  readonly swayAmount: number;
+  readonly lerpFactor: number;
+}
+
+/**
+ * Index-signature type covering tool entries and the top-level "sway" config key.
+ * The union value type lets TypeScript accept toolVisuals.json directly.
+ */
+type ToolVisualsConfig = { readonly [toolId: string]: ToolVisualEntry | SwayConfig | undefined };
+
+/** Narrows a config value to ToolVisualEntry (excludes SwayConfig and undefined). */
+function isToolVisualEntry(v: ToolVisualEntry | SwayConfig): v is ToolVisualEntry {
+  return "glbPath" in v;
+}
 
 // ---------------------------------------------------------------------------
-// Pure mapping functions (exported for testing — no R3F context needed)
+// Pure functions (exported for testing — no R3F context needed)
 // ---------------------------------------------------------------------------
+
+/**
+ * Computes a new sway offset by lerping toward (velocity * swayAmount) (Spec §11).
+ *
+ * @param velocity      Player movement direction { x, z } (e.g. from input frame)
+ * @param currentSway   Current accumulated sway { x, y } in camera space
+ * @param swayAmount    Scale factor from config (toolVisuals.json sway.swayAmount)
+ * @param lerpFactor    Smoothing speed from config (toolVisuals.json sway.lerpFactor)
+ * @param deltaTime     Frame delta time in seconds
+ * @returns             New sway { x, y } to apply as position offset
+ */
+export function computeSwayOffset(
+  velocity: { x: number; z: number },
+  currentSway: { x: number; y: number },
+  swayAmount: number,
+  lerpFactor: number,
+  deltaTime: number,
+): { x: number; y: number } {
+  const targetX = velocity.x * swayAmount;
+  const targetY = velocity.z * swayAmount;
+  const t = Math.min(1, lerpFactor * deltaTime);
+  return {
+    x: currentSway.x + (targetX - currentSway.x) * t,
+    y: currentSway.y + (targetY - currentSway.y) * t,
+  };
+}
 
 /**
  * Returns the GLB path for a tool, or null if no model exists in the config (Spec §11).
@@ -43,7 +83,9 @@ export function resolveToolGLBPath(
   toolId: string,
   config: ToolVisualsConfig,
 ): string | null {
-  return config[toolId]?.glbPath ?? null;
+  const entry = config[toolId];
+  if (!entry || !isToolVisualEntry(entry)) return null;
+  return entry.glbPath;
 }
 
 /**
@@ -53,7 +95,9 @@ export function resolveToolVisual(
   toolId: string,
   config: ToolVisualsConfig,
 ): ToolVisualEntry | null {
-  return config[toolId] ?? null;
+  const entry = config[toolId];
+  if (!entry || !isToolVisualEntry(entry)) return null;
+  return entry;
 }
 
 // ---------------------------------------------------------------------------
@@ -64,24 +108,42 @@ interface ToolGLBModelProps {
   glbPath: string;
   offset: readonly number[];
   scale: number;
+  moveDirection: { x: number; z: number };
+  swayAmount: number;
+  lerpFactor: number;
 }
 
 /**
  * Renders a tool GLB in camera space via R3F createPortal.
  *
+ * Uses useFrame to apply velocity-based sway (Spec §11):
+ * - Each frame lerps swayRef toward moveDirection * swayAmount
+ * - Group position is set imperatively on the Three.js object (no React state)
+ *
  * This is a separate component so useGLTF is only called when a valid GLB path
  * is known (satisfies Rules of Hooks — parent conditionally mounts this).
- *
- * The scene is cloned via useMemo so the cached useGLTF object is never
- * stolen from another render location in the scene graph.
  */
-const ToolGLBModel = ({ glbPath, offset, scale }: ToolGLBModelProps) => {
+const ToolGLBModel = ({ glbPath, offset, scale, moveDirection, swayAmount, lerpFactor }: ToolGLBModelProps) => {
   const { scene } = useGLTF(glbPath);
   const { camera } = useThree();
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
+  const groupRef = useRef<THREE.Group>(null);
+  const swayRef = useRef({ x: 0, y: 0 });
+
+  useFrame((_state, delta) => {
+    const group = groupRef.current;
+    if (!group) return;
+    swayRef.current = computeSwayOffset(moveDirection, swayRef.current, swayAmount, lerpFactor, delta);
+    group.position.set(
+      (offset[0] ?? 0) + swayRef.current.x,
+      (offset[1] ?? 0) + swayRef.current.y,
+      offset[2] ?? 0,
+    );
+  });
 
   return createPortal(
     <group
+      ref={groupRef}
       position={[offset[0] ?? 0, offset[1] ?? 0, offset[2] ?? 0]}
       scale={[scale, scale, scale]}
     >
@@ -95,21 +157,39 @@ const ToolGLBModel = ({ glbPath, offset, scale }: ToolGLBModelProps) => {
 // Public component
 // ---------------------------------------------------------------------------
 
+interface ToolViewModelProps {
+  /** Player movement direction { x, z } — passed from the input frame each render. */
+  moveDirection?: { x: number; z: number };
+}
+
+const ZERO_DIRECTION = { x: 0, z: 0 };
+
 /**
  * ToolViewModel renders the player's held tool in the lower-right of the FPS view (Spec §11).
  *
  * - Reads `selectedTool` from the game store.
- * - Resolves the GLB path and offset from config/game/toolVisuals.json.
+ * - Resolves the GLB path, offset, and sway config from config/game/toolVisuals.json.
  * - Portals the GLB group into the camera so it is fixed to the player's view.
+ * - Applies velocity-based sway via moveDirection prop (lerped each frame).
  * - Returns null for tools with no GLB mapping (watering-can, almanac, etc.).
  */
-export const ToolViewModel = () => {
+export const ToolViewModel = ({ moveDirection = ZERO_DIRECTION }: ToolViewModelProps) => {
   const selectedTool = useGameStore((s) => s.selectedTool);
   const config = toolVisualsData as ToolVisualsConfig;
   const glbPath = resolveToolGLBPath(selectedTool, config);
   const visual = resolveToolVisual(selectedTool, config);
+  const swayConfig = (toolVisualsData as { sway?: SwayConfig }).sway;
 
-  if (!glbPath || !visual) return null;
+  if (!glbPath || !visual || !swayConfig) return null;
 
-  return <ToolGLBModel glbPath={glbPath} offset={visual.offset} scale={visual.scale} />;
+  return (
+    <ToolGLBModel
+      glbPath={glbPath}
+      offset={visual.offset}
+      scale={visual.scale}
+      moveDirection={moveDirection}
+      swayAmount={swayConfig.swayAmount}
+      lerpFactor={swayConfig.lerpFactor}
+    />
+  );
 };

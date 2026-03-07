@@ -1,4 +1,8 @@
 {
+  "sway": {
+    "swayAmount": 0.06,
+    "lerpFactor": 8.0
+  },
   "trowel": {
     "glbPath": "assets/models/tools/Hoe.glb",
     "offset": [0.35, -0.3, -0.5],

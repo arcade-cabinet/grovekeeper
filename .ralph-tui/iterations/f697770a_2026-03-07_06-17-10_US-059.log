@@ -1,0 +1,131 @@
+# Iteration 59 Log
+
+## Metadata
+
+- **Task ID**: US-059
+- **Task Title**: Create tool view model component
+- **Description**: As a player, I want to see my held tool in the lower-right of my view so that I feel embodied in first-person. Load tool GLB, position fixed to camera. See GAME_SPEC.md §11.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T12:17:10.596Z
+- **Ended At**: 2026-03-07T12:24:18.364Z
+- **Duration**: 7m 7s
+- **Input Tokens**: 3805
+- **Output Tokens**: 23124
+- **Total Tokens**: 26929
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+Let me explore the codebase before writing any code.
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/player/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Good, let me read the GAME_SPEC.md §11 about Tools, and then the existing player components.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 11\. Tools|§11|Tool View Model|ToolViewModel|view.?model[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m
+Let me look at the FPS perspective design doc and tools config:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/plans/2026-03-06-fps-perspective-design.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/toolVisuals.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mequippedTool|activeTool|selectedTool|currentTool[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96massets/models/tools/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/assets/models/tools/README.md[0m
+Now I have everything I need. Let me set up todos and start TDD.
+
+`★ Insight ─────────────────────────────────────`
+- The README at `assets/models/tools/README.md` explicitly forbids placeholder boxes — only GLBs that exist in `assets/models/tools/` can be shown (5 of the 12 tools have GLBs: trowel→Hoe.glb, axe→Axe.glb, etc.)
+- The `resolveGLBPath as testable seam` codebase pattern means we export pure config-lookup functions from R3F components so they're unit-testable without WebGL context
+- For "fixed to camera" in R3F, `camera.add(group)` makes the group a native Three.js child of the camera — it moves/rotates with it automatically without per-frame manual matrix math
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolVisuals.json[0m "{
+  "trowel": {
+    "glbPath": "assets/models/tools/Hoe.glb",
+    "offset": [0.35, -0.3, -0.5],
+    "scale": 0.4,
+    "useAnimation": "stab",
+    "useDuration": 0.4
+  },
+  "axe": {
+    "glbPath": "ass... (863 chars)"
+[94m[TodoWrite][0m
+Now write the tests (RED phase):
+
+`★ Insight ─────────────────────────────────────`
+- Following the `resolveGLBPath as testable seam` pattern: the pure `resolveToolGLBPath` and `resolveToolVisual` functions can be imported and called in Jest without any R3F or WebGL context — no mocking of Three.js internals needed for the pure function tests
+- The `useGLTF + Rules of Hooks` pattern requires a sub-component (`ToolGLBModel`) that's only mounted when the GLB path is non-null, satisfying React's Rules of Hooks
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m "/**
+ * Tests for ToolViewModel first-person tool view model (Spec §11).
+ *
+ * Tests exported pure functions without rendering
+ * (R3F / drei require WebGL context, mocked here).
+ */
+
+jest.mock("@react... (4361 chars)"
+Now run the tests to confirm RED (should fail because ToolViewModel.tsx doesn't exist yet):
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run ToolViewModel tests to confirm RED phase $ npx jest --no-coverage --testPathPattern ToolViewModel 2>&1 | tail -30
+RED confirmed. Now implementing (GREEN phase):
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/TreeInstances.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeInstances.tsx[0m pattern: [96museGLTF|glbPath|require[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96museGLTF[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/TreeModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.tsx[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `createPortal(children, camera)` from `@react-three/fiber` renders Three.js children as children of the camera Object3D — this is the canonical R3F approach for camera-space rendering (weapon/tool view models) without per-frame matrix math
+- `scene.clone(true)` in a `useMemo` is essential because `useGLTF` returns a cached scene — using the same scene object in multiple `<primitive>` calls would silently steal the object from its previous parent in the Three.js scene graph
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m "/**
+ * ToolViewModel — first-person held tool model, fixed to camera (Spec §11).
+ *
+ * Reads the selected tool from the game store, resolves the GLB path from
+ * config/game/toolVisuals.json, and rend... (4090 chars)"
+Now run tests (GREEN phase):
+[94m[Bash][0m Run ToolViewModel tests to verify GREEN phase $ npx jest --no-coverage --testPathPattern ToolViewModel 2>&1 | tail -40
+15/15 GREEN. Now run the full quality gate:
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -20
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -15
+Both pass: `tsc → 0 errors`, `jest → 1971 tests, 0 failures` (15 new tests added).
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-058" → "---
+
+## 2026-03-07 - US-059
+- Implemented `compone..."
+[94m[TodoWrite][0m
+All acceptance criteria met:
+
+| Criterion | Status |
+|-----------|--------|
+| `components/player/ToolViewModel.tsx` exists | ✅ |
+| Loads tool GLB from `assets/models/tools/` | ✅ (via `useGLTF` + `toolVisuals.json` mapping) |
+| Positioned in lower-right viewport space, fixed to camera | ✅ (`createPortal(children, camera)` with offset `[0.35, -0.3, -0.5]`) |
+| Tool visible in FPS view | ✅ (portaled into camera Object3D) |
+| `npx tsc --noEmit` passes | ✅ (0 errors) |
+| `npx jest --no-coverage` passes | ✅ (1971 tests, 0 failures) |
+
+`★ Insight ─────────────────────────────────────`
+- The `assets/models/tools/README.md` file was the decisive artifact — it specified the exact GLB→tool mapping AND explicitly forbade placeholder boxes, preventing the wrong implementation approach (colored box fallbacks were spec'd in the design doc but superseded by the README)
+- `ToolVisualsConfig = { readonly [toolId: string]: ToolVisualEntry | undefined }` — the index signature with `| undefined` is the TypeScript pattern for "lookup by arbitrary key at runtime, where the key may not exist"; this enables safe `config[toolId]?.glbPath ?? null` without type assertions
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

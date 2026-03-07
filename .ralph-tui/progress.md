@@ -46,6 +46,26 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-060
+- Implemented `computeSwayOffset(velocity, currentSway, swayAmount, lerpFactor, dt)` — pure export on `ToolViewModel.tsx`, no R3F context needed
+- Added `sway: { swayAmount: 0.06, lerpFactor: 8.0 }` to `config/game/toolVisuals.json` — no inline constants
+- Wired sway into `ToolGLBModel` via `useFrame` + `swayRef` + `groupRef`: each frame lerps sway toward `moveDirection * swayAmount`, sets `group.position` imperatively
+- `ToolViewModel` now accepts optional `moveDirection?: { x: number; z: number }` prop (defaults to zero direction = no sway when standing still)
+- Added `SwayConfig` interface + `isToolVisualEntry` type guard to `ToolVisualsConfig` to accommodate the new `sway` key in the JSON without breaking the index signature
+- **Files changed:**
+  - `components/player/ToolViewModel.tsx` — added `computeSwayOffset`, `SwayConfig`, `isToolVisualEntry`, `ToolGLBModel` sway logic, `ToolViewModelProps`
+  - `components/player/ToolViewModel.test.ts` — added 6 tests for `computeSwayOffset`
+  - `config/game/toolVisuals.json` — added `sway` top-level config block
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 1977 tests, 0 failures (105 suites, +6 new tests)
+- **Learnings:**
+  - **Index-signature + non-uniform key problem**: Adding a `sway` key with a different shape to a JSON file breaks TypeScript casts to `{ [key: string]: ToolVisualEntry | undefined }`. Solution: widen the index value type to a union (`ToolVisualEntry | SwayConfig | undefined`) and add a structural type guard (`"glbPath" in v`) to narrow at the call sites.
+  - **Structural type guard as discriminant**: `"glbPath" in v` is enough to distinguish `ToolVisualEntry` from `SwayConfig` — no nominal type info needed. This works because the shapes are disjoint on that property.
+  - **swayRef + groupRef pattern for per-frame sway**: `swayRef` accumulates the lerped value between frames; `groupRef` gives direct access to the Three.js object so `group.position.set()` mutates without React re-renders. Same pattern as other per-frame imperative mutations in this codebase.
+
+---
+
 ## 2026-03-07 - US-059
 - Implemented `components/player/ToolViewModel.tsx` — first-person held tool model in camera space (Spec §11)
 - Implemented `resolveToolGLBPath(toolId, config)` and `resolveToolVisual(toolId, config)` — pure functions exported as testable seams
