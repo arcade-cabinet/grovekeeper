@@ -1,0 +1,290 @@
+# Iteration 119 Log
+
+## Metadata
+
+- **Task ID**: US-119
+- **Task Title**: Implement placement and resource deduction
+- **Description**: As a player, I want to place building pieces at snap points with resources deducted from my inventory so that building consumes materials. See GAME_SPEC.md §14.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T18:17:06.578Z
+- **Ended At**: 2026-03-07T18:32:15.548Z
+- **Duration**: 15m 8s
+- **Input Tokens**: 17904
+- **Output Tokens**: 40309
+- **Total Tokens**: 3748797
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Read,Glob,Grep,Agent[0m
+[94m[TodoWrite][0m
+[94m[Agent][0m Explore kitbashing and inventory systems
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing[0m pattern: [96m**/*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components[0m pattern: [96m**/*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities[0m pattern: [96m**/*[0m
+[94m[Agent][0m Explore Legend State store patterns
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/placement.ts[0m
+[94m[Glob][0m pattern: [96m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/rapier.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/index.ts[0m
+[94m[Glob][0m pattern: [96m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/unlocks.ts[0m
+[94m[Glob][0m pattern: [96m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/structures/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/resources.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Glob][0m pattern: [96m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/**/*Ghost*[0m
+[94m[Glob][0m pattern: [96m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/**/*Build*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/PlacementGhost*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/BuildPanel*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems[0m pattern: [96m**/*.test.ts*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PlacementGhost.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PlacementGhostUtils.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PlacementGhost.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PlacementGhostUtils.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PlacementGhostUtils.test.ts[0m
+[94m[Glob][0m pattern: [96m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/buildPanelUtils*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m
+[94m[Glob][0m pattern: [96m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/buildPanelUtils.ts[0m
+[94m[Glob][0m pattern: [96m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/index.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/placement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§35|kitbash|base building|modular piece|placement[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/buildPanelUtils*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§35|US-119|placement.*resource|resource.*deduction|spendResource.*build|addPlacedStructure|kitbash.*cost|build.*cost.*deduct[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/rapier.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/buildPanelUtils.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m35\.|building|kitbash|placement|US-119[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.ts[0m pattern: [96mwood|stone|metal_scrap|fiber|thatch[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 35\. Base Building[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/placePiece*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m35\.[0-9]|resource.*cost|cost.*resource|deduct|spend|afford|wood|stone|metal_scrap|fiber[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mplacePiece|place_piece|onConfirm|modularPiece|buildable|world\.add|world\.create[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/resources.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mworld\.add|world\.create|generateEntityId[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mworld\.add|world\.create|generateEntityId[0m
+[94m[Read][0m [95m/Users/jbogaty/.claude/projects/-Users-jbogaty-src-arcade-cabinet-grovekeeper/c7799e81-e1ee-4890-b159-97027d01f779/tool-results/toolu_01RAEWfSvfK9P4Vhuxp6S93P.txt[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mworld\.add\([0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/archetypes.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/resources.json[0m pattern: [96mwood|fiber|stone|metal_scrap|resource[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game[0m pattern: [96mwood|fiber|stone|metal_scrap[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mspendResource|addResource[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.ts[0m pattern: [96mplaceStructure|addPlacedStructure|buildMode|wood|fiber|stone|metal_scrap[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.ts[0m
+`★ Insight ─────────────────────────────────────`
+The agents surfaced a critical type mismatch: building costs in `building.json` use `wood`/`stone`/`metal_scrap`/`fiber`, but the `ResourceType` union only covers `timber`/`sap`/`fruit`/`acorns`. This will require extending the resource type system before wiring up placement.
+`─────────────────────────────────────────────────`
+
+Now let me read all the key files to build deep context before implementing.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/index.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/placement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/rapier.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/buildPanelUtils.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/resources.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores[0m pattern: [96memptyResources|resources.*acorns|resources.*timber[0m
+Good, no existing tests check exact resource shapes. Now I have everything I need. Let me proceed with implementation.
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `ResourceType` union and `emptyResources()` are the authoritative sources for the game's resource system. Adding building materials here integrates them fully into the typed store API — `spendResource("wood", 4)` will then be type-safe and properly initialized at 0 rather than `undefined`.
+`─────────────────────────────────────────────────`
+
+**Step 1: Extend resource types**
+[94m[ToolSearch][0m query: [93mselect:Edit,Write[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/resources.json[0m edit: "{
+  "types": ["timber", "sap", "fruit", "acorns"],..." → "{
+  "types": ["timber", "sap", "fruit", "acorns", ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.ts[0m edit: "export type ResourceType = "timber" | "sap" | "fru..." → "/** Grove harvest resources (organic) + building m..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `game/ → components/` import direction is illegal in this codebase (see the spirit cross-layer utility pattern). So `commit.ts` reads build costs directly from `config/game/building.json`, the same source `buildPanelUtils.ts` uses — no circular dependency, no code duplication at the logic level.
+`─────────────────────────────────────────────────`
+
+**Step 2: Create `commit.ts`**
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/commit.ts[0m "/**
+ * Kitbashing commit -- place a building piece and deduct resources. Spec §35.4.
+ *
+ * Pure function with minimal interfaces so it can be tested without React,
+ * WebGL, or native modules. Product... (4284 chars)"
+**Step 3: Export from index.ts**
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/index.ts[0m edit: "export { getAvailableSnapPoints, validatePlacement..." → "export { getAvailableSnapPoints, validatePlacement..."
+[94m[TodoWrite][0m
+**Step 4: Write tests**
+
+`★ Insight ─────────────────────────────────────`
+The "atomic pre-check before spending" pattern is critical for correctness: if a wall costs both `wood=4` AND `stone=6` but the player only has `wood=4, stone=3`, we must reject without spending the wood. A sequential spend-and-check would partially drain resources before failing.
+`─────────────────────────────────────────────────`
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m edit: "import {
+  getAvailableSnapPoints,
+  validatePlace..." → "import {
+  getAvailableSnapPoints,
+  validatePlace..."
+Now add the test suite at the end of the file:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m edit: "    const newPiece = makePiece({ gridX: 0 }); // p..." → "    const newPiece = makePiece({ gridX: 0 }); // p..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+I need to fix the type errors in files that hardcode the old resource shape. Let me read and fix them.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/supplyDemand.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/recipes.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/trading.test.ts[0m
+The pattern is clear: `makeResources()` helpers need updating to include building material keys. The cleanest fix is to use `emptyResources()` as the base in each.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/supplyDemand.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+Now I'll fix all type errors systematically. The pattern: use `emptyResources()` as the base where resource objects need all 8 keys.
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/supplyDemand.ts[0m edit: "function defaultMultipliers(): Record<ResourceType..." → "function defaultMultipliers(): Record<ResourceType..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/supplyDemand.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/supplyDemand.ts[0m edit: "function defaultMultipliers(): Record<ResourceType..." → "function defaultMultipliers(): Record<ResourceType..."
+Now fix the test files. First add `emptyResources` import to `gameStore.test.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "import type { SerializedTree } from "./gameStore";..." → "import type { SerializedTree } from "./gameStore";..."
+Now fix all `setState({ resources: {...} })` calls in `gameStore.test.ts` to use spread with `emptyResources()`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        resources: { timber: 100, sap: 50, fruit: ..." → "        resources: { ...emptyResources(), timber: ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        resources: { timber: 200, sap: 100, fruit:..." → "        resources: { ...emptyResources(), timber: ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        resources: { timber: 1000, sap: 1000, frui..." → "        resources: { ...emptyResources(), timber: ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        resources: { timber: 50, sap: 50, fruit: 0..." → "        resources: { ...emptyResources(), timber: ..."
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        gridSize: 32,
+        resources: { timber:..." → "        gridSize: 32,
+        resources: { ...empt..."
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        level: 20,
+        resources: { timber: 99..." → "        level: 20,
+        resources: { ...emptyRe..."
+Now fix the prestige test lines:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        resources: { timber: 9999, sap: 9999, frui..." → "        resources: { ...emptyResources(), timber: ..."
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        lifetimeResources: {
+          timber: 500..." → "        lifetimeResources: { ...emptyResources(), ..."
+Now fix the `upgradeToolTier` test lines:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        resources: { timber: 100, sap: 50, fruit: ..." → "        resources: { ...emptyResources(), timber: ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "        resources: { timber: 100, sap: 100, fruit:..." → "        resources: { ...emptyResources(), timber: ..."
+Now fix `recipes.test.ts` and `trading.test.ts`:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/recipes.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/trading.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/recipes.test.ts[0m edit: "import type { ResourceType } from "@/game/config/r..." → "import type { ResourceType } from "@/game/config/r..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/recipes.test.ts[0m edit: "    const makeResources = (
+      overrides: Parti..." → "    const makeResources = (
+      overrides: Parti..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/trading.test.ts[0m edit: "import type { ResourceType } from "@/game/config/r..." → "import type { ResourceType } from "@/game/config/r..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/trading.test.ts[0m edit: "    const makeResources = (
+      overrides: Parti..." → "    const makeResources = (
+      overrides: Parti..."
+Now re-run the type check:
+[94m[Bash][0m TypeScript type check after fixes $ npx tsc --noEmit 2>&1 | head -30
+TypeScript passes clean. Now run the tests:
+[94m[Bash][0m Run kitbashing tests $ npx jest --no-coverage --testPathPattern="kitbashing" 2>&1 | tail -40
+All 58 tests pass, including the 8 new `placeModularPiece` tests. Now run the full test suite:
+[94m[Bash][0m Full test suite $ npx jest --no-coverage 2>&1 | tail -25
+[94m[Bash][0m Show failing test names $ npx jest --no-coverage 2>&1 | grep -E "FAIL|✕|●" | head -30
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/supplyDemand.test.ts[0m
+[94m[Bash][0m Find resource equality tests in gameStore $ grep -n "starts with zero resources\|zero resources\|resources.*toEqual\|toEqual.*resources" /Users/...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+Now fix all these assertions — use `emptyResources()` or the updated counts:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "    it("starts with zero resources", () => {
+     ..." → "    it("starts with zero resources", () => {
+     ..."
+Now fix `resources.test.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.test.ts[0m edit: "    it("contains exactly 4 resource types", () => ..." → "    it("contains exactly 8 resource types", () => ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.test.ts[0m edit: "    it("returns an object with all resources set t..." → "    it("returns an object with all resources set t..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.test.ts[0m edit: "    it("has exactly 4 keys", () => {
+      const e..." → "    it("has exactly 8 keys", () => {
+      const e..."
+Now fix `supplyDemand.test.ts` — the `toEqual` assertions for market state multipliers:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/supplyDemand.test.ts[0m edit: "    it("creates fresh state with neutral multiplie..." → "    it("creates fresh state with neutral multiplie..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/supplyDemand.test.ts[0m edit: "    it("returns 1.0 for all resources with no hist..." → "    it("returns 1.0 for all resources with no hist..."
+[94m[Bash][0m Full test suite after all fixes $ npx jest --no-coverage 2>&1 | tail -10
+[94m[Bash][0m Show remaining failing test $ npx jest --no-coverage 2>&1 | grep "●" | head -5
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Bash][0m Find prestige resource reset logic $ grep -n "getPrestigeResetState\|emptyResources\|resources" /Users/jbogaty/src/arcade-cabinet/groveke...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.ts[0m edit: "    resources: { timber: 0, sap: 0, fruit: 0, acor..." → "    resources: { timber: 0, sap: 0, fruit: 0, acor..."
+[94m[Bash][0m Final test suite run $ npx jest --no-coverage 2>&1 | tail -8
+[94m[Bash][0m Show prestige test failure details $ npx jest --no-coverage --testPathPattern="prestige" 2>&1 | grep -A 20 "●"
+[94m[Bash][0m Find prestige test resource assertion $ grep -n "toEqual\|resources" /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.tes...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.test.ts[0m edit: "import {
+  calculatePrestigeBonus,
+  canPrestige,
+..." → "import {
+  calculatePrestigeBonus,
+  canPrestige,
+..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.test.ts[0m edit: "      expect(state.resources).toEqual({
+        ti..." → "      expect(state.resources).toEqual(emptyResourc..."
+[94m[Bash][0m Final full test suite run $ npx jest --no-coverage 2>&1 | tail -8
+All 2989 tests pass. Let me mark the test/typecheck task complete and update progress.md.
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check progress.md length $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Append US-119 entry to progress.md $ updated `resources.json`, `emptyResources()`, `supplyDemand.ts defaultMultipliers()`, and `prestige....
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `ResourceType` extension rippled across 8 test files because TypeScript's `Record<T, number>` requires all keys of `T` to be present in literal objects. The fix pattern — `{ ...emptyResources(), timber: 100 }` — is idiomatic and forward-safe: future resource type additions only require updating `emptyResources()`, not every test callsite.
+`─────────────────────────────────────────────────`
+
+**US-119 complete.** Here's a summary of what was implemented:
+
+### What was built
+
+**`game/systems/kitbashing/commit.ts`** — new pure function `placeModularPiece()`:
+1. Re-validates placement via Rapier (guards against stale ghost)
+2. Pre-checks all resource costs atomically (all-or-nothing)
+3. Deducts costs via `store.spendResource()` 
+4. Creates the ECS entity with `modularPiece` + `position` components
+5. Skips resource cost in `"explore"` difficulty (Spec §37)
+
+**Resource type system extended** — `wood`, `stone`, `metal_scrap`, `fiber` added to `ResourceType`, `emptyResources()`, `supplyDemand.ts`, and `prestige.ts`.
+
+**8 new tests** covering: success path, resource deduction, Rapier clearance failure, no ground contact, insufficient resources, atomic pre-check, explore mode, and world position math.
+
+All 2989 tests pass. `tsc --noEmit` clean.
+
+<promise>COMPLETE</promise>

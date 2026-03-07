@@ -2283,3 +2283,18 @@ after each iteration and it's included in prompts for context.
   - **`supplyDemand.ts defaultMultipliers()` must include all ResourceType keys**: Since `MarketState.priceMultipliers` is `Record<ResourceType, number>`, the hardcoded helper must enumerate all resource types including building materials (at 1.0 neutral).
 
 ---
+
+## 2026-03-07 - US-120
+- Work was already complete from US-119 iteration: 9 `placeModularPiece` tests were added alongside the implementation in `game/systems/kitbashing.test.ts`.
+- Verified all 9 tests pass and cover all acceptance criteria:
+  - Resource check: "returns false when resources insufficient", "atomic pre-check (stone: 3)"
+  - Resource deduction: "deducts build cost from store resources on success"
+  - Entity creation: "places entity in ECS world and returns true on success", "places entity at correct world position from grid coords"
+  - Snap point consumption: "accepts adjacent piece snap with existing pieces when resources sufficient"
+  - Edge cases: Rapier clearance failure, ground contact failure, explore mode skip (Spec §37)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest kitbashing.test --no-coverage` → 58/58 pass
+- **Learnings:**
+  - **Minimal mock interfaces defined in production code**: `KitbashPlacementWorld` and `KitbashCommitStore` are in `commit.ts` itself with exactly the methods tests need to spy on. Tests import the types and construct plain jest.fn() objects — no real ECS, store, or Rapier setup needed.
+  - **`makeGroundedRapier()` helper consolidates happy-path Rapier mocks**: Combines `intersectionsWithShape: false` (clear) + `castRay: { toi: 0.1 }` (grounded). Each test overrides only the one dimension it's testing, keeping setup noise minimal.
+
+---
