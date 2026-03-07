@@ -50,6 +50,14 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-071
+- Work already complete — `game/world/entitySpawner.test.ts` was written alongside the implementation in US-070 (41 tests, 0 failures)
+- All acceptance criteria met: 41 tests >> 8 minimum
+- Tests cover: deterministic spawning (`is deterministic`, `different seeds produce different spawn layouts`, `different chunks produce different tree positions`), biome-specific species (`all spawned trees have speciesId from the correct biome pool`, `wetlands trees all belong to wetland species pool`), density matches config (`returns correct tree count for starting-grove (temperate: 8)`, `frozen-peaks has fewer trees than starting-grove (tundra: 2 vs temperate: 8)`, `rocky-highlands has more rocks than wetlands`)
+- **Files changed:** None (pre-existing from US-070)
+
+---
+
 ## 2026-03-07 - US-070
 - Created `game/world/entitySpawner.ts` — pure function placer following the waterPlacer/audioZonePlacer pattern
 - `spawnChunkEntities(worldSeed, chunkX, chunkZ, biome, heightmap)` returns `{ trees, bushes, grass, rocks }` placement arrays
