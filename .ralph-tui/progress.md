@@ -815,3 +815,13 @@ after each iteration and it's included in prompts for context.
   - `{ ...ZERO_ROTATIONS, torsoY: ..., headSway: ... }` pattern ensures TypeScript validates all fields at ZERO_ROTATIONS definition site, making future interface additions safe
   - `advanceNpcAnimation` advancing for 3 states (walk/idle/talk) leaves sleep/work stationary — consistent with config having zero amplitudes for sleep
 ---
+
+## 2026-03-07 - US-045
+- Work already complete from US-043/US-044 — `game/systems/npcAnimation.test.ts` already had 33 tests covering all acceptance criteria
+- Verified: 33/33 tests pass, `npx tsc --noEmit` clean
+- Tests cover: state machine transitions (walk/idle/talk/sleep/work), sine wave values at key frames, speed scaling via `animSpeed`, opposition swing phases, amplitude bounds
+- Files changed: none (already implemented)
+- **Learnings:**
+  - US-043 and US-044 together already fulfilled US-045 — tests were written alongside implementation per the docs>tests>code workflow
+  - When a story is "write tests for X" and X was already implemented with tests in prior stories, verify the test count and acceptance criteria rather than writing duplicate tests
+---

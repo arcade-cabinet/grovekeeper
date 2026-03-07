@@ -1,0 +1,101 @@
+# Iteration 44 Log
+
+## Metadata
+
+- **Task ID**: US-044
+- **Task Title**: Implement anime.js idle and talk animations
+- **Description**: As a developer, I want NPC idle (breathing bob, head sway) and talk (head nod, arm gesture) animations so that NPCs have personality. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:59:13.938Z
+- **Ended At**: 2026-03-07T11:04:31.274Z
+- **Duration**: 5m 17s
+- **Input Tokens**: 116
+- **Output Tokens**: 18084
+- **Total Tokens**: 18200
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/npcs/**/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/NpcMeshes*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/NpcMeshes.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs/NpcManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*npc*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAnimation.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAnimation.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/npcAnimation.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mdocs/GAME_SPEC.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|15\. NPC|NPC Animation|idle.*bob|talk.*nod|head.*sway|breathing[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mNPC Animation|idle|talk|animation[0m
+Now I have a clear picture. Let me check how `NpcLimbRotations` is used in NpcMeshes and look at the progress.md tail for US-043 learnings:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mNpcLimbRotations|computeNpcLimb|advanceNpcAnim|npcAnimation[0m
+[94m[Bash][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Bash failed due to the following issues:
+The required parameter `command` is missing
+An unexpected parameter `cmd` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The existing walk-cycle design is a clean data-driven sine wave: `sin(t * freq + phaseOffset) * maxAngle`. For idle/talk, we extend the same pattern rather than inventing new machinery — idle gets a slow smooth `sin` for breathing torso bob and gentle head sway; talk reuses the arm channel with a different frequency/amplitude. Adding new output fields (`torsoY`, `headSway`, `armGesture`) instead of overloading `leftArm`/`rightArm` lets existing tests keep passing without modification to the walk assertions.
+`─────────────────────────────────────────────────`
+
+**Step 1: Update config** — give idle a non-zero head sway angle.
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/npcAnimation.json[0m edit: "    "idle": {
+      "bodyBob": { "amplitude": 0.02..." → "    "idle": {
+      "bodyBob": { "amplitude": 0.02..."
+[94m[TodoWrite][0m
+**Step 2: Extend `npcAnimation.ts`** — add `torsoY`, `headSway`, `armGesture` fields and implement idle/talk cases.
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAnimation.ts[0m "/**
+ * NPC animation system — Lego-style rigid body part rotation.
+ *
+ * Computes sine-wave rotation angles from NpcComponent animation state.
+ * No Three.js or anime.js runtime dependency — returns p... (4482 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Using `{ ...ZERO_ROTATIONS, torsoY: ..., headSway: ... }` for idle/talk ensures TypeScript sees all fields as present without manually listing every zero. This is safer than a partial return — the interface is fully satisfied in one expression, and adding a new field to the interface later would cause a compile error at the ZERO_ROTATIONS definition, not silently return undefined.
+`─────────────────────────────────────────────────`
+
+**Step 3: Update tests** — fix the two `advanceNpcAnimation` assertions that expect no progress during idle/talk, then add new tests for the idle/talk animation output fields.
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAnimation.test.ts[0m "/**
+ * Tests for NPC animation system (walk cycle, idle breathing, talk gestures).
+ * Spec: GAME_SPEC.md §15 — NPC Animation (Lego-style rigid body part rotation)
+ */
+
+import type { NpcComponent } fro... (12140 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript typecheck $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run npcAnimation tests $ npx jest --no-coverage --testPathPattern=npcAnimation 2>&1
+33 tests passing. Let me also run the full test suite to confirm nothing else broke:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+1687/1687 tests pass. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Bash][0m Append US-044 entry to progress.md $ added 13 new tests for idle/talk cases (33 total in suite) - Files changed:   - `config/game/npcAnim...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The idle `torsoY` intentionally uses smooth `sin` (range -0.02 to +0.02) rather than `abs(sin)` (walk's `bounceY`). Walk bounce uses abs to simulate foot-fall — always upward. Idle breathing is bidirectional — chest rises and falls. This distinction creates a qualitatively different feel despite using the same sine-wave math.
+`─────────────────────────────────────────────────`
+
+All done. Summary of what was implemented:
+
+**Files changed:**
+- `config/game/npcAnimation.json` — idle `headTurn` maxAngle `0→0.08`, frequency `0→0.7` (enables head sway)
+- `game/systems/npcAnimation.ts` — added `torsoY`, `headSway`, `armGesture` to `NpcLimbRotations`; updated `advanceNpcAnimation` to progress idle+talk; added idle and talk cases to `computeNpcLimbRotations`
+- `game/systems/npcAnimation.test.ts` — fixed 2 stale tests, added 13 new tests (33 total, all passing)
+
+**Behavior:**
+- **Idle**: slow breathing bob on torso Y (`sin`, ±0.02m, 1.5Hz) + gentle head sway Y-rotation (±0.08 rad, 0.7Hz)
+- **Talk**: head nod (±0.25 rad, 1.0Hz) + arm gesture (±0.15 rad, 1.5Hz) + slight torso bob (±0.01m, 2.0Hz)
+- Walk limbs unchanged, sleep/work stationary
+
+<promise>COMPLETE</promise>
