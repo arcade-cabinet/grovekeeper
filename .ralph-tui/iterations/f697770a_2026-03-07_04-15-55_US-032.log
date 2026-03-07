@@ -1,0 +1,43 @@
+# Iteration 32 Log
+
+## Metadata
+
+- **Task ID**: US-032
+- **Task Title**: Write Jest tests for difficulty config
+- **Description**: As a developer, I want tests for difficulty config so that all tiers load correctly, multipliers apply, and exploration mode zeroes are verified. See GAME_SPEC.md §4.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:15:55.430Z
+- **Ended At**: 2026-03-07T10:16:55.938Z
+- **Duration**: 1m 0s
+- **Input Tokens**: 59
+- **Output Tokens**: 2332
+- **Total Tokens**: 2391
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*difficulty*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/difficulty.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/difficulty.test.ts[0m
+The tests already exist (14 tests). Let me verify they pass.
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run difficulty config tests $ npx jest --no-coverage game/config/difficulty.test.ts 2>&1 | tail -20
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -5
+All 14 tests pass, TypeScript is clean. The work was already done in a prior iteration.
+
+`★ Insight ─────────────────────────────────────`
+The difficulty config uses a clean **flat JSON → typed array** pattern: `difficulty.json` is imported with `with { type: "json" }` (import attributes), cast to `DifficultyConfig[]`, then exposed as `DIFFICULTIES`. The accessor functions (`getDifficultyById`, `isExplorationMode`) are pure functions over that array — easy to test without any mocks.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Read end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - Optional param with default (`affectsGameplay ..." → "  - Optional param with default (`affectsGameplay ..."
+US-032 was already complete. 14 tests passing, `tsc --noEmit` clean.
+
+<promise>COMPLETE</promise>

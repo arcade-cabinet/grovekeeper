@@ -3,6 +3,7 @@
     {
       "id": "white-oak",
       "name": "White Oak",
+      "glbPath": "assets/models/trees/white-oak.glb",
       "difficulty": 1,
       "unlockLevel": 1,
       "biome": "Temperate",
@@ -23,6 +24,7 @@
     {
       "id": "weeping-willow",
       "name": "Weeping Willow",
+      "glbPath": "assets/models/trees/weeping-willow.glb",
       "difficulty": 2,
       "unlockLevel": 2,
       "biome": "Wetland",
@@ -43,6 +45,7 @@
     {
       "id": "elder-pine",
       "name": "Elder Pine",
+      "glbPath": "assets/models/trees/elder-pine.glb",
       "difficulty": 2,
       "unlockLevel": 3,
       "biome": "Mountain",
@@ -63,6 +66,7 @@
     {
       "id": "cherry-blossom",
       "name": "Cherry Blossom",
+      "glbPath": "assets/models/trees/cherry-blossom.glb",
       "difficulty": 3,
       "unlockLevel": 5,
       "biome": "Temperate",
@@ -83,6 +87,7 @@
     {
       "id": "ghost-birch",
       "name": "Ghost Birch",
+      "glbPath": "assets/models/trees/ghost-birch.glb",
       "difficulty": 3,
       "unlockLevel": 6,
       "biome": "Tundra Edge",
@@ -103,6 +108,7 @@
     {
       "id": "redwood",
       "name": "Redwood",
+      "glbPath": "assets/models/trees/redwood.glb",
       "difficulty": 4,
       "unlockLevel": 8,
       "biome": "Coastal",
@@ -123,6 +129,7 @@
     {
       "id": "flame-maple",
       "name": "Flame Maple",
+      "glbPath": "assets/models/trees/flame-maple.glb",
       "difficulty": 4,
       "unlockLevel": 10,
       "biome": "Highland",
@@ -143,6 +150,7 @@
     {
       "id": "baobab",
       "name": "Baobab",
+      "glbPath": "assets/models/trees/baobab.glb",
       "difficulty": 5,
       "unlockLevel": 12,
       "biome": "Savanna",
@@ -167,6 +175,7 @@
     {
       "id": "silver-birch",
       "name": "Silver Birch",
+      "glbPath": "assets/models/trees/silver-birch.glb",
       "difficulty": 2,
       "unlockLevel": 9,
       "biome": "Temperate",
@@ -187,6 +196,7 @@
     {
       "id": "ironbark",
       "name": "Ironbark",
+      "glbPath": "assets/models/trees/ironbark.glb",
       "difficulty": 4,
       "unlockLevel": 14,
       "biome": "Mountain",
@@ -207,6 +217,7 @@
     {
       "id": "golden-apple",
       "name": "Golden Apple",
+      "glbPath": "assets/models/trees/golden-apple.glb",
       "difficulty": 3,
       "unlockLevel": 18,
       "biome": "Orchard",
@@ -227,6 +238,7 @@
     {
       "id": "mystic-fern",
       "name": "Mystic Fern",
+      "glbPath": "assets/models/trees/mystic-fern.glb",
       "difficulty": 3,
       "unlockLevel": 22,
       "biome": "Enchanted",
@@ -249,6 +261,7 @@
     {
       "id": "crystal-oak",
       "name": "Crystalline Oak",
+      "glbPath": "assets/models/trees/crystal-oak.glb",
       "difficulty": 5,
       "unlockLevel": 25,
       "biome": "Enchanted",
@@ -270,6 +283,7 @@
     {
       "id": "moonwood-ash",
       "name": "Moonwood Ash",
+      "glbPath": "assets/models/trees/moonwood-ash.glb",
       "difficulty": 4,
       "unlockLevel": 25,
       "biome": "Enchanted",
@@ -291,6 +305,7 @@
     {
       "id": "worldtree",
       "name": "Worldtree",
+      "glbPath": "assets/models/trees/worldtree.glb",
       "difficulty": 5,
       "unlockLevel": 25,
       "biome": "Enchanted",

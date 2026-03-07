@@ -31,6 +31,39 @@ after each iteration and it's included in prompts for context.
 - **Rapier trimesh — imperative creation in useFrame**: `useRapier()` at component level, store `{ rapier, world: rapierWorld }` as stable refs, then inside `useFrame` call `rapier.RigidBodyDesc.fixed().setTranslation(x, y, z)` + `rapierWorld.createRigidBody()` + `rapier.ColliderDesc.trimesh(vertices, indices)` + `rapierWorld.createCollider()`. On unload: `rapierWorld.removeRigidBody(body)` removes the body and its colliders.
 - **isDirty variable loses TypeScript narrowing**: Extracting `const isDirty = !geometry || terrainChunk.dirty` to a separate boolean breaks control-flow narrowing — TypeScript can't prove geometry is non-null after `if (isDirty)`. Always use the condition directly in the `if`: `if (!geometry || terrainChunk.dirty)` so TS narrows `geometry` to non-undefined after the block.
 - **Rapier ColliderDesc.trimesh requires Uint32Array for indices**: `buildTrimeshArgs` returns `{ vertices: Float32Array, indices: Uint32Array }` — using `number[]` for indices fails the type check.
+- **useGLTF + Rules of Hooks**: Wrap `useGLTF` in a dedicated sub-component (`TreeGLBModel`) that's only mounted when the GLB stage is needed. This satisfies Rules of Hooks while avoiding an unconditional load of all GLBs at all stages. Parent component conditionally renders the sub-component with `{stage >= 2 && <TreeGLBModel ...>}`.
+- **resolveGLBPath as testable seam**: Export pure config-lookup functions from R3F components so they can be unit tested without WebGL/R3F context. Tests import the pure function directly and mock `@react-three/drei`/`@react-three/fiber` at the module level.
+- **species.json glbPath field**: Added `glbPath: "assets/models/trees/{speciesId}.glb"` to all 15 species in `config/game/species.json`. Convention: `assets/models/trees/{kebab-id}.glb`. Both base and prestige arrays have the field.
+
+---
+
+## 2026-03-07 - US-033
+- Created `components/entities/TreeModel.tsx`:
+  - `resolveGLBPath(speciesId)` — pure config lookup from `species.json`; throws for unknown speciesId (no fallback)
+  - `STAGE_SCALES` — stage 0→0.05, 1→0.15, 2→0.5, 3→1.0, 4→1.3 (Spec §8.1)
+  - `PROCEDURAL_STAGE_MAX = 1` — stages 0-1 use hardcoded geometry; stages 2-4 use GLB
+  - `TreeSeedMesh` — sphere mound (stage 0)
+  - `TreeSproutMesh` — cylinder stem (stage 1)
+  - `TreeGLBModel` — internal sub-component wrapping `useGLTF` (mounted only for stage >= 2)
+  - `TreeModel` — exported component routing to procedural or GLB based on stage
+- Added `glbPath` field to all 15 species (12 base + 3 prestige) in `config/game/species.json`
+  - Convention: `assets/models/trees/{kebab-id}.glb`
+- Created `components/entities/TreeModel.test.ts` with 19 tests (all green):
+  - `resolveGLBPath`: returns correct paths for base and prestige species; throws for unknown; all paths end in .glb; all paths are unique
+  - `STAGE_SCALES`: correct values at 2/3/4; monotonically increasing 0→4
+  - `PROCEDURAL_STAGE_MAX`: equals 1
+  - `TreeModel`: exports as function component
+- **Files changed:**
+  - `components/entities/TreeModel.tsx`: new file
+  - `components/entities/TreeModel.test.ts`: new file — 19 tests
+  - `config/game/species.json`: added `glbPath` to all 15 species
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 87 suites, 1530 tests, 0 failures
+- **Learnings:**
+  - `useGLTF` in R3F must be in a component that's conditionally mounted (not called conditionally) — sub-component pattern avoids Rules of Hooks violations
+  - Export pure config-lookup helpers from R3F components as the "testable seam"
+  - species.json `glbPath` field uses kebab-case ID as filename in `assets/models/trees/`
 
 ---
 
