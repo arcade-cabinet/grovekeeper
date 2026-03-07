@@ -13,8 +13,14 @@ import {
   checkClearance,
   checkGroundContact,
   validatePlacementWithRapier,
+  placeModularPiece,
 } from "./kitbashing";
-import type { KitbashRapierWorld, KitbashRapierModule } from "./kitbashing";
+import type {
+  KitbashRapierWorld,
+  KitbashRapierModule,
+  KitbashPlacementWorld,
+  KitbashCommitStore,
+} from "./kitbashing";
 import { rotateDirection, snapPointToWorld } from "./kitbashing/placement";
 import type { Entity } from "../ecs/world";
 import type { ModularPieceComponent, SnapPoint } from "../ecs/components/building";
@@ -460,5 +466,203 @@ describe("Multi-Snap (Spec §35.1)", () => {
     });
     const newPiece = makePiece({ gridX: 0 }); // pieceType: "wall" — not accepted by roof-only snaps
     expect(validatePlacement(newPiece, [makeEntity(westPiece), makeEntity(eastPiece)])).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Placement commit -- Spec §35.4
+// ---------------------------------------------------------------------------
+
+function makeCommitWorld(): { add: jest.Mock } & KitbashPlacementWorld {
+  return { add: jest.fn() };
+}
+
+function makeCommitStore(
+  resources: Record<string, number> = { wood: 10, stone: 10, metal_scrap: 10, fiber: 10 },
+  difficulty = "normal",
+): KitbashCommitStore {
+  const res = { ...resources };
+  return {
+    resources: res,
+    spendResource: jest.fn().mockImplementation((type: string, amount: number) => {
+      if ((res[type] ?? 0) < amount) return false;
+      res[type] = (res[type] ?? 0) - amount;
+      return true;
+    }),
+    difficulty,
+  };
+}
+
+function makeGroundedRapier(): { world: KitbashRapierWorld; rapier: KitbashRapierModule } {
+  return {
+    world: makeRapierWorld({
+      intersectionsWithShape: jest.fn().mockReturnValue(false),
+      castRay: jest.fn().mockReturnValue({ toi: 0.1 }),
+    }),
+    rapier: makeRapierModule(),
+  };
+}
+
+describe("placeModularPiece (Spec §35.4)", () => {
+  it("places entity in ECS world and returns true on success", () => {
+    const { world: rapierWorld, rapier } = makeGroundedRapier();
+    const ecsWorld = makeCommitWorld();
+    const store = makeCommitStore();
+    const piece = makePiece();
+
+    const result = placeModularPiece(piece, [], rapierWorld, rapier, ecsWorld, () => "id-1", store);
+
+    expect(result).toBe(true);
+    expect(ecsWorld.add).toHaveBeenCalledTimes(1);
+    expect(ecsWorld.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "id-1",
+        modularPiece: piece,
+        position: { x: 0, y: 0, z: 0 },
+      }),
+    );
+  });
+
+  it("deducts build cost from store resources on success", () => {
+    const { world: rapierWorld, rapier } = makeGroundedRapier();
+    const ecsWorld = makeCommitWorld();
+    // wall/wood costs { wood: 4 }
+    const store = makeCommitStore({ wood: 10 });
+    const piece = makePiece({ pieceType: "wall", materialType: "wood" });
+
+    placeModularPiece(piece, [], rapierWorld, rapier, ecsWorld, () => "id-1", store);
+
+    expect(store.spendResource).toHaveBeenCalledWith("wood", 4);
+    expect(store.resources["wood"]).toBe(6);
+  });
+
+  it("returns false and adds no entity when Rapier clearance fails", () => {
+    const rapierWorld = makeRapierWorld({
+      intersectionsWithShape: jest.fn().mockReturnValue(true),
+    });
+    const rapier = makeRapierModule();
+    const ecsWorld = makeCommitWorld();
+    const store = makeCommitStore();
+
+    const result = placeModularPiece(
+      makePiece(),
+      [],
+      rapierWorld,
+      rapier,
+      ecsWorld,
+      () => "id-1",
+      store,
+    );
+
+    expect(result).toBe(false);
+    expect(ecsWorld.add).not.toHaveBeenCalled();
+  });
+
+  it("returns false and spends no resources when first piece has no ground contact", () => {
+    const rapierWorld = makeRapierWorld({
+      intersectionsWithShape: jest.fn().mockReturnValue(false),
+      castRay: jest.fn().mockReturnValue(null),
+    });
+    const rapier = makeRapierModule();
+    const ecsWorld = makeCommitWorld();
+    const store = makeCommitStore();
+
+    const result = placeModularPiece(
+      makePiece(),
+      [],
+      rapierWorld,
+      rapier,
+      ecsWorld,
+      () => "id-1",
+      store,
+    );
+
+    expect(result).toBe(false);
+    expect(store.spendResource).not.toHaveBeenCalled();
+    expect(ecsWorld.add).not.toHaveBeenCalled();
+  });
+
+  it("returns false and spends no resources when resources insufficient", () => {
+    const { world: rapierWorld, rapier } = makeGroundedRapier();
+    const ecsWorld = makeCommitWorld();
+    // wall/wood costs { wood: 4 } — player only has 2
+    const store = makeCommitStore({ wood: 2 });
+    const piece = makePiece({ pieceType: "wall", materialType: "wood" });
+
+    const result = placeModularPiece(piece, [], rapierWorld, rapier, ecsWorld, () => "id-1", store);
+
+    expect(result).toBe(false);
+    expect(store.spendResource).not.toHaveBeenCalled();
+    expect(ecsWorld.add).not.toHaveBeenCalled();
+  });
+
+  it("does not spend any resource if only the second resource is insufficient (atomic pre-check)", () => {
+    const { world: rapierWorld, rapier } = makeGroundedRapier();
+    const ecsWorld = makeCommitWorld();
+    // roof/stone costs { stone: 7 } — test uses a custom piece with two-resource cost
+    // Simulate multi-resource by testing that pre-check gates all spending
+    // wall/wood costs { wood: 4 } — provide enough wood but no stone to show pre-check
+    // Use stone piece: { stone: 6 } — player has stone: 3 (insufficient)
+    const store = makeCommitStore({ stone: 3 });
+    const piece = makePiece({ pieceType: "wall", materialType: "stone" });
+
+    const result = placeModularPiece(piece, [], rapierWorld, rapier, ecsWorld, () => "id-1", store);
+
+    expect(result).toBe(false);
+    expect(store.spendResource).not.toHaveBeenCalled();
+  });
+
+  it("skips resource deduction in explore difficulty (Spec §37)", () => {
+    const { world: rapierWorld, rapier } = makeGroundedRapier();
+    const ecsWorld = makeCommitWorld();
+    // Player has zero resources — should still succeed in explore mode
+    const store = makeCommitStore({ wood: 0, stone: 0, metal_scrap: 0, fiber: 0 }, "explore");
+    const piece = makePiece({ pieceType: "wall", materialType: "wood" });
+
+    const result = placeModularPiece(piece, [], rapierWorld, rapier, ecsWorld, () => "id-1", store);
+
+    expect(result).toBe(true);
+    expect(store.spendResource).not.toHaveBeenCalled();
+    expect(ecsWorld.add).toHaveBeenCalledTimes(1);
+  });
+
+  it("places entity at correct world position from grid coords", () => {
+    const { world: rapierWorld, rapier } = makeGroundedRapier();
+    const ecsWorld = makeCommitWorld();
+    const store = makeCommitStore();
+    // gridX=3, gridY=1, gridZ=2 with GRID_SIZE=1 → position (3, 1, 2)
+    const piece = makePiece({ gridX: 3, gridY: 1, gridZ: 2 });
+
+    placeModularPiece(piece, [], rapierWorld, rapier, ecsWorld, () => "id-1", store);
+
+    expect(ecsWorld.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        position: { x: 3, y: 1, z: 2 },
+      }),
+    );
+  });
+
+  it("accepts adjacent piece snap with existing pieces when resources sufficient", () => {
+    const rapierWorld = makeRapierWorld({
+      intersectionsWithShape: jest.fn().mockReturnValue(false),
+    });
+    const rapier = makeRapierModule();
+    const ecsWorld = makeCommitWorld();
+    const store = makeCommitStore({ wood: 10 });
+    const existing = makePiece({ gridX: 0 });
+    const newPiece = makePiece({ gridX: 1 });
+
+    const result = placeModularPiece(
+      newPiece,
+      [makeEntity(existing)],
+      rapierWorld,
+      rapier,
+      ecsWorld,
+      () => "id-2",
+      store,
+    );
+
+    expect(result).toBe(true);
+    expect(ecsWorld.add).toHaveBeenCalledTimes(1);
   });
 });

@@ -12,12 +12,10 @@ describe("supply/demand system", () => {
     it("creates fresh state with neutral multipliers", () => {
       const state = initializeMarketState();
       expect(state.tradeHistory).toEqual([]);
-      expect(state.priceMultipliers).toEqual({
-        timber: 1.0,
-        sap: 1.0,
-        fruit: 1.0,
-        acorns: 1.0,
-      });
+      // All resource multipliers start at 1.0 (neutral price)
+      for (const mult of Object.values(state.priceMultipliers)) {
+        expect(mult).toBe(1.0);
+      }
       expect(state.lastUpdateDay).toBe(0);
     });
   });
@@ -25,12 +23,9 @@ describe("supply/demand system", () => {
   describe("computePriceMultipliers", () => {
     it("returns 1.0 for all resources with no history", () => {
       const multipliers = computePriceMultipliers([], 10);
-      expect(multipliers).toEqual({
-        timber: 1.0,
-        sap: 1.0,
-        fruit: 1.0,
-        acorns: 1.0,
-      });
+      for (const mult of Object.values(multipliers)) {
+        expect(mult).toBe(1.0);
+      }
     });
 
     it("buying raises the price multiplier", () => {

@@ -1,5 +1,6 @@
 import type { SerializedTree } from "./gameStore";
 import { levelFromXp, totalXpForLevel, useGameStore, xpToNext } from "./gameStore";
+import { emptyResources } from "@/game/config/resources";
 
 describe("Game Store", () => {
   beforeEach(() => {
@@ -80,12 +81,7 @@ describe("Game Store", () => {
   describe("Resource system", () => {
     it("starts with zero resources", () => {
       const state = useGameStore.getState();
-      expect(state.resources).toEqual({
-        timber: 0,
-        sap: 0,
-        fruit: 0,
-        acorns: 0,
-      });
+      expect(state.resources).toEqual(emptyResources());
     });
 
     it("addResource increases a specific resource", () => {
@@ -314,7 +310,7 @@ describe("Game Store", () => {
     it("expands from 12 to 16 when conditions met", () => {
       useGameStore.setState({
         level: 5,
-        resources: { timber: 100, sap: 50, fruit: 0, acorns: 0 },
+        resources: { ...emptyResources(), timber: 100, sap: 50 },
       });
       const result = useGameStore.getState().expandGrid();
       expect(result).toBe(true);
@@ -324,7 +320,7 @@ describe("Game Store", () => {
     it("deducts resources on expansion", () => {
       useGameStore.setState({
         level: 5,
-        resources: { timber: 200, sap: 100, fruit: 0, acorns: 0 },
+        resources: { ...emptyResources(), timber: 200, sap: 100 },
       });
       useGameStore.getState().expandGrid();
       const res = useGameStore.getState().resources;
@@ -335,7 +331,7 @@ describe("Game Store", () => {
     it("fails if insufficient level", () => {
       useGameStore.setState({
         level: 4,
-        resources: { timber: 1000, sap: 1000, fruit: 1000, acorns: 1000 },
+        resources: { ...emptyResources(), timber: 1000, sap: 1000, fruit: 1000, acorns: 1000 },
       });
       const result = useGameStore.getState().expandGrid();
       expect(result).toBe(false);
@@ -345,7 +341,7 @@ describe("Game Store", () => {
     it("fails if insufficient resources", () => {
       useGameStore.setState({
         level: 5,
-        resources: { timber: 50, sap: 50, fruit: 0, acorns: 0 },
+        resources: { ...emptyResources(), timber: 50, sap: 50 },
       });
       const result = useGameStore.getState().expandGrid();
       expect(result).toBe(false);
@@ -356,7 +352,7 @@ describe("Game Store", () => {
       useGameStore.setState({
         level: 99,
         gridSize: 32,
-        resources: { timber: 9999, sap: 9999, fruit: 9999, acorns: 9999 },
+        resources: { ...emptyResources(), timber: 9999, sap: 9999, fruit: 9999, acorns: 9999 },
       });
       const result = useGameStore.getState().expandGrid();
       expect(result).toBe(false);
@@ -366,7 +362,7 @@ describe("Game Store", () => {
     it("chain expands through multiple tiers", () => {
       useGameStore.setState({
         level: 20,
-        resources: { timber: 9999, sap: 9999, fruit: 9999, acorns: 9999 },
+        resources: { ...emptyResources(), timber: 9999, sap: 9999, fruit: 9999, acorns: 9999 },
       });
       useGameStore.getState().expandGrid();
       expect(useGameStore.getState().gridSize).toBe(16);
@@ -417,16 +413,11 @@ describe("Game Store", () => {
       useGameStore.setState({
         level: 25,
         xp: 99999,
-        resources: { timber: 9999, sap: 9999, fruit: 9999, acorns: 9999 },
+        resources: { ...emptyResources(), timber: 9999, sap: 9999, fruit: 9999, acorns: 9999 },
       });
       useGameStore.getState().performPrestige();
       const state = useGameStore.getState();
-      expect(state.resources).toEqual({
-        timber: 0,
-        sap: 0,
-        fruit: 0,
-        acorns: 0,
-      });
+      expect(state.resources).toEqual(emptyResources());
       expect(state.seeds).toEqual({ "white-oak": 10 });
     });
 
@@ -445,12 +436,7 @@ describe("Game Store", () => {
       useGameStore.setState({
         level: 25,
         xp: 99999,
-        lifetimeResources: {
-          timber: 5000,
-          sap: 3000,
-          fruit: 2000,
-          acorns: 1000,
-        },
+        lifetimeResources: { ...emptyResources(), timber: 5000, sap: 3000, fruit: 2000, acorns: 1000 },
       });
       useGameStore.getState().performPrestige();
       expect(useGameStore.getState().lifetimeResources.timber).toBe(5000);
@@ -687,7 +673,7 @@ describe("Game Store", () => {
 
     it("upgradeToolTier succeeds with sufficient resources", () => {
       useGameStore.setState({
-        resources: { timber: 100, sap: 50, fruit: 50, acorns: 50 },
+        resources: { ...emptyResources(), timber: 100, sap: 50, fruit: 50, acorns: 50 },
       });
       const result = useGameStore.getState().upgradeToolTier("trowel");
       expect(result).toBe(true);
@@ -696,7 +682,7 @@ describe("Game Store", () => {
 
     it("upgradeToolTier deducts resources", () => {
       useGameStore.setState({
-        resources: { timber: 100, sap: 100, fruit: 50, acorns: 50 },
+        resources: { ...emptyResources(), timber: 100, sap: 100, fruit: 50, acorns: 50 },
       });
       useGameStore.getState().upgradeToolTier("trowel");
       expect(useGameStore.getState().resources.timber).toBeLessThan(100);

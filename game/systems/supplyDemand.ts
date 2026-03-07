@@ -36,7 +36,16 @@ const MAX_MULTIPLIER = 2.5;
 // -- Helpers ──────────────────────────────────────────────────────────────────
 
 function defaultMultipliers(): Record<ResourceType, number> {
-  return { timber: 1.0, sap: 1.0, fruit: 1.0, acorns: 1.0 };
+  return {
+    timber: 1.0,
+    sap: 1.0,
+    fruit: 1.0,
+    acorns: 1.0,
+    wood: 1.0,
+    stone: 1.0,
+    metal_scrap: 1.0,
+    fiber: 1.0,
+  };
 }
 
 function clamp(value: number, min: number, max: number): number {

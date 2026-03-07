@@ -8,6 +8,7 @@ import {
   getUnlockedPrestigeSpecies,
   PRESTIGE_MIN_LEVEL,
 } from "./prestige";
+import { emptyResources } from "@/game/config/resources";
 
 describe("prestige system", () => {
   describe("canPrestige", () => {
@@ -161,12 +162,7 @@ describe("prestige system", () => {
       const state = getPrestigeResetState();
       expect(state.level).toBe(1);
       expect(state.xp).toBe(0);
-      expect(state.resources).toEqual({
-        timber: 0,
-        sap: 0,
-        fruit: 0,
-        acorns: 0,
-      });
+      expect(state.resources).toEqual(emptyResources());
     });
 
     it("gives 10 white-oak seeds", () => {

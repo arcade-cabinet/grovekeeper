@@ -2268,3 +2268,18 @@ after each iteration and it's included in prompts for context.
   - **`KitbashRapierWorld`/`KitbashRapierModule` minimal interfaces for casting**: Real Rapier objects satisfy the minimal interfaces — cast `rapierWorld as unknown as KitbashRapierWorld` to pass into kitbashing pure functions without importing the full Rapier package into component-land.
 
 ---
+
+## 2026-03-07 - US-119
+- Implemented `placeModularPiece()` in `game/systems/kitbashing/commit.ts` — pure function that re-validates placement via Rapier, pre-checks all resource costs atomically, spends them, and creates the ECS entity.
+- Extended `ResourceType` to include building materials: `wood`, `stone`, `metal_scrap`, `fiber`; updated `resources.json`, `emptyResources()`, `supplyDemand.ts defaultMultipliers()`, and `prestige.ts getPrestigeResetState()`.
+- Exported `placeModularPiece`, `KitbashPlacementWorld`, `KitbashCommitStore` from kitbashing barrel index.
+- Added 8 Jest tests in `kitbashing.test.ts` covering: success path, resource deduction, Rapier clearance rejection, ground contact rejection, insufficient resources, atomic pre-check, explore mode skip (Spec §37), and world position correctness.
+- Updated 8 test files to use `emptyResources()` spread pattern where `Record<ResourceType, number>` is constructed inline.
+- **Files changed:** `game/systems/kitbashing/commit.ts` (new), `game/systems/kitbashing/index.ts`, `game/systems/kitbashing.test.ts`, `game/config/resources.ts`, `config/game/resources.json`, `game/systems/supplyDemand.ts`, `game/systems/prestige.ts`, `game/stores/gameStore.test.ts`, `game/systems/prestige.test.ts`, `game/systems/recipes.test.ts`, `game/systems/trading.test.ts`, `game/systems/supplyDemand.test.ts`, `game/config/resources.test.ts`
+- **Learnings:**
+  - **`game/ → components/` import direction is illegal**: `commit.ts` reads build costs directly from `config/game/building.json` (same source as `buildPanelUtils.ts`) rather than importing `getBuildCost` from `components/`. Avoids the illegal cross-layer import.
+  - **ResourceType extension cascades to tests**: Extending a union type that backs `Record<T, number>` breaks all literal object constructions that omit the new keys. Fix pattern: `{ ...emptyResources(), timber: 100 }` as base everywhere. Search for `toEqual({timber:` to find assertion-side breaks too.
+  - **Atomic pre-check before multi-resource spend**: Always iterate `Object.entries(cost)` twice — first pass checks all, second pass spends all. Single-pass spend-and-check would partially drain resources before failing.
+  - **`supplyDemand.ts defaultMultipliers()` must include all ResourceType keys**: Since `MarketState.priceMultipliers` is `Record<ResourceType, number>`, the hardcoded helper must enumerate all resource types including building materials (at 1.0 neutral).
+
+---

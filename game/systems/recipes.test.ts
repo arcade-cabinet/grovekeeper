@@ -1,4 +1,5 @@
 import type { ResourceType } from "@/game/config/resources";
+import { emptyResources } from "@/game/config/resources";
 import {
   calculateCraftCost,
   canCraft,
@@ -96,13 +97,7 @@ describe("recipes system", () => {
   describe("canCraft", () => {
     const makeResources = (
       overrides: Partial<Record<ResourceType, number>> = {},
-    ): Record<ResourceType, number> => ({
-      timber: 0,
-      sap: 0,
-      fruit: 0,
-      acorns: 0,
-      ...overrides,
-    });
+    ): Record<ResourceType, number> => ({ ...emptyResources(), ...overrides });
 
     it("returns true when player has enough resources", () => {
       const recipe = getRecipeById("refine-timber")!; // needs 8 timber

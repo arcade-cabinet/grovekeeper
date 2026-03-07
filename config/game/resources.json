@@ -1,9 +1,13 @@
 {
-  "types": ["timber", "sap", "fruit", "acorns"],
+  "types": ["timber", "sap", "fruit", "acorns", "wood", "stone", "metal_scrap", "fiber"],
   "info": {
     "timber": { "name": "Timber", "icon": "tree" },
     "sap": { "name": "Sap", "icon": "droplet" },
     "fruit": { "name": "Fruit", "icon": "apple" },
-    "acorns": { "name": "Acorns", "icon": "nut" }
+    "acorns": { "name": "Acorns", "icon": "nut" },
+    "wood": { "name": "Wood", "icon": "log" },
+    "stone": { "name": "Stone", "icon": "pebble" },
+    "metal_scrap": { "name": "Metal Scrap", "icon": "gear" },
+    "fiber": { "name": "Fiber", "icon": "leaf" }
   }
 }

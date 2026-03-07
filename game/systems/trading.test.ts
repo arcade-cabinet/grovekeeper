@@ -1,4 +1,5 @@
 import type { ResourceType } from "@/game/config/resources";
+import { emptyResources } from "@/game/config/resources";
 import { BASE_TRADE_RATES, calculateTradeOutput, executeTrade, getTradeRates } from "./trading";
 
 describe("trading system", () => {
@@ -58,13 +59,7 @@ describe("trading system", () => {
 
     const makeResources = (
       overrides: Partial<Record<ResourceType, number>> = {},
-    ): Record<ResourceType, number> => ({
-      timber: 0,
-      sap: 0,
-      fruit: 0,
-      acorns: 0,
-      ...overrides,
-    });
+    ): Record<ResourceType, number> => ({ ...emptyResources(), ...overrides });
 
     it("returns spend and gain for a valid trade", () => {
       const result = executeTrade(timberToSap, 10, makeResources({ timber: 100 }));

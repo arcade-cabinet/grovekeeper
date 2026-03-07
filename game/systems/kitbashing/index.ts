@@ -17,3 +17,5 @@ export {
   checkGroundContact,
   validatePlacementWithRapier,
 } from "./rapier";
+export type { KitbashPlacementWorld, KitbashCommitStore } from "./commit";
+export { placeModularPiece } from "./commit";

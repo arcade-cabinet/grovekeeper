@@ -7,8 +7,8 @@ describe("resources config", () => {
       expect(RESOURCE_TYPES.length).toBeGreaterThan(0);
     });
 
-    it("contains exactly 4 resource types", () => {
-      expect(RESOURCE_TYPES.length).toBe(4);
+    it("contains exactly 8 resource types", () => {
+      expect(RESOURCE_TYPES.length).toBe(8);
     });
 
     it("contains timber, sap, fruit, and acorns", () => {
@@ -66,12 +66,10 @@ describe("resources config", () => {
   describe("emptyResources", () => {
     it("returns an object with all resources set to 0", () => {
       const empty = emptyResources();
-      expect(empty).toEqual({
-        timber: 0,
-        sap: 0,
-        fruit: 0,
-        acorns: 0,
-      });
+      for (const value of Object.values(empty)) {
+        expect(value).toBe(0);
+      }
+      expect(Object.values(empty).length).toBeGreaterThan(0);
     });
 
     it("returns a new object each time (not shared reference)", () => {
@@ -88,9 +86,9 @@ describe("resources config", () => {
       expect(b.timber).toBe(0);
     });
 
-    it("has exactly 4 keys", () => {
+    it("has exactly 8 keys", () => {
       const empty = emptyResources();
-      expect(Object.keys(empty).length).toBe(4);
+      expect(Object.keys(empty).length).toBe(8);
     });
   });
 });
