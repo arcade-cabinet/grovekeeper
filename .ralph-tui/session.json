@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T17:43:09.325Z",
-  "currentIteration": 113,
+  "updatedAt": "2026-03-07T17:53:34.400Z",
+  "currentIteration": 114,
   "maxIterations": 0,
-  "tasksCompleted": 113,
+  "tasksCompleted": 114,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -694,8 +694,8 @@
       {
         "id": "US-114",
         "title": "Wire dialogue effects to quest advancement",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-115",
@@ -2171,6 +2171,16 @@
       "durationMs": 676692,
       "startedAt": "2026-03-07T17:27:46.130Z",
       "endedAt": "2026-03-07T17:39:02.822Z"
+    },
+    {
+      "iteration": 114,
+      "status": "completed",
+      "taskId": "US-114",
+      "taskTitle": "Wire dialogue effects to quest advancement",
+      "taskCompleted": true,
+      "durationMs": 245376,
+      "startedAt": "2026-03-07T17:39:03.947Z",
+      "endedAt": "2026-03-07T17:43:09.323Z"
     }
   ],
   "skippedTaskIds": [],

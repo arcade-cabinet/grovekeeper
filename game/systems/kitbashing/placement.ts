@@ -1,24 +1,20 @@
 /**
- * Kitbashing system -- Fallout-style modular base building.
- *
- * Players snap modular pieces (walls, floors, roofs, pillars) together
- * on a coarse 1-unit grid. Pieces connect via snap points. Progressive
- * unlock by player level: wood L5, stone L10, metal L15, decorative L20.
+ * Kitbashing placement logic -- snap point detection and grid validation.
+ * Pure functions, no physics engine dependency. Spec §35.1.
  */
 
-import type { Entity } from "../ecs/world";
+import type { Entity } from "../../ecs/world";
 import type {
   ModularPieceComponent,
-  PieceType,
   SnapDirection,
   SnapPoint,
-} from "../ecs/components/building";
-import buildingConfig from "../../config/game/building.json";
+} from "../../ecs/components/building";
+import buildingConfig from "../../../config/game/building.json";
 
-const GRID_SIZE: number = buildingConfig.gridSize;
+export const GRID_SIZE: number = buildingConfig.gridSize;
 
 /** Opposite snap direction for matching connections. */
-const OPPOSITE_DIRECTION: Record<SnapDirection, SnapDirection> = {
+export const OPPOSITE_DIRECTION: Record<SnapDirection, SnapDirection> = {
   up: "down",
   down: "up",
   north: "south",
@@ -28,7 +24,7 @@ const OPPOSITE_DIRECTION: Record<SnapDirection, SnapDirection> = {
 };
 
 /** Check if two positions are within tolerance for snapping. */
-function positionsMatch(
+export function positionsMatch(
   a: { x: number; y: number; z: number },
   b: { x: number; y: number; z: number },
   tolerance: number,
@@ -41,7 +37,7 @@ function positionsMatch(
 }
 
 /** Convert a snap point from local piece space to world space. */
-function snapPointToWorld(
+export function snapPointToWorld(
   snap: SnapPoint,
   piece: ModularPieceComponent,
 ): { x: number; y: number; z: number } {
@@ -56,7 +52,7 @@ function snapPointToWorld(
 }
 
 /** Rotate a snap direction by the piece's rotation. */
-function rotateDirection(
+export function rotateDirection(
   direction: SnapDirection,
   rotation: 0 | 90 | 180 | 270,
 ): SnapDirection {
@@ -116,10 +112,8 @@ export function validatePlacement(
   piece: ModularPieceComponent,
   existingPieces: Entity[],
 ): boolean {
-  // First piece can go anywhere
   if (existingPieces.length === 0) return true;
 
-  // Check collision -- no two pieces at same grid position with same type
   for (const entity of existingPieces) {
     if (!entity.modularPiece) continue;
     const placed = entity.modularPiece;
@@ -134,7 +128,6 @@ export function validatePlacement(
     }
   }
 
-  // Must snap to at least one existing piece
   const snapTolerance = GRID_SIZE * 0.1;
   let hasConnection = false;
 
@@ -166,54 +159,4 @@ export function validatePlacement(
   }
 
   return hasConnection;
-}
-
-/**
- * Calculate the total base value of all pieces in a structure.
- * Higher base value attracts stronger raids in survival mode.
- */
-export function calculateBaseValue(pieces: Entity[]): number {
-  const pieceValues = buildingConfig.pieceValues as Record<string, number>;
-  let total = 0;
-
-  for (const entity of pieces) {
-    if (!entity.modularPiece) continue;
-    const value = pieceValues[entity.modularPiece.pieceType] ?? 0;
-    total += value;
-  }
-
-  return total;
-}
-
-/**
- * Get the list of piece types unlocked at the given player level.
- * Progressive unlock: wood L5, stone L10, metal L15, decorative L20.
- */
-export function getUnlockedPieces(playerLevel: number): PieceType[] {
-  const unlocks = buildingConfig.unlockLevels as Record<string, number>;
-  const unlocked: PieceType[] = [];
-
-  for (const [pieceType, requiredLevel] of Object.entries(unlocks)) {
-    if (playerLevel >= requiredLevel) {
-      unlocked.push(pieceType as PieceType);
-    }
-  }
-
-  return unlocked;
-}
-
-/**
- * Get the list of material types unlocked at the given player level.
- */
-export function getUnlockedMaterials(playerLevel: number): string[] {
-  const materialUnlocks = buildingConfig.materialUnlockLevels as Record<string, number>;
-  const unlocked: string[] = [];
-
-  for (const [material, requiredLevel] of Object.entries(materialUnlocks)) {
-    if (playerLevel >= requiredLevel) {
-      unlocked.push(material);
-    }
-  }
-
-  return unlocked;
 }

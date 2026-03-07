@@ -70,6 +70,24 @@ after each iteration and it's included in prompts for context.
 - **break after first trap hit per tick**: The inner enemy loop breaks immediately after the first in-range hit. This ensures one trigger per armed trap per frame. Without break, remaining enemies would be scanned inside an already-disarmed `if (trap.armed)` block.
 - **dialogueEffects as quest-only pure layer**: `applyDialogueEffects` only handles `start_quest` and `advance_quest` — other effect types (give_item, give_xp, etc.) are ignored and left to the UI/store caller. This keeps the function testable with just `initializeChainState` and no game store.
 - **Sequential effects ordering**: Effects in a DialogueNode's array apply left-to-right. A `start_quest` before `advance_quest` in the same array lets a single node begin a chain AND immediately advance an objective — enables "on-meet" quest starts.
+- **Rapier snap validation as pure functions with minimal interfaces**: Define `KitbashRapierWorld` and `KitbashRapierModule` minimal interfaces in the system file — no import of `useRapier` or `@react-three/rapier`. Functions accept them as plain parameters. Tests use `jest.fn()` mock objects cast with `as never`. Same pattern as `isGrounded` in `useJump.ts`.
+- **Clearance via `intersectionsWithShape`, ground contact via `castRay`**: Two distinct Rapier APIs for two distinct snap checks. `intersectionsWithShape(pos, rot, cuboid)` → overlap bool for clearance. `castRay(ray, maxToi, solid)` → hit or null for ground detection.
+- **Kitbashing subpackage decomposition**: When a system file exceeds 300 lines, split into `placement.ts` (pure snap math), `rapier.ts` (physics functions), `unlocks.ts` (progression), `index.ts` (barrel). The test file at `game/systems/kitbashing.test.ts` still resolves `"./kitbashing"` to the directory index automatically — no test path changes needed.
+
+---
+
+## 2026-03-07 - US-115
+- Decomposed `game/systems/kitbashing.ts` (219 lines) into a subpackage:
+  - `game/systems/kitbashing/placement.ts` (162 lines) — pure snap math: `getAvailableSnapPoints`, `validatePlacement`, helpers
+  - `game/systems/kitbashing/rapier.ts` (117 lines) — Rapier physics: `KitbashRapierWorld`, `KitbashRapierModule`, `checkSnapDirectionMatch`, `checkClearance`, `checkGroundContact`, `validatePlacementWithRapier`
+  - `game/systems/kitbashing/unlocks.ts` (57 lines) — `calculateBaseValue`, `getUnlockedPieces`, `getUnlockedMaterials`
+  - `game/systems/kitbashing/index.ts` (19 lines) — barrel re-export
+- Updated `game/systems/kitbashing.test.ts`: added 17 new tests for all 4 Rapier functions
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2928 tests pass (134 suites, +17 new tests)
+- **Learnings:**
+  - **Rapier snap validation as pure functions with minimal interfaces**: Define `KitbashRapierWorld` and `KitbashRapierModule` minimal interfaces — no import of `useRapier`. Functions accept them as plain parameters. Tests cast mock objects with `as never`. Same pattern as `isGrounded` in `useJump.ts`.
+  - **Clearance via `intersectionsWithShape`, ground contact via `castRay`**: Two distinct Rapier APIs for two distinct snap checks. `intersectionsWithShape(pos, rot, cuboid)` → overlap bool for clearance. `castRay(ray, maxToi, solid)` → hit or null for ground detection.
+  - **Kitbashing subpackage decomposition**: Adding ~100 lines pushed the 219-line file over the 300-line hard limit. Split into placement/rapier/unlocks + index barrel. Test file at `game/systems/kitbashing.test.ts` resolves `"./kitbashing"` to the directory index automatically — no test path changes needed.
 
 ---
 
