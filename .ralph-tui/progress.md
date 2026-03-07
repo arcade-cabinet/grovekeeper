@@ -46,6 +46,28 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-056
+- Implemented `game/world/waterPlacer.ts` — pure function placing water bodies at heightmap low points based on biome (Spec §31.2)
+- `findLocalMinima(heightmap, chunkSize, threshold)`: scans for cells strictly lower than all 8 neighbors and below threshold; skips edge cells
+- `computeFlowDirection(heightmap, x, z, chunkSize)`: central-difference gradient, negated for downhill flow, normalized to unit vector; flat terrain falls back to [1, 0]
+- `getBiomeWaterRule(biome)`: maps biome → `{probability, riverChance, streamChance}`; frozen-peaks=0%, wetlands=50% highest
+- `selectWaterType(rule, roll)`: normalized roll dispatch → river | stream | pond | null
+- `placeWaterBodies(worldSeed, chunkX, chunkZ, heightmap, biome)`: scoped RNG loop over minima, caps at MAX_WATER_BODIES_PER_CHUNK=2
+- **Files changed:**
+  - `game/world/waterPlacer.ts` — new: `LOW_POINT_THRESHOLD`, `MAX_WATER_BODIES_PER_CHUNK`, `WaterBodyPlacement`, `BiomeWaterRule`, `findLocalMinima`, `computeFlowDirection`, `getBiomeWaterRule`, `selectWaterType`, `placeWaterBodies`
+  - `game/world/waterPlacer.test.ts` — new: 30 tests across all 5 exports
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern waterPlacer` → 30 tests, 0 failures
+  - `npx jest --no-coverage` → 1944 tests, 0 failures (103 suites)
+- **Learnings:**
+  - **waterPlacer is a pure placement factory**: takes heightmap + biome, returns `WaterBodyPlacement[]`. ChunkManager calls `world.add()` with the result — no ECS imports needed in waterPlacer itself. Same injection pattern as `buildGerstnerUniforms`.
+  - **Local minima skip edges by design**: edge cells (x=0, x=15, z=0, z=15) have no full 8-neighbor ring; skipping them prevents rivers from snapping to chunk boundaries.
+  - **Central-difference gradient for flow**: `gx = (right - left) * 0.5`, `gz = (down - up) * 0.5`; negate both for downhill direction. Magnitude < 1e-6 → flat plateau fallback `[1, 0]`.
+  - **selectWaterType normalized dispatch**: `normalized = roll / rule.probability` within the placed band, then `if (normalized < riverChance) return "river"`. The probability threshold gates placement; the normalized value selects type. This keeps the two concerns separate and easy to unit test.
+
+---
+
 ## 2026-03-07 - US-054
 - Implemented splash and bubble particles for water interaction (Spec §36.1 + §31.2)
 - `detectWaterState(playerX, playerY, playerZ, waterBodies)`: pure function — "submerged" when Y ≤ water surface Y AND within horizontal footprint; "above" otherwise
