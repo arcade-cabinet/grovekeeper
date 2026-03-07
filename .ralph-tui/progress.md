@@ -1811,3 +1811,23 @@ after each iteration and it's included in prompts for context.
   - **collectCookedFood returns FoodComponent shape**: `modelPath: ""` is required because `FoodComponent` has that field, even for cooked results where no model path is relevant. Tests assert on `foodId`, `name`, `raw`, `saturation`, `healing` — not `modelPath`.
   - **Pure cooking system = trivially testable**: No ECS/R3F imports in cooking.ts means tests run in under 200ms with zero mocks.
 ---
+
+---
+
+## 2026-03-07 - US-095
+- Created `config/game/forging.json` — 3 smelt recipes (iron-ingot, charcoal, cut-stone) + 2 tool tier upgrades (basic→iron, iron→grovekeeper)
+- Created `game/systems/forging.ts` — 14 exported pure functions + 4 exported types:
+  - Smelt config: `getSmeltRecipes()`, `getSmeltRecipeById()`
+  - Smelt resource checks: `canSmelt()`, `deductSmeltCost()`
+  - Smelt slot progress: `createEmptySmeltSlot()`, `startSmelting()`, `advanceSmelting()`, `collectSmeltedItem()`
+  - Tool tier upgrades: `getToolTierUpgrade()`, `canUpgradeTool()`, `deductUpgradeCost()`, `applyTierUpgrade()`
+  - FPS interaction: `isForgeEntity()`, `getForgeInteractionLabel()`, `resolveForgeInteraction()`
+- Created `game/systems/forging.test.ts` — 43 tests covering all above
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2547 tests, 0 failures (122 suites, +43 new)
+- **Learnings:**
+  - **JSON cast with heterogeneous inputs: `as unknown as T[]`**: When a JSON config object has different keys per entry (e.g., recipe `inputs` have different resource keys), TypeScript infers a union of specific narrow types. `as T[]` fails with "neither type sufficiently overlaps". Use `as unknown as T[]` to bypass. The `Record<string, number>` interface vs the narrowly-inferred union is the source of the mismatch.
+  - **applyTierUpgrade baseEffectPower pattern**: Pass `baseEffectPower` (basic-tier value from tools.json) separately to `applyTierUpgrade`. Multiply by `upgrade.effectMultiplier` (absolute vs basic). Avoids drift from chaining upgrades on an already-multiplied value. Caller stores/passes the base, system applies math.
+  - **ForgeEntity minimal-interface for FPS**: `{ forge: { active: boolean } }` — single field. Type guard checks `"forge" in entity && forge !== null`. Matches CampfireEntity pattern from cooking.ts. Pure functions, no ECS imports.
+  - **SmeltStatus omits "failed"**: Unlike cooking (which can fail if campfire goes out), smelting always completes once started. Three states only: idle/smelting/done. Simpler state machine, cleaner tests.

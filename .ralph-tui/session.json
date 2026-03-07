@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T16:01:19.885Z",
-  "currentIteration": 93,
+  "updatedAt": "2026-03-07T16:09:07.672Z",
+  "currentIteration": 94,
   "maxIterations": 0,
-  "tasksCompleted": 93,
+  "tasksCompleted": 94,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -574,8 +574,8 @@
       {
         "id": "US-094",
         "title": "Write Jest tests for cooking",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-095",
@@ -1971,6 +1971,16 @@
       "durationMs": 220481,
       "startedAt": "2026-03-07T15:56:31.260Z",
       "endedAt": "2026-03-07T16:00:11.741Z"
+    },
+    {
+      "iteration": 94,
+      "status": "completed",
+      "taskId": "US-094",
+      "taskTitle": "Write Jest tests for cooking",
+      "taskCompleted": true,
+      "durationMs": 67012,
+      "startedAt": "2026-03-07T16:00:12.871Z",
+      "endedAt": "2026-03-07T16:01:19.883Z"
     }
   ],
   "skippedTaskIds": [],
