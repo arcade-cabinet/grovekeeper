@@ -35,6 +35,8 @@ import {
   startChain,
 } from "@/game/quests/questChainEngine";
 import type { QuestChainState } from "@/game/quests/types";
+import { applyDialogueEffects } from "@/game/systems/dialogueEffects";
+import type { DialogueEffect } from "@/game/ecs/components/dialogue";
 import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import { checkNewUnlocks } from "@/game/systems/levelUnlocks";
 import {
@@ -715,6 +717,20 @@ const actions = {
     queueMicrotask(() => {
       showToast(`Quest step complete: ${result.stepDef?.name}`, "success");
     });
+  },
+
+  /**
+   * Apply dialogue effects from a visited dialogue node.
+   * Handles 'start_quest' and 'advance_quest' effect types.
+   * Other types (give_item, give_xp, etc.) are the caller's responsibility.
+   */
+  applyDialogueNodeEffects(effects: DialogueEffect[]): { chainId: string; stepId: string }[] {
+    const state = getState();
+    const result = applyDialogueEffects(effects, state.questChainState, state.currentDay);
+    if (result.state !== state.questChainState) {
+      gameState$.questChainState.set(result.state);
+    }
+    return result.completedSteps;
   },
 
   // Discovery actions

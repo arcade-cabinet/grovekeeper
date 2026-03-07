@@ -68,6 +68,8 @@ after each iteration and it's included in prompts for context.
 - **Trap cooldown in TrapComponent is runtime state**: `TrapComponent.cooldown` tracks *remaining* seconds (counts down to 0). Config stores `cooldownDuration` (the full reset value) in `config/game/traps.json` keyed by `trapType`. `triggerTrap()` reads config to set `cooldown = cooldownDuration`; no need for a second component field.
 - **Trap system reuses applyDamageToHealth from combat.ts**: traps automatically respect the 0.5s invuln window. `applyTrapDamageToHealth` just delegates to `applyDamageToHealth(health, trap.damage, "trap:<type>")`.
 - **break after first trap hit per tick**: The inner enemy loop breaks immediately after the first in-range hit. This ensures one trigger per armed trap per frame. Without break, remaining enemies would be scanned inside an already-disarmed `if (trap.armed)` block.
+- **dialogueEffects as quest-only pure layer**: `applyDialogueEffects` only handles `start_quest` and `advance_quest` — other effect types (give_item, give_xp, etc.) are ignored and left to the UI/store caller. This keeps the function testable with just `initializeChainState` and no game store.
+- **Sequential effects ordering**: Effects in a DialogueNode's array apply left-to-right. A `start_quest` before `advance_quest` in the same array lets a single node begin a chain AND immediately advance an objective — enables "on-meet" quest starts.
 
 ---
 
@@ -194,6 +196,27 @@ after each iteration and it's included in prompts for context.
   - **`has_relationship` value encoding**: The condition `value` field encodes both npcId and minValue as a colon-separated string (`"elder-rowan:25"`). Tests must cover the string-split parse path — a malformed value would produce `NaN` for minValue, which `>=` comparisons treat as `false`.
   - **Coverage gap from deferred testing**: `has_discovered` and `time_of_day` were fully implemented in `evaluateCondition` but had zero test coverage — discovered by reading all `case` branches vs the test file. Always audit every `switch` case against the test file.
   - **Test-as-documentation**: The `has_relationship` tests double as the primary documentation for the `"npcId:minValue"` encoding convention — no other comment in the codebase explains this format as clearly.
+
+---
+
+## 2026-03-07 - US-114
+- Created `game/systems/dialogueEffects.ts` — pure function `applyDialogueEffects(effects, state, currentDay)`
+  - Iterates effects array in order; handles `start_quest` (calls `startChain`) and `advance_quest` (calls `advanceObjectives`)
+  - Returns `{ state: QuestChainState, completedSteps: { chainId, stepId }[] }`
+  - Non-quest effect types (`give_item`, `give_xp`, etc.) are silently ignored — handled by other layers
+- Created `game/systems/dialogueEffects.test.ts` — 14 tests across 3 describe blocks
+  - `start_quest`: chain starts, unknown chain no-op, idempotent, no completedSteps, step 0 zero progress
+  - `advance_quest`: progress incremented, step completes, default amount=1, no-match no-op, wrong event type untouched
+  - Multiple effects: start+advance in order, empty array, non-quest types ignored, completedSteps collected
+- Updated `game/stores/gameStore.ts`:
+  - Added import `applyDialogueEffects` from `@/game/systems/dialogueEffects`
+  - Added import type `DialogueEffect` from `@/game/ecs/components/dialogue`
+  - Added action `applyDialogueNodeEffects(effects)` — thin store wrapper; sets `questChainState` only when changed
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2912 tests pass (134 suites, +14 new)
+- **Learnings:**
+  - **dialogueEffects as quest-only pure layer**: Other effect types (give_item, give_xp, unlock_species) are the UI/store caller's responsibility. Keeping this module quest-focused makes it independently testable with only `initializeChainState` as setup — no game store needed.
+  - **Sequential effect ordering matters**: Effects in a node's array are applied left-to-right. A `start_quest` before `advance_quest` in the same array lets a single dialogue node both begin a chain AND immediately credit the first objective (useful for "on-meet" quest starts).
+  - **Same-reference no-op propagation**: `startChain` returns the same state object if the chain is already active. `advanceObjectives` returns the same state if no objectives changed. The store action checks `result.state !== state.questChainState` before writing — no unnecessary Legend State updates.
 
 ---
 
