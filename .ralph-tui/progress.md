@@ -2482,3 +2482,14 @@ after each iteration and it's included in prompts for context.
   - **Tests co-located with implementation in same US**: US-131 wrote both `weatherParticles.ts` and `weatherParticles.test.ts`. US-132 (pure test story) was therefore pre-satisfied. Always verify stop condition first.
   - **Stop condition check**: When a test-only story comes after an implementation story that required tests, always run `npx jest --no-coverage --testPathPattern=<pattern>` first before writing anything.
 ---
+
+## 2026-03-07 - US-134
+- Work already complete — `game/systems/dayNight.test.ts` (73 tests) was written alongside `dayNight.ts` during US-133
+- All acceptance criteria met: 73 tests pass, `npx tsc --noEmit` → 0 errors
+- Tests cover: `computeGameHour` (wrap, precision), `classifyTimeOfDay` (all 8 slot boundaries), `computeSunAngle` (horizon/zenith/nadir), `computeStarIntensity` (day=0, night=1, twilight partial), `computeLighting` (colors, intensities, shadowOpacity per slot), `computeSeason` (7-day cycle, wrap), `initDayNight` (starting state), `tickDayNight` (hour advance, wrap+dayNumber, slot transitions, sky sync, season promotion)
+- Files changed: none (already implemented)
+- **Learnings:**
+  - **Pure-function architecture makes test stories trivial**: All logic extracted to pure functions with no Three.js/ECS deps means zero mocking overhead. The test file has no `jest.mock()` calls.
+  - **Same pattern as US-132**: Test-only stories (US-132, US-134) that follow implementation stories (US-131, US-133) should always check stop condition first — implementation stories in this project include tests as part of the work.
+  - **Slot boundary tests are high-value**: Tests for `h=5 → dawn` (hourStart inclusive) and `h=7 → morning` (exclusive from dawn) pin the config semantics so a future config edit is immediately caught.
+---

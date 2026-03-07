@@ -1,0 +1,108 @@
+# Iteration 133 Log
+
+## Metadata
+
+- **Task ID**: US-133
+- **Task Title**: Implement day/night cycle system
+- **Description**: As a player, I want 600s = 1 game day with sky darkening at night and brightening at dawn so that the grove has temporal atmosphere. Update DayNightComponent: gameHour, timeOfDay, lights. See GAME_SPE...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T19:31:08.230Z
+- **Ended At**: 2026-03-07T19:36:03.178Z
+- **Duration**: 4m 54s
+- **Input Tokens**: 105
+- **Output Tokens**: 18069
+- **Total Tokens**: 18174
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/procedural/atmosphere.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/dayNight*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/atmosphere.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Now let me read the relevant spec section and look at the weather system for patterns:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§12|§ 12|section 12|Day.Night|day.night cycle[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/weather*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/weather.ts[0m
+Now let me look at the config directory and the ambientAudio system as a pattern reference:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/ambientAudio.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 12\.|^### 12\.[0m
+Now let me check the ambientAudio.json config and weather tests for pattern reference:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/ambientAudio.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/weather.test.ts[0m
+Now I have enough context. Let me implement the day/night cycle system:
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The day/night system follows the same pure-function pattern as `weather.ts` and `ambientAudio.ts`: all tuning values in JSON config, exported pure functions with no Three.js/ECS imports so tests run without mocking, and a single `tick*` mutator that drives both `DayNightComponent` and `SkyComponent`.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/dayNight.json[0m "{
+  "dayLengthSeconds": 600,
+  "secondsPerHour": 25,
+  "daysPerSeason": 7,
+  "seasons": ["spring", "summer", "autumn", "winter"],
+  "timeSlots": {
+    "dawn":      { "hourStart": 5,  "hourEnd": 7  },
+... (2069 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dayNight.ts[0m "/**
+ * Day/Night Cycle System (Spec §31.3)
+ *
+ * 600 real seconds = 1 game day (24 game hours).
+ * Drives DayNightComponent and SkyComponent — ambient/directional light,
+ * sun angle, star intensity, ... (6585 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+`computeSunAngle` uses a cosine centered on noon (`cos(PI*(h-12)/12)`) — this is more accurate than a sine offset because it puts the peak naturally at h=12, horizon crossings at h=6 and h=18, and bottom at h=0/24. The formula scales by PI/2 so the zenith value matches the spec's stated maximum of PI/2 radians.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dayNight.test.ts[0m "/**
+ * Day/Night Cycle System tests (Spec §31.3)
+ *
+ * All tests operate on pure functions — no Three.js, R3F, or ECS needed.
+ */
+
+import {
+  classifyTimeOfDay,
+  computeGameHour,
+  computeLighting,
+ ... (13173 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run day/night cycle tests $ npx jest --no-coverage game/systems/dayNight.test.ts 2>&1 | tail -40
+73/73 passing, tsc clean. Let me also run the full suite to confirm nothing regressed:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -10
+[94m[TodoWrite][0m
+All checks pass. Now appending the progress log:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-130" → "---
+
+## 2026-03-07 - US-133
+- Implemented day/nigh..."
+`★ Insight ─────────────────────────────────────`
+The midnight slot is intentionally the fallthrough case in `classifyTimeOfDay` — it's the only slot that wraps across the 0/24 boundary ([23,24) ∪ [0,5)). Putting it as an explicit `if` would require two range checks; as the `return "midnight"` default it covers both sides cleanly. The time slot boundaries are all config-sourced so they can be tuned (e.g., extending dawn to 6h) without touching logic.
+`─────────────────────────────────────────────────`
+
+**US-133 complete.** Summary:
+
+| File | Role |
+|------|------|
+| `config/game/dayNight.json` | All tuning: 600s day, 8 slot boundaries, lighting tables, star intensity, season cycle |
+| `game/systems/dayNight.ts` | Pure functions + `tickDayNight` mutator |
+| `game/systems/dayNight.test.ts` | 73 tests — 100% pass |
+
+- `npx tsc --noEmit` → 0 errors  
+- `npx jest --no-coverage` → 3229 tests, 140 suites, all pass
+
+<promise>COMPLETE</promise>
