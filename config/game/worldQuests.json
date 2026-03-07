@@ -1,0 +1,714 @@
+[
+  {
+    "id": "withered-road",
+    "name": "The Withered Road",
+    "description": "A blighted trail runs through the outer groves. Trees wither and paths crumble where something dark lingers.",
+    "icon": "🛣️",
+    "unlockDistanceChunks": 5,
+    "prerequisiteSpirits": 0,
+    "involvedNpcIds": ["bramble", "botanist-fern", "elder-rowan"],
+    "variantSlots": [
+      {
+        "slotId": "primary-npc",
+        "options": [
+          {"optionId": "npc-a", "npcId": "bramble", "dialogueId": "bramble-greeting", "label": "Bramble"},
+          {"optionId": "npc-b", "npcId": "botanist-fern", "dialogueId": "fern-greeting", "label": "Botanist Fern"},
+          {"optionId": "npc-c", "npcId": "elder-rowan", "dialogueId": "rowan-greeting", "label": "Elder Rowan"}
+        ]
+      },
+      {
+        "slotId": "setting",
+        "options": [
+          {"optionId": "set-a", "label": "the burnt meadow"},
+          {"optionId": "set-b", "label": "the dry forest edge"},
+          {"optionId": "set-c", "label": "the cracked hillside"}
+        ]
+      },
+      {
+        "slotId": "opening",
+        "options": [
+          {"optionId": "open-a", "label": "a withered sapling"},
+          {"optionId": "open-b", "label": "a dying elder tree"},
+          {"optionId": "open-c", "label": "a strange blight pattern"}
+        ]
+      },
+      {
+        "slotId": "task-a",
+        "options": [
+          {"optionId": "ta-a", "targetType": "trees_watered", "targetAmount": 5, "label": "Water 5 withered trees"},
+          {"optionId": "ta-b", "targetType": "trees_harvested", "targetAmount": 3, "label": "Remove 3 blighted trees"},
+          {"optionId": "ta-c", "targetType": "trees_planted", "targetAmount": 5, "label": "Plant 5 replacement trees"}
+        ]
+      },
+      {
+        "slotId": "task-b",
+        "options": [
+          {"optionId": "tb-a", "targetType": "saplings_grown", "targetAmount": 5, "label": "Grow 5 saplings"},
+          {"optionId": "tb-b", "targetType": "mature_trees_grown", "targetAmount": 2, "label": "Grow 2 trees to Mature"},
+          {"optionId": "tb-c", "targetType": "unique_species_planted", "targetAmount": 3, "label": "Plant 3 different species"}
+        ]
+      },
+      {
+        "slotId": "reward-bonus",
+        "options": [
+          {"optionId": "rwrd-a", "bonusXp": 50, "label": "grove wisdom"},
+          {"optionId": "rwrd-b", "bonusTimber": 15, "label": "reclaimed timber"},
+          {"optionId": "rwrd-c", "bonusSap": 20, "label": "healing sap"}
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "wr-1",
+        "name": "Signs of Decay",
+        "description": "The grove is struggling. Investigate the blight.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-a",
+        "targetAmountSlot": "task-a"
+      },
+      {
+        "id": "wr-2",
+        "name": "The Healing Path",
+        "description": "Restore life to the withered grove.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-b",
+        "targetAmountSlot": "task-b"
+      },
+      {
+        "id": "wr-3",
+        "name": "Road Reborn",
+        "description": "Plant an anchor tree to seal the restoration.",
+        "npcSlot": "primary-npc",
+        "targetType": "ancient_trees_grown",
+        "targetAmount": 1
+      }
+    ],
+    "baseReward": {"xp": 300}
+  },
+  {
+    "id": "lost-village",
+    "name": "The Lost Village",
+    "description": "Overgrown ruins hold the memory of a settlement swallowed by forest. Someone is looking for answers.",
+    "icon": "🏚️",
+    "unlockDistanceChunks": 8,
+    "prerequisiteSpirits": 0,
+    "involvedNpcIds": ["hazel", "willow", "sage"],
+    "variantSlots": [
+      {
+        "slotId": "primary-npc",
+        "options": [
+          {"optionId": "npc-a", "npcId": "hazel", "dialogueId": "hazel-greeting", "label": "Hazel"},
+          {"optionId": "npc-b", "npcId": "willow", "dialogueId": "willow-greeting", "label": "Willow"},
+          {"optionId": "npc-c", "npcId": "sage", "dialogueId": "sage-greeting", "label": "Sage"}
+        ]
+      },
+      {
+        "slotId": "setting",
+        "options": [
+          {"optionId": "set-a", "label": "mossy ruins"},
+          {"optionId": "set-b", "label": "an overgrown clearing"},
+          {"optionId": "set-c", "label": "crumbling stone walls"}
+        ]
+      },
+      {
+        "slotId": "opening",
+        "options": [
+          {"optionId": "open-a", "label": "a carved stone marker"},
+          {"optionId": "open-b", "label": "a broken fence post"},
+          {"optionId": "open-c", "label": "an abandoned tool"}
+        ]
+      },
+      {
+        "slotId": "task-a",
+        "options": [
+          {"optionId": "ta-a", "targetType": "timber_collected", "targetAmount": 15, "label": "Collect 15 timber from the ruins"},
+          {"optionId": "ta-b", "targetType": "trees_harvested", "targetAmount": 5, "label": "Clear 5 overgrown trees"},
+          {"optionId": "ta-c", "targetType": "acorns_collected", "targetAmount": 20, "label": "Gather 20 acorns from old trees"}
+        ]
+      },
+      {
+        "slotId": "task-b",
+        "options": [
+          {"optionId": "tb-a", "targetType": "trees_planted", "targetAmount": 5, "label": "Plant 5 memorial trees"},
+          {"optionId": "tb-b", "targetType": "unique_species_planted", "targetAmount": 3, "label": "Plant 3 native species"},
+          {"optionId": "tb-c", "targetType": "trees_watered", "targetAmount": 8, "label": "Tend 8 forgotten trees"}
+        ]
+      },
+      {
+        "slotId": "reward-bonus",
+        "options": [
+          {"optionId": "rwrd-a", "bonusXp": 75, "label": "old knowledge"},
+          {"optionId": "rwrd-b", "bonusTimber": 20, "label": "salvaged timber"},
+          {"optionId": "rwrd-c", "bonusAcorns": 25, "label": "preserved acorns"}
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "lv-1",
+        "name": "Ruins of the Past",
+        "description": "Search the overgrown settlement for clues.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-a",
+        "targetAmountSlot": "task-a"
+      },
+      {
+        "id": "lv-2",
+        "name": "Reclaim the Ground",
+        "description": "Restore nature's balance to the abandoned land.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-b",
+        "targetAmountSlot": "task-b"
+      },
+      {
+        "id": "lv-3",
+        "name": "A Living Memorial",
+        "description": "Grow a mature tree to honour what was lost.",
+        "npcSlot": "primary-npc",
+        "targetType": "mature_trees_grown",
+        "targetAmount": 3
+      }
+    ],
+    "baseReward": {"xp": 400}
+  },
+  {
+    "id": "merchants-burden",
+    "name": "The Merchant's Burden",
+    "description": "A travelling merchant carries a cargo too heavy — not in weight, but in consequence. Help ease the load.",
+    "icon": "⚖️",
+    "unlockDistanceChunks": 12,
+    "prerequisiteSpirits": 0,
+    "involvedNpcIds": ["hazel", "thorn", "oakley"],
+    "variantSlots": [
+      {
+        "slotId": "primary-npc",
+        "options": [
+          {"optionId": "npc-a", "npcId": "hazel", "dialogueId": "hazel-greeting", "label": "Hazel"},
+          {"optionId": "npc-b", "npcId": "thorn", "dialogueId": "thorn-greeting", "label": "Thorn"},
+          {"optionId": "npc-c", "npcId": "oakley", "dialogueId": "oakley-greeting", "label": "Oakley"}
+        ]
+      },
+      {
+        "slotId": "setting",
+        "options": [
+          {"optionId": "set-a", "label": "a crossroads market"},
+          {"optionId": "set-b", "label": "a forest trade post"},
+          {"optionId": "set-c", "label": "a river crossing"}
+        ]
+      },
+      {
+        "slotId": "opening",
+        "options": [
+          {"optionId": "open-a", "label": "a broken cart wheel"},
+          {"optionId": "open-b", "label": "a missing delivery"},
+          {"optionId": "open-c", "label": "a disputed trade"}
+        ]
+      },
+      {
+        "slotId": "task-a",
+        "options": [
+          {"optionId": "ta-a", "targetType": "timber_collected", "targetAmount": 20, "label": "Gather 20 timber for repairs"},
+          {"optionId": "ta-b", "targetType": "sap_collected", "targetAmount": 25, "label": "Collect 25 sap for trade"},
+          {"optionId": "ta-c", "targetType": "fruit_collected", "targetAmount": 15, "label": "Harvest 15 fruit for the market"}
+        ]
+      },
+      {
+        "slotId": "task-b",
+        "options": [
+          {"optionId": "tb-a", "targetType": "trees_planted", "targetAmount": 4, "label": "Plant 4 marker trees along the route"},
+          {"optionId": "tb-b", "targetType": "structures_built", "targetAmount": 1, "label": "Build a resting shelter"},
+          {"optionId": "tb-c", "targetType": "mature_trees_grown", "targetAmount": 2, "label": "Grow 2 shade trees"}
+        ]
+      },
+      {
+        "slotId": "reward-bonus",
+        "options": [
+          {"optionId": "rwrd-a", "bonusXp": 60, "label": "trader's insight"},
+          {"optionId": "rwrd-b", "bonusFruit": 20, "label": "market surplus"},
+          {"optionId": "rwrd-c", "bonusSap": 25, "label": "trade goods"}
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "mb-1",
+        "name": "The Troubled Trade",
+        "description": "Help the merchant deal with their immediate problem.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-a",
+        "targetAmountSlot": "task-a"
+      },
+      {
+        "id": "mb-2",
+        "name": "Smooth the Route",
+        "description": "Improve the trade path through the grove.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-b",
+        "targetAmountSlot": "task-b"
+      },
+      {
+        "id": "mb-3",
+        "name": "Lasting Commerce",
+        "description": "Establish a grove waypoint for future travellers.",
+        "npcSlot": "primary-npc",
+        "targetType": "ancient_trees_grown",
+        "targetAmount": 1
+      }
+    ],
+    "baseReward": {"xp": 500}
+  },
+  {
+    "id": "keepers-memory",
+    "name": "The Keeper's Memory",
+    "description": "Fragments of an old Grovekeeper's life are scattered across the land. Recover their story before it fades.",
+    "icon": "📜",
+    "unlockDistanceChunks": 15,
+    "prerequisiteSpirits": 0,
+    "involvedNpcIds": ["sage", "willow", "elder-rowan"],
+    "variantSlots": [
+      {
+        "slotId": "primary-npc",
+        "options": [
+          {"optionId": "npc-a", "npcId": "sage", "dialogueId": "sage-greeting", "label": "Sage"},
+          {"optionId": "npc-b", "npcId": "willow", "dialogueId": "willow-greeting", "label": "Willow"},
+          {"optionId": "npc-c", "npcId": "elder-rowan", "dialogueId": "rowan-greeting", "label": "Elder Rowan"}
+        ]
+      },
+      {
+        "slotId": "setting",
+        "options": [
+          {"optionId": "set-a", "label": "ancient grove hollows"},
+          {"optionId": "set-b", "label": "a forgotten shrine"},
+          {"optionId": "set-c", "label": "carved stone circles"}
+        ]
+      },
+      {
+        "slotId": "opening",
+        "options": [
+          {"optionId": "open-a", "label": "a runic carving on bark"},
+          {"optionId": "open-b", "label": "seeds of an extinct species"},
+          {"optionId": "open-c", "label": "a spirit echo in the grove"}
+        ]
+      },
+      {
+        "slotId": "task-a",
+        "options": [
+          {"optionId": "ta-a", "targetType": "ancient_trees_grown", "targetAmount": 2, "label": "Grow 2 ancient trees"},
+          {"optionId": "ta-b", "targetType": "unique_species_planted", "targetAmount": 5, "label": "Plant 5 different species"},
+          {"optionId": "ta-c", "targetType": "trees_planted", "targetAmount": 10, "label": "Plant 10 memorial trees"}
+        ]
+      },
+      {
+        "slotId": "task-b",
+        "options": [
+          {"optionId": "tb-a", "targetType": "player_level", "targetAmount": 10, "label": "Reach level 10"},
+          {"optionId": "tb-b", "targetType": "mature_trees_grown", "targetAmount": 5, "label": "Grow 5 trees to Mature"},
+          {"optionId": "tb-c", "targetType": "trees_watered", "targetAmount": 15, "label": "Tend 15 old trees"}
+        ]
+      },
+      {
+        "slotId": "reward-bonus",
+        "options": [
+          {"optionId": "rwrd-a", "bonusXp": 100, "label": "keeper's wisdom"},
+          {"optionId": "rwrd-b", "bonusTimber": 25, "label": "ancient timber"},
+          {"optionId": "rwrd-c", "bonusAcorns": 30, "label": "heritage seeds"}
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "km-1",
+        "name": "Fragments of a Life",
+        "description": "Follow the trail of the old Grovekeeper.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-a",
+        "targetAmountSlot": "task-a"
+      },
+      {
+        "id": "km-2",
+        "name": "The Keeper's Grove",
+        "description": "Tend the trees as the old keeper once did.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-b",
+        "targetAmountSlot": "task-b"
+      },
+      {
+        "id": "km-3",
+        "name": "Memory in Wood",
+        "description": "Grow an old-growth tree to preserve the keeper's legacy.",
+        "npcSlot": "primary-npc",
+        "targetType": "ancient_trees_grown",
+        "targetAmount": 1
+      },
+      {
+        "id": "km-4",
+        "name": "Living Record",
+        "description": "Establish a grove worthy of the old keeper's memory.",
+        "npcSlot": "primary-npc",
+        "targetType": "unique_species_planted",
+        "targetAmount": 6
+      }
+    ],
+    "baseReward": {"xp": 600}
+  },
+  {
+    "id": "singing-stones",
+    "name": "The Singing Stones",
+    "description": "Strange tones rise from certain rocks at dawn. Those who know the grove say the stones remember songs long forgotten.",
+    "icon": "🪨",
+    "unlockDistanceChunks": 20,
+    "prerequisiteSpirits": 0,
+    "involvedNpcIds": ["ember", "sage", "botanist-fern"],
+    "variantSlots": [
+      {
+        "slotId": "primary-npc",
+        "options": [
+          {"optionId": "npc-a", "npcId": "ember", "dialogueId": "ember-greeting", "label": "Ember"},
+          {"optionId": "npc-b", "npcId": "sage", "dialogueId": "sage-greeting", "label": "Sage"},
+          {"optionId": "npc-c", "npcId": "botanist-fern", "dialogueId": "fern-greeting", "label": "Botanist Fern"}
+        ]
+      },
+      {
+        "slotId": "setting",
+        "options": [
+          {"optionId": "set-a", "label": "a stone circle clearing"},
+          {"optionId": "set-b", "label": "a resonant valley floor"},
+          {"optionId": "set-c", "label": "a clifftop grove"}
+        ]
+      },
+      {
+        "slotId": "opening",
+        "options": [
+          {"optionId": "open-a", "label": "a humming at sunrise"},
+          {"optionId": "open-b", "label": "a tree that vibrates in wind"},
+          {"optionId": "open-c", "label": "a pattern in fallen leaves"}
+        ]
+      },
+      {
+        "slotId": "task-a",
+        "options": [
+          {"optionId": "ta-a", "targetType": "unique_species_planted", "targetAmount": 5, "label": "Plant 5 resonant species"},
+          {"optionId": "ta-b", "targetType": "ancient_trees_grown", "targetAmount": 2, "label": "Grow 2 ancient trees near stones"},
+          {"optionId": "ta-c", "targetType": "trees_planted", "targetAmount": 8, "label": "Plant 8 trees in the pattern"}
+        ]
+      },
+      {
+        "slotId": "task-b",
+        "options": [
+          {"optionId": "tb-a", "targetType": "trees_watered", "targetAmount": 10, "label": "Tend 10 grove trees at dawn"},
+          {"optionId": "tb-b", "targetType": "sap_collected", "targetAmount": 30, "label": "Collect 30 sap from resonant trees"},
+          {"optionId": "tb-c", "targetType": "mature_trees_grown", "targetAmount": 4, "label": "Grow 4 trees to Mature"}
+        ]
+      },
+      {
+        "slotId": "reward-bonus",
+        "options": [
+          {"optionId": "rwrd-a", "bonusXp": 80, "label": "stone resonance"},
+          {"optionId": "rwrd-b", "bonusSap": 30, "label": "singing sap"},
+          {"optionId": "rwrd-c", "bonusFruit": 25, "label": "grove harmony fruits"}
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "ss-1",
+        "name": "Finding the Frequency",
+        "description": "Plant trees to amplify the stones' song.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-a",
+        "targetAmountSlot": "task-a"
+      },
+      {
+        "id": "ss-2",
+        "name": "Tuning the Grove",
+        "description": "Tend the grove until the song grows clear.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-b",
+        "targetAmountSlot": "task-b"
+      },
+      {
+        "id": "ss-3",
+        "name": "The Final Chord",
+        "description": "Grow an old-growth tree to complete the harmonic grove.",
+        "npcSlot": "primary-npc",
+        "targetType": "ancient_trees_grown",
+        "targetAmount": 1
+      }
+    ],
+    "baseReward": {"xp": 700}
+  },
+  {
+    "id": "frozen-garden",
+    "name": "The Frozen Garden",
+    "description": "A garden locked in perpetual chill holds trees that should not survive. Someone tended them once. Someone must again.",
+    "icon": "❄️",
+    "unlockDistanceChunks": 25,
+    "prerequisiteSpirits": 0,
+    "involvedNpcIds": ["bramble", "willow", "oakley"],
+    "variantSlots": [
+      {
+        "slotId": "primary-npc",
+        "options": [
+          {"optionId": "npc-a", "npcId": "bramble", "dialogueId": "bramble-greeting", "label": "Bramble"},
+          {"optionId": "npc-b", "npcId": "willow", "dialogueId": "willow-greeting", "label": "Willow"},
+          {"optionId": "npc-c", "npcId": "oakley", "dialogueId": "oakley-greeting", "label": "Oakley"}
+        ]
+      },
+      {
+        "slotId": "setting",
+        "options": [
+          {"optionId": "set-a", "label": "a frost-locked tundra grove"},
+          {"optionId": "set-b", "label": "a frozen riverbank"},
+          {"optionId": "set-c", "label": "an ice-sheeted clearing"}
+        ]
+      },
+      {
+        "slotId": "opening",
+        "options": [
+          {"optionId": "open-a", "label": "trees encased in frost"},
+          {"optionId": "open-b", "label": "a cracked frozen pond"},
+          {"optionId": "open-c", "label": "a warm patch of soil"}
+        ]
+      },
+      {
+        "slotId": "task-a",
+        "options": [
+          {"optionId": "ta-a", "targetType": "trees_watered", "targetAmount": 8, "label": "Thaw 8 frozen trees"},
+          {"optionId": "ta-b", "targetType": "trees_planted", "targetAmount": 6, "label": "Plant 6 cold-hardy trees"},
+          {"optionId": "ta-c", "targetType": "trees_harvested", "targetAmount": 4, "label": "Clear 4 dead frost-killed trees"}
+        ]
+      },
+      {
+        "slotId": "task-b",
+        "options": [
+          {"optionId": "tb-a", "targetType": "trees_survived_season", "targetAmount": 8, "label": "Keep 8 trees alive through winter"},
+          {"optionId": "tb-b", "targetType": "saplings_grown", "targetAmount": 6, "label": "Grow 6 hardy saplings"},
+          {"optionId": "tb-c", "targetType": "unique_species_planted", "targetAmount": 4, "label": "Plant 4 frost-resistant species"}
+        ]
+      },
+      {
+        "slotId": "reward-bonus",
+        "options": [
+          {"optionId": "rwrd-a", "bonusXp": 90, "label": "frost endurance"},
+          {"optionId": "rwrd-b", "bonusTimber": 30, "label": "preserved timber"},
+          {"optionId": "rwrd-c", "bonusSap": 35, "label": "antifreeze sap"}
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "fg-1",
+        "name": "Breaking the Freeze",
+        "description": "Help the frozen garden thaw.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-a",
+        "targetAmountSlot": "task-a"
+      },
+      {
+        "id": "fg-2",
+        "name": "Winter Resilience",
+        "description": "Establish trees that can survive the cold.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-b",
+        "targetAmountSlot": "task-b"
+      },
+      {
+        "id": "fg-3",
+        "name": "The Garden Lives",
+        "description": "Grow a mature tree to anchor the garden's rebirth.",
+        "npcSlot": "primary-npc",
+        "targetType": "mature_trees_grown",
+        "targetAmount": 3
+      }
+    ],
+    "baseReward": {"xp": 800}
+  },
+  {
+    "id": "wanderers-journal",
+    "name": "The Wanderer's Journal",
+    "description": "A weathered journal found far from home charts a path through groves no one has mapped. Follow the wanderer's footsteps.",
+    "icon": "📓",
+    "unlockDistanceChunks": 35,
+    "prerequisiteSpirits": 0,
+    "involvedNpcIds": ["sage", "thorn", "hazel"],
+    "variantSlots": [
+      {
+        "slotId": "primary-npc",
+        "options": [
+          {"optionId": "npc-a", "npcId": "sage", "dialogueId": "sage-greeting", "label": "Sage"},
+          {"optionId": "npc-b", "npcId": "thorn", "dialogueId": "thorn-greeting", "label": "Thorn"},
+          {"optionId": "npc-c", "npcId": "hazel", "dialogueId": "hazel-greeting", "label": "Hazel"}
+        ]
+      },
+      {
+        "slotId": "setting",
+        "options": [
+          {"optionId": "set-a", "label": "uncharted deep forest"},
+          {"optionId": "set-b", "label": "a lost mountain trail"},
+          {"optionId": "set-c", "label": "an unmarked wetland path"}
+        ]
+      },
+      {
+        "slotId": "opening",
+        "options": [
+          {"optionId": "open-a", "label": "a page torn from the journal"},
+          {"optionId": "open-b", "label": "a hand-drawn map fragment"},
+          {"optionId": "open-c", "label": "a pressed leaf with symbols"}
+        ]
+      },
+      {
+        "slotId": "task-a",
+        "options": [
+          {"optionId": "ta-a", "targetType": "unique_species_planted", "targetAmount": 6, "label": "Document 6 species in the grove"},
+          {"optionId": "ta-b", "targetType": "ancient_trees_grown", "targetAmount": 3, "label": "Find 3 ancient trees on the route"},
+          {"optionId": "ta-c", "targetType": "trees_planted", "targetAmount": 12, "label": "Mark 12 waypoints with trees"}
+        ]
+      },
+      {
+        "slotId": "task-b",
+        "options": [
+          {"optionId": "tb-a", "targetType": "timber_collected", "targetAmount": 30, "label": "Gather 30 timber for camp building"},
+          {"optionId": "tb-b", "targetType": "sap_collected", "targetAmount": 40, "label": "Collect 40 sap for preservation"},
+          {"optionId": "tb-c", "targetType": "fruit_collected", "targetAmount": 25, "label": "Harvest 25 fruit for provisions"}
+        ]
+      },
+      {
+        "slotId": "reward-bonus",
+        "options": [
+          {"optionId": "rwrd-a", "bonusXp": 120, "label": "explorer's knowledge"},
+          {"optionId": "rwrd-b", "bonusTimber": 35, "label": "wilderness timber"},
+          {"optionId": "rwrd-c", "bonusFruit": 30, "label": "wild harvest"}
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "wj-1",
+        "name": "Tracing the Path",
+        "description": "Follow the journal's route through the wilderness.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-a",
+        "targetAmountSlot": "task-a"
+      },
+      {
+        "id": "wj-2",
+        "name": "Stocking the Journey",
+        "description": "Gather supplies for the long expedition ahead.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-b",
+        "targetAmountSlot": "task-b"
+      },
+      {
+        "id": "wj-3",
+        "name": "The Final Entry",
+        "description": "Complete the wanderer's unfinished grove.",
+        "npcSlot": "primary-npc",
+        "targetType": "ancient_trees_grown",
+        "targetAmount": 2
+      },
+      {
+        "id": "wj-4",
+        "name": "A New Chapter",
+        "description": "Plant a grove to mark where the journey ends.",
+        "npcSlot": "primary-npc",
+        "targetType": "unique_species_planted",
+        "targetAmount": 8
+      }
+    ],
+    "baseReward": {"xp": 1000}
+  },
+  {
+    "id": "worldroots-dream",
+    "name": "The Worldroot's Dream",
+    "description": "All eight spirits stir. The Worldroot stirs from its long sleep. The grove calls its Keeper to answer at last.",
+    "icon": "🌳",
+    "unlockDistanceChunks": 50,
+    "prerequisiteSpirits": 8,
+    "involvedNpcIds": ["elder-rowan", "sage", "bramble", "botanist-fern", "hazel", "oakley", "willow", "thorn", "ember"],
+    "variantSlots": [
+      {
+        "slotId": "primary-npc",
+        "options": [
+          {"optionId": "npc-a", "npcId": "elder-rowan", "dialogueId": "rowan-worldtree", "label": "Elder Rowan"},
+          {"optionId": "npc-b", "npcId": "sage", "dialogueId": "sage-worldtree-lore", "label": "Sage"},
+          {"optionId": "npc-c", "npcId": "bramble", "dialogueId": "bramble-greeting", "label": "Bramble"}
+        ]
+      },
+      {
+        "slotId": "setting",
+        "options": [
+          {"optionId": "set-a", "label": "the Worldroot sanctum"},
+          {"optionId": "set-b", "label": "the heart of the ancient grove"},
+          {"optionId": "set-c", "label": "the convergence of all paths"}
+        ]
+      },
+      {
+        "slotId": "opening",
+        "options": [
+          {"optionId": "open-a", "label": "all eight spirits singing in unison"},
+          {"optionId": "open-b", "label": "the ground trembling with roots"},
+          {"optionId": "open-c", "label": "a blinding light from deep forest"}
+        ]
+      },
+      {
+        "slotId": "task-a",
+        "options": [
+          {"optionId": "ta-a", "targetType": "ancient_trees_grown", "targetAmount": 5, "label": "Grow 5 ancient trees at the sanctum"},
+          {"optionId": "ta-b", "targetType": "unique_species_planted", "targetAmount": 10, "label": "Plant 10 sacred species"},
+          {"optionId": "ta-c", "targetType": "trees_planted", "targetAmount": 20, "label": "Plant 20 grove anchor trees"}
+        ]
+      },
+      {
+        "slotId": "task-b",
+        "options": [
+          {"optionId": "tb-a", "targetType": "player_level", "targetAmount": 20, "label": "Reach level 20"},
+          {"optionId": "tb-b", "targetType": "trees_survived_season", "targetAmount": 20, "label": "Keep 20 trees through a full season"},
+          {"optionId": "tb-c", "targetType": "mature_trees_grown", "targetAmount": 10, "label": "Grow 10 trees to Mature"}
+        ]
+      },
+      {
+        "slotId": "reward-bonus",
+        "options": [
+          {"optionId": "rwrd-a", "bonusXp": 500, "label": "Worldroot blessing"},
+          {"optionId": "rwrd-b", "bonusTimber": 100, "label": "ancient timber"},
+          {"optionId": "rwrd-c", "bonusSap": 100, "label": "worldsap"}
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "id": "wrd-1",
+        "name": "The Worldroot Stirs",
+        "description": "Journey to the Worldroot's sanctum and prepare the grove.",
+        "npcSlot": "primary-npc",
+        "targetType": "worldroot_reached",
+        "targetAmount": 1
+      },
+      {
+        "id": "wrd-2",
+        "name": "The Keeper's Offering",
+        "description": "Plant the great grove the Worldroot demands.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-a",
+        "targetAmountSlot": "task-a"
+      },
+      {
+        "id": "wrd-3",
+        "name": "Worthy of the Dream",
+        "description": "Prove yourself worthy of the Worldroot's gift.",
+        "npcSlot": "primary-npc",
+        "targetTypeSlot": "task-b",
+        "targetAmountSlot": "task-b"
+      },
+      {
+        "id": "wrd-4",
+        "name": "The Dream Fulfilled",
+        "description": "Grow the final anchor tree to bind the grove to the Worldroot forever.",
+        "npcSlot": "primary-npc",
+        "targetType": "ancient_trees_grown",
+        "targetAmount": 3
+      }
+    ],
+    "baseReward": {"xp": 2000}
+  }
+]

@@ -2083,3 +2083,28 @@ after each iteration and it's included in prompts for context.
   - **Condition value encoding as "npcId:threshold"**: The `DialogueCondition.value` field is `string | number`. For compound conditions (npcId + threshold), encode as `"elder-rowan:25"` and split on `:` in the evaluator. Simple and avoids widening the interface.
   - **Pure system + store split**: The system (`npcRelationship.ts`) is fully engine-agnostic pure functions. The store holds the mutable state and delegates to the pure functions. This makes all 34 relationship tests run in <0.3s with zero mocking.
 ---
+
+## 2026-03-07 - US-109
+- Implemented 8 world quest templates with seed-driven variant selection (Spec §30)
+- Files changed:
+  - `config/game/worldQuests.json` — 8 world quest templates, each with 6 variant slots × 3 options = 729 combos per template
+  - `game/quests/worldQuestSystem.ts` — variant selection + quest resolution logic
+  - `game/quests/worldQuestSystem.test.ts` — 39 tests across 5 describe blocks
+- Templates (in unlock distance order):
+  1. `withered-road` (dist=5) — Bramble/Fern/Rowan
+  2. `lost-village` (dist=8) — Hazel/Willow/Sage
+  3. `merchants-burden` (dist=12) — Hazel/Thorn/Oakley
+  4. `keepers-memory` (dist=15) — Sage/Willow/Rowan
+  5. `singing-stones` (dist=20) — Ember/Sage/Fern
+  6. `frozen-garden` (dist=25) — Bramble/Willow/Oakley
+  7. `wanderers-journal` (dist=35) — Sage/Thorn/Hazel
+  8. `worldroots-dream` (dist=50 + 8 spirits) — All NPCs
+- Key exports: `resolveVariantSelections`, `resolveWorldQuest`, `isWorldQuestUnlocked`, `getUnlockedWorldQuests`
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2851 tests pass (132 suites)
+- **Learnings:**
+  - **World quest vs NPC chain system**: World quests are template-based (not run through `questChainEngine`). They live in `config/game/worldQuests.json` and are resolved at runtime via seed. NPC chains use `questChains.json` + `questChainEngine`. They compose only through the quest state machine (questEngine.ts).
+  - **scopedRNG scope key includes templateId**: `scopedRNG("world-quest", worldSeed, templateId)` ensures each template produces an independent RNG stream from the same world seed. Same seed across templates would correlate variant selections, making all templates feel the same.
+  - **6-slot JSON schema with npcSlot/targetTypeSlot refs**: Steps reference slot IDs (`npcSlot: "primary-npc"`, `targetTypeSlot: "task-a"`) rather than hardcoding values. The resolution function uses a `Map<slotId, selectedOption>` lookup to apply overrides. Steps with neither a slot ref nor a fixed value fall back to safe defaults (`"trees_planted"`, amount `1`).
+  - **Double-gate for worldroots-dream**: `isWorldQuestUnlocked` checks BOTH `maxChunkDistance >= 50` AND `discoveredSpiritCount >= 8`. The spirit count defaults to 0 (caller omission = never unlocked). This mirrors the same-object pattern from main quest system without coupling to it.
+
+---
