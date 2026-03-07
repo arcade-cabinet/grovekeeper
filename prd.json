@@ -2073,8 +2073,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 127,
-      "passes": false,
-      "notes": "Phase 9: Raids + NG+. achievements.ts is 401 lines — MUST decompose. AchievementPopup.tsx (309 lines) also exists."
+      "passes": true,
+      "notes": "Phase 9: Raids + NG+. achievements.ts is 401 lines — MUST decompose. AchievementPopup.tsx (309 lines) also exists.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-128",
@@ -2847,6 +2848,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T19:01:25.770Z"
+    "updatedAt": "2026-03-07T19:10:27.348Z"
   }
 }

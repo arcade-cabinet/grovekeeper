@@ -377,6 +377,9 @@ export function useGameLoop(): void {
         tradeCount: store.marketState.tradeHistory.length,
         festivalCount: store.eventState.completedFestivalIds.length,
         discoveryCount,
+        chunksVisited: store.discoveredZones.length,
+        biomesDiscovered: store.visitedZoneTypes.length,
+        spiritsDiscovered: store.discoveredSpiritIds.length,
       };
 
       const newAchievements = checkAchievements(stats, store.achievements);

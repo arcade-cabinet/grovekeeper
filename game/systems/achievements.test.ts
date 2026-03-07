@@ -24,14 +24,17 @@ function makeStats(overrides: Partial<PlayerStats> = {}): PlayerStats {
     tradeCount: 0,
     festivalCount: 0,
     discoveryCount: 0,
+    chunksVisited: 0,
+    biomesDiscovered: 0,
+    spiritsDiscovered: 0,
     ...overrides,
   };
 }
 
-describe("achievements system", () => {
+describe("achievements system (Spec §25)", () => {
   describe("ACHIEVEMENTS catalog", () => {
-    it("has 36 achievements total", () => {
-      expect(ACHIEVEMENTS).toHaveLength(36);
+    it("has 45 achievements total", () => {
+      expect(ACHIEVEMENTS).toHaveLength(45);
     });
 
     it("each achievement has a unique ID", () => {
@@ -209,6 +212,60 @@ describe("achievements system", () => {
       expect(earned).toContain("long-haul");
       expect(earned).toContain("century");
     });
+
+    it("detects chunk exploration achievements (Spec §25.3)", () => {
+      const stats = makeStats({ chunksVisited: 25 });
+      const earned = checkAchievements(stats, []);
+      expect(earned).toContain("first-chunk");
+      expect(earned).toContain("zone-explorer");
+      expect(earned).toContain("world-wanderer");
+    });
+
+    it("does not award chunk achievements when still in starting zone", () => {
+      const stats = makeStats({ chunksVisited: 1 });
+      const earned = checkAchievements(stats, []);
+      expect(earned).not.toContain("first-chunk");
+      expect(earned).not.toContain("zone-explorer");
+      expect(earned).not.toContain("world-wanderer");
+    });
+
+    it("detects spirit discovery achievements (Spec §32.3)", () => {
+      const stats = makeStats({ spiritsDiscovered: 8 });
+      const earned = checkAchievements(stats, []);
+      expect(earned).toContain("spirit-touched");
+      expect(earned).toContain("spirit-seeker");
+      expect(earned).toContain("world-dreamer");
+    });
+
+    it("awards spirit-touched on first spirit only", () => {
+      const stats1 = makeStats({ spiritsDiscovered: 1 });
+      const stats0 = makeStats({ spiritsDiscovered: 0 });
+      expect(checkAchievements(stats1, [])).toContain("spirit-touched");
+      expect(checkAchievements(stats0, [])).not.toContain("spirit-touched");
+    });
+
+    it("detects NG+ achievements (Spec §25.3)", () => {
+      const stats = makeStats({ prestigeCount: 5 });
+      const earned = checkAchievements(stats, []);
+      expect(earned).toContain("twice-born");
+      expect(earned).toContain("thrice-born");
+      expect(earned).toContain("eternal-keeper");
+    });
+
+    it("awards NG+ achievements incrementally", () => {
+      expect(checkAchievements(makeStats({ prestigeCount: 2 }), [])).toContain("twice-born");
+      expect(checkAchievements(makeStats({ prestigeCount: 2 }), [])).not.toContain("thrice-born");
+      expect(checkAchievements(makeStats({ prestigeCount: 3 }), [])).toContain("thrice-born");
+      expect(checkAchievements(makeStats({ prestigeCount: 3 }), [])).not.toContain("eternal-keeper");
+      expect(checkAchievements(makeStats({ prestigeCount: 5 }), [])).toContain("eternal-keeper");
+    });
+
+    it("first-prestige does not trigger twice-born", () => {
+      const stats = makeStats({ prestigeCount: 1 });
+      const earned = checkAchievements(stats, []);
+      expect(earned).toContain("first-prestige");
+      expect(earned).not.toContain("twice-born");
+    });
   });
 
   describe("getAchievementById", () => {
@@ -220,6 +277,24 @@ describe("achievements system", () => {
 
     it("returns undefined for unknown ID", () => {
       expect(getAchievementById("nonexistent")).toBeUndefined();
+    });
+
+    it("finds new chunk exploration achievements", () => {
+      expect(getAchievementById("first-chunk")).toBeDefined();
+      expect(getAchievementById("zone-explorer")).toBeDefined();
+      expect(getAchievementById("world-wanderer")).toBeDefined();
+    });
+
+    it("finds new spirit discovery achievements", () => {
+      expect(getAchievementById("spirit-touched")).toBeDefined();
+      expect(getAchievementById("spirit-seeker")).toBeDefined();
+      expect(getAchievementById("world-dreamer")).toBeDefined();
+    });
+
+    it("finds new NG+ achievements", () => {
+      expect(getAchievementById("twice-born")).toBeDefined();
+      expect(getAchievementById("thrice-born")).toBeDefined();
+      expect(getAchievementById("eternal-keeper")).toBeDefined();
     });
   });
 });

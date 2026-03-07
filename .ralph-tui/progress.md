@@ -2384,3 +2384,18 @@ after each iteration and it's included in prompts for context.
   - **`emptyResources()` as canonical zero-state**: Use the shared factory from `game/config/resources.ts` as the `expect()` value for reset resource assertions — avoids fragile inline `{ timber: 0, ... }` objects that drift when resource types are added.
   - **`buildCostMultiplier` floor test**: Asymptote behavior (`Math.max(floor, ...)`) requires an explicit high-prestige test case — linear-region tests alone won't catch floor bugs.
 ---
+
+## 2026-03-07 - US-127
+- Decomposed `game/systems/achievements.ts` (401 lines) into `game/systems/achievements/` subpackage
+- Files: `types.ts` (52 lines), `core.ts` (194 lines), `world.ts` (223 lines), `checker.ts` (33 lines), `index.ts` (15 lines)
+- Added 9 new achievements: chunk exploration (first-chunk, zone-explorer, world-wanderer), spirit discovery (spirit-touched, spirit-seeker, world-dreamer), NG+ milestones (twice-born, thrice-born, eternal-keeper)
+- Total: 36 → 45 achievements; `config/game/achievements.json` updated to list all 45
+- Added 3 new `PlayerStats` fields: `chunksVisited`, `biomesDiscovered`, `spiritsDiscovered`
+- Wired in `useGameLoop.ts`: maps to existing store fields (`discoveredZones.length`, `visitedZoneTypes.length`, `discoveredSpiritIds.length`) — no new store changes needed
+- Updated `game/systems/achievements.test.ts`: 25 → 31 tests, all pass
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3047 tests pass (136 suites)
+- **Learnings:**
+  - **Subpackage decomposition avoids circular deps**: Put the combined `ACHIEVEMENTS` array and pure functions in `checker.ts` which imports from `core.ts` + `world.ts`. The barrel `index.ts` re-exports from `checker.ts` — never import from `./index` within the subpackage itself.
+  - **New PlayerStats fields map to existing store fields**: `discoveredSpiritIds.length`, `discoveredZones.length`, `visitedZoneTypes.length` were already tracked in the store — no new actions needed to support the new achievement types.
+  - **Test file stays adjacent, resolves to barrel automatically**: `game/systems/achievements.test.ts` importing `from "./achievements"` still works after the rename — TypeScript resolves the directory to its `index.ts` barrel.
+---
