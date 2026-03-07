@@ -1,0 +1,174 @@
+# Iteration 127 Log
+
+## Metadata
+
+- **Task ID**: US-127
+- **Task Title**: Update achievement system + decompose (over 300 lines)
+- **Description**: As a player, I want the existing achievements.ts (401 lines — OVER 300 LINE LIMIT) decomposed into a subpackage and updated to track chunk-based exploration achievements, spirit discoveries, and NG+ a...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T19:01:26.896Z
+- **Ended At**: 2026-03-07T19:10:27.347Z
+- **Duration**: 9m 0s
+- **Input Tokens**: 82815
+- **Output Tokens**: 34154
+- **Total Tokens**: 116969
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Read,Glob,Grep[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/achievements.json[0m
+Now let me read the test file and the AchievementPopup component:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/achievements*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+Now let me read the test file and AchievementPopup:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/AchievementPopup*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/AchievementPopup.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.ts[0m
+Let me look at how achievements.ts is currently used and check the ECS queries/world:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mfrom.*achievements[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useGameLoop.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+Let me see the full achievement check in the game loop:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useGameLoop.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useGameLoop.ts[0m
+Now I have a complete picture. Let me mark exploration done and move to implementation:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The codebase follows a "subpackage with barrel" pattern: when a file exceeds 300 lines, it becomes a directory with `index.ts` exporting everything — callers import from `"./achievements"` and TypeScript resolves to `./achievements/index.ts` automatically, so no import paths break.
+- `PlayerStats` is the achievement system's clean seam: the game loop derives stats from multiple sources (ECS queries + store) and passes the immutable `PlayerStats` object to pure `checkAchievements()`. Adding new fields here requires only adding derivation in the game loop.
+- The new achievements (`spiritsDiscovered`, `chunksVisited`, `biomesDiscovered`) map cleanly to existing store fields: `discoveredSpiritIds.length`, `discoveredZones.length`, `visitedZoneTypes.length` — no new store actions needed.
+`─────────────────────────────────────────────────`
+
+Creating the subpackage files:
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,Bash[0m
+Creating the subpackage directory and all files:
+[94m[Bash][0m Create achievements subpackage directory $ mkdir -p /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements/types.ts[0m "/**
+ * Achievement system types.
+ * Spec §25 -- Achievements and Milestones
+ */
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category:
+    | "... (1279 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements/core.ts[0m "/**
+ * Core grove achievements -- planting, harvesting, growing, collection, mastery.
+ * Spec §25.1
+ */
+
+import type { Achievement } from "./types";
+
+// All 12 base species that must be planted for th... (4547 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements/world.ts[0m "/**
+ * World achievements -- social, exploration (including chunk/spirit), economy,
+ * seasonal, and NG+ prestige milestones.
+ * Spec §25.2, §25.3, §32.3
+ */
+
+import type { Achievement } from "./types... (5620 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements/checker.ts[0m "/**
+ * Achievement checker functions -- pure, no side effects.
+ * Spec §25
+ */
+
+import { ACHIEVEMENTS } from "./index";
+import type { Achievement, PlayerStats } from "./types";
+
+/**
+ * Check all achie... (800 chars)"
+There's a circular dependency issue in `checker.ts` (imports from index, but index imports from checker). Let me fix that:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements/checker.ts[0m "/**
+ * Achievement checker functions -- pure, no side effects.
+ * Spec §25
+ */
+
+import type { Achievement, PlayerStats } from "./types";
+import { CORE_ACHIEVEMENTS } from "./core";
+import { WORLD_ACHI... (989 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements/index.ts[0m "/**
+ * achievements/ -- barrel export.
+ * Spec §25
+ *
+ * Decomposed from achievements.ts (401 lines) into:
+ *   types.ts    -- Achievement, PlayerStats interfaces
+ *   core.ts     -- 20 core grove ach... (665 chars)"
+Now delete the old monolithic file:
+[94m[Bash][0m Remove old monolithic achievements.ts $ rm /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements.ts
+[94m[TodoWrite][0m
+Now update `useGameLoop.ts` to add the 3 new stats fields:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useGameLoop.ts[0m edit: "      const stats: PlayerStats = {
+        treesPl..." → "      const stats: PlayerStats = {
+        treesPl..."
+[94m[TodoWrite][0m
+Now update the test file:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements.test.ts[0m "import type { PlayerStats } from "./achievements";
+import { ACHIEVEMENTS, checkAchievements, getAchievementById } from "./achievements";
+
+function makeStats(overrides: Partial<PlayerStats> = {}): Play... (10473 chars)"
+Now update `achievements.json` to include all 45 achievements as a reference:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/achievements.json[0m "[
+  {
+    "id": "first-seed",
+    "name": "First Seed",
+    "description": "Plant your first tree.",
+    "category": "planting"
+  },
+  {
+    "id": "green-thumb",
+    "name": "Green Thumb",
+    "descri... (6241 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+[94m[Bash][0m Run achievements tests $ npx jest --no-coverage --testPathPattern="achievements" 2>&1
+All 31 tests pass. Let me run the full test suite to ensure nothing is broken:
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -30
+136 test suites, 3047 tests — all pass. Now verify file sizes:
+[94m[Bash][0m Count lines in all achievements subpackage files $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/achievements/*.ts /Users/jbogaty/sr...
+All files are under the 300-line limit. The test file is exactly 300 lines (the sentinel fires for files *over* 300). Let me verify the AchievementPopup was also mentioned in the task as 309 lines — but the task only asks to decompose `achievements.ts`:
+[94m[Bash][0m Check AchievementPopup line count $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/AchievementPopup.tsx
+The task only asks to use the existing popup, not decompose it. The typecheck already passed confirming all imports work correctly. Now update the progress log:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Get total line count of progress.md $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-126
+- Tests for prestige alread..." → "## 2026-03-07 - US-126
+- Tests for prestige alread..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The circular dependency trap when building barrel-based subpackages: if `checker.ts` imported from `./index` and `index.ts` re-exported from `./checker`, Node's module resolution creates a circular chain. The fix is simple — let `checker.ts` import directly from `./core` and `./world`, keeping the barrel as a one-way aggregator.
+- The three new achievement types (`chunksVisited`, `biomesDiscovered`, `spiritsDiscovered`) required zero new store actions because the game already tracked `discoveredZones`, `visitedZoneTypes`, and `discoveredSpiritIds` for other systems. The `PlayerStats` interface is a clean seam that lets the achievement system compose from multiple store fields at check time.
+`─────────────────────────────────────────────────`
+
+US-127 is complete. Here's a summary:
+
+**Files created:**
+- `game/systems/achievements/types.ts` — `Achievement`, `PlayerStats` interfaces (with 3 new fields)
+- `game/systems/achievements/core.ts` — 20 core achievements (planting/harvesting/growing/collection/mastery)
+- `game/systems/achievements/world.ts` — 25 world achievements (social/exploration/economy/seasonal/NG+)
+- `game/systems/achievements/checker.ts` — `ACHIEVEMENTS` catalog + `checkAchievements` + `getAchievementById`
+- `game/systems/achievements/index.ts` — barrel re-export
+
+**Files modified:**
+- `game/systems/achievements.ts` → **deleted** (replaced by subpackage)
+- `game/hooks/useGameLoop.ts` — added `chunksVisited`, `biomesDiscovered`, `spiritsDiscovered` to stats
+- `game/systems/achievements.test.ts` — updated to 45 achievements, 31 tests
+- `config/game/achievements.json` — updated to list all 45 achievements
+
+**Results:** `npx tsc --noEmit` clean, `npx jest --no-coverage` → 3047 tests pass across 136 suites.
+
+<promise>COMPLETE</promise>

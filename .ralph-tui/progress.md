@@ -78,6 +78,17 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-128
+- Achievement tests already existed from US-127 decomposition; verified 31 tests pass, tsc clean.
+- Files changed: none (work was already complete from US-127)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage game/systems/achievements.test.ts` → 31 tests pass
+- **Learnings:**
+  - **Achievement system was already decomposed**: US-127 split the 401-line `achievements.ts` into `achievements/` subpackage (core.ts, world.ts, checker.ts, types.ts, index.ts barrel). Test file imports from `"./achievements"` — TypeScript resolves to the directory `index.ts` automatically, no path changes needed.
+  - **checkAchievements is a pure function**: `(stats: PlayerStats, alreadyEarned: string[]) => string[]` — zero store/ECS deps, trivially testable with plain objects. The no-double-trigger test simply passes `["first-seed"]` as `alreadyEarned` and asserts it's not in the returned array.
+  - **31 tests cover all AC categories**: trigger conditions (every category), no double-trigger, popup display via `getAchievementById`, incremental/boundary guards (first-prestige ≠ twice-born, spirit-touched only at >=1 not 0, NG+ milestone stepwise).
+
+---
+
 ## 2026-03-07 - US-122
 - Added 7 unlock state persistence (monotonicity) tests to `game/systems/kitbashing.test.ts`
 - Files changed:
