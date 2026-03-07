@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T18:49:57.389Z",
-  "currentIteration": 122,
+  "updatedAt": "2026-03-07T18:51:38.363Z",
+  "currentIteration": 123,
   "maxIterations": 0,
-  "tasksCompleted": 122,
+  "tasksCompleted": 123,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -748,8 +748,8 @@
       {
         "id": "US-123",
         "title": "Update raid system for chunk-based world + DayNight integration",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-124",
@@ -2261,6 +2261,16 @@
       "durationMs": 217451,
       "startedAt": "2026-03-07T18:40:28.865Z",
       "endedAt": "2026-03-07T18:44:06.316Z"
+    },
+    {
+      "iteration": 123,
+      "status": "completed",
+      "taskId": "US-123",
+      "taskTitle": "Update raid system for chunk-based world + DayNight integration",
+      "taskCompleted": true,
+      "durationMs": 349945,
+      "startedAt": "2026-03-07T18:44:07.443Z",
+      "endedAt": "2026-03-07T18:49:57.388Z"
     }
   ],
   "skippedTaskIds": [],

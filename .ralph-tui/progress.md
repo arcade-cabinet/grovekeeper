@@ -2346,3 +2346,14 @@ after each iteration and it's included in prompts for context.
   - **Approach direction seeding includes chunk coords**: `scopedRNG("raid", worldSeed, dayNumber, chunkX, chunkZ)` — adding chunk coords to the extra args ensures different chunks get different approach vectors even on the same day, using the same composable `scopedRNG` mechanism already established in the codebase.
 
 ---
+
+## 2026-03-07 - US-124
+- Work already complete — `game/systems/baseRaids.test.ts` was written as part of US-123 (same session that implemented `baseRaids.ts`)
+- Files changed: none (verified existing test file meets all acceptance criteria)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest baseRaids.test --no-coverage` → 34/34 pass
+- Tests cover: probability scaling (6), night-only gate (6), wave composition + seed determinism (8), warning messages (4), loot calculation (3), approach directions (7)
+- **Learnings:**
+  - **When impl + tests written together in same US, the "write tests" follow-up US is a verify-only task** — check that `npx jest` passes, confirm count ≥ 8, done. No new code needed.
+  - **34 tests > 8 minimum** — the breadth came from covering all four named areas (probability, wave composition, night-only, seed determinism) plus loot and approach directions as bonus coverage.
+
+---
