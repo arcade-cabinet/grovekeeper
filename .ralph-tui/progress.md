@@ -1198,3 +1198,22 @@ after each iteration and it's included in prompts for context.
   - **Module-level Three.js objects in tested hooks**: `const _raycaster = new THREE.Raycaster()` at module level is fine — Jest hoists `jest.mock("three", ...)` above all imports, so the mock constructor fires when the module is first loaded.
   - **`GameSystems` is the right host for frame hooks**: The null-rendering component inside `<Physics>` (inside `<Canvas>`) is the canonical place to add per-frame hooks that need R3F context without rendering anything.
 ---
+
+## 2026-03-07 - US-064
+- Implemented `components/player/TargetInfo.tsx` — React Native HUD overlay showing entity name + action prompt when raycast hits interactable (Spec §11)
+- Added `useTargetHit()` external store to `game/hooks/useRaycast.ts` — bridges per-frame R3F raycast (inside Canvas) to React Native HUD components (outside Canvas) via `useSyncExternalStore`
+- Pure functions: `resolveEntityName(hit)` → species name / NPC name / structure title-case; `resolveActionPrompt(hit, tool)` → tool-specific prompt for trees ("E to Harvest", "E to Water", etc.), "E to Talk" for NPCs, "E to Use" for structures
+- 18 tests in `TargetInfo.test.ts` covering all entity types and tool mappings
+- **Files changed:**
+  - `game/hooks/useRaycast.ts` — added `_setHit`, `useTargetHit`, updated `useRaycast` to call `_setHit` each frame
+  - `components/player/TargetInfo.tsx` — new: `resolveEntityName`, `resolveActionPrompt`, `TargetInfo`
+  - `components/player/TargetInfo.test.ts` — new: 18 tests for pure functions + smoke test
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2029 tests, 0 failures (107 suites, +18 new tests + useRaycast tests stable)
+- **Learnings:**
+  - **`_setHit` / `useTargetHit` external store pattern**: Follow `useInteraction.ts` — module-level `let _currentHit`, `Set<listener>`, `_getHit`, `_subscribeHit`, `_setHit`. `useTargetHit()` wraps in `useSyncExternalStore`. This is the canonical bridge between R3F Canvas (useFrame) and React Native HUD.
+  - **`_setHit(null)` on miss is mandatory**: Without the clear at the end of the intersects loop, the HUD would freeze on the last hit entity even after looking away. Always reset on the no-hit path.
+  - **NpcComponent has a `name` field**: `entity.npc?.name` is the direct display name — no config lookup needed, unlike trees (need `getSpeciesById`).
+  - **Kebab-case templateId formatting**: `templateId.split("-").map(capitalize).join(" ")` is the cleanest transform for structure names; no regex needed.
+---

@@ -10,7 +10,7 @@
  */
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useRef } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import * as THREE from "three";
 
 import type { Entity } from "@/game/ecs/world";
@@ -38,6 +38,33 @@ export interface RaycastHit {
 // Module-level objects reused each frame to avoid per-frame allocation.
 const _raycaster = new THREE.Raycaster();
 const _screenCenter = new THREE.Vector2(0, 0);
+
+// ── Shared hit store (for React Native HUD components outside Canvas) ─────────
+
+let _currentHit: RaycastHit | null = null;
+const _hitListeners = new Set<() => void>();
+
+function _getHit(): RaycastHit | null {
+  return _currentHit;
+}
+
+function _subscribeHit(listener: () => void): () => void {
+  _hitListeners.add(listener);
+  return () => _hitListeners.delete(listener);
+}
+
+export function _setHit(hit: RaycastHit | null): void {
+  _currentHit = hit;
+  for (const l of _hitListeners) l();
+}
+
+/**
+ * Returns the current RaycastHit for use outside the R3F Canvas.
+ * Bridges the per-frame raycast (useRaycast, inside Canvas) to React Native HUD.
+ */
+export function useTargetHit(): RaycastHit | null {
+  return useSyncExternalStore(_subscribeHit, _getHit, _getHit);
+}
 
 /**
  * Resolves an ECS entity by ID, searching trees → NPCs → structures in priority order.
@@ -123,12 +150,14 @@ export function useRaycast(): ReturnType<typeof useRef<RaycastHit | null>> {
       if (entityId) {
         const resolved = resolveEntityById(entityId, treesQuery, npcsQuery, structuresQuery);
         if (resolved) {
-          hitRef.current = {
+          const hit: RaycastHit = {
             entity: resolved.entity,
             entityType: resolved.entityType,
             distance: intersect.distance,
             point: intersect.point.clone(),
           };
+          hitRef.current = hit;
+          _setHit(hit);
           return;
         }
       }
@@ -140,15 +169,20 @@ export function useRaycast(): ReturnType<typeof useRef<RaycastHit | null>> {
         STRUCTURE_SNAP_RADIUS,
       );
       if (structure) {
-        hitRef.current = {
+        const hit: RaycastHit = {
           entity: structure,
           entityType: "structure",
           distance: intersect.distance,
           point: intersect.point.clone(),
         };
+        hitRef.current = hit;
+        _setHit(hit);
         return;
       }
     }
+
+    // No hit this frame — clear the shared store
+    _setHit(null);
   });
 
   return hitRef;
