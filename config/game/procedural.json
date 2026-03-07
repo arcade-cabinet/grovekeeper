@@ -190,6 +190,26 @@
       "color": "#e0f0ff",
       "gravity": 0.5,
       "maxParticles": 30
+    },
+    "splash": {
+      "emissionRate": 15,
+      "lifetime": 0.8,
+      "emissionRadius": 0.3,
+      "size": 0.03,
+      "color": "#e0f0ff",
+      "gravity": 0.5,
+      "windAffected": false,
+      "maxParticles": 30
+    },
+    "bubbles": {
+      "emissionRate": 5,
+      "lifetime": 2.0,
+      "emissionRadius": 0.5,
+      "size": 0.02,
+      "color": "#c8e8ff",
+      "gravity": -0.3,
+      "windAffected": false,
+      "maxParticles": 20
     }
   },
   "ambientZones": {

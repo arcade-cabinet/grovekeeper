@@ -37,9 +37,34 @@ after each iteration and it's included in prompts for context.
 - **InstancedMesh entitiesRef pattern**: Outer batch component holds `Map<modelPath, MutableRefObject<StaticEntityInput[]>>`; clears and repopulates refs each `useFrame`. Inner `StaticModelInstances` reads from the ref in its own `useFrame` — entity data flows imperatively with zero React state updates per frame. Capacity Map grows-only; `mesh.count` set each frame to active count.
 - **Multi-mesh GLB InstancedMesh**: `scene.traverse(obj => { if (obj instanceof THREE.Mesh) result.push({ geo, mat }) })` collects all sub-meshes. Render one `<instancedMesh>` per sub-mesh, all sharing the same per-entity world matrix. Callback ref `ref={(el) => { instancedRefs.current[i] = el; }}` handles dynamic sub-mesh ref array without hooks changes.
 
+- **WaterEntity minimal-interface injection for tickable systems**: Define a `WaterEntity` (or similar) interface with only the fields your system reads/writes. Pass `World<WaterEntity>` as a parameter — tests use it directly, production code casts `world as unknown as World<WaterEntity>`. State object holds entity refs for O(1) `world.remove()` without ECS search.
+- **Test geometry must match detection math**: Before running a spatial-detection test, verify test coordinates satisfy the geometry (e.g., halfW=5 means z=7 is OUTSIDE, z=4 is inside). The RED phase exposes these mismatches before any production code is written.
+
 - **Caustic plane reuses water geometry factory**: `buildWaterPlaneGeometry` is called for both the Gerstner wave surface and the caustic plane — same footprint. No need for a separate builder. Positioned at `y - CAUSTICS_DEPTH_OFFSET` (0.05 units below).
 - **AdditiveBlending for caustics**: `THREE.AdditiveBlending` adds `src_alpha * src_rgb` to destination. Caustic bright rings visually "light up" terrain below without occluding it. Requires `depthWrite: false` and `transparent: true`.
 - **Dual-Map lifecycle for caustics**: `causticMeshMapRef` + `causticMaterialMapRef` mirror the existing `meshMapRef`/`materialMapRef` pattern. Caustic meshes are created/destroyed with the same `aliveIds` set approach, keeping the cleanup symmetric.
+
+---
+
+## 2026-03-07 - US-054
+- Implemented splash and bubble particles for water interaction (Spec §36.1 + §31.2)
+- `detectWaterState(playerX, playerY, playerZ, waterBodies)`: pure function — "submerged" when Y ≤ water surface Y AND within horizontal footprint; "above" otherwise
+- `buildSplashEmitter()`: one-shot burst on water entry (type='splash', gravity 0.5, 30 max, 0.8s lifetime)
+- `buildBubblesEmitter()`: continuous while submerged (type='bubbles', gravity -0.3, 20 max)
+- `tickWaterParticles(world, playerPos, waterBodies, state)`: ECS-coupled tick managing entity lifecycle; above→submerged spawns splash; while submerged keeps bubbles alive; on exit removes bubbles
+- **Files changed:**
+  - `game/systems/waterParticles.ts` — new: `SPLASH_PARTICLE_COUNT`, `SPLASH_LIFETIME`, `WaterState`, `WaterBodyRef`, `WaterEntity`, `WaterParticlesState`, `detectWaterState`, `buildSplashEmitter`, `buildBubblesEmitter`, `tickWaterParticles`
+  - `game/systems/waterParticles.test.ts` — new: 30 tests (detectWaterState 8, buildSplashEmitter 7, buildBubblesEmitter 5, tickWaterParticles 10)
+  - `config/game/procedural.json` — added `particles.splash` and `particles.bubbles` config entries
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern waterParticles` → 30 tests, 0 failures
+  - `npx jest --no-coverage` → 1914 tests, 0 failures (102 suites)
+- **Learnings:**
+  - **WaterEntity minimal interface pattern**: `tickWaterParticles` takes `World<WaterEntity>` (not `World<Entity>`) — tests use `World<WaterEntity>` directly, production code casts `world as unknown as World<WaterEntity>`. Single cast at callsite, clean test setup.
+  - **Test geometry must match detection math**: test "positions splash at contact point" originally used `z=7` which was outside pond halfD=5. Failing test caught by running RED phase first — always verify test coordinates match detection bounds.
+  - **Splash emitter config vs waterfallSplash config**: the existing `waterfallSplash` has a larger `emissionRadius` (1.0 vs 0.3) since waterfalls are wider. Added separate `particles.splash` and `particles.bubbles` to config for player-specific particle behavior.
+  - **State object for ECS tick**: `WaterParticlesState` holds `prevWaterState + splashEntity + bubblesEntity` refs — caller manages state between ticks. Direct entity ref storage enables O(1) `world.remove()` without searching.
 
 ---
 
