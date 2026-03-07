@@ -1,0 +1,26 @@
+{
+  "transitionDays": 5,
+  "terrainColors": {
+    "spring": {
+      "grass": "#7DBF6E",
+      "dirt": "#8B6E52",
+      "rock": "#9E9E9E"
+    },
+    "summer": {
+      "grass": "#5EA34A",
+      "dirt": "#8B6E52",
+      "rock": "#9E9E9E"
+    },
+    "autumn": {
+      "grass": "#C8843A",
+      "dirt": "#795548",
+      "rock": "#8D8D8D"
+    },
+    "winter": {
+      "grass": "#B0BEC5",
+      "dirt": "#90A4AE",
+      "rock": "#CFD8DC",
+      "snow": "#ECEFF1"
+    }
+  }
+}

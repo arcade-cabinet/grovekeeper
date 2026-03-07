@@ -78,6 +78,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-135
+- Implemented seasonal effects system (Spec §6.3).
+- Files changed:
+  - `config/game/seasons.json` — new: per-season terrain color palettes (grass/dirt/rock/snow), transitionDays=5
+  - `game/systems/seasonalEffects.ts` — new: pure functions: getSeasonalTerrainColors, computeSeasonTransitionBlend, blendHexColors, detectSeasonChange, applySeasonToTree, applySeasonToBush, getBlendedTerrainPalette
+  - `game/systems/seasonalEffects.test.ts` — new: 36 tests, all passing
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3265 tests, 141 suites pass
+- **Learnings:**
+  - **Seasonal effects as thin orchestration**: `seasonalEffects.ts` delegates per-entity logic to `vegetationPlacement.ts` (getSeasonalTreeTint, updateBushSeason) — avoids duplicating color lookup tables. The new system adds terrain palettes, transition blending, and season-change detection.
+  - **Math.round(127.5) = 128 in JavaScript**: Hex color blend at t=0.5 between #000000 and #ffffff yields #808080, not #7f7f7f. JavaScript always rounds 0.5 up, unlike banker's rounding. Test expectations must use the computed value, not a hand-estimated midpoint.
+  - **Config JSON for terrain palettes**: Terrain season colors live in `config/game/seasons.json` not inline — maintains the "no magic numbers" project rule. Winter palette includes an optional `snow` field that other seasons omit; consumers check for `snow` presence before using it.
+
+---
+
 ## 2026-03-07 - US-133
 - Implemented day/night cycle system (Spec §31.3).
 - Files changed:

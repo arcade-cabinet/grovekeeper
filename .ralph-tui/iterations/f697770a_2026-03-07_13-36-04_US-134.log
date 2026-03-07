@@ -1,0 +1,56 @@
+# Iteration 134 Log
+
+## Metadata
+
+- **Task ID**: US-134
+- **Task Title**: Write Jest tests for day/night
+- **Description**: As a developer, I want tests for day/night so that hour advancement, time-of-day labels, and light color/intensity per slot are verified. See GAME_SPEC.md §12.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T19:36:04.311Z
+- **Ended At**: 2026-03-07T19:37:34.973Z
+- **Duration**: 1m 30s
+- **Input Tokens**: 73
+- **Output Tokens**: 3963
+- **Total Tokens**: 4036
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*dayNight*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*day-night*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*DayNight*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dayNight.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dayNight.ts[0m
+The test file and implementation both exist. Let me verify they're passing by checking the config and types they depend on.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/dayNight.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/atmosphere.ts[0m
+The tests and implementation both look complete. Let me run them to verify they pass.
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run dayNight Jest tests $ npx jest --no-coverage --testPathPattern="dayNight" 2>&1
+73 tests passing. Let me also run the TypeScript check.
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+Both checks pass. Now let me append to the progress log.
+
+`★ Insight ─────────────────────────────────────`
+- US-134's tests were already fully written as part of US-133: the `dayNight.test.ts` file (73 tests) was committed alongside the implementation in the same session — a direct result of the Docs > Tests > Code mandatory workflow.
+- Separating pure functions (`computeGameHour`, `classifyTimeOfDay`, `computeLighting`, etc.) from the ECS/R3F tick function means tests operate with zero mocking — just plain TypeScript objects and JSON config. The test file has no `jest.mock()` calls at all.
+- Boundary-inclusive slot tests (`h=5 → dawn`, `h=7 → morning`) are critical: they pin the exact `hourStart/hourEnd` semantics in config so future config edits are immediately caught.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Read[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Read last 20 lines of progress.md $ tail -20 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **Stop condition check**: When a test-only sto..." → "  - **Stop condition check**: When a test-only sto..."
+US-134 was already complete — `dayNight.test.ts` was written as part of US-133 (73 tests, all passing, TypeScript clean).
+
+**Acceptance criteria status:**
+- 73 tests pass (well above 8+ requirement)
+- Covers: hour advancement, time-of-day label transitions, light color/intensity per slot, sun angle, star intensity, season cycling, full tick mutation
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 73 passed
+
+<promise>COMPLETE</promise>
