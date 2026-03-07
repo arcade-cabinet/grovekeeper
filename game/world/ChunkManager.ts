@@ -21,6 +21,7 @@ import { assignBiome, getBiomeColor } from "./biomeMapper";
 import type { BiomeType } from "./biomeMapper";
 import { placeWaterBodies } from "./waterPlacer";
 import { placeAudioZones } from "./audioZonePlacer";
+import { spawnChunkEntities } from "./entitySpawner";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -332,6 +333,55 @@ export class ChunkManager {
           id: generateEntityId(),
           position: azp.position,
           ambientZone: azp.ambientZone,
+        }),
+      );
+    }
+
+    // Spawn biome-appropriate vegetation and terrain entities
+    const spawned = spawnChunkEntities(this.worldSeed, chunkX, chunkZ, biome as BiomeType, terrainData.heightmap);
+
+    for (const tp of spawned.trees) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: tp.position,
+          rotationY: tp.rotationY,
+          tree: tp.tree,
+          renderable: { visible, scale: 1 },
+        }),
+      );
+    }
+
+    for (const bp of spawned.bushes) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: bp.position,
+          rotationY: bp.rotationY,
+          bush: bp.bush,
+          renderable: { visible, scale: 1 },
+        }),
+      );
+    }
+
+    for (const gp of spawned.grass) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: gp.position,
+          grass: gp.grass,
+        }),
+      );
+    }
+
+    for (const rp of spawned.rocks) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: rp.position,
+          rotationY: rp.rotationY,
+          rock: rp.rock,
+          renderable: { visible, scale: 1 },
         }),
       );
     }

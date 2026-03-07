@@ -50,6 +50,29 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-070
+- Created `game/world/entitySpawner.ts` — pure function placer following the waterPlacer/audioZonePlacer pattern
+- `spawnChunkEntities(worldSeed, chunkX, chunkZ, biome, heightmap)` returns `{ trees, bushes, grass, rocks }` placement arrays
+- `biomeToVegetationKey(biome)` maps the 8 BiomeType values to vegetation.json density taxonomy (temperate, wetland, mountain, tundra, savanna, coastal, enchanted, highland)
+- `getBiomeSpeciesPool(biome)` returns biome-appropriate wild species IDs (no prestige species)
+- Each entity type uses a distinct `scopedRNG` scope string ("entity-trees", "entity-bushes", "entity-grass", "entity-rocks") for independent PRNG streams
+- Positions are clamped to `[0, CHUNK_SIZE)` local coords, sampled at heightmap elevation, offset by `chunkX/Z * CHUNK_SIZE` for world space
+- Wild trees: `stage: 2`, `wild: true`, `totalGrowthTime: 1800`, species models resolved from `vegetation.json.speciesModelMapping`
+- ChunkManager.loadChunk wired to call `spawnChunkEntities` and add all results as chunk child entities (cleaned up on chunk unload)
+- **Files changed:**
+  - `game/world/entitySpawner.ts` — new file (pure spawner, 230 lines)
+  - `game/world/entitySpawner.test.ts` — new file (41 tests)
+  - `game/world/ChunkManager.ts` — added import + wiring in `loadChunk`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2122 tests, 0 failures (110 suites, +41 new tests)
+- **Learnings:**
+  - **BiomeType → density key translation layer**: vegetation.json uses its own density taxonomy that doesn't match BiomeType identifiers; always add an explicit mapping function (biomeToVegetationKey) exported for testing
+  - **scopedRNG scope-per-entity-type**: use distinct scope strings per entity type so tree RNG and bush RNG don't share the same stream — prevents positional correlations between types
+  - **Placement pattern extends cleanly**: the return-placements pattern used in waterPlacer composes with ChunkManager's children[] tracking without any architectural changes
+
+---
+
 ## 2026-03-07 - US-069
 - Added async generation queue to `ChunkManager`: `pendingChunks: Set<string>` + `generationQueue: QueueItem[]` + `generationScheduled: boolean` flag
 - `update()` now unloads synchronously (as before) but queues new chunks instead of calling `loadChunk()` directly
