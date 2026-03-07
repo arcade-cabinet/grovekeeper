@@ -6,6 +6,7 @@
     "icon": "hammer",
     "unlockLevel": 1,
     "staminaCost": 5,
+    "maxDurability": 100,
     "action": "PLANT"
   },
   {
@@ -15,6 +16,7 @@
     "icon": "droplet",
     "unlockLevel": 1,
     "staminaCost": 3,
+    "maxDurability": 100,
     "action": "WATER"
   },
   {
@@ -24,6 +26,7 @@
     "icon": "book-open",
     "unlockLevel": 2,
     "staminaCost": 0,
+    "maxDurability": 0,
     "action": "INSPECT"
   },
   {
@@ -33,6 +36,7 @@
     "icon": "scissors",
     "unlockLevel": 3,
     "staminaCost": 4,
+    "maxDurability": 100,
     "action": "PRUNE"
   },
   {
@@ -42,6 +46,7 @@
     "icon": "leaf",
     "unlockLevel": 4,
     "staminaCost": 0,
+    "maxDurability": 0,
     "action": "SEEDS"
   },
   {
@@ -51,6 +56,7 @@
     "icon": "shovel",
     "unlockLevel": 5,
     "staminaCost": 8,
+    "maxDurability": 100,
     "action": "CLEAR"
   },
   {
@@ -60,6 +66,7 @@
     "icon": "axe",
     "unlockLevel": 7,
     "staminaCost": 10,
+    "maxDurability": 100,
     "action": "CHOP"
   },
   {
@@ -69,6 +76,7 @@
     "icon": "recycle",
     "unlockLevel": 10,
     "staminaCost": 6,
+    "maxDurability": 100,
     "action": "COMPOST"
   },
   {
@@ -78,6 +86,7 @@
     "icon": "cloud-rain",
     "unlockLevel": 11,
     "staminaCost": 4,
+    "maxDurability": 100,
     "action": "RAIN_CATCH"
   },
   {
@@ -87,6 +96,7 @@
     "icon": "sparkles",
     "unlockLevel": 13,
     "staminaCost": 8,
+    "maxDurability": 100,
     "action": "AREA_FERTILIZE"
   },
   {
@@ -96,6 +106,7 @@
     "icon": "shield",
     "unlockLevel": 16,
     "staminaCost": 6,
+    "maxDurability": 100,
     "action": "SCARECROW"
   },
   {
@@ -105,6 +116,7 @@
     "icon": "git-merge",
     "unlockLevel": 20,
     "staminaCost": 15,
+    "maxDurability": 100,
     "action": "GRAFT"
   }
 ]

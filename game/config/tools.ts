@@ -11,6 +11,8 @@ export interface ToolData {
   icon: string;
   unlockLevel: number;
   staminaCost: number;
+  /** Maximum uses before the tool breaks (0 = no durability wear). Spec §11.3 */
+  maxDurability: number;
   action: string;
 }
 

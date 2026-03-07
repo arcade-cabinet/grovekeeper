@@ -209,6 +209,8 @@ const initialState = {
   toolUpgrades: {} as Record<string, number>,
 
   toolUseCounts: {} as Record<string, number>,
+  /** Remaining durability per tool ID. Absence = full durability (lazy init). Spec §11.3 */
+  toolDurabilities: {} as Record<string, number>,
   wildTreesHarvested: 0,
   wildTreesRegrown: 0,
   visitedZoneTypes: [] as string[],
@@ -456,6 +458,27 @@ const actions = {
     if (current < amount) return false;
     gameState$.stamina.set(current - amount);
     return true;
+  },
+
+  /**
+   * Drain durability from a tool. Returns false if tool is already broken (≤ 0).
+   * Absence of an entry means full durability — first drain lazy-inits from maxDurability.
+   * Spec §11.3
+   */
+  drainToolDurability(toolId: string, maxDurability: number, amount = 1): boolean {
+    const state = getState();
+    const current = state.toolDurabilities[toolId] ?? maxDurability;
+    if (current <= 0) return false;
+    gameState$.toolDurabilities.set({
+      ...state.toolDurabilities,
+      [toolId]: Math.max(0, current - amount),
+    });
+    return true;
+  },
+
+  setToolDurability(toolId: string, value: number) {
+    const state = getState();
+    gameState$.toolDurabilities.set({ ...state.toolDurabilities, [toolId]: value });
   },
 
   unlockAchievement(id: string) {

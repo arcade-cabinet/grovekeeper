@@ -43,6 +43,29 @@ after each iteration and it's included in prompts for context.
 - **Caustic plane reuses water geometry factory**: `buildWaterPlaneGeometry` is called for both the Gerstner wave surface and the caustic plane — same footprint. No need for a separate builder. Positioned at `y - CAUSTICS_DEPTH_OFFSET` (0.05 units below).
 - **AdditiveBlending for caustics**: `THREE.AdditiveBlending` adds `src_alpha * src_rgb` to destination. Caustic bright rings visually "light up" terrain below without occluding it. Requires `depthWrite: false` and `transparent: true`.
 - **Dual-Map lifecycle for caustics**: `causticMeshMapRef` + `causticMaterialMapRef` mirror the existing `meshMapRef`/`materialMapRef` pattern. Caustic meshes are created/destroyed with the same `aliveIds` set approach, keeping the cleanup symmetric.
+- **Legend State stale snapshot in tests**: `const store = useGameStore.getState()` captures state at that point. Calling a mutating action (e.g. `drainToolDurability`) updates the observable but `store.field` stays stale. Always call `useGameStore.getState().field` fresh after a mutation — same pattern as the `spendToolStamina` test that reads `.stamina` fresh after the call.
+
+---
+
+## 2026-03-07 - US-066
+- Added `drainToolDurability(toolId, amount?)` to `game/actions/GameActions.ts` (Spec §11.3)
+- Added `toolDurabilities: Record<string, number>` state + `drainToolDurability`/`setToolDurability` methods to `game/stores/gameStore.ts`
+- Added `maxDurability: number` to `config/game/tools.json` (100 for wear tools, 0 for exempt: almanac/seed-pouch) and `game/config/tools.ts` `ToolData` interface
+- 7 new tests in `game/actions/GameActions.test.ts` covering: exempt tools return true, unknown tool no-op, lazy-init drain (100→99), custom amount (wrong target = 3 per spec), broken tool returns false, clamped at 0, consecutive drain accumulates
+- Existing tests already covered raycast distance (useRaycast.test.ts: 17 tests), action mapping (actionDispatcher.test.ts: 27 tests), and stamina cost deduction (GameActions.test.ts spendToolStamina: 4 tests)
+- **Files changed:**
+  - `config/game/tools.json` — added `maxDurability` to all 13 tools
+  - `game/config/tools.ts` — added `maxDurability: number` to `ToolData` interface
+  - `game/stores/gameStore.ts` — added `toolDurabilities` state + `drainToolDurability` + `setToolDurability` methods
+  - `game/actions/GameActions.ts` — added `drainToolDurability` function (15 lines)
+  - `game/actions/GameActions.test.ts` — added 7 tests in `drainToolDurability (Spec §11.3)` describe block
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2063 tests, 0 failures (108 suites, +7 new tests)
+- **Learnings:**
+  - **Legend State stale reference**: `const store = useGameStore.getState()` captures a snapshot; after `drainToolDurability` mutates state, `store.toolDurabilities["x"]` is stale. Always call `useGameStore.getState().toolDurabilities["x"]` after the mutation — same pattern as existing stamina tests.
+  - **Lazy init via map absence**: Omitting a tool from `toolDurabilities` at startup = full durability. First drain lazy-inits from `maxDurability`. No reset loop needed on game start.
+  - **maxDurability === 0 as exempt sentinel**: Mirrors `staminaCost === 0` pattern in `spendToolStamina`. Tools that don't wear (almanac, seed-pouch) use `maxDurability: 0` in JSON.
 
 ---
 

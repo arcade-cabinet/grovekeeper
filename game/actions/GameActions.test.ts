@@ -1,4 +1,5 @@
 import {
+  drainToolDurability,
   findHarvestableTrees,
   findMatureTrees,
   findPlantableTiles,
@@ -347,6 +348,48 @@ describe("GameActions", () => {
       useGameStore.getState().setStamina(2);
       expect(spendToolStamina("trowel")).toBe(false);
       expect(useGameStore.getState().stamina).toBe(2);
+    });
+  });
+
+  describe("drainToolDurability (Spec §11.3)", () => {
+    it("returns true for tools with maxDurability === 0 (almanac, seed-pouch)", () => {
+      // Tools exempt from wear always return true regardless of state
+      expect(drainToolDurability("almanac")).toBe(true);
+      expect(drainToolDurability("seed-pouch")).toBe(true);
+    });
+
+    it("returns true for unknown tool ID (no-op, no cost)", () => {
+      expect(drainToolDurability("nonexistent-tool")).toBe(true);
+    });
+
+    it("drains 1 durability on standard use", () => {
+      // Lazy init: absent from map = maxDurability (100)
+      drainToolDurability("trowel");
+      expect(useGameStore.getState().toolDurabilities["trowel"]).toBe(99);
+    });
+
+    it("drains a custom amount when specified", () => {
+      // Wrong target = 3 durability per Spec §11.3
+      drainToolDurability("axe", 3);
+      expect(useGameStore.getState().toolDurabilities["axe"]).toBe(97);
+    });
+
+    it("returns false when tool is already broken (durability === 0)", () => {
+      useGameStore.getState().setToolDurability("trowel", 0);
+      expect(drainToolDurability("trowel")).toBe(false);
+    });
+
+    it("clamps durability at 0, does not go negative", () => {
+      useGameStore.getState().setToolDurability("shovel", 1);
+      drainToolDurability("shovel", 5);
+      expect(useGameStore.getState().toolDurabilities["shovel"]).toBe(0);
+    });
+
+    it("each consecutive drain reduces durability by 1", () => {
+      drainToolDurability("watering-can");
+      drainToolDurability("watering-can");
+      drainToolDurability("watering-can");
+      expect(useGameStore.getState().toolDurabilities["watering-can"]).toBe(97);
     });
   });
 });
