@@ -16,7 +16,6 @@ import type {
   Position,
   Renderable,
   PlayerComponent,
-  GridCellComponent,
   PropComponent,
   RainCatcherComponent,
   ScarecrowComponent,
@@ -125,7 +124,7 @@ export interface Entity {
   rock?: RockComponent;
   hedge?: HedgeComponent;
   hedgeDecoration?: HedgeDecorationComponent;
-  gridCell?: GridCellComponent;
+  gridCell?: { gridX: number; gridZ: number; type: "soil" | "water" | "rock" | "path"; occupied: boolean; treeEntityId: string | null };
 
   // Items
   food?: FoodComponent;

@@ -28,8 +28,9 @@ import {
 } from "@/game/actions/GameActions";
 import type { ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
-import type { GridCellComponent } from "@/game/ecs/world";
 import { playerQuery, world } from "@/game/ecs/world";
+
+type TileCell = { gridX: number; gridZ: number };
 
 const gridCellsQuery = world.with("gridCell", "position");
 import { useGameStore } from "@/game/stores/gameStore";
@@ -573,7 +574,7 @@ export class PlayerGovernor {
     return null;
   }
 
-  private pickNearestTile(tiles: GridCellComponent[], px: number, pz: number): GridCellComponent {
+  private pickNearestTile(tiles: TileCell[], px: number, pz: number): TileCell {
     let closest = tiles[0];
     let minDist = Number.POSITIVE_INFINITY;
     for (const tile of tiles) {

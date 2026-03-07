@@ -24,7 +24,7 @@ import Svg, { Circle as SvgCircle, Rect as SvgRect } from "react-native-svg";
 
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import type { GridCellComponent, TreeComponent } from "@/game/ecs/world";
+import type { TreeComponent } from "@/game/ecs/world";
 import {
   playerQuery,
   structuresQuery,
@@ -43,7 +43,7 @@ import { MiniMapOverlay } from "./MiniMapOverlay";
 interface MinimapCell {
   gridX: number;
   gridZ: number;
-  type: GridCellComponent["type"];
+  type: "soil" | "water" | "rock" | "path";
   occupied: boolean;
 }
 

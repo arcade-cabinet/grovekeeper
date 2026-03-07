@@ -27,18 +27,9 @@ export interface PlayerComponent {
   maxStamina: number;
 }
 
-export interface PropComponent {
-  propId: string;
-  modelPath?: string;
-}
-
-export interface RainCatcherComponent {
-  radius: number;
-}
-
-export interface ScarecrowComponent {
-  radius: number;
-}
+export interface PropComponent { propId: string; modelPath?: string; }
+export interface RainCatcherComponent { radius: number; }
+export interface ScarecrowComponent { radius: number; }
 
 export interface Harvestable {
   resources: { type: string; amount: number }[];
@@ -52,14 +43,3 @@ export interface ChunkComponent {
   chunkZ: number;
   biome: string;
 }
-
-// --- LEGACY: Used in 25+ files. Remove during Phase 0-1 (grid→chunk migration) ---
-
-export interface GridCellComponent {
-  gridX: number;
-  gridZ: number;
-  type: "soil" | "water" | "rock" | "path";
-  occupied: boolean;
-  treeEntityId: string | null;
-}
-

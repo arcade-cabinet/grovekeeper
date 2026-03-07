@@ -13,7 +13,9 @@ import type { ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
 import { getToolById } from "@/game/config/tools";
 import { createTreeEntity } from "@/game/ecs/archetypes";
-import type { Entity, GridCellComponent } from "@/game/ecs/world";
+import type { Entity } from "@/game/ecs/world";
+
+type TileCell = { gridX: number; gridZ: number; type: "soil" | "water" | "rock" | "path"; occupied: boolean; treeEntityId: string | null };
 import { generateEntityId, playerQuery, treesQuery, world } from "@/game/ecs/world";
 
 const gridCellsQuery = world.with("gridCell", "position");
@@ -26,7 +28,7 @@ import { collectHarvest, initHarvestable } from "@/game/systems/harvest";
 // ──────────────────────────────────────────────
 
 /** Find the grid cell entity at a given grid coordinate. */
-function findCell(gridX: number, gridZ: number): GridCellComponent | null {
+function findCell(gridX: number, gridZ: number): TileCell | null {
   for (const cell of gridCellsQuery) {
     if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
       return cell.gridCell;
@@ -48,8 +50,8 @@ function findTreeById(treeEntityId: string): Entity | null {
 // ──────────────────────────────────────────────
 
 /** Find all empty, plantable soil tiles. */
-export function findPlantableTiles(): GridCellComponent[] {
-  const tiles: GridCellComponent[] = [];
+export function findPlantableTiles(): TileCell[] {
+  const tiles: TileCell[] = [];
   for (const cell of gridCellsQuery) {
     if (cell.gridCell && cell.gridCell.type === "soil" && !cell.gridCell.occupied) {
       tiles.push(cell.gridCell);

@@ -10,7 +10,7 @@ import {
   spendToolStamina,
   waterTree,
 } from "@/game/actions/GameActions";
-import type { Entity, GridCellComponent } from "@/game/ecs/world";
+import type { Entity } from "@/game/ecs/world";
 import { generateEntityId, world } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
 
@@ -34,7 +34,7 @@ jest.mock("@/game/ui/Toast", () => ({
 function addGridCell(
   gridX: number,
   gridZ: number,
-  type: GridCellComponent["type"] = "soil",
+  type: "soil" | "water" | "rock" | "path" = "soil",
   occupied = false,
 ): Entity {
   const entity: Entity = {
