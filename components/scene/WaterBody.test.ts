@@ -41,12 +41,15 @@ jest.mock("@/game/ecs/world", () => ({
 jest.mock("@/game/shaders/gerstnerWater", () => ({
   createGerstnerMaterial: jest.fn().mockReturnValue({ uniforms: { uTime: { value: 0 } } }),
   updateGerstnerTime: jest.fn(),
+  createCausticsMaterial: jest.fn().mockReturnValue({ uniforms: { uTime: { value: 0 } } }),
+  updateCausticsTime: jest.fn(),
 }));
 
 import * as THREE from "three";
 import {
   buildWaterPlaneGeometry,
   WATER_PLANE_SEGMENTS,
+  CAUSTICS_DEPTH_OFFSET,
   WaterBodies,
 } from "./WaterBody";
 import type { WaterBodyComponent } from "@/game/ecs/components/procedural/water";
@@ -133,6 +136,19 @@ describe("buildWaterPlaneGeometry (Spec §31.2)", () => {
     const [width, height] = MockPlaneGeometry.mock.calls[0] as [number, number];
     expect(width).toBe(64);
     expect(height).toBe(16);
+  });
+});
+
+// ─── CAUSTICS_DEPTH_OFFSET constant ──────────────────────────────────────────
+
+describe("CAUSTICS_DEPTH_OFFSET (Spec §31.2)", () => {
+  it("is a positive number", () => {
+    expect(typeof CAUSTICS_DEPTH_OFFSET).toBe("number");
+    expect(CAUSTICS_DEPTH_OFFSET).toBeGreaterThan(0);
+  });
+
+  it("is small enough to avoid visible gaps (< 0.5 world units)", () => {
+    expect(CAUSTICS_DEPTH_OFFSET).toBeLessThan(0.5);
   });
 });
 

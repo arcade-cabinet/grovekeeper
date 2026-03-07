@@ -182,3 +182,91 @@ export function createGerstnerMaterial(waterBody: WaterBodyComponent): THREE.Sha
 export function updateGerstnerTime(material: THREE.ShaderMaterial, time: number): void {
   material.uniforms.uTime.value = time;
 }
+
+// ─── Caustics ─────────────────────────────────────────────────────────────────
+
+/**
+ * UV scale for caustic pattern sampling (spec §31.2: scale 0.5).
+ * Smaller values = larger/coarser patterns.
+ */
+export const CAUSTICS_UV_SCALE = 0.5;
+
+/**
+ * Animation speed for caustic pattern (spec §31.2: speed 0.8).
+ */
+export const CAUSTICS_SPEED = 0.8;
+
+/**
+ * Caustic vertex shader — minimal passthrough that forwards UV to fragment.
+ */
+export const CAUSTICS_VERTEX_SHADER = `
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+/**
+ * Caustic fragment shader — two-layer sine interference pattern.
+ *
+ * Two offset sine waves scrolled in different directions produce an
+ * animated refractive caustic appearance. Output is white light with
+ * caustic intensity as alpha — intended for AdditiveBlending.
+ */
+export const CAUSTICS_FRAGMENT_SHADER = `
+  uniform float uTime;
+  uniform float uCausticsScale;
+  uniform float uCausticsSpeed;
+
+  varying vec2 vUv;
+
+  void main() {
+    vec2 uv = vUv * uCausticsScale * 8.0;
+    float t = uTime * uCausticsSpeed;
+
+    // Layer A: diagonal scroll
+    float a = sin(uv.x + t) * sin(uv.y - t * 0.7);
+    // Layer B: counter-scroll at slightly different frequency
+    float b = sin(uv.x * 1.3 - t * 0.6 + 1.5) * sin(uv.y * 0.9 + t * 0.5);
+
+    float caustic = max(0.0, (a + b) * 0.5);
+    caustic = caustic * caustic; // sharpen the bright rings
+
+    // AdditiveBlending: src_alpha * src_rgb is added to dest
+    gl_FragColor = vec4(1.0, 1.0, 1.0, caustic * 0.35);
+  }
+`;
+
+/**
+ * Create an additive caustic ShaderMaterial from a WaterBodyComponent.
+ *
+ * The caustic plane is rendered with AdditiveBlending so the bright
+ * pattern appears to project light onto the terrain below.
+ * Call `updateCausticsTime(mat, clock.elapsedTime)` each frame.
+ */
+export function createCausticsMaterial(): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: CAUSTICS_VERTEX_SHADER,
+    fragmentShader: CAUSTICS_FRAGMENT_SHADER,
+    uniforms: {
+      uTime: { value: 0 },
+      uCausticsScale: { value: CAUSTICS_UV_SCALE },
+      uCausticsSpeed: { value: CAUSTICS_SPEED },
+    },
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+}
+
+/**
+ * Update the time uniform on a caustics material — call from useFrame.
+ *
+ * @param material  The ShaderMaterial returned by createCausticsMaterial.
+ * @param time      Elapsed time in seconds.
+ */
+export function updateCausticsTime(material: THREE.ShaderMaterial, time: number): void {
+  material.uniforms.uTime.value = time;
+}

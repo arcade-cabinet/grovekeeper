@@ -1,0 +1,95 @@
+# Iteration 52 Log
+
+## Metadata
+
+- **Task ID**: US-052
+- **Task Title**: Create WaterBody R3F component
+- **Description**: As a developer, I want a WaterBody R3F component with PlaneGeometry and the Gerstner shader so that water planes render at entity positions. See GAME_SPEC.md §12.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T11:38:50.452Z
+- **Ended At**: 2026-03-07T11:42:29.810Z
+- **Duration**: 3m 39s
+- **Input Tokens**: 8051
+- **Output Tokens**: 11950
+- **Total Tokens**: 20001
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (28832 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/scene/**/*.tsx[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/**/*.ts[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/scene/**/*.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/water.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/shaders/gerstnerWater.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§12|§31|WaterBody|water body[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m pattern: [96mwaterBody|waterBodies|WaterBody[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/scene/WaterBody*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§12|section 12|Spec §12[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 12|^### 12|§12[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/scene/*.test.ts*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StaticInstances.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.test.ts[0m
+Now I have enough context. Let me set up todos and implement the component.
+
+`★ Insight ─────────────────────────────────────`
+- The water shader uses `pos.xz` for wave direction, so the mesh needs vertices in XZ (not XY). `TerrainChunks` builds a custom XZ `BufferGeometry` for this reason. Using `THREE.PlaneGeometry` (XY) with a `-π/2` X rotation keeps the shader working — local `pos.y` becomes world `Z`, meaning wave propagation uses `(localX, 0)` but still produces visible displacement.
+- The imperative `useFrame` + `Map<id, mesh>` pattern (used by TerrainChunks and StaticInstances) enables zero React re-renders per frame while correctly tracking entity lifecycle.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Bash[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/WaterBody.tsx[0m "/**
+ * WaterBodies — R3F component that renders all ECS water body entities
+ * using PlaneGeometry + Gerstner wave ShaderMaterial.
+ *
+ * Each water body is an ECS entity with a WaterBodyComponent that... (3535 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- For tests of R3F components that use `THREE.PlaneGeometry`, mock `three` to intercept constructor calls. The `jest.Mock` cast pattern (`as unknown as jest.Mock`) allows `.mock.calls` access without TypeScript complaints.
+- Exporting `buildWaterPlaneGeometry` as a pure seam lets tests verify geometry sizing (width × depth mapping) without needing a WebGL context.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/WaterBody.test.ts[0m "/**
+ * Tests for WaterBodies R3F component (Spec §31.2).
+ *
+ * Tests exported constants and buildWaterPlaneGeometry without
+ * WebGL/R3F context. The imperative useFrame rendering pattern is tested
+ *... (4763 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run WaterBody tests $ npx jest --no-coverage --testPathPattern WaterBody 2>&1
+12/12 tests pass. Now let me run the full suite:
+[94m[Bash][0m Full test suite $ npx jest --no-coverage 2>&1 | tail -20
+101 suites, 1864 tests, all passing. Now updating progress:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-051" → "---
+
+## 2026-03-07 - US-052
+- Created `WaterBodies..."
+[94m[TodoWrite][0m
+All acceptance criteria met:
+
+- `components/scene/WaterBody.tsx` created with `PlaneGeometry` + Gerstner shader
+- Size sourced from `WaterBodyComponent.size` via `buildWaterPlaneGeometry`
+- Water planes render at entity positions via `waterBodiesQuery` + imperative `useFrame`
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 1864 tests, 0 failures (101 suites)
+
+<promise>COMPLETE</promise>

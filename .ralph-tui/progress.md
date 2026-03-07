@@ -37,6 +37,30 @@ after each iteration and it's included in prompts for context.
 - **InstancedMesh entitiesRef pattern**: Outer batch component holds `Map<modelPath, MutableRefObject<StaticEntityInput[]>>`; clears and repopulates refs each `useFrame`. Inner `StaticModelInstances` reads from the ref in its own `useFrame` — entity data flows imperatively with zero React state updates per frame. Capacity Map grows-only; `mesh.count` set each frame to active count.
 - **Multi-mesh GLB InstancedMesh**: `scene.traverse(obj => { if (obj instanceof THREE.Mesh) result.push({ geo, mat }) })` collects all sub-meshes. Render one `<instancedMesh>` per sub-mesh, all sharing the same per-entity world matrix. Callback ref `ref={(el) => { instancedRefs.current[i] = el; }}` handles dynamic sub-mesh ref array without hooks changes.
 
+- **Caustic plane reuses water geometry factory**: `buildWaterPlaneGeometry` is called for both the Gerstner wave surface and the caustic plane — same footprint. No need for a separate builder. Positioned at `y - CAUSTICS_DEPTH_OFFSET` (0.05 units below).
+- **AdditiveBlending for caustics**: `THREE.AdditiveBlending` adds `src_alpha * src_rgb` to destination. Caustic bright rings visually "light up" terrain below without occluding it. Requires `depthWrite: false` and `transparent: true`.
+- **Dual-Map lifecycle for caustics**: `causticMeshMapRef` + `causticMaterialMapRef` mirror the existing `meshMapRef`/`materialMapRef` pattern. Caustic meshes are created/destroyed with the same `aliveIds` set approach, keeping the cleanup symmetric.
+
+---
+
+## 2026-03-07 - US-053
+- Implemented foam overlay and caustic projection for water bodies (Spec §31.2)
+- **Foam was already complete** from US-051: `vFoam` varying in Gerstner vertex shader accumulates steepness × sinP; fragment shader blends to white where `vFoam > uFoamThreshold` when `uFoamEnabled = true`.
+- **Caustics**: new additive-blended plane rendered `CAUSTICS_DEPTH_OFFSET` (0.05) below each water body with `causticsEnabled = true`. Two-layer sine interference pattern, UV scale 0.5, speed 0.8 (spec values exposed as exported constants).
+- **Files changed:**
+  - `game/shaders/gerstnerWater.ts` — added: `CAUSTICS_UV_SCALE`, `CAUSTICS_SPEED`, `CAUSTICS_VERTEX_SHADER`, `CAUSTICS_FRAGMENT_SHADER`, `createCausticsMaterial()`, `updateCausticsTime()`
+  - `components/scene/WaterBody.tsx` — added: `CAUSTICS_DEPTH_OFFSET`, `causticMeshMapRef`, `causticMaterialMapRef`; caustic plane lifecycle in `useFrame` (create/update/destroy)
+  - `game/shaders/gerstnerWater.test.ts` — added 18 tests for caustic constants, GLSL content, `createCausticsMaterial`, `updateCausticsTime`
+  - `components/scene/WaterBody.test.ts` — added `CAUSTICS_DEPTH_OFFSET` import + 2 tests; updated gerstnerWater mock to include caustic exports
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern "gerstnerWater|WaterBody"` → 71 tests, 0 failures
+  - `npx jest --no-coverage` → 1884 tests, 0 failures (101 suites)
+- **Learnings:**
+  - **Foam already existed**: Read the Gerstner shader before assuming foam needs new work — the entire foam pipeline (vFoam varying, uFoamEnabled/uFoamThreshold uniforms, fragment blend) was implemented in US-051. US-053 only required caustics.
+  - **Caustic plane reuses geometry factory**: `buildWaterPlaneGeometry` works for both water and caustic planes — same footprint, just positioned at `y - CAUSTICS_DEPTH_OFFSET`.
+  - **AdditiveBlending mock needs `blending` field**: The `THREE.ShaderMaterial` mock in `gerstnerWater.test.ts` only forwarded certain params. Adding `blending: params?.blending` to the mock and `AdditiveBlending: 2` to the THREE mock enables testing the blending mode without WebGL.
+
 ---
 
 ## 2026-03-07 - US-052
