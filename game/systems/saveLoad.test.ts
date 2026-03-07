@@ -37,6 +37,14 @@ const mockGridCells: Array<Record<string, unknown>> = [];
 const mockTrees: Array<Record<string, unknown>> = [];
 
 jest.mock("@/game/ecs/world", () => {
+  const gridCellsQueryMock = {
+    get entities() {
+      return mockGridCells;
+    },
+    [Symbol.iterator]: function* () {
+      yield* mockGridCells;
+    },
+  };
   return {
     world: {
       add: jest.fn((entity: Record<string, unknown>) => {
@@ -49,6 +57,7 @@ jest.mock("@/game/ecs/world", () => {
       [Symbol.iterator]: function* () {
         yield* [...mockEntities];
       },
+      with: () => gridCellsQueryMock,
     },
     treesQuery: {
       get entities() {
@@ -56,14 +65,6 @@ jest.mock("@/game/ecs/world", () => {
       },
       [Symbol.iterator]: function* () {
         yield* mockTrees;
-      },
-    },
-    gridCellsQuery: {
-      get entities() {
-        return mockGridCells;
-      },
-      [Symbol.iterator]: function* () {
-        yield* mockGridCells;
       },
     },
     generateEntityId: jest.fn(() => `entity_${Date.now()}_${Math.random()}`),

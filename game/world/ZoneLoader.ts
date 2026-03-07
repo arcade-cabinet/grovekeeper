@@ -8,7 +8,9 @@
 
 import { createGridCellEntity, createNpcEntity, createWildTreeEntity } from "@/game/ecs/archetypes";
 import type { Entity } from "@/game/ecs/world";
-import { gridCellsQuery, npcsQuery, world } from "@/game/ecs/world";
+import { npcsQuery, world } from "@/game/ecs/world";
+
+const gridCellsQuery = world.with("gridCell", "position");
 import { getNpcTemplate } from "@/game/npcs/NpcManager";
 import { createRNG, hashString } from "@/game/utils/seedRNG";
 import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types";

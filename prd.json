@@ -57,8 +57,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "Phase 0-A: Legacy Teardown. Depends on US-001, US-002, US-003 completing first."
+      "passes": true,
+      "notes": "Phase 0-A: Legacy Teardown. Depends on US-001, US-002, US-003 completing first.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-005",
@@ -2724,6 +2725,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T08:11:42.355Z"
+    "updatedAt": "2026-03-07T08:23:02.033Z"
   }
 }

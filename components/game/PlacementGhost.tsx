@@ -14,7 +14,9 @@ import { Pressable, View } from "react-native";
 import * as THREE from "three";
 
 import { Text } from "@/components/ui/text";
-import { gridCellsQuery, playerQuery } from "@/game/ecs/world";
+import { playerQuery, world } from "@/game/ecs/world";
+
+const gridCellsQuery = world.with("gridCell", "position");
 import { canPlace } from "@/game/structures/StructureManager";
 import type { StructureTemplate } from "@/game/structures/types";
 

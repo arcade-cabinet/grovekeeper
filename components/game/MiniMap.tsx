@@ -26,11 +26,13 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import type { GridCellComponent, TreeComponent } from "@/game/ecs/world";
 import {
-  gridCellsQuery,
   playerQuery,
   structuresQuery,
   treesQuery,
+  world,
 } from "@/game/ecs/world";
+
+const gridCellsQuery = world.with("gridCell", "position");
 
 import { MiniMapOverlay } from "./MiniMapOverlay";
 

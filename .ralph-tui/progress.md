@@ -9,7 +9,22 @@ after each iteration and it's included in prompts for context.
 - **Chunk-based tile state**: `occupied` = `!!tree || !!rock` via ECS queries; `cellType` = `rock ? "rock" : "soil"`. No GridCellComponent needed — derive from entity presence at position.
 - **Decoupling system inputs**: Replace `GridCellComponent`-shaped params with a minimal local interface (e.g., `WalkabilityCell`) so systems don't import ECS component types.
 - **grep substring trap**: `grep -r 'ZoneComponent'` matches `AmbientZoneComponent`, `MyZoneComponent`, etc. — rename any collateral types that contain the target as a substring. The ECS field KEY (e.g. `ambientZone`) is what queries use, not the TypeScript interface name, so renaming the interface is safe.
+- **Moving world.ts queries to callsites**: When removing a centralized query from world.ts, add `const gridCellsQuery = world.with("gridCell", "position");` at module level in each callsite file instead. Test mocks that mock `@/game/ecs/world` must add `with: () => mockQueryObject` to the `world` mock — otherwise module-level `world.with()` calls throw at import time.
 
+---
+
+## 2026-03-07 - US-004
+- Removed LEGACY comment block from world.ts Entity interface
+- Moved `gridCell?: GridCellComponent` to terrain features section (no LEGACY label)
+- Moved `zoneId?: string` to core spatial section (no LEGACY label)
+- Removed `gridCellsQuery` export and its LEGACY comment from world.ts
+- Added module-level `const gridCellsQuery = world.with("gridCell", "position")` to each callsite: saveLoad.ts, PlacementGhost.tsx, useWorldLoader.ts, ZoneLoader.ts, GameActions.ts, PlayerGovernor.ts, useGameLoop.ts, MiniMap.tsx
+- Removed `gridCellsQuery` import from world.test.ts; removed the "gridCellsQuery finds grid cells" test
+- Updated saveLoad.test.ts and useAutoSave.test.ts mocks: removed `gridCellsQuery` from top-level mock exports, added `with: () => mockQuery` to `world` mock
+- **Learnings:**
+  - Miniplex `world.with()` queries created at module level work identically to those exported from world.ts — same world singleton
+  - Test mocks for `@/game/ecs/world` that mock `world` as a plain object must include `with: () => mockQueryObj` when any module in the dep chain calls `world.with()` at module-init time; omitting it causes "world.with is not a function" at import
+  - The LEGACY comment is the cleanest removal target — `gridCell` and `zoneId` stay in Entity (just without the label) to keep callers working without a full system teardown
 ---
 
 ## 2026-03-07 - US-003

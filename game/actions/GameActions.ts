@@ -14,7 +14,9 @@ import { getSpeciesById } from "@/game/config/species";
 import { getToolById } from "@/game/config/tools";
 import { createTreeEntity } from "@/game/ecs/archetypes";
 import type { Entity, GridCellComponent } from "@/game/ecs/world";
-import { generateEntityId, gridCellsQuery, playerQuery, treesQuery, world } from "@/game/ecs/world";
+import { generateEntityId, playerQuery, treesQuery, world } from "@/game/ecs/world";
+
+const gridCellsQuery = world.with("gridCell", "position");
 import { useGameStore } from "@/game/stores/gameStore";
 import { canPlace, getTemplate } from "@/game/structures/StructureManager";
 import { collectHarvest, initHarvestable } from "@/game/systems/harvest";

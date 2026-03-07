@@ -90,6 +90,7 @@ export interface Entity {
   position?: Position;
   renderable?: Renderable;
   chunk?: ChunkComponent;
+  zoneId?: string;
 
   // Player
   player?: PlayerComponent;
@@ -124,6 +125,7 @@ export interface Entity {
   rock?: RockComponent;
   hedge?: HedgeComponent;
   hedgeDecoration?: HedgeDecorationComponent;
+  gridCell?: GridCellComponent;
 
   // Items
   food?: FoodComponent;
@@ -150,10 +152,6 @@ export interface Entity {
   // Dialogue & quest branching
   dialogue?: DialogueComponent;
   questBranch?: QuestBranchComponent;
-
-  // LEGACY: Remove during Phase 0-1 (grid→chunk)
-  gridCell?: GridCellComponent;
-  zoneId?: string;
 }
 
 // Create the ECS world
@@ -226,5 +224,3 @@ export const dialogueQuery = world.with("dialogue");
 export const activeDialogueQuery = world.with("dialogue", "position");
 export const questBranchQuery = world.with("questBranch");
 
-// LEGACY queries — remove during Phase 0-1
-export const gridCellsQuery = world.with("gridCell", "position");

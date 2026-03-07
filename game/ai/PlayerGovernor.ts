@@ -29,7 +29,9 @@ import {
 import type { ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
 import type { GridCellComponent } from "@/game/ecs/world";
-import { gridCellsQuery, playerQuery } from "@/game/ecs/world";
+import { playerQuery, world } from "@/game/ecs/world";
+
+const gridCellsQuery = world.with("gridCell", "position");
 import { useGameStore } from "@/game/stores/gameStore";
 import {
   advancePathFollow,

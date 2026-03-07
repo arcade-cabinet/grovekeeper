@@ -1,5 +1,5 @@
 import { createGridCellEntity, createPlayerEntity, createTreeEntity } from "./archetypes";
-import { generateEntityId, gridCellsQuery, playerQuery, treesQuery, world } from "./world";
+import { generateEntityId, playerQuery, treesQuery, world } from "./world";
 
 describe("ECS World", () => {
   beforeEach(() => {
@@ -79,13 +79,5 @@ describe("ECS World", () => {
       expect(players[0].id).toBe("player");
     });
 
-    it("gridCellsQuery finds grid cells", () => {
-      world.add(createGridCellEntity(0, 0));
-      world.add(createGridCellEntity(0, 1));
-      world.add(createGridCellEntity(1, 0));
-
-      const cells = [...gridCellsQuery];
-      expect(cells.length).toBe(3);
-    });
   });
 });

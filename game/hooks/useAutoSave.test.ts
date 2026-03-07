@@ -30,11 +30,16 @@ jest.mock("react-native", () => ({
 }));
 
 // Mock ECS world
-jest.mock("@/game/ecs/world", () => ({
-  treesQuery: { [Symbol.iterator]: function* () {} },
-  gridCellsQuery: { [Symbol.iterator]: function* () {} },
-  world: { [Symbol.iterator]: function* () {} },
-}));
+jest.mock("@/game/ecs/world", () => {
+  const mockQuery = { [Symbol.iterator]: function* () {}, entities: [], size: 0 };
+  return {
+    treesQuery: mockQuery,
+    world: {
+      [Symbol.iterator]: function* () {},
+      with: () => mockQuery,
+    },
+  };
+});
 
 jest.mock("@/game/ecs/archetypes", () => ({}));
 jest.mock("@/game/systems/growth", () => ({ getStageScale: () => 1 }));

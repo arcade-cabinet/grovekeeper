@@ -8,7 +8,9 @@
 
 import { useEffect, useRef } from "react";
 import startingWorld from "@/config/world/starting-world.json" with { type: "json" };
-import { gridCellsQuery } from "@/game/ecs/world";
+import { world } from "@/game/ecs/world";
+
+const gridCellsQuery = world.with("gridCell", "position");
 import { useGameStore } from "@/game/stores/gameStore";
 import type { WorldDefinition, ZoneDefinition } from "@/game/world/types";
 import { loadZoneEntities } from "@/game/world/ZoneLoader";

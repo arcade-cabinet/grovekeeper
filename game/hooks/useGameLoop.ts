@@ -14,13 +14,14 @@ import { NpcBrain, type NpcBrainContext } from "@/game/ai/NpcBrain";
 import { getSpeciesById } from "@/game/config/species";
 import { createWildTreeEntity } from "@/game/ecs/archetypes";
 import {
-  gridCellsQuery,
   harvestableQuery,
   npcsQuery,
   playerQuery,
   treesQuery,
   world,
 } from "@/game/ecs/world";
+
+const gridCellsQuery = world.with("gridCell", "position");
 import { useGameStore } from "@/game/stores/gameStore";
 import { checkAchievements, type PlayerStats } from "@/game/systems/achievements";
 import { calcGrowthRate, MAX_STAGE } from "@/game/systems/growth";
