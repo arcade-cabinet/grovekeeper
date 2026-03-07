@@ -2571,3 +2571,18 @@ after each iteration and it's included in prompts for context.
   - **Test stories that follow implementation stories should always check stop condition first**: US-138 included tests as part of the work (consistent with the docs > tests > code mandate). US-139 simply verifies the criteria are met.
   - **seedWords.test.ts covers all three acceptance criteria**: phrase format (3 words, title-cased, different adjectives), seed-to-world determinism (same entropy → same phrase), shuffle variation (different entropy → different phrase). NewGameModal.test.ts adds integration coverage.
 ---
+
+## 2026-03-07 - US-141
+- Implemented 11-step tutorial system (Spec §25.1).
+- Files created:
+  - `game/systems/tutorial.ts` — pure state machine: `TutorialStep` type, `TutorialState` interface, `TUTORIAL_STEPS` (11 steps with signal + label), `initialTutorialState()`, `tickTutorial(state, signal)`, `advanceStep(state)`, `skipTutorial(state)`, `isTutorialComplete(state)`, `currentStepLabel(state)`.
+  - `game/systems/tutorial.test.ts` — 23 tests across 6 describe blocks, all pass.
+- Files modified:
+  - `game/stores/gameStore.ts` — added `tutorialState: initialTutorialState()` to `initialState` (persisted via expo-sqlite), added `advanceTutorial(signal)` and `completeTutorialSkip()` actions.
+  - `components/game/TutorialOverlay.tsx` — reads `tutorialState` from game store, shows step label from store (falling back to `label` prop), adds `Pressable` Skip button (44px touch target, bottom-right, accessible).
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3387 tests, 146 suites, all pass.
+- **Learnings:**
+  - **All hooks before conditional return**: `useRef` and `useEffect` calls in `TutorialOverlay` must appear before any `if (...) return null` guard — even when the guard fires first at runtime. Placing hooks after the early return violates Rules of Hooks and causes runtime errors.
+  - **Signal-based tutorial mirrors quest objectives**: `tickTutorial(state, signal)` is the same pattern as `advanceObjectives(state, eventType, amount)` — game actions dispatch string signals, the system checks them against the current step's expected trigger. Fully decoupled from React, ECS, and Three.js; unit-testable with zero mocks.
+  - **Store action name collision with imported pure function**: When the game store action has the same name as an imported pure function (`skipTutorial`), import the pure function with an alias (`skipTutorial as skipTutorialPure`) and give the store action a different name (`completeTutorialSkip`). Matches the `discoverCampfire as discoverCampfirePure` pattern already in the codebase.
+---

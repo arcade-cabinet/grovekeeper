@@ -37,6 +37,12 @@ import {
 import type { QuestChainState } from "@/game/quests/types";
 import { applyDialogueEffects } from "@/game/systems/dialogueEffects";
 import type { DialogueEffect } from "@/game/ecs/components/dialogue";
+import {
+  initialTutorialState,
+  skipTutorial as skipTutorialPure,
+  tickTutorial,
+  type TutorialState,
+} from "@/game/systems/tutorial";
 import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import { checkNewUnlocks } from "@/game/systems/levelUnlocks";
 import {
@@ -255,6 +261,9 @@ const initialState = {
 
   /** Discovered Grovekeeper Spirit IDs. Spec §32.3. */
   discoveredSpiritIds: [] as string[],
+
+  /** Tutorial state — persists so tutorial does not repeat on reload. Spec §25.1 */
+  tutorialState: initialTutorialState() as TutorialState,
 };
 
 type GameStateData = typeof initialState;
@@ -1171,6 +1180,27 @@ const actions = {
 
     actions.advanceQuestObjective("spirit_discovered", 1);
     return true;
+  },
+
+  // Tutorial actions (Spec §25.1)
+
+  /**
+   * Advance the tutorial if `signal` matches the current step's expected signal.
+   * No-op if tutorial is already complete.
+   */
+  advanceTutorial(signal: string) {
+    const state = getState();
+    const newTutorialState = tickTutorial(state.tutorialState, signal);
+    if (newTutorialState !== state.tutorialState) {
+      gameState$.tutorialState.set(newTutorialState);
+    }
+  },
+
+  /**
+   * Skip the tutorial immediately. Marks as completed so it won't repeat.
+   */
+  completeTutorialSkip() {
+    gameState$.tutorialState.set(skipTutorialPure(getState().tutorialState));
   },
 
   // Database hydration -- bulk-set state from SQLite
