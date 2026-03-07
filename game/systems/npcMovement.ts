@@ -1,9 +1,18 @@
 /**
  * NPC movement system -- manages active NPC paths and movement.
  * Ported from BabylonJS archive -- no engine dependencies.
+ *
+ * Yuka EntityManager layer:
+ *   - `registerNpcEntity` / `deregisterNpcEntity` add/remove Yuka GameEntity
+ *     objects from the shared EntityManager.
+ *   - `updateNpcEntityManager(dt)` drives Yuka's entity update cycle,
+ *     advancing steering behaviors and scheduled AI evaluations.
+ *   - Call once per game tick from the game loop alongside
+ *     `updateNpcMovement` for each individual NPC.
  */
 
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import { EntityManager, GameEntity } from "yuka";
 import {
   advancePathFollow,
   createPathFollow,
@@ -15,6 +24,50 @@ const NPC_MOVE_SPEED: number = gridConfig.npcMoveSpeed;
 
 /** Active path states keyed by NPC entity ID. */
 const activePaths = new Map<string, PathFollowState>();
+
+// ── Yuka EntityManager ────────────────────────────────────────────────────────
+
+/** Shared Yuka EntityManager for all active NPC entities. */
+const entityManager = new EntityManager();
+
+/** Registered Yuka entities keyed by NPC entity ID for O(1) lookup/removal. */
+const yukaEntities = new Map<string, GameEntity>();
+
+/**
+ * Register a Yuka GameEntity for an NPC.
+ *
+ * Call when an NPC is loaded into an active chunk. The entity is added to
+ * the shared EntityManager and updated each tick via updateNpcEntityManager.
+ * Idempotent — registering the same entityId twice is a no-op.
+ */
+export function registerNpcEntity(entityId: string, entity: GameEntity): void {
+  if (yukaEntities.has(entityId)) return;
+  yukaEntities.set(entityId, entity);
+  entityManager.add(entity);
+}
+
+/**
+ * Deregister a Yuka GameEntity for an NPC.
+ *
+ * Call when an NPC is unloaded from an active chunk. Safe to call for
+ * unknown entity IDs.
+ */
+export function deregisterNpcEntity(entityId: string): void {
+  const entity = yukaEntities.get(entityId);
+  if (!entity) return;
+  entityManager.remove(entity);
+  yukaEntities.delete(entityId);
+}
+
+/**
+ * Advance all registered Yuka entities by dt seconds.
+ *
+ * Call once per game tick from the game loop. This drives Yuka's internal
+ * steering and goal evaluation cycle for every active NPC entity.
+ */
+export function updateNpcEntityManager(dt: number): void {
+  entityManager.update(dt);
+}
 
 /**
  * Start an NPC walking to a target tile.
@@ -91,7 +144,11 @@ export function cancelNpcMovement(entityId: string): void {
   activePaths.delete(entityId);
 }
 
-/** Cancel all active NPC movements. Called on scene dispose. */
+/** Cancel all active NPC movements and deregister all Yuka entities. Called on scene dispose. */
 export function cancelAllNpcMovements(): void {
   activePaths.clear();
+  for (const entity of yukaEntities.values()) {
+    entityManager.remove(entity);
+  }
+  yukaEntities.clear();
 }

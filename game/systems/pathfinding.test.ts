@@ -1,4 +1,11 @@
-import { buildWalkabilityGrid, findPath, type WalkabilityCell, type WalkabilityGrid } from "./pathfinding";
+import {
+  buildMultiChunkWalkabilityGrid,
+  buildWalkabilityGrid,
+  findPath,
+  type ChunkWalkabilityInput,
+  type WalkabilityCell,
+  type WalkabilityGrid,
+} from "./pathfinding";
 
 // Helper to create a simple walkability grid from a 2D array
 // 0 = walkable, 1 = blocked
@@ -243,5 +250,213 @@ describe("findPath", () => {
       const dz = Math.abs(result![i].z - result![i - 1].z);
       expect(dx + dz).toBe(1);
     }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildMultiChunkWalkabilityGrid (Spec §19.5 — chunk-boundary pathfinding)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("buildMultiChunkWalkabilityGrid", () => {
+  it("returns empty grid when no chunks are provided", () => {
+    const grid = buildMultiChunkWalkabilityGrid([]);
+    expect(grid.width).toBe(0);
+    expect(grid.height).toBe(0);
+    expect(grid.data).toHaveLength(0);
+  });
+
+  it("combines two side-by-side chunks into correct width/height", () => {
+    const chunk0: ChunkWalkabilityInput = {
+      cells: [
+        { x: 0, z: 0, walkable: true },
+        { x: 1, z: 0, walkable: true },
+      ],
+      chunkX: 0,
+      chunkZ: 0,
+      chunkSize: 2,
+    };
+    const chunk1: ChunkWalkabilityInput = {
+      cells: [
+        { x: 2, z: 0, walkable: true },
+        { x: 3, z: 0, walkable: true },
+      ],
+      chunkX: 1,
+      chunkZ: 0,
+      chunkSize: 2,
+    };
+    const grid = buildMultiChunkWalkabilityGrid([chunk0, chunk1]);
+    expect(grid.width).toBe(4);
+    expect(grid.height).toBe(2);
+    // All four walkable tiles open
+    expect(grid.data[0]).toBe(0);
+    expect(grid.data[1]).toBe(0);
+    expect(grid.data[2]).toBe(0);
+    expect(grid.data[3]).toBe(0);
+  });
+
+  it("stores maxSlope on the resulting grid", () => {
+    const chunk: ChunkWalkabilityInput = {
+      cells: [],
+      chunkX: 0,
+      chunkZ: 0,
+      chunkSize: 2,
+    };
+    const grid = buildMultiChunkWalkabilityGrid([chunk], 0.5);
+    expect(grid.maxSlope).toBe(0.5);
+  });
+
+  it("sets correct world-space origin", () => {
+    // Chunk at (-1, 0) with chunkSize 2 → originX = -2, originZ = 0
+    const chunk: ChunkWalkabilityInput = {
+      cells: [],
+      chunkX: -1,
+      chunkZ: 0,
+      chunkSize: 2,
+    };
+    const grid = buildMultiChunkWalkabilityGrid([chunk]);
+    expect(grid.originX).toBe(-2);
+    expect(grid.originZ).toBe(0);
+  });
+
+  it("unknown tiles default to blocked", () => {
+    // Single chunk with only (0,0) walkable; (1,0) not provided → blocked
+    const chunk: ChunkWalkabilityInput = {
+      cells: [{ x: 0, z: 0, walkable: true }],
+      chunkX: 0,
+      chunkZ: 0,
+      chunkSize: 2,
+    };
+    const grid = buildMultiChunkWalkabilityGrid([chunk]);
+    expect(grid.data[0]).toBe(0); // (0,0) walkable
+    expect(grid.data[1]).toBe(1); // (1,0) blocked by default
+  });
+
+  it("can find a path that crosses a chunk boundary", () => {
+    const cells1: WalkabilityCell[] = [];
+    const cells2: WalkabilityCell[] = [];
+    for (let x = 0; x < 2; x++) {
+      for (let z = 0; z < 2; z++) {
+        cells1.push({ x, z, walkable: true });
+      }
+    }
+    for (let x = 2; x < 4; x++) {
+      for (let z = 0; z < 2; z++) {
+        cells2.push({ x, z, walkable: true });
+      }
+    }
+    const grid = buildMultiChunkWalkabilityGrid([
+      { cells: cells1, chunkX: 0, chunkZ: 0, chunkSize: 2 },
+      { cells: cells2, chunkX: 1, chunkZ: 0, chunkSize: 2 },
+    ]);
+    const path = findPath(grid, { x: 0, z: 0 }, { x: 3, z: 0 });
+    expect(path).not.toBeNull();
+    expect(path![path!.length - 1]).toEqual({ x: 3, z: 0 });
+  });
+
+  it("merges heightmap data from multiple chunks", () => {
+    const hm0 = new Float32Array([1, 2, 3, 4]); // chunk 0: 2×2
+    const hm1 = new Float32Array([5, 6, 7, 8]); // chunk 1: 2×2
+    const chunk0: ChunkWalkabilityInput = {
+      cells: [
+        { x: 0, z: 0, walkable: true },
+        { x: 1, z: 0, walkable: true },
+        { x: 0, z: 1, walkable: true },
+        { x: 1, z: 1, walkable: true },
+      ],
+      chunkX: 0,
+      chunkZ: 0,
+      chunkSize: 2,
+      heightmap: hm0,
+    };
+    const chunk1: ChunkWalkabilityInput = {
+      cells: [
+        { x: 2, z: 0, walkable: true },
+        { x: 3, z: 0, walkable: true },
+        { x: 2, z: 1, walkable: true },
+        { x: 3, z: 1, walkable: true },
+      ],
+      chunkX: 1,
+      chunkZ: 0,
+      chunkSize: 2,
+      heightmap: hm1,
+    };
+    const grid = buildMultiChunkWalkabilityGrid([chunk0, chunk1]);
+    expect(grid.heightmap).not.toBeUndefined();
+    // chunk0 local (0,0) → world (0,0) → grid index 0
+    expect(grid.heightmap![0]).toBeCloseTo(1);
+    // chunk1 local (0,0) → world (2,0) → grid index 2
+    expect(grid.heightmap![2]).toBeCloseTo(5);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// findPath with heightmap slope blocking (Spec §19.5)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("findPath with heightmap slope blocking", () => {
+  it("blocks steep tiles when maxSlope is set", () => {
+    // 3-tile row: flat at 0, steep rise to 5, flat at 0
+    const data = new Uint8Array([0, 0, 0]);
+    const heightmap = new Float32Array([0, 5, 0]);
+    const grid: WalkabilityGrid = {
+      data,
+      width: 3,
+      height: 1,
+      originX: 0,
+      originZ: 0,
+      heightmap,
+      maxSlope: 1,
+    };
+    const path = findPath(grid, { x: 0, z: 0 }, { x: 2, z: 0 });
+    expect(path).toBeNull();
+  });
+
+  it("allows gentle slopes within maxSlope", () => {
+    const data = new Uint8Array([0, 0, 0]);
+    const heightmap = new Float32Array([0, 0.5, 1]);
+    const grid: WalkabilityGrid = {
+      data,
+      width: 3,
+      height: 1,
+      originX: 0,
+      originZ: 0,
+      heightmap,
+      maxSlope: 1,
+    };
+    const path = findPath(grid, { x: 0, z: 0 }, { x: 2, z: 0 });
+    expect(path).not.toBeNull();
+    expect(path!.length).toBe(3);
+  });
+
+  it("ignores heightmap when maxSlope is not set", () => {
+    const data = new Uint8Array([0, 0, 0]);
+    const heightmap = new Float32Array([0, 100, 0]); // extreme but no maxSlope
+    const grid: WalkabilityGrid = {
+      data,
+      width: 3,
+      height: 1,
+      originX: 0,
+      originZ: 0,
+      heightmap,
+    };
+    const path = findPath(grid, { x: 0, z: 0 }, { x: 2, z: 0 });
+    expect(path).not.toBeNull();
+  });
+
+  it("allows path when slope equals maxSlope exactly", () => {
+    const data = new Uint8Array([0, 0]);
+    const heightmap = new Float32Array([0, 1]);
+    const grid: WalkabilityGrid = {
+      data,
+      width: 2,
+      height: 1,
+      originX: 0,
+      originZ: 0,
+      heightmap,
+      maxSlope: 1,
+    };
+    // slope = |1-0| = 1 which equals maxSlope — should be allowed
+    const path = findPath(grid, { x: 0, z: 0 }, { x: 1, z: 0 });
+    expect(path).not.toBeNull();
   });
 });

@@ -4,6 +4,7 @@
  */
 
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import { Path, Vector3 } from "yuka";
 import type { TileCoord } from "@/game/systems/pathfinding";
 
 const CELL_SIZE: number = gridConfig.cellSize;
@@ -38,6 +39,21 @@ export function createPathFollow(path: TileCoord[]): PathFollowState {
     currentIndex: waypoints.length > 1 ? 1 : 0,
     done: waypoints.length === 0,
   };
+}
+
+/**
+ * Convert a PathFollowState into a Yuka Path object.
+ *
+ * Enables integration with Yuka's FollowPathBehavior for MovingEntity
+ * steering. The y coordinate defaults to 0 (flat terrain) but can be
+ * set explicitly when the NPC needs to track terrain height.
+ */
+export function toYukaPath(state: PathFollowState, y = 0): Path {
+  const path = new Path();
+  for (const wp of state.waypoints) {
+    path.add(new Vector3(wp.x, y, wp.z));
+  }
+  return path;
 }
 
 /**

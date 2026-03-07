@@ -15,6 +15,23 @@ export interface WalkabilityGrid {
   /** World-space origin of the grid (top-left corner). */
   originX: number;
   originZ: number;
+  /** Optional terrain heightmap indexed the same as data. Used for slope blocking. */
+  heightmap?: Float32Array;
+  /** Maximum height difference per tile for slope blocking. Undefined = no slope check. */
+  maxSlope?: number;
+}
+
+/** Input for one chunk when composing a multi-chunk walkability grid. */
+export interface ChunkWalkabilityInput {
+  /** Walkability cells with world-space x/z coordinates. */
+  cells: WalkabilityCell[];
+  /** Chunk grid coordinate (not world units). */
+  chunkX: number;
+  chunkZ: number;
+  /** Tile count per chunk side. */
+  chunkSize: number;
+  /** Optional heightmap for this chunk, indexed by local coords [z * chunkSize + x]. */
+  heightmap?: Float32Array;
 }
 
 export interface TileCoord {
@@ -53,6 +70,81 @@ export function buildWalkabilityGrid(
   }
 
   return { data, width, height, originX: bounds.minX, originZ: bounds.minZ };
+}
+
+/**
+ * Build a walkability grid spanning multiple chunks.
+ *
+ * Calculates world-space bounds from all chunk inputs and merges their
+ * walkability cells and optional heightmaps into a single grid. Cells
+ * outside their chunk's bounds are silently ignored.
+ *
+ * This supports cross-chunk pathfinding: pass the active chunk plus its
+ * 4 or 8 neighbors to let NPCs plan paths that cross chunk boundaries.
+ *
+ * Water bodies and structures should be included as walkable=false cells
+ * so the A* planner avoids them.
+ */
+export function buildMultiChunkWalkabilityGrid(
+  chunks: ChunkWalkabilityInput[],
+  maxSlope?: number,
+): WalkabilityGrid {
+  if (chunks.length === 0) {
+    return { data: new Uint8Array(0), width: 0, height: 0, originX: 0, originZ: 0 };
+  }
+
+  // Derive world-space bounds from all chunks
+  let minX = Infinity;
+  let minZ = Infinity;
+  let maxX = -Infinity;
+  let maxZ = -Infinity;
+
+  for (const chunk of chunks) {
+    const wx = chunk.chunkX * chunk.chunkSize;
+    const wz = chunk.chunkZ * chunk.chunkSize;
+    if (wx < minX) minX = wx;
+    if (wz < minZ) minZ = wz;
+    const ex = wx + chunk.chunkSize;
+    const ez = wz + chunk.chunkSize;
+    if (ex > maxX) maxX = ex;
+    if (ez > maxZ) maxZ = ez;
+  }
+
+  const width = maxX - minX;
+  const height = maxZ - minZ;
+  const data = new Uint8Array(width * height);
+  data.fill(1); // default all blocked
+
+  const hasHeightmap = chunks.some((c) => c.heightmap != null);
+  const heightmap = hasHeightmap ? new Float32Array(width * height) : undefined;
+
+  for (const chunk of chunks) {
+    const wx = chunk.chunkX * chunk.chunkSize;
+    const wz = chunk.chunkZ * chunk.chunkSize;
+
+    for (const cell of chunk.cells) {
+      const lx = cell.x - minX;
+      const lz = cell.z - minZ;
+      if (lx < 0 || lx >= width || lz < 0 || lz >= height) continue;
+      if (cell.walkable) {
+        data[lz * width + lx] = 0;
+      }
+    }
+
+    if (chunk.heightmap && heightmap) {
+      for (let cz = 0; cz < chunk.chunkSize; cz++) {
+        for (let cx = 0; cx < chunk.chunkSize; cx++) {
+          const dstX = wx + cx - minX;
+          const dstZ = wz + cz - minZ;
+          if (dstX >= 0 && dstX < width && dstZ >= 0 && dstZ < height) {
+            heightmap[dstZ * width + dstX] = chunk.heightmap[cz * chunk.chunkSize + cx];
+          }
+        }
+      }
+    }
+  }
+
+  return { data, width, height, originX: minX, originZ: minZ, heightmap, maxSlope };
 }
 
 // ---------------------------------------------------------------------------
@@ -157,6 +249,13 @@ export function findPath(
       const nFlat = nz * width + nx;
       if (visited[nFlat]) continue;
       if (data[nFlat] !== 0) continue; // blocked
+
+      // Slope blocking: skip neighbor if height rise exceeds maxSlope
+      if (grid.heightmap != null && grid.maxSlope !== undefined) {
+        const currH = grid.heightmap[current.z * width + current.x];
+        const nextH = grid.heightmap[nFlat];
+        if (Math.abs(nextH - currH) > grid.maxSlope) continue;
+      }
 
       const ng = current.g + 1;
       const nf = ng + heuristic(nx, nz, gx, gz);

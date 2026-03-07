@@ -2391,8 +2391,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 145,
-      "passes": false,
-      "notes": "Phase 1-B (late). npcMovement.ts, pathfinding.ts, pathFollowing.ts all exist — update for chunk world + Yuka."
+      "passes": true,
+      "notes": "Phase 1-B (late). npcMovement.ts, pathfinding.ts, pathFollowing.ts all exist — update for chunk world + Yuka.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-146",
@@ -2865,6 +2866,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T20:30:40.617Z"
+    "updatedAt": "2026-03-07T20:40:47.833Z"
   }
 }

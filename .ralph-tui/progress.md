@@ -75,6 +75,31 @@ after each iteration and it's included in prompts for context.
 - **Rapier snap validation as pure functions with minimal interfaces**: Define `KitbashRapierWorld` and `KitbashRapierModule` minimal interfaces in the system file — no import of `useRapier` or `@react-three/rapier`. Functions accept them as plain parameters. Tests use `jest.fn()` mock objects cast with `as never`. Same pattern as `isGrounded` in `useJump.ts`.
 - **Clearance via `intersectionsWithShape`, ground contact via `castRay`**: Two distinct Rapier APIs for two distinct snap checks. `intersectionsWithShape(pos, rot, cuboid)` → overlap bool for clearance. `castRay(ray, maxToi, solid)` → hit or null for ground detection.
 - **Kitbashing subpackage decomposition**: When a system file exceeds 300 lines, split into `placement.ts` (pure snap math), `rapier.ts` (physics functions), `unlocks.ts` (progression), `index.ts` (barrel). The test file at `game/systems/kitbashing.test.ts` still resolves `"./kitbashing"` to the directory index automatically — no test path changes needed.
+- **yuka.d.ts ambient declaration**: The project ships a hand-written `yuka.d.ts` at the repo root (no @types/yuka package). New yuka classes must be added there. Before importing a new yuka symbol, grep for `yuka.d.ts` first — if it doesn't declare the class, add it.
+- **buildMultiChunkWalkabilityGrid for cross-chunk nav**: Pass cells (world-space coords) and optional heightmaps (chunk-local indexing) from all active + neighbor chunks. The function computes combined bounds, merges all data, and returns a single `WalkabilityGrid`. A* runs on it directly — no cross-chunk coordination needed at pathfind time.
+- **Slope blocking is entry-cost in A* expansion**: Check `|h[neighbor] - h[current]| > maxSlope` in the neighbor-expansion loop and `continue` to skip that neighbor. This is directional — slope going up vs down are both checked. Keep `maxSlope` on the `WalkabilityGrid` struct so callers set it at grid-build time, not in the A* hot path.
+
+---
+
+## 2026-03-07 - US-145
+- Updated `game/systems/pathfinding.ts` with heightmap slope blocking + `buildMultiChunkWalkabilityGrid` for cross-chunk A* navigation.
+- Updated `game/systems/pathFollowing.ts` with `toYukaPath()` to convert `PathFollowState` to a Yuka `Path` for `FollowPathBehavior` integration.
+- Updated `game/systems/npcMovement.ts` with Yuka `EntityManager` layer: `registerNpcEntity`, `deregisterNpcEntity`, `updateNpcEntityManager`. `cancelAllNpcMovements` now also clears the EntityManager.
+- Updated `yuka.d.ts` to declare `EntityManager`, `Vector3`, `Path` (were missing from the hand-written ambient declaration).
+- Files changed:
+  - `game/systems/pathfinding.ts` — `WalkabilityGrid.heightmap/maxSlope`, `ChunkWalkabilityInput`, `buildMultiChunkWalkabilityGrid`, slope check in `findPath`
+  - `game/systems/pathfinding.test.ts` — 12 new tests for multi-chunk grid + heightmap slope blocking
+  - `game/systems/pathFollowing.ts` — `toYukaPath(state, y?)`
+  - `game/systems/pathFollowing.test.ts` — 5 new tests for `toYukaPath`
+  - `game/systems/npcMovement.ts` — Yuka `EntityManager` + 3 new exports
+  - `game/systems/npcMovement.test.ts` — 10 new tests for EntityManager functions
+  - `yuka.d.ts` — added `EntityManager`, `Vector3`, `Path` declarations
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3441 tests, 147 suites pass
+- **Learnings:**
+  - **yuka.d.ts ambient declaration**: The project ships a hand-written `yuka.d.ts` at the repo root. New yuka classes (`EntityManager`, `Path`, `Vector3`) must be added there — not as `@types/yuka` (no such package). Check for this file before importing new yuka symbols.
+  - **Multi-chunk pathfinding via merged grid**: Pass cells from all active + neighbor chunks into one `buildMultiChunkWalkabilityGrid` call. No cross-chunk coordinator needed — the merged grid spans the full nav area and A* runs on it directly. World-space cell coords + chunk-local heightmap coords are both handled.
+  - **Yuka EntityManager wraps path-following orchestration**: The EntityManager holds `GameEntity` objects (from `NpcBrain`) and calls `update(dt)` on each. Pair with the existing per-NPC `updateNpcMovement` call for individual path-following updates. The two systems are complementary, not redundant.
+  - **Slope check is entry-cost, not cell-flag**: In A* expansion, skip a neighbor when `|h[neighbor] - h[current]| > maxSlope`. This respects directional traversal — a cliff is blocked when climbing it, not when surveying it from above.
 
 ---
 

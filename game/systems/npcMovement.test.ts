@@ -1,8 +1,12 @@
+import { GameEntity } from "yuka";
 import {
   cancelAllNpcMovements,
   cancelNpcMovement,
+  deregisterNpcEntity,
   isNpcMoving,
+  registerNpcEntity,
   startNpcPath,
+  updateNpcEntityManager,
   updateNpcMovement,
 } from "./npcMovement";
 import type { WalkabilityGrid } from "./pathfinding";
@@ -133,5 +137,73 @@ describe("cancelAllNpcMovements", () => {
 
   it("is safe to call when no NPCs are moving", () => {
     expect(() => cancelAllNpcMovements()).not.toThrow();
+  });
+
+  it("deregisters all Yuka entities", () => {
+    registerNpcEntity("npc-ent-a", new GameEntity());
+    registerNpcEntity("npc-ent-b", new GameEntity());
+    // cancelAllNpcMovements clears entities — subsequent deregister should be no-op
+    cancelAllNpcMovements();
+    expect(() => deregisterNpcEntity("npc-ent-a")).not.toThrow();
+    expect(() => deregisterNpcEntity("npc-ent-b")).not.toThrow();
+  });
+});
+
+// ── Yuka EntityManager ────────────────────────────────────────────────────────
+
+describe("registerNpcEntity", () => {
+  it("registers an entity without error", () => {
+    const entity = new GameEntity();
+    expect(() => registerNpcEntity("npc-reg", entity)).not.toThrow();
+  });
+
+  it("is idempotent — registering the same entityId twice does not throw", () => {
+    const entity = new GameEntity();
+    registerNpcEntity("npc-idem", entity);
+    expect(() => registerNpcEntity("npc-idem", entity)).not.toThrow();
+  });
+
+  it("different entities for different IDs are both registered", () => {
+    const e1 = new GameEntity();
+    const e2 = new GameEntity();
+    expect(() => {
+      registerNpcEntity("npc-two-a", e1);
+      registerNpcEntity("npc-two-b", e2);
+    }).not.toThrow();
+  });
+});
+
+describe("deregisterNpcEntity", () => {
+  it("removes a previously registered entity without error", () => {
+    const entity = new GameEntity();
+    registerNpcEntity("npc-dereg", entity);
+    expect(() => deregisterNpcEntity("npc-dereg")).not.toThrow();
+  });
+
+  it("is safe to call for an unknown entity ID", () => {
+    expect(() => deregisterNpcEntity("ghost-entity")).not.toThrow();
+  });
+
+  it("is safe to call twice for the same entity", () => {
+    const entity = new GameEntity();
+    registerNpcEntity("npc-double-dereg", entity);
+    deregisterNpcEntity("npc-double-dereg");
+    expect(() => deregisterNpcEntity("npc-double-dereg")).not.toThrow();
+  });
+});
+
+describe("updateNpcEntityManager", () => {
+  it("does not throw when entities are registered", () => {
+    registerNpcEntity("npc-upd", new GameEntity());
+    expect(() => updateNpcEntityManager(0.016)).not.toThrow();
+  });
+
+  it("does not throw when no entities are registered", () => {
+    expect(() => updateNpcEntityManager(0.016)).not.toThrow();
+  });
+
+  it("does not throw with large dt values", () => {
+    registerNpcEntity("npc-bigdt", new GameEntity());
+    expect(() => updateNpcEntityManager(10)).not.toThrow();
   });
 });

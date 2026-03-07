@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T20:30:40.617Z",
-  "currentIteration": 143,
+  "updatedAt": "2026-03-07T20:40:47.834Z",
+  "currentIteration": 144,
   "maxIterations": 0,
-  "tasksCompleted": 143,
+  "tasksCompleted": 144,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -874,8 +874,8 @@
       {
         "id": "US-144",
         "title": "Mobile E2E tests with Maestro",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-145",
@@ -2471,6 +2471,16 @@
       "durationMs": 398448,
       "startedAt": "2026-03-07T20:15:53.102Z",
       "endedAt": "2026-03-07T20:22:31.550Z"
+    },
+    {
+      "iteration": 144,
+      "status": "completed",
+      "taskId": "US-144",
+      "taskTitle": "Mobile E2E tests with Maestro",
+      "taskCompleted": true,
+      "durationMs": 487938,
+      "startedAt": "2026-03-07T20:22:32.677Z",
+      "endedAt": "2026-03-07T20:30:40.615Z"
     }
   ],
   "skippedTaskIds": [],
