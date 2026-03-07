@@ -46,6 +46,19 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-057
+- Work already complete — `game/world/waterPlacer.test.ts` was written alongside the implementation in US-056 (30 tests, 0 failures)
+- All acceptance criteria met: 6+ tests, covers low-point detection (`findLocalMinima`), river path following (`computeFlowDirection` + flow magnitude tests), and pond size variation (`placeWaterBodies` required-fields test asserts `size.width/depth > 0`)
+- **Files changed:** None (pre-existing from US-056)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern waterPlacer` → 30 tests, 0 failures
+- **Learnings:**
+  - **Tests written with implementation satisfy downstream "write tests" stories**: when a pipeline story (US-056) follows Docs→Tests→Code strictly, the subsequent "tests for X" story (US-057) is already done. Verify before implementing.
+  - **Acceptance criterion "pond size variation" maps to required-fields test**: asserts `wb.size.width > 0` and `wb.size.depth > 0` for every emitted `WaterBodyPlacement`. Different types have hardcoded sizes (river 4×16, stream 2×8, pond 6×6) — no runtime variation, so the test verifies existence/non-zero rather than a range.
+
+---
+
 ## 2026-03-07 - US-056
 - Implemented `game/world/waterPlacer.ts` — pure function placing water bodies at heightmap low points based on biome (Spec §31.2)
 - `findLocalMinima(heightmap, chunkSize, threshold)`: scans for cells strictly lower than all 8 neighbors and below threshold; skips edge cells
