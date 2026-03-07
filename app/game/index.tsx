@@ -17,6 +17,7 @@ import { Camera } from "@/components/scene/Camera";
 import { Ground } from "@/components/scene/Ground";
 import { Lighting } from "@/components/scene/Lighting";
 import { Sky } from "@/components/scene/Sky";
+import { TerrainChunks } from "@/components/scene/TerrainChunk";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
 import { useGameLoop } from "@/game/hooks/useGameLoop";
@@ -238,6 +239,7 @@ export default function GameScreen() {
               season={currentSeason}
               sunIntensity={timeVisuals.sunIntensity}
             />
+            <TerrainChunks />
             <Ground
               gridSize={gridSize}
               biome="grass"

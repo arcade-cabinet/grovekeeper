@@ -23,7 +23,33 @@ after each iteration and it's included in prompts for context.
 - **ECS entity tracking in ChunkManager**: Store `world.add()` return value in a local `Map<string, Entity>`. Use `world.remove(entity)` directly from the Map for O(1) unload. Never search `world.entities` by field.
 - **Biome distance metric — use Chebyshev**: `Math.max(Math.abs(chunkX), Math.abs(chunkZ))` gives chunk distance that matches the square ring topology. Euclidean distance creates a circular exclusion zone that doesn't align with the 3x3/5x5 buffer rings used elsewhere in ChunkManager.
 - **Priority-order biome dispatch**: List biome rules as `if (condition) return biome` in priority order (first match wins). Avoids ambiguity at spec boundary overlaps (e.g. temp=0.5 is on the edge of multiple biomes). Easy to unit test each rule in isolation.
+- **TerrainChunk geometry — Y-up custom BufferGeometry, no PlaneGeometry rotation**: Build terrain geometry with Y = height directly (not displaced PlaneGeometry). Avoids the XY→XZ rotation confusion where PlaneGeometry's Y flips to -Z in world space. Use `(CHUNK_SIZE)^2` vertices (not `(CHUNK_SIZE+1)^2`) and `(CHUNK_SIZE-1)^2` quads for an exact 1:1 heightmap vertex match.
+- **Three.js mock cast pattern in tests**: `jest.mock("three", ...)` replaces at runtime but TypeScript still sees original types. Use `const MockFoo = Foo as unknown as jest.Mock` to safely access `.mock.calls` etc. Never use `as jest.Mock` directly — TypeScript rejects the conversion without the `unknown` intermediate.
+- **Vertex color geometry needs both sides**: `geometry.setAttribute("color", ...)` + `material.vertexColors: true`. Missing either silently falls back to white material. `computeVertexNormals()` is mandatory after displacement — without it shading breaks.
 
+---
+
+## 2026-03-07 - US-022
+- Created `components/scene/TerrainChunk.tsx` with:
+  - `buildTerrainGeometry(heightmap, baseColor)` — pure builder, exported for testing; builds a `BufferGeometry` with Y-displaced vertices (Y = heightmap * HEIGHT_SCALE) and uniform vertex colors from `THREE.Color(baseColor)`. Uses `(CHUNK_SIZE)^2` vertices / `(CHUNK_SIZE-1)^2` quads for exact heightmap match. Calls `computeVertexNormals()` for correct lighting.
+  - `HEIGHT_SCALE = 4` — world-space vertical displacement range
+  - `TerrainChunks` R3F component — queries `terrainChunksQuery` in `useFrame`, maintains per-entity mesh and geometry maps (same imperative pattern as `TreeInstances`). Respects `renderable.visible` for active/buffer chunk distinction. Disposes geometry + material on unload.
+- Created `components/scene/TerrainChunk.test.ts` with 15 tests (all green):
+  - HEIGHT_SCALE: positive, ≥ 1m
+  - TerrainChunks: exports as function component
+  - buildTerrainGeometry: returns BufferGeometry, sets position + color attributes, calls setIndex + computeVertexNormals, correct buffer sizes (CHUNK_SIZE²×3), height scale applied (value 1 → HEIGHT_SCALE), flat zero heightmap → Y=0, negative heightmap → negative Y, uses THREE.Color to parse hex, different colors produce different Color calls
+- Wired `<TerrainChunks />` into `app/game/index.tsx` (inside `<Physics>`, before `<Ground>`)
+- **Files changed:**
+  - `components/scene/TerrainChunk.tsx`: new file — R3F terrain chunk renderer
+  - `components/scene/TerrainChunk.test.ts`: new file — 15 tests, all green
+  - `app/game/index.tsx`: added `TerrainChunks` import + JSX element
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 81 suites, 1387 tests, 0 failures
+- **Learnings:**
+  - Build terrain geometry with Y-up directly (not rotated PlaneGeometry) — avoids axis confusion where PlaneGeometry's Y maps to -Z after the standard [-PI/2, 0, 0] rotation
+  - `as unknown as jest.Mock` is required when casting mocked Three.js classes to jest.Mock in TypeScript — `as jest.Mock` alone fails because `typeof Color` and `Mock` don't sufficiently overlap
+  - `capturedXxx: Float32Array | null` must be narrowed with `if (capturedXxx !== null)` before indexing — TypeScript narrows `null` out but not from `Float32Array | null` with `if (capturedXxx)` alone in some configurations
 ---
 
 ## 2026-03-07 - US-021

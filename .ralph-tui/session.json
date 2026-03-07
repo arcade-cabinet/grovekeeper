@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T09:26:40.401Z",
-  "currentIteration": 20,
+  "updatedAt": "2026-03-07T09:33:05.792Z",
+  "currentIteration": 21,
   "maxIterations": 0,
-  "tasksCompleted": 20,
+  "tasksCompleted": 21,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -136,8 +136,8 @@
       {
         "id": "US-021",
         "title": "Write Jest tests for biome mapper",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-022",
@@ -1241,6 +1241,16 @@
       "durationMs": 247109,
       "startedAt": "2026-03-07T09:21:18.511Z",
       "endedAt": "2026-03-07T09:25:25.620Z"
+    },
+    {
+      "iteration": 21,
+      "status": "completed",
+      "taskId": "US-021",
+      "taskTitle": "Write Jest tests for biome mapper",
+      "taskCompleted": true,
+      "durationMs": 73657,
+      "startedAt": "2026-03-07T09:25:26.742Z",
+      "endedAt": "2026-03-07T09:26:40.399Z"
     }
   ],
   "skippedTaskIds": [],
