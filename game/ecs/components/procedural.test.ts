@@ -49,6 +49,7 @@ describe("Procedural ECS Components", () => {
           heightmap: new Float32Array(256),
           baseColor: "#4a7c3f",
           biomeBlend: [0, 0, 0, 0],
+          neighborColors: ["#4a7c3f", "#4a7c3f", "#4a7c3f", "#4a7c3f"],
           dirty: true,
         },
       });
@@ -59,6 +60,7 @@ describe("Procedural ECS Components", () => {
           heightmap: new Float32Array(256),
           baseColor: "#7ab648",
           biomeBlend: [0.5, 0, 0, 0],
+          neighborColors: ["#7ab648", "#7ab648", "#7ab648", "#7ab648"],
           dirty: false,
         },
       });
@@ -77,6 +79,7 @@ describe("Procedural ECS Components", () => {
           heightmap: new Float32Array(256),
           baseColor: "#4a7c3f",
           biomeBlend: [0, 0, 0, 0],
+          neighborColors: ["#4a7c3f", "#4a7c3f", "#4a7c3f", "#4a7c3f"],
           dirty: true,
         },
       });
@@ -87,6 +90,7 @@ describe("Procedural ECS Components", () => {
           heightmap: new Float32Array(256),
           baseColor: "#7ab648",
           biomeBlend: [0, 0, 0, 0],
+          neighborColors: ["#4a7c3f", "#4a7c3f", "#4a7c3f", "#4a7c3f"],
           dirty: false,
         },
       });
@@ -363,6 +367,7 @@ describe("Procedural ECS Components", () => {
           heightmap: new Float32Array(16),
           baseColor: "#4a7c3f",
           biomeBlend: [0, 0, 0, 0],
+          neighborColors: ["#4a7c3f", "#4a7c3f", "#4a7c3f", "#4a7c3f"],
           dirty: false,
         },
       });

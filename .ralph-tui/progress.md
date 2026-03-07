@@ -47,6 +47,35 @@ after each iteration and it's included in prompts for context.
 - **Async queue flushQueue() test escape hatch**: When deferring work to `requestIdleCallback`/`setTimeout`, tests cannot rely on callbacks firing. Export `flushQueue()` as a synchronous drain that processes the entire queue without scheduling. Tests call `update()` then `flushQueue()` before asserting. Never use Jest fake timers for this — they require complex async/await boilerplate and don't work well with `requestIdleCallback` in Node.
 - **Lazy cancellation in generation queues**: Rather than filtering `generationQueue[]` when a chunk goes out of range (O(n) scan), remove it from `pendingChunks Set` only. When the dequeued item is processed, skip it if its key is absent from `pendingChunks`. O(1) cancel, O(1) skip — both maps stay consistent.
 - **One-chunk-per-idle pattern**: Processing one chunk per `requestIdleCallback` invocation (reschedule after each) yields control back to the browser after every expensive generation step. Simpler than tracking `deadline.timeRemaining()` and avoids the question of "how many ms does one chunk take?".
+- **No-seam biome blending via weighted average**: At a shared chunk boundary both chunks compute `(colorA + colorB) / 2` — identical by construction. Use weighted-average blend: `(base*1 + neighbor*w) / (1+w)` where `w = biomeBlend[i] * proximity`. Binary `biomeBlend[i]` (0 or 1) + spatial proximity falloff = smooth gradient without fractional weight complexity.
+- **computeBlendedColor as testable seam for vertex shading**: Export the per-vertex blend function as a pure function (no Three.js) from the R3F component file. Tests call it directly without any WebGL/R3F context. The R3F component imports and calls it in its tight vertex loop.
+
+---
+
+## 2026-03-07 - US-072
+- Implemented biome blending at chunk boundaries (Spec §31.1: "smooth 8-tile transition via biomeBlend weights")
+- `TerrainChunkComponent` extended with `neighborColors: [string, string, string, string]` (N, E, S, W hex colors)
+- `computeNeighborBiomes(worldSeed, chunkX, chunkZ)` exported from ChunkManager — returns [N, E, S, W] BiomeType tuple using same temp/moisture noise as center biome
+- `generateChunkData` now computes real `biomeBlend` (1 if neighbor biome differs, 0 if same) and `neighborColors` for all 4 directions
+- `computeBlendedColor(ix, iz, n, baseR, baseG, baseB, biomeBlend, neighborRGB, blendZone)` exported from TerrainChunk — pure testable seam, no Three.js
+- `buildTerrainGeometry` updated to accept optional `biomeBlend` + `neighborColors`, blending vertex colors over an 8-tile zone from each edge
+- Weighted-average formula: `(baseColor * 1 + wN * neighborN + ...) / (1 + wN + ...)` — both adjacent chunks produce `(colorA + colorB) / 2` at their shared boundary = zero seam
+- `TerrainChunks.useFrame` wires `terrainChunk.biomeBlend` + `terrainChunk.neighborColors` to `buildTerrainGeometry`
+- **Files changed:**
+  - `game/ecs/components/procedural/terrain.ts` — added `neighborColors` field
+  - `game/world/ChunkManager.ts` — added `sampleChunkBiome`, `computeNeighborBiomes`, updated `generateChunkData`
+  - `components/scene/TerrainChunk.tsx` — added `computeBlendedColor`, updated `buildTerrainGeometry`, wired in `useFrame`
+  - `game/ecs/components/procedural.test.ts` — added `neighborColors` to all `terrainChunk` test objects
+  - `game/world/biomeBlending.test.ts` — new test file (22 tests)
+  - `components/scene/TerrainChunk.test.ts` — added `computeBlendedColor` tests (+14 tests)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2146 tests, 0 failures (111 suites, +36 new tests)
+- **Learnings:**
+  - **No-seam blending via weighted average**: at shared chunk boundary, both chunks compute `(colorA + colorB) / 2` — guaranteed identical, zero seam, no special-casing needed
+  - **computeBlendedColor as testable seam**: pure function with no Three.js dependency tests the full blend math; `buildTerrainGeometry` calls it per-vertex
+  - **Binary biomeBlend weights**: 0 or 1 is sufficient — smoothness comes from the 8-tile spatial falloff (proximity), not from fractional weights
+  - **sampleChunkBiome extracts the noise sampling into a private helper**: reused for center + all 4 neighbors in one `generateChunkData` call, sharing the same SeededNoise instances
 
 ---
 

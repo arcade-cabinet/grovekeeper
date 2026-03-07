@@ -61,6 +61,45 @@ export function getChunksInRadius(
 }
 
 /**
+ * Compute the biome for a single chunk center using temperature + moisture noise.
+ * Pure function — same inputs always produce the same biome.
+ */
+function sampleChunkBiome(
+  tempNoise: SeededNoise,
+  moistNoise: SeededNoise,
+  chunkX: number,
+  chunkZ: number,
+): ReturnType<typeof assignBiome> {
+  const cx = (chunkX + 0.5) * 0.1;
+  const cz = (chunkZ + 0.5) * 0.1;
+  const temperature = (tempNoise.perlin(cx, cz) + 1) * 0.5;
+  const moisture = (moistNoise.perlin(cx, cz) + 1) * 0.5;
+  const distanceFromOrigin = Math.max(Math.abs(chunkX), Math.abs(chunkZ));
+  return assignBiome(temperature, moisture, distanceFromOrigin);
+}
+
+/**
+ * Compute the biomes of the 4 neighboring chunks [N, E, S, W].
+ * N = (chunkX, chunkZ-1), E = (chunkX+1, chunkZ), S = (chunkX, chunkZ+1), W = (chunkX-1, chunkZ).
+ *
+ * Pure function — same worldSeed + chunkCoords always produces same result.
+ */
+export function computeNeighborBiomes(
+  worldSeed: string,
+  chunkX: number,
+  chunkZ: number,
+): [BiomeType, BiomeType, BiomeType, BiomeType] {
+  const tempNoise = new SeededNoise(hashString(`${worldSeed}:temp`));
+  const moistNoise = new SeededNoise(hashString(`${worldSeed}:moist`));
+  return [
+    sampleChunkBiome(tempNoise, moistNoise, chunkX, chunkZ - 1), // N
+    sampleChunkBiome(tempNoise, moistNoise, chunkX + 1, chunkZ), // E
+    sampleChunkBiome(tempNoise, moistNoise, chunkX, chunkZ + 1), // S
+    sampleChunkBiome(tempNoise, moistNoise, chunkX - 1, chunkZ), // W
+  ];
+}
+
+/**
  * Generate TerrainChunkComponent data for a chunk.
  * Pure function — same worldSeed + chunkX + chunkZ always produces the same result.
  * Uses global coordinates so terrain is seamless across chunk boundaries.
@@ -73,6 +112,7 @@ export function generateChunkData(
   heightmap: Float32Array;
   baseColor: string;
   biomeBlend: [number, number, number, number];
+  neighborColors: [string, string, string, string];
   dirty: boolean;
 } {
   const tempNoise = new SeededNoise(hashString(`${worldSeed}:temp`));
@@ -80,18 +120,37 @@ export function generateChunkData(
 
   const heightmap = generateHeightmap(worldSeed, chunkX, chunkZ);
 
-  // Biome at chunk centre using coarse-scale noise
-  const cx = (chunkX + 0.5) * 0.1;
-  const cz = (chunkZ + 0.5) * 0.1;
-  const temperature = (tempNoise.perlin(cx, cz) + 1) * 0.5;
-  const moisture = (moistNoise.perlin(cx, cz) + 1) * 0.5;
-  const distanceFromOrigin = Math.max(Math.abs(chunkX), Math.abs(chunkZ));
-  const biome = assignBiome(temperature, moisture, distanceFromOrigin);
+  const centerBiome = sampleChunkBiome(tempNoise, moistNoise, chunkX, chunkZ);
+  const centerColor = getBiomeColor(centerBiome);
+
+  // Compute neighbor biomes [N, E, S, W] and derive blend weights + colors
+  const neighborBiomes: [BiomeType, BiomeType, BiomeType, BiomeType] = [
+    sampleChunkBiome(tempNoise, moistNoise, chunkX, chunkZ - 1), // N
+    sampleChunkBiome(tempNoise, moistNoise, chunkX + 1, chunkZ), // E
+    sampleChunkBiome(tempNoise, moistNoise, chunkX, chunkZ + 1), // S
+    sampleChunkBiome(tempNoise, moistNoise, chunkX - 1, chunkZ), // W
+  ];
+
+  const neighborColors: [string, string, string, string] = [
+    getBiomeColor(neighborBiomes[0]),
+    getBiomeColor(neighborBiomes[1]),
+    getBiomeColor(neighborBiomes[2]),
+    getBiomeColor(neighborBiomes[3]),
+  ];
+
+  // biomeBlend[i] = 1 if neighbor i has a different biome, 0 if same
+  const biomeBlend: [number, number, number, number] = [
+    neighborColors[0] !== centerColor ? 1 : 0,
+    neighborColors[1] !== centerColor ? 1 : 0,
+    neighborColors[2] !== centerColor ? 1 : 0,
+    neighborColors[3] !== centerColor ? 1 : 0,
+  ];
 
   return {
     heightmap,
-    baseColor: getBiomeColor(biome),
-    biomeBlend: [0, 0, 0, 0],
+    baseColor: centerColor,
+    biomeBlend,
+    neighborColors,
     dirty: false,
   };
 }

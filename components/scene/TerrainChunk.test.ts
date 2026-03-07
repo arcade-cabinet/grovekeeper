@@ -75,6 +75,7 @@ import * as THREE from "three";
 import {
   buildTerrainGeometry,
   buildTrimeshArgs,
+  computeBlendedColor,
   HEIGHT_SCALE,
   TerrainChunks,
 } from "./TerrainChunk";
@@ -298,5 +299,100 @@ describe("buildTrimeshArgs (Spec §9)", () => {
     expect(vertices[0]).toBeCloseTo(0);
     // Last vertex of first row: (ix=CHUNK_SIZE-1, iz=0) → X=CHUNK_SIZE-1
     expect(vertices[(CHUNK_SIZE - 1) * 3]).toBeCloseTo(CHUNK_SIZE - 1);
+  });
+});
+
+// ─── computeBlendedColor (biome blending seam) ────────────────────────────────
+
+describe("computeBlendedColor (Spec §31.1)", () => {
+  const n = 16; // CHUNK_SIZE
+  const BLEND_ZONE = 8; // half-chunk blend zone per spec §31.1
+
+  // Use primary colors for easy validation math
+  const red: [number, number, number] = [1, 0, 0];
+  const blue: [number, number, number] = [0, 0, 1];
+  const green: [number, number, number] = [0, 1, 0];
+  const noNeighbor: [number, number, number] = [0, 0, 0]; // unused when biomeBlend=0
+
+  it("returns pure baseColor when biomeBlend is all zeros (no blending)", () => {
+    const result = computeBlendedColor(0, 0, n, ...red, [0, 0, 0, 0], [blue, blue, blue, blue], BLEND_ZONE);
+    expect(result[0]).toBeCloseTo(1);  // R
+    expect(result[1]).toBeCloseTo(0);  // G
+    expect(result[2]).toBeCloseTo(0);  // B
+  });
+
+  it("returns pure baseColor at interior vertex (iz >= BLEND_ZONE) even with north blend", () => {
+    // iz=8 is exactly at the blend zone boundary → no north influence
+    const result = computeBlendedColor(4, BLEND_ZONE, n, ...red, [1, 0, 0, 0], [blue, noNeighbor, noNeighbor, noNeighbor], BLEND_ZONE);
+    expect(result[0]).toBeCloseTo(1);
+    expect(result[1]).toBeCloseTo(0);
+    expect(result[2]).toBeCloseTo(0);
+  });
+
+  it("blends toward north neighbor at iz=0 (north edge, biomeBlend[0]=1)", () => {
+    // iz=0 → proximityN = 1.0 → weight = 1.0
+    // Weighted avg: (red*1 + blue*1) / 2 = (0.5, 0, 0.5)
+    const result = computeBlendedColor(4, 0, n, ...red, [1, 0, 0, 0], [blue, noNeighbor, noNeighbor, noNeighbor], BLEND_ZONE);
+    expect(result[0]).toBeCloseTo(0.5);  // mid R
+    expect(result[2]).toBeCloseTo(0.5);  // mid B
+  });
+
+  it("blends toward east neighbor at ix=n-1 (east edge, biomeBlend[1]=1)", () => {
+    const result = computeBlendedColor(n - 1, 4, n, ...red, [0, 1, 0, 0], [noNeighbor, blue, noNeighbor, noNeighbor], BLEND_ZONE);
+    expect(result[0]).toBeCloseTo(0.5);
+    expect(result[2]).toBeCloseTo(0.5);
+  });
+
+  it("blends toward south neighbor at iz=n-1 (south edge, biomeBlend[2]=1)", () => {
+    const result = computeBlendedColor(4, n - 1, n, ...red, [0, 0, 1, 0], [noNeighbor, noNeighbor, blue, noNeighbor], BLEND_ZONE);
+    expect(result[0]).toBeCloseTo(0.5);
+    expect(result[2]).toBeCloseTo(0.5);
+  });
+
+  it("blends toward west neighbor at ix=0 (west edge, biomeBlend[3]=1)", () => {
+    const result = computeBlendedColor(0, 4, n, ...red, [0, 0, 0, 1], [noNeighbor, noNeighbor, noNeighbor, blue], BLEND_ZONE);
+    expect(result[0]).toBeCloseTo(0.5);
+    expect(result[2]).toBeCloseTo(0.5);
+  });
+
+  it("partial blend at iz=4 (half blend zone): weighted average", () => {
+    // iz=4 → proximityN = (8-4)/8 = 0.5, weight = 0.5
+    // color = (red*1 + blue*0.5) / (1+0.5) = (1+0, 0+0, 0+0.5) / 1.5 = (0.667, 0, 0.333)
+    const result = computeBlendedColor(4, 4, n, ...red, [1, 0, 0, 0], [blue, noNeighbor, noNeighbor, noNeighbor], BLEND_ZONE);
+    expect(result[0]).toBeCloseTo(1 / 1.5);
+    expect(result[1]).toBeCloseTo(0);
+    expect(result[2]).toBeCloseTo(0.5 / 1.5);
+  });
+
+  it("symmetric: adjacent chunks blend to same color at their shared boundary", () => {
+    // Chunk A east edge (ix=15): blends toward Chunk B color (blue)
+    const edgeA = computeBlendedColor(n - 1, 4, n, ...red, [0, 1, 0, 0], [noNeighbor, blue, noNeighbor, noNeighbor], BLEND_ZONE);
+    // Chunk B west edge (ix=0): blends toward Chunk A color (red)
+    const edgeB = computeBlendedColor(0, 4, n, ...blue, [0, 0, 0, 1], [noNeighbor, noNeighbor, noNeighbor, red], BLEND_ZONE);
+    // Both should equal (red + blue) / 2 = (0.5, 0, 0.5)
+    expect(edgeA[0]).toBeCloseTo(edgeB[0]);
+    expect(edgeA[1]).toBeCloseTo(edgeB[1]);
+    expect(edgeA[2]).toBeCloseTo(edgeB[2]);
+  });
+
+  it("corner vertex blends from both directions without exceeding [0,1] range", () => {
+    // ix=0, iz=0 → corner: north + west both active
+    const result = computeBlendedColor(0, 0, n, ...red, [1, 0, 0, 1], [blue, noNeighbor, noNeighbor, green], BLEND_ZONE);
+    for (const ch of result) {
+      expect(ch).toBeGreaterThanOrEqual(0);
+      expect(ch).toBeLessThanOrEqual(1.01); // small float tolerance
+    }
+  });
+
+  it("buildTerrainGeometry accepts optional biomeBlend and neighborColors without error", () => {
+    const heightmap = new Float32Array(n * n).fill(0);
+    expect(() =>
+      buildTerrainGeometry(heightmap, "#4a7c3f", [1, 0, 0, 0], ["#d4e8f0", "#4a7c3f", "#4a7c3f", "#4a7c3f"])
+    ).not.toThrow();
+  });
+
+  it("buildTerrainGeometry with no blend args still works (backward compat)", () => {
+    const heightmap = new Float32Array(n * n).fill(0);
+    expect(() => buildTerrainGeometry(heightmap, "#4a7c3f")).not.toThrow();
   });
 });

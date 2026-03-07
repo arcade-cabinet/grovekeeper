@@ -11,8 +11,10 @@ export interface TerrainChunkComponent {
   heightmap: Float32Array;
   /** Biome-derived vertex color hex (e.g., "#4a7c3f" for forest floor). */
   baseColor: string;
-  /** Blend weights for neighboring biome transitions [N, E, S, W]. */
+  /** Blend weights for neighboring biome transitions [N, E, S, W]. 1 = different biome, 0 = same. */
   biomeBlend: [number, number, number, number];
+  /** Hex colors of the 4 neighboring chunks [N, E, S, W] for vertex blending. */
+  neighborColors: [string, string, string, string];
   /** Whether this chunk's mesh needs regeneration. */
   dirty: boolean;
 }
