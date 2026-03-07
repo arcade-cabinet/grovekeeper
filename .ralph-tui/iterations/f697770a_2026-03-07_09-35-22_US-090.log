@@ -1,0 +1,104 @@
+# Iteration 90 Log
+
+## Metadata
+
+- **Task ID**: US-090
+- **Task Title**: Write Jest tests for survival drains
+- **Description**: As a developer, I want tests for survival system drains so that rates match difficulty config, hunger-stamina interaction, and death trigger are verified. See GAME_SPEC.md §21.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:35:22.235Z
+- **Ended At**: 2026-03-07T15:40:38.293Z
+- **Duration**: 5m 16s
+- **Input Tokens**: 130
+- **Output Tokens**: 16144
+- **Total Tokens**: 16274
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+Using TDD to write Jest tests for survival drains (US-090). Let me first read the relevant files.
+[94m[ToolSearch][0m query: [93mselect:Read,Grep,Glob[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (52811 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§21|survival.*drain|drain.*survival|hearts|hunger|stamina[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*survival*[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§21|survival.*drain|drain.*survival|hearts|hunger|stamina[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*survival*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+I can see US-089 already created `survival.test.ts` with 31 tests. Let me verify the existing tests cover all US-090 acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/survival.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/survival.ts[0m
+Let me check the stamina system to understand if stamina regen covers the "zero hunger stops regen" criterion.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/stamina*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/difficulty.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m
+Need to check for gaps in existing coverage — specifically zero hunger stops stamina regen and death at 0 hearts.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§12|§21|death|isPlayerDead|isDead|deathTrigger[0m
+Let me check how tests import JSON config files in this project.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mimport.*config.*json|import.*\.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§12.1|§12.2|§12.3|§21[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 12\.|### 12\.|## 21\.|### 21\.[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The existing survival.test.ts from US-089 has 31 tests but misses 3 specific acceptance criteria for US-090:
+1. **Drain rates vs config** — tests use hardcoded values that match config but never import difficulty.json to assert it
+2. **Zero hunger stops stamina regen** — the `hunger → regenMult=0` interaction has no dedicated function or test
+3. **Death at 0 hearts** — no `isPlayerDead()` function exists; tests show hearts reach 0 but don't assert a "dead" state
+`─────────────────────────────────────────────────`
+
+Now adding the RED tests first (they'll fail because `isPlayerDead` and `computeStaminaRegenMult` don't exist yet).
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/survival.test.ts[0m edit: "import type { HealthComponent } from "@/game/ecs/c..." → "import type { HealthComponent } from "@/game/ecs/c..."
+Now append the three new describe blocks at the end of the test file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/survival.test.ts[0m edit: "  it("Exploration mode player is unaffected by all..." → "  it("Exploration mode player is unaffected by all..."
+[94m[TodoWrite][0m
+Now add the two missing functions to `survival.ts`:
+
+`★ Insight ─────────────────────────────────────`
+`computeStaminaRegenMult` acts as a **decision seam** — the game loop calls it once per tick to get the effective regen multiplier, then passes that into `regenStamina()`. This keeps the hunger-stamina interaction in one pure function rather than scattered `if (hunger === 0)` guards across call sites. The `isWellFed` reuse avoids duplicating the `> 80` threshold.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/survival.ts[0m edit: "// -----------------------------------------------..." → "// -----------------------------------------------..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run survival tests only $ npx jest --no-coverage --testPathPattern="survival" 2>&1 | tail -30
+All 48 tests pass (31 from US-089 + 17 new). Now run the full suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -10
+2404 tests, 0 failures. All green.
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-087" → "---
+
+## 2026-03-07 - US-090
+- Added `isPlayerDead(..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Testing against the actual config JSON (not hardcoded copies) is a contract test — if someone changes `hard.hungerDrainRate` from 1.5 to 1.4 in the JSON, the test catches the spec drift immediately. This is more valuable than a unit test that just verifies `tickHunger(100, 100, 60, 1.5)` because it locks config values to spec expectations.
+`─────────────────────────────────────────────────`
+
+**Summary of changes:**
+
+- `game/systems/survival.ts` — Added `isPlayerDead()` (death check at 0 hearts) and `computeStaminaRegenMult()` (hunger-gated regen multiplier with Well Fed bonus)
+- `game/systems/survival.test.ts` — Added 17 tests covering all 3 missing acceptance criteria:
+  - **5 tests** for `isPlayerDead` — death triggers at/after 0 hearts
+  - **7 tests** for `computeStaminaRegenMult` — zero hunger stops regen, Well Fed grants +10%
+  - **5 tests** for difficulty config drain rates — each tier's `hungerDrainRate` asserted against the actual JSON
+
+All 2404 tests pass, `tsc --noEmit` clean.
+
+<promise>COMPLETE</promise>

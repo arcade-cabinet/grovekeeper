@@ -1731,3 +1731,28 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **No-op US pattern**: When acceptance criteria map 1:1 to a previous US's tests, signal completion immediately after verification. Don't re-implement. The two-layer design (US-086 creates tests, US-088 verifies them) is intentional in the PRD.
 ---
+
+## 2026-03-07 - US-091
+- Created `config/game/fishing.json` — all tuning constants: castDuration, minWaitDuration, maxWaitDuration, biteDuration, timingBarSpeed, zoneWidth, baseYield, fishingDockYieldBonus, biomeSpecies (8 biomes × species lists), seasonWeights (4 seasons × species weight overrides)
+- Created `game/systems/fishing.ts` — pure state machine + species selection (no ECS/R3F/Rapier):
+  - `FishingPhase` type: idle | casting | waiting | biting | minigame | caught | escaped
+  - `FishingState` interface with phase, elapsed, waitDuration, timingProgress, timingDirection, zoneStart, zoneEnd
+  - `createFishingState()` — initial idle state
+  - `isWaterFishable(waterBodyType)` — returns true for ocean/river/pond/stream; false for waterfall
+  - `startFishing(state, rng)` — idle → casting; seeded waitDuration + zoneStart/zoneEnd placement (2 rng calls)
+  - `tickFishing(state, dt)` — advances phase machine; bouncing cursor in minigame via while-loop reflection
+  - `pressFishingAction(state)` — biting → minigame; minigame → caught/escaped based on zone check
+  - `isFishingComplete(state)` — true when caught or escaped
+  - `selectFishSpecies(biome, season, rng)` — weighted random from biomeSpecies config; seasonal multipliers; null for unknown biome
+  - `computeFishYield(hasDock)` — Math.ceil(baseYield * (1 + fishingDockBonus)); hasDock from Fishing Dock structure (§18.1)
+- Created `game/systems/fishing.test.ts` — 53 tests covering all functions + full round trip (success and failure paths)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2457 tests, 0 failures (120 suites, +53 new)
+- **Learnings:**
+  - **While-loop reflection for bouncing cursor**: Single `if (p > 1) ... else if (p < 0)` only handles one bounce per tick. With large dt (tests or low-fps), the cursor can overshoot both walls. Use `while (p < 0 || p > 1)` with reflection math to handle arbitrary dt correctly.
+  - **Sparse seasonWeights pattern**: Config only lists species that get a boost; unlisted species default to `?? 1.0`. Keeps fishing.json concise without enumerating all species × seasons.
+  - **zoneStart = rng() * (1 - zoneWidth)**: Guarantees `zoneEnd = zoneStart + zoneWidth ≤ 1` always — no clamping needed after zone placement.
+  - **Fishing spec scattered across §10/§11/§18/§37**: No dedicated fishing section. Pieced together from: Fish resource (§10), Fishing Rod tool (§11.1), Fishing Dock +30% yield (§18.1), scopedRNG "fish" domain (§37).
+
+---
