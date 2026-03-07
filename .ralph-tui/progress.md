@@ -37,6 +37,30 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-048
+- Created `components/entities/PropModel.tsx`:
+  - `resolvePropGLBPath(propId)` — unified lookup across all 6 propAssets.json categories (structures, crops, kitchen, traps, weapons, misc); 134 entries total; throws for unknown (no fallback)
+  - `resolveFoodGLBPath(foodId)` — crop-based lookup for raw food items (apple, carrot, cucumber, pumpkin, tomato); throws for unknown/cooked foodId
+  - `PropGLBModel` — inner sub-component wrapping `useGLTF` + `scene.clone(true)` (Rules of Hooks)
+  - `PropModel` — public component; accepts `modelPath: string`, `position`, `rotationY`; caller resolves the path from PropComponent or FoodComponent
+- Created `components/entities/PropModel.test.ts` — 34 tests (all green):
+  - `resolvePropGLBPath`: 18 spot-checks across misc/crops/kitchen/traps/weapons/structures, all paths end in `.glb`, throws for unknown/empty/partial match
+  - `resolveFoodGLBPath`: all 5 crops resolve correctly, paths under `assets/models/crops/`, all unique, throws for cooked foodId/unknown/empty
+  - `PropModel`: exports as function component
+- **Files changed:**
+  - `components/entities/PropModel.tsx`: new file
+  - `components/entities/PropModel.test.ts`: new file — 34 tests
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern PropModel` → 34 tests, 0 failures
+  - `npx jest --no-coverage` → 1793 tests, 0 failures (95 suites)
+- **Learnings:**
+  - `PropModel` accepts `modelPath: string` directly (not an ID) — both `PropComponent.modelPath` and `FoodComponent.modelPath` are already path strings. The pure resolution functions (`resolvePropGLBPath`, `resolveFoodGLBPath`) serve as testable seams for callers, not internal implementation.
+  - Flattening all 6 propAssets.json categories into one `PROP_MAP` (134 entries) allows a single lookup for any prop type. No compound keys needed — prop IDs are globally unique across categories.
+  - `FoodComponent.modelPath` is required (not optional), while `PropComponent.modelPath` is optional — `resolvePropGLBPath` is the hard-error seam for the optional case.
+
+---
+
 ## 2026-03-07 - US-047
 - Created `config/game/fences.json` — 79 fence variants across 7 types (brick/drystone/wooden/metal/plackard/plaster/picket), keyed by `{fenceType}:{variant}` → modelPath at `assets/models/fences/{type}/{variant}.glb`
 - Created `components/entities/FenceModel.tsx`:
