@@ -24,6 +24,32 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-019
+- Created `game/world/terrainGenerator.ts` with exported `generateHeightmap(worldSeed, chunkX, chunkZ): Float32Array`
+  - Uses a single `SeededNoise` instance keyed to `hashString(worldSeed)` — seamless global terrain
+  - Samples at global world-space coordinates: `(chunkX * CHUNK_SIZE + localX) * 0.05`
+  - Returns `Float32Array` of `CHUNK_SIZE * CHUNK_SIZE` (256) elements, values in [-1, 1]
+  - Pure function — same seed + chunkCoords always identical output
+- Updated `game/world/ChunkManager.ts` to import and use `generateHeightmap` (removed inline loop)
+- Created `game/world/terrainGenerator.test.ts` with 12 tests:
+  - Output shape: `Float32Array`, length 256, any chunk
+  - Determinism: same call order, multiple calls, negative coords
+  - Seed isolation: different seeds differ
+  - Chunk isolation: different X or Z differ
+  - Value range: all values in [-1, 1] (2 chunks tested)
+  - Seamless boundaries: adjacent tile heights across chunk border within 0.5 delta
+- **Files changed:**
+  - `game/world/terrainGenerator.ts`: new file — `generateHeightmap` pure function
+  - `game/world/terrainGenerator.test.ts`: new file — 12 tests, all green
+  - `game/world/ChunkManager.ts`: replaced inline heightmap loop with `generateHeightmap` import
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 79 suites, 1354 tests, 0 failures
+- **Learnings:**
+  - To avoid circular imports when extracting from ChunkManager, import `gridConfig.chunkSize` directly in terrainGenerator.ts rather than importing `CHUNK_SIZE` from ChunkManager
+  - The seamless boundary test is approximate (delta < 0.5) because adjacent samples at scale 0.05 have slightly different global coords (15*0.05=0.75 vs 16*0.05=0.80) — the test verifies continuity, not identity
+---
+
 ## 2026-03-07 - US-018
 - Work already complete — `game/world/ChunkManager.test.ts` was created as part of US-017 (Docs > Tests > Code workflow)
 - 34 tests covering: config constants (CHUNK_SIZE=16, radii), `worldToChunkCoords` (origin, boundary, negative), `getChunksInRadius` (3x3=9, 5x5=25, center, corners, offsets), `getChunkKey` formatting, `generateChunkData` (determinism, size, dirty=false, biomeBlend, baseColor), ChunkManager (25 loaded, active=visible, buffer=hidden, terrainChunk+chunk components, transitions load/unload, entity presence in world, no-op on same chunk)

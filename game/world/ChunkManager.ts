@@ -14,6 +14,7 @@ import type { Entity } from "@/game/ecs/world";
 import { SeededNoise } from "@/game/utils/seededNoise";
 import { hashString } from "@/game/utils/seedRNG";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import { generateHeightmap } from "./terrainGenerator";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -89,20 +90,10 @@ export function generateChunkData(
   biomeBlend: [number, number, number, number];
   dirty: boolean;
 } {
-  // Single noise instance per worldSeed for seamless global terrain
-  const heightNoise = new SeededNoise(hashString(worldSeed));
   const tempNoise = new SeededNoise(hashString(`${worldSeed}:temp`));
   const moistNoise = new SeededNoise(hashString(`${worldSeed}:moist`));
 
-  const heightmap = new Float32Array(CHUNK_SIZE * CHUNK_SIZE);
-  for (let z = 0; z < CHUNK_SIZE; z++) {
-    for (let x = 0; x < CHUNK_SIZE; x++) {
-      // Global world-space coords (scaled for natural terrain frequency)
-      const gx = (chunkX * CHUNK_SIZE + x) * 0.05;
-      const gz = (chunkZ * CHUNK_SIZE + z) * 0.05;
-      heightmap[z * CHUNK_SIZE + x] = heightNoise.fbm(gx, gz, 4, 2.0, 0.5);
-    }
-  }
+  const heightmap = generateHeightmap(worldSeed, chunkX, chunkZ);
 
   // Biome at chunk centre using coarse-scale noise
   const cx = (chunkX + 0.5) * 0.1;
