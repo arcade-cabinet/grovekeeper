@@ -3,10 +3,11 @@
  *
  * Renders CSS-style weather effects (rain drops, drought haze,
  * windstorm streaks) as React Native animated overlays on top of
- * the game canvas. Reads weather type to determine which effect
- * to display.
+ * the game canvas. Reads ECS WeatherComponent for intensity and
+ * wind direction to scale animations. See GAME_SPEC.md §12.
  */
 
+import { useEntities } from "miniplex-react";
 import React, { useEffect, useMemo } from "react";
 import { AccessibilityInfo, View } from "react-native";
 import Animated, {
@@ -18,28 +19,36 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
+import { weatherQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
 import type { WeatherType } from "@/game/systems/weather";
 import { scopedRNG } from "@/game/utils/seedWords";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+import {
+  computeDropDuration,
+  computeIntensityOpacity,
+  computeRainDropCount,
+  computeWindAngleDeg,
+  computeWindStreakCount,
+} from "./weatherOverlayLogic";
 
 export interface WeatherOverlayProps {
   weatherType: WeatherType;
 }
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+// Fixed counts derived from config at intensity=1 — array size must not vary (Rules of Hooks)
+const MAX_RAIN_DROPS = computeRainDropCount(1.0);
+const MAX_WIND_STREAKS = computeWindStreakCount(1.0);
 
-const RAIN_DROP_COUNT = 30;
-const WIND_STREAK_COUNT = 8;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+// ECS hook: reads intensity + windDirection from WeatherComponent singleton
+function useWeatherECS() {
+  useEntities(weatherQuery);
+  const w = weatherQuery.first?.weather;
+  return {
+    intensity: w?.intensity ?? 1.0,
+    windDirection: (w?.windDirection ?? [0, -1]) as [number, number],
+    windSpeed: w?.windSpeed ?? 1.0,
+  };
+}
 
 function useReducedMotion(): boolean {
   const [reduced, setReduced] = React.useState(false);
@@ -51,15 +60,13 @@ function useReducedMotion(): boolean {
   return reduced;
 }
 
-// ---------------------------------------------------------------------------
-// Rain overlay
-// ---------------------------------------------------------------------------
+// --- Rain ---
 
-function RainDrop({ index, total }: { index: number; total: number }) {
+function RainDrop({ index, total, intensity }: { index: number; total: number; intensity: number }) {
   const translateY = useSharedValue(-20);
   const opacity = useSharedValue(0.6);
-
   const worldSeed = useGameStore((s) => s.worldSeed);
+
   const leftPct = useMemo(() => {
     const rng = scopedRNG("weather-rain-left", worldSeed, index);
     return (index / total) * 100 + rng() * 3;
@@ -68,10 +75,11 @@ function RainDrop({ index, total }: { index: number; total: number }) {
     const rng = scopedRNG("weather-rain-delay", worldSeed, index);
     return rng() * 800;
   }, [index, worldSeed]);
-  const duration = useMemo(() => {
+  const baseDuration = useMemo(() => {
     const rng = scopedRNG("weather-rain-duration", worldSeed, index);
     return 600 + rng() * 400;
   }, [index, worldSeed]);
+  const duration = computeDropDuration(baseDuration, intensity);
 
   useEffect(() => {
     translateY.value = withRepeat(
@@ -79,22 +87,16 @@ function RainDrop({ index, total }: { index: number; total: number }) {
         withTiming(-20, { duration: 0 }),
         withTiming(800, { duration, easing: Easing.linear }),
       ),
-      -1,
-      false,
-      () => {},
-      ReduceMotion.Never,
+      -1, false, () => {}, ReduceMotion.Never,
     );
     opacity.value = withRepeat(
       withSequence(
-        withTiming(0.7, { duration: duration * 0.2 }),
-        withTiming(0.3, { duration: duration * 0.8 }),
+        withTiming(computeIntensityOpacity(0.7, intensity), { duration: duration * 0.2 }),
+        withTiming(computeIntensityOpacity(0.3, intensity), { duration: duration * 0.8 }),
       ),
-      -1,
-      false,
-      () => {},
-      ReduceMotion.Never,
+      -1, false, () => {}, ReduceMotion.Never,
     );
-  }, [translateY, opacity, duration]);
+  }, [translateY, opacity, duration, intensity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -104,61 +106,45 @@ function RainDrop({ index, total }: { index: number; total: number }) {
   return (
     <Animated.View
       className="absolute w-[1px] bg-blue-300/70"
-      style={[
-        {
-          left: `${leftPct}%`,
-          top: -20,
-          height: 16,
-          borderRadius: 1,
-        },
-        animatedStyle,
-      ]}
+      style={[{ left: `${leftPct}%`, top: -20, height: 16, borderRadius: 1 }, animatedStyle]}
     />
   );
 }
 
-function RainOverlay() {
+function RainOverlay({ intensity }: { intensity: number }) {
   return (
     <>
-      {Array.from({ length: RAIN_DROP_COUNT }, (_, i) => (
-        <RainDrop key={`rain-${i}`} index={i} total={RAIN_DROP_COUNT} />
+      {Array.from({ length: MAX_RAIN_DROPS }, (_, i) => (
+        <RainDrop key={`rain-${i}`} index={i} total={MAX_RAIN_DROPS} intensity={intensity} />
       ))}
     </>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Drought overlay
-// ---------------------------------------------------------------------------
+// --- Drought ---
 
-function DroughtOverlay() {
+function DroughtOverlay({ intensity }: { intensity: number }) {
   const opacity = useSharedValue(0);
-
   useEffect(() => {
     opacity.value = withRepeat(
-      withSequence(withTiming(0.25, { duration: 2000 }), withTiming(0.15, { duration: 2000 })),
-      -1,
-      true,
-      () => {},
-      ReduceMotion.Never,
+      withSequence(
+        withTiming(computeIntensityOpacity(0.25, intensity), { duration: 2000 }),
+        withTiming(computeIntensityOpacity(0.15, intensity), { duration: 2000 }),
+      ),
+      -1, true, () => {}, ReduceMotion.Never,
     );
-  }, [opacity]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
+  }, [opacity, intensity]);
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
   return <Animated.View className="absolute inset-0 bg-orange-300" style={animatedStyle} />;
 }
 
-// ---------------------------------------------------------------------------
-// Windstorm overlay
-// ---------------------------------------------------------------------------
+// --- Windstorm ---
 
-function WindStreak({ index, total }: { index: number; total: number }) {
+function WindStreak({
+  index, total, intensity, windAngleDeg,
+}: { index: number; total: number; intensity: number; windAngleDeg: number }) {
   const translateX = useSharedValue(-100);
   const opacity = useSharedValue(0);
-
   const worldSeed = useGameStore((s) => s.worldSeed);
   const topPct = useMemo(() => (index / total) * 100, [index, total]);
   const duration = useMemo(() => {
@@ -172,80 +158,53 @@ function WindStreak({ index, total }: { index: number; total: number }) {
         withTiming(-100, { duration: 0 }),
         withTiming(500, { duration, easing: Easing.linear }),
       ),
-      -1,
-      false,
-      () => {},
-      ReduceMotion.Never,
+      -1, false, () => {}, ReduceMotion.Never,
     );
     opacity.value = withRepeat(
       withSequence(
-        withTiming(0.4, { duration: duration * 0.3 }),
+        withTiming(computeIntensityOpacity(0.4, intensity), { duration: duration * 0.3 }),
         withTiming(0, { duration: duration * 0.7 }),
       ),
-      -1,
-      false,
-      () => {},
-      ReduceMotion.Never,
+      -1, false, () => {}, ReduceMotion.Never,
     );
-  }, [translateX, opacity, duration]);
+  }, [translateX, opacity, duration, intensity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }, { rotate: "-15deg" }],
+    transform: [{ translateX: translateX.value }, { rotate: `-${windAngleDeg.toFixed(1)}deg` }],
     opacity: opacity.value,
   }));
 
   return (
     <Animated.View
       className="absolute bg-gray-400/50"
-      style={[
-        {
-          top: `${topPct}%`,
-          left: -100,
-          width: 60,
-          height: 2,
-          borderRadius: 1,
-        },
-        animatedStyle,
-      ]}
+      style={[{ top: `${topPct}%`, left: -100, width: 60, height: 2, borderRadius: 1 }, animatedStyle]}
     />
   );
 }
 
-function WindstormOverlay() {
+function WindstormOverlay({ intensity, windAngleDeg }: { intensity: number; windAngleDeg: number }) {
   return (
     <>
-      {/* Semi-transparent tint */}
-      <View className="absolute inset-0 bg-gray-500/10" />
-      {/* Wind streaks */}
-      {Array.from({ length: WIND_STREAK_COUNT }, (_, i) => (
-        <WindStreak key={`wind-${i}`} index={i} total={WIND_STREAK_COUNT} />
+      <View className="absolute inset-0 bg-gray-500/10" style={{ opacity: computeIntensityOpacity(1.0, intensity) }} />
+      {Array.from({ length: MAX_WIND_STREAKS }, (_, i) => (
+        <WindStreak key={`wind-${i}`} index={i} total={MAX_WIND_STREAKS} intensity={intensity} windAngleDeg={windAngleDeg} />
       ))}
     </>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Reduced motion fallbacks
-// ---------------------------------------------------------------------------
+// --- Reduced motion fallbacks ---
 
-function StaticRainOverlay() {
-  return <View className="absolute inset-0 bg-blue-300/15" />;
-}
+function StaticRainOverlay() { return <View className="absolute inset-0 bg-blue-300/15" />; }
+function StaticDroughtOverlay() { return <View className="absolute inset-0 bg-orange-300/20" />; }
+function StaticWindstormOverlay() { return <View className="absolute inset-0 bg-gray-400/15" />; }
 
-function StaticDroughtOverlay() {
-  return <View className="absolute inset-0 bg-orange-300/20" />;
-}
-
-function StaticWindstormOverlay() {
-  return <View className="absolute inset-0 bg-gray-400/15" />;
-}
-
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
+// --- Main component ---
 
 export function WeatherOverlay({ weatherType }: WeatherOverlayProps) {
   const reduceMotion = useReducedMotion();
+  const { intensity, windDirection } = useWeatherECS();
+  const windAngleDeg = computeWindAngleDeg(windDirection);
 
   if (weatherType === "clear") return null;
 
@@ -255,10 +214,9 @@ export function WeatherOverlay({ weatherType }: WeatherOverlayProps) {
       pointerEvents="none"
       accessibilityLabel={`Weather: ${weatherType}`}
     >
-      {weatherType === "rain" && (reduceMotion ? <StaticRainOverlay /> : <RainOverlay />)}
-      {weatherType === "drought" && (reduceMotion ? <StaticDroughtOverlay /> : <DroughtOverlay />)}
-      {weatherType === "windstorm" &&
-        (reduceMotion ? <StaticWindstormOverlay /> : <WindstormOverlay />)}
+      {weatherType === "rain" && (reduceMotion ? <StaticRainOverlay /> : <RainOverlay intensity={intensity} />)}
+      {weatherType === "drought" && (reduceMotion ? <StaticDroughtOverlay /> : <DroughtOverlay intensity={intensity} />)}
+      {weatherType === "windstorm" && (reduceMotion ? <StaticWindstormOverlay /> : <WindstormOverlay intensity={intensity} windAngleDeg={windAngleDeg} />)}
     </View>
   );
 }

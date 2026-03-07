@@ -1,0 +1,160 @@
+# Iteration 156 Log
+
+## Metadata
+
+- **Task ID**: US-156
+- **Task Title**: Wire NpcDialogue component to speech bubble system
+- **Description**: As a developer, I want the existing NpcDialogue.tsx (171 lines) updated to display dialogue from DialogueComponent ECS state, showing speech bubbles above NPCs/spirits with branch choice buttons. Inte...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T22:21:28.696Z
+- **Ended At**: 2026-03-07T22:35:11.175Z
+- **Duration**: 13m 42s
+- **Input Tokens**: 191
+- **Output Tokens**: 48337
+- **Total Tokens**: 48528
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NpcDialogue.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/SpeechBubble*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96m**/dialogue*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/SpeechBubble.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueEffects.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueLoader.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs[0m pattern: [96m**/types.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs/types.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems[0m pattern: [96m**/*.test.ts[0m
+Now let me look at the game store and NpcComponent to understand what data is available:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/config/game/dialogue-trees.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/dialogue-trees.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+Let me check the progress file and look at the GAME_SPEC.md §15 section:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|§33|dialogue.*bubble|speech.bubble.*npc|NpcDialogue.*ECS[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|§ 15|Speech Bubble|NPC Dialogue[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 15|^### 15|NpcDialogue|dialogue.*component.*ECS|bubble.*system[0m
+Let me check how existing game components query ECS and how the game screen is structured:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/components/game/*.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/DialogueChoices.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInteraction.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInteraction.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m
+Let me read a few more relevant hooks:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useBirmotherEncounter.ts[0m
+Now I have a clear picture. Let me check useSpiritProximity tests and existing NpcDialogue test files:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/useSpiritProximity.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/NpcDialogue*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/spirits.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mworldSeed[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mquestChain|QuestChain|dialogueEffects[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ui/Toast.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.test.ts[0m
+Now I have everything I need. Let me set up the todo list and implement:
+
+`★ Insight ─────────────────────────────────────`
+- The `game/ui/Toast.ts` pattern establishes the correct cross-layer bridge: a framework-free module that both game hooks AND React components can import from, avoiding circular dependencies
+- `DialogueChoices.tsx` already handles the auto-advance timer and branch selection UI, so NpcDialogue just needs to coordinate the ECS reading + dialogue navigation
+- Effects are on `DialogueNode.effects` (not branches) — they fire when a node is *displayed*, not when a branch is selected
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,Bash[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ui/dialogueBridge.ts[0m "/**
+ * Dialogue session bridge (Spec §15, §33).
+ *
+ * Module-level observable store for the active NPC/spirit dialogue session.
+ * Framework-free — importable from both game hooks and React Native com... (2914 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NpcDialogue.logic.ts[0m "/**
+ * NpcDialogue pure logic (Spec §15, §33).
+ *
+ * Extracted from NpcDialogue.tsx so Jest can import without the JSX runtime
+ * chain initializing React Native. See codebase pattern:
+ * "JSX runtime... (1753 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NpcDialogue.logic.test.ts[0m "/**
+ * Tests for NpcDialogue pure logic (Spec §15, §33).
+ *
+ * Imports from .ts (not .tsx) to avoid JSX runtime initialization.
+ * See codebase pattern: "JSX runtime chain breaks .tsx pure-function te... (3842 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The module-level `useSyncExternalStore` bridge pattern (same as `useInteraction.ts`'s selection store) is the right way to connect the R3F `useFrame` context to React Native UI — ECS mutations in `useFrame` don't trigger React re-renders directly
+- `DialogueChoices.tsx` already handles the 3s auto-advance timer via `setTimeout` + `useEffect`, so NpcDialogue just needs to pass `branches`, `entityId`, `nodeIndex`, and `worldSeed`
+- Node effects (`node.effects`) fire when a node is *displayed* (on `currentNodeId` change), not on branch selection — this matches the ECS `DialogueNode` structure
+`─────────────────────────────────────────────────`
+
+Now rewrite NpcDialogue.tsx:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NpcDialogue.tsx[0m "/**
+ * NpcDialogue -- ECS-driven dialogue panel (Spec §15, §33).
+ *
+ * Self-contained overlay: reads the active dialogue session from the
+ * dialogueBridge module, queries ECS for the entity's Dialogu... (9313 chars)"
+
+[91m[Error: <tool_use_error>File has been modified since read, either by the user or by a linter. Read it again before attempting to write it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NpcDialogue.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NpcDialogue.tsx[0m edit: "/**
+ * NpcDialogue -- NPC conversation UI with dia..." → "/**
+ * NpcDialogue -- ECS-driven dialogue panel (S..."
+[94m[TodoWrite][0m
+Now update `useSpiritProximity.ts` to call `openDialogueSession` after wiring the ECS component:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.ts[0m edit: "import type { DialogueComponent } from "@/game/ecs..." → "import type { DialogueComponent } from "@/game/ecs..."
+
+[91m[Error: <tool_use_error>File has been modified since read, either by the user or by a linter. Read it again before attempting to write it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.ts[0m edit: "import type { DialogueComponent } from "@/game/ecs..." → "import type { DialogueComponent } from "@/game/ecs..."
+Now add the `openDialogueSession` call after the `world.addComponent` call:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.ts[0m edit: "      // 3. Set dialogue component on spirit entit..." → "      // 3. Set dialogue component on spirit entit..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.test.ts[0m edit: "jest.mock("@/game/ui/Toast", () => ({
+  showToast:..." → "jest.mock("@/game/ui/Toast", () => ({
+  showToast:..."
+
+[91m[Error: <tool_use_error>File has been modified since read, either by the user or by a linter. Read it again before attempting to write it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useSpiritProximity.test.ts[0m edit: "jest.mock("@/game/ui/Toast", () => ({
+  showToast:..." → "jest.mock("@/game/ui/Toast", () => ({
+  showToast:..."
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+There's one real error I need to fix: `GameUI.tsx` passes old props to `NpcDialogue`. Let me fix that:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m edit: "      {setNpcDialogueOpen && (
+        <NpcDialogu..." → "      {/* NpcDialogue is now self-driven from ECS ..."
+[94m[Bash][0m Check for non-pre-existing TypeScript errors $ npx tsc --noEmit 2>&1 | grep -v "TS5097" | grep -v "allowImportingTsExtensions" | grep -v "Already i...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m edit: "export type { NpcDialogueProps } from "./NpcDialog..." → "export { NpcDialogue } from "./NpcDialogue.tsx";"
+[94m[Bash][0m Check remaining TypeScript errors (excluding pre-existing ones) $ npx tsc --noEmit 2>&1 | grep -v "TS5097" | grep -v "allowImportingTsExtensions" | grep -v "Already i...
+No new TS errors. Now run Jest:
+[94m[Bash][0m Run NpcDialogue and useSpiritProximity tests $ npx jest --no-coverage --testPathPattern="NpcDialogue.logic|useSpiritProximity" 2>&1 | tail -40
+All 31 tests pass. Now run the full test suite to confirm nothing is broken:
+[94m[Bash][0m Run full jest test suite $ npx jest --no-coverage 2>&1 | tail -20
+154 suites, 3772 tests — all passing.
+[94m[TodoWrite][0m
+Now update the progress log:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-156 entry to progress.md $ other types (give_item, give_xp) are TODO for store/UI layer.   - **DialogueChoices handles auto-adv...
+`★ Insight ─────────────────────────────────────`
+- The `game/ui/` layer (Toast.ts, now dialogueBridge.ts) is the clean seam between game systems and React Native UI — framework-free modules that both sides can import without circular dependencies
+- `useSyncExternalStore` with a module-level `Set<() => void>` subscriber pattern is the canonical React way to reactively read from external mutable state (same principle used by Zustand/Legend State)
+- By extracting pure functions to `.logic.ts` before testing, the test file has zero React Native imports and runs in <0.4s — the JSX runtime initialization cost is completely avoided
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

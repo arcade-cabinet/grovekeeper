@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T22:35:11.178Z",
-  "currentIteration": 155,
+  "updatedAt": "2026-03-07T22:50:58.041Z",
+  "currentIteration": 156,
   "maxIterations": 0,
-  "tasksCompleted": 155,
+  "tasksCompleted": 156,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -946,8 +946,8 @@
       {
         "id": "US-156",
         "title": "Wire NpcDialogue component to speech bubble system",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-157",
@@ -2591,6 +2591,16 @@
       "durationMs": 1434428,
       "startedAt": "2026-03-07T21:57:33.072Z",
       "endedAt": "2026-03-07T22:21:27.500Z"
+    },
+    {
+      "iteration": 156,
+      "status": "completed",
+      "taskId": "US-156",
+      "taskTitle": "Wire NpcDialogue component to speech bubble system",
+      "taskCompleted": true,
+      "durationMs": 822479,
+      "startedAt": "2026-03-07T22:21:28.696Z",
+      "endedAt": "2026-03-07T22:35:11.175Z"
     }
   ],
   "skippedTaskIds": [],

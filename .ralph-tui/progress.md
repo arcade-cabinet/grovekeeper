@@ -2873,3 +2873,20 @@ after each iteration and it's included in prompts for context.
   - **DialogueChoices handles auto-advance**: Don't re-implement the 3s timer in NpcDialogue — just pass `branches`, `entityId`, `nodeIndex`, `worldSeed` to the existing `DialogueChoices` component.
   - **Terminal nodes need a farewell button**: When `branches.length === 0`, `DialogueChoices` renders nothing. Add an explicit close button below it.
 ---
+
+---
+
+## 2026-03-07 - US-157
+- What was implemented: Wired WeatherOverlay and FloatingParticles to ECS weather/particle systems
+- Files changed:
+  - NEW `components/game/weatherOverlayLogic.ts` — pure functions: `computeRainDropCount`, `computeWindStreakCount`, `computeWindAngleDeg`, `computeIntensityOpacity`, `computeDropDuration`
+  - NEW `components/game/weatherOverlayLogic.test.ts` — 18 tests
+  - NEW `components/game/floatingParticlesLogic.ts` — pure functions: `computeWindDrift`, `computeDisplayParticleCount`, `computeParticleOpacity` + `MAX_DISPLAY_WEATHER_PARTICLES`
+  - NEW `components/game/floatingParticlesLogic.test.ts` — 20 tests
+  - UPDATED `components/game/WeatherOverlay.tsx` — added `useWeatherECS()` hook (reads `weatherQuery.first`), ECS-driven `intensity` + `windDirection` passed to RainOverlay/DroughtOverlay/WindstormOverlay; particle counts from procedural.json; wind angle from ECS windDirection
+  - UPDATED `components/game/FloatingParticles.tsx` — added `WeatherParticlesLayer` export; reads `particleEmittersQuery` + `weatherQuery` for 2D weather particle overlay (rain/snow/leaves/dust); wind drift from ECS windDirection
+- **Learnings:**
+  - **`Bucket.first` not `[0]`**: miniplex `Query` extends `Bucket` which has a `.first` getter but does NOT expose array index access via TypeScript. Use `weatherQuery.first?.weather` not `weatherQuery[0]?.weather` — the latter causes TS7053.
+  - **Fixed array size for weather particles (Rules of Hooks)**: Never vary the length of an `Array.from({ length: N })` that renders hook-bearing sub-components based on dynamic state. Derive N from `computeRainDropCount(1.0)` (max at full intensity) and scale opacity by intensity instead. WeatherParticlesLayer uses the count approach for non-hook particle Animated.Views — acceptable there since Animated.View has no hooks and React reconciles by key.
+  - **Extract pure functions to `.ts` (not `.tsx`)**: Any logic testable without RN/React must live in a `.ts` file. Importing from `.tsx` pulls in JSX runtime → Appearance.getColorScheme() crash in tests.
+  - **Particle counts from procedural.json**: `weather.particleCounts.rain = 500` is the 3D budget. 2D overlay uses `RAIN_DISPLAY_RATIO = 0.06` → 30 particles at intensity=1. Encode ratio as a constant, not inline math.
