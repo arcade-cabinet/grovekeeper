@@ -683,3 +683,15 @@ after each iteration and it's included in prompts for context.
   - **Testable seam via pure functions**: `resolveModelPath` and `getSpeciesUseWinterModel` are pure config-lookup functions exported separately from R3F components — allows full unit testing without WebGL/R3F context. The R3F tinting logic itself is not unit tested (no WebGL in Jest), but TypeScript verifies it compiles correctly.
   - **Winter model convention**: `assets/models/trees/{id}-winter.glb` — consistent with existing `glbPath` convention. Only 3 species have distinct winter GLBs; others rely on `seasonTint` color-only tinting.
 ---
+
+## 2026-03-07 - US-036
+- Work was already complete — tests for tree rendering logic were written incrementally during US-033 through US-035.
+- **Files verified:**
+  - `components/entities/TreeModel.test.ts` — 32 tests covering species-to-GLB mapping (resolveGLBPath), stage-to-scale (STAGE_SCALES), winter model swap (resolveModelPath, getSpeciesUseWinterModel), component export
+  - `game/systems/vegetationPlacement.test.ts` — includes getSeasonalTreeTint tests covering seasonal tint for evergreen/deciduous/species-specific tints
+  - `game/systems/treeScaleSystem.test.ts` — scale rendering tests
+- All 1556 tests pass (88 suites), `npx tsc --noEmit` clean.
+- **Learnings:**
+  - **Tests distributed across systems**: Tree rendering tests span 3 files because the logic is split across components (TreeModel.tsx), systems (treeScaleSystem.ts, vegetationPlacement.ts). The acceptance criteria "seasonal tint" is covered by `getSeasonalTreeTint` in vegetationPlacement.test.ts, not in TreeModel.test.ts — check all files before concluding coverage is missing.
+  - **R3F tinting logic is not unit-testable**: The material clone + traverse tinting inside `TreeGLBModel` cannot be tested in Jest (no WebGL). Pure function seams (`resolveModelPath`, `getSeasonalTreeTint`) are the correct unit test targets.
+---
