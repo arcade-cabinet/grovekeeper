@@ -59,6 +59,21 @@
       "biomes": ["labyrinth"],
       "nightOnly": false,
       "description": "Thorny hedge that lashes out at passing grovekeeper"
+    },
+    "thorn-sprite": {
+      "name": "Thorn Sprite",
+      "modelPath": "assets/models/enemies/thorn-sprite.glb",
+      "tier": 1,
+      "health": 3,
+      "attackPower": 1,
+      "attackCooldown": 1.5,
+      "aggroRange": 4,
+      "deaggroRange": 7,
+      "behavior": "patrol",
+      "lootTableId": "sprite-loot",
+      "biomes": ["forest", "meadow"],
+      "nightOnly": false,
+      "description": "Tiny forest spirit that patrols its territory aggressively"
     }
   },
   "spawnRules": {

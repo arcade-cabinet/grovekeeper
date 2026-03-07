@@ -1,5 +1,6 @@
 import enemiesConfig from "@/config/game/enemies.json" with { type: "json" };
 import { scopedRNG } from "@/game/utils/seedWords";
+import { isExplorationMode } from "@/game/config/difficulty";
 
 export interface EnemySpawnEntry {
   enemyType: string;
@@ -68,12 +69,15 @@ export function spawnEnemiesForChunk(
   worldSeed: string,
   isNight: boolean,
 ): EnemySpawnEntry[] {
+  // Enemies only spawn in Survival mode (affectsGameplay: true)
+  if (isExplorationMode(difficultyId)) return [];
+
   const diffMult =
     difficultyMultipliers[difficultyId as keyof typeof difficultyMultipliers] ??
     1;
   if (diffMult === 0) return [];
 
-  const rng = scopedRNG("enemies", worldSeed, chunkX, chunkZ);
+  const rng = scopedRNG("enemy", worldSeed, chunkX, chunkZ);
   const chunkDistance = Math.sqrt(chunkX * chunkX + chunkZ * chunkZ);
 
   const chance = encounterChance(chunkDistance, isNight, biome, difficultyId);

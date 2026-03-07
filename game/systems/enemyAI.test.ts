@@ -7,6 +7,9 @@ import {
   checkAggro,
   moveToward,
   canAttack,
+  EnemyBrain,
+  EnemyEntityManager,
+  type EnemyBrainContext,
 } from "./enemyAI";
 import type { Entity, Position } from "@/game/ecs/world";
 
@@ -14,6 +17,20 @@ function makeEntity(x: number, z: number): Entity {
   return {
     id: "test-enemy",
     position: { x, y: 0, z },
+  };
+}
+
+function makeCtx(overrides: Partial<EnemyBrainContext> = {}): EnemyBrainContext {
+  return {
+    playerX: 20,
+    playerZ: 20,
+    enemyX: 0,
+    enemyZ: 0,
+    homeX: 0,
+    homeZ: 0,
+    aggroRange: 8,
+    deaggroRange: 12,
+    ...overrides,
   };
 }
 
@@ -146,5 +163,153 @@ describe("Enemy AI System", () => {
       const target: Position = { x: 10, y: 0, z: 0 };
       expect(canAttack(pos, target, 2, 0)).toBe(false);
     });
+  });
+});
+
+describe("EnemyBrain (Yuka GoalEvaluator-backed)", () => {
+  describe("construction", () => {
+    it("starts in idle mode", () => {
+      const brain = new EnemyBrain("e1", "bat", "swarm");
+      expect(brain.getMode()).toBe("idle");
+    });
+
+    it("exposes entityId, enemyType, behavior", () => {
+      const brain = new EnemyBrain("e2", "knight", "patrol");
+      expect(brain.entityId).toBe("e2");
+      expect(brain.enemyType).toBe("knight");
+      expect(brain.behavior).toBe("patrol");
+    });
+  });
+
+  describe("patrol behavior", () => {
+    it("stays idle when player is far beyond aggro range", () => {
+      const brain = new EnemyBrain("e3", "knight", "patrol");
+      const mode = brain.update(0.016, makeCtx({ playerX: 100, playerZ: 100 }));
+      expect(mode).toBe("idle");
+    });
+
+    it("switches to aggro when player enters aggro range", () => {
+      const brain = new EnemyBrain("e4", "knight", "patrol");
+      // Player at distance 5 with aggroRange 8 → aggro
+      const mode = brain.update(0.016, makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8 }));
+      expect(mode).toBe("aggro");
+    });
+
+    it("stays aggro while player is within deaggro range", () => {
+      const brain = new EnemyBrain("e5", "knight", "patrol");
+      // First update: trigger aggro
+      brain.update(0.016, makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8, deaggroRange: 12 }));
+      // Second update: player still within deaggro range (dist=10, deaggro=12)
+      const mode = brain.update(0.016, makeCtx({ playerX: 10, playerZ: 0, aggroRange: 8, deaggroRange: 12 }));
+      expect(mode).toBe("aggro");
+    });
+
+    it("switches to returning when player exits deaggro range", () => {
+      const brain = new EnemyBrain("e6", "knight", "patrol");
+      // Trigger aggro first
+      brain.update(0.016, makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8, deaggroRange: 12 }));
+      // Player now beyond deaggro range
+      const mode = brain.update(0.016, makeCtx({ playerX: 15, playerZ: 0, aggroRange: 8, deaggroRange: 12 }));
+      expect(mode).toBe("returning");
+    });
+  });
+
+  describe("swarm behavior", () => {
+    it("aggros at 1.2x the standard range", () => {
+      const brain = new EnemyBrain("e7", "bat", "swarm");
+      // Standard aggroRange=8; swarm effective=9.6; player at dist=9 → should aggro
+      const mode = brain.update(0.016, makeCtx({ playerX: 9, playerZ: 0, aggroRange: 8 }));
+      expect(mode).toBe("aggro");
+    });
+
+    it("does not aggro when beyond swarm effective range", () => {
+      const brain = new EnemyBrain("e8", "bat", "swarm");
+      // Swarm effective=9.6; player at dist=10 → no aggro
+      const mode = brain.update(0.016, makeCtx({ playerX: 10, playerZ: 0, aggroRange: 8 }));
+      expect(mode).toBe("idle");
+    });
+  });
+
+  describe("ambush behavior", () => {
+    it("stays idle when player is at standard range (outside ambush zone)", () => {
+      const brain = new EnemyBrain("e9", "corrupted-hedge", "ambush");
+      // Ambush effective=4; player at dist=5 → no aggro (outside half range)
+      const mode = brain.update(0.016, makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8 }));
+      expect(mode).toBe("idle");
+    });
+
+    it("aggros when player is within ambush zone (half aggro range)", () => {
+      const brain = new EnemyBrain("e10", "corrupted-hedge", "ambush");
+      // Ambush effective=4; player at dist=3 → aggro
+      const mode = brain.update(0.016, makeCtx({ playerX: 3, playerZ: 0, aggroRange: 8 }));
+      expect(mode).toBe("aggro");
+    });
+  });
+
+  describe("guard behavior", () => {
+    it("aggros at standard range (same as patrol)", () => {
+      const brain = new EnemyBrain("e11", "skeleton-warrior", "guard");
+      const mode = brain.update(0.016, makeCtx({ playerX: 6, playerZ: 0, aggroRange: 8 }));
+      expect(mode).toBe("aggro");
+    });
+  });
+
+  describe("dispose", () => {
+    it("resets mode to idle", () => {
+      const brain = new EnemyBrain("e12", "knight", "patrol");
+      brain.update(0.016, makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8 }));
+      expect(brain.getMode()).toBe("aggro");
+      brain.dispose();
+      expect(brain.getMode()).toBe("idle");
+    });
+  });
+});
+
+describe("EnemyEntityManager", () => {
+  beforeEach(() => {
+    EnemyEntityManager.clear();
+  });
+
+  it("registers and retrieves a brain", () => {
+    const brain = new EnemyBrain("m1", "bat", "swarm");
+    EnemyEntityManager.register(brain);
+    expect(EnemyEntityManager.get("m1")).toBe(brain);
+  });
+
+  it("size reflects registered brains", () => {
+    EnemyEntityManager.register(new EnemyBrain("m2", "bat", "swarm"));
+    EnemyEntityManager.register(new EnemyBrain("m3", "knight", "patrol"));
+    expect(EnemyEntityManager.size).toBe(2);
+  });
+
+  it("remove disposes and deletes brain", () => {
+    const brain = new EnemyBrain("m4", "bat", "swarm");
+    EnemyEntityManager.register(brain);
+    EnemyEntityManager.remove("m4");
+    expect(EnemyEntityManager.get("m4")).toBeUndefined();
+    expect(EnemyEntityManager.size).toBe(0);
+  });
+
+  it("updateAll calls update on registered brains", () => {
+    const brain = new EnemyBrain("m5", "knight", "patrol");
+    EnemyEntityManager.register(brain);
+    EnemyEntityManager.updateAll(0.016, () =>
+      makeCtx({ playerX: 5, playerZ: 0, aggroRange: 8 }),
+    );
+    expect(brain.getMode()).toBe("aggro");
+  });
+
+  it("updateAll skips brains when getCtx returns null", () => {
+    const brain = new EnemyBrain("m6", "knight", "patrol");
+    EnemyEntityManager.register(brain);
+    EnemyEntityManager.updateAll(0.016, () => null);
+    expect(brain.getMode()).toBe("idle");
+  });
+
+  it("clear removes all brains", () => {
+    EnemyEntityManager.register(new EnemyBrain("m7", "bat", "swarm"));
+    EnemyEntityManager.register(new EnemyBrain("m8", "bat", "swarm"));
+    EnemyEntityManager.clear();
+    expect(EnemyEntityManager.size).toBe(0);
   });
 });

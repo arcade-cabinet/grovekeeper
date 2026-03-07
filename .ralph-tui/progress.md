@@ -56,6 +56,33 @@ after each iteration and it's included in prompts for context.
 - **Individual SpiritOrb vs InstancedMesh**: Max 8 spirits active at once (one per maze). Use individual `<mesh>` sub-components (`SpiritOrb`) — each has its own `useFrame` for independent bob/pulse animation. InstancedMesh would require matrix sharing and is inappropriate when animation params differ per orb.
 - **Hedge+spirit wiring co-located in loadChunk**: `generateLabyrinth` returns hedges, decorations, centerPosition, and mazeIndex all at once. Wire all three entity types (hedge walls, decorations, spirit) in a single `if (labyrinthResult)` block in `loadChunk`. Splitting them across separate calls would require double-calling the generator.
 
+- **Aggro hysteresis in GoalEvaluator**: `AggroEvaluator.calculateDesirability` must handle two cases: (1) initial trigger — use `aggroRange * behaviorMult`, (2) maintain chase — use `deaggroRange` while `currentMode === "aggro"`. Without the maintain case, `IdleEvaluator` wins by default while the enemy is between aggroRange and deaggroRange.
+- **Behavior-specific aggro via entity field**: Pass `behavior: "patrol"|"guard"|"swarm"|"ambush"` on the `GameEntity` subclass and read it in the evaluator. One `AggroEvaluator` handles all 4 behaviors via a `rangeMult` (swarm=1.2×, ambush=0.5×, others=1.0). No need for 4 separate evaluator classes.
+- **EnemyEntityManager as module-level registry**: A `Map<string, EnemyBrain>` + exported plain-object API (`register`, `get`, `remove`, `updateAll`, `clear`, `size`) is sufficient for chunk lifecycle management. No need to import Yuka's actual `EntityManager` class.
+
+---
+
+## 2026-03-07 - US-085
+- Updated `game/systems/enemyAI.ts` — added Yuka-backed `EnemyBrain` class and `EnemyEntityManager` registry
+  - `EnemyEntity extends GameEntity` with `ctx`, `behavior`, and `currentMode` fields
+  - `AggroEvaluator` handles all 4 behaviors (patrol/guard/swarm/ambush) via `rangeMult` on `aggroRange`; maintains chase via deaggroRange hysteresis
+  - `ReturnEvaluator` triggers when aggro'd player exits `deaggroRange`
+  - `IdleEvaluator` is lowest-priority fallback (score=0.05)
+  - `EnemyEntityManager` — module-level Map registry with register/get/remove/updateAll/clear/size
+- Updated `game/systems/enemySpawning.ts` — added `isExplorationMode` guard (explicit `affectsGameplay` check), changed RNG scope from `"enemies"` to `"enemy"`
+- Updated `config/game/enemies.json` — added 5th enemy type `"thorn-sprite"` (forest/meadow, patrol, tier 1)
+- Added 18 new tests to `game/systems/enemyAI.test.ts` covering EnemyBrain (patrol/guard/swarm/ambush behaviors, aggro/returning/idle transitions, dispose) and EnemyEntityManager lifecycle
+- **Files changed:**
+  - `game/systems/enemyAI.ts` — added EnemyBrain + EnemyEntityManager (~105 new lines, 230 total)
+  - `game/systems/enemySpawning.ts` — +3 lines (import + guard + scope rename)
+  - `game/systems/enemyAI.test.ts` — +110 lines (18 new tests)
+  - `config/game/enemies.json` — +14 lines (thorn-sprite)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2319 tests, 0 failures (117 suites, +18 new tests)
+- **Learnings:**
+  - See new Codebase Patterns entries above
+
 ---
 
 ## 2026-03-07 - US-084

@@ -1362,8 +1362,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 85,
-      "passes": false,
-      "notes": "Phase 4: Maze + Combat + Spirits. enemyAI.ts (126 lines) and enemySpawning.ts (115 lines) already exist — update for new vision."
+      "passes": true,
+      "notes": "Phase 4: Maze + Combat + Spirits. enemyAI.ts (126 lines) and enemySpawning.ts (115 lines) already exist — update for new vision.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-086",
@@ -2805,6 +2806,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T15:07:43.912Z"
+    "updatedAt": "2026-03-07T15:16:04.985Z"
   }
 }
