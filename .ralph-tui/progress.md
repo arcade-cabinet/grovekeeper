@@ -37,6 +37,18 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-038
+- Work already complete — `components/entities/BushModel.test.ts` was created as part of US-037 (Docs > Tests > Code workflow)
+- 36 tests covering: VALID_SEASONS (5 seasons, each present), VALID_BUSH_SHAPES (≥52, all start with `bush_`, no duplicates), `buildModelKey` (correct patterns, all 5 seasons produce different keys, all shapes produce different keys), `resolveBushGLBPath` (correct paths, ends in .glb, includes prefix, same shape→different path per season, different shapes→different paths, all 52×5 resolve without throwing, all 260 paths unique, throws for unknown/empty/partial bushShape), BushModel component export check
+- **Files changed:** none (already done in US-037)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern BushModel` → 36 tests, 0 failures
+- **Learnings:**
+  - The Docs > Tests > Code mandatory workflow eliminates "write tests for X" follow-up stories — tests ship with the implementation. US-037 already shipped 36 tests covering all US-038 acceptance criteria.
+
+---
+
 ## 2026-03-07 - US-034
 - Updated `config/game/growth.json` stageVisuals scales to (0.2, 0.4, 0.6, 0.8, 1.0) per acceptance criteria
 - Created `game/systems/treeScaleSystem.ts`:
