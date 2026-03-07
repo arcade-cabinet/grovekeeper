@@ -15,6 +15,22 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-009
+- Created `components/player/FPSCamera.tsx` with `EYE_HEIGHT = 1.6`, `PerspectiveCamera makeDefault`, `useFrame` updating `cam.position` each frame from `playerQuery.entities[0].position + EYE_HEIGHT`
+- Created `components/player/FPSCamera.test.ts` with 2 tests verifying exported constant and component type
+- **Files changed:**
+  - `components/player/FPSCamera.tsx`: new file — FPS camera at eye height, reads player ECS position in useFrame
+  - `components/player/FPSCamera.test.ts`: new file — 2 tests, all green
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 73 suites, 1249 tests, 0 failures
+- **Learnings:**
+  - `THREE.Vector3` must be mocked when imported at module level (the `new THREE.Vector3(...)` for `DEFAULT_POSITION` runs at import time); mock with `jest.fn().mockImplementation((x=0,y=0,z=0) => ({x,y,z,copy:jest.fn(),set:jest.fn()}))`
+  - `@react-three/fiber` must be mocked (not in transformIgnorePatterns) — `useFrame: jest.fn()` is sufficient
+  - `@/game/ecs/world` mock needs `playerQuery: { entities: [] }` for module-level access to succeed
+  - Eye height offset is applied as `pos.y + EYE_HEIGHT` on the player's ECS position (which lives at ground level), not relative to capsule center
+---
+
 ## 2026-03-07 - US-008
 - Created `components/player/PlayerCapsule.tsx` with `RigidBody type="dynamic"` + `CapsuleCollider args={[0.6, 0.3]}` (halfHeight, radius)
 - Created `components/player/PlayerCapsule.test.ts` with 4 tests verifying exported constants and component type

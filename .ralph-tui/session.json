@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T08:34:07.585Z",
-  "currentIteration": 7,
+  "updatedAt": "2026-03-07T08:36:56.440Z",
+  "currentIteration": 8,
   "maxIterations": 0,
-  "tasksCompleted": 7,
+  "tasksCompleted": 8,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -58,8 +58,8 @@
       {
         "id": "US-008",
         "title": "Create player capsule RigidBody component",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-009",
@@ -1111,6 +1111,16 @@
       "durationMs": 74888,
       "startedAt": "2026-03-07T08:30:00.686Z",
       "endedAt": "2026-03-07T08:31:15.574Z"
+    },
+    {
+      "iteration": 8,
+      "status": "completed",
+      "taskId": "US-008",
+      "taskTitle": "Create player capsule RigidBody component",
+      "taskCompleted": true,
+      "durationMs": 170883,
+      "startedAt": "2026-03-07T08:31:16.700Z",
+      "endedAt": "2026-03-07T08:34:07.583Z"
     }
   ],
   "skippedTaskIds": [],
