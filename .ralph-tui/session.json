@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T08:04:26.659Z",
-  "currentIteration": 0,
+  "updatedAt": "2026-03-07T08:08:53.836Z",
+  "currentIteration": 1,
   "maxIterations": 0,
-  "tasksCompleted": 0,
+  "tasksCompleted": 1,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -16,8 +16,8 @@
       {
         "id": "US-001",
         "title": "Remove GridCellComponent references from game systems",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-002",
@@ -1041,7 +1041,18 @@
       }
     ]
   },
-  "iterations": [],
+  "iterations": [
+    {
+      "iteration": 1,
+      "status": "completed",
+      "taskId": "US-001",
+      "taskTitle": "Remove GridCellComponent references from game systems",
+      "taskCompleted": true,
+      "durationMs": 350517,
+      "startedAt": "2026-03-07T07:58:36.139Z",
+      "endedAt": "2026-03-07T08:04:26.656Z"
+    }
+  ],
   "skippedTaskIds": [],
   "cwd": "/Users/jbogaty/src/arcade-cabinet/grovekeeper",
   "activeTaskIds": [],

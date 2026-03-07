@@ -57,6 +57,8 @@ function addPlayer(x = 6, z = 6): Entity {
       currentTool: "trowel",
       unlockedTools: ["trowel", "watering-can"],
       unlockedSpecies: ["white-oak"],
+      stamina: 100,
+      maxStamina: 100,
     },
     renderable: { visible: true, scale: 1 },
   };

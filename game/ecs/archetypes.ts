@@ -78,8 +78,6 @@ export const createPlayerEntity = (): Entity => ({
     currentTool: "trowel",
     unlockedTools: ["trowel", "watering-can"],
     unlockedSpecies: ["white-oak"],
-  },
-  farmerState: {
     stamina: 100,
     maxStamina: 100,
   },

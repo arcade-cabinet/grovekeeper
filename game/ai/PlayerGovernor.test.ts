@@ -20,12 +20,10 @@ function createPlayer(x = 5, z = 5) {
       currentTool: "trowel",
       unlockedTools: ["trowel", "watering-can", "axe", "pruning-shears"],
       unlockedSpecies: ["white-oak"],
-    },
-    position: { x, y: 0, z },
-    farmerState: {
       stamina: 100,
       maxStamina: 100,
     },
+    position: { x, y: 0, z },
   });
 }
 

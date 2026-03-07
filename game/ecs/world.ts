@@ -17,7 +17,6 @@ import type {
   Renderable,
   PlayerComponent,
   GridCellComponent,
-  FarmerState,
   ZoneComponent,
   PropComponent,
   RainCatcherComponent,
@@ -155,7 +154,6 @@ export interface Entity {
 
   // LEGACY: Remove during Phase 0-1 (grid→chunk, zone→chunk)
   gridCell?: GridCellComponent;
-  farmerState?: FarmerState;
   zone?: ZoneComponent;
   zoneId?: string;
 }
@@ -231,5 +229,4 @@ export const activeDialogueQuery = world.with("dialogue", "position");
 export const questBranchQuery = world.with("questBranch");
 
 // LEGACY queries — remove during Phase 0-1
-export const farmerQuery = world.with("farmerState", "position");
 export const gridCellsQuery = world.with("gridCell", "position");

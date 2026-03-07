@@ -23,6 +23,8 @@ export interface PlayerComponent {
   currentTool: string;
   unlockedTools: string[];
   unlockedSpecies: string[];
+  stamina: number;
+  maxStamina: number;
 }
 
 export interface PropComponent {
@@ -59,11 +61,6 @@ export interface GridCellComponent {
   type: "soil" | "water" | "rock" | "path";
   occupied: boolean;
   treeEntityId: string | null;
-}
-
-export interface FarmerState {
-  stamina: number;
-  maxStamina: number;
 }
 
 export interface ZoneComponent {

@@ -27,9 +27,9 @@ export function regenStamina(
  * Returns false if insufficient (no change).
  */
 export function drainStamina(entity: Entity, cost: number): boolean {
-  if (!entity.farmerState) return false;
-  if (entity.farmerState.stamina < cost) return false;
+  if (!entity.player) return false;
+  if (entity.player.stamina < cost) return false;
 
-  entity.farmerState.stamina -= cost;
+  entity.player.stamina -= cost;
   return true;
 }

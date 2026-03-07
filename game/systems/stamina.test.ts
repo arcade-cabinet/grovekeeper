@@ -63,51 +63,60 @@ describe("stamina system", () => {
   // ── drainStamina ───────────────────────────────────────────────
 
   describe("drainStamina", () => {
-    function makeFarmerEntity(stamina: number): Entity {
+    function makePlayerEntity(stamina: number): Entity {
       return {
-        id: "farmer",
-        farmerState: { stamina, maxStamina: 100 },
+        id: "player",
+        player: {
+          coins: 0,
+          xp: 0,
+          level: 1,
+          currentTool: "trowel",
+          unlockedTools: [],
+          unlockedSpecies: [],
+          stamina,
+          maxStamina: 100,
+        },
       };
     }
 
     it("drains stamina and returns true when sufficient", () => {
-      const entity = makeFarmerEntity(50);
+      const entity = makePlayerEntity(50);
       const result = drainStamina(entity, 10);
       expect(result).toBe(true);
-      expect(entity.farmerState!.stamina).toBe(40);
+      expect(entity.player!.stamina).toBe(40);
     });
 
     it("returns false when insufficient stamina", () => {
-      const entity = makeFarmerEntity(5);
+      const entity = makePlayerEntity(5);
       const result = drainStamina(entity, 10);
       expect(result).toBe(false);
-      expect(entity.farmerState!.stamina).toBe(5); // unchanged
+      expect(entity.player!.stamina).toBe(5); // unchanged
     });
 
     it("drains exact amount when stamina equals cost", () => {
-      const entity = makeFarmerEntity(10);
+      const entity = makePlayerEntity(10);
       const result = drainStamina(entity, 10);
       expect(result).toBe(true);
-      expect(entity.farmerState!.stamina).toBe(0);
+      expect(entity.player!.stamina).toBe(0);
     });
 
-    it("returns false when no farmerState", () => {
-      const entity: Entity = { id: "no-farmer" };
+    it("returns false when no player", () => {
+      const entity: Entity = { id: "no-player" };
       expect(drainStamina(entity, 10)).toBe(false);
     });
 
     it("handles zero cost", () => {
-      const entity = makeFarmerEntity(50);
+      const entity = makePlayerEntity(50);
       const result = drainStamina(entity, 0);
       expect(result).toBe(true);
-      expect(entity.farmerState!.stamina).toBe(50);
+      expect(entity.player!.stamina).toBe(50);
     });
 
     it("rejects negative stamina scenarios", () => {
-      const entity = makeFarmerEntity(0);
+      const entity = makePlayerEntity(0);
       const result = drainStamina(entity, 5);
       expect(result).toBe(false);
-      expect(entity.farmerState!.stamina).toBe(0);
+      expect(entity.player!.stamina).toBe(0);
     });
   });
 });

@@ -44,8 +44,8 @@ describe("ECS World", () => {
       expect(player.player?.coins).toBe(100);
       expect(player.player?.level).toBe(1);
       expect(player.player?.currentTool).toBe("trowel");
-      expect(player.farmerState?.stamina).toBe(100);
-      expect(player.farmerState?.maxStamina).toBe(100);
+      expect(player.player?.stamina).toBe(100);
+      expect(player.player?.maxStamina).toBe(100);
     });
 
     it("creates a grid cell entity", () => {

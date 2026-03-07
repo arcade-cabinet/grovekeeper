@@ -28,8 +28,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "Phase 0-A: Legacy Teardown. Replace FarmerState references with PlayerComponent stamina/state."
+      "passes": true,
+      "notes": "Phase 0-A: Legacy Teardown. Replace FarmerState references with PlayerComponent stamina/state.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-003",
@@ -2722,6 +2723,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T08:04:26.658Z"
+    "updatedAt": "2026-03-07T08:08:53.835Z"
   }
 }

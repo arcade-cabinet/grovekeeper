@@ -11,6 +11,24 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-002
+- Removed all `FarmerState` references; merged stamina fields into `PlayerComponent`
+- **Files changed:**
+  - `game/ecs/components/core.ts`: added `stamina` and `maxStamina` to `PlayerComponent`; deleted `FarmerState` interface
+  - `game/ecs/world.ts`: removed `FarmerState` import, `farmerState?: FarmerState` from Entity, and `farmerQuery` export
+  - `game/ecs/archetypes.ts`: moved `stamina`/`maxStamina` from `farmerState` block into `player` block in `createPlayerEntity`
+  - `game/systems/stamina.ts`: `drainStamina` now reads/writes `entity.player` instead of `entity.farmerState`
+  - `game/systems/stamina.test.ts`: replaced `makeFarmerEntity` fixture (using `farmerState`) with `makePlayerEntity` (using `player`); updated all assertions
+  - `game/hooks/useGameLoop.ts`: replaced `farmerQuery` import + loop with `playerQuery`; stamina regen reads from `entity.player`
+  - `game/ecs/world.test.ts`: updated stamina assertions from `player.farmerState?.stamina` → `player.player?.stamina`
+  - `game/ai/PlayerGovernor.test.ts`: moved `stamina`/`maxStamina` from `farmerState` into `player` in test fixture
+  - `game/actions/GameActions.test.ts`: added missing `stamina`/`maxStamina` to `player` fixture (caught by tsc)
+- **Learnings:**
+  - tsc catches ALL `PlayerComponent` fixture objects project-wide — when adding required fields to an interface, grep for partial fixtures (`coins: 100`) to find all test helpers that need updating
+  - `farmerQuery = world.with("farmerState", "position")` → simply replaced with `playerQuery` since all player entities now carry stamina; no separate query needed
+  - The stamina regen loop in `useGameLoop` used `if (!entity.farmerState) continue` as a guard — replaced with `if (!entity.player) continue`, which is equivalent since `playerQuery` already requires `player`
+---
+
 ## 2026-03-07 - US-001
 - Removed all `GridCellComponent` imports and usage from `game/systems/` and `game/hooks/`
 - **Files changed:**

@@ -14,7 +14,6 @@ import { NpcBrain, type NpcBrainContext } from "@/game/ai/NpcBrain";
 import { getSpeciesById } from "@/game/config/species";
 import { createWildTreeEntity } from "@/game/ecs/archetypes";
 import {
-  farmerQuery,
   gridCellsQuery,
   harvestableQuery,
   npcsQuery,
@@ -213,17 +212,17 @@ export function useGameLoop(): void {
 
     // ── 4. Stamina Regeneration ──────────────────────────────────────────
 
-    for (const entity of farmerQuery) {
-      if (!entity.farmerState) continue;
+    for (const entity of playerQuery) {
+      if (!entity.player) continue;
 
       const newStamina = regenStamina(
-        entity.farmerState.stamina,
-        entity.farmerState.maxStamina,
+        entity.player.stamina,
+        entity.player.maxStamina,
         dt,
       );
 
-      if (newStamina !== entity.farmerState.stamina) {
-        entity.farmerState.stamina = newStamina;
+      if (newStamina !== entity.player.stamina) {
+        entity.player.stamina = newStamina;
         // Sync to Zustand (rounded to avoid excessive updates)
         const rounded = Math.round(newStamina * 10) / 10;
         if (Math.abs(rounded - store.stamina) >= 0.5) {
