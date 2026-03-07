@@ -1,0 +1,147 @@
+# Iteration 115 Log
+
+## Metadata
+
+- **Task ID**: US-115
+- **Task Title**: Update kitbashing snap validation for Rapier physics
+- **Description**: As a developer, I want the existing kitbashing.ts (219 lines) updated to use Rapier physics raycasts for snap point detection, direction matching (N<->S, E<->W, up<->down), clearance via collision que...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T17:43:10.456Z
+- **Ended At**: 2026-03-07T17:53:34.397Z
+- **Duration**: 10m 23s
+- **Input Tokens**: 156
+- **Output Tokens**: 38939
+- **Total Tokens**: 39095
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (67179 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbashing.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§14|kitbash|Rapier|snap.*direction|clearance|ground contact[0m
+Now let me read the test file and the GAME_SPEC.md §35 section more carefully:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 35\.|### 35\.[0m
+Now let me look at how Rapier is used in existing systems and the building component:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mrapier|Rapier|RapierWorld|rapierWorld[0m
+Let me look at the combat and physics patterns to understand how Rapier is used:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/combat.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.ts[0m
+Let me look at the Rapier-related test patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.test.ts[0m
+Let me check the no-magic-numbers hook and the building config for additional constants I should add:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.claude/hooks/no-magic-numbers.sh[0m
+Let me check the file-size sentinel and then look at the last part of progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.claude/hooks/file-size-sentinel.sh[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The existing `combat.ts` pattern is the gold standard here: keep pure functions, accept Rapier world/module as plain parameters (minimal interfaces), never import hooks. Tests can then mock with plain objects — no actual Rapier physics engine required. The `useJump.ts` / `useJump.test.ts` pair also demonstrates the exact pattern for Rapier raycasts (`castRay`) in tests with `as never` casting.
+`─────────────────────────────────────────────────`
+
+Now I'll add the Rapier interfaces and new functions to `kitbashing.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.ts[0m edit: "/**
+ * Get the list of material types unlocked at ..." → "/**
+ * Get the list of material types unlocked at ..."
+Now update the test file to import and test the new functions:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m edit: "import {
+  getAvailableSnapPoints,
+  validatePlace..." → "import {
+  getAvailableSnapPoints,
+  validatePlace..."
+Now add the test suites for the new functions at the end of the test file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m edit: "  describe("getUnlockedMaterials", () => {
+    it(..." → "  describe("getUnlockedMaterials", () => {
+    it(..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run kitbashing tests $ npx jest --no-coverage game/systems/kitbashing.test.ts 2>&1
+All 33 tests pass (16 existing + 17 new). Let me verify the file line count:
+[94m[Bash][0m Check line counts for both files $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.ts /Users/jbogaty/src/ar...
+`kitbashing.ts` at 325 lines exceeds the 300-line hard rule from CLAUDE.md — need to decompose. Let me check for other importers first:
+[94m[Bash][0m Find all files importing kitbashing $ grep -r "from.*kitbashing" /Users/jbogaty/src/arcade-cabinet/grovekeeper --include="*.ts" --include=...
+Only the test file imports it. I'll decompose into a subpackage. Let me get the Write tool:
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+`★ Insight ─────────────────────────────────────`
+The decomposition into a subpackage with `index.ts` barrel is the standard pattern here — `"./kitbashing"` from the test file resolves to `./kitbashing/index.ts` once the `.ts` file is deleted, because TypeScript's module resolution checks directory index files as a fallback. No test file path changes needed.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/placement.ts[0m "/**
+ * Kitbashing placement logic -- snap point detection and grid validation.
+ * Pure functions, no physics engine dependency. Spec §35.1.
+ */
+
+import type { Entity } from "../../ecs/world";
+import t... (4840 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/rapier.ts[0m "/**
+ * Kitbashing Rapier physics snap validation.
+ * Clearance and ground contact checks via physics raycasts. Spec §35.1.
+ */
+
+import type { Entity } from "../../ecs/world";
+import type { ModularPiec... (3735 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/unlocks.ts[0m "/**
+ * Kitbashing unlock and value calculations. Spec §35.2, §35.3.
+ */
+
+import type { Entity } from "../../ecs/world";
+import type { PieceType } from "../../ecs/components/building";
+import buildingC... (1690 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/index.ts[0m "/**
+ * Kitbashing system -- Fallout-style modular base building.
+ *
+ * Players snap modular pieces (walls, floors, roofs, pillars) together
+ * on a coarse 1-unit grid. Pieces connect via snap points. ... (667 chars)"
+Now delete the original monolithic file:
+[94m[Bash][0m Delete original monolithic kitbashing.ts $ rm /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.ts
+Now run full checks:
+[94m[Bash][0m TypeScript check after decomposition $ npx tsc --noEmit 2>&1 && echo "TSC OK"
+[94m[Bash][0m Run kitbashing tests after decomposition $ npx jest --no-coverage game/systems/kitbashing.test.ts 2>&1 | tail -20
+All 33 tests pass. Let me verify the subpackage file sizes:
+[94m[Bash][0m Check line counts for subpackage files $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/*.ts
+All files under 300 lines. Let me run the full test suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -10
+[94m[TodoWrite][0m
+2928 tests pass across 134 suites. Now update progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **Sequential effects ordering**: Effects in a Di..." → "- **Sequential effects ordering**: Effects in a Di..."
+Now append the US-115 session entry:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-111" → "---
+
+## 2026-03-07 - US-115
+- Decomposed `game/sys..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Minimal interface pattern for Rapier in pure systems**: Rather than importing `useRapier` (a React hook) into a pure system file, define `KitbashRapierWorld` and `KitbashRapierModule` interfaces with only the 2 methods needed (`castRay`, `intersectionsWithShape`, `Ray`, `Cuboid`). Production callers destructure from `useRapier()` and pass them in; tests just use `jest.fn()` mocks cast as `never`.
+- **Two Rapier APIs, two different checks**: Shape overlap (`intersectionsWithShape` + `Cuboid`) is used for static clearance — "does anything occupy this volume?" Raycast (`castRay`) is used for ground contact — "is there solid terrain below?" These are different physics primitives serving different semantic purposes.
+`─────────────────────────────────────────────────`
+
+All done. Summary of what was done:
+
+**Files changed:**
+- Deleted `game/systems/kitbashing.ts` (219 lines → subpackage)
+- Created `game/systems/kitbashing/placement.ts` (162 lines) — pure snap math
+- Created `game/systems/kitbashing/rapier.ts` (117 lines) — Rapier interfaces + `checkSnapDirectionMatch`, `checkClearance`, `checkGroundContact`, `validatePlacementWithRapier`
+- Created `game/systems/kitbashing/unlocks.ts` (57 lines) — value/unlock functions
+- Created `game/systems/kitbashing/index.ts` (19 lines) — barrel
+- Updated `game/systems/kitbashing.test.ts` — added 17 tests across 4 new describe blocks
+
+**Results:** 2928/2928 tests pass, 0 TypeScript errors.
+
+<promise>COMPLETE</promise>

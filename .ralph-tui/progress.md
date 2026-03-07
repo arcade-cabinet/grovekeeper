@@ -76,6 +76,22 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-116
+- Added 16 new tests to `game/systems/kitbashing.test.ts` covering rotation handling and multi-snap (Spec §35.1)
+- New import: `rotateDirection`, `snapPointToWorld` from `./kitbashing/placement` (subpackage, not barrel)
+- **Rotation Handling** (10 tests):
+  - `rotateDirection`: north+90°=east, east+90°=south, north+180°=south, west+270°=south, up/down unaffected
+  - `snapPointToWorld`: rot=90° x→z offset, rot=180° x negated, y unaffected by horizontal rotation
+  - `checkSnapDirectionMatch`: rot=180° east-snap connects oppositely, rot=90° east-snap connects to north-snap of southern neighbor, rot=90° shifts snap out of alignment (reject)
+- **Multi-Snap** (4 tests): `getAvailableSnapPoints` returns 2+ snaps for 2 neighbors; `validatePlacement` with 2 neighbors; `validatePlacementWithRapier` with 2 neighbors + clear; rejects when both neighbors only accept incompatible types
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2944 tests pass (134 suites, +16 new tests)
+- **Learnings:**
+  - **Import helpers from subpackage, not barrel**: Test `rotateDirection`/`snapPointToWorld` via `./kitbashing/placement` directly — avoids widening the barrel's public API just for test access.
+  - **Math.round(cos/sin) eliminates float noise**: The `snapPointToWorld` impl uses `Math.round(Math.cos/sin)` so rotation by 90°/180°/270° yields exact 0/1/-1 integers. Tests can use `toBeCloseTo(0)` but the values are actually exact. Critical for reliable position matching in snap validation.
+  - **180° rotation test is clearest rotation case**: `east` snap at x=+0.5, rotated 180°, appears at world x=-0.5 (from gridX=0) or gridX+0.5 (from gridX=1). This directly demonstrates rotation-aware world-space snap alignment.
+
+---
+
 ## 2026-03-07 - US-115
 - Decomposed `game/systems/kitbashing.ts` (219 lines) into a subpackage:
   - `game/systems/kitbashing/placement.ts` (162 lines) — pure snap math: `getAvailableSnapPoints`, `validatePlacement`, helpers
