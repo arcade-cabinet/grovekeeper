@@ -23,7 +23,7 @@ jest.mock("@/game/stores/gameStore", () => ({
 }));
 
 import toolVisuals from "@/config/game/toolVisuals.json";
-import { computeSwayOffset, resolveToolGLBPath, resolveToolVisual, ToolViewModel } from "./ToolViewModel";
+import { computeSwayOffset, computeWalkBob, resolveToolGLBPath, resolveToolVisual, ToolViewModel } from "./ToolViewModel";
 
 type ToolVisualsConfig = typeof toolVisuals;
 
@@ -116,6 +116,42 @@ describe("resolveToolVisual (Spec §11)", () => {
 describe("ToolViewModel (Spec §11)", () => {
   it("exports ToolViewModel as a function component", () => {
     expect(typeof ToolViewModel).toBe("function");
+  });
+});
+
+describe("computeWalkBob (Spec §11)", () => {
+  it("returns zero when speed is zero (standing still)", () => {
+    expect(computeWalkBob(1.0, 0.02, 8.0, 0)).toBe(0);
+  });
+
+  it("returns bobHeight * sin(bobTime * bobFrequency) at full speed", () => {
+    // Choose bobTime so sin(bobTime * 8) = sin(π/2) = 1 → result = bobHeight
+    const bobTime = Math.PI / 2 / 8.0;
+    expect(computeWalkBob(bobTime, 0.02, 8.0, 1)).toBeCloseTo(0.02, 5);
+  });
+
+  it("scales proportionally with speed", () => {
+    const full = computeWalkBob(1.0, 0.02, 8.0, 1);
+    const half = computeWalkBob(1.0, 0.02, 8.0, 0.5);
+    expect(half).toBeCloseTo(full * 0.5, 5);
+  });
+
+  it("scales proportionally with bobHeight", () => {
+    const small = computeWalkBob(1.0, 0.01, 8.0, 1);
+    const large = computeWalkBob(1.0, 0.02, 8.0, 1);
+    expect(large).toBeCloseTo(small * 2, 5);
+  });
+
+  it("oscillates between positive and negative over a full cycle", () => {
+    const tPeak = Math.PI / 2 / 8.0;
+    const tTrough = (3 * Math.PI) / 2 / 8.0;
+    expect(computeWalkBob(tPeak, 0.02, 8.0, 1)).toBeCloseTo(0.02, 5);
+    expect(computeWalkBob(tTrough, 0.02, 8.0, 1)).toBeCloseTo(-0.02, 5);
+  });
+
+  it("returns zero at t=0 regardless of other params", () => {
+    // sin(0) = 0
+    expect(computeWalkBob(0, 0.05, 12.0, 1)).toBe(0);
   });
 });
 

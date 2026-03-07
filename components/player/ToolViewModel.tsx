@@ -34,14 +34,19 @@ interface SwayConfig {
   readonly lerpFactor: number;
 }
 
+interface BobConfig {
+  readonly bobHeight: number;
+  readonly bobFrequency: number;
+}
+
 /**
- * Index-signature type covering tool entries and the top-level "sway" config key.
+ * Index-signature type covering tool entries and the top-level "sway"/"bob" config keys.
  * The union value type lets TypeScript accept toolVisuals.json directly.
  */
-type ToolVisualsConfig = { readonly [toolId: string]: ToolVisualEntry | SwayConfig | undefined };
+type ToolVisualsConfig = { readonly [toolId: string]: ToolVisualEntry | SwayConfig | BobConfig | undefined };
 
-/** Narrows a config value to ToolVisualEntry (excludes SwayConfig and undefined). */
-function isToolVisualEntry(v: ToolVisualEntry | SwayConfig): v is ToolVisualEntry {
+/** Narrows a config value to ToolVisualEntry (excludes SwayConfig, BobConfig, and undefined). */
+function isToolVisualEntry(v: ToolVisualEntry | SwayConfig | BobConfig): v is ToolVisualEntry {
   return "glbPath" in v;
 }
 
@@ -73,6 +78,27 @@ export function computeSwayOffset(
     x: currentSway.x + (targetX - currentSway.x) * t,
     y: currentSway.y + (targetY - currentSway.y) * t,
   };
+}
+
+/**
+ * Computes vertical walk bob for the held tool (Spec §11).
+ *
+ * Returns bobHeight * sin(bobTime * bobFrequency) * speed.
+ * The speed factor gates the amplitude so bob is zero when standing still.
+ *
+ * @param bobTime       Accumulated time in seconds (advances every frame)
+ * @param bobHeight     Amplitude from config (toolVisuals.json bob.bobHeight)
+ * @param bobFrequency  Frequency in rad/s from config (toolVisuals.json bob.bobFrequency)
+ * @param speed         Movement speed factor 0..1 (derived from input moveDirection)
+ * @returns             Vertical Y offset to add to tool position
+ */
+export function computeWalkBob(
+  bobTime: number,
+  bobHeight: number,
+  bobFrequency: number,
+  speed: number,
+): number {
+  return bobHeight * Math.sin(bobTime * bobFrequency) * speed;
 }
 
 /**
@@ -111,6 +137,8 @@ interface ToolGLBModelProps {
   moveDirection: { x: number; z: number };
   swayAmount: number;
   lerpFactor: number;
+  bobHeight: number;
+  bobFrequency: number;
 }
 
 /**
@@ -123,20 +151,24 @@ interface ToolGLBModelProps {
  * This is a separate component so useGLTF is only called when a valid GLB path
  * is known (satisfies Rules of Hooks — parent conditionally mounts this).
  */
-const ToolGLBModel = ({ glbPath, offset, scale, moveDirection, swayAmount, lerpFactor }: ToolGLBModelProps) => {
+const ToolGLBModel = ({ glbPath, offset, scale, moveDirection, swayAmount, lerpFactor, bobHeight, bobFrequency }: ToolGLBModelProps) => {
   const { scene } = useGLTF(glbPath);
   const { camera } = useThree();
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
   const groupRef = useRef<THREE.Group>(null);
   const swayRef = useRef({ x: 0, y: 0 });
+  const bobTimeRef = useRef(0);
 
   useFrame((_state, delta) => {
     const group = groupRef.current;
     if (!group) return;
     swayRef.current = computeSwayOffset(moveDirection, swayRef.current, swayAmount, lerpFactor, delta);
+    bobTimeRef.current += delta;
+    const speed = Math.min(1, Math.sqrt(moveDirection.x ** 2 + moveDirection.z ** 2));
+    const bob = computeWalkBob(bobTimeRef.current, bobHeight, bobFrequency, speed);
     group.position.set(
       (offset[0] ?? 0) + swayRef.current.x,
-      (offset[1] ?? 0) + swayRef.current.y,
+      (offset[1] ?? 0) + swayRef.current.y + bob,
       offset[2] ?? 0,
     );
   });
@@ -179,8 +211,9 @@ export const ToolViewModel = ({ moveDirection = ZERO_DIRECTION }: ToolViewModelP
   const glbPath = resolveToolGLBPath(selectedTool, config);
   const visual = resolveToolVisual(selectedTool, config);
   const swayConfig = (toolVisualsData as { sway?: SwayConfig }).sway;
+  const bobConfig = (toolVisualsData as { bob?: BobConfig }).bob;
 
-  if (!glbPath || !visual || !swayConfig) return null;
+  if (!glbPath || !visual || !swayConfig || !bobConfig) return null;
 
   return (
     <ToolGLBModel
@@ -190,6 +223,8 @@ export const ToolViewModel = ({ moveDirection = ZERO_DIRECTION }: ToolViewModelP
       moveDirection={moveDirection}
       swayAmount={swayConfig.swayAmount}
       lerpFactor={swayConfig.lerpFactor}
+      bobHeight={bobConfig.bobHeight}
+      bobFrequency={bobConfig.bobFrequency}
     />
   );
 };

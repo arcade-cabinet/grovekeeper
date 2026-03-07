@@ -46,6 +46,28 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-061
+- Implemented `computeWalkBob(bobTime, bobHeight, bobFrequency, speed)` — pure export on `ToolViewModel.tsx`, no R3F context needed
+- Formula: `bobHeight * Math.sin(bobTime * bobFrequency) * speed` — speed factor (0..1 from moveDirection magnitude) gates amplitude so bob is zero when standing still
+- `bobTimeRef` accumulates unconditionally every frame; speed factor controls amplitude (no need to stop time accumulation when standing)
+- Added `bob: { bobHeight: 0.02, bobFrequency: 8.0 }` to `config/game/toolVisuals.json` — 2cm amplitude, ~1.27Hz oscillation (~76 steps/min)
+- Wired into `ToolGLBModel.useFrame`: `bobTimeRef.current += delta`, speed from `Math.min(1, sqrt(x²+z²))`, bob added to Y in `group.position.set()`
+- Added `BobConfig` interface; widened `ToolVisualsConfig` union and `isToolVisualEntry` guard to include it
+- `ToolViewModel` reads `bobConfig` via direct cast (same pattern as `swayConfig`)
+- **Files changed:**
+  - `components/player/ToolViewModel.tsx` — added `BobConfig`, `computeWalkBob`, widened union/guard, `bobTimeRef`, speed calc, `ToolGLBModelProps` + `ToolViewModel` bob threading
+  - `components/player/ToolViewModel.test.ts` — added 6 tests for `computeWalkBob`; imported `computeWalkBob`
+  - `config/game/toolVisuals.json` — added `bob` top-level config block
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 1983 tests, 0 failures (105 suites, +6 new tests)
+- **Learnings:**
+  - **Speed-factor amplitude gating vs. time-stop**: Multiplying by `speed` (0..1) is cleaner than stopping `bobTimeRef` accumulation when standing. No discontinuous phase jumps when movement resumes.
+  - **`isToolVisualEntry` guard parameter must widen with the union**: When adding a new config shape to `ToolVisualsConfig`, update the guard function's parameter type too — TypeScript infers the narrowed type from the parameter, so mismatches break callers.
+  - **BobConfig accessed via direct cast, not via the index signature**: `(toolVisualsData as { bob?: BobConfig }).bob` avoids having to thread `BobConfig` through the generic config lookup path — same pattern as `sway`.
+
+---
+
 ## 2026-03-07 - US-060
 - Implemented `computeSwayOffset(velocity, currentSway, swayAmount, lerpFactor, dt)` — pure export on `ToolViewModel.tsx`, no R3F context needed
 - Added `sway: { swayAmount: 0.06, lerpFactor: 8.0 }` to `config/game/toolVisuals.json` — no inline constants
