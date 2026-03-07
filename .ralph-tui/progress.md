@@ -114,6 +114,26 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-080
+- Created `components/entities/HedgeMaze.tsx` — R3F component that renders all ECS hedge and hedge decoration entities as 3D GLBs
+- Hedge wall pieces batched by `modelPath` into `StaticModelInstances` (InstancedMesh clusters) — a maze can have 100+ wall segments, batching keeps draw calls within budget §28
+- Decorations (fountain, benches, flowers, columns) rendered as individual `DecorationGLBModel` sub-components — sparse count (≤20 per maze), each unique GLB, no batching benefit
+- Reads from `hedgesQuery` + `hedgeDecorationsQuery` ECS queries; capacity state grows-only (same pattern as `FenceInstances`)
+- Decoration count change detection via `prevDecorationCountRef` — avoids `setDecorations` calls on stable frames
+- Created `components/entities/HedgeMaze.test.ts` — 19 tests for pure functions and component export
+- **Files changed:**
+  - `components/entities/HedgeMaze.tsx` — new file (~185 lines)
+  - `components/entities/HedgeMaze.test.ts` — new file (19 tests)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2271 tests, 0 failures (116 suites, +19 new tests)
+- **Learnings:**
+  - **Split batched vs. individual rendering by count**: Hedge walls (100+ instances per maze, repeated GLBs) → `StaticModelInstances`; decorations (≤20, unique models) → individual `DecorationGLBModel` mounts. Same rule as FenceInstances vs. StructureModel.
+  - **Decoration count change guard in useFrame**: Comparing `hedgeDecorationsQuery.entities.length !== prevDecorationCountRef.current` before calling `setDecorations` keeps decorations from triggering React re-renders on idle frames. Sufficient guard since mazes load/unload atomically.
+  - **resolveHedge/DecorationGLBPath as pass-through validators**: Unlike `resolveFenceGLBPath` which does a config map lookup, hedge paths are pre-computed by the maze generator. The resolver just validates the field is non-empty and throws with diagnostic context — preserves the "no silent fallbacks" hard rule without redundant config lookups.
+
+---
+
 ## 2026-03-07 - US-079
 - Created `game/world/mazeGenerator.ts` — world-layer wrapper around the existing `game/systems/hedgePlacement.ts` maze algorithm
 - `isLabyrinthChunk(worldSeed, chunkX, chunkZ)` — detects labyrinth chunks at ~3% probability using a dedicated "labyrinth-roll" scopedRNG scope; chunk (0,0) always excluded (tutorial village)
