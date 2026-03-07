@@ -78,6 +78,21 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-130
+- Implemented 6-layer ambient soundscape system (Spec §27.2).
+- Files changed:
+  - `config/game/ambientAudio.json` — new: per-biome layer volumes + time-gate config (all tuning values in JSON, no inline constants)
+  - `game/systems/ambientAudio.ts` — new: pure math functions + runtime layer management
+  - `game/systems/ambientAudio.test.ts` — new: 31 tests, all passing
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3110 tests, 138 suites pass
+- **Learnings:**
+  - **6-layer ambient = global synthesis channels, not per-zone nodes**: The 6 spec layers (wind/birds/insects/crickets/water/vegetation) are global accumulators. Zones contribute weighted volumes to each channel via distance gain + biome config. This avoids creating 6×N Tone.js nodes for N zones.
+  - **Pure-function testable seam eliminates all Tone.js mocking for math tests**: `computeZoneGain`, `layersForBiome`, `applyTimeGate`, `computeAmbientMix` are all pure functions with no Tone.js imports. 31 tests run in 0.286s with zero mocking. Runtime Tone.js layer management uses injected `nodeFactory` (dependency injection) for testability.
+  - **Time gate as allow-list per layer**: `timeGates` config maps LayerName → allowed TimeOfDay[]. Only layers WITH an entry get gated; wind/water/vegetation (always-on) simply have no entry in `timeGates`. Clean extension point — add a new gated layer by adding a config key.
+  - **`applyTimeGate` must not mutate input**: Tests verify no mutation. Always spread before modifying: `const result = { ...layers }`.
+  - **XZ-plane distance for 3D zone crossfade**: Player Y height is irrelevant for ambient zone blending. Use `Math.sqrt(dx*dx + dz*dz)` in the XZ plane only — otherwise a player on a hill would hear less ambient even at the same 2D location.
+---
+
 ## 2026-03-07 - US-128
 - Achievement tests already existed from US-127 decomposition; verified 31 tests pass, tsc clean.
 - Files changed: none (work was already complete from US-127)

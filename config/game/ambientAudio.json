@@ -1,0 +1,17 @@
+{
+  "layerVolumes": {
+    "forest":  { "wind": 0.4, "birds": 0.6, "insects": 0.2, "crickets": 0.0, "water": 0.0, "vegetation": 0.8 },
+    "meadow":  { "wind": 0.7, "birds": 0.6, "insects": 0.5, "crickets": 0.0, "water": 0.0, "vegetation": 0.4 },
+    "water":   { "wind": 0.3, "birds": 0.0, "insects": 0.0, "crickets": 0.0, "water": 1.0, "vegetation": 0.0 },
+    "cave":    { "wind": 0.2, "birds": 0.0, "insects": 0.0, "crickets": 0.0, "water": 0.3, "vegetation": 0.0 },
+    "village": { "wind": 0.3, "birds": 0.4, "insects": 0.2, "crickets": 0.0, "water": 0.0, "vegetation": 0.2 },
+    "night":   { "wind": 0.5, "birds": 0.0, "insects": 0.0, "crickets": 1.0, "water": 0.0, "vegetation": 0.2 },
+    "storm":   { "wind": 1.0, "birds": 0.0, "insects": 0.0, "crickets": 0.0, "water": 0.7, "vegetation": 0.0 },
+    "wind":    { "wind": 1.0, "birds": 0.2, "insects": 0.1, "crickets": 0.0, "water": 0.0, "vegetation": 0.1 }
+  },
+  "timeGates": {
+    "birds":   ["dawn", "morning", "noon", "afternoon"],
+    "insects": ["noon", "afternoon"],
+    "crickets": ["evening", "night", "midnight"]
+  }
+}
