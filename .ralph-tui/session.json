@@ -1,0 +1,1049 @@
+{
+  "version": 1,
+  "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
+  "status": "running",
+  "startedAt": "2026-03-07T07:58:36.133Z",
+  "updatedAt": "2026-03-07T08:04:26.659Z",
+  "currentIteration": 0,
+  "maxIterations": 0,
+  "tasksCompleted": 0,
+  "isPaused": false,
+  "agentPlugin": "claude",
+  "trackerState": {
+    "plugin": "json",
+    "totalTasks": 171,
+    "tasks": [
+      {
+        "id": "US-001",
+        "title": "Remove GridCellComponent references from game systems",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-002",
+        "title": "Remove FarmerState references from game systems",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-003",
+        "title": "Remove ZoneComponent references from game systems",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-004",
+        "title": "Remove legacy queries and Entity fields from world.ts",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-005",
+        "title": "Remove legacy component interfaces from core.ts",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-006",
+        "title": "Update all tests to remove legacy type references",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-007",
+        "title": "Install @react-three/rapier and add Physics provider",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-008",
+        "title": "Create player capsule RigidBody component",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-009",
+        "title": "Implement FPS camera attached to player capsule",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-010",
+        "title": "Add WASD movement via capsule velocity",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-011",
+        "title": "Implement jump and gravity",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-012",
+        "title": "Add mouse look with pointer lock",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-013",
+        "title": "Write Jest tests for player physics",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-014",
+        "title": "Write Jest tests for camera follow",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-015",
+        "title": "Implement SeededNoise utility",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-016",
+        "title": "Write Jest tests for SeededNoise",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-017",
+        "title": "Implement ChunkManager",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-018",
+        "title": "Write Jest tests for ChunkManager",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-019",
+        "title": "Generate terrain heightmap per chunk",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-020",
+        "title": "Implement biome assignment",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-021",
+        "title": "Write Jest tests for biome mapper",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-022",
+        "title": "Create terrain mesh R3F component",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-023",
+        "title": "Add Rapier trimesh collider per terrain chunk",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-024",
+        "title": "Implement delta-only persistence",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-025",
+        "title": "Create InputManager with InputFrame interface",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-026",
+        "title": "Implement KeyboardMouseProvider",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-027",
+        "title": "Implement TouchProvider with virtual joystick",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-028",
+        "title": "Write Jest tests for input system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-029",
+        "title": "Implement save/load with Legend State + expo-sqlite",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-030",
+        "title": "Write Jest tests for save/load",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-031",
+        "title": "Implement game mode config (Exploration vs Survival)",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-032",
+        "title": "Write Jest tests for difficulty config",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-033",
+        "title": "Create tree GLB loader with species mapping",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-034",
+        "title": "Implement growth stage scale rendering",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-035",
+        "title": "Add seasonal color tinting",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-036",
+        "title": "Write Jest tests for tree rendering logic",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-037",
+        "title": "Implement seasonal bush GLB swap",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-038",
+        "title": "Write Jest tests for bush model selection",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-039",
+        "title": "Implement grass instancing",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-040",
+        "title": "Write Jest tests for grass placement",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-041",
+        "title": "Create NPC GLB loader with seeded appearance",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-042",
+        "title": "Write Jest tests for NPC appearance determinism",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-043",
+        "title": "Implement anime.js walk cycle",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-044",
+        "title": "Implement anime.js idle and talk animations",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-045",
+        "title": "Write Jest tests for NPC animation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-046",
+        "title": "Create structure GLB rendering",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-047",
+        "title": "Create fence GLB rendering",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-048",
+        "title": "Create prop and food item rendering",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-049",
+        "title": "Write Jest tests for structure rendering logic",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-050",
+        "title": "Implement InstancedMesh batching for static entities",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-051",
+        "title": "Create Gerstner wave vertex shader",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-052",
+        "title": "Create WaterBody R3F component",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-053",
+        "title": "Implement foam and caustic effects",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-054",
+        "title": "Create splash and bubble particles",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-055",
+        "title": "Write Jest tests for Gerstner wave math",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-056",
+        "title": "Wire water bodies to chunk generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-057",
+        "title": "Write Jest tests for water placement",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-058",
+        "title": "Add ambient audio zones near water",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-059",
+        "title": "Create tool view model component",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-060",
+        "title": "Implement hand sway from movement",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-061",
+        "title": "Implement walk bob",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-062",
+        "title": "Add tool swap animation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-063",
+        "title": "Implement Rapier raycast from camera",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-064",
+        "title": "Create target info display",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-065",
+        "title": "Implement action dispatch system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-066",
+        "title": "Write Jest tests for raycast and actions",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-067",
+        "title": "Update HUD overlay for FPS perspective",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-068",
+        "title": "Write Jest tests for HUD data binding",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-069",
+        "title": "Implement async chunk generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-070",
+        "title": "Add entity spawning per chunk from biome template",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-071",
+        "title": "Write Jest tests for entity spawning",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-072",
+        "title": "Implement biome blending at boundaries",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-073",
+        "title": "Create procedural path generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-074",
+        "title": "Implement procedural village generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-075",
+        "title": "Write Jest tests for village generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-076",
+        "title": "Create campfire fast travel system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-077",
+        "title": "Add compass widget and signpost entities",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-078",
+        "title": "Write Jest tests for navigation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-079",
+        "title": "Implement hedge maze generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-080",
+        "title": "Render hedge maze from modular GLBs",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-081",
+        "title": "Write Jest tests for maze generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-082",
+        "title": "Create Grovekeeper spirit entity",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-083",
+        "title": "Implement spirit animations",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-084",
+        "title": "Write Jest tests for spirit animation math",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-085",
+        "title": "Update enemy AI and spawning for chunk-based world",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-086",
+        "title": "Implement combat system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-087",
+        "title": "Update loot drop system for ECS + config",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-088",
+        "title": "Write Jest tests for combat and loot",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-089",
+        "title": "Implement hearts/hunger/stamina systems",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-090",
+        "title": "Write Jest tests for survival drains",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-091",
+        "title": "Implement fishing mini-game",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-092",
+        "title": "Implement trap system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-093",
+        "title": "Update cooking system for FPS interaction + campfire raycast",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-094",
+        "title": "Write Jest tests for cooking",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-095",
+        "title": "Implement forging system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-096",
+        "title": "Write Jest tests for forging",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-097",
+        "title": "Implement mining system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-098",
+        "title": "Write Jest tests for mining",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-099",
+        "title": "Create dialogue tree data loader",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-100",
+        "title": "Implement seed-keyed branch selection",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-101",
+        "title": "Write Jest tests for dialogue branching",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-102",
+        "title": "Create floating speech bubble component",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-103",
+        "title": "Implement dialogue UI with choices",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-104",
+        "title": "Implement NPC relationship tracking",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-105",
+        "title": "Implement NPC schedule system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-106",
+        "title": "Write Jest tests for schedules and relationships",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-107",
+        "title": "Create quest state machine",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-108",
+        "title": "Implement main quest chain",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-109",
+        "title": "Implement world quest templates",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-110",
+        "title": "Write Jest tests for quest state machine",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-111",
+        "title": "Implement procedural quest generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-112",
+        "title": "Write Jest tests for procedural quests",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-113",
+        "title": "Update quest panel UI for FPS HUD integration",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-114",
+        "title": "Wire dialogue effects to quest advancement",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-115",
+        "title": "Update kitbashing snap validation for Rapier physics",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-116",
+        "title": "Write Jest tests for snap validation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-117",
+        "title": "Update BuildPanel for radial category selection",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-118",
+        "title": "Update PlacementGhost for Rapier-based snap validation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-119",
+        "title": "Implement placement and resource deduction",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-120",
+        "title": "Write Jest tests for placement",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-121",
+        "title": "Implement progressive piece unlocking",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-122",
+        "title": "Write Jest tests for unlock progression",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-123",
+        "title": "Update raid system for chunk-based world + DayNight integration",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-124",
+        "title": "Write Jest tests for raid mechanics",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-125",
+        "title": "Update prestige system for chunk-based world reset",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-126",
+        "title": "Write Jest tests for prestige",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-127",
+        "title": "Update achievement system + decompose (over 300 lines)",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-128",
+        "title": "Write Jest tests for achievements",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-129",
+        "title": "Set up Tone.js audio engine",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-130",
+        "title": "Implement ambient soundscape system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-131",
+        "title": "Create weather particle system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-132",
+        "title": "Write Jest tests for weather transitions",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-133",
+        "title": "Implement day/night cycle system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-134",
+        "title": "Write Jest tests for day/night",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-135",
+        "title": "Implement seasonal effects",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-136",
+        "title": "Create ambient particle emitters",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-137",
+        "title": "Create main menu screen",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-138",
+        "title": "Update new game modal for game modes + seed phrases",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-139",
+        "title": "Write Jest tests for seed phrase system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-140",
+        "title": "Create loading screen",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-141",
+        "title": "Implement 11-step tutorial with existing overlay component",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-142",
+        "title": "Write Jest tests for tutorial",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-143",
+        "title": "Full game loop integration test",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-144",
+        "title": "Mobile E2E tests with Maestro",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-145",
+        "title": "Wire NPC movement + pathfinding to Yuka AI",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-146",
+        "title": "Update npcAppearance for ChibiCharacter GLB assembly",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-147",
+        "title": "Wire haptics to tool actions",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-148",
+        "title": "Wire toolUpgrades + levelUnlocks to progression",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-149",
+        "title": "Wire speciesDiscovery to open world exploration",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-150",
+        "title": "Update MiniMap for open world navigation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-151",
+        "title": "Wire structurePlacement + vegetationPlacement to chunk generation",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-152",
+        "title": "Wire hedgePlacement to maze generator",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-153",
+        "title": "Wire cropGrowth to chunk-based farming",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-154",
+        "title": "Wire trading + TradeDialog to NPC economy",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-155",
+        "title": "Wire market systems to world economy",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-156",
+        "title": "Wire NpcDialogue component to speech bubble system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-157",
+        "title": "Wire WeatherOverlay + FloatingParticles to ECS weather system",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-158",
+        "title": "Create Settings screen",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-159",
+        "title": "Update MainMenu for brand styling + game mode flow",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-160",
+        "title": "Decompose gameStore.ts into subpackage",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-161",
+        "title": "Decompose oversized game systems",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-162",
+        "title": "Decompose oversized UI components",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-163",
+        "title": "Wire VirtualJoystick + MobileActionButtons to TouchProvider",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-164",
+        "title": "Wire offlineGrowth to chunk-based world",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-165",
+        "title": "Wire wildTreeRegrowth to chunk-based ecology",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-166",
+        "title": "Performance optimization: draw calls + instancing",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-167",
+        "title": "Performance optimization: memory + FPS profiling",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-168",
+        "title": "Wire ToolWheel + RadialActionMenu to FPS controls",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-169",
+        "title": "Decompose treeGeometry.ts and PlayerGovernor.ts",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-170",
+        "title": "Wire saveLoad system to chunk-based persistence",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "US-171",
+        "title": "Wire GameUI orchestration component",
+        "status": "open",
+        "completedInSession": false
+      }
+    ]
+  },
+  "iterations": [],
+  "skippedTaskIds": [],
+  "cwd": "/Users/jbogaty/src/arcade-cabinet/grovekeeper",
+  "activeTaskIds": [],
+  "subagentPanelVisible": false
+}

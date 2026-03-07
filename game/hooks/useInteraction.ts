@@ -21,8 +21,8 @@ import {
   waterTree,
 } from "@/game/actions/GameActions";
 import { getToolById } from "@/game/config/tools";
-import type { Entity, GridCellComponent } from "@/game/ecs/world";
-import { gridCellsQuery, npcsQuery, playerQuery, treesQuery } from "@/game/ecs/world";
+import type { Entity } from "@/game/ecs/world";
+import { npcsQuery, playerQuery, rocksQuery, treesQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
 import { showToast } from "@/game/ui/Toast";
 
@@ -80,14 +80,15 @@ export function worldToGrid(worldX: number, worldZ: number): { gridX: number; gr
   };
 }
 
-/** Find the grid cell at a given position. */
-function findGridCell(
-  gridX: number,
-  gridZ: number,
-): (Entity & { gridCell: GridCellComponent }) | null {
-  for (const cell of gridCellsQuery) {
-    if (cell.gridCell.gridX === gridX && cell.gridCell.gridZ === gridZ) {
-      return cell as Entity & { gridCell: GridCellComponent };
+/** Find a rock entity at a given grid position (chunk-based replacement for gridCell type lookup). */
+function findRockAtGrid(gridX: number, gridZ: number): Entity | null {
+  for (const rock of rocksQuery) {
+    if (
+      rock.position &&
+      Math.round(rock.position.x) === gridX &&
+      Math.round(rock.position.z) === gridZ
+    ) {
+      return rock;
     }
   }
   return null;
@@ -134,17 +135,17 @@ function _isPlayerInRange(gridX: number, gridZ: number, range: number): boolean 
   return Math.sqrt(dx * dx + dz * dz) <= range;
 }
 
-/** Build TileState from current selection. */
+/** Build TileState from current selection using chunk-based entity lookups. */
 function buildTileState(sel: InteractionSelection | null): TileState | null {
   if (!sel) return null;
 
-  const cell = findGridCell(sel.gridX, sel.gridZ);
   const tree = findTreeAtGrid(sel.gridX, sel.gridZ);
+  const rock = findRockAtGrid(sel.gridX, sel.gridZ);
 
   return {
-    occupied: cell?.gridCell.occupied ?? !!tree,
+    occupied: !!tree || !!rock,
     treeStage: tree?.tree?.stage ?? -1,
-    cellType: cell?.gridCell.type ?? "soil",
+    cellType: rock ? "rock" : "soil",
   };
 }
 

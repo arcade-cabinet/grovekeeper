@@ -1,7 +1,7 @@
 {
-  "project": "Grovekeeper",
-  "branchName": "ralph/full-game-implementation",
+  "name": "Grovekeeper",
   "description": "Complete Grovekeeper game implementation — PSX-aesthetic first-person grove-tending simulation",
+  "branchName": "ralph/full-game-implementation",
   "userStories": [
     {
       "id": "US-001",
@@ -14,8 +14,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "Phase 0-A: Legacy Teardown. Start by auditing all imports of GridCellComponent across game/systems/ and game/hooks/."
+      "passes": true,
+      "notes": "Phase 0-A: Legacy Teardown. Start by auditing all imports of GridCellComponent across game/systems/ and game/hooks/.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-002",
@@ -2719,5 +2720,8 @@
       "passes": false,
       "notes": "Phase 11. GameUI.tsx is 484 lines — must decompose. Central UI orchestrator."
     }
-  ]
+  ],
+  "metadata": {
+    "updatedAt": "2026-03-07T08:04:26.658Z"
+  }
 }

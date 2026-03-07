@@ -1,4 +1,4 @@
-import { buildWalkabilityGrid, findPath, type WalkabilityGrid } from "./pathfinding";
+import { buildWalkabilityGrid, findPath, type WalkabilityCell, type WalkabilityGrid } from "./pathfinding";
 
 // Helper to create a simple walkability grid from a 2D array
 // 0 = walkable, 1 = blocked
@@ -15,26 +15,10 @@ function makeGrid(rows: number[][], originX = 0, originZ = 0): WalkabilityGrid {
 }
 
 describe("buildWalkabilityGrid", () => {
-  it("marks soil tiles as walkable", () => {
-    const cells = [
-      {
-        gridCell: {
-          gridX: 0,
-          gridZ: 0,
-          type: "soil" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
-      {
-        gridCell: {
-          gridX: 1,
-          gridZ: 0,
-          type: "soil" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
+  it("marks walkable cells as open", () => {
+    const cells: WalkabilityCell[] = [
+      { x: 0, z: 0, walkable: true },
+      { x: 1, z: 0, walkable: true },
     ];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
@@ -46,38 +30,9 @@ describe("buildWalkabilityGrid", () => {
     expect(grid.data[1]).toBe(0); // walkable
   });
 
-  it("marks path tiles as walkable", () => {
-    const cells = [
-      {
-        gridCell: {
-          gridX: 0,
-          gridZ: 0,
-          type: "path" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
-    ];
-    const grid = buildWalkabilityGrid(cells, {
-      minX: 0,
-      minZ: 0,
-      maxX: 1,
-      maxZ: 1,
-    });
-    expect(grid.data[0]).toBe(0);
-  });
-
-  it("marks water tiles as blocked", () => {
-    const cells = [
-      {
-        gridCell: {
-          gridX: 0,
-          gridZ: 0,
-          type: "water" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
+  it("marks walkable=false cells as blocked", () => {
+    const cells: WalkabilityCell[] = [
+      { x: 0, z: 0, walkable: false },
     ];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
@@ -88,17 +43,22 @@ describe("buildWalkabilityGrid", () => {
     expect(grid.data[0]).toBe(1);
   });
 
-  it("marks rock tiles as blocked", () => {
-    const cells = [
-      {
-        gridCell: {
-          gridX: 0,
-          gridZ: 0,
-          type: "rock" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
+  it("marks water-equivalent (walkable=false) cells as blocked", () => {
+    const cells: WalkabilityCell[] = [
+      { x: 0, z: 0, walkable: false },
+    ];
+    const grid = buildWalkabilityGrid(cells, {
+      minX: 0,
+      minZ: 0,
+      maxX: 1,
+      maxZ: 1,
+    });
+    expect(grid.data[0]).toBe(1);
+  });
+
+  it("marks rock-equivalent (walkable=false) cells as blocked", () => {
+    const cells: WalkabilityCell[] = [
+      { x: 0, z: 0, walkable: false },
     ];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
@@ -111,16 +71,8 @@ describe("buildWalkabilityGrid", () => {
 
   it("defaults unknown positions to blocked", () => {
     // Only provide cell at (0,0), position (1,0) should be blocked
-    const cells = [
-      {
-        gridCell: {
-          gridX: 0,
-          gridZ: 0,
-          type: "soil" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
+    const cells: WalkabilityCell[] = [
+      { x: 0, z: 0, walkable: true },
     ];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
@@ -128,43 +80,24 @@ describe("buildWalkabilityGrid", () => {
       maxX: 2,
       maxZ: 1,
     });
-    expect(grid.data[0]).toBe(0); // known soil
+    expect(grid.data[0]).toBe(0); // known walkable
     expect(grid.data[1]).toBe(1); // unknown, defaults blocked
   });
 
-  it("skips entities without gridCell", () => {
-    const cells = [
-      {},
-      {
-        gridCell: {
-          gridX: 0,
-          gridZ: 0,
-          type: "soil" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
-    ];
+  it("handles empty iterable (all positions remain blocked)", () => {
+    const cells: WalkabilityCell[] = [];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,
       minZ: 0,
       maxX: 1,
       maxZ: 1,
     });
-    expect(grid.data[0]).toBe(0);
+    expect(grid.data[0]).toBe(1);
   });
 
   it("handles offset origins correctly", () => {
-    const cells = [
-      {
-        gridCell: {
-          gridX: 5,
-          gridZ: 5,
-          type: "soil" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
+    const cells: WalkabilityCell[] = [
+      { x: 5, z: 5, walkable: true },
     ];
     const grid = buildWalkabilityGrid(cells, {
       minX: 5,
@@ -180,16 +113,8 @@ describe("buildWalkabilityGrid", () => {
   });
 
   it("ignores cells outside bounds", () => {
-    const cells = [
-      {
-        gridCell: {
-          gridX: 10,
-          gridZ: 10,
-          type: "soil" as const,
-          occupied: false,
-          treeEntityId: null,
-        },
-      },
+    const cells: WalkabilityCell[] = [
+      { x: 10, z: 10, walkable: true },
     ];
     const grid = buildWalkabilityGrid(cells, {
       minX: 0,

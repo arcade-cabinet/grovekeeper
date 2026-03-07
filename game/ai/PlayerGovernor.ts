@@ -400,7 +400,14 @@ export class PlayerGovernor {
     }
 
     const bounds = this.config.getWorldBounds();
-    const grid = buildWalkabilityGrid(gridCellsQuery, bounds);
+    const walkCells = [];
+    for (const cell of gridCellsQuery) {
+      if (cell.gridCell) {
+        const { gridX, gridZ, type } = cell.gridCell;
+        walkCells.push({ x: gridX, z: gridZ, walkable: type === "soil" || type === "path" });
+      }
+    }
+    const grid = buildWalkabilityGrid(walkCells, bounds);
     const path = findPath(grid, start, goal);
 
     if (!path || path.length === 0) {

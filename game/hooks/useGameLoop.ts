@@ -266,15 +266,18 @@ export function useGameLoop(): void {
           minZ = 0,
           maxX = 12,
           maxZ = 12;
+        const walkCells = [];
         for (const cell of gridCellsQuery) {
           if (cell.gridCell) {
-            if (cell.gridCell.gridX < minX) minX = cell.gridCell.gridX;
-            if (cell.gridCell.gridZ < minZ) minZ = cell.gridCell.gridZ;
-            if (cell.gridCell.gridX + 1 > maxX) maxX = cell.gridCell.gridX + 1;
-            if (cell.gridCell.gridZ + 1 > maxZ) maxZ = cell.gridCell.gridZ + 1;
+            const { gridX, gridZ, type } = cell.gridCell;
+            if (gridX < minX) minX = gridX;
+            if (gridZ < minZ) minZ = gridZ;
+            if (gridX + 1 > maxX) maxX = gridX + 1;
+            if (gridZ + 1 > maxZ) maxZ = gridZ + 1;
+            walkCells.push({ x: gridX, z: gridZ, walkable: type === "soil" || type === "path" });
           }
         }
-        walkGridRef.current = buildWalkabilityGrid(gridCellsQuery, { minX, minZ, maxX, maxZ });
+        walkGridRef.current = buildWalkabilityGrid(walkCells, { minX, minZ, maxX, maxZ });
       }
 
       // Get player position

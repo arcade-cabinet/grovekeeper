@@ -3,8 +3,6 @@
  * Ported from BabylonJS archive -- no engine dependencies.
  */
 
-import type { GridCellComponent } from "@/game/ecs/world";
-
 // ---------------------------------------------------------------------------
 // Walkability Grid
 // ---------------------------------------------------------------------------
@@ -24,12 +22,19 @@ export interface TileCoord {
   z: number;
 }
 
+/** Chunk-based walkability input — caller maps chunk/terrain entities to this. */
+export interface WalkabilityCell {
+  x: number;
+  z: number;
+  walkable: boolean;
+}
+
 /**
- * Build a walkability grid from the current ECS grid cells.
- * Water and rock tiles are blocked; soil and path are walkable.
+ * Build a walkability grid from chunk-based walkability cells.
+ * Cells marked walkable=false (water, rock) are blocked; walkable=true (soil, path) are open.
  */
 export function buildWalkabilityGrid(
-  gridCells: Iterable<{ gridCell?: GridCellComponent }>,
+  cells: Iterable<WalkabilityCell>,
   bounds: { minX: number; minZ: number; maxX: number; maxZ: number },
 ): WalkabilityGrid {
   const width = bounds.maxX - bounds.minX;
@@ -38,14 +43,11 @@ export function buildWalkabilityGrid(
   // Default all to blocked (1) -- only known tiles become walkable
   data.fill(1);
 
-  for (const entity of gridCells) {
-    const gc = entity.gridCell;
-    if (!gc) continue;
-    const lx = gc.gridX - bounds.minX;
-    const lz = gc.gridZ - bounds.minZ;
+  for (const cell of cells) {
+    const lx = cell.x - bounds.minX;
+    const lz = cell.z - bounds.minZ;
     if (lx < 0 || lx >= width || lz < 0 || lz >= height) continue;
-    // Soil and path tiles are walkable
-    if (gc.type === "soil" || gc.type === "path") {
+    if (cell.walkable) {
       data[lz * width + lx] = 0;
     }
   }
