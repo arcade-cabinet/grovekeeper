@@ -636,5 +636,63 @@
         "completionDialogueId": "rowan-exploration"
       }
     ]
+  },
+  {
+    "id": "main-quest-spirits",
+    "name": "The Grovekeeper Path",
+    "description": "Find all 8 dormant Grovekeeper Spirits in the hedge labyrinths to awaken the ancient forest.",
+    "icon": "\u2b50",
+    "category": "main_story",
+    "npcId": "elder-rowan",
+    "requiredLevel": 1,
+    "steps": [
+      {
+        "id": "mqs-awaken-all",
+        "name": "Awaken the Spirits",
+        "description": "Find all 8 Grovekeeper Spirits hidden in the hedge labyrinths across the world.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "mqs-spirits",
+            "description": "Discover 8 Grovekeeper Spirits",
+            "targetType": "spirit_discovered",
+            "targetAmount": 8
+          }
+        ],
+        "reward": {
+          "xp": 500
+        },
+        "completionDialogueId": "rowan-exploration"
+      }
+    ]
+  },
+  {
+    "id": "worldroots-dream",
+    "name": "The Worldroot's Dream",
+    "description": "All 8 spirits have been awakened. Journey to the Worldroot's sanctum to complete your destiny as Grovekeeper.",
+    "icon": "\ud83c\udf33",
+    "category": "main_story",
+    "npcId": "elder-rowan",
+    "requiredLevel": 1,
+    "prerequisiteChainIds": ["main-quest-spirits"],
+    "steps": [
+      {
+        "id": "wrd-reach-worldroot",
+        "name": "The Worldroot Stirs",
+        "description": "Journey to the Worldroot's sanctum at the heart of the ancient forest.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "wrd-worldroot",
+            "description": "Reach the Worldroot's sanctum",
+            "targetType": "worldroot_reached",
+            "targetAmount": 1
+          }
+        ],
+        "reward": {
+          "xp": 1000
+        }
+      }
+    ]
   }
 ]

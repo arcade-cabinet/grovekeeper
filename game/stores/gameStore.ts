@@ -248,6 +248,9 @@ const initialState = {
 
   /** Trust/friendship levels per NPC. Spec §15. Persists across sessions. */
   npcRelationships: {} as Record<string, number>,
+
+  /** Discovered Grovekeeper Spirit IDs. Spec §32.3. */
+  discoveredSpiritIds: [] as string[],
 };
 
 type GameStateData = typeof initialState;
@@ -1112,6 +1115,32 @@ const actions = {
     gameState$.npcRelationships.set(
       setRelationshipPure(state.npcRelationships, npcId, value),
     );
+  },
+
+  // Spirit discovery actions (Spec §32.3)
+
+  /**
+   * Record a Grovekeeper Spirit as discovered. Idempotent -- safe to call
+   * multiple times for the same spiritId. Advances the main quest chain.
+   * Returns true if this was a new discovery, false if already known.
+   */
+  discoverSpirit(spiritId: string): boolean {
+    const state = getState();
+    if (state.discoveredSpiritIds.includes(spiritId)) return false;
+
+    gameState$.discoveredSpiritIds.set([...state.discoveredSpiritIds, spiritId]);
+
+    // Auto-start main quest chain on first spirit discovery if not yet active
+    const chainState = getState().questChainState;
+    const isActive = "main-quest-spirits" in chainState.activeChains;
+    const isCompleted = chainState.completedChainIds.includes("main-quest-spirits");
+    if (!isActive && !isCompleted) {
+      const newChainState = startChain(chainState, "main-quest-spirits", getState().currentDay);
+      gameState$.questChainState.set(newChainState);
+    }
+
+    actions.advanceQuestObjective("spirit_discovered", 1);
+    return true;
   },
 
   // Database hydration -- bulk-set state from SQLite

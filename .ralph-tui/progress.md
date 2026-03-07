@@ -97,6 +97,22 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-108
+- Implemented 8-spirit main quest chain (Spec §32.3)
+- Files changed:
+  - `game/quests/data/questChains.json` — added `main-quest-spirits` (1 step, objective `spirit_discovered × 8`, 500 XP reward) and `worldroots-dream` (prerequisite: `main-quest-spirits`, 1000 XP reward)
+  - `game/stores/gameStore.ts` — added `discoveredSpiritIds: string[]` to state; added `discoverSpirit(spiritId)` action (idempotent, auto-starts main quest chain on first call, calls `advanceQuestObjective("spirit_discovered", 1)`)
+  - `game/quests/mainQuestSystem.ts` — new file: pure query helpers (`getSpiritDiscoveryCount`, `isMainQuestComplete`, `isWorldrootsDreamAvailable`, constants `MAIN_QUEST_CHAIN_ID`, `WORLDROOTS_DREAM_CHAIN_ID`, `TOTAL_SPIRITS`)
+  - `game/quests/mainQuestSystem.test.ts` — new file: 16 tests across 5 describe blocks
+  - `game/stores/gameStore.test.ts` — added 6 `discoverSpirit` integration tests
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2812 tests pass (131 suites)
+- **Learnings:**
+  - **Main quest via prerequisiteChainIds**: `worldroots-dream` gates itself behind `main-quest-spirits` using the existing `prerequisiteChainIds` field — `computeAvailableChains` already handles it. No new machinery needed.
+  - **Auto-start pattern in discoverSpirit**: Rather than requiring an explicit quest start, `discoverSpirit` checks if `main-quest-spirits` is neither active nor completed and auto-starts it. This makes first spirit discovery seamless.
+  - **discoveredSpiritIds as double-count guard**: Store tracks `string[]` of discovered spirit IDs. `discoverSpirit` returns false on repeat — this is the only place where idempotency is enforced (the questChainEngine has no per-entity deduplication).
+
+---
+
 ## 2026-03-07 - US-106
 - Added 11 tests to `game/systems/dialogueBranch.test.ts` covering the missing dialogue gating cases
   - `evaluateCondition — has_relationship` (7 tests): meets threshold, exceeds, below, unknown NPC (default 0), minValue 0, negation both ways
