@@ -5,6 +5,8 @@ after each iteration and it's included in prompts for context.
 
 ## Codebase Patterns (Study These First)
 
+- **JSX runtime chain breaks .tsx pure-function tests**: Even with `jest.mock("react-native", ...)`, importing a `.tsx` component that uses `@/components/ui/text` pulls in `react-native-css-interop`'s JSX runtime which calls `Appearance.getColorScheme()` at module init, crashing the test. Fix: extract pure functions to a plain `.ts` file with no React/RN imports. Test imports from `.ts`; component imports and re-exports from `.ts`. Zero mock overhead.
+
 - **jsdom `@jest-environment jsdom` docblock**: Tests that use browser DOM APIs (`window`, `document`, `MouseEvent`, `KeyboardEvent`, etc.) must have `/** @jest-environment jsdom */` at the very top of the file. `jest-expo` uses React Native env by default; the docblock overrides per-file.
 - **jsdom `movementX`/`movementY` not in MouseEvent init dict**: `new MouseEvent('mousemove', { movementX: 100 })` → `event.movementX` is `undefined` in jsdom. Use `Object.defineProperty(event, 'movementX', { value: 100 })` after construction instead.
 - **useMouseLook pointer lock guard**: In `mousemove` handler always check `document.pointerLockElement !== canvas` and return early if not locked — mousemove fires globally, not just when locked.
@@ -2230,5 +2232,22 @@ after each iteration and it's included in prompts for context.
   - **scopedRNG scope key includes templateId**: `scopedRNG("world-quest", worldSeed, templateId)` ensures each template produces an independent RNG stream from the same world seed. Same seed across templates would correlate variant selections, making all templates feel the same.
   - **6-slot JSON schema with npcSlot/targetTypeSlot refs**: Steps reference slot IDs (`npcSlot: "primary-npc"`, `targetTypeSlot: "task-a"`) rather than hardcoding values. The resolution function uses a `Map<slotId, selectedOption>` lookup to apply overrides. Steps with neither a slot ref nor a fixed value fall back to safe defaults (`"trees_planted"`, amount `1`).
   - **Double-gate for worldroots-dream**: `isWorldQuestUnlocked` checks BOTH `maxChunkDistance >= 50` AND `discoveredSpiritCount >= 8`. The spirit count defaults to 0 (caller omission = never unlocked). This mirrors the same-object pattern from main quest system without coupling to it.
+
+---
+
+## 2026-03-07 - US-117
+- Updated `components/game/BuildPanel.tsx` from flat StructureTemplate list to two-step kitbashing picker: radial category wheel → scrollable piece list per category
+- Categories derived from GAME_SPEC §35.2 (Foundation, Walls, Roofs, Doors, Stairs, Utility) mapped to PieceType values
+- Build costs and unlock levels read from `config/game/building.json` (buildCosts, unlockLevels, materialUnlockLevels)
+- All touch targets ≥ 52px (above 44px minimum)
+- Locked pieces show 🔒 icon + level requirement; cost displayed as pill tags per resource
+- Created `components/game/buildPanelUtils.ts` for pure functions (testable seam)
+- Updated `components/game/GameUI.tsx` to remove old `StructureTemplate`-based props and use new `playerLevel`/`onSelectPiece`
+- 27 Jest tests in `components/game/BuildPanel.test.ts` covering all 5 pure functions
+- **Files changed:** `components/game/BuildPanel.tsx`, `components/game/buildPanelUtils.ts` (new), `components/game/BuildPanel.test.ts` (new), `components/game/GameUI.tsx`
+- **Learnings:**
+  - **JSX runtime chain breaks pure-function tests**: When a `.tsx` component imports `@/components/ui/text`, Jest loading it pulls in `react-native-css-interop`'s JSX runtime which calls `Appearance.getColorScheme()` at init — even with `jest.mock("react-native", ...)`. Solution: extract pure functions to a plain `.ts` file with no React/RN imports. Tests import from `.ts`; component imports and re-exports from `.ts`. Zero mock overhead.
+  - **Radial wheel inside a bottom-sheet modal**: Same `Math.cos(angle) * RING_RADIUS` math as `RadialActionMenu` but without Animated (no stagger needed inside a pre-opened sheet). Anchor at `width:0, height:0` View at center of a fixed-height container; buttons use `position: absolute` with left/top offsets from the anchor.
+  - **Effective unlock level = max(pieceUnlock, materialUnlock)**: A piece+material combo is locked if EITHER the piece type OR the material unlocks later. Display and guard logic both use `Math.max(unlockLevels[piece], materialUnlockLevels[material])`.
 
 ---

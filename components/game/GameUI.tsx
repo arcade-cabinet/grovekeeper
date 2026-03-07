@@ -25,7 +25,6 @@ import {
   PRESTIGE_MIN_LEVEL,
 } from "@/game/systems/prestige";
 import { getTradeRates } from "@/game/systems/trading";
-import { getAvailableTemplates } from "@/game/structures/StructureManager";
 import type { GameTime } from "./TimeDisplay";
 import type { WeatherType } from "@/game/systems/weather";
 import type { TileState } from "./ActionButton";
@@ -168,9 +167,6 @@ export function GameUI({
       })),
     [],
   );
-
-  // Structure templates available at current level
-  const structureTemplates = useMemo(() => getAvailableTemplates(level), [level]);
 
   // Trade rates
   const tradeRates = useMemo(() => getTradeRates(), []);
@@ -362,11 +358,10 @@ export function GameUI({
       />
       <BuildPanel
         open={buildPanelOpen}
-        level={level}
+        playerLevel={level}
         resources={resources}
-        templates={structureTemplates}
-        onSelectStructure={(template) => {
-          useGameStore.getState().setBuildMode(true, template.id);
+        onSelectPiece={(pieceType, material) => {
+          useGameStore.getState().setBuildMode(true, `${pieceType}:${material}`);
           setBuildPanelOpen(false);
         }}
         onClose={() => setBuildPanelOpen(false)}

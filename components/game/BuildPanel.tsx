@@ -1,174 +1,351 @@
 /**
- * BuildPanel -- Modal overlay for selecting and placing structures.
+ * BuildPanel -- Kitbashing piece picker with radial category selection.
  *
- * Shows available structures (filtered by player level), their costs,
- * and effects. Selecting a structure enters placement mode.
+ * Two-step navigation: radial category wheel → scrollable piece list per
+ * category. Categories derived from GAME_SPEC §35.2. Build costs and
+ * unlock levels loaded from config/game/building.json at runtime.
+ *
+ * Pure functions live in buildPanelUtils.ts for testability (Spec §35.4).
  */
 
+import { useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
-import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import type { ResourceType } from "@/game/config/resources";
-import type { StructureTemplate } from "@/game/structures/types";
+import type { MaterialType, PieceType } from "@/game/ecs/components/building";
+import {
+  buildCosts,
+  CATEGORIES,
+  canAffordPiece,
+  getBuildCost,
+  getPieceUnlockLevel,
+  isPieceLocked,
+} from "./buildPanelUtils";
+
+// Re-export pure functions for callers who import from this module
+export {
+  canAffordPiece,
+  getBuildCost,
+  getPiecesForCategory,
+  getPieceUnlockLevel,
+  isPieceLocked,
+} from "./buildPanelUtils";
+
+// ---------------------------------------------------------------------------
+// Display maps
+// ---------------------------------------------------------------------------
+
+const PIECE_LABELS: Record<PieceType, string> = {
+  wall: "Wall", floor: "Floor", roof: "Roof", stairs: "Stairs",
+  foundation: "Foundation", door: "Door", window: "Window",
+  pillar: "Pillar", platform: "Platform", beam: "Beam", pipe: "Pipe",
+};
+
+const MATERIAL_LABELS: Record<MaterialType, string> = {
+  thatch: "Thatch", wood: "Wood", stone: "Stone", metal: "Metal",
+};
+
+const MATERIAL_COLORS: Record<MaterialType, string> = {
+  thatch: "#D4A017", wood: "#8B6340", stone: "#9E9E9E", metal: "#607D8B",
+};
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
 
 export interface BuildPanelProps {
   open: boolean;
-  level: number;
-  resources: Record<ResourceType, number>;
-  templates: StructureTemplate[];
-  onSelectStructure: (template: StructureTemplate) => void;
+  playerLevel: number;
+  resources: Record<string, number>;
+  onSelectPiece: (pieceType: PieceType, material: MaterialType) => void;
   onClose: () => void;
 }
 
-function canAfford(
-  template: StructureTemplate,
-  resources: Record<ResourceType, number>,
-): boolean {
-  for (const [resource, amount] of Object.entries(template.cost)) {
-    if ((resources[resource as ResourceType] ?? 0) < amount) return false;
-  }
-  return true;
+// ---------------------------------------------------------------------------
+// Radial wheel constants
+// ---------------------------------------------------------------------------
+
+const RING_RADIUS = 68;
+const BUTTON_SIZE = 52;
+
+// ---------------------------------------------------------------------------
+// CategoryWheel sub-component
+// ---------------------------------------------------------------------------
+
+function CategoryWheel({
+  onSelect,
+}: {
+  onSelect: (categoryId: string) => void;
+}) {
+  const count = CATEGORIES.length;
+  return (
+    <View style={{ height: 180, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: 0, height: 0 }}>
+        {CATEGORIES.map((cat, i) => {
+          const angle = -Math.PI / 2 + (i / count) * 2 * Math.PI;
+          const x = Math.cos(angle) * RING_RADIUS - BUTTON_SIZE / 2;
+          const y = Math.sin(angle) * RING_RADIUS - BUTTON_SIZE / 2;
+          return (
+            <View
+              key={cat.id}
+              style={{
+                position: "absolute",
+                left: x,
+                top: y,
+                width: BUTTON_SIZE,
+                height: BUTTON_SIZE,
+              }}
+            >
+              <Pressable
+                style={{
+                  width: BUTTON_SIZE,
+                  height: BUTTON_SIZE,
+                  borderRadius: BUTTON_SIZE / 2,
+                  backgroundColor: "rgba(45,90,39,0.12)",
+                  borderWidth: 2,
+                  borderColor: "#2D5A27",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={() => onSelect(cat.id)}
+                accessibilityLabel={cat.label}
+              >
+                <Text style={{ fontSize: 20, lineHeight: 24 }}>{cat.icon}</Text>
+                <Text style={{ fontSize: 8, color: "#3E2723", fontWeight: "600" }}>
+                  {cat.label}
+                </Text>
+              </Pressable>
+            </View>
+          );
+        })}
+      </View>
+      <Text style={{ position: "absolute", bottom: 4, fontSize: 10, color: "#5D4037" }}>
+        Select category
+      </Text>
+    </View>
+  );
 }
 
-function formatEffect(
-  effect: NonNullable<StructureTemplate["effect"]>,
-): string {
-  const pct = Math.round(effect.magnitude * 100);
-  switch (effect.type) {
-    case "growth_boost":
-      return `+${pct}% growth within ${effect.radius} tiles`;
-    case "harvest_boost":
-      return `+${pct}% harvest within ${effect.radius} tiles`;
-    case "stamina_regen":
-      return `-${pct}% stamina cost within ${effect.radius} tiles`;
-    case "storage":
-      return `+${pct}% storage within ${effect.radius} tiles`;
-  }
+// ---------------------------------------------------------------------------
+// PieceRow sub-component
+// ---------------------------------------------------------------------------
+
+function PieceRow({
+  pieceType,
+  material,
+  playerLevel,
+  resources,
+  onSelect,
+}: {
+  pieceType: PieceType;
+  material: MaterialType;
+  playerLevel: number;
+  resources: Record<string, number>;
+  onSelect: () => void;
+}) {
+  const locked = isPieceLocked(pieceType, material, playerLevel);
+  const affordable = !locked && canAffordPiece(pieceType, material, resources);
+  const unlockLvl = getPieceUnlockLevel(pieceType, material);
+  const cost = getBuildCost(pieceType, material);
+
+  return (
+    <Pressable
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        minHeight: 52,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        marginBottom: 6,
+        borderRadius: 12,
+        borderWidth: 2,
+        backgroundColor: locked ? "rgba(0,0,0,0.04)" : affordable ? "#fff" : "#f4f0e8",
+        borderColor: affordable ? "#2D5A27" : "#ccc",
+        opacity: locked ? 0.55 : 1,
+      }}
+      onPress={onSelect}
+      disabled={locked || !affordable}
+      accessibilityLabel={`${PIECE_LABELS[pieceType]} ${MATERIAL_LABELS[material]}${locked ? `, locked until level ${unlockLvl}` : ""}`}
+    >
+      {/* Material color swatch */}
+      <View
+        style={{
+          width: 14,
+          height: 36,
+          borderRadius: 4,
+          backgroundColor: MATERIAL_COLORS[material],
+          marginRight: 10,
+          flexShrink: 0,
+        }}
+      />
+
+      {/* Piece + material name */}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={{ fontSize: 13, fontWeight: "600", color: "#3E2723" }}>
+          {PIECE_LABELS[pieceType]}
+        </Text>
+        <Text style={{ fontSize: 11, color: "#5D4037" }}>{MATERIAL_LABELS[material]}</Text>
+      </View>
+
+      {/* Build cost */}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginHorizontal: 8 }}>
+        {Object.entries(cost).map(([res, amt]) => (
+          <View
+            key={res}
+            style={{
+              backgroundColor: "rgba(45,90,39,0.12)",
+              borderRadius: 99,
+              paddingHorizontal: 6,
+              paddingVertical: 2,
+            }}
+          >
+            <Text style={{ fontSize: 10, color: "#2D5A27" }}>
+              {amt} {res}
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Lock badge OR level badge */}
+      {locked ? (
+        <View
+          style={{
+            flexShrink: 0,
+            backgroundColor: "rgba(93,64,55,0.15)",
+            borderRadius: 99,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ fontSize: 10 }}>🔒</Text>
+          <Text style={{ fontSize: 9, color: "#5D4037" }}>Lv{unlockLvl}</Text>
+        </View>
+      ) : (
+        <View
+          style={{
+            flexShrink: 0,
+            backgroundColor: "rgba(93,64,55,0.1)",
+            borderRadius: 99,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+          }}
+        >
+          <Text style={{ fontSize: 10, color: "#5D4037" }}>Lv{unlockLvl}</Text>
+        </View>
+      )}
+    </Pressable>
+  );
 }
+
+// ---------------------------------------------------------------------------
+// BuildPanel
+// ---------------------------------------------------------------------------
 
 export function BuildPanel({
   open,
+  playerLevel,
   resources,
-  templates,
-  onSelectStructure,
+  onSelectPiece,
   onClose,
 }: BuildPanelProps) {
-  const handleSelect = (template: StructureTemplate) => {
-    if (!canAfford(template, resources)) return;
-    onSelectStructure(template);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const handleClose = () => {
+    setSelectedCategory(null);
+    onClose();
+  };
+
+  const handleSelect = (pieceType: PieceType, material: MaterialType) => {
+    if (isPieceLocked(pieceType, material, playerLevel)) return;
+    if (!canAffordPiece(pieceType, material, resources)) return;
+    onSelectPiece(pieceType, material);
+    setSelectedCategory(null);
     onClose();
   };
 
   if (!open) return null;
 
+  const activeCat = CATEGORIES.find((c) => c.id === selectedCategory);
+
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/50">
+    <Modal visible transparent animationType="slide" onRequestClose={handleClose}>
+      <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" }}>
         <Pressable
-          className="absolute inset-0"
-          onPress={onClose}
+          style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
+          onPress={handleClose}
           accessibilityLabel="Close build panel"
         />
 
-        <View className="max-h-[70%] rounded-t-2xl border-t-2 border-bark-brown bg-parchment pb-8">
+        <View
+          style={{
+            maxHeight: "75%",
+            borderTopLeftRadius: 18,
+            borderTopRightRadius: 18,
+            borderTopWidth: 2,
+            borderTopColor: "#5D4037",
+            backgroundColor: "#FAF7F2",
+            paddingBottom: 28,
+          }}
+        >
           {/* Header */}
-          <View className="flex-row items-center justify-between border-b border-bark-brown/30 px-4 py-3">
-            <Text className="font-heading text-lg font-bold text-forest-green">
-              Build Structure
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderBottomWidth: 1,
+              borderBottomColor: "rgba(93,64,55,0.25)",
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+            }}
+          >
+            {selectedCategory ? (
+              <Pressable
+                style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+                onPress={() => setSelectedCategory(null)}
+                accessibilityLabel="Back to categories"
+              >
+                <Text style={{ fontSize: 18, color: "#5D4037" }}>←</Text>
+              </Pressable>
+            ) : (
+              <View style={{ width: 44 }} />
+            )}
+
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#2D5A27" }}>
+              {activeCat ? `Build: ${activeCat.icon} ${activeCat.label}` : "Build"}
             </Text>
+
             <Pressable
-              className="min-h-[44px] min-w-[44px] items-center justify-center"
-              onPress={onClose}
+              style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+              onPress={handleClose}
               accessibilityLabel="Close"
             >
-              <Text className="text-lg font-bold text-soil-dark">X</Text>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: "#3E2723" }}>✕</Text>
             </Pressable>
           </View>
 
-          {/* Structure list */}
-          <ScrollView className="px-4 py-2">
-            {templates.length === 0 && (
-              <Text className="py-8 text-center text-sm text-soil-dark">
-                No structures available yet. Level up!
-              </Text>
-            )}
-
-            {templates.map((template) => {
-              const affordable = canAfford(template, resources);
-              return (
-                <Pressable
-                  key={template.id}
-                  className="mb-2 flex-row items-start gap-3 rounded-xl border-2 px-3 py-3"
-                  style={{
-                    backgroundColor: affordable ? "white" : "#f0ece4",
-                    borderColor: affordable ? "#2D5A27" : "#ccc",
-                    opacity: affordable ? 1 : 0.6,
-                  }}
-                  onPress={() => handleSelect(template)}
-                  disabled={!affordable}
-                  accessibilityLabel={`${template.name}, level ${template.requiredLevel} required`}
-                >
-                  {/* Icon */}
-                  <Text className="mt-0.5 flex-shrink-0 text-2xl">
-                    {template.icon}
-                  </Text>
-
-                  {/* Info */}
-                  <View className="min-w-0 flex-1">
-                    <Text className="text-sm font-semibold text-soil-dark">
-                      {template.name}
-                    </Text>
-                    <Text className="mt-0.5 text-xs text-bark-brown">
-                      {template.description}
-                    </Text>
-
-                    {/* Cost tags */}
-                    <View className="mt-1.5 flex-row flex-wrap gap-1.5">
-                      {Object.entries(template.cost).map(([res, amount]) => (
-                        <View
-                          key={res}
-                          className="rounded-full px-1.5 py-0.5"
-                          style={{ backgroundColor: "rgba(45,90,39,0.13)" }}
-                        >
-                          <Text className="text-[10px] text-forest-green">
-                            {amount} {res}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-
-                    {/* Effect description */}
-                    {template.effect && (
-                      <Text className="mt-1 text-[10px] text-forest-green">
-                        {formatEffect(template.effect)}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Level badge */}
-                  <View
-                    className="flex-shrink-0 rounded-full px-1.5 py-0.5"
-                    style={{ backgroundColor: "rgba(93,64,55,0.13)" }}
-                  >
-                    <Text className="text-[10px] text-bark-brown">
-                      Lv{template.requiredLevel}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
-          {/* Cancel button */}
-          <View className="px-4">
-            <Button
-              className="min-h-[44px] w-full rounded-xl border-2 border-bark-brown bg-transparent"
-              variant="outline"
-              onPress={onClose}
-            >
-              <Text className="font-bold text-bark-brown">Cancel</Text>
-            </Button>
-          </View>
+          {/* Body */}
+          {!selectedCategory ? (
+            <CategoryWheel onSelect={setSelectedCategory} />
+          ) : (
+            <ScrollView style={{ paddingHorizontal: 12, paddingTop: 8 }}>
+              {activeCat?.pieces.map((pieceType) => {
+                const materials = Object.keys(
+                  buildCosts[pieceType] ?? {},
+                ) as MaterialType[];
+                return materials.map((material) => (
+                  <PieceRow
+                    key={`${pieceType}-${material}`}
+                    pieceType={pieceType}
+                    material={material}
+                    playerLevel={playerLevel}
+                    resources={resources}
+                    onSelect={() => handleSelect(pieceType, material)}
+                  />
+                ));
+              })}
+            </ScrollView>
+          )}
         </View>
       </View>
     </Modal>
