@@ -32,6 +32,37 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-024
+- Created `game/world/chunkPersistence.ts` with delta-only chunk persistence (Spec §26.2):
+  - `PlantedTree` interface: minimal tree state needed to reconstruct a player-planted tree (localX, localZ, speciesId, stage, progress, plantedAt, meshSeed)
+  - `ChunkDiff` interface: per-chunk diff container (plantedTrees array — extensible to other entity types)
+  - `chunkDiffs$` — Legend State observable `Record<string, ChunkDiff>` keyed by canonical chunkKey; in-memory but designed to be wired to expo-sqlite via `syncObservable`
+  - Queries: `isChunkModified(chunkKey)`, `loadChunkDiff(chunkKey)`
+  - Mutations: `saveChunkDiff`, `recordPlantedTree` (accumulates into existing diff), `clearChunkDiff` (single chunk), `clearAllChunkDiffs` (new game / prestige reset)
+  - Application: `applyChunkDiff(chunkKey, chunkX, chunkZ)` — spawns ECS entities from stored diff on chunk reload, using world-space coords `(chunkX * CHUNK_SIZE + localX, 0, chunkZ * CHUNK_SIZE + localZ)`
+- Created `game/world/chunkPersistence.test.ts` with 28 tests (all green):
+  - isChunkModified: false before any mod, true after, false after clear
+  - loadChunkDiff: null for unmodified, returns stored diff, null for unknown key
+  - saveChunkDiff: round-trip, overwrites previous, no cross-chunk pollution
+  - clearChunkDiff: removes target, preserves others, no-op for unmapped keys
+  - clearAllChunkDiffs: removes all, leaves observable empty
+  - recordPlantedTree: creates diff on first plant, accumulates, preserves all fields
+  - Zero storage: no entries at startup, only modified chunks have entries
+  - applyChunkDiff: no-op for undiffed chunk, spawns N entities, correct world-space position, restores speciesId/stage/progress, round-trip (plant → unload → reload → entity in world)
+- **Files changed:**
+  - `game/world/chunkPersistence.ts`: new file — delta persistence layer
+  - `game/world/chunkPersistence.test.ts`: new file — 28 tests, all green
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 82 suites, 1423 tests, 0 failures
+- **Learnings:**
+  - `chunkDiffs$.peek()` is correct for imperative non-React reads; `.get()` outside a reactive context creates unintended subscriptions
+  - Module-level Legend State observables carry state between tests — `clearAllChunkDiffs()` in `beforeEach` is mandatory. Same for ECS world entities.
+  - `recordPlantedTree` read-modify-write pattern: peek current diff, spread into new array, write back. This is idiomatic Legend State mutation for non-keyed records.
+  - `applyChunkDiff` reconstructs full `TreeComponent` with safe defaults for fields not stored in the diff (watered=false, wild=false, baseModel="", etc.) — the diff stores only what's needed for visual fidelity.
+
+---
+
 ## 2026-03-07 - US-023
 - Exported `buildTrimeshArgs(heightmap: Float32Array): { vertices: Float32Array; indices: Uint32Array }` from `components/scene/TerrainChunk.tsx` — pure function that extracts flat vertex positions (local chunk space, Y = heightmap * HEIGHT_SCALE) and CCW-wound triangle indices for Rapier's trimesh collider.
 - Modified `TerrainChunks` to:

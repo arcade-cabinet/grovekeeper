@@ -1,0 +1,92 @@
+# Iteration 23 Log
+
+## Metadata
+
+- **Task ID**: US-023
+- **Task Title**: Add Rapier trimesh collider per terrain chunk
+- **Description**: As a developer, I want a TrimeshCollider generated from terrain geometry vertices so that the player capsule collides with the terrain surface. See GAME_SPEC.md §9 for physics requirements.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:33:06.910Z
+- **Ended At**: 2026-03-07T09:40:17.428Z
+- **Duration**: 7m 10s
+- **Input Tokens**: 108
+- **Output Tokens**: 25035
+- **Total Tokens**: 25143
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/scene/**/*.tsx[0m
+Let me read the key files to understand the current state:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/Ground.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§9|physics|trimesh|collider[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+Now let me look at how Rapier is used for colliders in the codebase:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mTrimeshCollider|trimesh|useRapier|RigidBody|Collider[0m
+Let me check the useJump implementation to understand how Rapier's imperative API is used:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mTrimeshCollider|trimesh|ColliderDesc|createCollider|createRigidBody|removeRigidBody[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m pattern: [96mposition.*y.*=|y:.*0|position\.y[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.test.ts[0m
+Now I have a complete picture. Let me implement the solution.
+
+`★ Insight ─────────────────────────────────────`
+- Rapier's `ColliderDesc.trimesh(vertices, indices)` takes a flat `Float32Array` of `(x,y,z)` triples and a `Uint32Array` of triangle vertex indices — the same data produced by Three.js `BufferGeometry` builders.
+- The trimesh collider must be created imperatively in `useFrame` via `useRapier()` (called at component level), not declaratively, because `TerrainChunks` manages chunk lifecycle imperatively via ref maps rather than React state.
+- Static terrain bodies use `rapier.RigidBodyDesc.fixed().setTranslation(x, y, z)` — "fixed" prevents movement under physics forces, and `setTranslation` places the body at the chunk's world-space origin (vertices are in local chunk coords 0..CHUNK_SIZE-1).
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.tsx[0m "/**
+ * TerrainChunks — R3F component that renders all ECS terrain chunk entities
+ * and maintains Rapier static trimesh colliders for physics.
+ *
+ * Each terrain chunk is a BufferGeometry with Y-displ... (8834 chars)"
+Now update the test file to add the Rapier mock and `buildTrimeshArgs` tests:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.test.ts[0m "/**
+ * Tests for TerrainChunks R3F component (Spec §31.1, §9).
+ *
+ * Tests exported constants and buildTerrainGeometry/buildTrimeshArgs without
+ * WebGL/R3F/Rapier context. The imperative useFrame ren... (10206 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+
+[91m[Error: Exit code 2
+components/scene/TerrainChunk.tsx(201,9): error TS2322: Type 'BufferGeometry<NormalBufferAttributes, BufferGeometryEventMap> | undefined' is not assignable to type 'BufferGeometry<NormalBufferAttributes, BufferGeometryEventMap>'.
+  Type 'undefined' is not assignable to type 'BufferGeometry<NormalBufferAttributes, BufferGeometryEventMap>'.][0m
+TypeScript lost narrowing because I extracted the boolean to a variable. Let me fix by using the direct condition check (as the original did):
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.tsx[0m edit: "      // Regenerate geometry when dirty or first-t..." → "      // Regenerate geometry when dirty or first-t..."
+[94m[Bash][0m TypeScript type check after fix $ npx tsc --noEmit 2>&1
+Good, TypeScript passes. Now run tests:
+[94m[Bash][0m Run all Jest tests $ npx jest --no-coverage 2>&1 | tail -30
+81 suites, 1395 tests — all green. Let me update the progress log:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **Vertex color geometry needs both sides**: `geo..." → "- **Vertex color geometry needs both sides**: `geo..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `const isDirty = !geometry || dirty` breaks TypeScript's control-flow narrowing — after `if (isDirty) { geometry = ... }`, TS still sees `geometry` as `T | undefined`. The fix is to use the condition directly in the `if` statement, which TS traces through correctly.
+- Rapier's imperative API (`createRigidBody`/`createCollider`/`removeRigidBody`) is the right tool when chunk lifecycle is managed via an ECS-keyed `Map` in `useFrame`, not React state. The body map tracks the same entity `id` key as the mesh map.
+- `removeRigidBody(body)` is the only call needed on cleanup — Rapier automatically removes all colliders attached to a body when the body is destroyed.
+`─────────────────────────────────────────────────`
+
+US-023 is complete:
+
+- **`buildTrimeshArgs`** — pure function exporting `Float32Array` vertices + `Uint32Array` indices for Rapier trimesh colliders
+- **`TerrainChunks`** — now creates a fixed Rapier `RigidBody` + `TrimeshCollider` for each chunk on load, destroys it on unload or dirty rebuild
+- **8 new tests** for `buildTrimeshArgs` (buffer sizes, Y values, index bounds, X range)
+- `tsc --noEmit` → 0 errors | `jest --no-coverage` → 81 suites, 1395 tests, 0 failures
+
+<promise>COMPLETE</promise>
