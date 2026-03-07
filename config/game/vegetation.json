@@ -114,7 +114,22 @@
     "bush_tall_half_single",
     "bush_tall_open_right",
     "bush_tall_overgrown",
-    "bush_tall_single"
+    "bush_tall_single",
+    "bush_single",
+    "bush_half",
+    "bush_open_right",
+    "bush_corner",
+    "bush_connector_low",
+    "bush_connector_low_end",
+    "bush_connector_high",
+    "bush_long_corner",
+    "bush_long_low",
+    "bush_tall_corner",
+    "bush_tall_low",
+    "bush_overgrown_tall",
+    "bush_overgrown_half",
+    "bush_full",
+    "bush_half_single"
   ],
   "bushRootsProbability": 0.3,
   "biomeDensity": {

@@ -695,3 +695,16 @@ after each iteration and it's included in prompts for context.
   - **Tests distributed across systems**: Tree rendering tests span 3 files because the logic is split across components (TreeModel.tsx), systems (treeScaleSystem.ts, vegetationPlacement.ts). The acceptance criteria "seasonal tint" is covered by `getSeasonalTreeTint` in vegetationPlacement.test.ts, not in TreeModel.test.ts — check all files before concluding coverage is missing.
   - **R3F tinting logic is not unit-testable**: The material clone + traverse tinting inside `TreeGLBModel` cannot be tested in Jest (no WebGL). Pure function seams (`resolveModelPath`, `getSeasonalTreeTint`) are the correct unit test targets.
 ---
+
+## 2026-03-07 - US-037
+- Implemented seasonal bush GLB swap: `BushModel` component + pure mapping functions.
+- **Files changed:**
+  - `components/entities/BushModel.tsx` — new file. Exports `VALID_SEASONS`, `VALID_BUSH_SHAPES`, `buildModelKey`, `resolveBushGLBPath`, `BushModelProps`, `BushModel`.
+  - `components/entities/BushModel.test.ts` — new file. 36 tests covering constants, key composition, path resolution (all 52x5 combinations), unknown-shape throws, component export.
+  - `config/game/vegetation.json` — extended `bushShapes` array from 37 to 52 shapes (added 15 plausible variants following the same `bush_*` naming convention).
+- **Learnings:**
+  - **BushModel vs TreeModel: no procedural stages**: Unlike trees (which need procedural geometry for Seed/Sprout stages), bushes always render a GLB. The component is simpler: one sub-component, one GLB path, no stage branching.
+  - **Model key pattern `{shape}_{season}`**: Keeps path construction deterministic and testable. The key is distinct from the GLB path — `buildModelKey` returns the key, `resolveBushGLBPath` wraps it in the full `assets/models/bushes/...glb` path.
+  - **Config as allowlist**: `resolveBushGLBPath` validates against `vegetation.json bushShapes` (throws on unknown). Adding a new shape only requires a config change — no code change needed.
+  - **Uniqueness test**: `all resolved paths are unique across 52 shapes x 5 seasons` verifies 52x5=260 distinct paths in one test — catches any accidental path collisions from bad key composition.
+---
