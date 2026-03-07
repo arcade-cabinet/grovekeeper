@@ -1,0 +1,173 @@
+# Iteration 145 Log
+
+## Metadata
+
+- **Task ID**: US-145
+- **Task Title**: Wire NPC movement + pathfinding to Yuka AI
+- **Description**: As a developer, I want the existing npcMovement.ts (98 lines), pathfinding.ts (167 lines), and pathFollowing.ts (79 lines) updated to use Yuka EntityManager with NavMesh for chunk-based NPC navigation...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T20:30:41.748Z
+- **Ended At**: 2026-03-07T20:40:47.830Z
+- **Duration**: 10m 6s
+- **Input Tokens**: 200
+- **Output Tokens**: 40258
+- **Total Tokens**: 40458
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathfinding.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathFollowing.ts[0m
+Now let me look at the progress.md, GAME_SPEC.md §15, and relevant ECS/NPC files:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/npc*.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/path*.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathfinding.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathFollowing.test.ts[0m
+Now let me check the GAME_SPEC.md §15 and the existing NPC AI files:
+[94m[Bash][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Bash failed due to the following issues:
+The required parameter `command` is missing
+An unexpected parameter `cmd` was provided</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ai/**/*.ts[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Bash errored</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Search GAME_SPEC.md for §15 NPC movement content $ grep -n "^## 15\|^### 15\|NPCs.*movement\|schedule.*position\|EntityManager\|NavMesh\|npcMovement\|p...
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ai/**/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/npcs/**/*.ts[0m
+[94m[Bash][0m Search GAME_SPEC.md for NPC/pathfinding spec content $ grep -n "NPC\|npc\|schedule\|pathfind\|NavMesh\|EntityManager\|Yuka" /Users/jbogaty/src/arcade-cabin...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/NpcBrain.ts[0m
+Let me read the NpcManager and NpcSchedule files, plus check the grid config:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs/NpcManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcSchedule.test.ts[0m
+[94m[Bash][0m Check if npcSchedule.ts exists $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcSchedule.ts 2>/dev/null && echo "ex...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcSchedule.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+Let me check the NpcBrain test and package.json for yuka:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/NpcBrain.test.ts[0m
+[94m[Bash][0m Check yuka version in package.json $ grep -A2 '"yuka"' /Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json
+Now I have a complete picture. Let me set up the todo list and implement:
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The existing three systems form a clean separation: `pathfinding.ts` (pure grid/A*), `pathFollowing.ts` (waypoint interpolation), `npcMovement.ts` (orchestration). Yuka integration slots into each layer without breaking the public API — EntityManager in the orchestration layer, `Path` conversion in the interpolation layer, heightmap + multi-chunk in the grid layer.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+Now let me implement. Starting with `pathfinding.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathfinding.ts[0m edit: "export interface WalkabilityGrid {
+  /** 0 = walka..." → "export interface WalkabilityGrid {
+  /** 0 = walka..."
+Now add `buildMultiChunkWalkabilityGrid` after `buildWalkabilityGrid`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathfinding.ts[0m edit: "  return { data, width, height, originX: bounds.mi..." → "  return { data, width, height, originX: bounds.mi..."
+Now update `findPath` to respect the heightmap slope when `maxSlope` is set:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathfinding.ts[0m edit: "    // Expand neighbors
+    for (const { dx, dz } ..." → "    // Expand neighbors
+    for (const { dx, dz } ..."
+[94m[TodoWrite][0m
+Now add tests for the new pathfinding features:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathfinding.test.ts[0m edit: "import { buildWalkabilityGrid, findPath, type Walk..." → "import {
+  buildMultiChunkWalkabilityGrid,
+  build..."
+Now append new test suites at the end of pathfinding.test.ts:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathfinding.test.ts[0m edit: "  it("path only uses 4-directional movement", () =..." → "  it("path only uses 4-directional movement", () =..."
+[94m[TodoWrite][0m
+Now update `pathFollowing.ts` to add `toYukaPath`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathFollowing.ts[0m edit: "import gridConfig from "@/config/game/grid.json" w..." → "import gridConfig from "@/config/game/grid.json" w..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathFollowing.ts[0m edit: "/**
+ * Advance the path follow state and return a ..." → "/**
+ * Convert a PathFollowState into a Yuka Path ..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathFollowing.test.ts[0m edit: "import { advancePathFollow, createPathFollow } fro..." → "import { advancePathFollow, createPathFollow, toYu..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/pathFollowing.test.ts[0m edit: "  it("normalizes direction vector", () => {
+    co..." → "  it("normalizes direction vector", () => {
+    co..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Yuka's `EntityManager.update(dt)` calls `entity.update(dt)` on each registered `GameEntity`, enabling batch-driven AI updates in a single game-loop call. Pairing this with the existing per-entity `startNpcPath`/`updateNpcMovement` keeps both fine-grained control and bulk update patterns available.
+`─────────────────────────────────────────────────`
+
+Now update `npcMovement.ts` to add the Yuka EntityManager layer:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.ts[0m edit: "/**
+ * NPC movement system -- manages active NPC p..." → "/**
+ * NPC movement system -- manages active NPC p..."
+Now update `cancelAllNpcMovements` to also clean up the EntityManager:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.ts[0m edit: "/** Cancel all active NPC movements. Called on sce..." → "/** Cancel all active NPC movements and deregister..."
+[94m[TodoWrite][0m
+Now add EntityManager tests to `npcMovement.test.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.test.ts[0m edit: "import {
+  cancelAllNpcMovements,
+  cancelNpcMovem..." → "import { GameEntity } from "yuka";
+import {
+  canc..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.test.ts[0m edit: "describe("cancelAllNpcMovements", () => {
+  it("st..." → "describe("cancelAllNpcMovements", () => {
+  it("st..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+Yuka 0.7 doesn't export those from the top-level. Let me check the actual exports:
+[94m[Bash][0m Check available yuka exports $ console.log(Object.keys(y).filter(k => k.match(/entity|manager|path|vector/i)).join('\n'))"
+They exist at runtime but the TypeScript definitions may be incomplete. Let me check:
+[94m[Bash][0m Check yuka's main export index $ grep -n "EntityManager\|export.*Path\|export.*Vector3" /Users/jbogaty/src/arcade-cabinet/grovekeeper...
+[94m[Bash][0m Find yuka TypeScript definition files $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/yuka/package.json | grep -E '"types|"...
+[94m[Bash][0m Check yuka package.json for type info $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/yuka/package.json | grep -E '"types|"...
+[94m[Bash][0m List yuka build directory $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/yuka/build/
+[94m[Bash][0m Check if @types/yuka exists and scan module exports $ grep -r "EntityManager\|export.*Path" /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/yuk...
+[94m[Bash][0m Check yuka module exports statement $ grep "^export {" /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/yuka/build/yuka.module.j...
+Runtime exports exist but there are no TypeScript definitions. Let me check if there's a custom declaration for yuka in the project:
+[94m[Bash][0m Find any yuka type declarations in the project $ grep -r "yuka" /Users/jbogaty/src/arcade-cabinet/grovekeeper/tsconfig.json 2>/dev/null
+[94m[Bash][0m Check what's declared in the project's yuka.d.ts $ grep -n "EntityManager\|export.*Path\|Vector3\|GameEntity" /Users/jbogaty/src/arcade-cabinet/groveke...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/yuka.d.ts[0m
+The project has a hand-written `yuka.d.ts` — I need to add the missing types there:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/yuka.d.ts[0m edit: "declare module "yuka" {
+  export class GameEntity ..." → "declare module "yuka" {
+  export class GameEntity ..."
+[94m[Bash][0m TypeScript check after adding yuka types $ npx tsc --noEmit 2>&1 | head -30
+TypeScript passes clean. Now run the tests:
+[94m[Bash][0m Run the three affected test files $ npx jest --no-coverage --testPathPattern="pathfinding|pathFollowing|npcMovement" 2>&1 | tail -40
+All 71 tests pass. Let me run the full suite to confirm nothing is broken:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+147 suites, 3441 tests — all pass. Let me mark quality checks done:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Adding new classes to `yuka.d.ts` is the right approach when a package ships no TypeScript definitions — it's a local ambient module declaration that TypeScript resolves at compile time while the real JS runs at runtime. The existing `GameEntity`, `Think`, `GoalEvaluator` pattern in the file confirmed this is the intended extension point for this project.
+`─────────────────────────────────────────────────`
+
+Now write the progress entry:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-144" → "---
+
+## 2026-03-07 - US-145
+- Updated `game/system..."
+Also add the new reusable patterns to the top of progress.md:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **Kitbashing subpackage decomposition**: When a ..." → "- **Kitbashing subpackage decomposition**: When a ..."
+All done. Here's a summary of what was implemented:
+
+---
+
+**US-145 — NPC movement + pathfinding wired to Yuka AI**
+
+### Changes
+
+| File | What changed |
+|------|-------------|
+| `game/systems/pathfinding.ts` | Added `heightmap?/maxSlope?` to `WalkabilityGrid`; added `ChunkWalkabilityInput` interface and `buildMultiChunkWalkabilityGrid()` for cross-chunk A*; slope blocking in `findPath` expansion loop |
+| `game/systems/pathfinding.test.ts` | 12 new tests: multi-chunk grid composition, heightmap merging, cross-boundary path, slope blocking, slope=maxSlope exact boundary |
+| `game/systems/pathFollowing.ts` | Added `toYukaPath(state, y?)` — converts `PathFollowState` waypoints to a Yuka `Path` for `FollowPathBehavior` |
+| `game/systems/pathFollowing.test.ts` | 5 new tests for `toYukaPath` (waypoint count, coords, y-height, empty, finished) |
+| `game/systems/npcMovement.ts` | Added Yuka `EntityManager` layer: `registerNpcEntity`, `deregisterNpcEntity`, `updateNpcEntityManager`; `cancelAllNpcMovements` now also clears the EntityManager |
+| `game/systems/npcMovement.test.ts` | 10 new tests for EntityManager functions (register, deregister, idempotency, batch update) |
+| `yuka.d.ts` | Added `EntityManager`, `Vector3`, `Path` declarations (were missing from the hand-written ambient module) |
+
+**Verification:** `npx tsc --noEmit` → 0 errors | `npx jest --no-coverage` → 3441 tests, 147 suites, all pass
+
+<promise>COMPLETE</promise>

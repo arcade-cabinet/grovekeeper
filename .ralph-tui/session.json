@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T20:40:47.834Z",
-  "currentIteration": 144,
+  "updatedAt": "2026-03-07T20:45:03.514Z",
+  "currentIteration": 145,
   "maxIterations": 0,
-  "tasksCompleted": 144,
+  "tasksCompleted": 145,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -880,8 +880,8 @@
       {
         "id": "US-145",
         "title": "Wire NPC movement + pathfinding to Yuka AI",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-146",
@@ -2481,6 +2481,16 @@
       "durationMs": 487938,
       "startedAt": "2026-03-07T20:22:32.677Z",
       "endedAt": "2026-03-07T20:30:40.615Z"
+    },
+    {
+      "iteration": 145,
+      "status": "completed",
+      "taskId": "US-145",
+      "taskTitle": "Wire NPC movement + pathfinding to Yuka AI",
+      "taskCompleted": true,
+      "durationMs": 606082,
+      "startedAt": "2026-03-07T20:30:41.748Z",
+      "endedAt": "2026-03-07T20:40:47.830Z"
     }
   ],
   "skippedTaskIds": [],

@@ -2658,3 +2658,16 @@ after each iteration and it's included in prompts for context.
   - **Pure state machine = zero-mock tests**: Because `tutorial.ts` has no React/RN/ECS/Three.js imports, the test file needs zero `jest.mock()` calls. Import real production functions and call them directly.
   - **Identity-return optimization is testable**: `tickTutorial` returns the same state reference on wrong signal — `expect(next).toBe(state)` tests this allocation optimization as a first-class assertion.
 ---
+
+## 2026-03-07 - US-146
+- Work already complete — `game/systems/npcAppearance.ts` (176 lines) was implemented in a prior iteration with full ChibiCharacter GLB assembly support.
+- Files verified:
+  - `game/systems/npcAppearance.ts` — ChibiCharacter base model selection (6 non-allinone bases), 33 mix-and-match items from `config/game/npcAssets.json`, role affinity system, incompatibility sets, color palette selection, all via `scopedRNG("npc-appearance", worldSeed, npcId, role)`
+  - `game/systems/npcAppearance.test.ts` — 11 tests covering determinism, seed variation, valid base models, no-allinone, hex palette, slot validity, incompatibility, coverage of all 6 bases, role affinity
+  - `config/game/npcAssets.json` — 7 base models + 33 items (confirmed counts match spec §19.2)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage npcAppearance` → 11/11 pass
+- **Learnings:**
+  - **Type alias between imports is valid TypeScript**: `import type { A } from "x"; type B = Pick<A, ...>; import { C } from "y"` compiles because TypeScript hoists all imports before executing module bodies. Biome's `organizeImports` is an assist action (not a lint rule), so `biome check` passes — only `biome check --write` would reorder it.
+  - **Two-pool affinity avoids role lock-in**: 70% chance to pick from role-preferred base list, 30% from all models. This means minority bases still appear across a large NPC population — prevents a world of only merchants for trading roles.
+  - **Stop condition applies**: When acceptance criteria are fully met by existing implementation and tests, verify + signal. Do not re-implement.
+---

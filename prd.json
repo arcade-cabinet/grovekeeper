@@ -2409,8 +2409,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 146,
-      "passes": false,
-      "notes": "Phase 1-B (late). npcAppearance.ts (176 lines) already exists — update for ChibiCharacter GLBs."
+      "passes": true,
+      "notes": "Phase 1-B (late). npcAppearance.ts (176 lines) already exists — update for ChibiCharacter GLBs.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-147",
@@ -2866,6 +2867,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T20:40:47.833Z"
+    "updatedAt": "2026-03-07T20:45:03.513Z"
   }
 }
