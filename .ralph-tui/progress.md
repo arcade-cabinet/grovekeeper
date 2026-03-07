@@ -71,6 +71,26 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-111
+- Created `game/quests/proceduralQuests.ts` — procedural quest generation for chunks
+  - `ProceduralQuestCategory`: `"gather" | "plant" | "explore" | "deliver" | "build" | "discover"`
+  - `buildQuestContext(category, rng, chunkX, chunkZ)` — picks npcId, targetType, targetAmount; always consumes exactly 3 RNG values for uniform call count
+  - `buildQuestDef(ctx, index)` — builds `QuestDef` with category-specific title, description, steps; index differentiates quests within same chunk
+  - `generateChunkQuests(worldSeed, chunkX, chunkZ)` — deterministic 1–4 quests per chunk via `scopedRNG("procedural-quest", ...)`; each quest is `createQuest(def)` from the existing state machine (state: "available")
+- Created `config/game/proceduralQuests.json` — all tuning values: pools (npcIds, resources, species, structures, landmarks), amounts per category, questsPerChunk range, rewards
+- Created `game/quests/proceduralQuests.test.ts` — 37 tests across 3 describe blocks
+  - `generateChunkQuests`: count range, determinism, chunk variation, state, ID uniqueness, all-categories coverage, coordinates in context, NPC pool validation
+  - `buildQuestContext` (per category): targetType pool membership, targetAmount range, category field, NPC pool
+  - `buildQuestDef` (per category): step count, targetType naming conventions, ID uniqueness, non-empty title/description
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2888 tests pass (133 suites)
+- **Learnings:**
+  - **Uniform RNG call count per category**: Each `buildQuestContext` call must consume exactly the same number of RNG values (3: npcRoll, targetRoll, amountRoll) regardless of category. For `explore` (fixed targetType) and `discover` (fixed amount), extra rolls are consumed with `void roll` to keep the PRNG stream deterministic across sequences of quests.
+  - **`void` for intentionally discarded RNG values**: Using `void targetRoll` is cleaner than `_ = rng()` for documenting that a slot is consumed for stream uniformity, not ignored accidentally.
+  - **Export pure helpers for testability**: Exporting `buildQuestContext` and `buildQuestDef` as named exports allows direct unit testing of per-category behavior without having to find seeds that produce specific categories. Tests use a `makeRng([0, 0, 0])` helper to control the PRNG deterministically.
+  - **deliver quest is 2-step**: Deliver is the only template with 2 steps (gather then deliver-to-npc). All other categories have 1 step. Tests assert `toHaveLength(2)` specifically for deliver.
+
+---
+
 ## 2026-03-07 - US-110
 - Work already complete — tests for the quest state machine were written as part of US-107, US-108, and US-109
 - Files confirmed existing with full coverage:
