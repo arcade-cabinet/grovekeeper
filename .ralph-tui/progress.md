@@ -15,6 +15,21 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-007
+- Installed `@react-three/rapier@2.2.0` via pnpm
+- Wrapped all `<Canvas>` children in `<Physics>` provider in `app/game/index.tsx`
+- **Files changed:**
+  - `package.json` / `pnpm-lock.yaml`: added `@react-three/rapier ^2.2.0`
+  - `app/game/index.tsx`: added `import { Physics } from "@react-three/rapier"` and wrapped Canvas children
+- **Verification:**
+  - `pnpm list @react-three/rapier` → 2.2.0
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 71 suites, 1243 tests, 0 failures
+- **Learnings:**
+  - `<Physics>` must be a child of `<Canvas>` (uses R3F's `useFrame` internally) — wrapping all scene children gives all future `<RigidBody>` / `<Collider>` descendants access to the physics context
+  - Package installed cleanly with no peer dependency issues specific to Rapier itself
+---
+
 ## 2026-03-07 - US-006
 - No changes required — all acceptance criteria were already met by prior stories (US-001 through US-005)
 - **Files changed:** none

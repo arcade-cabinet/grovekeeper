@@ -1,3 +1,4 @@
+import { Physics } from "@react-three/rapier";
 import { Canvas } from "@react-three/fiber";
 import { Stack } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -222,29 +223,31 @@ export default function GameScreen() {
       <View style={styles.container}>
         {/* 3D Canvas */}
         <Canvas shadows style={styles.canvas}>
-          <GameSystems />
-          <Camera />
-          <Lighting
-            timeOfDay={timeVisuals.timeOfDay}
-            season={currentSeason}
-            sunIntensity={timeVisuals.sunIntensity}
-            ambientIntensity={timeVisuals.ambientIntensity}
-            skyColors={timeVisuals.skyColors}
-          />
-          <Sky
-            skyColors={timeVisuals.skyColors}
-            season={currentSeason}
-            sunIntensity={timeVisuals.sunIntensity}
-          />
-          <Ground
-            gridSize={gridSize}
-            biome="grass"
-            season={currentSeason}
-            onPointerDown={onGroundTap}
-          />
-          <Player />
-          <TreeInstances onTreeTap={onTreeTap} />
-          <NpcMeshes onNpcTap={onNpcTap} />
+          <Physics>
+            <GameSystems />
+            <Camera />
+            <Lighting
+              timeOfDay={timeVisuals.timeOfDay}
+              season={currentSeason}
+              sunIntensity={timeVisuals.sunIntensity}
+              ambientIntensity={timeVisuals.ambientIntensity}
+              skyColors={timeVisuals.skyColors}
+            />
+            <Sky
+              skyColors={timeVisuals.skyColors}
+              season={currentSeason}
+              sunIntensity={timeVisuals.sunIntensity}
+            />
+            <Ground
+              gridSize={gridSize}
+              biome="grass"
+              season={currentSeason}
+              onPointerDown={onGroundTap}
+            />
+            <Player />
+            <TreeInstances onTreeTap={onTreeTap} />
+            <NpcMeshes onNpcTap={onNpcTap} />
+          </Physics>
         </Canvas>
 
         {/* HUD overlay */}
