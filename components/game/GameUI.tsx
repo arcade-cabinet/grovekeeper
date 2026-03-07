@@ -11,7 +11,6 @@
 import { AxeIcon, DropletsIcon, ScissorsIcon, SproutIcon } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
 import { totalXpForLevel, useGameStore, xpToNext } from "@/game/stores/gameStore";
@@ -261,20 +260,11 @@ export function GameUI({
       {/* Weather visual overlay (rain, drought, windstorm) */}
       <WeatherOverlay weatherType={currentWeather ?? "clear"} />
 
-      {/* Top HUD bar */}
-      <SafeAreaView style={styles.hudTop} pointerEvents="box-none">
-        <HUD
-          resources={resources}
-          level={level}
-          xpProgress={xpProgress}
-          gameTime={gameTime}
-          selectedTool={selectedTool}
-          showBuild={level >= 3}
-          onOpenMenu={onOpenMenu}
-          onOpenTools={onOpenTools}
-          onOpenBuild={() => setBuildPanelOpen(true)}
-        />
-      </SafeAreaView>
+      {/* Full FPS HUD overlay — self-contained, reads from ECS + Legend State */}
+      <HUD
+        onOpenMenu={onOpenMenu}
+        onOpenSeedSelect={() => setSeedSelectOpen(true)}
+      />
 
       {/* Weather forecast widget - below HUD */}
       {currentWeather && gameTime && (
@@ -453,12 +443,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 50,
-  },
-  hudTop: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
   },
   weatherForecast: {
     position: "absolute",

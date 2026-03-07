@@ -1260,3 +1260,8 @@ after each iteration and it's included in prompts for context.
   - **NpcComponent has a `name` field**: `entity.npc?.name` is the direct display name — no config lookup needed, unlike trees (need `getSpeciesById`).
   - **Kebab-case templateId formatting**: `templateId.split("-").map(capitalize).join(" ")` is the cleanest transform for structure names; no regex needed.
 ---
+
+- **Self-contained HUD pattern** (US-067): Move all Legend State reads from parent screen into HUD itself. Removes prop-drilling and simplifies `app/game/index.tsx`.
+  - **ECS snapshot in React Native land**: `const [playerEntity] = [...playerQuery]` — spread Miniplex query for a snapshot. Refreshes on every re-render driven by `gameTimeMicroseconds`.
+  - **Transitive reanimated mock chain**: Any sub-component importing `react-native-reanimated` (e.g. `ResourceBar`) pulls in `react-native-worklets` (ESM-only, not in jest transform). Fix: mock ALL local sub-components in test file to break the chain without touching `jest.config.js`.
+  - **Compass via atan2**: `Math.atan2(dx, -dz) * (180/Math.PI)`, normalized `((angle % 360) + 360) % 360`. Rotate unicode "↑" via `transform: [{ rotate: \`${bearing}deg\` }]`.
