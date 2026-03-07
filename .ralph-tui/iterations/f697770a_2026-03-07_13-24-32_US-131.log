@@ -1,0 +1,97 @@
+# Iteration 131 Log
+
+## Metadata
+
+- **Task ID**: US-131
+- **Task Title**: Create weather particle system
+- **Description**: As a player, I want rain (500 particles falling), snow (300 drifting), and wind particles driven by WeatherComponent so that weather is visible. See GAME_SPEC.md §12.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T19:24:32.026Z
+- **Ended At**: 2026-03-07T19:29:27.135Z
+- **Duration**: 4m 55s
+- **Input Tokens**: 96
+- **Output Tokens**: 16031
+- **Total Tokens**: 16127
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/atmosphere.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/weather*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/particle*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/weather.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/particles.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§12|§ 12|section 12|weatherParticle|weather particle|WeatherParticle[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/weather.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mweather|particle|rain|snow|wind[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+Let me read the existing water particles system as a pattern, and the GAME_SPEC section 36:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/waterParticles.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/waterParticles.test.ts[0m
+Now let me read the procedural config and GAME_SPEC section 36:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 36|### 36|Particle System|rain.*particle|snow.*particle|wind.*particle|500|300[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 36|### 36\.|§36|Particle System[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `waterParticles.ts` pattern is a clean seam: minimal ECS entity interface → pure builder functions sourced from config → tick function that manages emitter lifecycle in ECS. This pattern keeps everything testable without WebGL or React Three Fiber context. The weather system follows the same convention: config drives all tuning values (particle counts, sizes, gravity from spec §36.1), and `tickWeatherParticles` handles create/remove transitions on weather type change.
+`─────────────────────────────────────────────────`
+
+First, add rain/snow/wind emitter configs to `procedural.json`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m edit: "    "splash": {
+      "emissionRate": 15,
+      "l..." → "    "rain": {
+      "emissionRate": 250,
+      "li..."
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/weatherParticles.ts[0m "/**
+ * Weather particles system — rain, snow, and wind-driven particles.
+ *
+ * Spec §36.1:
+ *   Rain  : gravity 1.0, wind-affected, 500 max (also covers thunderstorm)
+ *   Snow  : gravity 0.3, wind-af... (6654 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Note `resolveParticleCategory` unifies "rain" and "thunderstorm" into the same emitter — thunderstorm lighting comes from a separate system (§36 separates the lightning flash effect). The builder takes `intensity` (0–1 from `WeatherComponent`) and scales `emissionRate` by it, while `maxParticles` stays fixed at the spec budget cap (500/300/100). This means a light drizzle emits 25 particles/s but can never exceed 500 alive at once.
+`─────────────────────────────────────────────────`
+
+Now write the tests:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/weatherParticles.test.ts[0m "/**
+ * Tests for weather particles system (Spec §36.1).
+ *
+ * Validates rain (500 max), snow (300 max), and wind/dust (100 max) emitters
+ * driven by WeatherComponent state.
+ */
+import { World } from ... (11008 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run weather particles tests $ npx jest --no-coverage game/systems/weatherParticles.test.ts 2>&1
+46/46 passing. Both tsc and jest are clean.
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md for append point $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-131 completion entry to progress.md $ "windstorm" → dust-type particles. Clear/fog → null (no particles). Single function is the testable ...
+[94m[TodoWrite][0m
+All done. Here's a summary:
+
+**Files created/modified:**
+- `game/systems/weatherParticles.ts` — new pure-function system (149 lines)
+- `game/systems/weatherParticles.test.ts` — 46 tests (all passing)
+- `config/game/procedural.json` — added `particles.rain`, `particles.snow`, `particles.wind` emitter configs
+
+**What was implemented:**
+- `buildRainEmitter(intensity)` — 500 max particles, gravity 1.0, wind-affected (§36.1)
+- `buildSnowEmitter(intensity)` — 300 max particles, gravity 0.3, wind-affected (§36.1)
+- `buildWindEmitter(intensity)` — 100 max particles (dust), gravity 0.1, wind-affected (§36.1)
+- `resolveParticleCategory(weatherType)` — maps WeatherComponent types to particle categories (rain+thunderstorm→rain, snow→snow, windstorm→wind, clear/fog→null)
+- `tickWeatherParticles(world, weather, playerPos, state)` — manages single emitter lifecycle per weather type, handles transitions and teardown
+
+**Quality gates:** `npx tsc --noEmit` ✓ (no errors) | `npx jest` ✓ (46/46 passing)
+
+<promise>COMPLETE</promise>

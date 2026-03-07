@@ -2457,3 +2457,14 @@ after each iteration and it's included in prompts for context.
   - **Single emitter per weather system**: Only one emitter entity lives in the world at a time. Category change triggers remove-old + spawn-new in the same tick — no risk of two emitters accumulating.
   - **Config-as-spec**: Adding rain/snow/wind under `particles` (not just `weather.particleCounts`) keeps the builder functions consistent with existing splash/bubbles pattern — `buildXEmitter` reads from `proceduralConfig.particles.X` exclusively.
 ---
+
+## 2026-03-07 - US-132
+- Work already complete — `game/systems/weather.test.ts` (20 tests) and `game/systems/weatherParticles.test.ts` (47 tests) both existed and were passing from prior US-131 work
+- All acceptance criteria met: 67 tests pass, `npx tsc --noEmit` → 0 errors
+- `weather.test.ts` covers: state initialization, growth/stamina multipliers per weather type, duration countdown, season-based probabilities (spring favors rain), deterministic seeding, and windstorm damage threshold
+- `weatherParticles.test.ts` covers: particle category mapping, emitter builders (gravity, maxParticles, windAffected, emissionRate scaling), tick lifecycle (create/swap/remove), and wind direction behavior
+- Files changed: none (already implemented)
+- **Learnings:**
+  - **Tests co-located with implementation in same US**: US-131 wrote both `weatherParticles.ts` and `weatherParticles.test.ts`. US-132 (pure test story) was therefore pre-satisfied. Always verify stop condition first.
+  - **Stop condition check**: When a test-only story comes after an implementation story that required tests, always run `npx jest --no-coverage --testPathPattern=<pattern>` first before writing anything.
+---
