@@ -24,6 +24,7 @@ import { TOOLS } from "@/game/config/tools";
 import { useGameLoop } from "@/game/hooks/useGameLoop";
 import { useInput } from "@/game/hooks/useInput";
 import { useInteraction } from "@/game/hooks/useInteraction";
+import { useRaycast } from "@/game/hooks/useRaycast";
 import { useWorldLoader } from "@/game/hooks/useWorldLoader";
 import { totalXpForLevel, useGameStore, xpToNext } from "@/game/stores/gameStore";
 import { ACHIEVEMENTS } from "@/game/systems/achievements";
@@ -43,6 +44,7 @@ import { computeTimeState, getLightIntensity, getSkyColors } from "@/game/system
 /** Null-rendering component that drives all game systems via useFrame. */
 function GameSystems() {
   useGameLoop();
+  useRaycast();
   return null;
 }
 

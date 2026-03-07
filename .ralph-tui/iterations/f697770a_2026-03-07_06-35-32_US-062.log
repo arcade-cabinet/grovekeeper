@@ -1,0 +1,158 @@
+# Iteration 62 Log
+
+## Metadata
+
+- **Task ID**: US-062
+- **Task Title**: Add tool swap animation
+- **Description**: As a player, I want a smooth animation when switching tools so that the transition feels polished. Lower current tool, swap model, raise new tool via anime.js tween. See GAME_SPEC.md §11.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T12:35:32.781Z
+- **Ended At**: 2026-03-07T12:47:42.065Z
+- **Duration**: 12m 9s
+- **Input Tokens**: 189
+- **Output Tokens**: 40433
+- **Total Tokens**: 40622
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Read[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (35394 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Grep,Glob,Bash[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|section 11|tool swap|toolSwap|swapTool[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*ToolViewModel*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components[0m pattern: [96m**/*tool*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m
+Now let me look at the game spec section 11 and existing anime.js usage:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m§11|tool swap|toolSwap|anime\.js|animejs|from "animejs"[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mselectedTool|setSelectedTool|tool[0m
+[94m[Bash][0m Find section 11 and tool swap references in GAME_SPEC.md $ grep -n "§11\|tool.*swap\|swap.*tool\|Lower.*tool\|raise.*tool\|lower.*tool" /Users/jbogaty/src/arca...
+[94m[Bash][0m Check if anime.js is in package.json $ grep -n "animejs\|anime.js\|\"anime\"\|from 'animejs'" /Users/jbogaty/src/arcade-cabinet/grovekeeper...
+[94m[Bash][0m Check animation-related packages in package.json $ grep -n "anime\|tween\|animation" /Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json
+[94m[Bash][0m Find section 11 and tool viewmodel content in GAME_SPEC.md $ grep -n "§ 11\|## 11\|^## §11\|^# 11\|Tool View\|ToolView\|held tool\|equip" /Users/jbogaty/src/arca...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json[0m
+[94m[Bash][0m Find anime.js usage in game directory $ grep -rn "animejs\|anime(" /Users/jbogaty/src/arcade-cabinet/grovekeeper/game --include="*.ts" --inc...
+[94m[Bash][0m Find swap/equip/transition references in GAME_SPEC.md $ grep -n "swap\|equip\|lower\|raise\|transition" /Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/G...
+[94m[Bash][0m Find tool animation references in GAME_SPEC.md $ grep -n "tool.*anim\|anim.*tool\|swap.*anim\|equip.*anim\|lower.*current\|raise.*new" /Users/jbogaty...
+[94m[Bash][0m Check if animejs is in node_modules $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules | grep anime 2>/dev/null || echo "anim...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolVisuals.json[0m
+[94m[Bash][0m Read the last 200 lines of progress.md $ tail -200 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+Now let me check the recent entries in progress.md for US-059 through US-061 (which this task depends on):
+[94m[Bash][0m Find US-059 through US-062 entries in progress.md $ grep -n "US-059\|US-060\|US-061\|US-062\|tool.*view\|viewmodel\|walk bob\|hand sway" /Users/jbogaty/...
+[94m[Bash][0m List all player component files $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/
+[94m[Bash][0m Read the top of progress.md for US-059 through US-061 entries $ sed -n '1,120p' /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+Let me check the TypeScript configuration and then look at the existing anime.js usage:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/tsconfig.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/npcAnimation.ts[0m
+[94m[Bash][0m Check NPC animation system for anime.js usage patterns $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAnimation.ts | head -30
+[94m[Bash][0m Check expo tsconfig base for module settings $ cat expo/tsconfig.base.json 2>/dev/null || cat node_modules/expo/tsconfig.base.json 2>/dev/null | gr...
+Let me check the Jest configuration and then look at how anime.js is handled:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+[94m[Bash][0m Check if animejs or its types are installed $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules | grep -E "^animejs$|^@types.animejs" ...
+I have enough context. Let me now implement the tool swap animation.
+
+`★ Insight ─────────────────────────────────────`
+- animejs v3 is NOT yet installed — needs `pnpm add animejs` as part of this task
+- The `ToolGLBModel` sub-component pattern was established to satisfy Rules of Hooks — `swapAnimRef` from `ToolViewModel` can be passed as a prop and read each frame without breaking this
+- `useState(selectedTool)` for `displayedToolId` is needed to trigger GLB unmount/remount at the bottom of the animation; the swap happens at the nadir (lowest point) and the new tool rises up
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Bash][0m Install animejs v3 $ pnpm add animejs@^3.2.2 2>&1 | tail -10
+[94m[Bash][0m Check animejs installation and structure $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/animejs/
+[94m[Bash][0m Check animejs package exports and types fields $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/animejs/package.json | grep -E '"main...
+[94m[Bash][0m Check animejs lib structure and module type $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/animejs/lib/ && cat /Users/jbogaty/src...
+[94m[Bash][0m Install anime.js type definitions $ pnpm add -D @types/animejs 2>&1 | tail -5
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit,Write[0m
+Now let me add the swap config to `toolVisuals.json`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolVisuals.json[0m edit: "{
+  "sway": {" → "{
+  "swap": {
+    "lowerY": 0.4,
+    "duration": 1..."
+[94m[TodoWrite][0m
+Now let me update `ToolViewModel.tsx` with the swap animation:
+
+`★ Insight ─────────────────────────────────────`
+- Using `useState(selectedTool)` for `displayedToolId` is the key — it controls which GLB is mounted, and calling `setDisplayedToolId` inside anime's `complete` callback triggers the React re-render that swaps the model at the lowest point of the animation
+- `swapAnimRef = useRef({ y: 0 })` persists across child remounts — when `ToolGLBModel` unmounts/remounts due to tool swap, the new instance inherits the current `-lowerY` position and anime.js is already tweening it back to 0
+- `buildSwapDownParams`/`buildSwapUpParams` are pure functions returning plain objects — testable without any anime.js or React context
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "import { useMemo, useRef } from "react";
+import ty..." → "import { useEffect, useMemo, useRef, useState } fr..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "interface SwayConfig {
+  readonly swayAmount: numb..." → "interface SwayConfig {
+  readonly swayAmount: numb..."
+Now add the pure functions for testing, and update the `isToolVisualEntry` guard:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "/** Narrows a config value to ToolVisualEntry (exc..." → "/** Narrows a config value to ToolVisualEntry (exc..."
+Now add the two exported pure functions for the swap animation:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "/**
+ * Returns the GLB path for a tool, or null if..." → "/**
+ * Builds anime.js params for the tool-lower p..."
+Now update `ToolGLBModelProps` and the `useFrame` to support `swapAnimRef`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "interface ToolGLBModelProps {
+  glbPath: string;
+ ..." → "interface ToolGLBModelProps {
+  glbPath: string;
+ ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "const ToolGLBModel = ({ glbPath, offset, scale, mo..." → "const ToolGLBModel = ({ glbPath, offset, scale, mo..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "    group.position.set(
+      (offset[0] ?? 0) + s..." → "    group.position.set(
+      (offset[0] ?? 0) + s..."
+Now update the `ToolViewModel` component to add the swap animation logic:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "/**
+ * ToolViewModel renders the player's held too..." → "/**
+ * ToolViewModel renders the player's held too..."
+Now let's verify the updated file looks correct:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m
+Good — exactly 300 lines. Now let me add the tests for the two new pure functions:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m edit: "jest.mock("@react-three/drei", () => ({
+  useGLTF:..." → "jest.mock("animejs", () => ({
+  __esModule: true,
+..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m edit: "import toolVisuals from "@/config/game/toolVisuals..." → "import toolVisuals from "@/config/game/toolVisuals..."
+Now add the test suites for `buildSwapDownParams` and `buildSwapUpParams`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m edit: "describe("computeSwayOffset (Spec §11)", () => {" → "describe("buildSwapDownParams (Spec §11)", () => {..."
+Now let's run the quality checks:
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run ToolViewModel tests $ npx jest --no-coverage --testPathPattern "ToolViewModel" 2>&1
+All 37 tests pass. Let me run the full test suite to make sure nothing regressed:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+1993 tests pass (up from 1983, +10 new tests). Now let me update `progress.md`:
+[94m[TodoWrite][0m
+[94m[Bash][0m Append US-062 entry to progress.md $ total 1993 tests, 0 failures - **Files changed:**   - `package.json` — added `animejs`, `@types/anim...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The `useState`/`useEffect` split is the key architectural insight: React state controls *which* GLB is mounted (declarative), while anime.js drives *when* the swap happens (imperative). These two concerns must stay in separate layers — trying to merge them causes React/animation lifecycle conflicts.
+- The new `ToolGLBModel` instance starts already at `-lowerY` when it mounts because `swapAnimRef.current.y` is still at its nadir from the DOWN tween. The UP tween is already running by then. No "start from zero" reset is needed.
+- `buildSwapDown/UpParams` returning plain `{ targets, y, duration, easing, complete }` objects (not anime.js types) is the same "testable seam" pattern used throughout this codebase (`resolveGLBPath`, `computeSwayOffset`, etc.) — pure functions that can be unit tested without any runtime context.
+`─────────────────────────────────────────────────`
+
+**US-062 complete.** Summary of changes:
+
+| File | Change |
+|------|--------|
+| `package.json` | +`animejs@^3.2.2`, +`@types/animejs` |
+| `config/game/toolVisuals.json` | Added `swap: { lowerY: 0.4, duration: 150 }` |
+| `components/player/ToolViewModel.tsx` | `SwapConfig`, `buildSwapDownParams`, `buildSwapUpParams`, `useState`/`useEffect` swap state machine, `swapAnimRef` threaded through to `useFrame` |
+| `components/player/ToolViewModel.test.ts` | animejs mock + 10 new tests |
+
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 1993 tests, 0 failures
+
+<promise>COMPLETE</promise>

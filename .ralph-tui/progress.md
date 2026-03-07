@@ -1185,3 +1185,16 @@ after each iteration and it's included in prompts for context.
   - **Mock animejs in Jest**: `jest.mock("animejs", () => ({ __esModule: true, default: jest.fn(() => ({ pause: jest.fn() })) }))`. The `__esModule: true` flag is required so `import anime from "animejs"` resolves the `default` export correctly in Jest's CommonJS transform.
   - **Effect deps `[selectedTool]` only**: Intentionally omit `displayedToolId` — the effect should only re-trigger when the user selects a new tool, not when the internal swap completes. Biome-ignore comment added for lint compliance.
 ---
+
+## 2026-03-07 - US-063
+- Implemented `game/hooks/useRaycast.ts` — per-frame center-screen raycast using Three.js `Raycaster.setFromCamera(Vector2(0,0), camera)`
+- Created `game/hooks/useRaycast.test.ts` — 19 tests covering pure functions and constants
+- Wired `useRaycast()` into `GameSystems` component in `app/game/index.tsx`
+- Files changed: `game/hooks/useRaycast.ts` (new), `game/hooks/useRaycast.test.ts` (new), `app/game/index.tsx` (import + hook call)
+- **Learnings:**
+  - **Three.js Raycaster, not Rapier castRay, for entity detection**: Tree/NPC/structure meshes have no Rapier colliders — only terrain does. `Raycaster.setFromCamera(new Vector2(0,0), camera)` fires from camera position along the exact forward vector (screen center), which satisfies "Rapier raycast from camera" spec intent.
+  - **InstancedMesh fallback via spatial lookup**: `StaticModelInstances` (used by StructureInstances) renders as `InstancedMesh` without per-instance `userData.entityId`. Solved with a spatial `findNearestStructure` fallback that searches `structuresQuery` by proximity to the hit point.
+  - **Pure function seam with injected iterables**: `resolveEntityById(id, trees, npcs, structures)` and `findNearestStructure(point, structures, maxDist)` take `Iterable<Entity>` params instead of reading module-level queries directly — same testability pattern as `isGrounded` in `useJump.ts`. Tests pass plain arrays, no Miniplex mock needed.
+  - **Module-level Three.js objects in tested hooks**: `const _raycaster = new THREE.Raycaster()` at module level is fine — Jest hoists `jest.mock("three", ...)` above all imports, so the mock constructor fires when the module is first loaded.
+  - **`GameSystems` is the right host for frame hooks**: The null-rendering component inside `<Physics>` (inside `<Canvas>`) is the canonical place to add per-frame hooks that need R3F context without rendering anything.
+---
