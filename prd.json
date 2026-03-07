@@ -2266,8 +2266,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 138,
-      "passes": false,
-      "notes": "Phase 11: Tutorial + Menu + Polish. NewGameModal.tsx (273 lines) and SeedSelect.tsx (283 lines) already exist."
+      "passes": true,
+      "notes": "Phase 11: Tutorial + Menu + Polish. NewGameModal.tsx (273 lines) and SeedSelect.tsx (283 lines) already exist.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-139",
@@ -2858,6 +2859,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T19:53:16.422Z"
+    "updatedAt": "2026-03-07T20:03:26.503Z"
   }
 }

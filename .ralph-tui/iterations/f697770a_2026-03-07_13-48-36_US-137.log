@@ -1,0 +1,137 @@
+# Iteration 137 Log
+
+## Metadata
+
+- **Task ID**: US-137
+- **Task Title**: Create main menu screen
+- **Description**: As a player, I want a main menu with vertical gradient background, logo SVG, tagline, and buttons (New Grove, Continue if save exists, Settings) so that the game has a polished entry point. See GAME_S...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T19:48:36.361Z
+- **Ended At**: 2026-03-07T19:53:16.421Z
+- **Duration**: 4m 40s
+- **Input Tokens**: 2221
+- **Output Tokens**: 14703
+- **Total Tokens**: 16924
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/theme.json[0m
+
+[91m[Error: File content (78686 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/MainMenu*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+`MainMenu.tsx` already exists and looks complete. Let me check related components and if tests exist.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/*.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*MainMenu*.test.*[0m
+[94m[ToolSearch][0m query: [93mselect:Grep,Bash[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§26|section 26|## 26\.|### 26\.[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mapp/**/*.tsx[0m
+The `MainMenu.tsx` exists but is missing the Settings button. `app/index.tsx` is already wired. I need to:
+1. Add Settings button to `MainMenu.tsx`
+2. Extract pure logic to `.ts` for testability
+3. Write tests
+4. Update `app/index.tsx`
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The codebase's key pattern: **JSX runtime chain in `.tsx` files crashes tests** because `react-native-css-interop` calls `Appearance.getColorScheme()` at module init. The fix is to extract all testable pure logic to a plain `.ts` file with zero React/RN imports — tests import from `.ts`, components import and re-export from `.ts`.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Edit[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mainMenuLogic.ts[0m "/**
+ * Pure logic for the MainMenu component (Spec §26).
+ *
+ * Extracted to a plain .ts file so it can be unit-tested without pulling in
+ * the React Native JSX runtime chain (which crashes in Jest).
+... (1011 chars)"
+[94m[TodoWrite][0m
+Now add the Settings button and `onSettings` prop to `MainMenu.tsx`, also importing from the new logic file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m edit: "import { Button } from "@/components/ui/button";
+i..." → "import { Button } from "@/components/ui/button";
+i..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m edit: "export interface MainMenuProps {
+  treesPlanted: n..." → "export interface MainMenuProps {
+  treesPlanted: n..."
+Now update the main component to use the logic functions and add the Settings button:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m edit: "export function MainMenu({ treesPlanted, onContinu..." → "export function MainMenu({ treesPlanted, onContinu..."
+Now update the component body to use `saveExists` instead of `hasSave` local var, and add Settings button. Let me read the current state first:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m
+Now update the JSX to use `saveExists` and the extracted logic functions, then add the Settings button:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m edit: "        {/* Buttons */}
+        <View className="z..." → "        {/* Buttons */}
+        <View className="z..."
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mainMenuLogic.test.ts[0m "/**
+ * Tests for MainMenu pure logic (Spec §26).
+ *
+ * Imports from mainMenuLogic.ts (plain .ts) to avoid triggering the
+ * react-native-css-interop JSX runtime crash in Jest.
+ */
+
+import {
+  hasSave,... (1774 chars)"
+[94m[TodoWrite][0m
+Now add the `handleSettings` callback to `app/index.tsx`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/index.tsx[0m edit: "  const handleNewGrove = useCallback(() => {
+    u..." → "  const handleNewGrove = useCallback(() => {
+    u..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+The TypeScript error is expected — Expo Router rejects `/settings` because no screen exists. I need to create a real settings screen:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mdifficulty|musicVolume|sfxVolume|audio|reducedMotion[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/_layout.tsx[0m
+Now let me look at the button component to understand the `variant="ghost"` usage:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/ui/button*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/ui/button.tsx[0m
+`★ Insight ─────────────────────────────────────`
+Expo Router uses **typed routes** — `router.push("/settings")` fails TypeScript if `app/settings.tsx` doesn't exist. The route type is auto-generated from the file system. Creating a real screen (not a stub) is the right fix because the Settings button is a real feature that needs to navigate somewhere, and the project's "no stubs" rule prevents a placeholder.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/settings.tsx[0m "import { LinearGradient } from "expo-linear-gradient";
+import { Stack, useRouter } from "expo-router";
+import { useCallback } from "react";
+import { ScrollView, TouchableOpacity, View } from "react-na... (3914 chars)"
+[94m[Bash][0m TypeScript type check after adding settings screen $ npx tsc --noEmit 2>&1 | head -60
+TypeScript passes. Now run the tests:
+[94m[Bash][0m Run mainMenuLogic tests only $ npx jest --no-coverage --testPathPattern="mainMenuLogic" 2>&1
+All 10 tests pass. Now run the full test suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+143 suites, 3337 tests — all pass. Let me mark the final task complete:
+[94m[TodoWrite][0m
+Now append the progress log:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-136" → "---
+
+## 2026-03-07 - US-137
+- Implemented main men..."
+All acceptance criteria satisfied:
+
+| Criterion | Status |
+|-----------|--------|
+| `app/index.tsx` renders main menu | ✅ already wired, now passes `onSettings` |
+| Vertical gradient background | ✅ `LinearGradient` in `MainMenu.tsx` |
+| Logo SVG and tagline | ✅ `<Logo>` + tagline text |
+| Buttons: New Grove, Continue (if save), Settings | ✅ Settings button added |
+| Brand styling | ✅ forest green/parchment palette throughout |
+| `npx tsc --noEmit` passes | ✅ 0 errors |
+| `npx jest --no-coverage` passes | ✅ 3337 tests, 143 suites |
+
+Files changed:
+- `components/game/mainMenuLogic.ts` — new pure logic
+- `components/game/mainMenuLogic.test.ts` — 10 tests
+- `components/game/MainMenu.tsx` — Settings button + logic import
+- `app/index.tsx` — `handleSettings` + prop pass-through
+- `app/settings.tsx` — new real settings screen (difficulty selector)
+
+<promise>COMPLETE</promise>

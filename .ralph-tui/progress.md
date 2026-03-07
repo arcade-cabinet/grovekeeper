@@ -2535,3 +2535,16 @@ after each iteration and it's included in prompts for context.
   - **Same pattern as US-132**: Test-only stories (US-132, US-134) that follow implementation stories (US-131, US-133) should always check stop condition first — implementation stories in this project include tests as part of the work.
   - **Slot boundary tests are high-value**: Tests for `h=5 → dawn` (hourStart inclusive) and `h=7 → morning` (exclusive from dawn) pin the config semantics so a future config edit is immediately caught.
 ---
+
+## 2026-03-07 - US-138
+- Rewrote `components/game/NewGameModal.tsx` (273→243 lines): replaced the 5-tile difficulty system with Exploration/Survival mode selector + Adj Adj Noun seed phrase input + shuffle button + Survival sub-difficulty grid (Gentle/Standard/Harsh/Ironwood). `onStart` now receives a `NewGameConfig` struct (`worldSeed`, `gameMode`, `survivalDifficulty`, `permadeath`).
+- Updated `components/game/SeedSelect.tsx`: added optional `worldSeed?: string` prop; displays a compact world seed badge (Adj Adj Noun format) in the species picker header when provided.
+- Updated `components/game/index.ts`: replaced `DifficultyTier` barrel export with `GameMode`, `SurvivalDifficulty`, `NewGameConfig`.
+- Created `components/game/NewGameModal.test.ts`: 9 tests covering `NewGameConfig` type shape, all 4 survival difficulties, Ironwood permadeath enforcement, Exploration permadeath=false, and `generateSeedPhrase` integration.
+- Files changed: `NewGameModal.tsx`, `SeedSelect.tsx`, `components/game/index.ts`, `NewGameModal.test.ts` (new)
+- **Learnings:**
+  - **`DifficultyTier` removal pattern**: When a type is exported via the barrel `index.ts` and consumed externally, update `index.ts` first before changing the source file — TypeScript catches dangling exports immediately.
+  - **TSX component tests → plain .ts**: The JSX runtime crash pattern (via `react-native-css-interop`) means UI component tests must live in `.ts` files that import only types and pure helpers. `NewGameModal.test.ts` imports `type NewGameConfig` and `generateSeedPhrase` — no JSX, no mock overhead.
+  - **Shuffle button uses `generateSeedPhrase(Date.now())`**: This is the right call for a new random phrase. `scopedRNG` is for deterministic subsystem streams within a seed, not for picking a new seed.
+  - **`worldSeed` prop stays optional in SeedSelect**: The species picker is used in-game where the world seed is always available via the store, but keeping it optional means zero migration cost for existing call sites.
+---

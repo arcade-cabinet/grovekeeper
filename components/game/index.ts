@@ -56,7 +56,12 @@ export type { TradeDialogProps } from "./TradeDialog";
 export { TradeDialog } from "./TradeDialog";
 export type { WeatherForecastProps } from "./WeatherForecast";
 export { WeatherForecast } from "./WeatherForecast";
-export type { DifficultyTier, NewGameModalProps } from "./NewGameModal";
+export type {
+  GameMode,
+  NewGameConfig,
+  NewGameModalProps,
+  SurvivalDifficulty,
+} from "./NewGameModal";
 export { NewGameModal } from "./NewGameModal";
 export type { RulesModalProps } from "./RulesModal";
 export { RulesModal } from "./RulesModal";

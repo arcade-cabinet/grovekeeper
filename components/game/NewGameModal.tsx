@@ -1,67 +1,122 @@
 /**
- * NewGameModal -- Difficulty selection UI for starting a new grove.
+ * NewGameModal -- game mode + world seed + difficulty selection for a new grove.
  *
- * Mobile-first layout: 3 tiles top row (Explore/Normal/Hard),
- * 2 tiles bottom row (Brutal/Ultra Brutal). Shows description panel
- * and permadeath toggle based on selected difficulty.
+ * US-138: Updated for Exploration/Survival mode selection, Adj Adj Noun seed
+ * phrases (game/utils/seedWords.ts), shuffle button, and Survival sub-difficulty
+ * selector (Gentle/Standard/Harsh/Ironwood). See GAME_SPEC.md §26, §37.
  */
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, Switch, View } from "react-native";
+import { Modal, Pressable, ScrollView, Switch, TextInput, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
+import { generateSeedPhrase } from "@/game/utils/seedWords";
 
-export interface DifficultyTier {
-  id: string;
-  name: string;
-  tagline: string;
-  description: string;
-  color: string;
-  icon: string;
-  permadeathForced: "on" | "off" | "optional";
-  growthSpeedMult: number;
-  resourceYieldMult: number;
-  exposureEnabled: boolean;
-  disasterFrequency: number;
-  buildingDegradationRate: number;
-  cropDiseaseEnabled: boolean;
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export type GameMode = "exploration" | "survival";
+export type SurvivalDifficulty = "gentle" | "standard" | "harsh" | "ironwood";
+
+/** Game config produced by the modal and fed into gameStore.resetGame(). */
+export interface NewGameConfig {
+  worldSeed: string;
+  gameMode: GameMode;
+  survivalDifficulty: SurvivalDifficulty;
+  permadeath: boolean;
 }
 
 export interface NewGameModalProps {
   open: boolean;
-  difficultyTiers: DifficultyTier[];
   onClose: () => void;
-  onStart: (difficulty: string, permadeath: boolean) => void;
+  onStart: (config: NewGameConfig) => void;
 }
 
-const ICONS: Record<string, string> = {
-  leaf: "\u{1F33F}",
-  sun: "\u2600\uFE0F",
-  flame: "\u{1F525}",
-  skull: "\u{1F480}",
-  zap: "\u26A1",
-};
+// ---------------------------------------------------------------------------
+// Survival tier data (Spec §37.2)
+// ---------------------------------------------------------------------------
 
-export function NewGameModal({ open, difficultyTiers, onClose, onStart }: NewGameModalProps) {
-  const [selected, setSelected] = useState<DifficultyTier>(
-    difficultyTiers.find((t) => t.id === "normal") ?? difficultyTiers[0],
-  );
+interface SurvivalTier {
+  id: SurvivalDifficulty;
+  name: string;
+  icon: string;
+  hearts: number;
+  tagline: string;
+  color: string;
+  permadeathForced: "on" | "off" | "optional";
+}
+
+const SURVIVAL_TIERS: SurvivalTier[] = [
+  {
+    id: "gentle",
+    name: "Gentle",
+    icon: "\u{1F331}",
+    hearts: 7,
+    tagline: "Forgiving survival",
+    color: "#4CAF50",
+    permadeathForced: "off",
+  },
+  {
+    id: "standard",
+    name: "Standard",
+    icon: "\u{1F33F}",
+    hearts: 5,
+    tagline: "The intended experience",
+    color: "#2196F3",
+    permadeathForced: "optional",
+  },
+  {
+    id: "harsh",
+    name: "Harsh",
+    icon: "\u{1F525}",
+    hearts: 4,
+    tagline: "Nature fights back",
+    color: "#FF9800",
+    permadeathForced: "optional",
+  },
+  {
+    id: "ironwood",
+    name: "Ironwood",
+    icon: "\u{1F480}",
+    hearts: 3,
+    tagline: "One bad winter ends it all",
+    color: "#F44336",
+    permadeathForced: "on",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
+  const [seedPhrase, setSeedPhrase] = useState(() => generateSeedPhrase());
+  const [gameMode, setGameMode] = useState<GameMode>("exploration");
+  const [survivalDifficulty, setSurvivalDifficulty] = useState<SurvivalDifficulty>("standard");
   const [permadeath, setPermadeath] = useState(false);
 
-  const handleSelect = (tier: DifficultyTier) => {
-    setSelected(tier);
-    // Reset permadeath based on forced state
+  const handleShuffle = () => {
+    setSeedPhrase(generateSeedPhrase(Date.now()));
+  };
+
+  const handleModeSelect = (mode: GameMode) => {
+    setGameMode(mode);
+    if (mode === "exploration") setPermadeath(false);
+  };
+
+  const handleTierSelect = (tier: SurvivalTier) => {
+    setSurvivalDifficulty(tier.id);
     if (tier.permadeathForced === "on") setPermadeath(true);
-    else setPermadeath(false);
+    else if (tier.permadeathForced === "off") setPermadeath(false);
   };
 
   const handleStart = () => {
-    onStart(selected.id, permadeath);
+    onStart({ worldSeed: seedPhrase, gameMode, survivalDifficulty, permadeath });
   };
 
-  // Split tiers into rows: top 3, bottom 2
-  const topRow = difficultyTiers.slice(0, 3);
-  const bottomRow = difficultyTiers.slice(3);
+  const activeTier = SURVIVAL_TIERS.find((t) => t.id === survivalDifficulty) ?? SURVIVAL_TIERS[1];
+  const showPermadeath = gameMode === "survival" && activeTier.permadeathForced !== "off";
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
@@ -73,106 +128,104 @@ export function NewGameModal({ open, difficultyTiers, onClose, onStart }: NewGam
             showsVerticalScrollIndicator={false}
           >
             {/* Header */}
-            <Text className="mb-3 text-center font-heading text-lg font-bold text-soil-dark">
-              Choose Your Challenge
+            <Text className="mb-4 text-center font-heading text-lg font-bold text-soil-dark">
+              New Grove
             </Text>
 
-            {/* Top row: Explore, Normal, Hard */}
-            <View className="mb-2 flex-row gap-2">
-              {topRow.map((tier) => (
-                <DifficultyTile
-                  key={tier.id}
-                  tier={tier}
-                  isSelected={selected.id === tier.id}
-                  onSelect={() => handleSelect(tier)}
+            {/* World Seed -- Adj Adj Noun phrase */}
+            <View className="mb-4">
+              <Text className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                World Seed
+              </Text>
+              <View className="flex-row items-center gap-2 rounded-xl border-2 border-forest-green/30 bg-white px-3 py-2">
+                <TextInput
+                  className="flex-1 text-base text-soil-dark"
+                  value={seedPhrase}
+                  onChangeText={setSeedPhrase}
+                  accessibilityLabel="World seed phrase"
+                  placeholder="Adjective Adjective Noun"
                 />
-              ))}
+                <Pressable
+                  onPress={handleShuffle}
+                  className="min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-forest-green/10"
+                  accessibilityLabel="Shuffle seed phrase"
+                >
+                  <Text className="text-base">{"\u{1F500}"}</Text>
+                </Pressable>
+              </View>
+              <Text className="mt-1 text-center text-[10px] text-gray-400">
+                Your world is generated from this phrase
+              </Text>
             </View>
 
-            {/* Bottom row: Brutal, Ultra Brutal */}
-            <View className="mb-3 flex-row gap-2">
-              {bottomRow.map((tier) => (
-                <DifficultyTile
-                  key={tier.id}
-                  tier={tier}
-                  isSelected={selected.id === tier.id}
-                  onSelect={() => handleSelect(tier)}
+            {/* Game Mode selector */}
+            <View className="mb-4">
+              <Text className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Game Mode
+              </Text>
+              <View className="flex-row gap-2">
+                <ModeButton
+                  label="Exploration"
+                  icon="\u{1F333}"
+                  tagline="Cozy, no survival pressure"
+                  isSelected={gameMode === "exploration"}
+                  color="#4CAF50"
+                  onPress={() => handleModeSelect("exploration")}
                 />
-              ))}
+                <ModeButton
+                  label="Survival"
+                  icon="\u2694\uFE0F"
+                  tagline="Hearts, hunger, danger"
+                  isSelected={gameMode === "survival"}
+                  color="#E53935"
+                  onPress={() => handleModeSelect("survival")}
+                />
+              </View>
             </View>
 
-            {/* Description panel */}
-            <View
-              className="mb-3 rounded-lg bg-white p-3"
-              style={{ borderWidth: 2, borderColor: `${selected.color}40` }}
-            >
-              <View className="mb-1 flex-row items-center gap-2">
-                <Text className="text-lg">{ICONS[selected.icon] ?? ""}</Text>
-                <Text className="text-base font-bold" style={{ color: selected.color }}>
-                  {selected.name}
+            {/* Survival sub-difficulty (Spec §37.2) */}
+            {gameMode === "survival" && (
+              <View className="mb-4">
+                <Text className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Difficulty
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {SURVIVAL_TIERS.map((tier) => (
+                    <SubDifficultyTile
+                      key={tier.id}
+                      tier={tier}
+                      isSelected={survivalDifficulty === tier.id}
+                      onSelect={() => handleTierSelect(tier)}
+                    />
+                  ))}
+                </View>
+                <Text className="mt-2 text-center text-xs text-gray-500">
+                  {activeTier.hearts}
+                  {"\u2665"} \u00B7 {activeTier.tagline}
                 </Text>
               </View>
-              <Text className="text-xs leading-5 text-gray-600">{selected.description}</Text>
+            )}
 
-              {/* Feature summary */}
-              <View className="mt-2 flex-row flex-wrap">
-                <View className="w-1/2 pr-1.5">
-                  <FeatureRow label="Growth" value={`${selected.growthSpeedMult}x`} />
+            {/* Permadeath toggle (Harsh / Ironwood only) */}
+            {showPermadeath && (
+              <View className="mb-4 flex-row items-center justify-between rounded-lg border border-gray-300 bg-white p-3">
+                <View className="mr-3 shrink">
+                  <Text className="text-sm font-semibold text-soil-dark">Permadeath</Text>
+                  <Text className="text-[11px] text-gray-500">
+                    {activeTier.permadeathForced === "on"
+                      ? "Always on for Ironwood"
+                      : "Optional \u2014 death is permanent"}
+                  </Text>
                 </View>
-                <View className="w-1/2 pl-1.5">
-                  <FeatureRow label="Yields" value={`${selected.resourceYieldMult}x`} />
-                </View>
-                <View className="w-1/2 pr-1.5">
-                  <FeatureRow
-                    label="Exposure"
-                    value={selected.exposureEnabled ? "Active" : "Off"}
-                  />
-                </View>
-                <View className="w-1/2 pl-1.5">
-                  <FeatureRow
-                    label="Disasters"
-                    value={
-                      selected.disasterFrequency > 0
-                        ? `${selected.disasterFrequency}/yr`
-                        : "None"
-                    }
-                  />
-                </View>
-                <View className="w-1/2 pr-1.5">
-                  <FeatureRow
-                    label="Building Decay"
-                    value={
-                      selected.buildingDegradationRate > 0
-                        ? `${selected.buildingDegradationRate}%/season`
-                        : "None"
-                    }
-                  />
-                </View>
-                <View className="w-1/2 pl-1.5">
-                  <FeatureRow
-                    label="Diseases"
-                    value={selected.cropDiseaseEnabled ? "Active" : "None"}
-                  />
-                </View>
+                <Switch
+                  value={permadeath}
+                  onValueChange={setPermadeath}
+                  disabled={activeTier.permadeathForced === "on"}
+                  trackColor={{ false: "#D1D5DB", true: "#2D5A27" }}
+                  thumbColor="#FFFFFF"
+                />
               </View>
-            </View>
-
-            {/* Permadeath toggle */}
-            <View className="mb-3 flex-row items-center justify-between rounded-lg border border-gray-300 bg-white p-3">
-              <View className="mr-3 shrink">
-                <Text className="text-sm font-semibold text-soil-dark">Permadeath</Text>
-                <Text className="text-[11px] text-gray-500">
-                  {permadeathLabel(selected.permadeathForced)}
-                </Text>
-              </View>
-              <Switch
-                value={permadeath}
-                onValueChange={setPermadeath}
-                disabled={selected.permadeathForced !== "optional"}
-                trackColor={{ false: "#D1D5DB", true: "#2D5A27" }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
+            )}
 
             {/* Actions */}
             <View className="flex-row gap-2 pt-1">
@@ -191,7 +244,7 @@ export function NewGameModal({ open, difficultyTiers, onClose, onStart }: NewGam
                   accessibilityLabel="Begin Your Grove"
                 >
                   <LinearGradient
-                    colors={[selected.color, `${selected.color}dd`]}
+                    colors={["#2D5A27", "#4CAF5099"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     className="absolute inset-0"
@@ -207,67 +260,73 @@ export function NewGameModal({ open, difficultyTiers, onClose, onStart }: NewGam
   );
 }
 
-// --- Helpers ---
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
 
-function permadeathLabel(forced: string): string {
-  if (forced === "on") return "Always on for this difficulty";
-  if (forced === "off") return "Disabled for this difficulty";
-  return "Optional -- death is permanent";
-}
-
-// --- Sub-components ---
-
-function DifficultyTile({
-  tier,
+function ModeButton({
+  label,
+  icon,
+  tagline,
   isSelected,
-  onSelect,
+  color,
+  onPress,
 }: Readonly<{
-  tier: DifficultyTier;
+  label: string;
+  icon: string;
+  tagline: string;
   isSelected: boolean;
-  onSelect: () => void;
+  color: string;
+  onPress: () => void;
 }>) {
-  const isRecommended = tier.id === "normal";
-
   return (
     <Pressable
-      accessibilityLabel={`${tier.name} difficulty${isRecommended ? " (Recommended)" : ""}: ${tier.tagline}`}
-      className="relative min-h-[72px] flex-1 items-center justify-center rounded-lg p-2"
+      className="flex-1 items-center justify-center rounded-xl p-3"
       style={{
-        backgroundColor: isSelected ? `${tier.color}15` : "#FFFFFF",
+        backgroundColor: isSelected ? `${color}18` : "#FFFFFF",
         borderWidth: 2,
-        borderColor: isSelected ? tier.color : "#E0E0E0",
-        shadowColor: isSelected ? tier.color : "transparent",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: isSelected ? 0.3 : 0,
-        shadowRadius: 4,
-        elevation: isSelected ? 4 : 0,
+        borderColor: isSelected ? color : "#E0E0E0",
+        minHeight: 80,
       }}
-      onPress={onSelect}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label} mode`}
     >
-      {isRecommended && (
-        <View
-          className="absolute -top-2 self-center rounded-full px-1.5 py-0.5"
-          style={{ backgroundColor: tier.color }}
-        >
-          <Text className="text-[9px] font-bold text-white">Recommended</Text>
-        </View>
-      )}
-      <Text className="mb-0.5 text-xl">{ICONS[tier.icon] ?? ""}</Text>
-      <Text
-        className="text-xs font-bold"
-        style={{ color: isSelected ? tier.color : "#3E2723" }}
-      >
-        {tier.name}
+      <Text className="mb-0.5 text-2xl">{icon}</Text>
+      <Text className="text-sm font-bold" style={{ color: isSelected ? color : "#3E2723" }}>
+        {label}
       </Text>
+      <Text className="mt-0.5 text-center text-[10px] text-gray-500">{tagline}</Text>
     </Pressable>
   );
 }
 
-function FeatureRow({ label, value }: Readonly<{ label: string; value: string }>) {
+function SubDifficultyTile({
+  tier,
+  isSelected,
+  onSelect,
+}: Readonly<{
+  tier: SurvivalTier;
+  isSelected: boolean;
+  onSelect: () => void;
+}>) {
   return (
-    <View className="flex-row justify-between py-0.5">
-      <Text className="text-[11px] text-gray-500">{label}</Text>
-      <Text className="text-[11px] font-medium text-gray-700">{value}</Text>
-    </View>
+    <Pressable
+      className="items-center justify-center rounded-lg p-2"
+      style={{
+        width: "47%",
+        backgroundColor: isSelected ? `${tier.color}15` : "#FFFFFF",
+        borderWidth: 2,
+        borderColor: isSelected ? tier.color : "#E0E0E0",
+        minHeight: 64,
+      }}
+      onPress={onSelect}
+      accessibilityLabel={`${tier.name}: ${tier.tagline}`}
+    >
+      <Text className="text-lg">{tier.icon}</Text>
+      <Text className="text-xs font-bold" style={{ color: isSelected ? tier.color : "#3E2723" }}>
+        {tier.name}
+      </Text>
+    </Pressable>
   );
 }

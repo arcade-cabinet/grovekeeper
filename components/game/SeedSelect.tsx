@@ -43,6 +43,8 @@ export interface SeedSelectProps {
   selectedSpecies: string;
   onSelect: (speciesId: string) => void;
   onClose: () => void;
+  /** Active world seed phrase (Adj Adj Noun). Shown as a header badge when provided. */
+  worldSeed?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +117,7 @@ export function SeedSelect({
   selectedSpecies,
   onSelect,
   onClose,
+  worldSeed,
 }: SeedSelectProps) {
   if (!open) return null;
 
@@ -142,6 +145,15 @@ export function SeedSelect({
               <Icon as={XIcon} size={20} className="text-soil-dark" />
             </Pressable>
           </View>
+
+          {/* World seed badge -- Adj Adj Noun phrase (Spec §3.1) */}
+          {worldSeed ? (
+            <View className="mx-4 mb-2 mt-1 rounded-lg bg-forest-green/10 px-3 py-1.5">
+              <Text className="text-center text-[11px] text-forest-green">
+                {"\u{1F331}"} World: {worldSeed}
+              </Text>
+            </View>
+          ) : null}
 
           {/* Species grid - 2 columns */}
           <ScrollView className="px-3 py-3">
