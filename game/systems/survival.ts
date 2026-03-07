@@ -93,8 +93,38 @@ export function tickHeartsFromExposure(
 }
 
 // ---------------------------------------------------------------------------
+// Hearts — death check — Spec §12.3
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns true when hearts reach zero (player death trigger).
+ * Spec §12.3: 0 hearts = death. Drop carried resources, respawn at last campfire.
+ */
+export function isPlayerDead(health: HealthComponent): boolean {
+  return health.current <= 0;
+}
+
+// ---------------------------------------------------------------------------
 // Stamina — Spec §12.1
 // ---------------------------------------------------------------------------
+
+/**
+ * Compute the effective stamina regen multiplier based on hunger state.
+ * Spec §12.1: regen rate modified by difficulty + hunger.
+ * Spec §12.2: 0 hunger = no stamina regen (returns 0).
+ * Spec §12.2: Well Fed (>80) = +10% regen bonus.
+ * Exploration mode (affectsGameplay=false) bypasses hunger gating.
+ */
+export function computeStaminaRegenMult(
+  hunger: number,
+  baseRegenMult: number,
+  affectsGameplay: boolean = true,
+): number {
+  if (!affectsGameplay) return baseRegenMult;
+  if (hunger <= 0) return 0;
+  if (isWellFed(hunger)) return baseRegenMult * 1.1;
+  return baseRegenMult;
+}
 
 /**
  * Drain stamina for a player action, scaled by difficulty multiplier.

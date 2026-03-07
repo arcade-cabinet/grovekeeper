@@ -90,6 +90,23 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-090
+- Added `isPlayerDead(health)` to `game/systems/survival.ts` — returns `health.current <= 0` (Spec §12.3)
+- Added `computeStaminaRegenMult(hunger, baseRegenMult, affectsGameplay)` to `game/systems/survival.ts` — returns 0 at starvation, 1.1× bonus when Well Fed, bypasses hunger gating in Explore mode (Spec §12.1, §12.2)
+- Updated `game/systems/survival.test.ts` — added 17 tests (total now 48):
+  - 5 tests for `isPlayerDead` (zero hearts, above zero, full, triggered by starvation, triggered by exposure)
+  - 7 tests for `computeStaminaRegenMult` (zero hunger blocks regen, normal, Well Fed bonus, difficulty mult, combined mult, Explore mode, hunger=1 not starving)
+  - 5 tests for drain rates matching difficulty config (all 5 tiers: explore/normal/hard/brutal/ultra-brutal)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2404 tests, 0 failures (119 suites, +17 new)
+- **Learnings:**
+  - **computeStaminaRegenMult as hunger-stamina seam**: The interaction between zero hunger and stamina regen lives in one pure function. Game loop calls it once to get effective regenMult, then passes to `regenStamina()`. Avoids scattered `if (hunger === 0)` guards.
+  - **Well Fed bonus reuses isWellFed threshold**: `computeStaminaRegenMult` calls `isWellFed(hunger)` internally — single source of truth for the >80 threshold. No magic number duplication.
+  - **JSON config import in tests**: Use `import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" }` — same pattern as `useMouseLook.test.ts`. Tests that assert against config values (not just hardcoded copies) catch drift between config and documented spec.
+
+---
+
 ## 2026-03-07 - US-087
 - Updated `game/systems/lootSystem.ts` — added `rollLootForEnemy(enemyId, lootTableId, tier, worldSeed)` that uses `scopedRNG("loot", worldSeed, enemyId)` internally, then calls `rollLoot` + `createLootDrop`
 - Updated `config/game/loot.json` — added missing `sprite-loot` table (referenced by `thorn-sprite` in enemies.json)

@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T15:35:21.100Z",
-  "currentIteration": 88,
+  "updatedAt": "2026-03-07T15:40:38.295Z",
+  "currentIteration": 89,
   "maxIterations": 0,
-  "tasksCompleted": 88,
+  "tasksCompleted": 89,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -544,8 +544,8 @@
       {
         "id": "US-089",
         "title": "Implement hearts/hunger/stamina systems",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-090",
@@ -1921,6 +1921,16 @@
       "durationMs": 73728,
       "startedAt": "2026-03-07T15:27:25.817Z",
       "endedAt": "2026-03-07T15:28:39.545Z"
+    },
+    {
+      "iteration": 89,
+      "status": "completed",
+      "taskId": "US-089",
+      "taskTitle": "Implement hearts/hunger/stamina systems",
+      "taskCompleted": true,
+      "durationMs": 400427,
+      "startedAt": "2026-03-07T15:28:40.671Z",
+      "endedAt": "2026-03-07T15:35:21.098Z"
     }
   ],
   "skippedTaskIds": [],

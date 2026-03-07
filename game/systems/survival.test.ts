@@ -9,7 +9,10 @@ import {
   tickHeartsFromStarvation,
   tickHeartsFromExposure,
   tickStaminaDrain,
+  isPlayerDead,
+  computeStaminaRegenMult,
 } from "@/game/systems/survival";
+import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
 
 function makeHealth(current: number, max: number): HealthComponent {
   return { current, max, invulnFrames: 0, lastDamageSource: null };
@@ -232,5 +235,110 @@ describe("combined survival scenario", () => {
     tickHeartsFromExposure(health, 60, 0.3, true, false);
     expect(hunger).toBe(100);
     expect(health.current).toBe(7);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isPlayerDead — Spec §12.3
+// ---------------------------------------------------------------------------
+
+describe("isPlayerDead (Spec §12.3)", () => {
+  it("returns true when hearts are exactly zero", () => {
+    const health = makeHealth(0, 5);
+    expect(isPlayerDead(health)).toBe(true);
+  });
+
+  it("returns false when hearts are above zero", () => {
+    const health = makeHealth(0.001, 5);
+    expect(isPlayerDead(health)).toBe(false);
+  });
+
+  it("returns false when hearts are at full", () => {
+    const health = makeHealth(5, 5);
+    expect(isPlayerDead(health)).toBe(false);
+  });
+
+  it("triggers after starvation drains hearts to zero", () => {
+    const health = makeHealth(0.001, 5);
+    tickHeartsFromStarvation(health, 0, 60);
+    expect(isPlayerDead(health)).toBe(true);
+  });
+
+  it("triggers after exposure drains hearts to zero", () => {
+    const health = makeHealth(0.001, 5);
+    tickHeartsFromExposure(health, 60, 1.0, true);
+    expect(isPlayerDead(health)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// computeStaminaRegenMult — Spec §12.1, §12.2
+// Zero hunger stops stamina regen; Well Fed grants +10% bonus.
+// ---------------------------------------------------------------------------
+
+describe("computeStaminaRegenMult (Spec §12.1, §12.2)", () => {
+  it("returns 0 when hunger is zero — no stamina regen at starvation", () => {
+    expect(computeStaminaRegenMult(0, 1.0)).toBe(0);
+  });
+
+  it("returns base mult when hunger is above zero", () => {
+    expect(computeStaminaRegenMult(50, 1.0)).toBe(1.0);
+  });
+
+  it("returns 1.1x base mult when Well Fed (hunger > 80)", () => {
+    expect(computeStaminaRegenMult(81, 1.0)).toBeCloseTo(1.1);
+  });
+
+  it("applies difficulty regenMult as base", () => {
+    expect(computeStaminaRegenMult(50, 0.8)).toBeCloseTo(0.8);
+  });
+
+  it("applies Well Fed bonus on top of difficulty regenMult", () => {
+    expect(computeStaminaRegenMult(90, 0.8)).toBeCloseTo(0.88);
+  });
+
+  it("returns base regenMult in Exploration mode even at zero hunger", () => {
+    expect(computeStaminaRegenMult(0, 1.5, false)).toBe(1.5);
+  });
+
+  it("hunger at exactly 1 is not starving — full regen", () => {
+    expect(computeStaminaRegenMult(1, 1.0)).toBe(1.0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Drain rates match difficulty config — Spec §12.2
+// ---------------------------------------------------------------------------
+
+describe("hunger drain rates match difficulty config (Spec §12.2)", () => {
+  it("Explore tier: hungerDrainRate is 0 — no hunger drain", () => {
+    const explore = difficultyConfig.find((d) => d.id === "explore")!;
+    expect(explore.hungerDrainRate).toBe(0);
+    // With rate=0, no drain even over a full minute
+    expect(tickHunger(100, 100, 60, explore.hungerDrainRate)).toBe(100);
+  });
+
+  it("Normal tier: hungerDrainRate is 1.0 — 1 unit/min", () => {
+    const normal = difficultyConfig.find((d) => d.id === "normal")!;
+    expect(normal.hungerDrainRate).toBe(1.0);
+    expect(tickHunger(100, 100, 60, normal.hungerDrainRate)).toBeCloseTo(99.0);
+  });
+
+  it("Hard tier: hungerDrainRate is 1.5 — 1.5 units/min", () => {
+    const hard = difficultyConfig.find((d) => d.id === "hard")!;
+    expect(hard.hungerDrainRate).toBe(1.5);
+    expect(tickHunger(100, 100, 60, hard.hungerDrainRate)).toBeCloseTo(98.5);
+  });
+
+  it("Brutal tier: hungerDrainRate is 2.0 — 2 units/min", () => {
+    const brutal = difficultyConfig.find((d) => d.id === "brutal")!;
+    expect(brutal.hungerDrainRate).toBe(2.0);
+    expect(tickHunger(100, 100, 60, brutal.hungerDrainRate)).toBeCloseTo(98.0);
+  });
+
+  it("Ultra-brutal tier: hungerDrainRate is 2.0 — same max drain as Brutal", () => {
+    const ultraBrutal = difficultyConfig.find((d) => d.id === "ultra-brutal")!;
+    expect(ultraBrutal.hungerDrainRate).toBe(2.0);
+    expect(tickHunger(100, 100, 60, ultraBrutal.hungerDrainRate)).toBeCloseTo(98.0);
   });
 });
