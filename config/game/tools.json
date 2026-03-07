@@ -62,6 +62,17 @@
     "effectPower": 3.0
   },
   {
+    "id": "pick",
+    "name": "Pick",
+    "description": "Mine rocks and ore veins",
+    "icon": "pickaxe",
+    "unlockLevel": 6,
+    "staminaCost": 10,
+    "maxDurability": 100,
+    "action": "MINE",
+    "effectPower": 4.0
+  },
+  {
     "id": "axe",
     "name": "Axe",
     "description": "Chop old growth for big timber, clear old trees",

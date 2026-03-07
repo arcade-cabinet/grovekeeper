@@ -71,6 +71,30 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-097
+- Created `config/game/mining.json` — ore table per biome (8 biomes), rock hardness table (default/granite/iron-vein/obsidian), baseStaminaPerHardness=8
+- Added "pick" tool to `config/game/tools.json` (action: "MINE", staminaCost: 10, unlockLevel: 6, effectPower: 4.0)
+- Created `game/systems/mining.ts` — 9 pure exported functions:
+  - `getRockHardness(rockType)` — lookup hardness from config, fallback to default (1)
+  - `computeMiningStaminaCost(rockType)` — hardness × baseStaminaPerHardness
+  - `getOreForBiome(biome)` → OreYield (stone in common biomes, ore in rocky-highlands/frozen-peaks/twilight-glade)
+  - `mineRock(rock, biome, rngValue)` → MineResult — floor-based amount from [min, max] range
+  - `isPickTool(action)` — checks action === "MINE"
+  - `isRockEntity(entity)` — type guard (same pattern as isForgeEntity/isCampfireEntity)
+  - `getRockInteractionLabel(entity)` — returns "Mine"
+  - `resolveMiningInteraction(entity)` → MiningInteraction — FPS resolver
+- Created `game/systems/mining.test.ts` — 47 tests, all passing
+- Updated `game/config/tools.test.ts` — bumped expected count from 12 to 13
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2594 tests, 0 failures (123 suites)
+- **Learnings:**
+  - **mineRock RNG formula**: `minAmount + Math.floor(rngValue * (range + 1))` clamped to maxAmount gives uniform distribution over [min, max] inclusive. At rngValue=0.0 → min; at rngValue≈1.0 → max. Standard dice-roll math.
+  - **Hardcoded tool count tests**: When adding a tool to tools.json, always update tools.test.ts tool count assertion. A fragile count test like `expect(TOOLS.length).toBe(12)` will fail on each addition.
+  - **_rock prefix for unused param**: `_rock: RockComponent` in mineRock signals intentional unused param (rock is passed for caller context but biome drives the result). TypeScript strict mode does not warn on `_` prefixed params.
+
+---
+
 ## 2026-03-07 - US-093
 - Updated `game/systems/cooking.ts` (+60 lines) for FPS raycast interaction:
   - Added `CampfireEntity` interface (minimal, no ECS world import)
