@@ -582,3 +582,18 @@ after each iteration and it's included in prompts for context.
   - The unsubscribe function returned by `observe()` stops all future notifications immediately — safe to verify with synchronous assertions.
   - US-029 had already implemented all the save/load code AND most tests; US-030 only needed to close the "auto-save trigger" gap in the acceptance criteria.
 ---
+
+## 2026-03-07 - US-031
+- Implemented game mode config (Exploration vs Survival) per Spec §37
+- **Files changed:**
+  - `config/game/difficulty.json` — added `affectsGameplay: false` to `explore`, `affectsGameplay: true` to all 4 survival modes; set `staminaDrainMult: 0` for explore (spec §37.1: no stamina drain)
+  - `game/config/difficulty.ts` (new) — typed config loader with `getDifficultyById()` and `isExplorationMode()` helpers
+  - `game/config/difficulty.test.ts` (new) — 16 tests covering all difficulty IDs, affectsGameplay flags, and isExplorationMode
+  - `game/stores/gameStore.ts` — added `setDifficulty(id)` action
+  - `game/systems/stamina.ts` — added optional `affectsGameplay = true` param to `drainStamina`; when false, action always allowed, no stamina deducted
+  - `game/systems/stamina.test.ts` — added 4 exploration mode tests
+- **Learnings:**
+  - `affectsGameplay` as a boolean flag on each difficulty entry is the simplest gate — systems just pass it through rather than re-reading the store
+  - Pattern: `getDifficultyById(state.difficulty)?.affectsGameplay ?? true` gives safe default (survival) for unknown IDs
+  - Optional param with default (`affectsGameplay = true`) keeps all existing call sites unchanged — no refactor needed
+---

@@ -118,5 +118,32 @@ describe("stamina system", () => {
       expect(result).toBe(false);
       expect(entity.player!.stamina).toBe(0);
     });
+
+    // ── Exploration mode (Spec §37.1) ──────────────────────────────
+    describe("exploration mode (affectsGameplay=false)", () => {
+      it("always returns true regardless of cost", () => {
+        const entity = makePlayerEntity(5);
+        const result = drainStamina(entity, 50, false);
+        expect(result).toBe(true);
+      });
+
+      it("does not deduct stamina", () => {
+        const entity = makePlayerEntity(50);
+        drainStamina(entity, 20, false);
+        expect(entity.player!.stamina).toBe(50);
+      });
+
+      it("allows action even with zero stamina", () => {
+        const entity = makePlayerEntity(0);
+        const result = drainStamina(entity, 10, false);
+        expect(result).toBe(true);
+        expect(entity.player!.stamina).toBe(0);
+      });
+
+      it("still returns false when no player component", () => {
+        const entity: Entity = { id: "no-player" };
+        expect(drainStamina(entity, 10, false)).toBe(false);
+      });
+    });
   });
 });

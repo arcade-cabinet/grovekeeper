@@ -309,6 +309,10 @@ const actions = {
     gameState$.screen.set(screen);
   },
 
+  setDifficulty(difficultyId: string) {
+    gameState$.difficulty.set(difficultyId);
+  },
+
   setSelectedTool(selectedTool: string) {
     gameState$.selectedTool.set(selectedTool);
   },
