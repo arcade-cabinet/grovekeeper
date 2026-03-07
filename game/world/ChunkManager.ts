@@ -7,6 +7,8 @@
  *   - Buffer ring (5x5, radius 2): pre-generated, renderable.visible = false
  *   - Terrain is seamless: global world-space coordinates used for all noise
  *   - Delta-only persistence: unmodified chunks regenerate from seed
+ *   - Async generation: new chunks are queued and generated on requestIdleCallback
+ *     (or setTimeout fallback) to avoid frame drops during chunk loading
  */
 
 import { generateEntityId, world } from "@/game/ecs/world";
@@ -105,18 +107,45 @@ export function getChunkBiome(worldSeed: string, chunkX: number, chunkZ: number)
   return assignBiome(temperature, moisture, distanceFromOrigin);
 }
 
+// ─── Async generation helpers ─────────────────────────────────────────────────
+
+interface QueueItem {
+  chunkX: number;
+  chunkZ: number;
+  visible: boolean;
+}
+
+/** Schedule a callback on idle time (requestIdleCallback) or next tick (setTimeout). */
+function scheduleIdle(cb: () => void): void {
+  if (typeof requestIdleCallback !== "undefined") {
+    requestIdleCallback(cb);
+  } else {
+    setTimeout(cb, 0);
+  }
+}
+
 // ─── ChunkManager class ───────────────────────────────────────────────────────
 
 /**
  * ChunkManager tracks the player's chunk position and keeps the ECS world
  * populated with terrain entities for the surrounding active (3x3) and
  * buffer (5x5) rings.
+ *
+ * Chunk generation is deferred to idle time (requestIdleCallback / setTimeout)
+ * so that bulk loading on player movement does not cause frame drops.
+ * Call flushQueue() in tests to process all pending generation synchronously.
  */
 export class ChunkManager {
   private readonly worldSeed: string;
   private readonly loadedChunks: Map<string, Entity> = new Map();
   /** Child entities (water bodies + audio zones) keyed by chunk key. */
   private readonly chunkChildEntities: Map<string, Entity[]> = new Map();
+  /** Chunks queued for generation but not yet added to ECS. Key = chunk key. */
+  private readonly pendingChunks: Set<string> = new Set();
+  /** FIFO queue of chunk generation work items. */
+  private readonly generationQueue: QueueItem[] = [];
+  /** True when an idle/timeout callback is already scheduled. */
+  private generationScheduled = false;
   private playerChunkX = 0;
   private playerChunkZ = 0;
   /** True until the first update() call forces a full load. */
@@ -128,7 +157,8 @@ export class ChunkManager {
 
   /**
    * Call every frame (or when player position changes).
-   * Loads/unloads chunks as the player moves across chunk boundaries.
+   * Unloads out-of-range chunks synchronously. Queues new chunks for async
+   * generation via requestIdleCallback (or setTimeout fallback).
    */
   update(playerPos: { x: number; y: number; z: number }): void {
     const { chunkX, chunkZ } = worldToChunkCoords(playerPos);
@@ -153,7 +183,7 @@ export class ChunkManager {
       ),
     );
 
-    // Unload chunks that are now outside the buffer ring
+    // Synchronously unload chunks that are now outside the buffer ring
     const toUnload: string[] = [];
     for (const key of this.loadedChunks.keys()) {
       if (!desiredKeys.has(key)) toUnload.push(key);
@@ -167,24 +197,97 @@ export class ChunkManager {
       this.chunkChildEntities.delete(key);
     }
 
-    // Load new chunks + update visibility for existing ones
+    // Cancel pending generation for chunks that moved out of range
+    for (const key of this.pendingChunks) {
+      if (!desiredKeys.has(key)) {
+        this.pendingChunks.delete(key);
+        // Queue item stays in generationQueue but will be skipped (key not in pendingChunks)
+      }
+    }
+
+    // Queue new chunks for async generation; update visibility for already-loaded ones
     for (const { chunkX: cx, chunkZ: cz } of bufferChunkCoords) {
       const key = getChunkKey(cx, cz);
       const isActive = activeKeys.has(key);
 
-      if (!this.loadedChunks.has(key)) {
-        this.loadChunk(cx, cz, isActive);
-      } else {
+      if (!this.loadedChunks.has(key) && !this.pendingChunks.has(key)) {
+        this.pendingChunks.add(key);
+        this.generationQueue.push({ chunkX: cx, chunkZ: cz, visible: isActive });
+      } else if (this.loadedChunks.has(key)) {
         // Update visibility when chunk moves between active / buffer
         const entity = this.loadedChunks.get(key)!;
         if (entity.renderable) entity.renderable.visible = isActive;
       }
     }
+
+    this.scheduleGeneration();
   }
 
   /** All currently loaded chunk entities (active + buffer). */
   getLoadedChunks(): ReadonlyMap<string, Entity> {
     return this.loadedChunks;
+  }
+
+  /** Number of chunks queued for generation but not yet loaded. */
+  getPendingChunkCount(): number {
+    return this.pendingChunks.size;
+  }
+
+  /**
+   * Process all queued chunk generation synchronously.
+   * Intended for use in tests where idle callbacks don't fire automatically.
+   */
+  flushQueue(): void {
+    while (this.generationQueue.length > 0) {
+      const item = this.generationQueue.shift()!;
+      const key = getChunkKey(item.chunkX, item.chunkZ);
+
+      // Skip if cancelled (player moved away before this chunk was generated)
+      if (!this.pendingChunks.has(key)) continue;
+      // Skip if somehow already loaded
+      if (this.loadedChunks.has(key)) {
+        this.pendingChunks.delete(key);
+        continue;
+      }
+
+      this.loadChunk(item.chunkX, item.chunkZ, item.visible);
+      this.pendingChunks.delete(key);
+    }
+    this.generationScheduled = false;
+  }
+
+  private scheduleGeneration(): void {
+    if (this.generationQueue.length === 0 || this.generationScheduled) return;
+    this.generationScheduled = true;
+
+    scheduleIdle(() => {
+      this.generationScheduled = false;
+      this.processNextBatch();
+    });
+  }
+
+  /**
+   * Process queued chunks one at a time, rescheduling after each to yield
+   * control back to the render loop and prevent frame drops.
+   */
+  private processNextBatch(): void {
+    if (this.generationQueue.length === 0) return;
+
+    const item = this.generationQueue.shift()!;
+    const key = getChunkKey(item.chunkX, item.chunkZ);
+
+    // Skip if cancelled
+    if (this.pendingChunks.has(key)) {
+      if (!this.loadedChunks.has(key)) {
+        this.loadChunk(item.chunkX, item.chunkZ, item.visible);
+      }
+      this.pendingChunks.delete(key);
+    }
+
+    // If more chunks remain, schedule another idle callback
+    if (this.generationQueue.length > 0) {
+      this.scheduleGeneration();
+    }
   }
 
   private loadChunk(chunkX: number, chunkZ: number, visible: boolean): void {

@@ -6,6 +6,7 @@
  *  - generateChunkData determinism and output shape
  *  - ChunkManager.update loads 3x3 active + 5x5 buffer ring
  *  - Chunk transitions: new chunks loaded, old chunks removed
+ *  - Async generation: chunks queued after update, loaded after flushQueue
  */
 
 import { world } from "@/game/ecs/world";
@@ -162,18 +163,68 @@ describe("generateChunkData (Spec §17.1)", () => {
   });
 });
 
-// ─── ChunkManager ─────────────────────────────────────────────────────────────
+// ─── ChunkManager async generation (Spec §17.1) ───────────────────────────────
+
+describe("ChunkManager async generation (Spec §17.1)", () => {
+  it("update() queues chunks as pending before generation completes", () => {
+    const mgr = new ChunkManager("test-world");
+    mgr.update({ x: 0, y: 0, z: 0 });
+
+    // Chunks are queued but not yet loaded (no flushQueue call)
+    expect(mgr.getPendingChunkCount()).toBe(25);
+    expect(mgr.getLoadedChunks().size).toBe(0);
+  });
+
+  it("flushQueue() completes all pending generation", () => {
+    const mgr = new ChunkManager("test-world");
+    mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
+
+    expect(mgr.getPendingChunkCount()).toBe(0);
+    expect(mgr.getLoadedChunks().size).toBe(25);
+  });
+
+  it("chunks outside desired range are cancelled before generation", () => {
+    const mgr = new ChunkManager("test-world");
+    mgr.update({ x: 0, y: 0, z: 0 }); // queues 25 chunks around (0,0)
+    // Immediately move far away — old chunks should be cancelled
+    mgr.update({ x: 1000, y: 0, z: 1000 }); // chunk (62,62)
+
+    mgr.flushQueue();
+
+    // Old chunks around (0,0) must not be loaded
+    const key = getChunkKey(0, 0);
+    expect(mgr.getLoadedChunks().has(key)).toBe(false);
+
+    // New chunks around (62,62) must be loaded
+    const newCenter = getChunkKey(62, 62);
+    expect(mgr.getLoadedChunks().has(newCenter)).toBe(true);
+  });
+
+  it("second update before flush only queues new chunks, not already-pending ones", () => {
+    const mgr = new ChunkManager("test-world");
+    mgr.update({ x: 0, y: 0, z: 0 }); // queues 25
+
+    // Same position — no-op, queue stays at 25
+    mgr.update({ x: 5, y: 0, z: 7 });
+    expect(mgr.getPendingChunkCount()).toBe(25);
+  });
+});
+
+// ─── ChunkManager (with flushQueue) ───────────────────────────────────────────
 
 describe("ChunkManager (Spec §17.1)", () => {
   it("update loads 25 ECS entities for 5x5 buffer ring", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
     expect(mgr.getLoadedChunks().size).toBe(25);
   });
 
   it("active chunks (3x3) have renderable.visible=true", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
 
     // Active = radius-1 = chunks (-1,-1) to (1,1)
     for (const { chunkX, chunkZ } of getChunksInRadius(0, 0, ACTIVE_RADIUS)) {
@@ -187,6 +238,7 @@ describe("ChunkManager (Spec §17.1)", () => {
   it("buffer-only chunks (outside 3x3, inside 5x5) have renderable.visible=false", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
 
     const activeKeys = new Set(
       getChunksInRadius(0, 0, ACTIVE_RADIUS).map(({ chunkX, chunkZ }) =>
@@ -204,6 +256,7 @@ describe("ChunkManager (Spec §17.1)", () => {
   it("all loaded chunks have terrainChunk ECS component", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
 
     for (const [, entity] of mgr.getLoadedChunks()) {
       expect(entity.terrainChunk).toBeDefined();
@@ -214,6 +267,7 @@ describe("ChunkManager (Spec §17.1)", () => {
   it("all loaded chunks have chunk component with correct coords", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
 
     for (const [key, entity] of mgr.getLoadedChunks()) {
       const [cx, cz] = key.split(",").map(Number);
@@ -226,9 +280,11 @@ describe("ChunkManager (Spec §17.1)", () => {
   it("chunk transition — moving one chunk right loads right column", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 }); // player at chunk (0,0)
+    mgr.flushQueue();
 
     // Move player to chunk (1,0) — one chunk east
     mgr.update({ x: 16, y: 0, z: 0 }); // player at chunk (1,0)
+    mgr.flushQueue();
 
     // New right column at chunkX=3 (buffer radius 2 from center 1)
     for (let cz = -2; cz <= 2; cz++) {
@@ -240,7 +296,9 @@ describe("ChunkManager (Spec §17.1)", () => {
   it("chunk transition — moving one chunk right removes left column", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 }); // player at chunk (0,0)
+    mgr.flushQueue();
     mgr.update({ x: 16, y: 0, z: 0 }); // player at chunk (1,0)
+    mgr.flushQueue();
 
     // Old left column at chunkX=-2 should be unloaded
     for (let cz = -2; cz <= 2; cz++) {
@@ -252,13 +310,16 @@ describe("ChunkManager (Spec §17.1)", () => {
   it("chunk transition preserves total 25-chunk count", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
     mgr.update({ x: 16, y: 0, z: 0 });
+    mgr.flushQueue();
     expect(mgr.getLoadedChunks().size).toBe(25);
   });
 
   it("loaded entities are present in the ECS world", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
 
     for (const [, entity] of mgr.getLoadedChunks()) {
       expect(world.entities).toContain(entity);
@@ -268,6 +329,7 @@ describe("ChunkManager (Spec §17.1)", () => {
   it("no-op when player stays in same chunk", () => {
     const mgr = new ChunkManager("test-world");
     mgr.update({ x: 0, y: 0, z: 0 });
+    mgr.flushQueue();
     const firstMap = new Map(mgr.getLoadedChunks());
 
     // Same chunk, different world position within it

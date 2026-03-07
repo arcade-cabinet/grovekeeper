@@ -44,6 +44,29 @@ after each iteration and it's included in prompts for context.
 - **AdditiveBlending for caustics**: `THREE.AdditiveBlending` adds `src_alpha * src_rgb` to destination. Caustic bright rings visually "light up" terrain below without occluding it. Requires `depthWrite: false` and `transparent: true`.
 - **Dual-Map lifecycle for caustics**: `causticMeshMapRef` + `causticMaterialMapRef` mirror the existing `meshMapRef`/`materialMapRef` pattern. Caustic meshes are created/destroyed with the same `aliveIds` set approach, keeping the cleanup symmetric.
 - **Legend State stale snapshot in tests**: `const store = useGameStore.getState()` captures state at that point. Calling a mutating action (e.g. `drainToolDurability`) updates the observable but `store.field` stays stale. Always call `useGameStore.getState().field` fresh after a mutation — same pattern as the `spendToolStamina` test that reads `.stamina` fresh after the call.
+- **Async queue flushQueue() test escape hatch**: When deferring work to `requestIdleCallback`/`setTimeout`, tests cannot rely on callbacks firing. Export `flushQueue()` as a synchronous drain that processes the entire queue without scheduling. Tests call `update()` then `flushQueue()` before asserting. Never use Jest fake timers for this — they require complex async/await boilerplate and don't work well with `requestIdleCallback` in Node.
+- **Lazy cancellation in generation queues**: Rather than filtering `generationQueue[]` when a chunk goes out of range (O(n) scan), remove it from `pendingChunks Set` only. When the dequeued item is processed, skip it if its key is absent from `pendingChunks`. O(1) cancel, O(1) skip — both maps stay consistent.
+- **One-chunk-per-idle pattern**: Processing one chunk per `requestIdleCallback` invocation (reschedule after each) yields control back to the browser after every expensive generation step. Simpler than tracking `deadline.timeRemaining()` and avoids the question of "how many ms does one chunk take?".
+
+---
+
+## 2026-03-07 - US-069
+- Added async generation queue to `ChunkManager`: `pendingChunks: Set<string>` + `generationQueue: QueueItem[]` + `generationScheduled: boolean` flag
+- `update()` now unloads synchronously (as before) but queues new chunks instead of calling `loadChunk()` directly
+- `scheduleGeneration()` uses `requestIdleCallback` with `setTimeout(cb, 0)` fallback; one chunk generated per idle callback invocation (reschedule after each)
+- `flushQueue()` processes entire queue synchronously — for tests and force-load scenarios
+- `getPendingChunkCount()` exposes pending set size for assertions
+- Lazy cancellation: removing a chunk from `pendingChunks` marks it cancelled; queue item is skipped when dequeued without filtering the array
+- **Files changed:**
+  - `game/world/ChunkManager.ts` — added async generation queue + `flushQueue()` + `getPendingChunkCount()` + `scheduleIdle()` helper
+  - `game/world/ChunkManager.test.ts` — added 4 async tests; all 34 existing tests updated to call `flushQueue()` after `update()`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2081 tests, 0 failures (109 suites, +4 new tests)
+- **Learnings:**
+  - **Async queue flushQueue() test escape hatch**: export a synchronous drain; tests call `update()` then `flushQueue()` before asserting — no fake timers needed
+  - **Lazy cancellation pattern**: delete key from `pendingChunks`; skip in `processNextBatch` if absent — O(1) cancel without filtering the queue array
+  - **One chunk per idle callback**: simplest frame-drop prevention; yields after each expensive generation step without needing deadline.timeRemaining() math
 
 ---
 
