@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T10:07:41.453Z",
-  "currentIteration": 28,
+  "updatedAt": "2026-03-07T10:11:16.654Z",
+  "currentIteration": 29,
   "maxIterations": 0,
-  "tasksCompleted": 28,
+  "tasksCompleted": 29,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -184,8 +184,8 @@
       {
         "id": "US-029",
         "title": "Implement save/load with Legend State + expo-sqlite",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-030",
@@ -1321,6 +1321,16 @@
       "durationMs": 60881,
       "startedAt": "2026-03-07T10:02:52.942Z",
       "endedAt": "2026-03-07T10:03:53.823Z"
+    },
+    {
+      "iteration": 29,
+      "status": "completed",
+      "taskId": "US-029",
+      "taskTitle": "Implement save/load with Legend State + expo-sqlite",
+      "taskCompleted": true,
+      "durationMs": 226508,
+      "startedAt": "2026-03-07T10:03:54.943Z",
+      "endedAt": "2026-03-07T10:07:41.451Z"
     }
   ],
   "skippedTaskIds": [],

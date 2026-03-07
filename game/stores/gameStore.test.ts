@@ -833,4 +833,77 @@ describe("Game Store", () => {
       expect(useGameStore.getState().activeBorderCosmetic).toBeNull();
     });
   });
+
+  describe("subscribe -- auto-save trigger (Spec §7)", () => {
+    it("fires listener when state changes", () => {
+      const listener = jest.fn();
+      const unsub = useGameStore.subscribe(listener);
+      listener.mockClear(); // discard initial call from observe()
+
+      useGameStore.getState().addCoins(50);
+      expect(listener).toHaveBeenCalled();
+
+      unsub();
+    });
+
+    it("returns an unsubscribe function that stops future notifications", () => {
+      const listener = jest.fn();
+      const unsub = useGameStore.subscribe(listener);
+      listener.mockClear();
+
+      unsub();
+      useGameStore.getState().addCoins(50);
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it("fires on saveGrove -- confirming save action triggers auto-save", () => {
+      const listener = jest.fn();
+      const unsub = useGameStore.subscribe(listener);
+      listener.mockClear();
+
+      useGameStore.getState().saveGrove([], { x: 0, z: 0 });
+      expect(listener).toHaveBeenCalled();
+
+      unsub();
+    });
+
+    it("fires on hydrateFromDb -- confirming load triggers subscribers", () => {
+      const listener = jest.fn();
+      const unsub = useGameStore.subscribe(listener);
+      listener.mockClear();
+
+      useGameStore.getState().hydrateFromDb({ level: 5, xp: 500 });
+      expect(listener).toHaveBeenCalled();
+
+      unsub();
+    });
+
+    it("fires on resetGame -- confirming new game clears and notifies", () => {
+      const listener = jest.fn();
+      const unsub = useGameStore.subscribe(listener);
+      listener.mockClear();
+
+      useGameStore.getState().resetGame("new-seed");
+      expect(listener).toHaveBeenCalled();
+      expect(useGameStore.getState().worldSeed).toBe("new-seed");
+
+      unsub();
+    });
+
+    it("multiple independent subscribers all fire on state change", () => {
+      const listenerA = jest.fn();
+      const listenerB = jest.fn();
+      const unsubA = useGameStore.subscribe(listenerA);
+      const unsubB = useGameStore.subscribe(listenerB);
+      listenerA.mockClear();
+      listenerB.mockClear();
+
+      useGameStore.getState().addCoins(10);
+      expect(listenerA).toHaveBeenCalled();
+      expect(listenerB).toHaveBeenCalled();
+
+      unsubA();
+      unsubB();
+    });
+  });
 });

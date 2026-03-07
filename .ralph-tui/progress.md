@@ -573,3 +573,12 @@ after each iteration and it's included in prompts for context.
   - **`chunkDiffs$` is a separate observable from `gameState$`**: Chunk diffs live in `game/world/chunkPersistence.ts` and must be independently wired to SQLite. Adding a second `syncObservable` call in `initPersistence()` is the right pattern — both use the same plugin instance but different `name` keys.
   - **EPHEMERAL_KEYS transform on save**: Strip `screen`, `groveData`, `buildMode`, `buildTemplateId` from the Legend State kv-store serialization. These are runtime-only fields that should never persist (groveData is saved via relational trees table instead).
 ---
+
+## 2026-03-07 - US-030
+- What was implemented: Added 6 auto-save trigger tests to `game/stores/gameStore.test.ts` under a new `subscribe -- auto-save trigger (Spec §7)` describe block. All other save/load tests (16 in saveLoad.test.ts, 28 in chunkPersistence.test.ts) already existed from US-029.
+- Files changed: `game/stores/gameStore.test.ts`
+- **Learnings:**
+  - `observe(gameState$, listener)` from Legend State fires **synchronously** when any child observable changes — no async/Promise needed in tests. `listener.mockClear()` after subscribe is needed to discard the initial eager call.
+  - The unsubscribe function returned by `observe()` stops all future notifications immediately — safe to verify with synchronous assertions.
+  - US-029 had already implemented all the save/load code AND most tests; US-030 only needed to close the "auto-save trigger" gap in the acceptance criteria.
+---
