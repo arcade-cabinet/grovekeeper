@@ -12,7 +12,14 @@ jest.mock("@react-three/drei", () => ({
 
 jest.mock("@react-three/fiber", () => ({}));
 
-import { PROCEDURAL_STAGE_MAX, STAGE_SCALES, TreeModel, resolveGLBPath } from "./TreeModel";
+import {
+  PROCEDURAL_STAGE_MAX,
+  STAGE_SCALES,
+  TreeModel,
+  resolveGLBPath,
+  resolveModelPath,
+  getSpeciesUseWinterModel,
+} from "./TreeModel";
 
 // ---------------------------------------------------------------------------
 // resolveGLBPath — species config lookup
@@ -128,6 +135,88 @@ describe("STAGE_SCALES (Spec §8.1)", () => {
 describe("PROCEDURAL_STAGE_MAX (Spec §8.1)", () => {
   it("is 1 (stages 0 and 1 use hardcoded geometry)", () => {
     expect(PROCEDURAL_STAGE_MAX).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resolveModelPath — winter model swap (Spec §6.3, §8.1)
+// ---------------------------------------------------------------------------
+
+describe("resolveModelPath (Spec §6.3)", () => {
+  it("returns glbPath when isWinter=false regardless of useWinterModel", () => {
+    // elder-pine has useWinterModel=true, but winter flag is false
+    const path = resolveModelPath("elder-pine", false);
+    expect(path).toBe("assets/models/trees/elder-pine.glb");
+  });
+
+  it("returns glbPath when isWinter=true but species has useWinterModel=false", () => {
+    // white-oak does not use a winter model
+    const path = resolveModelPath("white-oak", true);
+    expect(path).toBe("assets/models/trees/white-oak.glb");
+  });
+
+  it("returns winterModel path when isWinter=true and species has useWinterModel=true (elder-pine)", () => {
+    const path = resolveModelPath("elder-pine", true);
+    expect(path).toBe("assets/models/trees/elder-pine-winter.glb");
+  });
+
+  it("returns winterModel path when isWinter=true and species has useWinterModel=true (ghost-birch)", () => {
+    const path = resolveModelPath("ghost-birch", true);
+    expect(path).toBe("assets/models/trees/ghost-birch-winter.glb");
+  });
+
+  it("returns winterModel path for prestige species with useWinterModel=true (crystal-oak)", () => {
+    const path = resolveModelPath("crystal-oak", true);
+    expect(path).toBe("assets/models/trees/crystal-oak-winter.glb");
+  });
+
+  it("throws for unknown speciesId", () => {
+    expect(() => resolveModelPath("not-a-tree", false)).toThrow(
+      '[TreeModel] Unknown speciesId: "not-a-tree"',
+    );
+  });
+
+  it("non-winter path always ends in .glb for all base species", () => {
+    const baseIds = [
+      "white-oak", "weeping-willow", "elder-pine", "cherry-blossom", "ghost-birch",
+      "redwood", "flame-maple", "baobab", "silver-birch", "ironbark",
+      "golden-apple", "mystic-fern",
+    ];
+    for (const id of baseIds) {
+      expect(resolveModelPath(id, false)).toMatch(/\.glb$/);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getSpeciesUseWinterModel (Spec §6.3)
+// ---------------------------------------------------------------------------
+
+describe("getSpeciesUseWinterModel (Spec §6.3)", () => {
+  it("returns false for white-oak (no winter model)", () => {
+    expect(getSpeciesUseWinterModel("white-oak")).toBe(false);
+  });
+
+  it("returns true for elder-pine (has winter model)", () => {
+    expect(getSpeciesUseWinterModel("elder-pine")).toBe(true);
+  });
+
+  it("returns true for ghost-birch (has winter model)", () => {
+    expect(getSpeciesUseWinterModel("ghost-birch")).toBe(true);
+  });
+
+  it("returns true for crystal-oak prestige species (has winter model)", () => {
+    expect(getSpeciesUseWinterModel("crystal-oak")).toBe(true);
+  });
+
+  it("returns false for redwood (evergreen but no winter model swap)", () => {
+    expect(getSpeciesUseWinterModel("redwood")).toBe(false);
+  });
+
+  it("throws for unknown speciesId", () => {
+    expect(() => getSpeciesUseWinterModel("not-a-tree")).toThrow(
+      '[TreeModel] Unknown speciesId: "not-a-tree"',
+    );
   });
 });
 

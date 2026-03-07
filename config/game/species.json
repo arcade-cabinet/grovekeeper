@@ -13,6 +13,8 @@
       "seedCost": {},
       "special": "Starter tree, reliable",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 1.8,
         "trunkRadius": 0.15,
@@ -34,6 +36,8 @@
       "seedCost": { "sap": 5 },
       "special": "+30% yield near water tiles",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 2.0,
         "trunkRadius": 0.12,
@@ -55,6 +59,8 @@
       "seedCost": { "timber": 5 },
       "special": "Grows at 30% in Winter",
       "evergreen": true,
+      "winterModel": "assets/models/trees/elder-pine-winter.glb",
+      "useWinterModel": true,
       "meshParams": {
         "trunkHeight": 2.2,
         "trunkRadius": 0.13,
@@ -76,6 +82,8 @@
       "seedCost": { "fruit": 8 },
       "special": "Beauty Aura: +10% XP within 1 tile",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 1.6,
         "trunkRadius": 0.1,
@@ -97,6 +105,8 @@
       "seedCost": { "sap": 6, "acorns": 2 },
       "special": "50% growth in Winter; night glow",
       "evergreen": false,
+      "winterModel": "assets/models/trees/ghost-birch-winter.glb",
+      "useWinterModel": true,
       "meshParams": {
         "trunkHeight": 2.0,
         "trunkRadius": 0.1,
@@ -118,6 +128,8 @@
       "seedCost": { "timber": 15 },
       "special": "Tallest; Old Growth: +1 Acorn/cycle",
       "evergreen": true,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 3.0,
         "trunkRadius": 0.2,
@@ -139,6 +151,8 @@
       "seedCost": { "fruit": 12 },
       "special": "Beauty Aura 2-tile; 2x yield in Autumn",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 2.0,
         "trunkRadius": 0.14,
@@ -164,6 +178,8 @@
       "seedCost": { "timber": 10, "sap": 10, "fruit": 10 },
       "special": "Drought resist; all resources; 2-tile footprint",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 2.5,
         "trunkRadius": 0.3,
@@ -185,6 +201,8 @@
       "seedCost": { "sap": 4 },
       "special": "+20% growth near water tiles",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 2.0,
         "trunkRadius": 0.1,
@@ -206,6 +224,8 @@
       "seedCost": { "timber": 12 },
       "special": "Storm immune; 3x timber at Old Growth",
       "evergreen": true,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 2.4,
         "trunkRadius": 0.22,
@@ -227,6 +247,8 @@
       "seedCost": { "fruit": 10 },
       "special": "3x fruit yield in Autumn",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 1.6,
         "trunkRadius": 0.12,
@@ -248,6 +270,8 @@
       "seedCost": { "sap": 8, "fruit": 4 },
       "special": "+15% growth per adjacent tree (max +60%)",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "meshParams": {
         "trunkHeight": 0.8,
         "trunkRadius": 0.08,
@@ -271,6 +295,8 @@
       "seedCost": { "acorns": 20 },
       "special": "Prismatic glow; Acorns x5",
       "evergreen": true,
+      "winterModel": "assets/models/trees/crystal-oak-winter.glb",
+      "useWinterModel": true,
       "requiredPrestiges": 1,
       "meshParams": {
         "trunkHeight": 2.2,
@@ -293,6 +319,8 @@
       "seedCost": { "sap": 15, "acorns": 10 },
       "special": "Grows only at night; silver shimmer",
       "evergreen": false,
+      "winterModel": "",
+      "useWinterModel": false,
       "requiredPrestiges": 2,
       "meshParams": {
         "trunkHeight": 2.4,
@@ -320,6 +348,8 @@
       "seedCost": { "timber": 20, "sap": 20, "fruit": 20, "acorns": 20 },
       "special": "2x2 footprint; boosts entire grove",
       "evergreen": true,
+      "winterModel": "",
+      "useWinterModel": false,
       "requiredPrestiges": 3,
       "meshParams": {
         "trunkHeight": 3.5,

@@ -670,3 +670,16 @@ after each iteration and it's included in prompts for context.
   - Flat JSON → typed array pattern: `import data from "...json" with { type: "json" }` cast to typed array; no mock needed in tests — JSON import works directly in Jest
   - `isExplorationMode` safe default is `false` (survival), not `true` — unknown difficulty IDs are treated as survival to avoid accidentally disabling danger systems
 ---
+
+## 2026-03-07 - US-035
+- Implemented seasonal color tinting and winter model swap for TreeModel
+- **Files changed:**
+  - `components/entities/TreeModel.tsx` — added `resolveModelPath`, `getSpeciesUseWinterModel` exports; updated `TreeGLBModel` to accept `tintColor` and apply it via material cloning in `useMemo`; updated `TreeModelProps` to include `seasonTint?` and `isWinter?`
+  - `components/entities/TreeModel.test.ts` — added 14 new tests for `resolveModelPath` and `getSpeciesUseWinterModel` (32 total, all passing)
+  - `config/game/species.json` — added `winterModel` and `useWinterModel` fields to all 15 species; elder-pine, ghost-birch, crystal-oak get `useWinterModel: true`
+- **Learnings:**
+  - **Three.js deep clone shares materials**: `scene.clone(true)` clones mesh objects but materials remain shared references. Must clone materials inside `traverse` before setting `.color` to avoid corrupting the `useGLTF` cache for all instances of the same species.
+  - **useMemo deps [scene, tintColor]**: Memoizing the tinted clone avoids re-traversal every render. Only rebuilds when the source scene or tint color changes.
+  - **Testable seam via pure functions**: `resolveModelPath` and `getSpeciesUseWinterModel` are pure config-lookup functions exported separately from R3F components — allows full unit testing without WebGL/R3F context. The R3F tinting logic itself is not unit tested (no WebGL in Jest), but TypeScript verifies it compiles correctly.
+  - **Winter model convention**: `assets/models/trees/{id}-winter.glb` — consistent with existing `glbPath` convention. Only 3 species have distinct winter GLBs; others rely on `seasonTint` color-only tinting.
+---
