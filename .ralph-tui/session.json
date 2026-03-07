@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T15:27:24.686Z",
-  "currentIteration": 86,
+  "updatedAt": "2026-03-07T15:28:39.547Z",
+  "currentIteration": 87,
   "maxIterations": 0,
-  "tasksCompleted": 86,
+  "tasksCompleted": 87,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -532,8 +532,8 @@
       {
         "id": "US-087",
         "title": "Update loot drop system for ECS + config",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-088",
@@ -1901,6 +1901,16 @@
       "durationMs": 451663,
       "startedAt": "2026-03-07T15:16:06.116Z",
       "endedAt": "2026-03-07T15:23:37.779Z"
+    },
+    {
+      "iteration": 87,
+      "status": "completed",
+      "taskId": "US-087",
+      "taskTitle": "Update loot drop system for ECS + config",
+      "taskCompleted": true,
+      "durationMs": 225770,
+      "startedAt": "2026-03-07T15:23:38.914Z",
+      "endedAt": "2026-03-07T15:27:24.684Z"
     }
   ],
   "skippedTaskIds": [],

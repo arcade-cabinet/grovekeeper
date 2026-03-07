@@ -1,0 +1,105 @@
+# Iteration 87 Log
+
+## Metadata
+
+- **Task ID**: US-087
+- **Task Title**: Update loot drop system for ECS + config
+- **Description**: As a developer, I want the existing lootSystem.ts (65 lines) updated to use LootDropComponent ECS entities with seeded loot table rolls from config/game/loot.json and a despawn timer so that combat ha...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:23:38.914Z
+- **Ended At**: 2026-03-07T15:27:24.684Z
+- **Duration**: 3m 45s
+- **Input Tokens**: 108
+- **Output Tokens**: 11893
+- **Total Tokens**: 12001
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite,Bash[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (51219 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/loot.json[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/loot.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/combat.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/loot.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/lootSystem.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Let me check the seedRNG utility and also run the current tests to see if they pass.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+[94m[Bash][0m Run lootSystem tests $ npx jest --no-coverage --testPathPattern="lootSystem" 2>&1 | tail -30
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mscopedRNG[0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m pattern: [96mscopedRNG[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mexport.*scopedRNG[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/enemies.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/enemies.json[0m
+Let me check the relevant GAME_SPEC section and also look at the full current state of things:
+[94m[Bash][0m Find GAME_SPEC §20 loot section $ grep -n "§20\|section 20\|## 20\|### 20\|loot" /Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GA...
+Now I have a clear picture. The lootSystem.ts and tests exist and pass, but the acceptance criteria requires:
+1. A high-level `rollLootForEnemy` function using `scopedRNG('loot', worldSeed, enemyId)` (currently missing)
+2. `sprite-loot` table missing from loot.json (enemies.json references it for `thorn-sprite`)
+
+`★ Insight ─────────────────────────────────────`
+The current `rollLoot(lootTableId, tier, rng)` is a pure function that accepts any RNG — this is good testable design. The AC pattern `scopedRNG('loot', worldSeed, enemyId)` belongs in a higher-level function that wraps it, not inside `rollLoot` itself. This preserves testability of the core logic while satisfying the scoped-seed requirement at the integration layer.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit,Write[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/loot.json[0m edit: "    "hedge-loot": {
+      "drops": [
+        { "re..." → "    "hedge-loot": {
+      "drops": [
+        { "re..."
+[94m[TodoWrite][0m
+Now add `rollLootForEnemy` to lootSystem.ts — the high-level integration function that uses scopedRNG:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.ts[0m edit: "import lootConfig from "@/config/game/loot.json" w..." → "import lootConfig from "@/config/game/loot.json" w..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.ts[0m edit: "export function updateLootDespawn(
+  loot: LootDro..." → "export function updateLootDespawn(
+  loot: LootDro..."
+[94m[TodoWrite][0m
+Now add tests for `rollLootForEnemy`:
+
+`★ Insight ─────────────────────────────────────`
+The test for `rollLootForEnemy` validates the scopedRNG contract by asserting determinism across two calls with the same args — if `scopedRNG` produces the same stream, both calls produce identical drops. The "different seeds produce different drops" test catches the case where the scoping logic was silently ignored.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.test.ts[0m edit: "import { rollLoot, createLootDrop, updateLootDespa..." → "import { rollLoot, createLootDrop, updateLootDespa..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.test.ts[0m edit: "function sumLoot(loot: { amount: number }[]): numb..." → "describe("rollLootForEnemy (Spec §34)", () => {
+  ..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run lootSystem tests $ npx jest --no-coverage --testPathPattern="lootSystem" 2>&1
+All 14 tests pass. Now run the full test suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+118 suites, 2356 tests, 0 failures (5 new tests added). Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-086" → "---
+
+## 2026-03-07 - US-087
+- Updated `game/system..."
+[94m[TodoWrite][0m
+All acceptance criteria satisfied:
+
+| Criterion | Status |
+|---|---|
+| Update lootSystem.ts for ECS LootDropComponent | ✓ already done + extended |
+| Loot tables from config/game/loot.json | ✓ |
+| Seeded rolls via `scopedRNG('loot', worldSeed, enemyId)` | ✓ `rollLootForEnemy` |
+| Despawn timer (configurable) | ✓ 60s from loot.json |
+| Loot spawns on enemy death + despawns after timer | ✓ `rollLootForEnemy` + `updateLootDespawn` |
+| `npx tsc --noEmit` passes | ✓ 0 errors |
+| `npx jest --no-coverage` passes | ✓ 2356 tests, 0 failures |
+
+<promise>COMPLETE</promise>

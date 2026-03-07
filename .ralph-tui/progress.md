@@ -1681,3 +1681,13 @@ after each iteration and it's included in prompts for context.
   - **Piece count math**: 12×12 maze has 312 total wall slots. Spanning tree removes 143 + 4 center = ~147 walls. Expected piece count ≈ 165. Range [120, 312] is the right sanity check bound.
   - **Multi-seed reachability**: Running the BFS test across 4 known seeds catches edge cases where a specific seed might expose a backtracker bug without relying solely on seed=42.
 ---
+
+## 2026-03-07 - US-088
+- Work already complete from US-086 (combat.test.ts — 32 tests) and US-087 (lootSystem.test.ts — 14 tests)
+- Verified all 46 tests pass: `npx jest --testPathPattern="combat|lootSystem"` → 46 passed, 2 suites
+- Verified `npx tsc --noEmit` → 0 errors
+- **Coverage:** damage calculation (computePlayerDamage, computeEnemyDamage), knockback impulse (computeKnockback), loot table probabilities (rollLoot, rollLootForEnemy), despawn timing (updateLootDespawn, despawnTimer field)
+- **Files verified:** game/systems/combat.test.ts (32 tests), game/systems/lootSystem.test.ts (14 tests)
+- **Learnings:**
+  - **No-op US pattern**: When acceptance criteria map 1:1 to a previous US's tests, signal completion immediately after verification. Don't re-implement. The two-layer design (US-086 creates tests, US-088 verifies them) is intentional in the PRD.
+---
