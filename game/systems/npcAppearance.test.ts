@@ -109,6 +109,20 @@ describe("generateNpcAppearance", () => {
     }
   });
 
+  it("should produce all 6 base models across enough seeds", () => {
+    const reached = new Set<string>();
+    const roles = ["trading", "quests", "tips", "seeds", "crafting", "lore"];
+    for (let i = 0; i < 500; i++) {
+      const role = roles[i % roles.length];
+      const appearance = generateNpcAppearance(`npc-${i}`, `Seed${i}`, role);
+      reached.add(appearance.baseModel);
+    }
+    const expected = ["basemesh", "archer", "knight", "merchant", "ninja", "student"];
+    for (const model of expected) {
+      expect(reached).toContain(model);
+    }
+  });
+
   it("should favor role-appropriate base models", () => {
     const tradingBases: string[] = [];
     for (let i = 0; i < 100; i++) {

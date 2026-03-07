@@ -64,6 +64,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-042
+- `game/systems/npcAppearance.test.ts` already had 10 passing tests from prior work; added 1 more for "all base models reachable" — explicitly verifies all 6 base models (basemesh, archer, knight, merchant, ninja, student) are reachable across 500 seeded calls
+- 11 tests total in `npcAppearance.test.ts`: determinism, seed variation (npcId + worldSeed), valid base model, allinone excluded, all bases reachable, hex colorPalette, boolean useEmission, valid item slots, incompatible item exclusion, role affinity
+- **Files changed:**
+  - `game/systems/npcAppearance.test.ts`: added "should produce all 6 base models across enough seeds" test
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 1654 tests, 0 failures (91 suites)
+- **Learnings:**
+  - "All base models reachable" = set-coverage property. Run N seeds across all roles and assert the collected set contains all expected models. With 70% affinity + 500 seeds across 6 roles, all 6 models appear reliably.
+  - US-042 was mostly pre-done by US-041 (NpcModel.test.ts had 33 tests including resolveNpcAppearance coverage) and the prior npcAppearance.test.ts. Gap was the explicit reachability test.
+
+---
+
 ## 2026-03-07 - US-038
 - Work already complete — `components/entities/BushModel.test.ts` was created as part of US-037 (Docs > Tests > Code workflow)
 - 36 tests covering: VALID_SEASONS (5 seasons, each present), VALID_BUSH_SHAPES (≥52, all start with `bush_`, no duplicates), `buildModelKey` (correct patterns, all 5 seasons produce different keys, all shapes produce different keys), `resolveBushGLBPath` (correct paths, ends in .glb, includes prefix, same shape→different path per season, different shapes→different paths, all 52×5 resolve without throwing, all 260 paths unique, throws for unknown/empty/partial bushShape), BushModel component export check
