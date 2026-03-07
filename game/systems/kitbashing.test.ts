@@ -185,6 +185,56 @@ describe("Kitbashing System", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Unlock state persistence (Spec §35.2) -- monotonicity
+// ---------------------------------------------------------------------------
+
+describe("Unlock state persistence (Spec §35.2)", () => {
+  describe("getUnlockedPieces monotonicity", () => {
+    it("level 0 unlocks nothing (gates start at L5)", () => {
+      expect(getUnlockedPieces(0)).toHaveLength(0);
+    });
+
+    it("level 10 includes all pieces unlocked at level 5 (superset)", () => {
+      const atFive = getUnlockedPieces(5);
+      const atTen = getUnlockedPieces(10);
+      expect(atTen).toEqual(expect.arrayContaining(atFive));
+    });
+
+    it("level 15 includes all pieces unlocked at level 10 (superset)", () => {
+      const atTen = getUnlockedPieces(10);
+      const atFifteen = getUnlockedPieces(15);
+      expect(atFifteen).toEqual(expect.arrayContaining(atTen));
+    });
+
+    it("level 20 unlocks all piece types", () => {
+      const allTypes = ["wall", "floor", "roof", "stairs", "foundation", "door", "window", "pillar", "platform", "beam", "pipe"];
+      const atTwenty = getUnlockedPieces(20);
+      expect(atTwenty).toEqual(expect.arrayContaining(allTypes));
+    });
+  });
+
+  describe("getUnlockedMaterials monotonicity", () => {
+    it("level 5 includes all materials unlocked at level 1 (superset)", () => {
+      const atOne = getUnlockedMaterials(1);
+      const atFive = getUnlockedMaterials(5);
+      expect(atFive).toEqual(expect.arrayContaining(atOne));
+    });
+
+    it("level 16 includes all materials unlocked at level 15 (superset)", () => {
+      const atFifteen = getUnlockedMaterials(15);
+      const atSixteen = getUnlockedMaterials(16);
+      expect(atSixteen).toEqual(expect.arrayContaining(atFifteen));
+    });
+
+    it("level 20 unlocks all material tiers including reinforced", () => {
+      const allMaterials = ["thatch", "wood", "stone", "metal", "reinforced"];
+      const atTwenty = getUnlockedMaterials(20);
+      expect(atTwenty).toEqual(expect.arrayContaining(allMaterials));
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Rapier physics snap validation -- Spec §35.1
 // ---------------------------------------------------------------------------
 

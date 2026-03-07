@@ -1,0 +1,154 @@
+# Iteration 121 Log
+
+## Metadata
+
+- **Task ID**: US-121
+- **Task Title**: Implement progressive piece unlocking
+- **Description**: As a player, I want building pieces gated by level (Tier 1 L1-5: wood, Tier 2 L6-15: stone/metal, Tier 3 L16+: advanced) so that building progresses with my character. See GAME_SPEC.md §14.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T18:33:44.708Z
+- **Ended At**: 2026-03-07T18:40:27.723Z
+- **Duration**: 6m 43s
+- **Input Tokens**: 153
+- **Output Tokens**: 22540
+- **Total Tokens**: 22693
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbashing*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbashing/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/unlocks.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/index.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/building.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/BuildPanel*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/buildPanelUtils*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/buildPanelUtils.ts[0m
+Now let me check the GAME_SPEC.md for the tier requirements and see what's already implemented vs what's needed.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mTier [123]|L1-5|L6-15|L16|wood pieces|stone.*metal|advanced pieces|progressive.*unlock|unlock.*tier[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§35|35\.|Section 35|building.*tier|tier.*building|Tier 1.*L1|Tier 2.*L6|Tier 3.*L16[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/commit.ts[0m
+Now I have a clear picture. Let me check the last part of the test file and the GAME_SPEC §35 section fully.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§35|Tier 1|Tier 2|Tier 3|L1-5|L6-15|L16|reinforced|advanced[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.ts[0m
+Now I have a complete picture. Here's what's needed:
+- Existing code implements Tier 1 (wood, thatch) and Tier 2 (stone, metal) locking  
+- Missing: Tier 3 (L16+) "reinforced" material as "advanced" pieces  
+- Missing: `getTier()` function  
+- Missing: tests for Tier 3 content
+
+`★ Insight ─────────────────────────────────────`
+The existing `isPieceLocked(piece, material, level)` uses `max(pieceUnlockLevel, materialUnlockLevel)`, so adding a new "reinforced" material at L16 automatically makes ALL pieces with reinforced material require L16+. This is the cheapest way to implement Tier 3 without touching piece-type logic.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m edit: "/** Material type for visual style and durability ..." → "/** Material type for visual style and durability ..."
+[94m[TodoWrite][0m
+Now update `building.json` to add `reinforced` at L16 with build costs:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m edit: "  "materialUnlockLevels": {
+    "thatch": 1,
+    "..." → "  "materialUnlockLevels": {
+    "thatch": 1,
+    "..."
+Now add reinforced build costs for each piece type:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m edit: "    "wall": { "wood": { "wood": 4 }, "stone": { "s..." → "    "wall": { "wood": { "wood": 4 }, "stone": { "s..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+`getTier()` maps a continuous level number to discrete tiers using early-return priority ordering — the same pattern used elsewhere in the codebase (e.g., biome dispatch). Putting it in `buildPanelUtils.ts` (not the ECS `unlocks.ts`) keeps it in the UI layer where it's consumed, while still being testable as a pure function.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/buildPanelUtils.ts[0m edit: "export function isPieceLocked(
+  pieceType: PieceT..." → "export function isPieceLocked(
+  pieceType: PieceT..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m edit: "import {
+  buildCosts,
+  CATEGORIES,
+  canAffordPi..." → "import {
+  buildCosts,
+  CATEGORIES,
+  canAffordPi..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m edit: "// Re-export pure functions for callers who import..." → "// Re-export pure functions for callers who import..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m edit: "const MATERIAL_LABELS: Record<MaterialType, string..." → "const MATERIAL_LABELS: Record<MaterialType, string..."
+Now I need to remove the unused `getTier` import from BuildPanel.tsx (it was added to the import but may not be used directly in the component):
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m pattern: [96mgetTier[0m
+`getTier` in the import block is unused since the re-export uses `export {...} from` (direct re-export). Remove it from the import:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m edit: "import {
+  buildCosts,
+  CATEGORIES,
+  canAffordPi..." → "import {
+  buildCosts,
+  CATEGORIES,
+  canAffordPi..."
+[94m[TodoWrite][0m
+Now add Tier 3 tests to `BuildPanel.test.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m edit: "import {
+  getPiecesForCategory,
+  getBuildCost,
+ ..." → "import {
+  getPiecesForCategory,
+  getBuildCost,
+ ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m edit: "describe("isPieceLocked (Spec §35.4)", () => {
+  i..." → "describe("isPieceLocked (Spec §35.4)", () => {
+  i..."
+Now add `getUnlockedMaterials` test for L16 to `kitbashing.test.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m edit: "  describe("getUnlockedMaterials", () => {
+    it(..." → "  describe("getUnlockedMaterials", () => {
+    it(..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m edit: "    it("should unlock metal at level 15", () => {
+..." → "    it("should unlock metal at level 15", () => {
+..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run kitbashing and BuildPanel tests $ npx jest --no-coverage --testPathPattern="kitbashing|BuildPanel" 2>&1 | tail -30
+All 97 tests pass. Let me do a full test run to confirm nothing else broke:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+136 suites, 3001 tests — all pass. Let me mark it complete and update the progress log.
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-116" → "---
+
+## 2026-03-07 - US-121
+- Implemented progress..."
+All done. Here's a summary of what was implemented:
+
+**US-121: Progressive piece unlocking**
+
+| File | Change |
+|---|---|
+| `game/ecs/components/building.ts` | Added `"reinforced"` to `MaterialType` |
+| `config/game/building.json` | `"reinforced": 16` in `materialUnlockLevels`; reinforced build costs (stone+metal_scrap) for all 11 piece types |
+| `components/game/buildPanelUtils.ts` | New `getTier(playerLevel): 1 | 2 | 3` pure function |
+| `components/game/BuildPanel.tsx` | `MATERIAL_LABELS["reinforced"]`, `MATERIAL_COLORS["reinforced"]`; re-exports `getTier` |
+| `components/game/BuildPanel.test.ts` | 8 new tests for Tier 3 locking, `getTier`, and reinforced build costs |
+| `game/systems/kitbashing.test.ts` | 2 new tests for `getUnlockedMaterials` at L15/L16 |
+
+The existing `isPieceLocked(piece, material, level)` automatically gates all pieces with `"reinforced"` material at L16+, since it uses `max(pieceUnlockLevel, materialUnlockLevel)`. No new gating logic was needed — just the new material entry in config.
+
+`★ Insight ─────────────────────────────────────`
+The tier system (`getTier`) lives in the UI layer (`buildPanelUtils.ts`) rather than the ECS system (`unlocks.ts`), because "tier" is a display concept (which tier badge to show, what label to apply) while `getUnlockedMaterials` / `isPieceLocked` in the ECS layer operate on raw level numbers. This separation keeps each layer's responsibility clean.
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

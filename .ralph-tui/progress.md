@@ -78,6 +78,17 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-122
+- Added 7 unlock state persistence (monotonicity) tests to `game/systems/kitbashing.test.ts`
+- Files changed:
+  - `game/systems/kitbashing.test.ts` — new `describe("Unlock state persistence (Spec §35.2)")` block with 7 tests across two sub-describes
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3008 tests pass (136 suites, +7 new tests)
+- **Learnings:**
+  - **Monotonicity = unlock state persistence**: The missing coverage was that nothing tested whether pieces stay unlocked at higher levels. `expect(atTen).toEqual(expect.arrayContaining(atFive))` is the clean pattern — assert superset containment without caring about order.
+  - **expect.arrayContaining is the right tool**: Unlike `toContain` (single value), `arrayContaining` asserts that all elements of the expected array appear in the received array. Perfect for superset assertions on unlock lists.
+  - **"Level 0 unlocks nothing" is an important edge case**: All unlock levels start at L5 — calling `getUnlockedPieces(0)` should return `[]`. Tests that only probe specific thresholds (L5, L10, L15) miss this boundary below the lowest gate.
+---
+
 ## 2026-03-07 - US-121
 - Implemented progressive piece unlocking Tier 3 (L16+: advanced reinforced pieces)
 - Files changed:

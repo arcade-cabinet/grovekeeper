@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T18:40:27.725Z",
-  "currentIteration": 120,
+  "updatedAt": "2026-03-07T18:44:06.318Z",
+  "currentIteration": 121,
   "maxIterations": 0,
-  "tasksCompleted": 120,
+  "tasksCompleted": 121,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -736,8 +736,8 @@
       {
         "id": "US-121",
         "title": "Implement progressive piece unlocking",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-122",
@@ -2241,6 +2241,16 @@
       "durationMs": 86828,
       "startedAt": "2026-03-07T18:32:16.752Z",
       "endedAt": "2026-03-07T18:33:43.580Z"
+    },
+    {
+      "iteration": 121,
+      "status": "completed",
+      "taskId": "US-121",
+      "taskTitle": "Implement progressive piece unlocking",
+      "taskCompleted": true,
+      "durationMs": 403015,
+      "startedAt": "2026-03-07T18:33:44.708Z",
+      "endedAt": "2026-03-07T18:40:27.723Z"
     }
   ],
   "skippedTaskIds": [],
