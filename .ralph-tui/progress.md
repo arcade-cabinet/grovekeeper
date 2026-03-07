@@ -1023,3 +1023,15 @@ after each iteration and it's included in prompts for context.
   - US-043 and US-044 together already fulfilled US-045 — tests were written alongside implementation per the docs>tests>code workflow
   - When a story is "write tests for X" and X was already implemented with tests in prior stories, verify the test count and acceptance criteria rather than writing duplicate tests
 ---
+
+## 2026-03-07 - US-055
+- Tests for Gerstner wave math already fully implemented in `game/shaders/gerstnerWater.test.ts` (written during US-051 and extended in US-053)
+- 57 tests covering: MAX_WAVE_LAYERS constant, vertex/fragment shader GLSL content (displacement uniforms, foam varying, foam threshold, caustic uniforms), `buildGerstnerUniforms` (1-layer pond, 4-layer ocean, clamping to MAX_WAVE_LAYERS), `createGerstnerMaterial`/`createCausticsMaterial` material factories, `updateGerstnerTime`/`updateCausticsTime` time setters, caustic constants
+- Files changed: none (already complete)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern gerstnerWater` → 57 tests, 0 failures
+- **Learnings:**
+  - **GLSL math testing strategy**: GPU shader math (Gerstner displacement formula) cannot run in Jest. Test it via two seams: (1) shader string structure checks (does the GLSL declare the right uniforms and constants?), and (2) pure TS uniform-builder function (`buildGerstnerUniforms`) that maps the data model to shader inputs. This covers data pipeline correctness without WebGL.
+  - **"Write tests for X" stories**: When prior stories followed docs>tests>code, the tests are already written. Verify against acceptance criteria rather than writing duplicates.
+---
