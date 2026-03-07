@@ -39,6 +39,22 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-052
+- Created `WaterBodies` R3F component rendering ECS water body entities with PlaneGeometry + Gerstner shader (Spec §31.2)
+- **Files changed:**
+  - `components/scene/WaterBody.tsx` — new: `WATER_PLANE_SEGMENTS` const, `buildWaterPlaneGeometry(size)` pure factory, `WaterBodies` named export component (imperative useFrame pattern: Map<id,mesh> + Map<id,material>, lifecycle create/destroy, `updateGerstnerTime` each frame)
+  - `components/scene/WaterBody.test.ts` — new: 12 tests covering WATER_PLANE_SEGMENTS constraints, buildWaterPlaneGeometry (width/depth mapping, segment counts, pond/ocean/rectangular sizes), WaterBodies function component export
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern WaterBody` → 12 tests, 0 failures
+  - `npx jest --no-coverage` → 1864 tests, 0 failures (101 suites)
+- **Learnings:**
+  - **PlaneGeometry orientation for Gerstner shader**: `THREE.PlaneGeometry` lies in XY (Z=0). The Gerstner shader uses `pos.xz` for wave propagation. To get a horizontal water surface, rotate mesh `-π/2` around X at the Three.js level — the shader still sees local XY positions but visual result is a horizontal plane.
+  - **buildWaterPlaneGeometry as testable seam**: Exporting the geometry builder as a pure function allows testing PlaneGeometry size mapping (width × depth) without a WebGL context, following the same pattern as `buildGerstnerUniforms` and `resolveGLBPath`.
+  - **Dual-Map lifecycle (meshMap + materialMap)**: Keeping separate `Map<id, Mesh>` and `Map<id, ShaderMaterial>` avoids casting `mesh.material` to `ShaderMaterial` every frame — material reference stays typed and direct for the `updateGerstnerTime` call.
+
+---
+
 ## 2026-03-07 - US-051
 - Implemented Gerstner wave ShaderMaterial for water bodies (Spec §31.2)
 - **Files changed:**

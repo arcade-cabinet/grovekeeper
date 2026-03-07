@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T11:38:49.333Z",
-  "currentIteration": 50,
+  "updatedAt": "2026-03-07T11:42:29.811Z",
+  "currentIteration": 51,
   "maxIterations": 0,
-  "tasksCompleted": 50,
+  "tasksCompleted": 51,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -316,8 +316,8 @@
       {
         "id": "US-051",
         "title": "Create Gerstner wave vertex shader",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-052",
@@ -1541,6 +1541,16 @@
       "durationMs": 582239,
       "startedAt": "2026-03-07T11:22:54.117Z",
       "endedAt": "2026-03-07T11:32:36.356Z"
+    },
+    {
+      "iteration": 51,
+      "status": "completed",
+      "taskId": "US-051",
+      "taskTitle": "Create Gerstner wave vertex shader",
+      "taskCompleted": true,
+      "durationMs": 371847,
+      "startedAt": "2026-03-07T11:32:37.484Z",
+      "endedAt": "2026-03-07T11:38:49.331Z"
     }
   ],
   "skippedTaskIds": [],
