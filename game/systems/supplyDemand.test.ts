@@ -34,17 +34,13 @@ describe("supply/demand system", () => {
     });
 
     it("buying raises the price multiplier", () => {
-      const history: TradeRecord[] = [
-        { resource: "timber", direction: "buy", amount: 50, day: 5 },
-      ];
+      const history: TradeRecord[] = [{ resource: "timber", direction: "buy", amount: 50, day: 5 }];
       const multipliers = computePriceMultipliers(history, 10);
       expect(multipliers.timber).toBe(1.5); // 1.0 + 50/100
     });
 
     it("selling lowers the price multiplier", () => {
-      const history: TradeRecord[] = [
-        { resource: "sap", direction: "sell", amount: 50, day: 5 },
-      ];
+      const history: TradeRecord[] = [{ resource: "sap", direction: "sell", amount: 50, day: 5 }];
       const multipliers = computePriceMultipliers(history, 10);
       expect(multipliers.sap).toBe(0.5); // 1.0 - 50/100
     });

@@ -12,12 +12,7 @@ import {
   getUpgradeTarget,
 } from "./StructureManager";
 
-function makeCell(
-  gridX: number,
-  gridZ: number,
-  type: string = "soil",
-  occupied = false,
-) {
+function makeCell(gridX: number, gridZ: number, type: string = "soil", occupied = false) {
   return {
     gridCell: {
       gridX,
@@ -38,9 +33,13 @@ function makeStructureEntity(
   return {
     structure: {
       templateId: "test",
+      category: "essential" as const,
+      modelPath: "",
       effectType: effectType as "growth_boost",
       effectRadius,
       effectMagnitude,
+      level: 1,
+      buildCost: [],
     },
     position: { x, z },
   };
@@ -106,9 +105,7 @@ describe("StructureManager", () => {
     it("sorts by requiredLevel ascending", () => {
       const templates = getAvailableTemplates(25);
       for (let i = 1; i < templates.length; i++) {
-        expect(templates[i].requiredLevel).toBeGreaterThanOrEqual(
-          templates[i - 1].requiredLevel,
-        );
+        expect(templates[i].requiredLevel).toBeGreaterThanOrEqual(templates[i - 1].requiredLevel);
       }
     });
   });
@@ -170,11 +167,7 @@ describe("StructureManager", () => {
     });
 
     it("rejects 2x2 placement when one corner is missing", () => {
-      const cells = [
-        makeCell(0, 0, "soil"),
-        makeCell(1, 0, "soil"),
-        makeCell(0, 1, "soil"),
-      ];
+      const cells = [makeCell(0, 0, "soil"), makeCell(1, 0, "soil"), makeCell(0, 1, "soil")];
       expect(canPlace("greenhouse", 0, 0, cells)).toBe(false);
     });
 

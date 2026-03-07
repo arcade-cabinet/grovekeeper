@@ -31,27 +31,19 @@ export const TOOL_UPGRADE_TIERS: ToolUpgradeTier[] = [
   },
 ];
 
-export function getToolUpgradeTier(
-  currentTier: number,
-): ToolUpgradeTier | null {
+export function getToolUpgradeTier(currentTier: number): ToolUpgradeTier | null {
   if (currentTier >= 3) return null;
   return TOOL_UPGRADE_TIERS[currentTier] ?? null;
 }
 
-export function getStaminaCostWithUpgrade(
-  baseCost: number,
-  upgradeTier: number,
-): number {
+export function getStaminaCostWithUpgrade(baseCost: number, upgradeTier: number): number {
   if (upgradeTier <= 0) return baseCost;
   const tier = TOOL_UPGRADE_TIERS[Math.min(upgradeTier, 3) - 1];
   if (!tier) return baseCost;
   return Math.max(1, Math.round(baseCost * (1 - tier.staminaReduction)));
 }
 
-export function getEffectWithUpgrade(
-  baseEffect: number,
-  upgradeTier: number,
-): number {
+export function getEffectWithUpgrade(baseEffect: number, upgradeTier: number): number {
   if (upgradeTier <= 0) return baseEffect;
   const tier = TOOL_UPGRADE_TIERS[Math.min(upgradeTier, 3) - 1];
   if (!tier) return baseEffect;

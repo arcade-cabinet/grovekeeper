@@ -68,9 +68,7 @@ export function createEmptyProgress(): SpeciesProgress {
   };
 }
 
-export function checkDiscoveryProgress(
-  allProgress: Record<string, SpeciesProgress>,
-): CodexStats {
+export function checkDiscoveryProgress(allProgress: Record<string, SpeciesProgress>): CodexStats {
   let speciesDiscovered = 0;
   let speciesStudied = 0;
   let speciesMastered = 0;
@@ -85,9 +83,7 @@ export function checkDiscoveryProgress(
   }
 
   const completionPercent =
-    TOTAL_SPECIES_COUNT > 0
-      ? Math.round((speciesLegendary / TOTAL_SPECIES_COUNT) * 100)
-      : 0;
+    TOTAL_SPECIES_COUNT > 0 ? Math.round((speciesLegendary / TOTAL_SPECIES_COUNT) * 100) : 0;
 
   return {
     totalSpecies: TOTAL_SPECIES_COUNT,
@@ -108,15 +104,7 @@ export function getVisibleCodexFields(tier: DiscoveryTier): string[] {
     case 2:
       return ["name", "lore.tier1", "lore.tier2", "habitat", "growthTip"];
     case 3:
-      return [
-        "name",
-        "lore.tier1",
-        "lore.tier2",
-        "lore.tier3",
-        "habitat",
-        "growthTip",
-        "funFact",
-      ];
+      return ["name", "lore.tier1", "lore.tier2", "lore.tier3", "habitat", "growthTip", "funFact"];
     case 4:
       return [
         "name",

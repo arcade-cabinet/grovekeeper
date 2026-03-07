@@ -18,10 +18,7 @@ export function regenStamina(
   regenMult: number = 1.0,
 ): number {
   if (currentStamina >= maxStamina) return currentStamina;
-  return Math.min(
-    maxStamina,
-    currentStamina + BASE_STAMINA_REGEN_PER_SEC * regenMult * deltaTime,
-  );
+  return Math.min(maxStamina, currentStamina + BASE_STAMINA_REGEN_PER_SEC * regenMult * deltaTime);
 }
 
 /**

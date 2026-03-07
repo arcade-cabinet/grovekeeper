@@ -6,7 +6,7 @@
  * GroundBuilder.ts for R3F.
  */
 
-import { useFrame } from "@react-three/fiber";
+import { type ThreeEvent, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
@@ -21,6 +21,8 @@ export interface GroundProps {
   showGrid?: boolean;
   /** Center position of the ground plane [x, z]. */
   center?: [number, number];
+  /** Pointer down handler for tile selection (from useInteraction). */
+  onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
 }
 
 /** Biome base colors — vibrant and distinct. */
@@ -51,6 +53,7 @@ export const Ground = ({
   season = "spring",
   showGrid = true,
   center = [0, 0],
+  onPointerDown,
 }: GroundProps) => {
   const groundRef = useRef<THREE.Mesh>(null);
   const gridRef = useRef<THREE.LineSegments>(null);
@@ -106,13 +109,10 @@ export const Ground = ({
         rotation={[-Math.PI / 2, 0, 0]}
         position={[centerX, -0.05, centerZ]}
         receiveShadow
+        onPointerDown={onPointerDown}
       >
         <planeGeometry args={[groundSize, groundSize]} />
-        <meshStandardMaterial
-          color={groundColor}
-          roughness={0.95}
-          metalness={0}
-        />
+        <meshStandardMaterial color={groundColor} roughness={0.95} metalness={0} />
       </mesh>
 
       {/* Grid overlay */}

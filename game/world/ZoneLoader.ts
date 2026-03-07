@@ -6,11 +6,7 @@
  * overlaying any sparse tile overrides.
  */
 
-import {
-  createGridCellEntity,
-  createNpcEntity,
-  createWildTreeEntity,
-} from "@/game/ecs/archetypes";
+import { createGridCellEntity, createNpcEntity, createWildTreeEntity } from "@/game/ecs/archetypes";
 import type { Entity } from "@/game/ecs/world";
 import { gridCellsQuery, npcsQuery, world } from "@/game/ecs/world";
 import { getNpcTemplate } from "@/game/npcs/NpcManager";
@@ -19,9 +15,7 @@ import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types";
 import { pickWeighted } from "./WorldGenerator";
 
 /** Map zone ground material to grid cell type. */
-function materialToCellType(
-  material: GroundMaterial,
-): "soil" | "water" | "rock" | "path" {
+function materialToCellType(material: GroundMaterial): "soil" | "water" | "rock" | "path" {
   switch (material) {
     case "soil":
       return "soil";
@@ -174,20 +168,14 @@ function spawnWildTrees(
     // Random starting stage between 2-4 (Sapling through Old Growth)
     const stage = (Math.floor(rng() * 3) + 2) as 0 | 1 | 2 | 3 | 4;
 
-    const treeEntity = createWildTreeEntity(
-      cell.worldX,
-      cell.worldZ,
-      speciesId,
-      stage,
-    );
+    const treeEntity = createWildTreeEntity(cell.worldX, cell.worldZ, speciesId, stage);
     (treeEntity as Entity & { zoneId?: string }).zoneId = zoneId;
     world.add(treeEntity);
     entities.push(treeEntity);
 
     // Mark the grid cell as occupied
     const gridEntity = gridEntities.find(
-      (e) =>
-        e.gridCell?.gridX === cell.worldX && e.gridCell?.gridZ === cell.worldZ,
+      (e) => e.gridCell?.gridX === cell.worldX && e.gridCell?.gridZ === cell.worldZ,
     );
     if (gridEntity?.gridCell) {
       gridEntity.gridCell.occupied = true;

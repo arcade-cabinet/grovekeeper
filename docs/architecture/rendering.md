@@ -1,5 +1,17 @@
 # Rendering Architecture
 
+> **PARTIALLY SUPERSEDED (2026-03-07):** Several rendering details have changed. See `docs/plans/2026-03-07-unified-game-design.md` Sections 2 and 5. Key corrections:
+>
+> - **Trees use 3DPSX GLB models** (8 base + 6 winter variants), not procedural SPS geometry. Growth = scale per stage. ~50 lines replaces 951-line SPS generator.
+> - **NPCs use 3DPSX ChibiCharacter GLBs** with anime.js Lego-style animation, not procedural box primitives.
+> - **First-person perspective** -- no visible player mesh. Player IS the camera with Rapier capsule collider.
+> - **No BorderTrees component** -- border/decorative trees are GLB instances, same as planted trees.
+> - **Instanced rendering keys:** `${speciesId}_${stage}_${season}[_night]` for trees.
+> - **Vertex budget:** ~30,000 per visible chunk (see unified doc Section 2).
+> - **Seasonal bushes:** 262 3DPSX GLBs (52 shapes x 5 seasons), swap GLB on season change.
+>
+> The R3F declarative architecture, useFrame pattern, instanced mesh approach, and day/night cycle remain accurate.
+
 Grovekeeper's 3D rendering uses React Three Fiber (R3F) with a fully declarative, component-based architecture. The scene is composed of React components inside a `<Canvas>`, each owning its own per-frame logic via `useFrame` hooks.
 
 ## Scene Decomposition
@@ -102,47 +114,27 @@ The ground component renders:
 2. **Soil base** -- Flat ground covering the planting area.
 3. **Grid overlay** -- Semi-transparent grid lines showing planting positions.
 
-## Player Mesh
+## Player
 
-The player ("Fern") is built from Three.js primitives:
-
-- **Body:** CylinderGeometry (tapered, forest green)
-- **Head:** SphereGeometry (skin-toned)
-- **Hat:** CylinderGeometry pieces (autumn gold)
-
-Position is synced from the ECS player entity every frame via `useFrame`.
+First-person perspective -- the player IS the camera. No visible player mesh. A Rapier KinematicCharacterController capsule handles collision. The camera sits at eye height (1.6 units) inside the capsule. See `docs/architecture/fps-camera.md` for details.
 
 ## Tree Rendering
 
 Trees use Three.js `InstancedMesh` for efficient batch rendering. All trees of the same species share a single instanced draw call.
 
-### Tree Geometry Generation
+### Tree Models (3DPSX GLBs)
 
-Tree meshes are generated procedurally using Three.js `BufferGeometry`, ported from the original SPS Tree Generator. The generator creates deterministic trees using seeded RNG.
+Trees use pre-made 3DPSX GLB models, not procedural geometry. 8 retro nature tree silhouettes + 72 tree_pack_1.1 models mapped to 15 species. Growth stages are scale-based:
 
-Source: `src/game/utils/treeGeometry.ts`
+| Stage | Name | Approach |
+|-------|------|----------|
+| 0 | Seed | Tiny hardcoded geometry (cone + sphere, ~20 verts) |
+| 1 | Sprout | Hardcoded geometry (cylinder + triangles, ~30 verts) |
+| 2 | Sapling | Species GLB at 0.5x scale |
+| 3 | Mature | Species GLB at 1.0x scale |
+| 4 | Old Growth | Species GLB at 1.3x scale + Y-axis squash (0.95) |
 
-### Species-Specific Rendering
-
-Each of the 15 species maps to a unique rendering profile:
-
-| Species         | Special Feature                    |
-|-----------------|-------------------------------------|
-| White Oak       | Standard tree                       |
-| Weeping Willow  | Drooping canopy geometry            |
-| Elder Pine      | Conical shape, forked trunk         |
-| Cherry Blossom  | Pink canopy, falling petal overlay  |
-| Ghost Birch     | Night glow (emissive material)      |
-| Redwood         | Tallest tree, heavy trunk           |
-| Flame Maple     | Orange-red seasonal tints           |
-| Baobab          | Wide tapered trunk                  |
-| Silver Birch    | +20% growth near water              |
-| Ironbark        | Storm immune, 3x timber at Old Growth |
-| Golden Apple    | 3x fruit yield in Autumn            |
-| Mystic Fern     | +15% growth per adjacent tree       |
-| Crystalline Oak | Prismatic seasonal color shifts     |
-| Moonwood Ash    | Silver shimmer material             |
-| Worldtree       | Largest tree, grove-wide presence   |
+Seasonal variation: winter variant GLB swap (6 models) or material color tint uniform. Seeded rotation + scale jitter (0.85x-1.15x) for natural variation.
 
 ### Instanced Rendering
 
@@ -200,6 +192,6 @@ Weather effects use React Native animated overlays (not 3D particles) to minimiz
 - **Windstorm:** Diagonal streak animation
 - **Cherry petals:** Floating petal animation (active when Cherry Blossom trees reach stage 3+)
 
-## Border Trees
+## Decorative / Background Trees
 
-14 decorative trees placed around the grid edges to frame the grove. They use simple geometry (cylinder trunk + sphere canopy) with seeded RNG for scale variation. These trees change canopy color with the seasons but are not part of the ECS.
+In the infinite world, decorative trees are the same GLB models used for planted trees, placed via procedural scatter during chunk generation. They use `InstancedMesh` for efficient batch rendering and are NOT individual ECS entities. They change appearance via seasonal GLB swap or color tint uniform, same as interactive trees.

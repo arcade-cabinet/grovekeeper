@@ -47,13 +47,7 @@ export interface EncounterChoice {
 }
 
 export interface EncounterEffect {
-  type:
-    | "give_resource"
-    | "give_seed"
-    | "give_xp"
-    | "spawn_tree"
-    | "buff_growth"
-    | "nothing";
+  type: "give_resource" | "give_seed" | "give_xp" | "spawn_tree" | "buff_growth" | "nothing";
   resource?: ResourceType;
   amount?: number;
   speciesId?: string;

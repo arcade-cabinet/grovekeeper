@@ -202,7 +202,7 @@
     "id": "thorn",
     "name": "Thorn",
     "title": "Forest Ranger",
-    "icon": "\ud83e\uddd1\u200d\ud83c\udf3e",
+    "icon": "\ud83c\udf32",
     "function": "quests",
     "appearance": {
       "bodyColor": "#33691E",

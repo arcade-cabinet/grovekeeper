@@ -39,25 +39,17 @@ const ZONE_BONUSES: Record<ZoneType, ZoneBonus[]> = {
 
 /** Get bonuses for a zone type. */
 export function getZoneBonuses(zoneType: ZoneType): ZoneBonus[] {
-  return ZONE_BONUSES[zoneType] ?? [];
+  return [...(ZONE_BONUSES[zoneType] ?? [])];
 }
 
 /** Get the total magnitude of a specific bonus type for a zone. */
-export function getZoneBonusMagnitude(
-  zoneType: ZoneType,
-  bonusType: BonusType,
-): number {
+export function getZoneBonusMagnitude(zoneType: ZoneType, bonusType: BonusType): number {
   const bonuses = ZONE_BONUSES[zoneType] ?? [];
-  return bonuses
-    .filter((b) => b.type === bonusType)
-    .reduce((sum, b) => sum + b.magnitude, 0);
+  return bonuses.filter((b) => b.type === bonusType).reduce((sum, b) => sum + b.magnitude, 0);
 }
 
 /** Check if a zone has a specific bonus type. */
-export function hasZoneBonus(
-  zoneType: ZoneType,
-  bonusType: BonusType,
-): boolean {
+export function hasZoneBonus(zoneType: ZoneType, bonusType: BonusType): boolean {
   const bonuses = ZONE_BONUSES[zoneType] ?? [];
   return bonuses.some((b) => b.type === bonusType);
 }

@@ -1,73 +1,128 @@
-# Minimal Template
+# Grovekeeper
 
-This is a [React Native](https://reactnative.dev/) project built with [Expo](https://expo.dev/) and [React Native Reusables](https://reactnativereusables.com).
+*"Every forest begins with a single seed."*
 
-It was initialized using the following command:
+A PSX-aesthetic survival game where you explore an infinite procedural world, tend groves, and discover the 14 ancient Grovekeepers hidden deep within hedge labyrinths. Plant, chop, water, dig, forage, fish, farm, forge -- every comfort is earned. Same seed, same world, always.
 
-```bash
-npx @react-native-reusables/cli@latest init -t grovekeeper
-```
+**Mobile-first** -- designed for 3-15 minute sessions. Runs on iOS, Android, and Web.
+
+## The Game
+
+You start with a basic axe, a trowel, a watering can, three White Oak seeds, and a worn compass. Set out from the tutorial village into a chunk-based infinite world with 8 biomes, procedural villages, merchant camps, ancient groves, and garden labyrinths. Find the dormant Grovekeepers, unlock all 15 tree species, and master the land.
+
+- **Survival systems** -- hearts, hunger, stamina, temperature, weather impact
+- **Seeded determinism** -- "Adjective Adjective Noun" seed phrases, zero Math.random()
+- **PSX aesthetic** -- no antialiasing, flat shading, chunky geometry, pixelated textures
+- **Infinite world** -- chunk-based generation with delta-only persistence
+- **4 difficulty tiers** -- Seedling, Sapling, Hardwood, Ironwood (permadeath)
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Expo SDK 55 (New Architecture) |
+| Runtime | React 19, React Native 0.83 |
+| 3D Engine | React Three Fiber 9 + drei 10 |
+| ECS | Miniplex 2.x |
+| State | Legend State 3.x (persistent via expo-sqlite) |
+| NPC AI | Yuka 0.7 |
+| NPC Animation | anime.js (rigid body part rotation) |
+| Audio | Tone.js (spatial, FM synthesis) |
+| Database | expo-sqlite + drizzle-orm |
+| Styling | NativeWind 4 + Tailwind CSS 3 |
+| Language | TypeScript 5.9, strict mode |
+| Lint/Format | Biome 2.4 |
+| Testing | Jest (unit) + Maestro (E2E) |
+| Package Manager | pnpm |
 
 ## Getting Started
 
-To run the development server:
-
 ```bash
-    npm run dev
-    # or
-    yarn dev
-    # or
-    pnpm dev
-    # or
-    bun dev
+# Install dependencies
+pnpm install
+
+# Start dev server
+pnpm dev
+
+# Run on specific platform
+pnpm ios      # iOS simulator (Mac only)
+pnpm android  # Android emulator
+pnpm web      # Browser
 ```
 
-This will start the Expo Dev Server. Open the app in:
-
-- **iOS**: press `i` to launch in the iOS simulator _(Mac only)_
-- **Android**: press `a` to launch in the Android emulator
-- **Web**: press `w` to run in a browser
-
-You can also scan the QR code using the [Expo Go](https://expo.dev/go) app on your device. This project fully supports running in Expo Go for quick testing on physical devices.
-
-## Adding components
-
-You can add more reusable components using the CLI:
+## Development
 
 ```bash
-npx react-native-reusables/cli@latest add [...components]
+pnpm test             # Run tests (Jest)
+pnpm test:watch       # Watch mode
+pnpm test:coverage    # Coverage report
+pnpm test:e2e         # Maestro mobile E2E
+pnpm lint             # Biome lint + format check
+pnpm format           # Biome format (write)
+pnpm check            # Full check (lint + format, write fixes)
+npx tsc --noEmit      # TypeScript type check
 ```
 
-> e.g. `npx react-native-reusables/cli@latest add input textarea`
+## Project Structure
 
-If you don't specify any component names, you'll be prompted to select which components to add interactively. Use the `--all` flag to install all available components at once.
+```
+grovekeeper/
+  CLAUDE.md              -- Agent instructions and project rules
+  docs/
+    GAME_SPEC.md         -- Single source of truth for game design
+    plans/               -- Design documents (unified design is the master)
+    architecture/        -- Technical architecture deep dives
+    game-design/         -- Game mechanics docs
+    brand/               -- Visual identity
+    ui-ux/               -- HUD layout, controls, tutorial flow
+    guides/              -- Getting started, coding standards, contributing
+  app/                   -- Expo Router screens (MainMenu, Game)
+  components/
+    scene/               -- R3F 3D components (Camera, Sky, Ground, Lighting)
+    entities/            -- R3F entity renderers (Player, Trees, NPCs)
+    game/                -- HUD, menus, dialogs (React Native)
+    ui/                  -- Base UI primitives
+  game/
+    systems/             -- Pure-function game systems (growth, weather, harvest)
+    stores/              -- Legend State persistent state
+    ecs/                 -- Miniplex world, queries, archetypes
+    hooks/               -- R3F hooks (useInput, useMovement)
+    npcs/                -- NPC management and data
+    quests/              -- Quest chain engine
+    events/              -- Event scheduler
+    world/               -- World generation, zone loading
+    structures/          -- Structure placement + effects
+    actions/             -- Game action dispatcher
+    config/              -- Runtime config loaders
+    constants/           -- Codex + derived constants
+    ai/                  -- Yuka NPC AI + PlayerGovernor
+    db/                  -- expo-sqlite + drizzle-orm
+    utils/               -- Pure utilities (seedRNG, treeGeometry)
+  config/                -- JSON game data (species, tools, quests, difficulty)
+  assets/                -- Textures, models, fonts
+  .maestro/              -- Maestro E2E test flows
+  .claude/               -- Agent infrastructure (hooks, agents, commands)
+```
 
-## Project Features
+## Architecture
 
-- ⚛️ Built with [Expo Router](https://expo.dev/router)
-- 🎨 Styled with [Tailwind CSS](https://tailwindcss.com/) via [Nativewind](https://www.nativewind.dev/)
-- 📦 UI powered by [React Native Reusables](https://github.com/founded-labs/react-native-reusables)
-- 🚀 New Architecture enabled
-- 🔥 Edge to Edge enabled
-- 📱 Runs on iOS, Android, and Web
+- **ECS (Miniplex)** -- runtime game state: entity positions, growth progress, tile states
+- **Legend State** -- persistent player state: level, XP, resources, unlocks, settings
+- **Pure systems** -- `(world, deltaTime, ...context) => void`, config from JSON, randomness from `scopedRNG`
+- **GLB models** -- 3DPSX PSX-native models for trees, NPCs, structures, props (procedural for terrain, water, sky, weather, audio)
+- **Chunk-based world** -- 16x16 tiles per chunk, 3x3 active, 5x5 buffer, delta-only persistence
 
-## Learn More
+## Documentation
 
-To dive deeper into the technologies used:
+See [docs/README.md](docs/README.md) for the full documentation index.
 
-- [React Native Docs](https://reactnative.dev/docs/getting-started)
-- [Expo Docs](https://docs.expo.dev/)
-- [Nativewind Docs](https://www.nativewind.dev/)
-- [React Native Reusables](https://reactnativereusables.com)
+The **[Unified Game Design](docs/plans/2026-03-07-unified-game-design.md)** is the master design document covering all game systems, world generation, economy, NPCs, progression, and implementation phases.
 
-## Deploy with EAS
+## Deploy
 
-The easiest way to deploy your app is with [Expo Application Services (EAS)](https://expo.dev/eas).
-
-- [EAS Build](https://docs.expo.dev/build/introduction/)
-- [EAS Updates](https://docs.expo.dev/eas-update/introduction/)
-- [EAS Submit](https://docs.expo.dev/submit/introduction/)
+- **Web**: GitHub Pages via GitHub Actions
+- **Native**: EAS Build for iOS + Android
 
 ---
 
-If you enjoy using React Native Reusables, please consider giving it a ⭐ on [GitHub](https://github.com/founded-labs/react-native-reusables). Your support means a lot!
+Built with [Expo](https://expo.dev/), [React Three Fiber](https://r3f.docs.pmnd.rs/), and [Three.js](https://threejs.org/).

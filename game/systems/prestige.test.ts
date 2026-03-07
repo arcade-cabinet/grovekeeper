@@ -106,11 +106,7 @@ describe("prestige system", () => {
     it("unlocks all 3 prestige species at prestige 3+", () => {
       const species = getUnlockedPrestigeSpecies(3);
       expect(species).toHaveLength(3);
-      expect(species.map((s) => s.id)).toEqual([
-        "crystal-oak",
-        "moonwood-ash",
-        "worldtree",
-      ]);
+      expect(species.map((s) => s.id)).toEqual(["crystal-oak", "moonwood-ash", "worldtree"]);
     });
   });
 

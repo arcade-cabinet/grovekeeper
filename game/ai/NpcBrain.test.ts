@@ -150,10 +150,7 @@ describe("NpcBrain", () => {
       expect(brain.getBehavior()).toBe("approaching");
 
       // NPC is still moving, update should keep the behavior
-      const behavior = brain.update(
-        0.016,
-        makeCtx({ distToPlayer: 2.0, playerX: 7, playerZ: 5 }),
-      );
+      const behavior = brain.update(0.016, makeCtx({ distToPlayer: 2.0, playerX: 7, playerZ: 5 }));
       expect(behavior).toBe("approaching");
     });
   });
@@ -169,10 +166,7 @@ describe("NpcBrain", () => {
       const brain = new NpcBrain("npc-1", "elder-rowan", 5, 5);
       npcMovementMock.__setStartResult(true);
       brain.setTutorialTarget(10, 10);
-      const behavior = brain.update(
-        0.016,
-        makeCtx({ distToPlayer: 2.5, npcX: 5, npcZ: 5 }),
-      );
+      const behavior = brain.update(0.016, makeCtx({ distToPlayer: 2.5, npcX: 5, npcZ: 5 }));
       expect(behavior).toBe("tutorial_guide");
     });
 

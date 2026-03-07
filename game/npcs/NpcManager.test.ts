@@ -43,9 +43,7 @@ describe("NpcManager", () => {
       const template = getNpcTemplate("botanist-fern");
       expect(template).toBeDefined();
       expect(template!.questConfig).toBeDefined();
-      expect(template!.questConfig!.specialQuestIds).toContain(
-        "plant-5-species",
-      );
+      expect(template!.questConfig!.specialQuestIds).toContain("plant-5-species");
     });
   });
 

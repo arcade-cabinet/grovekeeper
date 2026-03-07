@@ -3,7 +3,7 @@
  * Ported from BabylonJS archive -- no engine dependencies.
  */
 
-import gridConfig from "@/config/game/grid.json";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import type { TileCoord } from "@/game/systems/pathfinding";
 
 const CELL_SIZE: number = gridConfig.cellSize;

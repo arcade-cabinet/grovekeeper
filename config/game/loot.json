@@ -1,0 +1,37 @@
+{
+  "tables": {
+    "bat-loot": {
+      "drops": [
+        { "resource": "sap", "min": 1, "max": 3, "chance": 0.8 },
+        { "resource": "fruit", "min": 1, "max": 2, "chance": 0.3 }
+      ],
+      "rareDrop": { "resource": "acorns", "min": 2, "max": 5, "chance": 0.05 }
+    },
+    "skeleton-loot": {
+      "drops": [
+        { "resource": "timber", "min": 2, "max": 5, "chance": 0.9 },
+        { "resource": "acorns", "min": 1, "max": 3, "chance": 0.5 }
+      ],
+      "rareDrop": { "resource": "sap", "min": 5, "max": 10, "chance": 0.1 }
+    },
+    "knight-loot": {
+      "drops": [
+        { "resource": "timber", "min": 3, "max": 8, "chance": 1.0 },
+        { "resource": "sap", "min": 2, "max": 5, "chance": 0.7 },
+        { "resource": "acorns", "min": 2, "max": 4, "chance": 0.5 }
+      ],
+      "rareDrop": { "resource": "fruit", "min": 5, "max": 12, "chance": 0.15 }
+    },
+    "hedge-loot": {
+      "drops": [
+        { "resource": "timber", "min": 1, "max": 3, "chance": 0.9 },
+        { "resource": "sap", "min": 1, "max": 2, "chance": 0.4 }
+      ],
+      "rareDrop": { "resource": "fruit", "min": 2, "max": 4, "chance": 0.08 }
+    }
+  },
+  "despawnTimerSeconds": 60,
+  "floatBobSpeed": 2.0,
+  "floatBobAmplitude": 0.15,
+  "pickupRadius": 1.5
+}

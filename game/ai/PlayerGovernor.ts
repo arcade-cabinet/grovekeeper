@@ -36,11 +36,7 @@ import {
   createPathFollow,
   type PathFollowState,
 } from "@/game/systems/pathFollowing";
-import {
-  buildWalkabilityGrid,
-  findPath,
-  type TileCoord,
-} from "@/game/systems/pathfinding";
+import { buildWalkabilityGrid, findPath, type TileCoord } from "@/game/systems/pathfinding";
 import { BASE_TRADE_RATES, executeTrade } from "@/game/systems/trading";
 
 // ──────────────────────────────────────────────
@@ -550,11 +546,7 @@ export class PlayerGovernor {
         if (count <= 0) continue;
         const species = getSpeciesById(sp);
         if (!species) continue;
-        if (
-          species.yield.some((y) =>
-            neededResources.includes(y.resource as ResourceType),
-          )
-        ) {
+        if (species.yield.some((y) => neededResources.includes(y.resource as ResourceType))) {
           return sp;
         }
       }
@@ -572,11 +564,7 @@ export class PlayerGovernor {
     return null;
   }
 
-  private pickNearestTile(
-    tiles: GridCellComponent[],
-    px: number,
-    pz: number,
-  ): GridCellComponent {
+  private pickNearestTile(tiles: GridCellComponent[], px: number, pz: number): GridCellComponent {
     let closest = tiles[0];
     let minDist = Number.POSITIVE_INFINITY;
     for (const tile of tiles) {

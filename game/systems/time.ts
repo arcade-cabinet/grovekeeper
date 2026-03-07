@@ -28,8 +28,7 @@ const REAL_SECONDS_PER_GAME_DAY = 300;
 const MICROSECONDS_PER_REAL_SECOND = 1_000_000;
 
 /** Microseconds per in-game day. */
-export const MICROSECONDS_PER_DAY =
-  REAL_SECONDS_PER_GAME_DAY * MICROSECONDS_PER_REAL_SECOND;
+export const MICROSECONDS_PER_DAY = REAL_SECONDS_PER_GAME_DAY * MICROSECONDS_PER_REAL_SECOND;
 
 /** How many microseconds per "game second" (1/86400 of a day). */
 export const MICROSECONDS_PER_GAME_SECOND = MICROSECONDS_PER_DAY / 86400;
@@ -114,8 +113,7 @@ export function computeTimeState(
   seasonLength = DEFAULT_SEASON_LENGTH,
 ): TimeState {
   const dayNumber = Math.floor(microseconds / MICROSECONDS_PER_DAY);
-  const dayProgress =
-    (microseconds % MICROSECONDS_PER_DAY) / MICROSECONDS_PER_DAY;
+  const dayProgress = (microseconds % MICROSECONDS_PER_DAY) / MICROSECONDS_PER_DAY;
   const phase = phaseFromProgress(dayProgress);
   const { season, seasonDay } = seasonFromDay(dayNumber, seasonLength);
   const hour = Math.floor(dayProgress * 24);

@@ -2,7 +2,7 @@
 
 **Purpose:** Guide any AI agent (Claude Code, Cursor, Cline, Windsurf, or custom) to effectively contribute to Grovekeeper. This document defines agent roles, coordination protocols, and the project memory bank that survives between sessions.
 
-**Architecture Migration:** The project has migrated from BabylonJS + Vite + Capacitor to React Three Fiber + Expo SDK 55. The old BabylonJS codebase is archived at `/grovekeeper-babylonjs-archive` (READ ONLY reference). All new work targets the Expo/R3F stack.
+**Architecture Migration:** The project has migrated from BabylonJS + Vite + Capacitor to React Three Fiber + Expo SDK 55. All new work targets the Expo/R3F stack.
 
 ---
 
@@ -122,7 +122,6 @@ When explicitly asked, review EVERY memory bank file -- even those that seem unc
 - `src/game/constants/` -- Species, tools, config, resources
 - `config/` -- JSON config hierarchy (game balance, species data, recipes)
 
-**Reference:** Old implementations in `/grovekeeper-babylonjs-archive/src/game/systems/` for porting logic.
 
 **Rules:**
 - Systems are pure functions: `(world, dt, ...context) => void`
@@ -174,7 +173,6 @@ Each component owns its own `useFrame` hook. There is no monolithic game loop.
 - `src/game/utils/seedRNG.ts` -- Seeded RNG for deterministic meshes
 - `src/game/utils/gridMath.ts` -- Grid coordinate math
 
-**Reference:** Old BabylonJS scene managers in `/grovekeeper-babylonjs-archive/src/game/scene/` for visual reference.
 
 **Rules:**
 - Declarative R3F components -- no imperative `scene.add()` calls
@@ -300,6 +298,7 @@ describe('systemName', () => {
 ```
 
 **Maestro E2E Pattern:**
+
 ```yaml
 appId: com.grovekeeper.app
 ---

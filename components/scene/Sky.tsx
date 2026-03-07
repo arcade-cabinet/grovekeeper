@@ -8,9 +8,10 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AccessibilityInfo } from "react-native";
 import * as THREE from "three";
-import theme from "@/config/theme.json";
+import theme from "@/config/theme.json" with { type: "json" };
 
 export interface SkyProps {
   /** Sky colors from the time system — zenith, horizon, sun, ambient as hex strings. */
@@ -42,6 +43,13 @@ export const Sky = ({ skyColors, season, sunIntensity }: SkyProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const matRef = useRef<THREE.ShaderMaterial>(null);
 
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => sub.remove();
+  }, []);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: create once, update in useFrame
   const uniforms = useMemo(
     () => ({
@@ -51,8 +59,7 @@ export const Sky = ({ skyColors, season, sunIntensity }: SkyProps) => {
         value: SEASONAL_TINTS[season]?.clone() ?? new THREE.Color(1, 1, 1),
       },
       uIntensity: {
-        value:
-          NIGHT_INTENSITY + (DAY_INTENSITY - NIGHT_INTENSITY) * sunIntensity,
+        value: NIGHT_INTENSITY + (DAY_INTENSITY - NIGHT_INTENSITY) * sunIntensity,
       },
     }),
     [],
@@ -65,11 +72,16 @@ export const Sky = ({ skyColors, season, sunIntensity }: SkyProps) => {
     mat.uniforms.uZenithColor.value.set(skyColors.zenith);
     mat.uniforms.uHorizonColor.value.set(skyColors.horizon);
 
-    const tint = SEASONAL_TINTS[season];
-    if (tint) {
-      mat.uniforms.uSeasonTint.value.copy(tint);
-    } else {
+    if (reduceMotion) {
+      // Skip seasonal tint blend — snap to neutral
       mat.uniforms.uSeasonTint.value.set(1, 1, 1);
+    } else {
+      const tint = SEASONAL_TINTS[season];
+      if (tint) {
+        mat.uniforms.uSeasonTint.value.copy(tint);
+      } else {
+        mat.uniforms.uSeasonTint.value.set(1, 1, 1);
+      }
     }
 
     mat.uniforms.uIntensity.value =

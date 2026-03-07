@@ -38,9 +38,7 @@ describe("growth system", () => {
     });
 
     it("clamps stage above max to max", () => {
-      expect(getStageScale(MAX_STAGE + 5, 0)).toBe(
-        STAGE_VISUALS[MAX_STAGE].scale,
-      );
+      expect(getStageScale(MAX_STAGE + 5, 0)).toBe(STAGE_VISUALS[MAX_STAGE].scale);
     });
 
     it("floors fractional stage values", () => {
@@ -78,18 +76,12 @@ describe("growth system", () => {
     it("applies spring season multiplier", () => {
       const rate = calcGrowthRate({ ...baseParams, season: "spring" });
       // spring mult = 1.5 => 1.5 / 10 = 0.15
-      expect(rate).toBeCloseTo(
-        SEASON_GROWTH_MULTIPLIERS.spring / baseParams.baseTime,
-        6,
-      );
+      expect(rate).toBeCloseTo(SEASON_GROWTH_MULTIPLIERS.spring / baseParams.baseTime, 6);
     });
 
     it("applies autumn season multiplier", () => {
       const rate = calcGrowthRate({ ...baseParams, season: "autumn" });
-      expect(rate).toBeCloseTo(
-        SEASON_GROWTH_MULTIPLIERS.autumn / baseParams.baseTime,
-        6,
-      );
+      expect(rate).toBeCloseTo(SEASON_GROWTH_MULTIPLIERS.autumn / baseParams.baseTime, 6);
     });
 
     it("returns 0 in winter for non-evergreen trees", () => {

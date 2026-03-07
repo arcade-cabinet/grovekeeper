@@ -2,7 +2,7 @@
  * Tree species data accessors backed by config/game/species.json.
  */
 
-import speciesData from "@/config/game/species.json";
+import speciesData from "@/config/game/species.json" with { type: "json" };
 
 export interface TreeSpeciesData {
   id: string;
@@ -26,8 +26,7 @@ export interface TreeSpeciesData {
   requiredPrestiges?: number;
 }
 
-export const TREE_SPECIES: TreeSpeciesData[] =
-  speciesData.base as unknown as TreeSpeciesData[];
+export const TREE_SPECIES: TreeSpeciesData[] = speciesData.base as unknown as TreeSpeciesData[];
 
 export const PRESTIGE_TREE_SPECIES: TreeSpeciesData[] =
   speciesData.prestige as unknown as TreeSpeciesData[];

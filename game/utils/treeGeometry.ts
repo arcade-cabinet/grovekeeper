@@ -16,8 +16,8 @@
  */
 
 import * as THREE from "three";
-import growthConfig from "@/config/game/growth.json";
-import speciesConfig from "@/config/game/species.json";
+import growthConfig from "@/config/game/growth.json" with { type: "json" };
+import speciesConfig from "@/config/game/species.json" with { type: "json" };
 
 import { createRNG } from "./seedRNG";
 
@@ -27,9 +27,7 @@ import { createRNG } from "./seedRNG";
 // Supports merging geometries that share identical attribute names/itemSizes.
 // ---------------------------------------------------------------------------
 
-function mergeGeometries(
-  geometries: THREE.BufferGeometry[],
-): THREE.BufferGeometry | null {
+function mergeGeometries(geometries: THREE.BufferGeometry[]): THREE.BufferGeometry | null {
   if (geometries.length === 0) return null;
   if (geometries.length === 1) return geometries[0].clone();
 
@@ -47,11 +45,9 @@ function mergeGeometries(
   }
 
   // Build merged attribute arrays
-  const mergedAttrs: Record<string, { array: Float32Array; itemSize: number }> =
-    {};
+  const mergedAttrs: Record<string, { array: Float32Array; itemSize: number }> = {};
   for (const name of attrNames) {
-    const itemSize = (geometries[0].getAttribute(name) as THREE.BufferAttribute)
-      .itemSize;
+    const itemSize = (geometries[0].getAttribute(name) as THREE.BufferAttribute).itemSize;
     mergedAttrs[name] = {
       array: new Float32Array(totalVertices * itemSize),
       itemSize,
@@ -88,10 +84,7 @@ function mergeGeometries(
   const merged = new THREE.BufferGeometry();
   for (const name of attrNames) {
     const { array, itemSize } = mergedAttrs[name];
-    merged.setAttribute(
-      name,
-      new THREE.Float32BufferAttribute(array, itemSize),
-    );
+    merged.setAttribute(name, new THREE.Float32BufferAttribute(array, itemSize));
   }
   if (mergedIndex) {
     merged.setIndex(new THREE.BufferAttribute(mergedIndex, 1));
@@ -230,17 +223,13 @@ function createBranchGeometry(
     let corePoint = scaleVec3(branchSys.y, t * branchLength);
     corePoint = addVec3(
       corePoint,
-      scaleVec3(
-        branchSys.x,
-        bowHeight * Math.exp(-t) * Math.sin(bowFreq * t * Math.PI),
-      ),
+      scaleVec3(branchSys.x, bowHeight * Math.exp(-t) * Math.sin(bowFreq * t * Math.PI)),
     );
     corePoint = addVec3(corePoint, branchAt);
     corePath[d] = corePoint;
 
     // Randomized, tapered radius
-    const xsr =
-      branchRadius * (1 + (0.4 * rng() - 0.2)) * (1 - (1 - branchTaper) * t);
+    const xsr = branchRadius * (1 + (0.4 * rng() - 0.2)) * (1 - (1 - branchTaper) * t);
     radii.push(xsr);
 
     const ring: Vec3[] = [];
@@ -284,10 +273,7 @@ function createBranchGeometry(
   }
 
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute(positions, 3),
-  );
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
 
@@ -483,8 +469,7 @@ function createLeafGeometries(
     const py =
       pathLower.y +
       (pathUpper.y - pathLower.y) * frac +
-      ((0.6 * leafWidth) / leafWHRatio + base.radii[a][upper]) *
-        (2 * (s % 2) - 1);
+      ((0.6 * leafWidth) / leafWHRatio + base.radii[a][upper]) * (2 * (s % 2) - 1);
     const pz = pathLower.z + (pathUpper.z - pathLower.z) * frac;
 
     const leaf = leafTemplate.clone();
@@ -549,9 +534,7 @@ function createCrownGeometries(
   // Pre-compute random turns for fork-end mini-trees
   const turns: number[] = [];
   for (let f = 0; f < forks ** (clampedBoughs + 1); f++) {
-    turns.push(
-      randPct(Math.floor(f / forks ** clampedBoughs) * forkTurn, 0.2, rng),
-    );
+    turns.push(randPct(Math.floor(f / forks ** clampedBoughs) * forkTurn, 0.2, rng));
   }
 
   // Fork-end mini-trees: place a scaled copy of the base trunk at each branch tip
@@ -583,10 +566,7 @@ function createCrownGeometries(
     const mat4 = new THREE.Matrix4();
     const axisUp = new THREE.Vector3(0, 1, 0);
     const dir3 = new THREE.Vector3(miniDir.x, miniDir.y, miniDir.z);
-    const quat = new THREE.Quaternion().setFromUnitVectors(
-      axisUp,
-      dir3.normalize(),
-    );
+    const quat = new THREE.Quaternion().setFromUnitVectors(axisUp, dir3.normalize());
     mat4.compose(
       new THREE.Vector3(miniTop.x, miniTop.y, miniTop.z),
       quat,
@@ -625,10 +605,7 @@ function createCrownGeometries(
     const mat4 = new THREE.Matrix4();
     const axisUp = new THREE.Vector3(0, 1, 0);
     const dir3 = new THREE.Vector3(miniDir.x, miniDir.y, miniDir.z);
-    const quat = new THREE.Quaternion().setFromUnitVectors(
-      axisUp,
-      dir3.normalize(),
-    );
+    const quat = new THREE.Quaternion().setFromUnitVectors(axisUp, dir3.normalize());
     mat4.compose(
       new THREE.Vector3(miniPlace.x, miniPlace.y, miniPlace.z),
       quat,
@@ -663,10 +640,7 @@ function createCrownGeometries(
 // Species data lookup
 // ---------------------------------------------------------------------------
 
-const allSpecies: SpeciesData[] = [
-  ...speciesConfig.base,
-  ...speciesConfig.prestige,
-];
+const allSpecies: SpeciesData[] = [...speciesConfig.base, ...speciesConfig.prestige];
 
 function getSpeciesData(speciesId: string): SpeciesData | undefined {
   return allSpecies.find((s) => s.id === speciesId);
@@ -921,10 +895,7 @@ export function createTreeGeometry(
     trunkColors[i * 3 + 1] = trunkColor.g;
     trunkColors[i * 3 + 2] = trunkColor.b;
   }
-  base.geometry.setAttribute(
-    "color",
-    new THREE.Float32BufferAttribute(trunkColors, 3),
-  );
+  base.geometry.setAttribute("color", new THREE.Float32BufferAttribute(trunkColors, 3));
 
   // Build leaf geometries
   const leaves = createLeafGeometries(

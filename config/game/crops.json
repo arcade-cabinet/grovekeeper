@@ -1,0 +1,69 @@
+{
+  "crops": [
+    {
+      "id": "apple",
+      "name": "Apple",
+      "modelPath": "assets/models/crops/apple.glb",
+      "growthTimeSec": [30, 60, 90, 0],
+      "baseYield": 3,
+      "seasonAffinity": "autumn",
+      "seasonBonus": 1.5,
+      "waterMultiplier": 2.0,
+      "replantable": true,
+      "saturation": 15,
+      "unlockLevel": 1
+    },
+    {
+      "id": "carrot",
+      "name": "Carrot",
+      "modelPath": "assets/models/crops/carrot.glb",
+      "growthTimeSec": [20, 40, 60, 0],
+      "baseYield": 4,
+      "seasonAffinity": "spring",
+      "seasonBonus": 1.5,
+      "waterMultiplier": 2.0,
+      "replantable": true,
+      "saturation": 10,
+      "unlockLevel": 1
+    },
+    {
+      "id": "cucumber",
+      "name": "Cucumber",
+      "modelPath": "assets/models/crops/cucumber.glb",
+      "growthTimeSec": [25, 50, 75, 0],
+      "baseYield": 3,
+      "seasonAffinity": "summer",
+      "seasonBonus": 1.5,
+      "waterMultiplier": 2.0,
+      "replantable": true,
+      "saturation": 8,
+      "unlockLevel": 3
+    },
+    {
+      "id": "pumpkin",
+      "name": "Pumpkin",
+      "modelPath": "assets/models/crops/pumpkin.glb",
+      "growthTimeSec": [40, 80, 120, 0],
+      "baseYield": 2,
+      "seasonAffinity": "autumn",
+      "seasonBonus": 2.0,
+      "waterMultiplier": 2.0,
+      "replantable": true,
+      "saturation": 25,
+      "unlockLevel": 5
+    },
+    {
+      "id": "tomato",
+      "name": "Tomato",
+      "modelPath": "assets/models/crops/tomato.glb",
+      "growthTimeSec": [25, 50, 70, 0],
+      "baseYield": 4,
+      "seasonAffinity": "summer",
+      "seasonBonus": 1.5,
+      "waterMultiplier": 2.0,
+      "replantable": true,
+      "saturation": 12,
+      "unlockLevel": 2
+    }
+  ]
+}

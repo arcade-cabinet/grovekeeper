@@ -94,11 +94,7 @@ describe("traveling merchant system", () => {
 
     it("merchant does not arrive before nextVisitDay", () => {
       const state = initializeMerchantState(0);
-      const updated = updateMerchant(
-        state,
-        state.nextVisitDay - 1,
-        "test-seed",
-      );
+      const updated = updateMerchant(state, state.nextVisitDay - 1, "test-seed");
       expect(updated.isPresent).toBe(false);
     });
 
@@ -150,16 +146,12 @@ describe("traveling merchant system", () => {
       expect(result.offer).not.toBeNull();
 
       if (originalQty > 1) {
-        const remaining = result.state.currentOffers.find(
-          (o) => o.id === offerId,
-        );
+        const remaining = result.state.currentOffers.find((o) => o.id === offerId);
         expect(remaining).toBeDefined();
         expect(remaining!.quantity).toBe(originalQty - 1);
       } else {
         // Offer removed when depleted
-        const remaining = result.state.currentOffers.find(
-          (o) => o.id === offerId,
-        );
+        const remaining = result.state.currentOffers.find((o) => o.id === offerId);
         expect(remaining).toBeUndefined();
       }
     });

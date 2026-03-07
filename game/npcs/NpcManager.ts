@@ -5,8 +5,8 @@
  * checks. No engine dependencies -- purely data-driven.
  */
 
-import dialogueData from "./data/dialogues.json";
-import npcData from "./data/npcs.json";
+import dialogueData from "./data/dialogues.json" with { type: "json" };
+import npcData from "./data/npcs.json" with { type: "json" };
 import type { DialogueNode, NpcTemplate } from "./types";
 
 const npcTemplates: NpcTemplate[] = npcData as NpcTemplate[];
@@ -41,11 +41,6 @@ export function getDialogueNode(nodeId: string): DialogueNode | undefined {
  * Check if a player at (px, pz) is adjacent to an NPC at (nx, nz).
  * Uses Chebyshev distance <= 1.5 (adjacent tile including diagonals).
  */
-export function isPlayerAdjacent(
-  px: number,
-  pz: number,
-  nx: number,
-  nz: number,
-): boolean {
+export function isPlayerAdjacent(px: number, pz: number, nx: number, nz: number): boolean {
   return Math.abs(px - nx) <= 1.5 && Math.abs(pz - nz) <= 1.5;
 }

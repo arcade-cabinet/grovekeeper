@@ -82,6 +82,13 @@ function addTree(
       totalGrowthTime: 0,
       plantedAt: Date.now(),
       meshSeed: 12345,
+      wild: false,
+      pruned: false,
+      fertilized: false,
+      baseModel: "tree01",
+      winterModel: "",
+      useWinterModel: false,
+      seasonTint: "#228B22",
     },
     renderable: { visible: true, scale: 0.1 },
   };

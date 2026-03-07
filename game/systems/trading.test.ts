@@ -1,10 +1,5 @@
 import type { ResourceType } from "@/game/config/resources";
-import {
-  BASE_TRADE_RATES,
-  calculateTradeOutput,
-  executeTrade,
-  getTradeRates,
-} from "./trading";
+import { BASE_TRADE_RATES, calculateTradeOutput, executeTrade, getTradeRates } from "./trading";
 
 describe("trading system", () => {
   describe("getTradeRates", () => {
@@ -72,11 +67,7 @@ describe("trading system", () => {
     });
 
     it("returns spend and gain for a valid trade", () => {
-      const result = executeTrade(
-        timberToSap,
-        10,
-        makeResources({ timber: 100 }),
-      );
+      const result = executeTrade(timberToSap, 10, makeResources({ timber: 100 }));
       expect(result).toEqual({
         spend: { type: "timber", amount: 10 },
         gain: { type: "sap", amount: 5 },
@@ -84,38 +75,22 @@ describe("trading system", () => {
     });
 
     it("returns null if player cannot afford the trade", () => {
-      const result = executeTrade(
-        timberToSap,
-        10,
-        makeResources({ timber: 5 }),
-      );
+      const result = executeTrade(timberToSap, 10, makeResources({ timber: 5 }));
       expect(result).toBeNull();
     });
 
     it("returns null if input amount is less than minimum", () => {
-      const result = executeTrade(
-        timberToSap,
-        5,
-        makeResources({ timber: 100 }),
-      );
+      const result = executeTrade(timberToSap, 5, makeResources({ timber: 100 }));
       expect(result).toBeNull();
     });
 
     it("returns null for zero input", () => {
-      const result = executeTrade(
-        timberToSap,
-        0,
-        makeResources({ timber: 100 }),
-      );
+      const result = executeTrade(timberToSap, 0, makeResources({ timber: 100 }));
       expect(result).toBeNull();
     });
 
     it("floors to whole trade batches", () => {
-      const result = executeTrade(
-        timberToSap,
-        25,
-        makeResources({ timber: 100 }),
-      );
+      const result = executeTrade(timberToSap, 25, makeResources({ timber: 100 }));
       expect(result).toEqual({
         spend: { type: "timber", amount: 20 },
         gain: { type: "sap", amount: 10 },
@@ -123,20 +98,12 @@ describe("trading system", () => {
     });
 
     it("returns null when resources exactly zero", () => {
-      const result = executeTrade(
-        timberToSap,
-        10,
-        makeResources({ timber: 0 }),
-      );
+      const result = executeTrade(timberToSap, 10, makeResources({ timber: 0 }));
       expect(result).toBeNull();
     });
 
     it("works when resources exactly match cost", () => {
-      const result = executeTrade(
-        timberToSap,
-        10,
-        makeResources({ timber: 10 }),
-      );
+      const result = executeTrade(timberToSap, 10, makeResources({ timber: 10 }));
       expect(result).not.toBeNull();
       expect(result!.spend.amount).toBe(10);
     });

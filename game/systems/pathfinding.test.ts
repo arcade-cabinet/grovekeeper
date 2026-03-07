@@ -1,8 +1,4 @@
-import {
-  buildWalkabilityGrid,
-  findPath,
-  type WalkabilityGrid,
-} from "./pathfinding";
+import { buildWalkabilityGrid, findPath, type WalkabilityGrid } from "./pathfinding";
 
 // Helper to create a simple walkability grid from a 2D array
 // 0 = walkable, 1 = blocked

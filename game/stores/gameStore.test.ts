@@ -1,10 +1,5 @@
 import type { SerializedTree } from "./gameStore";
-import {
-  levelFromXp,
-  totalXpForLevel,
-  useGameStore,
-  xpToNext,
-} from "./gameStore";
+import { levelFromXp, totalXpForLevel, useGameStore, xpToNext } from "./gameStore";
 
 describe("Game Store", () => {
   beforeEach(() => {
@@ -266,9 +261,9 @@ describe("Game Store", () => {
     it("unlockAchievement does not duplicate", () => {
       useGameStore.getState().unlockAchievement("first-seed");
       useGameStore.getState().unlockAchievement("first-seed");
-      expect(
-        useGameStore.getState().achievements.filter((a) => a === "first-seed"),
-      ).toHaveLength(1);
+      expect(useGameStore.getState().achievements.filter((a) => a === "first-seed")).toHaveLength(
+        1,
+      );
     });
   });
 
@@ -277,20 +272,14 @@ describe("Game Store", () => {
       useGameStore.getState().trackSpeciesPlanted("white-oak");
       useGameStore.getState().trackSpeciesPlanted("white-oak");
       useGameStore.getState().trackSpeciesPlanted("elder-pine");
-      expect(useGameStore.getState().speciesPlanted).toEqual([
-        "white-oak",
-        "elder-pine",
-      ]);
+      expect(useGameStore.getState().speciesPlanted).toEqual(["white-oak", "elder-pine"]);
     });
 
     it("trackSeason adds seasons without duplicates", () => {
       useGameStore.getState().trackSeason("spring");
       useGameStore.getState().trackSeason("spring");
       useGameStore.getState().trackSeason("summer");
-      expect(useGameStore.getState().seasonsExperienced).toEqual([
-        "spring",
-        "summer",
-      ]);
+      expect(useGameStore.getState().seasonsExperienced).toEqual(["spring", "summer"]);
     });
   });
 
@@ -515,19 +504,10 @@ describe("Game Store", () => {
       useGameStore.setState({
         level: 25,
         xp: 99999,
-        unlockedTools: [
-          "trowel",
-          "watering-can",
-          "axe",
-          "shovel",
-          "pruning-shears",
-        ],
+        unlockedTools: ["trowel", "watering-can", "axe", "shovel", "pruning-shears"],
       });
       useGameStore.getState().performPrestige();
-      expect(useGameStore.getState().unlockedTools).toEqual([
-        "trowel",
-        "watering-can",
-      ]);
+      expect(useGameStore.getState().unlockedTools).toEqual(["trowel", "watering-can"]);
     });
   });
 
@@ -611,9 +591,7 @@ describe("Game Store", () => {
       useGameStore.getState().addPlacedStructure("greenhouse", 10, 10);
       useGameStore.getState().removePlacedStructure(5, 5);
       expect(useGameStore.getState().placedStructures).toHaveLength(1);
-      expect(useGameStore.getState().placedStructures[0].templateId).toBe(
-        "greenhouse",
-      );
+      expect(useGameStore.getState().placedStructures[0].templateId).toBe("greenhouse");
     });
   });
 
@@ -637,9 +615,7 @@ describe("Game Store", () => {
     });
 
     it("starting-grove is already discovered", () => {
-      expect(useGameStore.getState().discoveredZones).toContain(
-        "starting-grove",
-      );
+      expect(useGameStore.getState().discoveredZones).toContain("starting-grove");
     });
 
     it("setCurrentZoneId changes current zone", () => {
@@ -673,10 +649,7 @@ describe("Game Store", () => {
       useGameStore.getState().incrementWildTreesHarvested("white-oak");
       useGameStore.getState().incrementWildTreesHarvested("white-oak");
       useGameStore.getState().incrementWildTreesHarvested("elder-pine");
-      expect(useGameStore.getState().wildSpeciesHarvested).toEqual([
-        "white-oak",
-        "elder-pine",
-      ]);
+      expect(useGameStore.getState().wildSpeciesHarvested).toEqual(["white-oak", "elder-pine"]);
     });
 
     it("incrementWildTreesRegrown increments count", () => {
@@ -689,10 +662,7 @@ describe("Game Store", () => {
       useGameStore.getState().trackVisitedZoneType("forest");
       useGameStore.getState().trackVisitedZoneType("forest");
       useGameStore.getState().trackVisitedZoneType("grove");
-      expect(useGameStore.getState().visitedZoneTypes).toEqual([
-        "forest",
-        "grove",
-      ]);
+      expect(useGameStore.getState().visitedZoneTypes).toEqual(["forest", "grove"]);
     });
 
     it("incrementSeasonalPlanting only increments spring count", () => {

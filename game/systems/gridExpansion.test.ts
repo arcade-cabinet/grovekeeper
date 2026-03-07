@@ -137,9 +137,7 @@ describe("grid expansion system", () => {
         acorns: 100,
       };
       expect(canAffordExpansion(tier, resources, 20)).toBe(true);
-      expect(canAffordExpansion(tier, { ...resources, acorns: 99 }, 20)).toBe(
-        false,
-      );
+      expect(canAffordExpansion(tier, { ...resources, acorns: 99 }, 20)).toBe(false);
     });
   });
 

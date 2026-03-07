@@ -1,0 +1,297 @@
+{
+  "structures": [
+    {
+      "id": "barn",
+      "name": "Barn",
+      "category": "storage",
+      "modelPath": "assets/models/structures/farm/barn.glb",
+      "effectType": "storage",
+      "effectRadius": 6,
+      "effectMagnitude": 2.0,
+      "maxDurability": 200,
+      "level": 5,
+      "buildCost": [
+        { "resource": "timber", "amount": 30 },
+        { "resource": "acorns", "amount": 10 }
+      ]
+    },
+    {
+      "id": "house-1",
+      "name": "Small House",
+      "category": "base-building",
+      "modelPath": "assets/models/structures/farm/house-1.glb",
+      "effectType": "stamina_regen",
+      "effectRadius": 4,
+      "effectMagnitude": 0.5,
+      "maxDurability": 150,
+      "level": 3,
+      "buildCost": [
+        { "resource": "timber", "amount": 20 },
+        { "resource": "sap", "amount": 5 }
+      ]
+    },
+    {
+      "id": "house-2",
+      "name": "Farmhouse",
+      "category": "base-building",
+      "modelPath": "assets/models/structures/farm/house-2.glb",
+      "effectType": "stamina_regen",
+      "effectRadius": 5,
+      "effectMagnitude": 0.75,
+      "maxDurability": 175,
+      "level": 7,
+      "buildCost": [
+        { "resource": "timber", "amount": 35 },
+        { "resource": "sap", "amount": 10 }
+      ]
+    },
+    {
+      "id": "house-3",
+      "name": "Cottage",
+      "category": "base-building",
+      "modelPath": "assets/models/structures/farm/house-3.glb",
+      "effectType": "stamina_regen",
+      "effectRadius": 5,
+      "effectMagnitude": 1.0,
+      "maxDurability": 200,
+      "level": 10,
+      "buildCost": [
+        { "resource": "timber", "amount": 45 },
+        { "resource": "sap", "amount": 15 },
+        { "resource": "acorns", "amount": 10 }
+      ]
+    },
+    {
+      "id": "house-4",
+      "name": "Lodge",
+      "category": "base-building",
+      "modelPath": "assets/models/structures/farm/house-4.glb",
+      "effectType": "stamina_regen",
+      "effectRadius": 6,
+      "effectMagnitude": 1.25,
+      "maxDurability": 225,
+      "level": 14,
+      "buildCost": [
+        { "resource": "timber", "amount": 60 },
+        { "resource": "sap", "amount": 20 },
+        { "resource": "acorns", "amount": 15 }
+      ]
+    },
+    {
+      "id": "house-5",
+      "name": "Manor",
+      "category": "base-building",
+      "modelPath": "assets/models/structures/farm/house-5.glb",
+      "effectType": "stamina_regen",
+      "effectRadius": 8,
+      "effectMagnitude": 1.5,
+      "maxDurability": 300,
+      "level": 18,
+      "buildCost": [
+        { "resource": "timber", "amount": 80 },
+        { "resource": "sap", "amount": 30 },
+        { "resource": "fruit", "amount": 20 },
+        { "resource": "acorns", "amount": 20 }
+      ]
+    },
+    {
+      "id": "windmill",
+      "name": "Windmill",
+      "category": "production",
+      "modelPath": "assets/models/structures/farm/windmill.glb",
+      "effectType": "harvest_boost",
+      "effectRadius": 8,
+      "effectMagnitude": 0.25,
+      "maxDurability": 200,
+      "level": 12,
+      "buildCost": [
+        { "resource": "timber", "amount": 50 },
+        { "resource": "sap", "amount": 20 },
+        { "resource": "acorns", "amount": 15 }
+      ]
+    },
+    {
+      "id": "water-well",
+      "name": "Water Well",
+      "category": "essential",
+      "modelPath": "assets/models/structures/farm/water-well.glb",
+      "effectType": "growth_boost",
+      "effectRadius": 5,
+      "effectMagnitude": 0.15,
+      "maxDurability": 150,
+      "level": 4,
+      "buildCost": [
+        { "resource": "timber", "amount": 15 },
+        { "resource": "sap", "amount": 8 }
+      ]
+    },
+    {
+      "id": "campfire-1",
+      "name": "Campfire",
+      "category": "essential",
+      "modelPath": "assets/models/structures/farm/campfire-1.glb",
+      "effectType": "cooking",
+      "effectRadius": 3,
+      "effectMagnitude": 1.0,
+      "maxDurability": 50,
+      "level": 1,
+      "buildCost": [
+        { "resource": "timber", "amount": 5 }
+      ]
+    },
+    {
+      "id": "campfire-2",
+      "name": "Stone Campfire",
+      "category": "essential",
+      "modelPath": "assets/models/structures/farm/campfire-2.glb",
+      "effectType": "cooking",
+      "effectRadius": 4,
+      "effectMagnitude": 1.5,
+      "maxDurability": 100,
+      "level": 6,
+      "buildCost": [
+        { "resource": "timber", "amount": 10 },
+        { "resource": "acorns", "amount": 5 }
+      ]
+    },
+    {
+      "id": "chicken-coop-1",
+      "name": "Chicken Coop",
+      "category": "production",
+      "modelPath": "assets/models/structures/farm/chicken-coop-1.glb",
+      "effectType": "harvest_boost",
+      "effectRadius": 3,
+      "effectMagnitude": 0.1,
+      "maxDurability": 80,
+      "level": 6,
+      "buildCost": [
+        { "resource": "timber", "amount": 15 },
+        { "resource": "fruit", "amount": 5 }
+      ]
+    },
+    {
+      "id": "chicken-coop-2",
+      "name": "Large Chicken Coop",
+      "category": "production",
+      "modelPath": "assets/models/structures/farm/chicken-coop-2.glb",
+      "effectType": "harvest_boost",
+      "effectRadius": 4,
+      "effectMagnitude": 0.2,
+      "maxDurability": 120,
+      "level": 11,
+      "buildCost": [
+        { "resource": "timber", "amount": 25 },
+        { "resource": "fruit", "amount": 10 },
+        { "resource": "sap", "amount": 5 }
+      ]
+    },
+    {
+      "id": "storage-1",
+      "name": "Small Shed",
+      "category": "storage",
+      "modelPath": "assets/models/structures/farm/storage-1.glb",
+      "effectType": "storage",
+      "effectRadius": 3,
+      "effectMagnitude": 1.0,
+      "maxDurability": 80,
+      "level": 2,
+      "buildCost": [
+        { "resource": "timber", "amount": 10 }
+      ]
+    },
+    {
+      "id": "storage-2",
+      "name": "Tool Shed",
+      "category": "storage",
+      "modelPath": "assets/models/structures/farm/storage-2.glb",
+      "effectType": "storage",
+      "effectRadius": 3,
+      "effectMagnitude": 1.5,
+      "maxDurability": 100,
+      "level": 5,
+      "buildCost": [
+        { "resource": "timber", "amount": 15 },
+        { "resource": "sap", "amount": 5 }
+      ]
+    },
+    {
+      "id": "storage-3",
+      "name": "Warehouse",
+      "category": "storage",
+      "modelPath": "assets/models/structures/farm/storage-3.glb",
+      "effectType": "storage",
+      "effectRadius": 5,
+      "effectMagnitude": 2.0,
+      "maxDurability": 150,
+      "level": 9,
+      "buildCost": [
+        { "resource": "timber", "amount": 30 },
+        { "resource": "sap", "amount": 10 },
+        { "resource": "acorns", "amount": 5 }
+      ]
+    },
+    {
+      "id": "notice-board",
+      "name": "Notice Board",
+      "category": "decoration",
+      "modelPath": "assets/models/structures/farm/notice-board.glb",
+      "maxDurability": 50,
+      "level": 2,
+      "buildCost": [
+        { "resource": "timber", "amount": 5 }
+      ]
+    },
+    {
+      "id": "lamp",
+      "name": "Lamp Post",
+      "category": "decoration",
+      "modelPath": "assets/models/structures/farm/lamp.glb",
+      "maxDurability": 40,
+      "level": 3,
+      "buildCost": [
+        { "resource": "timber", "amount": 5 },
+        { "resource": "sap", "amount": 3 }
+      ]
+    },
+    {
+      "id": "bird-house",
+      "name": "Bird House",
+      "category": "decoration",
+      "modelPath": "assets/models/structures/farm/bird-house.glb",
+      "effectType": "growth_boost",
+      "effectRadius": 3,
+      "effectMagnitude": 0.05,
+      "maxDurability": 30,
+      "level": 4,
+      "buildCost": [
+        { "resource": "timber", "amount": 8 }
+      ]
+    },
+    {
+      "id": "water-post",
+      "name": "Water Post",
+      "category": "essential",
+      "modelPath": "assets/models/structures/farm/water-post.glb",
+      "effectType": "growth_boost",
+      "effectRadius": 3,
+      "effectMagnitude": 0.1,
+      "maxDurability": 60,
+      "level": 3,
+      "buildCost": [
+        { "resource": "timber", "amount": 8 },
+        { "resource": "sap", "amount": 4 }
+      ]
+    },
+    {
+      "id": "wooden-frame",
+      "name": "Wooden Frame",
+      "category": "base-building",
+      "modelPath": "assets/models/structures/farm/wooden-frame.glb",
+      "maxDurability": 60,
+      "level": 2,
+      "buildCost": [
+        { "resource": "timber", "amount": 8 }
+      ]
+    }
+  ]
+}

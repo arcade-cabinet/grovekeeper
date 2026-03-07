@@ -1,5 +1,12 @@
 # ECS Patterns
 
+> **NOTE (2026-03-07):** Core ECS patterns remain accurate. Minor updates:
+> - **Persistent state** uses Legend State 3.x (not Zustand). References to "Zustand" below should read "Legend State."
+> - **No fixed grid** -- the world is infinite chunks. `GridCellComponent` is per-chunk, not a fixed size.
+> - **New entity types** include structures, chunk features, labyrinth elements (not just trees/player/gridCells).
+> - **Tree meshSeed** is less relevant -- trees use 3DPSX GLB models (not procedural SPS geometry).
+> - **Serialization** is chunk-delta based, not whole-grove serialization.
+
 Grovekeeper uses [Miniplex 2.x](https://github.com/hmans/miniplex) as its Entity-Component-System framework. The ECS manages all runtime game state that changes every frame: entity positions, tree growth progress, grid cell occupancy, and player location.
 
 ## Entity Interface
@@ -174,43 +181,41 @@ Additional periodic checks (not every frame):
 - Side effects (toast notifications, XP awards) are handled by the caller in `GameScene.tsx`, not inside the system.
 - Systems must not create or destroy entities. Entity lifecycle is managed by the game loop.
 
-## ECS vs Zustand Split
+## ECS vs Legend State Split
 
-The split between ECS and Zustand follows a clear rule:
+The split between ECS and Legend State follows a clear rule:
 
 | Changes every frame?   | Persists across sessions? | Where it lives |
 |------------------------|---------------------------|----------------|
 | Yes                    | No                        | ECS only       |
-| Yes                    | Yes                       | ECS + serialized to Zustand |
-| No                     | Yes                       | Zustand only   |
+| Yes                    | Yes                       | ECS + serialized to Legend State |
+| No                     | Yes                       | Legend State only   |
 
 **ECS-only examples:** Player position during movement, tree renderable.scale during growth animation.
 
-**ECS + serialized examples:** Tree stage and progress (stored in ECS at runtime, serialized to `groveData` in Zustand on save).
+**ECS + serialized examples:** Tree stage and progress (stored in ECS at runtime, serialized to chunk delta in Legend State on save).
 
-**Zustand-only examples:** Player level, XP, coins, resources, unlocked tools/species, achievements, settings.
+**Legend State-only examples:** Player level, XP, resources, hearts, hunger, unlocked tools/species, achievements, settings, chunk deltas.
 
-## Grove Serialization
+## Chunk Delta Serialization
 
-Trees are serialized from ECS to Zustand for persistence:
+Player modifications are serialized from ECS to Legend State as chunk deltas:
 
 ```typescript
-interface SerializedTree {
-  speciesId: string;
-  gridX: number;
-  gridZ: number;
-  stage: 0 | 1 | 2 | 3 | 4;
-  progress: number;
-  watered: boolean;
-  totalGrowthTime: number;
-  plantedAt: number;
-  meshSeed: number;
+interface ChunkDelta {
+  plantedTrees: { tileX: number; tileZ: number; speciesId: string; plantedAt: number; stage: number }[];
+  harvestedTrees: { tileX: number; tileZ: number; harvestedAt: number }[];
+  builtStructures: { tileX: number; tileZ: number; structureId: string; rotation: number }[];
+  removedItems: { tileX: number; tileZ: number; itemType: string }[];
+  npcRelationships: { npcId: string; relationship: number }[];
+  completedQuests: string[];
+  discoveredSpecies: string[];
 }
 ```
 
 Serialization happens:
 - On manual save (debounced 1 second after plant/harvest actions)
 - Every 30 seconds via auto-save
-- Immediately when the browser tab loses focus (`visibilitychange` event)
+- Immediately when the app goes to background (`visibilitychange` event)
 
-On load, serialized trees are restored into the ECS world via `restoreTreeEntity`, and grid cells are marked as occupied.
+On chunk load, the chunk is regenerated from seed, then the delta is applied -- player-planted trees appear, harvested trees stay removed.

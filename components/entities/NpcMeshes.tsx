@@ -5,8 +5,8 @@
  * function type (trading, quests, tips, seeds, crafting, lore).
  */
 
-import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { type ThreeEvent, useFrame } from "@react-three/fiber";
+import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
 
 import type { NpcFunction } from "@/game/ecs/world";
@@ -39,12 +39,26 @@ const sharedGeometry = new THREE.CapsuleGeometry(
   RADIAL_SEGMENTS,
 );
 
-export const NpcMeshes = () => {
+export interface NpcMeshesProps {
+  /** Called when an NPC mesh is tapped (entityId, worldX, worldZ). */
+  onNpcTap?: (entityId: string, worldX: number, worldZ: number) => void;
+}
+
+export const NpcMeshes = ({ onNpcTap }: NpcMeshesProps = {}) => {
   const groupRef = useRef<THREE.Group>(null);
   const meshMapRef = useRef(new Map<string, THREE.Mesh>());
-  const materialCacheRef = useRef(
-    new Map<NpcFunction, THREE.MeshStandardMaterial>(),
-  );
+  const materialCacheRef = useRef(new Map<NpcFunction, THREE.MeshStandardMaterial>());
+
+  // Dispose cached materials on unmount to prevent GPU memory leaks
+  useEffect(() => {
+    const cache = materialCacheRef.current;
+    return () => {
+      for (const material of cache.values()) {
+        material.dispose();
+      }
+      cache.clear();
+    };
+  }, []);
 
   useFrame(() => {
     const group = groupRef.current;
@@ -80,6 +94,7 @@ export const NpcMeshes = () => {
         // biome-ignore lint/style/noNonNullAssertion: just set above
         mesh = new THREE.Mesh(sharedGeometry, materialCache.get(npc.function)!);
         mesh.castShadow = true;
+        mesh.userData = { entityId: id };
         meshMap.set(id, mesh);
         group.add(mesh);
       }
@@ -99,5 +114,18 @@ export const NpcMeshes = () => {
     }
   });
 
-  return <group ref={groupRef} />;
+  const handlePointerDown = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      if (!onNpcTap) return;
+      event.stopPropagation();
+      const obj = event.object;
+      const entityId = obj.userData?.entityId as string | undefined;
+      if (entityId) {
+        onNpcTap(entityId, event.point.x, event.point.z);
+      }
+    },
+    [onNpcTap],
+  );
+
+  return <group ref={groupRef} onPointerDown={handlePointerDown} />;
 };

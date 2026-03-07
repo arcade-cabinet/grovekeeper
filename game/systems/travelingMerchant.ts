@@ -158,8 +158,7 @@ const ALL_OFFER_TEMPLATES: OfferTemplate[] = [
 
 function computeNextVisitDay(currentDay: number, rng: () => number): number {
   const interval =
-    MIN_VISIT_INTERVAL +
-    Math.floor(rng() * (MAX_VISIT_INTERVAL - MIN_VISIT_INTERVAL + 1));
+    MIN_VISIT_INTERVAL + Math.floor(rng() * (MAX_VISIT_INTERVAL - MIN_VISIT_INTERVAL + 1));
   return currentDay + interval;
 }
 
@@ -199,10 +198,7 @@ export function isMerchantPresent(state: MerchantState): boolean {
  *
  * Offer quantities scale slightly with visit count.
  */
-export function generateMerchantOffers(
-  visitCount: number,
-  rngSeed: string,
-): MerchantOffer[] {
+export function generateMerchantOffers(visitCount: number, rngSeed: string): MerchantOffer[] {
   const seed = hashString(`${rngSeed}-offers-${visitCount}`);
   const rng = createRNG(seed);
 
@@ -275,10 +271,7 @@ export function updateMerchant(
   // Merchant arrives if it is time
   if (!newState.isPresent && currentDay >= newState.nextVisitDay) {
     const visitNumber = newState.visitCount + 1;
-    const offers = generateMerchantOffers(
-      visitNumber,
-      `${rngSeed}-visit-${visitNumber}`,
-    );
+    const offers = generateMerchantOffers(visitNumber, `${rngSeed}-visit-${visitNumber}`);
 
     newState = {
       ...newState,

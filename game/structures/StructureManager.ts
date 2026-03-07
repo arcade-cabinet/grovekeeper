@@ -6,7 +6,7 @@
  */
 
 import type { StructureComponent } from "@/game/ecs/world";
-import structureData from "./data/structures.json";
+import structureData from "./data/structures.json" with { type: "json" };
 import type { StructureTemplate } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -143,8 +143,7 @@ export function getEffectsAtPosition(
     if (!entity.structure || !entity.position) continue;
 
     const { effectType, effectRadius, effectMagnitude } = entity.structure;
-    if (!effectType || effectRadius == null || effectMagnitude == null)
-      continue;
+    if (!effectType || effectRadius == null || effectMagnitude == null) continue;
 
     const dx = worldX - entity.position.x;
     const dz = worldZ - entity.position.z;
@@ -208,9 +207,7 @@ export function canUpgrade(templateId: string): boolean {
  * Get the resource cost to upgrade from a given template to its next tier.
  * Returns null if no upgrade path exists.
  */
-export function getUpgradeCost(
-  templateId: string,
-): Record<string, number> | null {
+export function getUpgradeCost(templateId: string): Record<string, number> | null {
   const template = getTemplate(templateId);
   if (!template?.upgradeTo) return null;
   const upgradeTemplate = getTemplate(template.upgradeTo);

@@ -1,5 +1,15 @@
 # Grid System
 
+> **Superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Section 4 (Open World: Infinite Procedural Exploration)
+>
+> This document describes the **old fixed-grid system** with a 12x12 starting zone, orthographic diorama camera, tiered expansion costs, and BabylonJS coordinate mapping. The unified design replaces this entirely with an **infinite chunk-based procedural world** (16x16 tile chunks, 3x3 active, 5x5 buffer ring), seeded deterministic generation, delta-only persistence, 8 biomes with noise-driven placement, and seamless terrain stitching with no loading screens. The fixed grid and expansion tiers no longer exist. Refer to the unified doc for the canonical state.
+
+---
+
+*The content below is retained for historical reference only.*
+
+---
+
 The grove is a square grid of plantable tiles viewed from a locked orthographic diorama camera angle. The grid starts at 12x12 and expands through five tiers (0-4) as the player levels up.
 
 ## Grid Dimensions

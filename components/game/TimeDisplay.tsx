@@ -45,9 +45,7 @@ export function TimeDisplay({ time }: TimeDisplayProps) {
     <View className="flex-row items-center gap-1.5">
       {/* Time of day */}
       <View className="flex-row items-center gap-1 rounded-full bg-black/25 px-2 py-0.5">
-        <Text className="text-xs font-medium text-white">
-          {getTimeLabel(hours)}
-        </Text>
+        <Text className="text-xs font-medium text-white">{getTimeLabel(hours)}</Text>
         <Text className="text-xs font-medium text-white">{timeString}</Text>
       </View>
 
@@ -55,9 +53,7 @@ export function TimeDisplay({ time }: TimeDisplayProps) {
       <View
         className={`flex-row items-center gap-1 rounded-full border px-2 py-0.5 ${SEASON_COLORS[season]}`}
       >
-        <Text className="text-xs font-medium capitalize text-white">
-          {SEASON_LABELS[season]}
-        </Text>
+        <Text className="text-xs font-medium capitalize text-white">{SEASON_LABELS[season]}</Text>
         <Text className="text-xs font-medium text-white">D{day}</Text>
       </View>
     </View>
@@ -71,9 +67,7 @@ export function TimeDisplayCompact({ time }: TimeDisplayProps) {
   return (
     <View className="flex-row items-center gap-1 rounded-full bg-black/25 px-1.5 py-0.5">
       <Text className="text-xs text-white">{getTimeLabel(hours)}</Text>
-      <Text className="text-xs capitalize text-white">
-        {SEASON_LABELS[season]}
-      </Text>
+      <Text className="text-xs capitalize text-white">{SEASON_LABELS[season]}</Text>
     </View>
   );
 }

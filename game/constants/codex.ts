@@ -76,8 +76,7 @@ const SPECIES_CODEX: SpeciesCodexEntry[] = [
         "A grove with a hundred harvested White Oaks is said to hum with quiet energy. The timber from such a grove never warps or splinters.",
     },
     habitat: "Temperate meadows and lowland valleys",
-    growthTip:
-      "A forgiving species. Water regularly for a steady growth boost.",
+    growthTip: "A forgiving species. Water regularly for a steady growth boost.",
     funFact:
       "White Oaks can live for centuries, their trunks growing wider than a grove keeper's hut.",
   },
@@ -94,10 +93,8 @@ const SPECIES_CODEX: SpeciesCodexEntry[] = [
         "A legendary grove of willows once produced sap so pure it glowed faintly at dusk. Traders traveled from distant lands to acquire even a single vial.",
     },
     habitat: "Wetlands, riverbanks, and pond shores",
-    growthTip:
-      "Plant near water tiles for a 30% yield bonus. Keep the soil moist.",
-    funFact:
-      "Willow bark was once steeped into a bitter tea used to soothe aching joints.",
+    growthTip: "Plant near water tiles for a 30% yield bonus. Keep the soil moist.",
+    funFact: "Willow bark was once steeped into a bitter tea used to soothe aching joints.",
   },
   {
     speciesId: "elder-pine",
@@ -168,8 +165,7 @@ const SPECIES_CODEX: SpeciesCodexEntry[] = [
     habitat: "Coastal fog belts and temperate rainforests",
     growthTip:
       "Slow to mature but yields 5 timber per harvest. At Old Growth stage, gains a bonus Acorn per cycle.",
-    funFact:
-      "A single Redwood can contain enough timber to build an entire village.",
+    funFact: "A single Redwood can contain enough timber to build an entire village.",
   },
   {
     speciesId: "flame-maple",
@@ -186,8 +182,7 @@ const SPECIES_CODEX: SpeciesCodexEntry[] = [
     habitat: "Highland clearings and mountain meadows",
     growthTip:
       "2-tile Beauty Aura and 2x fruit yield in Autumn. Plan your planting around the seasonal calendar.",
-    funFact:
-      "Flame Maple syrup is dark amber with a smoky sweetness found nowhere else.",
+    funFact: "Flame Maple syrup is dark amber with a smoky sweetness found nowhere else.",
   },
   {
     speciesId: "baobab",
@@ -222,8 +217,7 @@ const SPECIES_CODEX: SpeciesCodexEntry[] = [
     habitat: "Temperate woodlands near streams",
     growthTip:
       "Grows 20% faster near water tiles. Quick cycle times make it efficient for early sap production.",
-    funFact:
-      "Silver Birch sap can be tapped in spring and fermented into a mildly sweet wine.",
+    funFact: "Silver Birch sap can be tapped in spring and fermented into a mildly sweet wine.",
   },
   {
     speciesId: "ironbark",
@@ -240,8 +234,7 @@ const SPECIES_CODEX: SpeciesCodexEntry[] = [
     habitat: "Mountain strongholds and rocky ridgelines",
     growthTip:
       "Completely immune to windstorm damage. At Old Growth, timber yield triples to 12 per harvest.",
-    funFact:
-      "Ironbark heartwood is so dense it sinks in water -- one of the few woods that does.",
+    funFact: "Ironbark heartwood is so dense it sinks in water -- one of the few woods that does.",
   },
   {
     speciesId: "golden-apple",
@@ -294,8 +287,7 @@ const SPECIES_CODEX: SpeciesCodexEntry[] = [
     habitat: "Enchanted groves (prestige only)",
     growthTip:
       "Requires prestige to unlock. Yields 5 acorns per harvest -- the highest acorn yield of any species.",
-    funFact:
-      "Crystal Oak wood, when polished, is naturally transparent along the grain.",
+    funFact: "Crystal Oak wood, when polished, is naturally transparent along the grain.",
   },
   {
     speciesId: "moonwood-ash",
@@ -338,9 +330,7 @@ const SPECIES_CODEX: SpeciesCodexEntry[] = [
 /**
  * Look up a codex entry by species ID.
  */
-export function getCodexEntry(
-  speciesId: string,
-): SpeciesCodexEntry | undefined {
+export function getCodexEntry(speciesId: string): SpeciesCodexEntry | undefined {
   return SPECIES_CODEX.find((entry) => entry.speciesId === speciesId);
 }
 
@@ -375,16 +365,14 @@ export const BIOME_CODEX: BiomeCodexEntry[] = [
   {
     id: "wetland",
     name: "Wetland",
-    description:
-      "Marshy hollows and pond-dotted clearings where water-loving species thrive.",
+    description: "Marshy hollows and pond-dotted clearings where water-loving species thrive.",
     climate: "Humid, frequent rainfall",
     nativeSpecies: ["weeping-willow"],
   },
   {
     id: "mountain",
     name: "Mountain",
-    description:
-      "Rocky slopes and wind-swept ridges where only the hardiest trees take root.",
+    description: "Rocky slopes and wind-swept ridges where only the hardiest trees take root.",
     climate: "Cold, high altitude, strong winds",
     nativeSpecies: ["elder-pine", "ironbark"],
   },
@@ -407,8 +395,7 @@ export const BIOME_CODEX: BiomeCodexEntry[] = [
   {
     id: "highland",
     name: "Highland",
-    description:
-      "Elevated meadows above the treeline, ablaze with color in autumn.",
+    description: "Elevated meadows above the treeline, ablaze with color in autumn.",
     climate: "Cool, dramatic seasonal shifts",
     nativeSpecies: ["flame-maple"],
   },
@@ -442,7 +429,5 @@ export const BIOME_CODEX: BiomeCodexEntry[] = [
  * Look up a biome codex entry by biome ID.
  */
 export function getBiomeEntry(biomeId: string): BiomeCodexEntry | undefined {
-  return BIOME_CODEX.find(
-    (entry) => entry.id === biomeId.toLowerCase().replace(/\s+/g, "-"),
-  );
+  return BIOME_CODEX.find((entry) => entry.id === biomeId.toLowerCase().replace(/\s+/g, "-"));
 }

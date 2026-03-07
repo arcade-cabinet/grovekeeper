@@ -3,17 +3,13 @@
  * Ported from BabylonJS archive -- no engine dependencies.
  */
 
-import gridConfig from "@/config/game/grid.json";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import {
   advancePathFollow,
   createPathFollow,
   type PathFollowState,
 } from "@/game/systems/pathFollowing";
-import {
-  findPath,
-  type TileCoord,
-  type WalkabilityGrid,
-} from "@/game/systems/pathfinding";
+import { findPath, type TileCoord, type WalkabilityGrid } from "@/game/systems/pathfinding";
 
 const NPC_MOVE_SPEED: number = gridConfig.npcMoveSpeed;
 

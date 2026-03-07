@@ -1,4 +1,4 @@
-import growthConfig from "@/config/game/growth.json";
+import growthConfig from "@/config/game/growth.json" with { type: "json" };
 import type { SerializedTree } from "@/game/stores/gameStore";
 import { hashString } from "@/game/utils/seedRNG";
 import type { Entity, NpcFunction } from "./world";
@@ -21,11 +21,7 @@ export function getStageScale(stage: number, progress: number): number {
   return baseScale + (nextScale - baseScale) * partialPreview;
 }
 
-export const createTreeEntity = (
-  gridX: number,
-  gridZ: number,
-  speciesId: string,
-): Entity => ({
+export const createTreeEntity = (gridX: number, gridZ: number, speciesId: string): Entity => ({
   id: generateEntityId(),
   position: { x: gridX, y: 0, z: gridZ },
   tree: {
@@ -36,6 +32,13 @@ export const createTreeEntity = (
     totalGrowthTime: 0,
     plantedAt: Date.now(),
     meshSeed: hashString(`${speciesId}-${gridX}-${gridZ}`),
+    wild: false,
+    pruned: false,
+    fertilized: false,
+    baseModel: "tree01",
+    winterModel: "",
+    useWinterModel: false,
+    seasonTint: "#228B22",
   },
   renderable: { visible: true, scale: 0.0 },
 });
@@ -51,6 +54,13 @@ export const restoreTreeEntity = (data: SerializedTree): Entity => ({
     totalGrowthTime: data.totalGrowthTime,
     plantedAt: data.plantedAt,
     meshSeed: data.meshSeed,
+    wild: false,
+    pruned: false,
+    fertilized: false,
+    baseModel: "tree01",
+    winterModel: "",
+    useWinterModel: false,
+    seasonTint: "#228B22",
   },
   renderable: {
     visible: true,
@@ -97,6 +107,12 @@ export const createWildTreeEntity = (
       plantedAt: Date.now(),
       meshSeed: seed,
       wild: true,
+      pruned: false,
+      fertilized: false,
+      baseModel: "tree01",
+      winterModel: "",
+      useWinterModel: false,
+      seasonTint: "#228B22",
     },
     renderable: {
       visible: true,
@@ -136,6 +152,17 @@ export const createNpcEntity = (
     function: npcFunction,
     interactable: playerLevel >= requiredLevel,
     requiredLevel,
+    baseModel: "basemesh",
+    useEmission: false,
+    items: {},
+    colorPalette: "#8B4513",
+    name: "Villager",
+    personality: "cheerful",
+    dialogue: "",
+    schedule: [],
+    currentAnim: "idle",
+    animProgress: 0,
+    animSpeed: 1,
   },
   renderable: { visible: true, scale: 1 },
 });

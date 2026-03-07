@@ -17,9 +17,7 @@ describe("level unlocks system", () => {
 
     it("entries are sorted by level", () => {
       for (let i = 1; i < LEVEL_UNLOCKS.length; i++) {
-        expect(LEVEL_UNLOCKS[i].level).toBeGreaterThanOrEqual(
-          LEVEL_UNLOCKS[i - 1].level,
-        );
+        expect(LEVEL_UNLOCKS[i].level).toBeGreaterThanOrEqual(LEVEL_UNLOCKS[i - 1].level);
       }
     });
   });

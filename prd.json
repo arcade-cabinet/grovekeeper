@@ -1,0 +1,2218 @@
+{
+  "project": "Grovekeeper",
+  "branchName": "ralph/full-game-implementation",
+  "description": "Complete Grovekeeper game implementation — PSX-aesthetic first-person grove-tending simulation",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Remove GridCellComponent references from game systems",
+      "description": "As a developer, I want to remove all GridCellComponent imports and usage from game/systems/ and game/hooks/ so that the codebase is clean of legacy grid-based logic. Replace grid-based logic with chunk-based equivalents using ChunkComponent. See GAME_SPEC.md §6 for chunk-based world requirements.",
+      "acceptanceCriteria": [
+        "grep -r 'GridCellComponent' game/systems/ returns 0 matches",
+        "grep -r 'GridCellComponent' game/hooks/ returns 0 matches",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Phase 0-A: Legacy Teardown. Start by auditing all imports of GridCellComponent across game/systems/ and game/hooks/."
+    },
+    {
+      "id": "US-002",
+      "title": "Remove FarmerState references from game systems",
+      "description": "As a developer, I want to remove all FarmerState usage from the codebase so that player state uses the modern PlayerComponent with stamina/state fields. See GAME_SPEC.md §7 for player component requirements.",
+      "acceptanceCriteria": [
+        "grep -r 'FarmerState' game/ returns 0 matches",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Phase 0-A: Legacy Teardown. Replace FarmerState references with PlayerComponent stamina/state."
+    },
+    {
+      "id": "US-003",
+      "title": "Remove ZoneComponent references from game systems",
+      "description": "As a developer, I want to remove all ZoneComponent usage so that spatial logic uses chunk coordinates instead of zones. See GAME_SPEC.md §6 for chunk-based architecture.",
+      "acceptanceCriteria": [
+        "grep -r 'ZoneComponent' game/ returns 0 matches (except core.ts legacy comment if needed)",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Phase 0-A: Legacy Teardown. Replace zone-based logic with chunk coordinates."
+    },
+    {
+      "id": "US-004",
+      "title": "Remove legacy queries and Entity fields from world.ts",
+      "description": "As a developer, I want to remove gridCellsQuery, farmerQuery, and legacy Entity interface fields (gridCell, farmerState, zone, zoneId) from world.ts so that the ECS world only contains modern components. See GAME_SPEC.md §5 for ECS architecture.",
+      "acceptanceCriteria": [
+        "world.ts has no LEGACY comments",
+        "gridCellsQuery and farmerQuery are removed from world.ts",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Phase 0-A: Legacy Teardown. Depends on US-001, US-002, US-003 completing first."
+    },
+    {
+      "id": "US-005",
+      "title": "Remove legacy component interfaces from core.ts",
+      "description": "As a developer, I want to delete the GridCellComponent, FarmerState, and ZoneComponent interfaces from core.ts so that only modern component types remain. See GAME_SPEC.md §5 for ECS component definitions.",
+      "acceptanceCriteria": [
+        "core.ts is under 50 lines",
+        "GridCellComponent, FarmerState, ZoneComponent interfaces are deleted",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "Phase 0-A: Legacy Teardown. Depends on US-004."
+    },
+    {
+      "id": "US-006",
+      "title": "Update all tests to remove legacy type references",
+      "description": "As a developer, I want to fix any test files that reference removed legacy types (GridCellComponent, FarmerState, ZoneComponent) so that the full test suite passes cleanly. See GAME_SPEC.md §5 for current component types.",
+      "acceptanceCriteria": [
+        "npx jest --no-coverage passes with 0 failures",
+        "No test files reference GridCellComponent, FarmerState, or ZoneComponent",
+        "npx tsc --noEmit passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Phase 0-A: Legacy Teardown. Final cleanup story for this phase."
+    },
+    {
+      "id": "US-007",
+      "title": "Install @react-three/rapier and add Physics provider",
+      "description": "As a developer, I want to install @react-three/rapier and wrap the Canvas children in a <Physics> provider in app/game/index.tsx so that physics simulation is available for all 3D entities. See GAME_SPEC.md §9 for physics requirements.",
+      "acceptanceCriteria": [
+        "pnpm list @react-three/rapier shows installed",
+        "app/game/index.tsx wraps Canvas children in <Physics>",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera."
+    },
+    {
+      "id": "US-008",
+      "title": "Create player capsule RigidBody component",
+      "description": "As a developer, I want a PlayerCapsule component with a dynamic RigidBody and CapsuleCollider (height 1.8, radius 0.3) so that the player has physics-based collision. See GAME_SPEC.md §9 for player physics spec.",
+      "acceptanceCriteria": [
+        "New file components/player/PlayerCapsule.tsx exists",
+        "RigidBody type='dynamic' with CapsuleCollider (height 1.8, radius 0.3)",
+        "Component renders without errors",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera."
+    },
+    {
+      "id": "US-009",
+      "title": "Implement FPS camera attached to player capsule",
+      "description": "As a developer, I want an FPSCamera component that follows the player capsule position with an eye height offset of 1.6 so that the player sees from first-person perspective. See GAME_SPEC.md §9 for FPS camera spec.",
+      "acceptanceCriteria": [
+        "New file components/player/FPSCamera.tsx exists",
+        "Camera position follows capsule position + eye height offset (1.6)",
+        "useFrame updates camera position each frame",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera. Depends on US-008."
+    },
+    {
+      "id": "US-010",
+      "title": "Add WASD movement via capsule velocity",
+      "description": "As a player, I want to move with WASD keys so that I can walk around the grove in first-person. Movement reads InputFrame in useFrame and applies linvel to the capsule RigidBody relative to camera yaw. See GAME_SPEC.md §10 for input requirements.",
+      "acceptanceCriteria": [
+        "WASD keys move the player capsule",
+        "Movement is relative to camera yaw (forward/back/strafe)",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera. Depends on US-008, US-009."
+    },
+    {
+      "id": "US-011",
+      "title": "Implement jump and gravity",
+      "description": "As a player, I want to jump with the space key and fall with gravity so that movement feels physical. Ground detection via raycast down from capsule. See GAME_SPEC.md §9 for physics spec.",
+      "acceptanceCriteria": [
+        "Space key applies upward impulse to capsule",
+        "Ground detection via raycast down from capsule",
+        "Player falls with gravity when airborne",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera. Depends on US-010."
+    },
+    {
+      "id": "US-012",
+      "title": "Add mouse look with pointer lock",
+      "description": "As a player, I want to click to lock the pointer and use mouse movement to look around so that I have full first-person camera control. Clamp pitch to +-85 degrees. See GAME_SPEC.md §10 for input requirements.",
+      "acceptanceCriteria": [
+        "Click locks pointer via Pointer Lock API",
+        "Mouse delta rotates camera yaw and pitch",
+        "Pitch clamped to +-85 degrees",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera. Depends on US-009."
+    },
+    {
+      "id": "US-013",
+      "title": "Write Jest tests for player physics",
+      "description": "As a developer, I want comprehensive tests for the player physics system so that capsule creation, movement vectors, jump impulse, and ground detection are verified. See GAME_SPEC.md §9.",
+      "acceptanceCriteria": [
+        "8+ tests pass for player physics",
+        "Tests cover capsule creation, movement vectors from input, jump impulse, ground detection",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera. Tests for US-008 through US-011."
+    },
+    {
+      "id": "US-014",
+      "title": "Write Jest tests for camera follow",
+      "description": "As a developer, I want tests for the FPS camera so that position offset, yaw/pitch from mouse delta, and pitch clamping are verified. See GAME_SPEC.md §9.",
+      "acceptanceCriteria": [
+        "6+ tests pass for camera follow",
+        "Tests cover camera position offset, yaw/pitch from mouse delta, pitch clamping",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera. Tests for US-009, US-012."
+    },
+    {
+      "id": "US-015",
+      "title": "Implement SeededNoise utility",
+      "description": "As a developer, I want a SeededNoise utility with Perlin noise, fBm, ridged multifractal, and domain warping so that terrain generation is deterministic from worldSeed. See GAME_SPEC.md §6 for procedural world requirements.",
+      "acceptanceCriteria": [
+        "New file game/utils/seededNoise.ts exists",
+        "Implements Perlin noise, fBm, ridged multifractal, domain warping",
+        "All seeded from worldSeed — same seed+coords always produce same value",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain."
+    },
+    {
+      "id": "US-016",
+      "title": "Write Jest tests for SeededNoise",
+      "description": "As a developer, I want comprehensive tests for the SeededNoise utility so that determinism, seed variation, fBm detail, and ridged output are verified. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "10+ tests pass for SeededNoise",
+        "Tests cover determinism, different seeds produce different values, fBm fractal detail, ridged produces ridges",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain. Tests for US-015."
+    },
+    {
+      "id": "US-017",
+      "title": "Implement ChunkManager",
+      "description": "As a developer, I want a ChunkManager that tracks the player's chunk coordinates and loads a 3x3 active ring with a 5x5 buffer ring so that the world streams seamlessly. See GAME_SPEC.md §6 for chunk system requirements.",
+      "acceptanceCriteria": [
+        "New file game/world/ChunkManager.ts exists",
+        "Tracks player chunk coords, loads 3x3 active ring, 5x5 buffer",
+        "Adds/removes ECS entities on chunk transitions",
+        "ChunkManager.update(playerPos) loads correct chunks",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain."
+    },
+    {
+      "id": "US-018",
+      "title": "Write Jest tests for ChunkManager",
+      "description": "As a developer, I want tests for ChunkManager so that chunk load/unload, active ring, buffer ring, and deduplication are verified. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "8+ tests pass for ChunkManager",
+        "Tests cover chunk load/unload on player movement, 3x3 active ring, 5x5 buffer ring, no duplicate loads",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain. Tests for US-017."
+    },
+    {
+      "id": "US-019",
+      "title": "Generate terrain heightmap per chunk",
+      "description": "As a developer, I want a terrain generator that uses SeededNoise to fill a 16x16 Float32Array heightmap per chunk so that terrain is procedurally generated. See GAME_SPEC.md §6 for terrain generation.",
+      "acceptanceCriteria": [
+        "New file game/world/terrainGenerator.ts exists",
+        "Uses SeededNoise to generate TerrainChunkComponent.heightmap (16x16 Float32Array)",
+        "Deterministic heightmaps for same seed + chunkCoords",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain. Depends on US-015."
+    },
+    {
+      "id": "US-020",
+      "title": "Implement biome assignment",
+      "description": "As a developer, I want a biome mapper that uses temperature + moisture noise to assign one of 8 biome types per chunk so that the world has diverse environments. See GAME_SPEC.md §6 for biome requirements.",
+      "acceptanceCriteria": [
+        "New file game/world/biomeMapper.ts exists",
+        "Temperature + moisture noise maps to 8 biome types",
+        "Assigns biome to ChunkComponent and baseColor to TerrainChunkComponent",
+        "Biome consistent for same coords",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain. Depends on US-015."
+    },
+    {
+      "id": "US-021",
+      "title": "Write Jest tests for biome mapper",
+      "description": "As a developer, I want tests for the biome mapper so that determinism, all 8 biomes reachable, and temperature/moisture ranges are verified. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "8+ tests pass for biome mapper",
+        "Tests cover biome assignment determinism, all 8 biomes reachable, temperature/moisture ranges",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain. Tests for US-020."
+    },
+    {
+      "id": "US-022",
+      "title": "Create terrain mesh R3F component",
+      "description": "As a developer, I want a TerrainChunk R3F component that creates a PlaneGeometry displaced by the heightmap with vertex colors from biome data so that terrain is visible in the scene. See GAME_SPEC.md §6 for terrain rendering.",
+      "acceptanceCriteria": [
+        "New file components/scene/TerrainChunk.tsx exists",
+        "PlaneGeometry displaced by heightmap",
+        "Vertex colors from biome baseColor",
+        "Visible textured terrain in scene",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain. Depends on US-019, US-020."
+    },
+    {
+      "id": "US-023",
+      "title": "Add Rapier trimesh collider per terrain chunk",
+      "description": "As a developer, I want a TrimeshCollider generated from terrain geometry vertices so that the player capsule collides with the terrain surface. See GAME_SPEC.md §9 for physics requirements.",
+      "acceptanceCriteria": [
+        "TrimeshCollider created from terrain geometry vertices",
+        "Player capsule collides with terrain surface",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain. Depends on US-007, US-022."
+    },
+    {
+      "id": "US-024",
+      "title": "Implement delta-only persistence",
+      "description": "As a developer, I want to save only player-modified chunks so that unexplored areas require zero storage. On revisit: regenerate from seed, apply diffs. See GAME_SPEC.md §6 for persistence requirements.",
+      "acceptanceCriteria": [
+        "New file game/world/chunkPersistence.ts exists",
+        "Only player-modified chunks are saved",
+        "Diffs stored in Legend State",
+        "Plant tree, leave chunk, return = tree still there",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "Phase 0-C: Chunk System + Terrain. Depends on US-017."
+    },
+    {
+      "id": "US-025",
+      "title": "Create InputManager with InputFrame interface",
+      "description": "As a developer, I want an InputManager singleton with a well-defined InputFrame interface (moveX, moveZ, lookDeltaX, lookDeltaY, jump, interact, toolSwap, sprint) so that game code reads unified input. See GAME_SPEC.md §10 for input system.",
+      "acceptanceCriteria": [
+        "New file game/input/InputManager.ts exists",
+        "InputFrame interface: moveX, moveZ, lookDeltaX, lookDeltaY, jump, interact, toolSwap, sprint",
+        "InputManager.getFrame() returns valid InputFrame",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": "Phase 0-D: Input + Save + Difficulty."
+    },
+    {
+      "id": "US-026",
+      "title": "Implement KeyboardMouseProvider",
+      "description": "As a developer, I want a KeyboardMouseProvider that maps WASD to movement, mouse delta to look, space to jump, and E to interact so that desktop input works. See GAME_SPEC.md §10.",
+      "acceptanceCriteria": [
+        "New file game/input/KeyboardMouseProvider.ts exists",
+        "WASD movement, mouse delta for look, space for jump, E for interact",
+        "Registers on window events",
+        "Keyboard input produces correct InputFrame values",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "Phase 0-D: Input + Save + Difficulty. Depends on US-025."
+    },
+    {
+      "id": "US-027",
+      "title": "Implement TouchProvider with virtual joystick",
+      "description": "As a player on mobile, I want a custom virtual joystick (left side), look zone (right side), and action buttons so that I can play on touchscreen. 44px touch targets. See GAME_SPEC.md §10.",
+      "acceptanceCriteria": [
+        "New file game/input/TouchProvider.ts exists",
+        "Custom joystick (left side, no nipplejs dependency)",
+        "Look zone (right side), jump/interact buttons",
+        "44px minimum touch targets",
+        "Touch input produces correct InputFrame values",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "Phase 0-D: Input + Save + Difficulty. Depends on US-025."
+    },
+    {
+      "id": "US-028",
+      "title": "Write Jest tests for input system",
+      "description": "As a developer, I want tests for the input system so that InputFrame normalization, keyboard mapping, joystick direction, and touch zones are verified. See GAME_SPEC.md §10.",
+      "acceptanceCriteria": [
+        "10+ tests pass for input system",
+        "Tests cover InputFrame normalization, keyboard mapping, joystick direction calculation, touch zone detection",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": "Phase 0-D: Input + Save + Difficulty. Tests for US-025 through US-027."
+    },
+    {
+      "id": "US-029",
+      "title": "Implement save/load with Legend State + expo-sqlite",
+      "description": "As a player, I want my game state to save automatically so that I can resume where I left off. Save player state, chunk deltas, quest progress, settings. Auto-save on background. See GAME_SPEC.md §7.",
+      "acceptanceCriteria": [
+        "game/stores/gameStore.ts handles save of player state, chunk deltas, quest progress, settings",
+        "Auto-save triggers on app background",
+        "Save + reload restores all persistent state",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": "Phase 0-D: Input + Save + Difficulty."
+    },
+    {
+      "id": "US-030",
+      "title": "Write Jest tests for save/load",
+      "description": "As a developer, I want tests for save/load so that round-trip persistence and auto-save triggers are verified. See GAME_SPEC.md §7.",
+      "acceptanceCriteria": [
+        "6+ tests pass for save/load",
+        "Tests cover round-trip: create state, save, clear, load, verify equality",
+        "Tests cover auto-save trigger",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": "Phase 0-D: Input + Save + Difficulty. Tests for US-029."
+    },
+    {
+      "id": "US-031",
+      "title": "Implement game mode config (Exploration vs Survival)",
+      "description": "As a player, I want to choose Exploration mode (no survival pressure) or Survival mode so that I can play the way I prefer. Update config/game/difficulty.json. Systems check affectsGameplay flag. See GAME_SPEC.md §4.",
+      "acceptanceCriteria": [
+        "config/game/difficulty.json updated with exploration mode (all multipliers 0)",
+        "Game mode loaded in gameStore",
+        "Systems check affectsGameplay flag",
+        "Exploration mode disables survival drains",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": "Phase 0-D: Input + Save + Difficulty."
+    },
+    {
+      "id": "US-032",
+      "title": "Write Jest tests for difficulty config",
+      "description": "As a developer, I want tests for difficulty config so that all tiers load correctly, multipliers apply, and exploration mode zeroes are verified. See GAME_SPEC.md §4.",
+      "acceptanceCriteria": [
+        "6+ tests pass for difficulty config",
+        "Tests cover all difficulty tiers load correctly, multiplier application, exploration mode zeroes",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": "Phase 0-D: Input + Save + Difficulty. Tests for US-031."
+    },
+    {
+      "id": "US-033",
+      "title": "Create tree GLB loader with species mapping",
+      "description": "As a developer, I want a TreeModel component that maps speciesId to GLB path via config/game/species.json and loads with useGLTF so that each tree species renders its correct model. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "New file components/entities/TreeModel.tsx exists",
+        "Maps speciesId to GLB path via config/game/species.json",
+        "useGLTF loads correct GLB for each species",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass."
+    },
+    {
+      "id": "US-034",
+      "title": "Implement growth stage scale rendering",
+      "description": "As a player, I want to see my trees grow from tiny seedlings to full-size so that growth feels visible. TreeComponent.stage (0-4) maps to scale (0.2, 0.4, 0.6, 0.8, 1.0). See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "TreeComponent.stage (0-4) maps to scale (0.2, 0.4, 0.6, 0.8, 1.0)",
+        "Stage 0 trees visibly smaller than stage 4",
+        "Scale applied to mesh",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 34,
+      "passes": false,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass. Depends on US-033."
+    },
+    {
+      "id": "US-035",
+      "title": "Add seasonal color tinting",
+      "description": "As a player, I want trees to change color with the seasons so that the grove feels alive. Apply TreeComponent.seasonTint to material.color. Winter: swap to winterModel if useWinterModel=true. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "TreeComponent.seasonTint applied to material.color",
+        "Winter: swap to winterModel if useWinterModel=true in species config",
+        "Trees change color per season",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 35,
+      "passes": false,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass. Depends on US-033."
+    },
+    {
+      "id": "US-036",
+      "title": "Write Jest tests for tree rendering logic",
+      "description": "As a developer, I want tests for tree rendering so that species-to-GLB mapping, stage-to-scale, seasonal tint, and winter model swap are verified. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "8+ tests pass for tree rendering logic",
+        "Tests cover species-to-GLB mapping, stage-to-scale, seasonal tint, winter model swap",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 36,
+      "passes": false,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass. Tests for US-033 through US-035."
+    },
+    {
+      "id": "US-037",
+      "title": "Implement seasonal bush GLB swap",
+      "description": "As a developer, I want bushes to swap their GLB model based on season and bushShape so that seasonal variety is visible. 52 shapes x 5 seasons. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "New file components/entities/BushModel.tsx exists",
+        "BushComponent.season + bushShape maps to correct model key",
+        "Bush model changes on season change",
+        "52 shapes x 5 seasons supported",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 37,
+      "passes": false,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass."
+    },
+    {
+      "id": "US-038",
+      "title": "Write Jest tests for bush model selection",
+      "description": "As a developer, I want tests for bush model selection so that all 5 seasons produce different model keys and invalid bushShape is handled. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "6+ tests pass for bush model selection",
+        "Tests cover all 5 seasons produce different model keys, invalid bushShape handling",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 38,
+      "passes": false,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass. Tests for US-037."
+    },
+    {
+      "id": "US-039",
+      "title": "Implement grass instancing",
+      "description": "As a developer, I want grass rendered via InstancedMesh with per-instance position/rotation from chunk seed so that grass is visible without excessive draw calls. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "New file components/entities/GrassInstances.tsx exists",
+        "InstancedMesh from grass GLBs",
+        "Per-instance position/rotation from chunk seed",
+        "Density from GrassComponent.density",
+        "Grass visible in scene",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 39,
+      "passes": false,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass."
+    },
+    {
+      "id": "US-040",
+      "title": "Write Jest tests for grass placement",
+      "description": "As a developer, I want tests for grass placement so that density controls and deterministic placement are verified. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "4+ tests pass for grass placement",
+        "Tests cover density controls instance count, deterministic placement from seed",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 40,
+      "passes": false,
+      "notes": "Phase 1-A: GLB Trees + Bushes + Grass. Tests for US-039."
+    },
+    {
+      "id": "US-041",
+      "title": "Create NPC GLB loader with seeded appearance",
+      "description": "As a developer, I want an NpcModel component that uses scopedRNG to deterministically select a base model, items, and color palette from config/game/npcAssets.json so that each NPC looks unique but consistent. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "New file components/entities/NpcModel.tsx exists",
+        "scopedRNG('npc-appearance', worldSeed, npcId) selects base model + items + color palette",
+        "Same seed always produces same NPC appearance",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 41,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures."
+    },
+    {
+      "id": "US-042",
+      "title": "Write Jest tests for NPC appearance determinism",
+      "description": "As a developer, I want tests for NPC appearance so that seeded assembly, seed variation, and base model reachability are verified. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "8+ tests pass for NPC appearance determinism",
+        "Tests cover seeded assembly, different seeds produce different appearances, all base models reachable",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 42,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures. Tests for US-041."
+    },
+    {
+      "id": "US-043",
+      "title": "Implement anime.js walk cycle",
+      "description": "As a developer, I want NPC limbs to swing during walk animation using anime.js sine-wave rotation so that NPCs feel alive. Speed from NpcComponent.animSpeed. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "New file game/systems/npcAnimation.ts exists",
+        "Sine-wave arm/leg rotation",
+        "Speed from NpcComponent.animSpeed",
+        "Triggers on currentAnim='walk'",
+        "Limbs swing during walk",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 43,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures."
+    },
+    {
+      "id": "US-044",
+      "title": "Implement anime.js idle and talk animations",
+      "description": "As a developer, I want NPC idle (breathing bob, head sway) and talk (head nod, arm gesture) animations so that NPCs have personality. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "Idle: breathing bob (torso Y), slight head sway",
+        "Talk: head nod, arm gesture",
+        "Idle bob visible, talk triggers on dialogue",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 44,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures. Extends US-043."
+    },
+    {
+      "id": "US-045",
+      "title": "Write Jest tests for NPC animation",
+      "description": "As a developer, I want tests for NPC animation so that state machine transitions, sine wave values, and speed scaling are verified. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "8+ tests pass for NPC animation",
+        "Tests cover animation state machine transitions (idle->walk->talk->idle), sine wave values at key frames, speed scaling",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 45,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures. Tests for US-043, US-044."
+    },
+    {
+      "id": "US-046",
+      "title": "Create structure GLB rendering",
+      "description": "As a developer, I want a StructureModel component that loads farm structure GLBs by StructureComponent.templateId so that buildings, windmills, wells, and barns are visible. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "New file components/entities/StructureModel.tsx exists",
+        "Loads 85 farm structure GLBs by StructureComponent.templateId to modelPath",
+        "Structures visible in scene",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 46,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures."
+    },
+    {
+      "id": "US-047",
+      "title": "Create fence GLB rendering",
+      "description": "As a developer, I want a FenceModel component that loads fence GLBs by type and variant with auto-connect for adjacent fences so that fences render correctly. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "New file components/entities/FenceModel.tsx exists",
+        "Loads fence by FenceComponent.fenceType + variant",
+        "7 fence types with corners, gates, broken variants",
+        "Auto-connect adjacent fences",
+        "Fences render at correct positions",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 47,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures."
+    },
+    {
+      "id": "US-048",
+      "title": "Create prop and food item rendering",
+      "description": "As a developer, I want a PropModel component that renders PropComponent and FoodComponent items with their modelPath GLBs so that world props are visible. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "New file components/entities/PropModel.tsx exists",
+        "Renders PropComponent, FoodComponent items with modelPath GLBs",
+        "Props visible in scene",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 48,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures."
+    },
+    {
+      "id": "US-049",
+      "title": "Write Jest tests for structure rendering logic",
+      "description": "As a developer, I want tests for structure rendering so that templateId-to-modelPath resolution, placement snapping, and spacing validation are verified. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "6+ tests pass for structure rendering logic",
+        "Tests cover templateId-to-modelPath resolution, placement snapping, spacing validation",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 49,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures. Tests for US-046 through US-048."
+    },
+    {
+      "id": "US-050",
+      "title": "Implement InstancedMesh batching for static entities",
+      "description": "As a developer, I want same-model structures, fences, and props batched into InstancedMesh so that draw calls stay under 50. See GAME_SPEC.md §28 for performance budgets.",
+      "acceptanceCriteria": [
+        "Batch same-model structures/fences/props into InstancedMesh",
+        "Draw call count < 50 for typical scene",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 50,
+      "passes": false,
+      "notes": "Phase 1-B: NPCs + Animation + Structures."
+    },
+    {
+      "id": "US-051",
+      "title": "Create Gerstner wave vertex shader",
+      "description": "As a developer, I want a custom ShaderMaterial with Gerstner wave displacement so that water surfaces undulate realistically. See GAME_SPEC.md §12 for water system.",
+      "acceptanceCriteria": [
+        "New file game/shaders/gerstnerWater.ts exists",
+        "Custom ShaderMaterial with Gerstner displacement from WaterBodyComponent.waveLayers[]",
+        "Water surface visibly undulates",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 51,
+      "passes": false,
+      "notes": "Phase 1-C: Water System."
+    },
+    {
+      "id": "US-052",
+      "title": "Create WaterBody R3F component",
+      "description": "As a developer, I want a WaterBody R3F component with PlaneGeometry and the Gerstner shader so that water planes render at entity positions. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "New file components/scene/WaterBody.tsx exists",
+        "PlaneGeometry with Gerstner shader",
+        "Size from WaterBodyComponent.size",
+        "Color from config",
+        "Water planes render at entity positions",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 52,
+      "passes": false,
+      "notes": "Phase 1-C: Water System. Depends on US-051."
+    },
+    {
+      "id": "US-053",
+      "title": "Implement foam and caustic effects",
+      "description": "As a developer, I want foam overlay where wave steepness exceeds threshold and caustics projected below water so that water looks polished. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "Foam: white overlay where steepness > foamThreshold",
+        "Caustics: animated pattern projected below water",
+        "Foam visible on steep waves, caustics on terrain under water",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 53,
+      "passes": false,
+      "notes": "Phase 1-C: Water System. Depends on US-051."
+    },
+    {
+      "id": "US-054",
+      "title": "Create splash and bubble particles",
+      "description": "As a developer, I want splash particles on water entry and bubble particles when submerged so that water interaction feels tactile. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "ParticleEmitterComponent type='splash' on water entry",
+        "ParticleEmitterComponent type='bubbles' for submerged",
+        "Tied to player water detection (Y < water surface)",
+        "Particles appear on water contact",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 54,
+      "passes": false,
+      "notes": "Phase 1-C: Water System."
+    },
+    {
+      "id": "US-055",
+      "title": "Write Jest tests for Gerstner wave math",
+      "description": "As a developer, I want tests for Gerstner wave math so that displacement formula, steepness, foam threshold, and multi-layer summation are verified. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "8+ tests pass for Gerstner wave math",
+        "Tests cover displacement formula, steepness calculation, foam threshold check, multi-layer summation",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 55,
+      "passes": false,
+      "notes": "Phase 1-C: Water System. Tests for US-051."
+    },
+    {
+      "id": "US-056",
+      "title": "Wire water bodies to chunk generation",
+      "description": "As a developer, I want water bodies placed automatically based on heightmap low points and biome so that rivers and ponds appear naturally. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "New file game/world/waterPlacer.ts exists",
+        "Places water bodies based on heightmap low points + biome",
+        "Rivers follow gradient",
+        "Water appears in low terrain areas",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 56,
+      "passes": false,
+      "notes": "Phase 1-C: Water System. Depends on US-019, US-020."
+    },
+    {
+      "id": "US-057",
+      "title": "Write Jest tests for water placement",
+      "description": "As a developer, I want tests for water placement so that low-point detection, river path following, and pond size variation are verified. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "6+ tests pass for water placement",
+        "Tests cover low-point detection, river path following, pond size variation",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 57,
+      "passes": false,
+      "notes": "Phase 1-C: Water System. Tests for US-056."
+    },
+    {
+      "id": "US-058",
+      "title": "Add ambient audio zones near water",
+      "description": "As a developer, I want AmbientZoneComponent entities auto-created near water bodies with soundscape='water' so that water areas have spatial audio. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "Auto-create AmbientZoneComponent entities near water bodies",
+        "soundscape='water', radius scales with body size",
+        "Audio zones co-locate with water",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 58,
+      "passes": false,
+      "notes": "Phase 1-C: Water System. Depends on US-056."
+    },
+    {
+      "id": "US-059",
+      "title": "Create tool view model component",
+      "description": "As a player, I want to see my held tool in the lower-right of my view so that I feel embodied in first-person. Load tool GLB, position fixed to camera. See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "New file components/player/ToolViewModel.tsx exists",
+        "Loads tool GLB from assets/models/tools/",
+        "Positioned in lower-right viewport space, fixed to camera",
+        "Tool visible in FPS view",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 59,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD."
+    },
+    {
+      "id": "US-060",
+      "title": "Implement hand sway from movement",
+      "description": "As a player, I want my held tool to sway when I move so that movement feels physical. Offset tool position by velocity * swayAmount, smooth with lerp. See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "Tool position offset by player velocity * swayAmount",
+        "Smoothed with lerp",
+        "Tool sways when moving",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 60,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Depends on US-059."
+    },
+    {
+      "id": "US-061",
+      "title": "Implement walk bob",
+      "description": "As a player, I want my held tool to bob vertically when walking so that footsteps feel grounded. Vertical sine wave: bobHeight * sin(time * bobFrequency). See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "Vertical sine wave synced to movement speed",
+        "bobHeight * sin(time * bobFrequency)",
+        "Tool bobs while walking",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 61,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Depends on US-059."
+    },
+    {
+      "id": "US-062",
+      "title": "Add tool swap animation",
+      "description": "As a player, I want a smooth animation when switching tools so that the transition feels polished. Lower current tool, swap model, raise new tool via anime.js tween. See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "Lower current tool, swap model, raise new tool",
+        "anime.js tween animation",
+        "Smooth tool change animation",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 62,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Depends on US-059."
+    },
+    {
+      "id": "US-063",
+      "title": "Implement Rapier raycast from camera",
+      "description": "As a developer, I want a raycast from camera position along forward direction that returns the closest hit entity so that the player can target things in the world. See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "Ray cast from camera position along forward direction",
+        "Returns closest hit entity",
+        "Raycast detects tree/NPC/structure entities",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 63,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Depends on US-007."
+    },
+    {
+      "id": "US-064",
+      "title": "Create target info display",
+      "description": "As a player, I want to see the entity name and action prompt (e.g. 'E to Harvest') when I look at something interactable so that I know what I can do. See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "New file components/player/TargetInfo.tsx exists",
+        "Shows entity name and action prompt when raycast hits interactable",
+        "Prompt appears on hover/look",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 64,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Depends on US-063."
+    },
+    {
+      "id": "US-065",
+      "title": "Implement action dispatch system",
+      "description": "As a developer, I want an action dispatcher that maps tool type + target entity type to the correct action (DIG/CHOP/WATER/PLANT/PRUNE) so that interactions are consistent. See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "New file game/actions/actionDispatcher.ts exists",
+        "Maps tool type + target entity type to action (DIG/CHOP/WATER/PLANT/PRUNE)",
+        "Executes correct system function",
+        "Correct action fires for each tool+target combo",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 65,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Depends on US-063."
+    },
+    {
+      "id": "US-066",
+      "title": "Write Jest tests for raycast and actions",
+      "description": "As a developer, I want tests for raycast and action dispatch so that distance, mapping, stamina cost, and tool durability are verified. See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "10+ tests pass for raycast and actions",
+        "Tests cover raycast distance, action mapping table, stamina cost deduction, tool durability drain",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 66,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Tests for US-063 through US-065."
+    },
+    {
+      "id": "US-067",
+      "title": "Create HUD overlay",
+      "description": "As a player, I want a HUD showing my stamina bar, tool belt, resource counts, day/time, and compass so that I always know my status. Mobile: 44px buttons. See GAME_SPEC.md §16.",
+      "acceptanceCriteria": [
+        "New file components/game/HUD.tsx exists",
+        "Shows stamina bar, tool belt, resource counts, day/time, compass",
+        "Mobile: 44px touch targets",
+        "HUD visible with live data from game state",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 67,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD."
+    },
+    {
+      "id": "US-068",
+      "title": "Write Jest tests for HUD data binding",
+      "description": "As a developer, I want tests for the HUD so that correct values display and update on state change. See GAME_SPEC.md §16.",
+      "acceptanceCriteria": [
+        "6+ tests pass for HUD data binding",
+        "Tests cover HUD displays correct values from game state, updates on state change",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 68,
+      "passes": false,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Tests for US-067."
+    },
+    {
+      "id": "US-069",
+      "title": "Implement async chunk generation",
+      "description": "As a developer, I want terrain/entity generation to run on requestIdleCallback or setTimeout so that chunk loading does not cause frame drops. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "Chunk generation runs asynchronously (requestIdleCallback or setTimeout)",
+        "No frame drops during chunk loading",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 69,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming. Depends on US-017."
+    },
+    {
+      "id": "US-070",
+      "title": "Add entity spawning per chunk from biome template",
+      "description": "As a developer, I want an entity spawner that populates chunks with trees, bushes, grass, and rocks based on biome type and density config so that the world feels populated. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "New file game/world/entitySpawner.ts exists",
+        "Spawns trees, bushes, grass, rocks based on biome type + density from config",
+        "Seeded positions for determinism",
+        "Chunks populate with biome-appropriate entities",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 70,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming. Depends on US-019, US-020."
+    },
+    {
+      "id": "US-071",
+      "title": "Write Jest tests for entity spawning",
+      "description": "As a developer, I want tests for entity spawning so that determinism, biome-specific species, and density matching are verified. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "8+ tests pass for entity spawning",
+        "Tests cover deterministic spawning, biome-specific species, density matches config",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 71,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming. Tests for US-070."
+    },
+    {
+      "id": "US-072",
+      "title": "Implement biome blending at boundaries",
+      "description": "As a developer, I want vertex color interpolation across chunk edges using biome blend weights so that there are no hard color seams between biomes. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "TerrainChunkComponent.biomeBlend weights implemented",
+        "Vertex color interpolation across chunk edges",
+        "No hard color seams between biomes",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 72,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming. Depends on US-022."
+    },
+    {
+      "id": "US-073",
+      "title": "Create procedural path generation",
+      "description": "As a developer, I want trail splines generated between villages and landmarks that carve into the terrain heightmap so that the world has walkable paths. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "New file game/world/pathGenerator.ts exists",
+        "Generates trail splines between villages/landmarks",
+        "Carves paths into terrain heightmap",
+        "PathSegmentComponent entities created",
+        "Visible paths connecting landmarks",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 73,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming. Depends on US-019."
+    },
+    {
+      "id": "US-074",
+      "title": "Implement procedural village generation",
+      "description": "As a developer, I want villages of 3-8 buildings from structure GLBs with seeded layout, NPC entities, and a campfire fast-travel point so that the world has settlements. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "New file game/world/villageGenerator.ts exists",
+        "3-8 buildings from structure GLBs, seeded layout",
+        "Spawn NPC entities with schedules",
+        "Campfire fast-travel point included",
+        "Villages generate deterministically from seed",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 74,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming. Depends on US-046, US-041."
+    },
+    {
+      "id": "US-075",
+      "title": "Write Jest tests for village generation",
+      "description": "As a developer, I want tests for village generation so that building count, NPC population, campfire presence, and determinism are verified. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "8+ tests pass for village generation",
+        "Tests cover building count range, NPC population, campfire presence, determinism from seed",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 75,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming. Tests for US-074."
+    },
+    {
+      "id": "US-076",
+      "title": "Create campfire fast travel system",
+      "description": "As a player, I want to discover campfires by visiting them and fast travel between up to 8 saved points so that traversal of the large world is manageable. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "New file game/systems/fastTravel.ts exists",
+        "Discover campfires by visiting",
+        "Max 8 saved campfire points",
+        "UI to select destination",
+        "Teleport player to selected campfire",
+        "Fast travel between discovered campfires works",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 76,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming."
+    },
+    {
+      "id": "US-077",
+      "title": "Add compass widget and signpost entities",
+      "description": "As a player, I want a compass that points to the nearest undiscovered direction and signpost entities at path intersections so that I can navigate the world. See GAME_SPEC.md §16.",
+      "acceptanceCriteria": [
+        "Compass widget points to nearest undiscovered direction/POI",
+        "Signpost entities placed at path intersections",
+        "Compass rotates toward nearest POI",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 77,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming."
+    },
+    {
+      "id": "US-078",
+      "title": "Write Jest tests for navigation",
+      "description": "As a developer, I want tests for navigation so that campfire discovery, fast travel teleport, and compass direction are verified. See GAME_SPEC.md §16.",
+      "acceptanceCriteria": [
+        "6+ tests pass for navigation",
+        "Tests cover campfire discovery, fast travel teleport, compass direction calculation",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 78,
+      "passes": false,
+      "notes": "Phase 3: Open World Streaming. Tests for US-076, US-077."
+    },
+    {
+      "id": "US-079",
+      "title": "Implement hedge maze generation",
+      "description": "As a developer, I want a seeded recursive backtracker maze generator on a 12x12 grid that maps to modular hedge GLB pieces so that garden labyrinths appear in the world. See GAME_SPEC.md §18.",
+      "acceptanceCriteria": [
+        "New file game/world/mazeGenerator.ts exists",
+        "Seeded recursive backtracker on 12x12 grid",
+        "Maps to modular hedge GLB pieces",
+        "Deterministic solvable mazes from seed",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 79,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits."
+    },
+    {
+      "id": "US-080",
+      "title": "Render hedge maze from modular GLBs",
+      "description": "As a developer, I want a HedgeMaze component that places HedgeComponent entities from the maze layout with a fountain and benches at center so that mazes are walkable 3D environments. See GAME_SPEC.md §18.",
+      "acceptanceCriteria": [
+        "New file components/entities/HedgeMaze.tsx exists",
+        "Places HedgeComponent entities from maze layout",
+        "Center: fountain + benches GLBs",
+        "Walkable 3D maze from GLBs",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 80,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits. Depends on US-079."
+    },
+    {
+      "id": "US-081",
+      "title": "Write Jest tests for maze generation",
+      "description": "As a developer, I want tests for maze generation so that solvability, determinism, center reachability, and piece count are verified. See GAME_SPEC.md §18.",
+      "acceptanceCriteria": [
+        "8+ tests pass for maze generation",
+        "Tests cover solvability, determinism, center is reachable, correct piece count",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 81,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits. Tests for US-079."
+    },
+    {
+      "id": "US-082",
+      "title": "Create Grovekeeper spirit entity",
+      "description": "As a player, I want to discover glowing spirit orbs at maze centers so that the main quest has tangible rewards. IcosahedronGeometry + emissive material, color from scopedRNG. See GAME_SPEC.md §19.",
+      "acceptanceCriteria": [
+        "New file components/entities/GrovekeeperSpirit.tsx exists",
+        "IcosahedronGeometry + MeshStandardMaterial with emissive",
+        "Color from scopedRNG('spirit', worldSeed, mazeIndex)",
+        "Glowing orb renders at maze center",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 82,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits."
+    },
+    {
+      "id": "US-083",
+      "title": "Implement spirit animations",
+      "description": "As a developer, I want spirits to have spawn rise, idle bob, emissive pulse, and trail particle animations so that they feel magical. See GAME_SPEC.md §19.",
+      "acceptanceCriteria": [
+        "Spawn rise: lerp Y from 0 to hoverHeight",
+        "Idle bob: sine wave",
+        "Emissive pulse animation",
+        "Trail particles",
+        "Spirit floats and pulses",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 83,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits. Depends on US-082."
+    },
+    {
+      "id": "US-084",
+      "title": "Write Jest tests for spirit animation math",
+      "description": "As a developer, I want tests for spirit animation so that spawn progress, bob calculation, pulse intensity, and trail color are verified. See GAME_SPEC.md §19.",
+      "acceptanceCriteria": [
+        "6+ tests pass for spirit animation math",
+        "Tests cover spawn progress, bob calculation, pulse intensity, trail color derivation",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 84,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits. Tests for US-082, US-083."
+    },
+    {
+      "id": "US-085",
+      "title": "Implement enemy spawning and AI",
+      "description": "As a developer, I want enemies spawned from biome templates with patrol/guard/swarm/ambush behaviors using Yuka AI so that Survival mode has threats. See GAME_SPEC.md §20.",
+      "acceptanceCriteria": [
+        "New file game/systems/enemyAI.ts exists",
+        "Spawns from biome templates",
+        "Patrol/guard/swarm/ambush behaviors using Yuka",
+        "Enemies move with AI behaviors",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 85,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits."
+    },
+    {
+      "id": "US-086",
+      "title": "Implement combat system",
+      "description": "As a player in Survival mode, I want to fight enemies with my tools so that I can defend my grove. Tool damage = effectPower * difficulty multiplier. Knockback on hit. See GAME_SPEC.md §20.",
+      "acceptanceCriteria": [
+        "New file game/systems/combat.ts exists",
+        "Tool damage = effectPower * difficulty multiplier",
+        "Enemy knockback on hit",
+        "Player damage from enemies",
+        "Health tracking",
+        "Player can fight and defeat enemies",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 86,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits. Depends on US-085."
+    },
+    {
+      "id": "US-087",
+      "title": "Create loot drop system",
+      "description": "As a developer, I want LootDropComponent entities to spawn on enemy death with seeded loot table rolls and a despawn timer so that combat has rewards. See GAME_SPEC.md §20.",
+      "acceptanceCriteria": [
+        "New file game/systems/lootSystem.ts exists",
+        "LootDropComponent spawns on enemy death",
+        "Seeded loot table rolls",
+        "Despawn timer",
+        "Loot appears after killing enemy",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 87,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits. Depends on US-086."
+    },
+    {
+      "id": "US-088",
+      "title": "Write Jest tests for combat and loot",
+      "description": "As a developer, I want tests for combat and loot so that damage calculation, knockback, loot probabilities, and despawn timing are verified. See GAME_SPEC.md §20.",
+      "acceptanceCriteria": [
+        "10+ tests pass for combat and loot",
+        "Tests cover damage calculation, knockback impulse, loot table probabilities, despawn timing",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 88,
+      "passes": false,
+      "notes": "Phase 4: Maze + Combat + Spirits. Tests for US-085 through US-087."
+    },
+    {
+      "id": "US-089",
+      "title": "Implement hearts/hunger/stamina systems",
+      "description": "As a player in Survival mode, I want hearts that drain from damage/exposure, hunger that drains per minute, and stamina that drains on actions so that resource management matters. See GAME_SPEC.md §21.",
+      "acceptanceCriteria": [
+        "New file game/systems/survival.ts exists",
+        "Hearts drain from damage/exposure",
+        "Hunger drains per minute (tier-scaled)",
+        "Stamina drains on actions",
+        "All three stats drain correctly per difficulty config",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 89,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems."
+    },
+    {
+      "id": "US-090",
+      "title": "Write Jest tests for survival drains",
+      "description": "As a developer, I want tests for survival system drains so that rates match difficulty config, hunger-stamina interaction, and death trigger are verified. See GAME_SPEC.md §21.",
+      "acceptanceCriteria": [
+        "10+ tests pass for survival drains",
+        "Tests cover drain rates match difficulty config, zero hunger stops stamina regen, death triggers at 0 hearts",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 90,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems. Tests for US-089."
+    },
+    {
+      "id": "US-091",
+      "title": "Implement fishing mini-game",
+      "description": "As a player, I want to cast a line into water and play a timing mini-game to catch fish so that water bodies are interactive. Fish species from biome+season (seeded). See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "New file game/systems/fishing.ts exists",
+        "Raycast hits water body triggers fishing start",
+        "Timing indicator mini-game",
+        "Fish species from biome+season (seeded)",
+        "Fishing catches fish",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 91,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems."
+    },
+    {
+      "id": "US-092",
+      "title": "Implement trap system",
+      "description": "As a player in Survival mode, I want to place traps that arm on placement and trigger when enemies enter the radius so that I can defend strategically. See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "New file game/systems/traps.ts exists",
+        "Place TrapComponent entity",
+        "Arms on placement",
+        "Triggers when enemy enters radius",
+        "Damage + cooldown",
+        "Traps damage enemies",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 92,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems."
+    },
+    {
+      "id": "US-093",
+      "title": "Implement cooking system",
+      "description": "As a player, I want to interact with a campfire to open a cooking UI, match ingredients to recipes, and produce cooked food so that I can restore hunger/health. See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "New file game/systems/cooking.ts exists",
+        "Interact with campfire triggers cooking UI",
+        "Match ingredients to recipes (config/game/cooking.json)",
+        "Timer produces cooked food",
+        "Cooking produces correct output item",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 93,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems."
+    },
+    {
+      "id": "US-094",
+      "title": "Write Jest tests for cooking",
+      "description": "As a developer, I want tests for the cooking system so that recipe matching, cook timer, ingredient consumption, and food stat values are verified. See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "8+ tests pass for cooking",
+        "Tests cover recipe matching, cook timer, ingredient consumption, food stat values",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 94,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems. Tests for US-093."
+    },
+    {
+      "id": "US-095",
+      "title": "Implement forging system",
+      "description": "As a player, I want to interact with a forge to smelt ore into ingots and upgrade tool tiers (basic->iron->grovekeeper) so that I can improve my capabilities. See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "New file game/systems/forging.ts exists",
+        "Interact with forge structure",
+        "Smelt ore into ingots",
+        "Upgrade tool tier (basic->iron->grovekeeper)",
+        "Resource cost deducted",
+        "Tool tier upgrades correctly",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 95,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems."
+    },
+    {
+      "id": "US-096",
+      "title": "Write Jest tests for forging",
+      "description": "As a developer, I want tests for the forging system so that smelting ratio, upgrade stats, resource cost, and tier cap are verified. See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "6+ tests pass for forging",
+        "Tests cover ore smelting ratio, tool upgrade stat changes, resource cost deduction, max tier cap",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 96,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems. Tests for US-095."
+    },
+    {
+      "id": "US-097",
+      "title": "Implement mining system",
+      "description": "As a player, I want to mine rocks with a pick tool to extract ore based on biome type so that I can gather materials for forging. See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "New file game/systems/mining.ts exists",
+        "Interact with RockComponent via pick tool",
+        "Ore type determined by biome",
+        "Stamina cost scales with hardness",
+        "Mining produces ore resources",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 97,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems."
+    },
+    {
+      "id": "US-098",
+      "title": "Write Jest tests for mining",
+      "description": "As a developer, I want tests for the mining system so that ore type per biome, stamina cost, and durability drain are verified. See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "6+ tests pass for mining",
+        "Tests cover ore type per biome, stamina cost calculation, durability drain",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 98,
+      "passes": false,
+      "notes": "Phase 5: Survival Systems. Tests for US-097."
+    },
+    {
+      "id": "US-099",
+      "title": "Create dialogue tree data loader",
+      "description": "As a developer, I want a dialogue loader that reads DialogueTree configs from JSON and validates node graph integrity (all targetNodeIds exist) so that dialogue data is reliable. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "New file game/systems/dialogueLoader.ts exists",
+        "Loads DialogueTree configs from JSON",
+        "Validates node graph (all targetNodeIds exist)",
+        "All config trees load without errors",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 99,
+      "passes": false,
+      "notes": "Phase 6: Dialogue + NPC Relationships."
+    },
+    {
+      "id": "US-100",
+      "title": "Implement seed-keyed branch selection",
+      "description": "As a developer, I want dialogue branches selected deterministically via scopedRNG so that the same seed always selects the same branch with normalized seedBias weights. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "New file game/systems/dialogueBranch.ts exists",
+        "scopedRNG('dialogue-branch', worldSeed, entityId, nodeIndex) selects default branch",
+        "Normalize seedBias weights",
+        "Same seed always selects same branch",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 100,
+      "passes": false,
+      "notes": "Phase 6: Dialogue + NPC Relationships. Depends on US-099."
+    },
+    {
+      "id": "US-101",
+      "title": "Write Jest tests for dialogue branching",
+      "description": "As a developer, I want tests for dialogue branching so that determinism, seed variation, weight normalization, and condition gating are verified. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "10+ tests pass for dialogue branching",
+        "Tests cover determinism, different seeds select different branches, weight normalization, condition gating",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 101,
+      "passes": false,
+      "notes": "Phase 6: Dialogue + NPC Relationships. Tests for US-099, US-100."
+    },
+    {
+      "id": "US-102",
+      "title": "Create floating speech bubble component",
+      "description": "As a player, I want to see speech bubbles floating above NPCs and spirits during dialogue so that conversations feel grounded in the world. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "New file components/entities/SpeechBubble.tsx exists",
+        "Billboard quad above entity",
+        "Fredoka font text",
+        "Fade in/out animation",
+        "Bubble visible above NPC/spirit during dialogue",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 102,
+      "passes": false,
+      "notes": "Phase 6: Dialogue + NPC Relationships."
+    },
+    {
+      "id": "US-103",
+      "title": "Implement dialogue UI with choices",
+      "description": "As a player, I want dialogue choice buttons below text with 44px touch targets and auto-advance after 3s (using seed branch) so that I can interact with NPCs. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "Branch choice buttons below text",
+        "44px touch targets",
+        "Auto-advance after 3s (uses seed branch selection)",
+        "Player can select dialogue branches",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 103,
+      "passes": false,
+      "notes": "Phase 6: Dialogue + NPC Relationships. Depends on US-100, US-102."
+    },
+    {
+      "id": "US-104",
+      "title": "Implement NPC relationship tracking",
+      "description": "As a developer, I want trust/friendship levels per NPC that increase from trading, quests, and gifts and affect available dialogue so that NPC interactions have depth. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "New file game/systems/npcRelationship.ts exists",
+        "Trust/friendship levels per NPC",
+        "Increase from trading, quest completion, gifts",
+        "Affects available dialogue options",
+        "Relationship levels persist across sessions",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 104,
+      "passes": false,
+      "notes": "Phase 6: Dialogue + NPC Relationships."
+    },
+    {
+      "id": "US-105",
+      "title": "Implement NPC schedule system",
+      "description": "As a developer, I want NPCs to follow daily routines driven by NpcScheduleEntry[] so that NPCs move between positions based on game hour. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "New file game/systems/npcSchedule.ts exists",
+        "NpcScheduleEntry[] drives position+activity by hour",
+        "NPCs move between schedule positions",
+        "NPCs follow daily routines",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 105,
+      "passes": false,
+      "notes": "Phase 6: Dialogue + NPC Relationships."
+    },
+    {
+      "id": "US-106",
+      "title": "Write Jest tests for schedules and relationships",
+      "description": "As a developer, I want tests for NPC schedules and relationships so that schedule positioning, relationship changes, and dialogue gating are verified. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "8+ tests pass for schedules and relationships",
+        "Tests cover schedule position at specific hours, relationship level changes, dialogue gating",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 106,
+      "passes": false,
+      "notes": "Phase 6: Dialogue + NPC Relationships. Tests for US-104, US-105."
+    },
+    {
+      "id": "US-107",
+      "title": "Create quest state machine",
+      "description": "As a developer, I want a quest engine with states (available->active->completed|failed), step tracking, and objective text so that quests have structured progression. See GAME_SPEC.md §17.",
+      "acceptanceCriteria": [
+        "New file game/quests/questEngine.ts exists",
+        "States: available->active->completed|failed",
+        "Step tracking",
+        "Objective text",
+        "Quest advances through states correctly",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 107,
+      "passes": false,
+      "notes": "Phase 7: Quest System."
+    },
+    {
+      "id": "US-108",
+      "title": "Implement main quest chain",
+      "description": "As a player, I want an 8-spirit discovery quest where each spirit discovery advances the main quest toward 'The Worldroot's Dream' so that the game has a clear goal. See GAME_SPEC.md §17.",
+      "acceptanceCriteria": [
+        "8-spirit discovery quest implemented",
+        "Each spirit discovery advances main quest",
+        "Final quest 'The Worldroot's Dream' requires all 8",
+        "Discovering spirits advances main quest",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 108,
+      "passes": false,
+      "notes": "Phase 7: Quest System. Depends on US-107, US-082."
+    },
+    {
+      "id": "US-109",
+      "title": "Implement world quest templates",
+      "description": "As a developer, I want 8 world quest templates from GAME_SPEC.md §30 with seed-driven variant selection (6 slots x 3 options = 729 combos each) so that quests feel varied. See GAME_SPEC.md §30.",
+      "acceptanceCriteria": [
+        "8 world quest templates implemented",
+        "Variant selection from seed",
+        "6 slots x 3 options = 729 combos each",
+        "Seed produces deterministic quest variant",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 109,
+      "passes": false,
+      "notes": "Phase 7: Quest System. Depends on US-107."
+    },
+    {
+      "id": "US-110",
+      "title": "Write Jest tests for quest state machine",
+      "description": "As a developer, I want tests for the quest state machine so that transitions, step advancement, completion, and failure are verified. See GAME_SPEC.md §17.",
+      "acceptanceCriteria": [
+        "8+ tests pass for quest state machine",
+        "Tests cover transitions, step advancement, completion conditions, failure conditions",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 110,
+      "passes": false,
+      "notes": "Phase 7: Quest System. Tests for US-107 through US-109."
+    },
+    {
+      "id": "US-111",
+      "title": "Implement procedural quest generation",
+      "description": "As a developer, I want procedural quests generated from templates (gather/plant/explore/deliver/build/discover) with seeded context so that new chunks bring fresh content. See GAME_SPEC.md §17.",
+      "acceptanceCriteria": [
+        "New file game/quests/proceduralQuests.ts exists",
+        "Templates: gather/plant/explore/deliver/build/discover",
+        "Seeded context (target, NPC, location)",
+        "Quests generate for new chunks",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 111,
+      "passes": false,
+      "notes": "Phase 7: Quest System. Depends on US-107."
+    },
+    {
+      "id": "US-112",
+      "title": "Write Jest tests for procedural quests",
+      "description": "As a developer, I want tests for procedural quest generation so that template filling, determinism, and context validity are verified. See GAME_SPEC.md §17.",
+      "acceptanceCriteria": [
+        "6+ tests pass for procedural quests",
+        "Tests cover template filling, determinism, context validity",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 112,
+      "passes": false,
+      "notes": "Phase 7: Quest System. Tests for US-111."
+    },
+    {
+      "id": "US-113",
+      "title": "Create quest UI",
+      "description": "As a player, I want a quest panel showing active quests with objectives and checkmarks plus completion notifications so that I can track my progress. See GAME_SPEC.md §16.",
+      "acceptanceCriteria": [
+        "New file components/game/QuestPanel.tsx exists",
+        "Shows active quests with objectives and checkmarks",
+        "Completion notification popup",
+        "Quest objectives visible and update in real-time",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 113,
+      "passes": false,
+      "notes": "Phase 7: Quest System."
+    },
+    {
+      "id": "US-114",
+      "title": "Wire dialogue effects to quest advancement",
+      "description": "As a developer, I want DialogueEffect type='advance_quest' to trigger quest steps and type='start_quest' to begin new quests so that dialogue drives progression. See GAME_SPEC.md §15, §17.",
+      "acceptanceCriteria": [
+        "DialogueEffect type='advance_quest' triggers quest step advancement",
+        "DialogueEffect type='start_quest' begins new quest",
+        "Dialogue choices advance quests correctly",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 114,
+      "passes": false,
+      "notes": "Phase 7: Quest System. Depends on US-100, US-107."
+    },
+    {
+      "id": "US-115",
+      "title": "Create snap point validation system",
+      "description": "As a developer, I want a kitbashing snap point validator that checks direction matching (N<->S, E<->W, up<->down), clearance, and ground contact so that building placement is structurally sound. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "New file game/systems/kitbashing.ts exists",
+        "Validates snap direction matching (N<->S, E<->W, up<->down)",
+        "Clearance check",
+        "Ground contact check",
+        "Valid snaps accepted, invalid rejected",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 115,
+      "passes": false,
+      "notes": "Phase 8: Base Building."
+    },
+    {
+      "id": "US-116",
+      "title": "Write Jest tests for snap validation",
+      "description": "As a developer, I want tests for snap validation so that direction matching, clearance blocking, rotation handling, and multi-snap are verified. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "10+ tests pass for snap validation",
+        "Tests cover direction matching, clearance blocking, rotation handling, multi-snap",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 116,
+      "passes": false,
+      "notes": "Phase 8: Base Building. Tests for US-115."
+    },
+    {
+      "id": "US-117",
+      "title": "Create building radial menu",
+      "description": "As a player, I want a radial menu for selecting building categories and pieces with build cost display and 44px touch targets so that building is intuitive. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "New file components/game/BuildMenu.tsx exists",
+        "Radial category selection then piece list",
+        "Shows build cost",
+        "44px touch targets",
+        "Menu navigates categories and pieces",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 117,
+      "passes": false,
+      "notes": "Phase 8: Base Building."
+    },
+    {
+      "id": "US-118",
+      "title": "Implement ghost preview with validation",
+      "description": "As a player, I want a translucent ghost mesh at the snap position that turns green for valid and red for invalid placements so that I get visual feedback before building. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "Translucent mesh at snap position",
+        "Green = valid placement, red = invalid",
+        "Rotates with controls",
+        "Ghost follows cursor/touch with color feedback",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 118,
+      "passes": false,
+      "notes": "Phase 8: Base Building. Depends on US-115."
+    },
+    {
+      "id": "US-119",
+      "title": "Implement placement and resource deduction",
+      "description": "As a player, I want to place building pieces at snap points with resources deducted from my inventory so that building consumes materials. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "Places ModularPieceComponent entity at snap point",
+        "Deducts resources from player inventory",
+        "Pieces place and resources deducted correctly",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 119,
+      "passes": false,
+      "notes": "Phase 8: Base Building. Depends on US-115, US-118."
+    },
+    {
+      "id": "US-120",
+      "title": "Write Jest tests for placement",
+      "description": "As a developer, I want tests for building placement so that resource check, deduction, entity creation, and snap point consumption are verified. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "8+ tests pass for placement",
+        "Tests cover resource check, deduction, entity creation, snap point consumption",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 120,
+      "passes": false,
+      "notes": "Phase 8: Base Building. Tests for US-119."
+    },
+    {
+      "id": "US-121",
+      "title": "Implement progressive piece unlocking",
+      "description": "As a player, I want building pieces gated by level (Tier 1 L1-5: wood, Tier 2 L6-15: stone/metal, Tier 3 L16+: advanced) so that building progresses with my character. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "Pieces gated by player level",
+        "Tier 1 (L1-5): wood pieces",
+        "Tier 2 (L6-15): stone/metal pieces",
+        "Tier 3 (L16+): advanced pieces",
+        "Locked pieces show lock icon and level requirement",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 121,
+      "passes": false,
+      "notes": "Phase 8: Base Building."
+    },
+    {
+      "id": "US-122",
+      "title": "Write Jest tests for unlock progression",
+      "description": "As a developer, I want tests for progressive unlocking so that level gates, unlock persistence, and tier boundaries are verified. See GAME_SPEC.md §14.",
+      "acceptanceCriteria": [
+        "6+ tests pass for unlock progression",
+        "Tests cover level gates, unlock state persistence, tier boundaries",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 122,
+      "passes": false,
+      "notes": "Phase 8: Base Building. Tests for US-121."
+    },
+    {
+      "id": "US-123",
+      "title": "Implement raid probability and wave generation",
+      "description": "As a developer, I want raid probability that scales with base value + day number and seeded wave generation (enemy count, types, directions) that triggers only at night so that Survival mode has escalating threats. See GAME_SPEC.md §23.",
+      "acceptanceCriteria": [
+        "New file game/systems/baseRaids.ts exists",
+        "Probability scales with base value + day number",
+        "Wave: enemy count, types, approach directions (seeded)",
+        "Night only trigger",
+        "Raids trigger with appropriate probability",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 123,
+      "passes": false,
+      "notes": "Phase 9: Raids + NG+."
+    },
+    {
+      "id": "US-124",
+      "title": "Write Jest tests for raid mechanics",
+      "description": "As a developer, I want tests for raid mechanics so that probability scaling, wave composition, night-only check, and seed determinism are verified. See GAME_SPEC.md §23.",
+      "acceptanceCriteria": [
+        "8+ tests pass for raid mechanics",
+        "Tests cover probability scaling, wave composition, night-only check, seed determinism",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 124,
+      "passes": false,
+      "notes": "Phase 9: Raids + NG+. Tests for US-123."
+    },
+    {
+      "id": "US-125",
+      "title": "Implement New Game+ prestige system",
+      "description": "As a player, I want to start New Game+ after completing the main quest, resetting world/resources/level but carrying cosmetics and prestige tier bonuses (growth speed, stamina, build cost). See GAME_SPEC.md §24.",
+      "acceptanceCriteria": [
+        "New file game/systems/prestige.ts exists",
+        "After main quest: reset world/resources/level",
+        "Carry cosmetics and prestige tier",
+        "Apply prestige bonuses (growth speed, stamina, build cost)",
+        "NG+ resets and applies bonuses correctly",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 125,
+      "passes": false,
+      "notes": "Phase 9: Raids + NG+. Depends on US-108."
+    },
+    {
+      "id": "US-126",
+      "title": "Write Jest tests for prestige",
+      "description": "As a developer, I want tests for prestige so that carry-forward data, reset data, bonus application, and tier progression are verified. See GAME_SPEC.md §24.",
+      "acceptanceCriteria": [
+        "6+ tests pass for prestige",
+        "Tests cover carry-forward data, reset data, bonus application, tier progression",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 126,
+      "passes": false,
+      "notes": "Phase 9: Raids + NG+. Tests for US-125."
+    },
+    {
+      "id": "US-127",
+      "title": "Implement achievement system",
+      "description": "As a player, I want 45 achievements that trigger on specific conditions (first harvest, all species, etc.) with popup notifications so that I have goals to chase. See GAME_SPEC.md §25.",
+      "acceptanceCriteria": [
+        "New file game/systems/achievements.ts exists",
+        "45 achievements from config/game/achievements.json",
+        "Trigger on conditions (first harvest, all species, etc.)",
+        "Popup notification on achievement",
+        "Achievements trigger and persist",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 127,
+      "passes": false,
+      "notes": "Phase 9: Raids + NG+."
+    },
+    {
+      "id": "US-128",
+      "title": "Write Jest tests for achievements",
+      "description": "As a developer, I want tests for achievements so that trigger conditions, no double-trigger, persistence, and popup display are verified. See GAME_SPEC.md §25.",
+      "acceptanceCriteria": [
+        "8+ tests pass for achievements",
+        "Tests cover trigger conditions, no double-trigger, persistence, popup display",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 128,
+      "passes": false,
+      "notes": "Phase 9: Raids + NG+. Tests for US-127."
+    },
+    {
+      "id": "US-129",
+      "title": "Set up Tone.js audio engine",
+      "description": "As a developer, I want Tone.js installed with a master volume control and spatial Panner3D pool (HRTF) so that audio has a proper foundation. See GAME_SPEC.md §13.",
+      "acceptanceCriteria": [
+        "pnpm add tone installs Tone.js",
+        "New file game/systems/audioEngine.ts exists",
+        "Master volume control",
+        "Spatial Panner3D pool (HRTF)",
+        "Tone.js context initializes",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 129,
+      "passes": false,
+      "notes": "Phase 10: Audio + Weather + Particles."
+    },
+    {
+      "id": "US-130",
+      "title": "Implement ambient soundscape system",
+      "description": "As a player, I want 6-layer ambient audio per biome driven by AmbientZoneComponent entities with Panner3D spatial audio and distance-based crossfade so that the world sounds alive. See GAME_SPEC.md §13.",
+      "acceptanceCriteria": [
+        "New file game/systems/ambientAudio.ts exists",
+        "6-layer ambient per biome",
+        "AmbientZoneComponent entities drive Panner3D sources",
+        "Crossfade by distance",
+        "Biome-specific ambient audio plays",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 130,
+      "passes": false,
+      "notes": "Phase 10: Audio + Weather + Particles. Depends on US-129."
+    },
+    {
+      "id": "US-131",
+      "title": "Create weather particle system",
+      "description": "As a player, I want rain (500 particles falling), snow (300 drifting), and wind particles driven by WeatherComponent so that weather is visible. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "New file game/systems/weatherParticles.ts exists",
+        "Rain: 500 falling particles",
+        "Snow: 300 drifting particles",
+        "Wind particles",
+        "Driven by WeatherComponent state",
+        "Weather particles visible matching weather state",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 131,
+      "passes": false,
+      "notes": "Phase 10: Audio + Weather + Particles."
+    },
+    {
+      "id": "US-132",
+      "title": "Write Jest tests for weather transitions",
+      "description": "As a developer, I want tests for weather so that state changes, duration countdown, season probabilities, and wind direction are verified. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "8+ tests pass for weather transitions",
+        "Tests cover weather state changes, duration countdown, season probabilities, wind direction",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 132,
+      "passes": false,
+      "notes": "Phase 10: Audio + Weather + Particles. Tests for US-131."
+    },
+    {
+      "id": "US-133",
+      "title": "Implement day/night cycle system",
+      "description": "As a player, I want 600s = 1 game day with sky darkening at night and brightening at dawn so that the grove has temporal atmosphere. Update DayNightComponent: gameHour, timeOfDay, lights. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "New file game/systems/dayNight.ts exists",
+        "600s = 1 game day",
+        "Updates DayNightComponent: gameHour, timeOfDay, ambient/directional light",
+        "Drives SkyComponent",
+        "Sky darkens at night, brightens at dawn",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 133,
+      "passes": false,
+      "notes": "Phase 10: Audio + Weather + Particles."
+    },
+    {
+      "id": "US-134",
+      "title": "Write Jest tests for day/night",
+      "description": "As a developer, I want tests for day/night so that hour advancement, time-of-day labels, and light color/intensity per slot are verified. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "8+ tests pass for day/night",
+        "Tests cover hour advancement, time-of-day label transitions, light color/intensity per time slot",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 134,
+      "passes": false,
+      "notes": "Phase 10: Audio + Weather + Particles. Tests for US-133."
+    },
+    {
+      "id": "US-135",
+      "title": "Implement seasonal effects",
+      "description": "As a player, I want to see terrain color shift, vegetation scale/color changes, and bush GLB swaps on season transitions so that the grove evolves with the seasons. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "New file game/systems/seasonalEffects.ts exists",
+        "Terrain vertex color shift per season",
+        "Vegetation scale/color changes",
+        "Bush GLB swaps on season change",
+        "Season transition on day boundaries",
+        "Visible seasonal changes",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 135,
+      "passes": false,
+      "notes": "Phase 10: Audio + Weather + Particles. Depends on US-037."
+    },
+    {
+      "id": "US-136",
+      "title": "Create ambient particle emitters",
+      "description": "As a player, I want fireflies at night near water, pollen in spring/summer, and falling leaves in autumn with wind so that the grove is atmospheric. See GAME_SPEC.md §12.",
+      "acceptanceCriteria": [
+        "Fireflies: night, near water",
+        "Pollen: spring/summer",
+        "Leaves: autumn, affected by wind",
+        "ParticleEmitterComponent entities spawned per chunk",
+        "Ambient particles visible in appropriate conditions",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 136,
+      "passes": false,
+      "notes": "Phase 10: Audio + Weather + Particles."
+    },
+    {
+      "id": "US-137",
+      "title": "Create main menu screen",
+      "description": "As a player, I want a main menu with vertical gradient background, logo SVG, tagline, and buttons (New Grove, Continue if save exists, Settings) so that the game has a polished entry point. See GAME_SPEC.md §26.",
+      "acceptanceCriteria": [
+        "app/index.tsx renders main menu",
+        "Vertical gradient background",
+        "Logo SVG and tagline",
+        "Buttons: New Grove, Continue (if save exists), Settings",
+        "Menu renders with brand styling",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 137,
+      "passes": false,
+      "notes": "Phase 11: Tutorial + Menu + Polish."
+    },
+    {
+      "id": "US-138",
+      "title": "Implement new game modal",
+      "description": "As a player, I want a new game modal with mode selection (Exploration/Survival), seed input ('Adj Adj Noun'), shuffle button, and difficulty selector so that I can customize my grove. See GAME_SPEC.md §26.",
+      "acceptanceCriteria": [
+        "New file components/game/NewGameModal.tsx exists",
+        "Mode selection: Exploration/Survival",
+        "Seed input with 'Adj Adj Noun' format",
+        "Shuffle button generates new phrase",
+        "Difficulty selector for Survival mode",
+        "Modal produces valid game config",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 138,
+      "passes": false,
+      "notes": "Phase 11: Tutorial + Menu + Polish."
+    },
+    {
+      "id": "US-139",
+      "title": "Write Jest tests for seed phrase system",
+      "description": "As a developer, I want tests for the seed phrase system so that phrase format, seed-to-world determinism, and shuffle variation are verified. See GAME_SPEC.md §26.",
+      "acceptanceCriteria": [
+        "6+ tests pass for seed phrase system",
+        "Tests cover phrase generation format, seed-to-world determinism, shuffle produces different phrase",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 139,
+      "passes": false,
+      "notes": "Phase 11: Tutorial + Menu + Polish. Tests for US-138."
+    },
+    {
+      "id": "US-140",
+      "title": "Create loading screen",
+      "description": "As a player, I want a loading screen with progress bar (font load, store init, world gen, first frame), animated logo, and rotating tips so that the wait feels polished. See GAME_SPEC.md §26.",
+      "acceptanceCriteria": [
+        "New file components/game/LoadingScreen.tsx exists",
+        "Progress bar showing real progress (font load, store init, world gen, first frame)",
+        "Animated logo",
+        "Tip rotation",
+        "Loading screen shows real progress",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 140,
+      "passes": false,
+      "notes": "Phase 11: Tutorial + Menu + Polish."
+    },
+    {
+      "id": "US-141",
+      "title": "Implement 11-step tutorial",
+      "description": "As a new player, I want a guided tutorial (look, move, equip, dig, plant, water, wait, harvest, talk, campfire, explore) where each step completes on my action so that I learn the game naturally. See GAME_SPEC.md §27.",
+      "acceptanceCriteria": [
+        "New file game/systems/tutorial.ts exists",
+        "11 steps: look, move, equip, dig, plant, water, wait, harvest, talk, campfire, explore",
+        "Each step completes on correct player action",
+        "Tutorial advances on correct action",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 141,
+      "passes": false,
+      "notes": "Phase 11: Tutorial + Menu + Polish."
+    },
+    {
+      "id": "US-142",
+      "title": "Write Jest tests for tutorial",
+      "description": "As a developer, I want tests for the tutorial so that step progression, action detection, completion state, and skip functionality are verified. See GAME_SPEC.md §27.",
+      "acceptanceCriteria": [
+        "8+ tests pass for tutorial",
+        "Tests cover step progression, action detection, completion state, skip functionality",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 142,
+      "passes": false,
+      "notes": "Phase 11: Tutorial + Menu + Polish. Tests for US-141."
+    },
+    {
+      "id": "US-143",
+      "title": "Integration testing and bug fixes",
+      "description": "As a developer, I want the full test suite and Maestro E2E flows to pass with 0 failures and 0 TypeScript errors so that the game is stable for release. See GAME_SPEC.md §28.",
+      "acceptanceCriteria": [
+        "npx jest --no-coverage passes with 0 failures",
+        "npx tsc --noEmit passes with 0 errors",
+        "Maestro E2E flows pass on mobile",
+        "No mobile-specific rendering issues"
+      ],
+      "priority": 143,
+      "passes": false,
+      "notes": "Phase 11: Tutorial + Menu + Polish. Final integration pass."
+    },
+    {
+      "id": "US-144",
+      "title": "Performance optimization",
+      "description": "As a developer, I want draw calls < 50, FPS >= 55 on mobile, and all performance budgets met so that the game runs smoothly on target devices. See GAME_SPEC.md §28.",
+      "acceptanceCriteria": [
+        "Draw calls < 50 for typical scene",
+        "FPS >= 55 on mobile",
+        "InstancedMesh for repeated models",
+        "Code split via Expo Router",
+        "Freeze static world matrices",
+        "Meets all performance budgets from GAME_SPEC.md §28",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 144,
+      "passes": false,
+      "notes": "Phase 11: Tutorial + Menu + Polish. Final performance pass."
+    }
+  ]
+}

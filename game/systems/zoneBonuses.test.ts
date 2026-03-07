@@ -55,20 +55,12 @@ describe("getZoneBonusMagnitude", () => {
   });
 
   it("returns 0 for unknown zone type", () => {
-    expect(getZoneBonusMagnitude("unknown" as ZoneType, "growth_boost")).toBe(
-      0,
-    );
+    expect(getZoneBonusMagnitude("unknown" as ZoneType, "growth_boost")).toBe(0);
   });
 });
 
 describe("hasZoneBonus", () => {
-  const allZoneTypes: ZoneType[] = [
-    "grove",
-    "clearing",
-    "forest",
-    "path",
-    "settlement",
-  ];
+  const allZoneTypes: ZoneType[] = ["grove", "clearing", "forest", "path", "settlement"];
 
   it("grove has growth_boost", () => {
     expect(hasZoneBonus("grove", "growth_boost")).toBe(true);

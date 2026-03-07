@@ -17,11 +17,7 @@ const hardSpecies: OfflineSpeciesData = {
   evergreen: false,
 };
 
-function makeTree(
-  stage: number,
-  progress: number,
-  speciesId = "white-oak",
-): OfflineTreeState {
+function makeTree(stage: number, progress: number, speciesId = "white-oak"): OfflineTreeState {
   return { speciesId, stage, progress, watered: true };
 }
 

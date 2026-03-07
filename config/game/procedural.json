@@ -1,0 +1,209 @@
+{
+  "terrain": {
+    "chunkSize": 16,
+    "tileSize": 1.0,
+    "heightScale": 4.0,
+    "noiseOctaves": 6,
+    "noiseLacunarity": 2.0,
+    "noisePersistence": 0.5,
+    "biomeColors": {
+      "forest": "#4a7c3f",
+      "meadow": "#7ab648",
+      "desert": "#c4a44a",
+      "swamp": "#3a5a3a",
+      "tundra": "#a0b0b8",
+      "mountains": "#6b6b6b",
+      "beach": "#d4c088",
+      "volcanic": "#3a2a2a"
+    },
+    "biomeBlendWidth": 4,
+    "pathCarveDepth": 0.15,
+    "pathTypes": {
+      "trail": { "width": 1.0, "color": "#8b7355" },
+      "road": { "width": 2.5, "color": "#7a6b55" },
+      "bridge": { "width": 2.0, "color": "#6b5a3f" },
+      "stepping_stones": { "width": 1.5, "color": "#888888" }
+    }
+  },
+  "water": {
+    "oceanWaves": [
+      { "amplitude": 0.15, "wavelength": 8.0, "speed": 1.2, "steepness": 0.4, "direction": [1, 0] },
+      { "amplitude": 0.08, "wavelength": 4.0, "speed": 0.8, "steepness": 0.3, "direction": [0.7, 0.7] },
+      { "amplitude": 0.04, "wavelength": 2.0, "speed": 1.5, "steepness": 0.5, "direction": [-0.3, 0.9] },
+      { "amplitude": 0.02, "wavelength": 1.0, "speed": 2.0, "steepness": 0.6, "direction": [0.5, -0.5] }
+    ],
+    "pondWaves": [
+      { "amplitude": 0.02, "wavelength": 3.0, "speed": 0.3, "steepness": 0.1, "direction": [1, 0] },
+      { "amplitude": 0.01, "wavelength": 1.5, "speed": 0.5, "steepness": 0.1, "direction": [0, 1] }
+    ],
+    "riverWaves": [
+      { "amplitude": 0.05, "wavelength": 3.0, "speed": 1.0, "steepness": 0.3, "direction": [1, 0] },
+      { "amplitude": 0.03, "wavelength": 1.5, "speed": 1.5, "steepness": 0.2, "direction": [0.8, 0.2] }
+    ],
+    "colors": {
+      "ocean": "#1a5276",
+      "river": "#2e86ab",
+      "pond": "#3d9ea0",
+      "stream": "#5dade2",
+      "waterfall": "#85c1e9"
+    },
+    "foamColor": "#e8e8e0",
+    "foamThreshold": 0.6,
+    "causticsScale": 0.5,
+    "causticsSpeed": 0.8,
+    "causticsIntensity": 0.3,
+    "splashParticleCount": 12,
+    "splashLifetime": 0.8,
+    "bubbleRiseSpeed": 0.5
+  },
+  "sky": {
+    "dayGradient": [
+      { "position": 0.0, "color": "#1a0533" },
+      { "position": 0.15, "color": "#c46210" },
+      { "position": 0.25, "color": "#e8973f" },
+      { "position": 0.35, "color": "#f5c76b" },
+      { "position": 0.45, "color": "#87ceeb" },
+      { "position": 0.55, "color": "#6bb3d9" },
+      { "position": 0.75, "color": "#4a90b8" },
+      { "position": 1.0, "color": "#1a3a5c" }
+    ],
+    "nightGradient": [
+      { "position": 0.0, "color": "#0a0a1a" },
+      { "position": 0.3, "color": "#0d1530" },
+      { "position": 0.6, "color": "#111d40" },
+      { "position": 1.0, "color": "#0a0a1a" }
+    ],
+    "starCount": 200,
+    "cloudLayers": 2,
+    "cloudScrollSpeed": 0.02,
+    "sunSize": 0.05,
+    "moonSize": 0.04
+  },
+  "dayNight": {
+    "dayLengthSeconds": 600,
+    "timeSlots": {
+      "dawn": [5, 7],
+      "morning": [7, 10],
+      "noon": [10, 14],
+      "afternoon": [14, 17],
+      "dusk": [17, 19],
+      "evening": [19, 22],
+      "night": [22, 24],
+      "midnight": [0, 5]
+    },
+    "ambientColors": {
+      "dawn": "#ffb366",
+      "morning": "#ffe0b2",
+      "noon": "#ffffff",
+      "afternoon": "#fff3e0",
+      "dusk": "#ff8a65",
+      "evening": "#5c6bc0",
+      "night": "#283593",
+      "midnight": "#1a237e"
+    },
+    "ambientIntensities": {
+      "dawn": 0.4,
+      "morning": 0.7,
+      "noon": 1.0,
+      "afternoon": 0.85,
+      "dusk": 0.5,
+      "evening": 0.25,
+      "night": 0.12,
+      "midnight": 0.08
+    },
+    "shadowOpacities": {
+      "dawn": 0.3,
+      "morning": 0.6,
+      "noon": 0.8,
+      "afternoon": 0.7,
+      "dusk": 0.3,
+      "evening": 0.1,
+      "night": 0.0,
+      "midnight": 0.0
+    }
+  },
+  "weather": {
+    "particleCounts": {
+      "rain": 500,
+      "snow": 300,
+      "leaves": 50,
+      "dust": 100
+    },
+    "particleSizes": {
+      "rain": 0.02,
+      "snow": 0.05,
+      "leaves": 0.08,
+      "dust": 0.03
+    },
+    "fogDefaults": {
+      "density": 0.4,
+      "color": "#c8c8c8",
+      "height": 3.0
+    },
+    "windSpeedRange": [0.5, 3.0],
+    "thunderstormLightningInterval": [4, 12]
+  },
+  "particles": {
+    "fireflies": {
+      "emissionRate": 3,
+      "lifetime": 4.0,
+      "emissionRadius": 8.0,
+      "size": 0.04,
+      "color": "#c8ff00",
+      "gravity": -0.1,
+      "maxParticles": 30,
+      "activeHours": [20, 4]
+    },
+    "pollen": {
+      "emissionRate": 5,
+      "lifetime": 6.0,
+      "emissionRadius": 5.0,
+      "size": 0.02,
+      "color": "#ffffaa",
+      "gravity": -0.02,
+      "maxParticles": 40,
+      "activeSeasons": ["spring", "summer"]
+    },
+    "campfireSmoke": {
+      "emissionRate": 8,
+      "lifetime": 3.0,
+      "emissionRadius": 0.5,
+      "size": 0.15,
+      "color": "#888888",
+      "gravity": -0.5,
+      "maxParticles": 25
+    },
+    "campfireSparks": {
+      "emissionRate": 4,
+      "lifetime": 1.5,
+      "emissionRadius": 0.3,
+      "size": 0.02,
+      "color": "#ff6600",
+      "gravity": -0.8,
+      "maxParticles": 15
+    },
+    "waterfallSplash": {
+      "emissionRate": 15,
+      "lifetime": 0.8,
+      "emissionRadius": 1.0,
+      "size": 0.03,
+      "color": "#e0f0ff",
+      "gravity": 0.5,
+      "maxParticles": 30
+    }
+  },
+  "ambientZones": {
+    "defaultRadius": 12.0,
+    "crossfadeDistance": 4.0,
+    "soundscapeVolumes": {
+      "forest": 0.6,
+      "meadow": 0.4,
+      "water": 0.7,
+      "cave": 0.5,
+      "village": 0.5,
+      "night": 0.3,
+      "storm": 0.8,
+      "wind": 0.4
+    }
+  }
+}

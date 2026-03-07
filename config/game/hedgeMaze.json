@@ -1,0 +1,79 @@
+{
+  "gridSize": 12,
+  "cellScale": 3,
+  "pieceWeights": {
+    "basic": ["1x1", "1x2", "1x3", "2x1", "2x2", "3x1"],
+    "diagonal": ["1x1", "1x2", "2x1", "2x2", "3x1"],
+    "round": ["1x1", "1x2", "2x1", "2x2"],
+    "triangle": ["2x1", "2x2", "3x1", "3x2"]
+  },
+  "junctionPieces": {
+    "L": ["L_1", "L_2", "L_3"],
+    "T": ["T_1", "T_2", "T_3"],
+    "X": ["X_1", "X_2", "X_3"]
+  },
+  "dressing": {
+    "deadEndProbability": 0.7,
+    "intersectionProbability": 0.2,
+    "flowerVsVaseProbability": 0.6,
+    "flowerbedTypes": 7,
+    "vaseTypes": 5,
+    "columnTypes": 3
+  },
+  "centerReward": {
+    "fountain": "hedges/misc/stone/fountain01_round_water.glb",
+    "benches": [
+      "hedges/misc/stone/bench01.glb",
+      "hedges/misc/stone/bench02.glb"
+    ],
+    "possibleRewards": [
+      { "type": "rare_seed", "weight": 0.4 },
+      { "type": "rare_resource", "weight": 0.3 },
+      { "type": "cosmetic_unlock", "weight": 0.2 },
+      { "type": "xp_bonus", "weight": 0.1 }
+    ]
+  },
+  "complexity": {
+    "minDeadEnds": 4,
+    "maxDeadEnds": 8,
+    "branchingFactor": 0.6,
+    "loopProbability": 0.15
+  },
+  "miscModels": {
+    "fences": [
+      "fence1_01", "fence1_02", "fence1_03", "fence1_04",
+      "fence1_05", "fence1_06", "fence1_07", "fence1_08",
+      "fence1_double_gate", "fence1_single_gate",
+      "fence2_01", "fence2_02", "fence2_03", "fence2_04",
+      "fence2_05", "fence2_06", "fence2_07", "fence2_08",
+      "fence2_double_gate", "fence2_single_gate",
+      "fence3_01", "fence3_02", "fence3_03", "fence3_04",
+      "fence3_05", "fence3_06", "fence3_07", "fence3_08",
+      "fence3_double_gate", "fence3_single_gate"
+    ],
+    "flowers": [
+      "flowerbed1_1x2", "flowerbed1_2x2",
+      "flowerbed2_1x2", "flowerbed2_2x2",
+      "flowerbed3_1x2", "flowerbed3_2x2",
+      "flowerbed4_1x2", "flowerbed4_2x2",
+      "flowerbed5_1x2", "flowerbed5_2x2",
+      "flowerbed6_1x2", "flowerbed6_2x2",
+      "flowerbed7_1x2", "flowerbed7_2x2",
+      "flowerbed_1x2_empty", "flowerbed_2x2_empty",
+      "vase1", "vase2", "vase3", "vase4", "vase5", "vase_empty"
+    ],
+    "stone": [
+      "bench01", "bench02", "bridge",
+      "column1", "column2", "column3",
+      "fountain01_round", "fountain01_round_water",
+      "fountain01_square", "fountain01_square_water",
+      "fountain02_round", "fountain02_round_water",
+      "fountain02_square", "fountain02_square_water",
+      "stairs01", "stairs02",
+      "stone_corner", "stone_pillar",
+      "stone_wall1", "stone_wall2", "stone_wall3", "stone_wall4",
+      "table"
+    ],
+    "structures": ["gazebo", "tower"]
+  }
+}

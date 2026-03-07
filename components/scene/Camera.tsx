@@ -28,15 +28,10 @@ const TARGET_Y = 1.5;
 const DEFAULT_TARGET = new THREE.Vector3(5.5, TARGET_Y, 5.5);
 
 const prefersReducedMotion =
-  typeof window !== "undefined" &&
-  window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
 /** Convert spherical (alpha, beta, radius) to Cartesian offset from target. */
-function sphericalOffset(
-  alpha: number,
-  beta: number,
-  radius: number,
-): THREE.Vector3 {
+function sphericalOffset(alpha: number, beta: number, radius: number): THREE.Vector3 {
   return new THREE.Vector3(
     radius * Math.sin(beta) * Math.cos(alpha),
     radius * Math.cos(beta),
@@ -64,11 +59,7 @@ export const Camera = () => {
 
     // Read player position from ECS
     const players = playerQuery.entities;
-    const desiredTarget = new THREE.Vector3(
-      DEFAULT_TARGET.x,
-      TARGET_Y,
-      DEFAULT_TARGET.z,
-    );
+    const desiredTarget = new THREE.Vector3(DEFAULT_TARGET.x, TARGET_Y, DEFAULT_TARGET.z);
     if (players.length > 0) {
       const pos = players[0].position;
       desiredTarget.set(pos.x, TARGET_Y, pos.z);
@@ -96,12 +87,9 @@ export const Camera = () => {
       near={0.5}
       far={100}
       position={[
-        DEFAULT_TARGET.x +
-          sphericalOffset(CAMERA_ALPHA, CAMERA_BETA, BASE_RADIUS).x,
-        DEFAULT_TARGET.y +
-          sphericalOffset(CAMERA_ALPHA, CAMERA_BETA, BASE_RADIUS).y,
-        DEFAULT_TARGET.z +
-          sphericalOffset(CAMERA_ALPHA, CAMERA_BETA, BASE_RADIUS).z,
+        DEFAULT_TARGET.x + sphericalOffset(CAMERA_ALPHA, CAMERA_BETA, BASE_RADIUS).x,
+        DEFAULT_TARGET.y + sphericalOffset(CAMERA_ALPHA, CAMERA_BETA, BASE_RADIUS).y,
+        DEFAULT_TARGET.z + sphericalOffset(CAMERA_ALPHA, CAMERA_BETA, BASE_RADIUS).z,
       ]}
     />
   );

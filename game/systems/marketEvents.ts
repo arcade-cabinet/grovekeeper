@@ -107,15 +107,10 @@ export function initializeMarketEventState(): MarketEventState {
 /**
  * Check if a market event is currently active.
  */
-export function isMarketEventActive(
-  state: MarketEventState,
-  currentDay: number,
-): boolean {
+export function isMarketEventActive(state: MarketEventState, currentDay: number): boolean {
   if (!state.activeEvent) return false;
 
-  const def = MARKET_EVENTS.find(
-    (e) => e.id === state.activeEvent?.definitionId,
-  );
+  const def = MARKET_EVENTS.find((e) => e.id === state.activeEvent?.definitionId);
   if (!def) return false;
 
   return currentDay < state.activeEvent.startDay + def.durationDays;
@@ -131,9 +126,7 @@ export function getActiveMarketEventModifiers(
 ): Partial<Record<ResourceType, number>> {
   if (!isMarketEventActive(state, currentDay)) return {};
 
-  const def = MARKET_EVENTS.find(
-    (e) => e.id === state.activeEvent?.definitionId,
-  );
+  const def = MARKET_EVENTS.find((e) => e.id === state.activeEvent?.definitionId);
   if (!def) return {};
 
   return { ...def.effects };
@@ -157,9 +150,7 @@ export function updateMarketEvents(
 
   // Check if active event has expired
   if (newState.activeEvent) {
-    const def = MARKET_EVENTS.find(
-      (e) => e.id === newState.activeEvent?.definitionId,
-    );
+    const def = MARKET_EVENTS.find((e) => e.id === newState.activeEvent?.definitionId);
     if (def && currentDay >= newState.activeEvent.startDay + def.durationDays) {
       newState = {
         ...newState,
@@ -186,10 +177,7 @@ export function updateMarketEvents(
         newState = {
           ...newState,
           activeEvent: { definitionId: event.id, startDay: currentDay },
-          eventHistory: [
-            ...newState.eventHistory,
-            { id: event.id, day: currentDay },
-          ],
+          eventHistory: [...newState.eventHistory, { id: event.id, day: currentDay }],
           lastEventDay: currentDay,
         };
         newEventTriggered = true;

@@ -9,15 +9,9 @@
  */
 
 import { createRNG, hashString } from "@/game/utils/seedRNG";
-import encountersData from "./data/encounters.json";
-import festivalsData from "./data/festivals.json";
-import type {
-  EncounterDef,
-  EventState,
-  FestivalChallenge,
-  FestivalDef,
-  Season,
-} from "./types";
+import encountersData from "./data/encounters.json" with { type: "json" };
+import festivalsData from "./data/festivals.json" with { type: "json" };
+import type { EncounterDef, EventState, FestivalChallenge, FestivalDef, Season } from "./types";
 
 // ============================================
 // Constants
@@ -81,10 +75,7 @@ export function initializeEventState(): EventState {
 // Main update -- called once per game day
 // ============================================
 
-export function updateEvents(
-  state: EventState,
-  context: EventContext,
-): EventUpdateResult {
+export function updateEvents(state: EventState, context: EventContext): EventUpdateResult {
   let nextState = { ...state };
   let festivalStarted: FestivalDef | null = null;
   let festivalEnded: string | null = null;
@@ -113,21 +104,17 @@ export function updateEvents(
 
   // Check if a new festival should start
   if (!nextState.activeFestival) {
-    const daysSinceLastFestival =
-      context.currentDay - nextState.lastFestivalDay;
+    const daysSinceLastFestival = context.currentDay - nextState.lastFestivalDay;
     if (daysSinceLastFestival >= FESTIVAL_COOLDOWN_DAYS) {
       const matchingFestival = festivals.find(
-        (f) =>
-          f.season === context.season && f.triggerDay === context.currentDay,
+        (f) => f.season === context.season && f.triggerDay === context.currentDay,
       );
       if (matchingFestival) {
-        const challenges: FestivalChallenge[] = matchingFestival.challenges.map(
-          (c) => ({
-            ...c,
-            currentProgress: 0,
-            completed: false,
-          }),
-        );
+        const challenges: FestivalChallenge[] = matchingFestival.challenges.map((c) => ({
+          ...c,
+          currentProgress: 0,
+          completed: false,
+        }));
         nextState = {
           ...nextState,
           activeFestival: {
@@ -154,8 +141,7 @@ export function updateEvents(
 
   // Roll for new encounter if none active and cooldown has passed
   if (!nextState.activeEncounter) {
-    const daysSinceLastEncounter =
-      context.currentDay - nextState.lastEncounterDay;
+    const daysSinceLastEncounter = context.currentDay - nextState.lastEncounterDay;
     if (daysSinceLastEncounter >= ENCOUNTER_COOLDOWN_DAYS) {
       const triggered = rollForEncounter(context);
       if (triggered) {
@@ -218,10 +204,7 @@ export function advanceFestivalChallenge(
 // Encounter resolution
 // ============================================
 
-export function resolveEncounter(
-  state: EventState,
-  definitionId: string,
-): EventState {
+export function resolveEncounter(state: EventState, definitionId: string): EventState {
   if (!state.activeEncounter) return state;
   if (state.activeEncounter.definitionId !== definitionId) return state;
 

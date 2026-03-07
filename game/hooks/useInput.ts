@@ -77,10 +77,7 @@ export function useInput() {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
       const key = e.key.toLowerCase();
@@ -150,10 +147,7 @@ export function useInput() {
   const clearTouch = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      moveDirection:
-        keysRef.current.size > 0
-          ? keysToWorld(keysRef.current)
-          : { x: 0, z: 0 },
+      moveDirection: keysRef.current.size > 0 ? keysToWorld(keysRef.current) : { x: 0, z: 0 },
       isTouching: false,
     }));
   }, []);

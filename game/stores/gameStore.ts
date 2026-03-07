@@ -1,4 +1,19 @@
-import { create } from "zustand";
+/**
+ * gameStore -- Legend State observable with expo-sqlite/kv-store persistence.
+ *
+ * Faithful port of the BabylonJS archive's Zustand store, upgraded to use
+ * Legend State v3 for signal-based reactivity and automatic SQLite persistence.
+ *
+ * Exports a Zustand-compatible `useGameStore` API so all consumer files
+ * (hooks, actions, components) work without changes:
+ *   - useGameStore((s) => s.level)       -- React hook selector
+ *   - useGameStore.getState().addXp(100) -- imperative access
+ *   - useGameStore.subscribe(listener)   -- change subscription
+ */
+
+import { observable, observe, batch } from "@legendapp/state";
+import { useSelector } from "@legendapp/state/react";
+
 import { emptyResources, type ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
 import { getToolById } from "@/game/config/tools";
@@ -19,10 +34,7 @@ import {
   startChain,
 } from "@/game/quests/questChainEngine";
 import type { QuestChainState } from "@/game/quests/types";
-import {
-  canAffordExpansion,
-  getNextExpansionTier,
-} from "@/game/systems/gridExpansion";
+import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import { checkNewUnlocks } from "@/game/systems/levelUnlocks";
 import {
   initializeMarketEventState,
@@ -48,10 +60,7 @@ import {
   recordTrade,
 } from "@/game/systems/supplyDemand";
 import type { Season } from "@/game/systems/time";
-import {
-  canAffordToolUpgrade,
-  getToolUpgradeTier,
-} from "@/game/systems/toolUpgrades";
+import { canAffordToolUpgrade, getToolUpgradeTier } from "@/game/systems/toolUpgrades";
 import {
   initializeMerchantState,
   type MerchantState,
@@ -59,6 +68,10 @@ import {
   updateMerchant,
 } from "@/game/systems/travelingMerchant";
 import { showToast } from "@/game/ui/Toast";
+
+// ---------------------------------------------------------------------------
+// Types (unchanged from BabylonJS archive)
+// ---------------------------------------------------------------------------
 
 export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";
 
@@ -79,221 +92,13 @@ export interface GroveData {
   playerPosition: { x: number; z: number };
 }
 
-interface GameState {
-  screen: GameScreen;
-  difficulty: string;
-  permadeath: boolean;
-  selectedTool: string;
-  selectedSpecies: string;
-  coins: number;
-  xp: number;
-  level: number;
-  unlockedTools: string[];
-  unlockedSpecies: string[];
-  treesPlanted: number;
-  treesMatured: number;
-  treesHarvested: number;
-  treesWatered: number;
+// ---------------------------------------------------------------------------
+// XP formulas (unchanged from BabylonJS archive)
+// ---------------------------------------------------------------------------
 
-  // Time state (persisted)
-  gameTimeMicroseconds: number;
-  currentSeason: Season;
-  currentDay: number;
-
-  // Quest state
-  activeQuests: ActiveQuest[];
-  completedQuestIds: string[];
-  completedGoalIds: string[];
-  lastQuestRefresh: number;
-
-  // Resources
-  resources: Record<ResourceType, number>;
-  seeds: Record<string, number>;
-
-  // Lifetime resource tracking (for achievements)
-  lifetimeResources: Record<ResourceType, number>;
-
-  // Achievements
-  achievements: string[];
-
-  // Seasons experienced (for seasonal-veteran achievement)
-  seasonsExperienced: string[];
-
-  // Species ever planted (for one-of-each achievement)
-  speciesPlanted: string[];
-
-  // Stamina (persisted for session recovery)
-  stamina: number;
-  maxStamina: number;
-
-  // Grove serialization (ECS -> localStorage)
-  groveData: GroveData | null;
-
-  // Grid expansion
-  gridSize: number;
-
-  // Prestige
-  prestigeCount: number;
-  activeBorderCosmetic: string | null;
-
-  // Discovery (fog-of-war)
-  discoveredZones: string[];
-
-  // World/zone state
-  currentZoneId: string;
-  worldSeed: string;
-
-  // Build mode
-  buildMode: boolean;
-  buildTemplateId: string | null;
-  placedStructures: { templateId: string; worldX: number; worldZ: number }[];
-
-  // Tool upgrades
-  toolUpgrades: Record<string, number>;
-
-  // Achievement expansion tracking
-  toolUseCounts: Record<string, number>;
-  wildTreesHarvested: number;
-  wildTreesRegrown: number;
-  visitedZoneTypes: string[];
-  treesPlantedInSpring: number;
-  treesHarvestedInAutumn: number;
-  wildSpeciesHarvested: string[];
-
-  // Quest chain state
-  questChainState: QuestChainState;
-
-  // Economy state
-  marketState: MarketState;
-  merchantState: MerchantState;
-  marketEventState: MarketEventState;
-
-  // Event scheduler state
-  eventState: EventState;
-
-  // Species codex progress
-  speciesProgress: Record<string, SpeciesProgress>;
-  pendingCodexUnlocks: string[];
-
-  // Settings
-  hasSeenRules: boolean;
-  hapticsEnabled: boolean;
-  soundEnabled: boolean;
-
-  // Actions
-  saveGrove: (
-    trees: SerializedTree[],
-    playerPos: { x: number; z: number },
-  ) => void;
-  setScreen: (screen: GameScreen) => void;
-  setSelectedTool: (tool: string) => void;
-  setSelectedSpecies: (species: string) => void;
-  addCoins: (amount: number) => void;
-  addXp: (amount: number) => void;
-  unlockTool: (toolId: string) => void;
-  unlockSpecies: (speciesId: string) => void;
-  incrementTreesPlanted: () => void;
-  incrementTreesMatured: () => void;
-  incrementTreesHarvested: () => void;
-  incrementTreesWatered: () => void;
-  addResource: (type: ResourceType, amount: number) => void;
-  spendResource: (type: ResourceType, amount: number) => boolean;
-  addSeed: (speciesId: string, amount: number) => void;
-  spendSeed: (speciesId: string, amount: number) => boolean;
-  setStamina: (value: number) => void;
-  spendStamina: (amount: number) => boolean;
-  unlockAchievement: (id: string) => void;
-  trackSpeciesPlanted: (speciesId: string) => void;
-  trackSeason: (season: string) => void;
-  expandGrid: () => boolean;
-  performPrestige: () => boolean;
-  setActiveBorderCosmetic: (id: string | null) => void;
-  setBuildMode: (enabled: boolean, templateId?: string) => void;
-  addPlacedStructure: (
-    templateId: string,
-    worldX: number,
-    worldZ: number,
-  ) => void;
-  removePlacedStructure: (worldX: number, worldZ: number) => void;
-  resetGame: () => void;
-
-  // Time actions
-  setGameTime: (microseconds: number) => void;
-  setCurrentSeason: (season: Season) => void;
-  setCurrentDay: (day: number) => void;
-
-  // Quest actions
-  setActiveQuests: (quests: ActiveQuest[]) => void;
-  updateQuest: (questId: string, quest: ActiveQuest) => void;
-  completeQuest: (questId: string) => void;
-  setLastQuestRefresh: (time: number) => void;
-
-  // Quest chain actions
-  refreshAvailableChains: () => void;
-  startQuestChain: (chainId: string) => void;
-  advanceQuestObjective: (
-    eventType: string,
-    amount: number,
-  ) => { chainId: string; stepId: string }[];
-  claimQuestStepReward: (chainId: string) => void;
-
-  // Discovery actions
-  discoverZone: (zoneId: string) => boolean;
-
-  // World/zone actions
-  setCurrentZoneId: (zoneId: string) => void;
-  setWorldSeed: (seed: string) => void;
-
-  // Achievement expansion tracking actions
-  incrementToolUse: (toolId: string) => void;
-  incrementWildTreesHarvested: (speciesId?: string) => void;
-  incrementWildTreesRegrown: () => void;
-  trackVisitedZoneType: (zoneType: string) => void;
-  incrementSeasonalPlanting: (season: string) => void;
-  incrementSeasonalHarvest: (season: string) => void;
-
-  // Tool upgrade actions
-  upgradeToolTier: (toolId: string) => boolean;
-
-  // Economy actions
-  recordMarketTrade: (
-    resource: ResourceType,
-    direction: "buy" | "sell",
-    amount: number,
-  ) => void;
-  updateEconomy: (currentDay: number) => void;
-  purchaseMerchantOffer: (offerId: string) => boolean;
-
-  // Event scheduler actions
-  tickEvents: (context: EventContext) => void;
-  advanceEventChallenge: (challengeType: string, amount?: number) => void;
-  resolveEncounter: (definitionId: string) => void;
-
-  // Species codex actions
-  trackSpeciesPlanting: (speciesId: string) => void;
-  trackSpeciesGrowth: (speciesId: string, newStage: number) => void;
-  trackSpeciesHarvest: (speciesId: string, yieldAmount: number) => void;
-  consumePendingCodexUnlock: () => string | null;
-
-  // Settings actions
-  setHasSeenRules: (seen: boolean) => void;
-  setHapticsEnabled: (enabled: boolean) => void;
-  setSoundEnabled: (enabled: boolean) => void;
-
-  // Database hydration
-  hydrateFromDb: (state: Partial<GameState>) => void;
-}
-
-/**
- * Spec XP formula:
- * xpToNext(level) = 100 + (level - 2) * 50 + floor((level - 1) / 5) * 200
- * Level 1 needs 100 XP (edge case: (1-2)*50 = -50, clamped by the 100 base)
- */
 export function xpToNext(level: number): number {
   if (level < 1) return 100;
-  return (
-    100 + Math.max(0, (level - 2) * 50) + Math.floor((level - 1) / 5) * 200
-  );
+  return 100 + Math.max(0, (level - 2) * 50) + Math.floor((level - 1) / 5) * 200;
 }
 
 export function totalXpForLevel(targetLevel: number): number {
@@ -314,7 +119,10 @@ export function levelFromXp(totalXp: number): number {
   return level;
 }
 
+// ---------------------------------------------------------------------------
 // Initial game time: Spring, Day 1, 8:00 AM
+// ---------------------------------------------------------------------------
+
 const INITIAL_GAME_TIME = (() => {
   const hours = 8;
   const day = 1;
@@ -328,14 +136,16 @@ const INITIAL_GAME_TIME = (() => {
   const monthsPerYear = 12;
 
   const totalDays =
-    (year - 1) * monthsPerYear * daysPerMonth +
-    (month - 1) * daysPerMonth +
-    (day - 1);
+    (year - 1) * monthsPerYear * daysPerMonth + (month - 1) * daysPerMonth + (day - 1);
   const totalHours = totalDays * hoursPerDay + hours;
   const totalMinutes = totalHours * minutesPerHour;
   const totalSeconds = totalMinutes * secondsPerMinute;
   return totalSeconds * microsecondsPerSecond;
 })();
+
+// ---------------------------------------------------------------------------
+// Initial state (identical to BabylonJS archive)
+// ---------------------------------------------------------------------------
 
 const initialState = {
   screen: "menu" as GameScreen,
@@ -421,194 +231,275 @@ const initialState = {
   soundEnabled: true,
 };
 
-export const useGameStore = create<GameState>()((set, get) => ({
-  ...initialState,
+type GameStateData = typeof initialState;
 
-  saveGrove: (trees, playerPos) =>
-    set({ groveData: { trees, playerPosition: playerPos } }),
+// ---------------------------------------------------------------------------
+// Observable state
+// ---------------------------------------------------------------------------
 
-  setScreen: (screen) => set({ screen }),
-  setSelectedTool: (selectedTool) => set({ selectedTool }),
-  setSelectedSpecies: (selectedSpecies) => set({ selectedSpecies }),
+export const gameState$ = observable(structuredClone(initialState));
 
-  addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
+// ---------------------------------------------------------------------------
+// Automatic persistence via expo-sqlite/kv-store
+// ---------------------------------------------------------------------------
 
-  addXp: (amount) =>
-    set((state) => {
-      const newXp = state.xp + amount;
-      const newLevel = levelFromXp(newXp);
+// Fields that should NOT be persisted (ephemeral runtime state)
+const EPHEMERAL_KEYS = new Set(["screen", "groveData", "buildMode", "buildTemplateId"]);
 
-      if (newLevel > state.level) {
-        const unlocks = checkNewUnlocks(state.level, newLevel);
-        const newUnlockedTools = [...state.unlockedTools];
-        const newUnlockedSpecies = [...state.unlockedSpecies];
+let persistenceInitialized = false;
 
-        for (const toolId of unlocks.tools) {
-          if (!newUnlockedTools.includes(toolId)) {
-            newUnlockedTools.push(toolId);
+/**
+ * Initialize automatic persistence. Called once from the app entry point.
+ * Separated from module init to avoid crashing in test environments
+ * where expo-sqlite native modules aren't available.
+ */
+export async function initPersistence(): Promise<void> {
+  if (persistenceInitialized) return;
+  persistenceInitialized = true;
+
+  const { syncObservable } = await import("@legendapp/state/sync");
+  const { observablePersistSqlite } = await import(
+    "@legendapp/state/persist-plugins/expo-sqlite"
+  );
+  const { Storage } = await import("expo-sqlite/kv-store");
+
+  syncObservable(gameState$, {
+    persist: {
+      name: "gameStore",
+      plugin: observablePersistSqlite(Storage),
+      transform: {
+        save: (value: GameStateData) => {
+          const cleaned = { ...value };
+          for (const key of EPHEMERAL_KEYS) {
+            delete (cleaned as Record<string, unknown>)[key];
           }
+          return cleaned as GameStateData;
+        },
+      },
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Helper: read state without tracking (for actions + game loop)
+// ---------------------------------------------------------------------------
+
+function getState(): GameStateData {
+  return gameState$.peek();
+}
+
+// ---------------------------------------------------------------------------
+// Actions (faithful port of BabylonJS archive Zustand actions)
+// ---------------------------------------------------------------------------
+
+const actions = {
+  saveGrove(trees: SerializedTree[], playerPos: { x: number; z: number }) {
+    gameState$.groveData.set({ trees, playerPosition: playerPos });
+  },
+
+  setScreen(screen: GameScreen) {
+    gameState$.screen.set(screen);
+  },
+
+  setSelectedTool(selectedTool: string) {
+    gameState$.selectedTool.set(selectedTool);
+  },
+
+  setSelectedSpecies(selectedSpecies: string) {
+    gameState$.selectedSpecies.set(selectedSpecies);
+  },
+
+  addCoins(amount: number) {
+    gameState$.coins.set((prev) => prev + amount);
+  },
+
+  addXp(amount: number) {
+    const state = getState();
+    const newXp = state.xp + amount;
+    const newLevel = levelFromXp(newXp);
+
+    if (newLevel > state.level) {
+      const unlocks = checkNewUnlocks(state.level, newLevel);
+      const newUnlockedTools = [...state.unlockedTools];
+      const newUnlockedSpecies = [...state.unlockedSpecies];
+
+      for (const toolId of unlocks.tools) {
+        if (!newUnlockedTools.includes(toolId)) {
+          newUnlockedTools.push(toolId);
         }
-        for (const speciesId of unlocks.species) {
-          if (!newUnlockedSpecies.includes(speciesId)) {
-            newUnlockedSpecies.push(speciesId);
-          }
+      }
+      for (const speciesId of unlocks.species) {
+        if (!newUnlockedSpecies.includes(speciesId)) {
+          newUnlockedSpecies.push(speciesId);
         }
-
-        queueMicrotask(() => {
-          showToast(`Level ${newLevel}!`, "success");
-          for (const speciesId of unlocks.species) {
-            const sp = getSpeciesById(speciesId);
-            showToast(`Unlocked: ${sp?.name ?? speciesId}`, "achievement");
-          }
-          for (const toolId of unlocks.tools) {
-            const tool = getToolById(toolId);
-            showToast(`Unlocked: ${tool?.name ?? toolId}`, "achievement");
-          }
-        });
-
-        return {
-          xp: newXp,
-          level: newLevel,
-          unlockedTools: newUnlockedTools,
-          unlockedSpecies: newUnlockedSpecies,
-        };
       }
 
-      return { xp: newXp, level: newLevel };
-    }),
+      batch(() => {
+        gameState$.xp.set(newXp);
+        gameState$.level.set(newLevel);
+        gameState$.unlockedTools.set(newUnlockedTools);
+        gameState$.unlockedSpecies.set(newUnlockedSpecies);
+      });
 
-  unlockTool: (toolId) =>
-    set((state) => ({
-      unlockedTools: state.unlockedTools.includes(toolId)
-        ? state.unlockedTools
-        : [...state.unlockedTools, toolId],
-    })),
+      queueMicrotask(() => {
+        showToast(`Level ${newLevel}!`, "success");
+        for (const speciesId of unlocks.species) {
+          const sp = getSpeciesById(speciesId);
+          showToast(`Unlocked: ${sp?.name ?? speciesId}`, "achievement");
+        }
+        for (const toolId of unlocks.tools) {
+          const tool = getToolById(toolId);
+          showToast(`Unlocked: ${tool?.name ?? toolId}`, "achievement");
+        }
+      });
+    } else {
+      batch(() => {
+        gameState$.xp.set(newXp);
+        gameState$.level.set(newLevel);
+      });
+    }
+  },
 
-  unlockSpecies: (speciesId) =>
-    set((state) => ({
-      unlockedSpecies: state.unlockedSpecies.includes(speciesId)
-        ? state.unlockedSpecies
-        : [...state.unlockedSpecies, speciesId],
-    })),
+  unlockTool(toolId: string) {
+    const current = getState().unlockedTools;
+    if (!current.includes(toolId)) {
+      gameState$.unlockedTools.set([...current, toolId]);
+    }
+  },
 
-  incrementTreesPlanted: () =>
-    set((state) => ({ treesPlanted: state.treesPlanted + 1 })),
+  unlockSpecies(speciesId: string) {
+    const current = getState().unlockedSpecies;
+    if (!current.includes(speciesId)) {
+      gameState$.unlockedSpecies.set([...current, speciesId]);
+    }
+  },
 
-  incrementTreesMatured: () =>
-    set((state) => ({ treesMatured: state.treesMatured + 1 })),
+  incrementTreesPlanted() {
+    gameState$.treesPlanted.set((prev) => prev + 1);
+  },
 
-  incrementTreesHarvested: () =>
-    set((state) => ({ treesHarvested: state.treesHarvested + 1 })),
+  incrementTreesMatured() {
+    gameState$.treesMatured.set((prev) => prev + 1);
+  },
 
-  incrementTreesWatered: () =>
-    set((state) => ({ treesWatered: state.treesWatered + 1 })),
+  incrementTreesHarvested() {
+    gameState$.treesHarvested.set((prev) => prev + 1);
+  },
 
-  addResource: (type, amount) => {
-    set((state) => ({
-      resources: { ...state.resources, [type]: state.resources[type] + amount },
-      lifetimeResources: {
-        ...state.lifetimeResources,
-        [type]: state.lifetimeResources[type] + amount,
-      },
-    }));
+  incrementTreesWatered() {
+    gameState$.treesWatered.set((prev) => prev + 1);
+  },
+
+  addResource(type: ResourceType, amount: number) {
+    const state = getState();
+    gameState$.resources.set({
+      ...state.resources,
+      [type]: state.resources[type] + amount,
+    });
+    gameState$.lifetimeResources.set({
+      ...state.lifetimeResources,
+      [type]: state.lifetimeResources[type] + amount,
+    });
     queueMicrotask(() => {
-      get().advanceQuestObjective(`${type}_collected`, amount);
+      actions.advanceQuestObjective(`${type}_collected`, amount);
     });
   },
 
-  spendResource: (type, amount) => {
-    const current = get().resources[type];
+  spendResource(type: ResourceType, amount: number): boolean {
+    const current = getState().resources[type];
     if (current < amount) return false;
-    set((state) => ({
-      resources: { ...state.resources, [type]: state.resources[type] - amount },
-    }));
+    const state = getState();
+    gameState$.resources.set({
+      ...state.resources,
+      [type]: state.resources[type] - amount,
+    });
     return true;
   },
 
-  addSeed: (speciesId, amount) =>
-    set((state) => ({
-      seeds: {
-        ...state.seeds,
-        [speciesId]: (state.seeds[speciesId] ?? 0) + amount,
-      },
-    })),
+  addSeed(speciesId: string, amount: number) {
+    const state = getState();
+    gameState$.seeds.set({
+      ...state.seeds,
+      [speciesId]: (state.seeds[speciesId] ?? 0) + amount,
+    });
+  },
 
-  spendSeed: (speciesId, amount) => {
-    const current = get().seeds[speciesId] ?? 0;
+  spendSeed(speciesId: string, amount: number): boolean {
+    const current = getState().seeds[speciesId] ?? 0;
     if (current < amount) return false;
-    set((state) => ({
-      seeds: {
-        ...state.seeds,
-        [speciesId]: (state.seeds[speciesId] ?? 0) - amount,
-      },
-    }));
+    const state = getState();
+    gameState$.seeds.set({
+      ...state.seeds,
+      [speciesId]: (state.seeds[speciesId] ?? 0) - amount,
+    });
     return true;
   },
 
-  setStamina: (value) => set({ stamina: value }),
+  setStamina(value: number) {
+    gameState$.stamina.set(value);
+  },
 
-  spendStamina: (amount) => {
-    const current = get().stamina;
+  spendStamina(amount: number): boolean {
+    const current = getState().stamina;
     if (current < amount) return false;
-    set({ stamina: current - amount });
+    gameState$.stamina.set(current - amount);
     return true;
   },
 
-  unlockAchievement: (id) =>
-    set((state) =>
-      state.achievements.includes(id)
-        ? state
-        : { achievements: [...state.achievements, id] },
-    ),
+  unlockAchievement(id: string) {
+    const current = getState().achievements;
+    if (!current.includes(id)) {
+      gameState$.achievements.set([...current, id]);
+    }
+  },
 
-  trackSpeciesPlanted: (speciesId) =>
-    set((state) =>
-      state.speciesPlanted.includes(speciesId)
-        ? state
-        : { speciesPlanted: [...state.speciesPlanted, speciesId] },
-    ),
+  trackSpeciesPlanted(speciesId: string) {
+    const current = getState().speciesPlanted;
+    if (!current.includes(speciesId)) {
+      gameState$.speciesPlanted.set([...current, speciesId]);
+    }
+  },
 
-  trackSeason: (season) =>
-    set((state) =>
-      state.seasonsExperienced.includes(season)
-        ? state
-        : { seasonsExperienced: [...state.seasonsExperienced, season] },
-    ),
+  trackSeason(season: string) {
+    const current = getState().seasonsExperienced;
+    if (!current.includes(season)) {
+      gameState$.seasonsExperienced.set([...current, season]);
+    }
+  },
 
-  expandGrid: () => {
-    const state = get();
+  expandGrid(): boolean {
+    const state = getState();
     const nextTier = getNextExpansionTier(state.gridSize);
     if (!nextTier) return false;
-    if (!canAffordExpansion(nextTier, state.resources, state.level))
-      return false;
+    if (!canAffordExpansion(nextTier, state.resources, state.level)) return false;
     const newResources = { ...state.resources };
     for (const [resource, amount] of Object.entries(nextTier.cost)) {
       newResources[resource as keyof typeof newResources] =
         (newResources[resource as keyof typeof newResources] ?? 0) - amount;
     }
-    set({ gridSize: nextTier.size, resources: newResources });
+    batch(() => {
+      gameState$.gridSize.set(nextTier.size);
+      gameState$.resources.set(newResources);
+    });
     queueMicrotask(() => {
-      showToast(
-        `Grove expanded to ${nextTier.size}x${nextTier.size}!`,
-        "success",
-      );
+      showToast(`Grove expanded to ${nextTier.size}x${nextTier.size}!`, "success");
     });
     return true;
   },
 
-  performPrestige: () => {
-    const state = get();
+  performPrestige(): boolean {
+    const state = getState();
     if (!canPrestige(state.level)) return false;
     const newCount = state.prestigeCount + 1;
     const resetState = getPrestigeResetState();
     const bonus = calculatePrestigeBonus(newCount);
     const prestigeSpecies = getUnlockedPrestigeSpecies(newCount);
-    const newUnlockedSpecies = [
-      "white-oak",
-      ...prestigeSpecies.map((s) => s.id),
-    ];
-    set({
-      ...resetState,
+    const newUnlockedSpecies = ["white-oak", ...prestigeSpecies.map((s) => s.id)];
+
+    gameState$.set({
+      ...getState(),
+      ...(resetState as Partial<GameStateData>),
+      screen: state.screen, // preserve screen (ephemeral)
       prestigeCount: newCount,
       maxStamina: 100 + bonus.staminaBonus,
       stamina: 100 + bonus.staminaBonus,
@@ -633,7 +524,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
       hasSeenRules: state.hasSeenRules,
       hapticsEnabled: state.hapticsEnabled,
       soundEnabled: state.soundEnabled,
+      groveData: null,
     });
+
     queueMicrotask(() => {
       showToast(`Prestige ${newCount}! Bonuses applied.`, "achievement");
       for (const sp of prestigeSpecies) {
@@ -645,110 +538,124 @@ export const useGameStore = create<GameState>()((set, get) => ({
     return true;
   },
 
-  setActiveBorderCosmetic: (id) => set({ activeBorderCosmetic: id }),
+  setActiveBorderCosmetic(id: string | null) {
+    gameState$.activeBorderCosmetic.set(id);
+  },
 
-  setBuildMode: (enabled, templateId) =>
-    set({
-      buildMode: enabled,
-      buildTemplateId: enabled ? (templateId ?? null) : null,
-    }),
-
-  addPlacedStructure: (templateId, worldX, worldZ) =>
-    set((state) => ({
-      placedStructures: [
-        ...state.placedStructures,
-        { templateId, worldX, worldZ },
-      ],
-    })),
-
-  removePlacedStructure: (worldX, worldZ) =>
-    set((state) => ({
-      placedStructures: state.placedStructures.filter(
-        (s) => s.worldX !== worldX || s.worldZ !== worldZ,
-      ),
-    })),
-
-  resetGame: () => set(initialState),
-
-  // Time actions
-  setGameTime: (microseconds) => set({ gameTimeMicroseconds: microseconds }),
-  setCurrentSeason: (season) => set({ currentSeason: season }),
-  setCurrentDay: (day) => set({ currentDay: day }),
-
-  // Quest actions
-  setActiveQuests: (quests) => set({ activeQuests: quests }),
-  updateQuest: (questId, quest) =>
-    set((state) => ({
-      activeQuests: state.activeQuests.map((q) =>
-        q.id === questId ? quest : q,
-      ),
-    })),
-  completeQuest: (questId) =>
-    set((state) => ({
-      activeQuests: state.activeQuests.filter((q) => q.id !== questId),
-      completedQuestIds: [...state.completedQuestIds, questId],
-    })),
-  setLastQuestRefresh: (time) => set({ lastQuestRefresh: time }),
-
-  // Quest chain actions
-  refreshAvailableChains: () => {
-    const state = get();
-    const available = computeAvailableChains(
-      state.questChainState,
-      state.level,
-    );
-    set({
-      questChainState: {
-        ...state.questChainState,
-        availableChainIds: available,
-      },
+  setBuildMode(enabled: boolean, templateId?: string) {
+    batch(() => {
+      gameState$.buildMode.set(enabled);
+      gameState$.buildTemplateId.set(enabled ? (templateId ?? null) : null);
     });
   },
 
-  startQuestChain: (chainId) => {
-    const state = get();
-    const newChainState = startChain(
-      state.questChainState,
-      chainId,
-      state.currentDay,
-    );
-    set({ questChainState: newChainState });
+  addPlacedStructure(templateId: string, worldX: number, worldZ: number) {
+    const current = getState().placedStructures;
+    gameState$.placedStructures.set([...current, { templateId, worldX, worldZ }]);
   },
 
-  advanceQuestObjective: (eventType, amount) => {
-    const state = get();
+  removePlacedStructure(worldX: number, worldZ: number) {
+    const current = getState().placedStructures;
+    gameState$.placedStructures.set(
+      current.filter((s) => s.worldX !== worldX || s.worldZ !== worldZ),
+    );
+  },
+
+  resetGame(worldSeed?: string) {
+    const newState = structuredClone(initialState);
+    if (worldSeed) {
+      newState.worldSeed = worldSeed;
+    }
+    gameState$.set(newState);
+  },
+
+  // Time actions
+  setGameTime(microseconds: number) {
+    gameState$.gameTimeMicroseconds.set(microseconds);
+  },
+
+  setCurrentSeason(season: Season) {
+    gameState$.currentSeason.set(season);
+  },
+
+  setCurrentDay(day: number) {
+    gameState$.currentDay.set(day);
+  },
+
+  // Quest actions
+  setActiveQuests(quests: ActiveQuest[]) {
+    gameState$.activeQuests.set(quests);
+  },
+
+  updateQuest(questId: string, quest: ActiveQuest) {
+    const current = getState().activeQuests;
+    gameState$.activeQuests.set(current.map((q) => (q.id === questId ? quest : q)));
+  },
+
+  completeQuest(questId: string) {
+    const state = getState();
+    batch(() => {
+      gameState$.activeQuests.set(state.activeQuests.filter((q) => q.id !== questId));
+      gameState$.completedQuestIds.set([...state.completedQuestIds, questId]);
+    });
+  },
+
+  setLastQuestRefresh(time: number) {
+    gameState$.lastQuestRefresh.set(time);
+  },
+
+  // Quest chain actions
+  refreshAvailableChains() {
+    const state = getState();
+    const available = computeAvailableChains(state.questChainState, state.level);
+    gameState$.questChainState.set({
+      ...state.questChainState,
+      availableChainIds: available,
+    });
+  },
+
+  startQuestChain(chainId: string) {
+    const state = getState();
+    const newChainState = startChain(state.questChainState, chainId, state.currentDay);
+    gameState$.questChainState.set(newChainState);
+  },
+
+  advanceQuestObjective(
+    eventType: string,
+    amount: number,
+  ): { chainId: string; stepId: string }[] {
+    const state = getState();
     const result = advanceObjectives(state.questChainState, eventType, amount);
     if (result.state !== state.questChainState) {
-      set({ questChainState: result.state });
+      gameState$.questChainState.set(result.state);
     }
     return result.completedSteps;
   },
 
-  claimQuestStepReward: (chainId) => {
-    const state = get();
+  claimQuestStepReward(chainId: string) {
+    const state = getState();
     const result = claimStepReward(state.questChainState, chainId);
     if (!result.stepDef) return;
 
-    set({ questChainState: result.state });
+    gameState$.questChainState.set(result.state);
 
     const reward = result.stepDef.reward;
-    const store = get();
 
     if (reward.xp) {
-      store.addXp(reward.xp);
+      actions.addXp(reward.xp);
     }
     if (reward.resources) {
       for (const [resource, amount] of Object.entries(reward.resources)) {
-        if (amount) store.addResource(resource as ResourceType, amount);
+        if (amount) actions.addResource(resource as ResourceType, amount);
       }
     }
     if (reward.seeds) {
       for (const seed of reward.seeds) {
-        store.addSeed(seed.speciesId, seed.amount);
+        actions.addSeed(seed.speciesId, seed.amount);
       }
     }
     if (reward.unlockSpecies) {
-      store.unlockSpecies(reward.unlockSpecies);
+      actions.unlockSpecies(reward.unlockSpecies);
     }
 
     queueMicrotask(() => {
@@ -757,68 +664,69 @@ export const useGameStore = create<GameState>()((set, get) => ({
   },
 
   // Discovery actions
-  discoverZone: (zoneId) => {
-    const state = get();
+  discoverZone(zoneId: string): boolean {
+    const state = getState();
     if (state.discoveredZones.includes(zoneId)) return false;
-    set({ discoveredZones: [...state.discoveredZones, zoneId] });
+    gameState$.discoveredZones.set([...state.discoveredZones, zoneId]);
     queueMicrotask(() => {
       showToast(`Discovered new area!`, "success");
     });
-    get().addXp(50);
+    actions.addXp(50);
     return true;
   },
 
   // World/zone actions
-  setCurrentZoneId: (zoneId) => set({ currentZoneId: zoneId }),
-  setWorldSeed: (seed) => set({ worldSeed: seed }),
+  setCurrentZoneId(zoneId: string) {
+    gameState$.currentZoneId.set(zoneId);
+  },
+
+  setWorldSeed(seed: string) {
+    gameState$.worldSeed.set(seed);
+  },
 
   // Achievement expansion tracking actions
-  incrementToolUse: (toolId) =>
-    set((state) => ({
-      toolUseCounts: {
-        ...state.toolUseCounts,
-        [toolId]: (state.toolUseCounts[toolId] ?? 0) + 1,
-      },
-    })),
+  incrementToolUse(toolId: string) {
+    const state = getState();
+    gameState$.toolUseCounts.set({
+      ...state.toolUseCounts,
+      [toolId]: (state.toolUseCounts[toolId] ?? 0) + 1,
+    });
+  },
 
-  incrementWildTreesHarvested: (speciesId) =>
-    set((state) => ({
-      wildTreesHarvested: state.wildTreesHarvested + 1,
-      wildSpeciesHarvested:
-        speciesId && !state.wildSpeciesHarvested.includes(speciesId)
-          ? [...state.wildSpeciesHarvested, speciesId]
-          : state.wildSpeciesHarvested,
-    })),
+  incrementWildTreesHarvested(speciesId?: string) {
+    const state = getState();
+    gameState$.wildTreesHarvested.set(state.wildTreesHarvested + 1);
+    if (speciesId && !state.wildSpeciesHarvested.includes(speciesId)) {
+      gameState$.wildSpeciesHarvested.set([...state.wildSpeciesHarvested, speciesId]);
+    }
+  },
 
-  incrementWildTreesRegrown: () =>
-    set((state) => ({ wildTreesRegrown: state.wildTreesRegrown + 1 })),
+  incrementWildTreesRegrown() {
+    gameState$.wildTreesRegrown.set((prev) => prev + 1);
+  },
 
-  trackVisitedZoneType: (zoneType) =>
-    set((state) =>
-      state.visitedZoneTypes.includes(zoneType)
-        ? state
-        : { visitedZoneTypes: [...state.visitedZoneTypes, zoneType] },
-    ),
+  trackVisitedZoneType(zoneType: string) {
+    const current = getState().visitedZoneTypes;
+    if (!current.includes(zoneType)) {
+      gameState$.visitedZoneTypes.set([...current, zoneType]);
+    }
+  },
 
-  incrementSeasonalPlanting: (season) =>
-    set((state) => ({
-      treesPlantedInSpring:
-        season === "spring"
-          ? state.treesPlantedInSpring + 1
-          : state.treesPlantedInSpring,
-    })),
+  incrementSeasonalPlanting(season: string) {
+    if (season === "spring") {
+      gameState$.treesPlantedInSpring.set((prev) => prev + 1);
+    }
+  },
 
-  incrementSeasonalHarvest: (season) =>
-    set((state) => ({
-      treesHarvestedInAutumn:
-        season === "autumn"
-          ? state.treesHarvestedInAutumn + 1
-          : state.treesHarvestedInAutumn,
-    })),
+  incrementSeasonalHarvest(season: string) {
+    if (season === "autumn") {
+      gameState$.treesHarvestedInAutumn.set((prev) => prev + 1);
+    }
+  },
 
   // Tool upgrade actions
-  upgradeToolTier: (toolId) => {
-    const state = get();
+  upgradeToolTier(toolId: string): boolean {
+    const state = getState();
     const currentTier = state.toolUpgrades[toolId] ?? 0;
     const nextTier = getToolUpgradeTier(currentTier);
     if (!nextTier) return false;
@@ -828,12 +736,12 @@ export const useGameStore = create<GameState>()((set, get) => ({
       newResources[resource as keyof typeof newResources] =
         (newResources[resource as keyof typeof newResources] ?? 0) - amount;
     }
-    set({
-      resources: newResources,
-      toolUpgrades: {
+    batch(() => {
+      gameState$.resources.set(newResources);
+      gameState$.toolUpgrades.set({
         ...state.toolUpgrades,
         [toolId]: currentTier + 1,
-      },
+      });
     });
     queueMicrotask(() => {
       showToast(`Tool upgraded to tier ${currentTier + 1}!`, "success");
@@ -842,8 +750,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
   },
 
   // Economy actions
-  recordMarketTrade: (resource, direction, amount) => {
-    const state = get();
+  recordMarketTrade(resource: ResourceType, direction: "buy" | "sell", amount: number) {
+    const state = getState();
     const newMarketState = recordTrade(
       state.marketState,
       resource,
@@ -851,67 +759,49 @@ export const useGameStore = create<GameState>()((set, get) => ({
       amount,
       state.currentDay,
     );
-    set({ marketState: newMarketState });
+    gameState$.marketState.set(newMarketState);
   },
 
-  updateEconomy: (currentDay) => {
-    const state = get();
+  updateEconomy(currentDay: number) {
+    const state = getState();
     const rngSeed = state.worldSeed || "default";
 
     const prunedMarket = pruneHistory(state.marketState, currentDay);
+    const newMerchantState = updateMerchant(state.merchantState, currentDay, rngSeed);
+    const eventResult = updateMarketEvents(state.marketEventState, currentDay, rngSeed);
 
-    const newMerchantState = updateMerchant(
-      state.merchantState,
-      currentDay,
-      rngSeed,
-    );
-
-    const eventResult = updateMarketEvents(
-      state.marketEventState,
-      currentDay,
-      rngSeed,
-    );
-
-    const updates: Partial<GameState> = {};
-
-    if (prunedMarket !== state.marketState) {
-      updates.marketState = prunedMarket;
-    }
-    if (newMerchantState !== state.merchantState) {
-      updates.merchantState = newMerchantState;
-      if (newMerchantState.isPresent && !state.merchantState.isPresent) {
-        queueMicrotask(() => {
-          showToast("A traveling merchant has arrived!", "success");
-        });
+    batch(() => {
+      if (prunedMarket !== state.marketState) {
+        gameState$.marketState.set(prunedMarket);
       }
-    }
-    if (eventResult.state !== state.marketEventState) {
-      updates.marketEventState = eventResult.state;
-      if (eventResult.newEventTriggered && eventResult.state.activeEvent) {
-        queueMicrotask(() => {
-          showToast("Market event started!", "success");
-        });
+      if (newMerchantState !== state.merchantState) {
+        gameState$.merchantState.set(newMerchantState);
+        if (newMerchantState.isPresent && !state.merchantState.isPresent) {
+          queueMicrotask(() => {
+            showToast("A traveling merchant has arrived!", "success");
+          });
+        }
       }
-    }
-
-    if (Object.keys(updates).length > 0) {
-      set(updates);
-    }
+      if (eventResult.state !== state.marketEventState) {
+        gameState$.marketEventState.set(eventResult.state);
+        if (eventResult.newEventTriggered && eventResult.state.activeEvent) {
+          queueMicrotask(() => {
+            showToast("Market event started!", "success");
+          });
+        }
+      }
+    });
   },
 
-  purchaseMerchantOffer: (offerId) => {
-    const state = get();
+  purchaseMerchantOffer(offerId: string): boolean {
+    const state = getState();
     if (!state.merchantState.isPresent) return false;
 
-    const offer = state.merchantState.currentOffers.find(
-      (o) => o.id === offerId,
-    );
+    const offer = state.merchantState.currentOffers.find((o) => o.id === offerId);
     if (!offer || offer.quantity <= 0) return false;
 
     for (const [resource, amount] of Object.entries(offer.cost)) {
-      if (
-        (state.resources[resource as ResourceType] ?? 0) < (amount as number)
-      ) {
+      if ((state.resources[resource as ResourceType] ?? 0) < (amount as number)) {
         return false;
       }
     }
@@ -924,21 +814,21 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const result = purchaseOffer(state.merchantState, offerId);
     if (!result.offer) return false;
 
-    set({ resources: newResources, merchantState: result.state });
+    batch(() => {
+      gameState$.resources.set(newResources);
+      gameState$.merchantState.set(result.state);
+    });
 
     const reward = result.offer.reward;
-    const store = get();
     if (reward.type === "resource" && reward.resource && reward.amount) {
-      if (reward.type === "resource" && reward.resource && reward.amount) {
-        const resourceType = reward.resource as ResourceType;
-        if (resourceType in state.resources) {
-          store.addResource(resourceType, reward.amount);
-        }
+      const resourceType = reward.resource as ResourceType;
+      if (resourceType in state.resources) {
+        actions.addResource(resourceType, reward.amount);
       }
     } else if (reward.type === "seed" && reward.speciesId && reward.amount) {
-      store.addSeed(reward.speciesId, reward.amount);
+      actions.addSeed(reward.speciesId, reward.amount);
     } else if (reward.type === "xp" && reward.amount) {
-      store.addXp(reward.amount);
+      actions.addXp(reward.amount);
     }
 
     queueMicrotask(() => {
@@ -949,11 +839,11 @@ export const useGameStore = create<GameState>()((set, get) => ({
   },
 
   // Event scheduler actions
-  tickEvents: (context) => {
-    const state = get();
+  tickEvents(context: EventContext) {
+    const state = getState();
     const result = updateEvents(state.eventState, context);
     if (result.state !== state.eventState) {
-      set({ eventState: result.state });
+      gameState$.eventState.set(result.state);
     }
     if (result.festivalStarted) {
       queueMicrotask(() => {
@@ -969,17 +859,16 @@ export const useGameStore = create<GameState>()((set, get) => ({
       queueMicrotask(() => {
         if (completed && def) {
           showToast(`${def.name} complete!`, "success");
-          const store = get();
           const reward = def.completionReward;
-          if (reward.xp) store.addXp(reward.xp);
+          if (reward.xp) actions.addXp(reward.xp);
           if (reward.resources) {
             for (const [resource, amount] of Object.entries(reward.resources)) {
-              if (amount) store.addResource(resource as ResourceType, amount);
+              if (amount) actions.addResource(resource as ResourceType, amount);
             }
           }
           if (reward.seeds) {
             for (const seed of reward.seeds) {
-              store.addSeed(seed.speciesId, seed.amount);
+              actions.addSeed(seed.speciesId, seed.amount);
             }
           }
         } else if (def) {
@@ -997,144 +886,198 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }
   },
 
-  advanceEventChallenge: (challengeType, amount = 1) => {
-    const state = get();
+  advanceEventChallenge(challengeType: string, amount = 1) {
+    const state = getState();
     if (!state.eventState.activeFestival) return;
-    const newEventState = advanceFestivalChallenge(
-      state.eventState,
-      challengeType,
-      amount,
-    );
+    const newEventState = advanceFestivalChallenge(state.eventState, challengeType, amount);
     if (newEventState !== state.eventState) {
-      set({ eventState: newEventState });
+      gameState$.eventState.set(newEventState);
     }
   },
 
-  resolveEncounter: (definitionId) => {
-    const state = get();
+  resolveEncounter(definitionId: string) {
+    const state = getState();
     const newEventState = resolveEncounterPure(state.eventState, definitionId);
     if (newEventState !== state.eventState) {
-      set({ eventState: newEventState });
+      gameState$.eventState.set(newEventState);
     }
   },
 
   // Species codex actions
-  trackSpeciesPlanting: (speciesId) =>
-    set((state) => {
-      const existing =
-        state.speciesProgress[speciesId] ?? createEmptyProgress();
-      const updated: SpeciesProgress = {
-        ...existing,
-        timesPlanted: existing.timesPlanted + 1,
-      };
-      updated.discoveryTier = computeDiscoveryTier(updated);
+  trackSpeciesPlanting(speciesId: string) {
+    const state = getState();
+    const existing = state.speciesProgress[speciesId] ?? createEmptyProgress();
+    const updated: SpeciesProgress = {
+      ...existing,
+      timesPlanted: existing.timesPlanted + 1,
+    };
+    updated.discoveryTier = computeDiscoveryTier(updated);
 
-      const tierChanged = updated.discoveryTier > existing.discoveryTier;
-      const newPending = tierChanged
-        ? [...state.pendingCodexUnlocks, speciesId]
-        : state.pendingCodexUnlocks;
+    const tierChanged = updated.discoveryTier > existing.discoveryTier;
 
+    batch(() => {
+      gameState$.speciesProgress.set({ ...state.speciesProgress, [speciesId]: updated });
       if (tierChanged) {
-        const sp = getSpeciesById(speciesId);
-        queueMicrotask(() => {
-          showToast(
-            `Codex: ${sp?.name ?? speciesId} -- Discovered!`,
-            "achievement",
-          );
-        });
+        gameState$.pendingCodexUnlocks.set([...state.pendingCodexUnlocks, speciesId]);
       }
+    });
 
-      return {
-        speciesProgress: { ...state.speciesProgress, [speciesId]: updated },
-        pendingCodexUnlocks: newPending,
-      };
-    }),
+    if (tierChanged) {
+      const sp = getSpeciesById(speciesId);
+      queueMicrotask(() => {
+        showToast(`Codex: ${sp?.name ?? speciesId} -- Discovered!`, "achievement");
+      });
+    }
+  },
 
-  trackSpeciesGrowth: (speciesId, newStage) =>
-    set((state) => {
-      const existing =
-        state.speciesProgress[speciesId] ?? createEmptyProgress();
-      if (newStage <= existing.maxStageReached) return state;
+  trackSpeciesGrowth(speciesId: string, newStage: number) {
+    const state = getState();
+    const existing = state.speciesProgress[speciesId] ?? createEmptyProgress();
+    if (newStage <= existing.maxStageReached) return;
 
-      const updated: SpeciesProgress = {
-        ...existing,
-        maxStageReached: newStage,
-      };
-      updated.discoveryTier = computeDiscoveryTier(updated);
+    const updated: SpeciesProgress = {
+      ...existing,
+      maxStageReached: newStage,
+    };
+    updated.discoveryTier = computeDiscoveryTier(updated);
 
-      const tierChanged = updated.discoveryTier > existing.discoveryTier;
-      const newPending = tierChanged
-        ? [...state.pendingCodexUnlocks, speciesId]
-        : state.pendingCodexUnlocks;
+    const tierChanged = updated.discoveryTier > existing.discoveryTier;
 
+    batch(() => {
+      gameState$.speciesProgress.set({ ...state.speciesProgress, [speciesId]: updated });
       if (tierChanged) {
-        const sp = getSpeciesById(speciesId);
-        const tierNames = [
-          "",
-          "Discovered",
-          "Studied",
-          "Mastered",
-          "Legendary",
-        ];
-        queueMicrotask(() => {
-          showToast(
-            `Codex: ${sp?.name ?? speciesId} -- ${tierNames[updated.discoveryTier]}!`,
-            "achievement",
-          );
-        });
+        gameState$.pendingCodexUnlocks.set([...state.pendingCodexUnlocks, speciesId]);
       }
+    });
 
-      return {
-        speciesProgress: { ...state.speciesProgress, [speciesId]: updated },
-        pendingCodexUnlocks: newPending,
-      };
-    }),
+    if (tierChanged) {
+      const sp = getSpeciesById(speciesId);
+      const tierNames = ["", "Discovered", "Studied", "Mastered", "Legendary"];
+      queueMicrotask(() => {
+        showToast(
+          `Codex: ${sp?.name ?? speciesId} -- ${tierNames[updated.discoveryTier]}!`,
+          "achievement",
+        );
+      });
+    }
+  },
 
-  trackSpeciesHarvest: (speciesId, yieldAmount) =>
-    set((state) => {
-      const existing =
-        state.speciesProgress[speciesId] ?? createEmptyProgress();
-      const updated: SpeciesProgress = {
-        ...existing,
-        timesHarvested: existing.timesHarvested + 1,
-        totalYield: existing.totalYield + yieldAmount,
-      };
-      updated.discoveryTier = computeDiscoveryTier(updated);
+  trackSpeciesHarvest(speciesId: string, yieldAmount: number) {
+    const state = getState();
+    const existing = state.speciesProgress[speciesId] ?? createEmptyProgress();
+    const updated: SpeciesProgress = {
+      ...existing,
+      timesHarvested: existing.timesHarvested + 1,
+      totalYield: existing.totalYield + yieldAmount,
+    };
+    updated.discoveryTier = computeDiscoveryTier(updated);
 
-      const tierChanged = updated.discoveryTier > existing.discoveryTier;
-      const newPending = tierChanged
-        ? [...state.pendingCodexUnlocks, speciesId]
-        : state.pendingCodexUnlocks;
+    const tierChanged = updated.discoveryTier > existing.discoveryTier;
 
+    batch(() => {
+      gameState$.speciesProgress.set({ ...state.speciesProgress, [speciesId]: updated });
       if (tierChanged) {
-        const sp = getSpeciesById(speciesId);
-        queueMicrotask(() => {
-          showToast(
-            `Codex: ${sp?.name ?? speciesId} -- Legendary!`,
-            "achievement",
-          );
-        });
+        gameState$.pendingCodexUnlocks.set([...state.pendingCodexUnlocks, speciesId]);
       }
+    });
 
-      return {
-        speciesProgress: { ...state.speciesProgress, [speciesId]: updated },
-        pendingCodexUnlocks: newPending,
-      };
-    }),
+    if (tierChanged) {
+      const sp = getSpeciesById(speciesId);
+      queueMicrotask(() => {
+        showToast(`Codex: ${sp?.name ?? speciesId} -- Legendary!`, "achievement");
+      });
+    }
+  },
 
-  consumePendingCodexUnlock: () => {
-    const state = get();
+  consumePendingCodexUnlock(): string | null {
+    const state = getState();
     if (state.pendingCodexUnlocks.length === 0) return null;
     const [first, ...rest] = state.pendingCodexUnlocks;
-    set({ pendingCodexUnlocks: rest });
+    gameState$.pendingCodexUnlocks.set(rest);
     return first;
   },
 
   // Settings actions
-  setHasSeenRules: (seen) => set({ hasSeenRules: seen }),
-  setHapticsEnabled: (enabled) => set({ hapticsEnabled: enabled }),
-  setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
+  setHasSeenRules(seen: boolean) {
+    gameState$.hasSeenRules.set(seen);
+  },
+
+  setHapticsEnabled(enabled: boolean) {
+    gameState$.hapticsEnabled.set(enabled);
+  },
+
+  setSoundEnabled(enabled: boolean) {
+    gameState$.soundEnabled.set(enabled);
+  },
 
   // Database hydration -- bulk-set state from SQLite
-  hydrateFromDb: (dbState) => set(dbState),
-}));
+  hydrateFromDb(dbState: Partial<GameStateData>) {
+    gameState$.set({ ...getState(), ...dbState });
+  },
+};
+
+// ---------------------------------------------------------------------------
+// GameState type (state + actions, matches Zustand interface for consumers)
+// ---------------------------------------------------------------------------
+
+type GameState = GameStateData & typeof actions;
+
+// ---------------------------------------------------------------------------
+// Zustand-compatible API wrapper
+// ---------------------------------------------------------------------------
+
+/**
+ * useGameStore -- drop-in replacement for Zustand's `useStore` hook.
+ *
+ * Consumers call: `useGameStore((s) => s.level)` or `useGameStore()` (full state)
+ * Under the hood: Legend State's `useSelector` tracks which fields
+ * the selector reads and only re-renders when those values change.
+ */
+function useGameStoreHook(): GameState;
+function useGameStoreHook<T>(selector: (state: GameState) => T): T;
+function useGameStoreHook<T>(selector?: (state: GameState) => T): T | GameState {
+  return useSelector(() => {
+    const snapshot = gameState$.get();
+    const combined = { ...snapshot, ...actions } as GameState;
+    return selector ? selector(combined) : combined;
+  });
+}
+
+/**
+ * getState() -- imperative access for non-React code (GameActions, hooks, tests).
+ * Returns state + action methods.
+ */
+function getStateWithActions(): GameState {
+  return { ...getState(), ...actions } as GameState;
+}
+
+/**
+ * setState() -- partial state update (used by tests).
+ * Merges partial state into the observable.
+ */
+function setState(partial: Partial<GameStateData>): void {
+  gameState$.set({ ...getState(), ...partial });
+}
+
+/**
+ * getInitialState() -- returns the initial state (used by tests for reset).
+ */
+function getInitialState(): GameStateData {
+  return structuredClone(initialState);
+}
+
+/**
+ * subscribe() -- change listener (used by useAutoSave).
+ * Returns unsubscribe function.
+ */
+function subscribe(listener: () => void): () => void {
+  return observe(gameState$, listener);
+}
+
+// Assemble the Zustand-compatible export
+export const useGameStore = Object.assign(useGameStoreHook, {
+  getState: getStateWithActions,
+  setState,
+  getInitialState,
+  subscribe,
+});

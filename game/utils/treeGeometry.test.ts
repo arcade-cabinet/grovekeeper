@@ -19,10 +19,7 @@ describe("createTreeGeometry", () => {
 
       // Compare all vertex positions
       for (let i = 0; i < pos1.count * 3; i++) {
-        expect((pos1.array as Float32Array)[i]).toBeCloseTo(
-          (pos2.array as Float32Array)[i],
-          10,
-        );
+        expect((pos1.array as Float32Array)[i]).toBeCloseTo((pos2.array as Float32Array)[i], 10);
       }
 
       geom1.dispose();
@@ -41,11 +38,7 @@ describe("createTreeGeometry", () => {
       let hasDifference = false;
       const minCount = Math.min(pos1.count, pos2.count);
       for (let i = 0; i < minCount * 3; i++) {
-        if (
-          Math.abs(
-            (pos1.array as Float32Array)[i] - (pos2.array as Float32Array)[i],
-          ) > 0.001
-        ) {
+        if (Math.abs((pos1.array as Float32Array)[i] - (pos2.array as Float32Array)[i]) > 0.001) {
           hasDifference = true;
           break;
         }
@@ -74,10 +67,8 @@ describe("createTreeGeometry", () => {
       if (countsMatch) {
         for (let i = 0; i < oakPos.count * 3; i++) {
           if (
-            Math.abs(
-              (oakPos.array as Float32Array)[i] -
-                (willowPos.array as Float32Array)[i],
-            ) > 0.001
+            Math.abs((oakPos.array as Float32Array)[i] - (willowPos.array as Float32Array)[i]) >
+            0.001
           ) {
             positionsMatch = false;
             break;

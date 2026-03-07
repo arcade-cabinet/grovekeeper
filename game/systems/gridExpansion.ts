@@ -8,7 +8,7 @@
  * All functions are pure -- no imports from stores or ECS.
  */
 
-import gridConfig from "@/config/game/grid.json";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 export interface GridExpansionTier {
   size: number;
@@ -28,12 +28,8 @@ export function getMaxGridSizeForLevel(level: number): number {
   return GRID_EXPANSION_TIERS[0].size;
 }
 
-export function getNextExpansionTier(
-  currentSize: number,
-): GridExpansionTier | null {
-  const currentIndex = GRID_EXPANSION_TIERS.findIndex(
-    (t) => t.size === currentSize,
-  );
+export function getNextExpansionTier(currentSize: number): GridExpansionTier | null {
+  const currentIndex = GRID_EXPANSION_TIERS.findIndex((t) => t.size === currentSize);
   if (currentIndex === -1 || currentIndex >= GRID_EXPANSION_TIERS.length - 1) {
     return null;
   }

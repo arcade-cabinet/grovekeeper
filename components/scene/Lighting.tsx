@@ -35,11 +35,7 @@ function hexToColor3(hex: string): THREE.Color {
   return new THREE.Color(hex);
 }
 
-export const Lighting = ({
-  sunIntensity,
-  ambientIntensity,
-  skyColors,
-}: LightingProps) => {
+export const Lighting = ({ sunIntensity, ambientIntensity, skyColors }: LightingProps) => {
   const sunRef = useRef<THREE.DirectionalLight>(null);
   const ambientRef = useRef<THREE.AmbientLight>(null);
 
@@ -86,11 +82,7 @@ export const Lighting = ({
 
   return (
     <>
-      <ambientLight
-        ref={ambientRef}
-        intensity={ambientIntensity}
-        color="#6090b0"
-      />
+      <ambientLight ref={ambientRef} intensity={ambientIntensity} color="#6090b0" />
       <directionalLight
         ref={sunRef}
         intensity={sunIntensity * 0.8}

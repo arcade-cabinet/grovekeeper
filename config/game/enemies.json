@@ -1,0 +1,96 @@
+{
+  "types": {
+    "bat": {
+      "name": "Cave Bat",
+      "modelPath": "assets/models/enemies/bat.glb",
+      "tier": 1,
+      "health": 8,
+      "attackPower": 3,
+      "attackCooldown": 1.2,
+      "aggroRange": 5,
+      "deaggroRange": 8,
+      "behavior": "swarm",
+      "lootTableId": "bat-loot",
+      "biomes": ["forest", "cave", "labyrinth"],
+      "nightOnly": true,
+      "description": "Small winged creature that attacks in groups at dusk"
+    },
+    "skeleton-warrior": {
+      "name": "Skeleton Warrior",
+      "modelPath": "assets/models/enemies/skeleton-warrior.glb",
+      "tier": 2,
+      "health": 25,
+      "attackPower": 8,
+      "attackCooldown": 2.0,
+      "aggroRange": 6,
+      "deaggroRange": 10,
+      "behavior": "guard",
+      "lootTableId": "skeleton-loot",
+      "biomes": ["labyrinth", "ruins"],
+      "nightOnly": false,
+      "description": "Ancient warrior that guards labyrinth inner rings"
+    },
+    "knight": {
+      "name": "Corrupted Knight",
+      "modelPath": "assets/models/enemies/knight.glb",
+      "tier": 3,
+      "health": 50,
+      "attackPower": 12,
+      "attackCooldown": 2.5,
+      "aggroRange": 7,
+      "deaggroRange": 12,
+      "behavior": "patrol",
+      "lootTableId": "knight-loot",
+      "biomes": ["ruins", "labyrinth"],
+      "nightOnly": false,
+      "description": "Fallen knight patrolling ancient ruins"
+    },
+    "corrupted-hedge": {
+      "name": "Corrupted Hedge",
+      "modelPath": "assets/models/hedges/hedge-basic-2x1.glb",
+      "tier": 1,
+      "health": 15,
+      "attackPower": 5,
+      "attackCooldown": 3.0,
+      "aggroRange": 3,
+      "deaggroRange": 5,
+      "behavior": "ambush",
+      "lootTableId": "hedge-loot",
+      "biomes": ["labyrinth"],
+      "nightOnly": false,
+      "description": "Thorny hedge that lashes out at passing grovekeeper"
+    }
+  },
+  "spawnRules": {
+    "normalChunk": {
+      "minEnemies": 0,
+      "maxEnemies": 3,
+      "spawnChanceBase": 0.3
+    },
+    "labyrinthChunk": {
+      "minEnemies": 5,
+      "maxEnemies": 10,
+      "spawnChanceBase": 0.9
+    },
+    "ruinsChunk": {
+      "minEnemies": 2,
+      "maxEnemies": 6,
+      "spawnChanceBase": 0.7
+    }
+  },
+  "tierScaling": {
+    "distancePerTier": 8,
+    "maxTier": 5,
+    "healthPerTier": 1.4,
+    "attackPerTier": 1.3,
+    "lootBonusPerTier": 1.2
+  },
+  "nightSpawnMultiplier": 1.5,
+  "difficultyMultipliers": {
+    "explore": 0,
+    "normal": 1.0,
+    "hard": 1.5,
+    "brutal": 2.0,
+    "ultra-brutal": 3.0
+  }
+}

@@ -1,8 +1,4 @@
-import {
-  emptyResources,
-  RESOURCE_INFO,
-  RESOURCE_TYPES,
-} from "@/game/config/resources";
+import { emptyResources, RESOURCE_INFO, RESOURCE_TYPES } from "@/game/config/resources";
 
 describe("resources config", () => {
   describe("RESOURCE_TYPES", () => {

@@ -194,8 +194,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "Plant all 12 base species",
     icon: "book",
     category: "mastery",
-    check: (s) =>
-      ALL_BASE_SPECIES.every((species) => s.speciesPlanted.includes(species)),
+    check: (s) => ALL_BASE_SPECIES.every((species) => s.speciesPlanted.includes(species)),
   },
   {
     id: "level-5",
@@ -382,10 +381,7 @@ export const ACHIEVEMENTS: Achievement[] = [
 /**
  * Check all achievements and return the IDs of any newly earned ones.
  */
-export function checkAchievements(
-  stats: PlayerStats,
-  alreadyEarned: string[],
-): string[] {
+export function checkAchievements(stats: PlayerStats, alreadyEarned: string[]): string[] {
   const earned = new Set(alreadyEarned);
   const newlyEarned: string[] = [];
 

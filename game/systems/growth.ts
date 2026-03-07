@@ -6,7 +6,7 @@
  * are engine-agnostic.
  */
 
-import growthConfig from "@/config/game/growth.json";
+import growthConfig from "@/config/game/growth.json" with { type: "json" };
 
 // -- Types ────────────────────────────────────────────────────────────────────
 
@@ -23,8 +23,7 @@ export interface GrowthRateParams {
 
 const MAX_STAGE: number = growthConfig.maxStage;
 const STAGE_VISUALS: { scale: number }[] = growthConfig.stageVisuals;
-const SEASON_GROWTH_MULTIPLIERS: Record<string, number> =
-  growthConfig.seasonMultipliers;
+const SEASON_GROWTH_MULTIPLIERS: Record<string, number> = growthConfig.seasonMultipliers;
 const WATER_BONUS: number = growthConfig.waterBonus;
 
 // Difficulty multipliers: index 1-5 maps to species difficulty
@@ -61,8 +60,7 @@ export function getStageScale(stage: number, progress: number): number {
  * Returns the rate per second (without deltaTime).
  */
 export function calcGrowthRate(params: GrowthRateParams): number {
-  const { baseTime, difficulty, season, watered, evergreen, speciesId } =
-    params;
+  const { baseTime, difficulty, season, watered, evergreen, speciesId } = params;
 
   // Season multiplier
   let seasonMult = SEASON_GROWTH_MULTIPLIERS[season] ?? 1.0;

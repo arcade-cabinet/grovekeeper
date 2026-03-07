@@ -14,13 +14,7 @@ import { getSpeciesById } from "@/game/config/species";
 import { getToolById } from "@/game/config/tools";
 import { createTreeEntity } from "@/game/ecs/archetypes";
 import type { Entity, GridCellComponent } from "@/game/ecs/world";
-import {
-  generateEntityId,
-  gridCellsQuery,
-  playerQuery,
-  treesQuery,
-  world,
-} from "@/game/ecs/world";
+import { generateEntityId, gridCellsQuery, playerQuery, treesQuery, world } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores/gameStore";
 import { canPlace, getTemplate } from "@/game/structures/StructureManager";
 import { collectHarvest, initHarvestable } from "@/game/systems/harvest";
@@ -55,11 +49,7 @@ function findTreeById(treeEntityId: string): Entity | null {
 export function findPlantableTiles(): GridCellComponent[] {
   const tiles: GridCellComponent[] = [];
   for (const cell of gridCellsQuery) {
-    if (
-      cell.gridCell &&
-      cell.gridCell.type === "soil" &&
-      !cell.gridCell.occupied
-    ) {
+    if (cell.gridCell && cell.gridCell.type === "soil" && !cell.gridCell.occupied) {
       tiles.push(cell.gridCell);
     }
   }
@@ -130,11 +120,7 @@ export function movePlayerTo(gridX: number, gridZ: number): void {
  * Validates: tile exists, is soil, not occupied, player has seeds (and seed cost resources).
  * Returns true on success.
  */
-export function plantTree(
-  speciesId: string,
-  gridX: number,
-  gridZ: number,
-): boolean {
+export function plantTree(speciesId: string, gridX: number, gridZ: number): boolean {
   const store = useGameStore.getState();
   const species = getSpeciesById(speciesId);
 
@@ -145,8 +131,7 @@ export function plantTree(
   // Validate seed cost resources
   if (species?.seedCost) {
     for (const [resource, amount] of Object.entries(species.seedCost)) {
-      if ((store.resources[resource as ResourceType] ?? 0) < amount)
-        return false;
+      if ((store.resources[resource as ResourceType] ?? 0) < amount) return false;
     }
   }
 
@@ -199,9 +184,7 @@ export function waterTree(treeEntityId: string): boolean {
  * Harvest a mature+ tree (chop with axe). Removes the tree entity.
  * Returns the resources gained, or null if the tree couldn't be harvested.
  */
-export function harvestTree(
-  treeEntityId: string,
-): { type: string; amount: number }[] | null {
+export function harvestTree(treeEntityId: string): { type: string; amount: number }[] | null {
   const tree = findTreeById(treeEntityId);
   if (!tree?.tree || tree.tree.stage < 3) return null;
 
@@ -221,17 +204,13 @@ export function harvestTree(
         type: y.resource,
         amount: y.amount,
       }));
-      for (const g of gains)
-        store.addResource(g.type as ResourceType, g.amount);
+      for (const g of gains) store.addResource(g.type as ResourceType, g.amount);
       store.addXp(50);
       store.incrementTreesHarvested();
 
       // Find the grid cell to clear occupancy
       if (tree.position) {
-        const gc = findCell(
-          Math.round(tree.position.x),
-          Math.round(tree.position.z),
-        );
+        const gc = findCell(Math.round(tree.position.x), Math.round(tree.position.z));
         if (gc) {
           gc.occupied = false;
           gc.treeEntityId = null;
@@ -245,12 +224,20 @@ export function harvestTree(
   store.addXp(50);
   store.incrementTreesHarvested();
 
+  // Track wild tree harvests for achievements
+  if (tree.tree?.wild) {
+    store.incrementWildTreesHarvested(tree.tree.speciesId);
+  }
+
+  // Record species harvest in codex
+  if (tree.tree) {
+    const totalYield = (harvestResources ?? []).reduce((s, r) => s + r.amount, 0);
+    store.trackSpeciesHarvest(tree.tree.speciesId, totalYield);
+  }
+
   // Clear grid cell occupancy
   if (tree.position) {
-    const gc = findCell(
-      Math.round(tree.position.x),
-      Math.round(tree.position.z),
-    );
+    const gc = findCell(Math.round(tree.position.x), Math.round(tree.position.z));
     if (gc) {
       gc.occupied = false;
       gc.treeEntityId = null;
@@ -326,10 +313,7 @@ export function removeSeedling(treeEntityId: string): boolean {
   if (!tree?.tree || tree.tree.stage > 1) return false;
 
   if (tree.position) {
-    const gc = findCell(
-      Math.round(tree.position.x),
-      Math.round(tree.position.z),
-    );
+    const gc = findCell(Math.round(tree.position.x), Math.round(tree.position.z));
     if (gc) {
       gc.occupied = false;
       gc.treeEntityId = null;
@@ -347,11 +331,7 @@ export function removeSeedling(treeEntityId: string): boolean {
  * Validates: template exists, resources available, placement valid.
  * Returns true on success.
  */
-export function placeStructure(
-  templateId: string,
-  worldX: number,
-  worldZ: number,
-): boolean {
+export function placeStructure(templateId: string, worldX: number, worldZ: number): boolean {
   const template = getTemplate(templateId);
   if (!template) return false;
 
@@ -376,9 +356,13 @@ export function placeStructure(
     position: { x: worldX, y: 0, z: worldZ },
     structure: {
       templateId: template.id,
+      category: "essential",
+      modelPath: "",
       effectType: template.effect?.type,
       effectRadius: template.effect?.radius,
       effectMagnitude: template.effect?.magnitude,
+      level: 1,
+      buildCost: [],
     },
   };
   world.add(structureEntity);

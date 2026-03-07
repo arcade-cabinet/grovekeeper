@@ -100,9 +100,7 @@ describe("weather system", () => {
       const result = updateWeather(state, 600, "spring", 42);
       expect(result.nextCheckTime).toBe(600); // 300 + 300
       expect(result.current.startTime).toBe(300); // starts at old nextCheckTime
-      expect(["clear", "rain", "drought", "windstorm"]).toContain(
-        result.current.type,
-      );
+      expect(["clear", "rain", "drought", "windstorm"]).toContain(result.current.type);
     });
 
     it("produces deterministic results with same seed", () => {

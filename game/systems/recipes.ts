@@ -40,11 +40,7 @@ export interface XpOutput {
   amount: number;
 }
 
-export type RecipeOutput =
-  | ResourceOutput
-  | SeedOutput
-  | EffectOutput
-  | XpOutput;
+export type RecipeOutput = ResourceOutput | SeedOutput | EffectOutput | XpOutput;
 
 // ---------------------------------------------------------------------------
 // Recipe tier
@@ -217,9 +213,7 @@ export const RECIPES: Recipe[] = [
       { type: "acorns", amount: 12 },
       { type: "sap", amount: 8 },
     ],
-    outputs: [
-      { kind: "effect", effect: "rain_call", magnitude: 1, durationSec: 300 },
-    ],
+    outputs: [{ kind: "effect", effect: "rain_call", magnitude: 1, durationSec: 300 }],
   },
   {
     id: "pruning-oil",
@@ -296,8 +290,7 @@ export const RECIPES: Recipe[] = [
   {
     id: "essence-of-growth",
     name: "Essence of Growth",
-    description:
-      "Distilled essence that massively accelerates all nearby trees",
+    description: "Distilled essence that massively accelerates all nearby trees",
     tier: 3,
     requiredLevel: 13,
     inputs: [
@@ -529,18 +522,11 @@ export function getRecipesForLevel(level: number): Recipe[] {
   return RECIPES.filter((r) => r.requiredLevel <= level);
 }
 
-export function canCraft(
-  recipe: Recipe,
-  resources: Record<ResourceType, number>,
-): boolean {
-  return recipe.inputs.every(
-    (input) => (resources[input.type] ?? 0) >= input.amount,
-  );
+export function canCraft(recipe: Recipe, resources: Record<ResourceType, number>): boolean {
+  return recipe.inputs.every((input) => (resources[input.type] ?? 0) >= input.amount);
 }
 
-export function calculateCraftCost(
-  recipe: Recipe,
-): Partial<Record<ResourceType, number>> {
+export function calculateCraftCost(recipe: Recipe): Partial<Record<ResourceType, number>> {
   const cost: Partial<Record<ResourceType, number>> = {};
   for (const input of recipe.inputs) {
     cost[input.type] = (cost[input.type] ?? 0) + input.amount;

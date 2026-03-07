@@ -53,6 +53,13 @@ describe("archetypes", () => {
         totalGrowthTime: 120.5,
         plantedAt: 1700000000000,
         meshSeed: 42,
+        wild: false,
+        pruned: false,
+        fertilized: false,
+        baseModel: "tree01",
+        winterModel: "",
+        useWinterModel: false,
+        seasonTint: "#228B22",
       });
     });
 
@@ -65,9 +72,7 @@ describe("archetypes", () => {
       const entity = restoreTreeEntity(savedTree);
       expect(entity.renderable).toBeDefined();
       expect(entity.renderable?.visible).toBe(true);
-      expect(entity.renderable?.scale).toBe(
-        getStageScale(savedTree.stage, savedTree.progress),
-      );
+      expect(entity.renderable?.scale).toBe(getStageScale(savedTree.stage, savedTree.progress));
     });
 
     it("generates a unique entity ID", () => {

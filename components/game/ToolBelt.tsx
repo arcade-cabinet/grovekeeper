@@ -66,7 +66,7 @@ export function ToolBelt({
                 isActive
                   ? "border-2 border-yellow-400 bg-yellow-400/30"
                   : "border-2 border-transparent bg-white/50"
-              } ${!isUnlocked ? "opacity-30" : !canUnlock ? "opacity-60" : ""}`}
+              } ${!isUnlocked ? (canUnlock ? "opacity-60" : "opacity-30") : ""}`}
               disabled={!isUnlocked}
               onPress={() => onSelectTool(tool.id)}
               accessibilityLabel={`${tool.name}${!isUnlocked ? ` (Level ${tool.unlockLevel})` : ""}`}
@@ -85,8 +85,8 @@ export function ToolBelt({
       {selectedTool === "trowel" && selectedSpecies && (
         <View className="items-center rounded bg-forest-green/20 px-1 py-0.5">
           <Text className="text-[10px] font-bold text-soil-dark">
-            <Icon as={SproutIcon} size={10} className="text-forest-green" />{" "}
-            {selectedSpecies} (x{seedCount ?? 0})
+            <Icon as={SproutIcon} size={10} className="text-forest-green" /> {selectedSpecies} (x
+            {seedCount ?? 0})
           </Text>
         </View>
       )}

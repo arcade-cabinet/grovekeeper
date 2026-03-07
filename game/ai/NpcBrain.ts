@@ -4,23 +4,14 @@
  */
 
 import { GameEntity, GoalEvaluator, Think } from "yuka";
-import {
-  cancelNpcMovement,
-  isNpcMoving,
-  startNpcPath,
-} from "@/game/systems/npcMovement";
+import { cancelNpcMovement, isNpcMoving, startNpcPath } from "@/game/systems/npcMovement";
 import type { WalkabilityGrid } from "@/game/systems/pathfinding";
 
 // ──────────────────────────────────────────────
 // Types
 // ──────────────────────────────────────────────
 
-export type NpcBehavior =
-  | "idle"
-  | "wandering"
-  | "approaching"
-  | "returning"
-  | "tutorial_guide";
+export type NpcBehavior = "idle" | "wandering" | "approaching" | "returning" | "tutorial_guide";
 
 export interface NpcBrainContext {
   /** Pre-built walkability grid for pathfinding. */
@@ -111,10 +102,7 @@ class ReturnHomeEvaluator extends GoalEvaluator<NpcEntity> {
     if (!ctx) return 0;
     // Only return home if player is far away AND NPC is far from home
     if (ctx.distToPlayer <= NOTICE_RANGE) return 0;
-    const homeDist = Math.max(
-      Math.abs(ctx.npcX - ctx.homeX),
-      Math.abs(ctx.npcZ - ctx.homeZ),
-    );
+    const homeDist = Math.max(Math.abs(ctx.npcX - ctx.homeX), Math.abs(ctx.npcZ - ctx.homeZ));
     if (homeDist <= 2) return 0;
     return this.characterBias * 0.6;
   }
@@ -157,12 +145,7 @@ export class NpcBrain {
     started: boolean;
   } | null = null;
 
-  constructor(
-    entityId: string,
-    templateId: string,
-    homeX: number,
-    homeZ: number,
-  ) {
+  constructor(entityId: string, templateId: string, homeX: number, homeZ: number) {
     this.entityId = entityId;
     this.templateId = templateId;
     this.homeX = homeX;
@@ -251,11 +234,7 @@ export class NpcBrain {
   }
 
   /** Set a tutorial override -- NPC walks to target, ignoring normal AI. */
-  setTutorialTarget(
-    targetX: number,
-    targetZ: number,
-    onArrival?: () => void,
-  ): void {
+  setTutorialTarget(targetX: number, targetZ: number, onArrival?: () => void): void {
     cancelNpcMovement(this.entityId);
     this.tutorialOverride = { targetX, targetZ, onArrival, started: false };
     this.currentBehavior = "tutorial_guide";
@@ -292,21 +271,12 @@ export class NpcBrain {
 
   private executeWander(ctx: NpcBrainContext): void {
     // Pick a random walkable tile within WANDER_RANGE of home
-    const offsetX =
-      Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
-    const offsetZ =
-      Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
+    const offsetX = Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
+    const offsetZ = Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
     const targetX = this.homeX + offsetX;
     const targetZ = this.homeZ + offsetZ;
 
-    const started = startNpcPath(
-      this.entityId,
-      ctx.npcX,
-      ctx.npcZ,
-      targetX,
-      targetZ,
-      ctx.grid,
-    );
+    const started = startNpcPath(this.entityId, ctx.npcX, ctx.npcZ, targetX, targetZ, ctx.grid);
 
     if (started) {
       this.currentBehavior = "wandering";
@@ -330,14 +300,7 @@ export class NpcBrain {
     const targetX = Math.round(ctx.playerX) + offsetX;
     const targetZ = Math.round(ctx.playerZ) + offsetZ;
 
-    const started = startNpcPath(
-      this.entityId,
-      ctx.npcX,
-      ctx.npcZ,
-      targetX,
-      targetZ,
-      ctx.grid,
-    );
+    const started = startNpcPath(this.entityId, ctx.npcX, ctx.npcZ, targetX, targetZ, ctx.grid);
 
     if (started) {
       this.currentBehavior = "approaching";

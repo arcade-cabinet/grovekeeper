@@ -36,7 +36,10 @@ export function initHarvestable(entity: Entity): void {
 export function harvestCooldownTick(entity: Entity, deltaTime: number): void {
   if (!entity.harvestable || entity.harvestable.ready) return;
 
-  entity.harvestable.cooldownElapsed += deltaTime;
+  entity.harvestable.cooldownElapsed = Math.min(
+    entity.harvestable.cooldownElapsed + deltaTime,
+    entity.harvestable.cooldownTotal,
+  );
 
   if (entity.harvestable.cooldownElapsed >= entity.harvestable.cooldownTotal) {
     entity.harvestable.ready = true;
@@ -46,24 +49,18 @@ export function harvestCooldownTick(entity: Entity, deltaTime: number): void {
 /**
  * Compute the yield multiplier for a tree at harvest time.
  */
-export function computeYieldMultiplier(
-  entity: Entity,
-  currentSeason?: string,
-): number {
+export function computeYieldMultiplier(entity: Entity, currentSeason?: string): number {
   if (!entity.tree) return 1.0;
 
   const stageMultiplier = entity.tree.stage >= 4 ? 1.5 : 1.0;
   const prunedMultiplier = entity.tree.pruned ? 1.5 : 1.0;
 
   // Ironbark: 3x timber at Old Growth
-  const ironbarkMult =
-    entity.tree.speciesId === "ironbark" && entity.tree.stage >= 4 ? 3.0 : 1.0;
+  const ironbarkMult = entity.tree.speciesId === "ironbark" && entity.tree.stage >= 4 ? 3.0 : 1.0;
 
   // Golden Apple: 3x fruit yield in Autumn
   const goldenAppleMult =
-    entity.tree.speciesId === "golden-apple" && currentSeason === "autumn"
-      ? 3.0
-      : 1.0;
+    entity.tree.speciesId === "golden-apple" && currentSeason === "autumn" ? 3.0 : 1.0;
 
   return stageMultiplier * prunedMultiplier * ironbarkMult * goldenAppleMult;
 }

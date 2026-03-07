@@ -1,9 +1,5 @@
 import type { Season } from "./seasonalMarket";
-import {
-  applySeasonalPrice,
-  getResourceModifier,
-  getSeasonalModifiers,
-} from "./seasonalMarket";
+import { applySeasonalPrice, getResourceModifier, getSeasonalModifiers } from "./seasonalMarket";
 
 describe("seasonal market", () => {
   describe("getSeasonalModifiers", () => {

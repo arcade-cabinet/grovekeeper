@@ -1,5 +1,22 @@
 # Seasons and Weather
 
+> **Partially superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Section 10 (Day/Night, Weather, & Atmosphere)
+>
+> **Key changes from this document:**
+> - **Weather now has survival impact:** rain causes cold exposure, drought reduces yields AND increases stamina cost, windstorm damages structures and trees, snow causes cold damage and freezes water
+> - **Snow added** as a 4th weather type (this doc only has rain/drought/windstorm)
+> - **Night penalties:** cold exposure (heart drain without campfire/shelter), reduced visibility, hostile creatures near labyrinths
+> - **Night rewards:** Ghost Birch reveals hidden paths, Sage/Ember NPCs available, lunar herbs only harvestable at night
+> - **Golden hour XP bonus:** +15% harvest XP during dawn/dusk
+> - **Species weather affinities:** Willow +30% rain yield, Ghost Birch +50% snow growth
+> - **Weather transitions:** fade-in 5s, fade-out 8s, approach cues 30s before event
+> - **BabylonJS references are outdated** -- now React Three Fiber with ShaderMaterial sky
+> - **CSS overlay weather visuals still valid** (zero draw calls)
+>
+> This document retains **unique detail** about the time system (scale factors, day structure, light formulas), season growth multipliers, weather state machine, deterministic RNG seeding, and growth formula integration that supplements the unified doc.
+
+---
+
 Grovekeeper features a continuous day/night cycle with four seasons and dynamic weather events that affect tree growth rates and player stamina costs.
 
 ## Time System

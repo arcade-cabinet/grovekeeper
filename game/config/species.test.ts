@@ -1,8 +1,4 @@
-import {
-  getSpeciesById,
-  PRESTIGE_TREE_SPECIES,
-  TREE_SPECIES,
-} from "@/game/config/species";
+import { getSpeciesById, PRESTIGE_TREE_SPECIES, TREE_SPECIES } from "@/game/config/species";
 
 describe("species config", () => {
   describe("TREE_SPECIES", () => {
@@ -97,9 +93,7 @@ describe("species config", () => {
     });
 
     it("includes crystal-oak prestige species", () => {
-      const crystalOak = PRESTIGE_TREE_SPECIES.find(
-        (s) => s.id === "crystal-oak",
-      );
+      const crystalOak = PRESTIGE_TREE_SPECIES.find((s) => s.id === "crystal-oak");
       expect(crystalOak).toBeDefined();
       expect(crystalOak!.requiredPrestiges).toBe(1);
     });

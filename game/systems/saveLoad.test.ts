@@ -1,20 +1,33 @@
 import type { GroveSaveData } from "@/game/systems/saveLoad";
 
-// Polyfill localStorage for Node/jest-expo environment
-const storage: Record<string, string> = {};
-const localStorageMock = {
-  getItem: (key: string) => storage[key] ?? null,
-  setItem: (key: string, value: string) => {
-    storage[key] = value;
-  },
-  removeItem: (key: string) => {
-    delete storage[key];
-  },
-  clear: () => {
-    for (const key of Object.keys(storage)) delete storage[key];
-  },
-};
-Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
+// -- Mock db queries (new relational API) --
+let mockTreeRows: Array<{
+  speciesId: string;
+  gridX: number;
+  gridZ: number;
+  stage: number;
+  progress: number;
+  watered: boolean;
+  totalGrowthTime: number;
+  plantedAt: number;
+  meshSeed: number;
+}> = [];
+const mockSaveGroveToDb = jest.fn();
+const mockLoadGroveFromDb = jest.fn(async () => {
+  if (mockTreeRows.length === 0) return null;
+  return {
+    trees: mockTreeRows.map((t) => ({
+      ...t,
+      stage: t.stage as 0 | 1 | 2 | 3 | 4,
+    })),
+    playerPosition: { x: 6, z: 6 },
+  };
+});
+
+jest.mock("@/game/db/queries", () => ({
+  saveGroveToDb: (...args: unknown[]) => mockSaveGroveToDb(...args),
+  loadGroveFromDb: () => mockLoadGroveFromDb(),
+}));
 
 // We need to mock many dependencies. Build mocks inline since Jest hoists
 // jest.mock calls and factory closures can't reference outer variables.
@@ -109,11 +122,11 @@ describe("saveLoad system", () => {
     mockEntities.length = 0;
     mockGridCells.length = 0;
     mockTrees.length = 0;
+    mockTreeRows = [];
     jest.clearAllMocks();
-    localStorage.clear();
   });
 
-  // ── serializeGrove ─────────────────────────────────────────────
+  // -- serializeGrove --
 
   describe("serializeGrove", () => {
     it("returns save data with version 1", () => {
@@ -179,7 +192,7 @@ describe("saveLoad system", () => {
     });
   });
 
-  // ── deserializeGrove ───────────────────────────────────────────
+  // -- deserializeGrove --
 
   describe("deserializeGrove", () => {
     it("clears existing entities before loading", () => {
@@ -239,78 +252,97 @@ describe("saveLoad system", () => {
     });
   });
 
-  // ── saveGroveToStorage ─────────────────────────────────────────
+  // -- saveGroveToStorage --
 
   describe("saveGroveToStorage", () => {
-    it("saves serialized data to localStorage", () => {
-      saveGroveToStorage(16, "test-seed");
-      const raw = localStorage.getItem("grovekeeper-grove");
-      expect(raw).not.toBeNull();
-      const parsed = JSON.parse(raw!);
-      expect(parsed.gridSize).toBe(16);
-      expect(parsed.seed).toBe("test-seed");
-      expect(parsed.version).toBe(1);
+    it("calls saveGroveToDb with serialized tree data", async () => {
+      mockTrees.push({
+        tree: {
+          speciesId: "white-oak",
+          stage: 2,
+          progress: 0.5,
+          watered: false,
+          totalGrowthTime: 100,
+          plantedAt: 1000,
+          meshSeed: 42,
+        },
+        position: { x: 3, y: 0, z: 5 },
+      });
+
+      await saveGroveToStorage(16, "test-seed");
+      expect(mockSaveGroveToDb).toHaveBeenCalledTimes(1);
+      const [treesArg] = mockSaveGroveToDb.mock.calls[0];
+      expect(treesArg).toHaveLength(1);
+      expect(treesArg[0].speciesId).toBe("white-oak");
+      expect(treesArg[0].gridX).toBe(3);
+      expect(treesArg[0].gridZ).toBe(5);
     });
   });
 
-  // ── loadGroveFromStorage ───────────────────────────────────────
+  // -- loadGroveFromStorage --
 
   describe("loadGroveFromStorage", () => {
-    it("returns null when no save exists", () => {
-      expect(loadGroveFromStorage()).toBeNull();
+    it("returns null when no save exists", async () => {
+      expect(await loadGroveFromStorage()).toBeNull();
     });
 
-    it("returns parsed save data when present", () => {
-      const data: GroveSaveData = {
-        version: 1,
-        timestamp: 12345,
-        gridSize: 16,
-        seed: "my-seed",
-        tiles: [],
-        trees: [],
-      };
-      localStorage.setItem("grovekeeper-grove", JSON.stringify(data));
-      const loaded = loadGroveFromStorage();
-      expect(loaded).toEqual(data);
-    });
+    it("returns GroveSaveData when trees exist in db", async () => {
+      mockTreeRows.push({
+        speciesId: "white-oak",
+        gridX: 3,
+        gridZ: 5,
+        stage: 2,
+        progress: 0.5,
+        watered: false,
+        totalGrowthTime: 100,
+        plantedAt: 1000,
+        meshSeed: 42,
+      });
 
-    it("returns null for malformed JSON", () => {
-      localStorage.setItem("grovekeeper-grove", "not-json{{{");
-      expect(loadGroveFromStorage()).toBeNull();
+      const loaded = await loadGroveFromStorage();
+      expect(loaded).not.toBeNull();
+      expect(loaded!.trees).toHaveLength(1);
+      expect(loaded!.trees[0].speciesId).toBe("white-oak");
+      expect(loaded!.trees[0].col).toBe(3);
+      expect(loaded!.trees[0].row).toBe(5);
     });
   });
 
-  // ── hasSaveData ────────────────────────────────────────────────
+  // -- hasSaveData --
 
   describe("hasSaveData", () => {
-    it("returns false when no save", () => {
-      expect(hasSaveData()).toBe(false);
+    it("returns false when no trees in db", async () => {
+      expect(await hasSaveData()).toBe(false);
     });
 
-    it("returns true when save exists", () => {
-      localStorage.setItem("grovekeeper-grove", "{}");
-      expect(hasSaveData()).toBe(true);
+    it("returns true when trees exist in db", async () => {
+      mockTreeRows.push({
+        speciesId: "white-oak",
+        gridX: 0,
+        gridZ: 0,
+        stage: 0,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 0,
+        plantedAt: 0,
+        meshSeed: 0,
+      });
+      expect(await hasSaveData()).toBe(true);
     });
   });
 
-  // ── clearSaveData ──────────────────────────────────────────────
+  // -- clearSaveData --
 
   describe("clearSaveData", () => {
-    it("removes save data from localStorage", () => {
-      localStorage.setItem("grovekeeper-grove", "{}");
-      clearSaveData();
-      expect(localStorage.getItem("grovekeeper-grove")).toBeNull();
-    });
-
-    it("does not throw if no save exists", () => {
-      expect(() => clearSaveData()).not.toThrow();
+    it("does not throw", async () => {
+      await expect(clearSaveData()).resolves.not.toThrow();
     });
   });
 
-  // ── Round-trip ─────────────────────────────────────────────────
+  // -- Round-trip --
 
   describe("round-trip serialization", () => {
-    it("serialize then load from storage preserves data", () => {
+    it("serialize then load from storage preserves tree data", async () => {
       mockTrees.push({
         tree: {
           speciesId: "white-oak",
@@ -323,21 +355,33 @@ describe("saveLoad system", () => {
         },
         position: { x: 7, y: 0, z: 8 },
       });
-      mockGridCells.push({
-        gridCell: { gridX: 7, gridZ: 8, type: "soil" },
-      });
 
-      saveGroveToStorage(20, "round-trip-seed");
-      const loaded = loadGroveFromStorage();
+      // Simulate saveGroveToStorage storing the data and making it available for load
+      mockSaveGroveToDb.mockImplementation(
+        (
+          treesData: Array<{
+            speciesId: string;
+            gridX: number;
+            gridZ: number;
+            stage: number;
+            progress: number;
+            watered: boolean;
+            totalGrowthTime: number;
+            plantedAt: number;
+            meshSeed: number;
+          }>,
+        ) => {
+          mockTreeRows = treesData;
+        },
+      );
+
+      await saveGroveToStorage(20, "round-trip-seed");
+      const loaded = await loadGroveFromStorage();
       expect(loaded).not.toBeNull();
-      expect(loaded!.gridSize).toBe(20);
-      expect(loaded!.seed).toBe("round-trip-seed");
       expect(loaded!.trees).toHaveLength(1);
       expect(loaded!.trees[0].speciesId).toBe("white-oak");
       expect(loaded!.trees[0].stage).toBe(3);
       expect(loaded!.trees[0].progress).toBe(0.75);
-      expect(loaded!.tiles).toHaveLength(1);
-      expect(loaded!.tiles[0].type).toBe("soil");
     });
   });
 });

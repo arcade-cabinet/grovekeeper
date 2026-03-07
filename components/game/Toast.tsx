@@ -1,10 +1,7 @@
 import { Pressable, View } from "react-native";
-import Animated, {
-  Layout,
-  SlideInUp,
-  SlideOutUp,
-} from "react-native-reanimated";
-import { create } from "zustand";
+import Animated, { Layout, SlideInUp, SlideOutUp } from "react-native-reanimated";
+import { observable } from "@legendapp/state";
+import { useSelector } from "@legendapp/state/react";
 import { Text } from "@/components/ui/text";
 
 // ---------------------------------------------------------------------------
@@ -18,12 +15,6 @@ export interface ToastItem {
   message: string;
   type: ToastType;
   createdAt: number;
-}
-
-interface ToastStore {
-  toasts: ToastItem[];
-  addToast: (message: string, type?: ToastType) => void;
-  removeToast: (id: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -48,45 +39,52 @@ const TOAST_TEXT: Record<ToastType, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Store
+// Observable state
 // ---------------------------------------------------------------------------
 
 let toastCounter = 0;
 
-export const useToastStore = create<ToastStore>((set, get) => ({
-  toasts: [],
+const toastState$ = observable({ toasts: [] as ToastItem[] });
 
-  addToast: (message: string, type: ToastType = "info") => {
-    toastCounter += 1;
-    const id = `toast-${Date.now()}-${toastCounter}`;
-    const item: ToastItem = { id, message, type, createdAt: Date.now() };
+function addToast(message: string, type: ToastType = "info") {
+  toastCounter += 1;
+  const id = `toast-${Date.now()}-${toastCounter}`;
+  const item: ToastItem = { id, message, type, createdAt: Date.now() };
 
-    set((state) => {
-      const next = [...state.toasts, item];
-      while (next.length > MAX_VISIBLE) {
-        next.shift();
-      }
-      return { toasts: next };
-    });
+  const next = [...toastState$.toasts.peek(), item];
+  while (next.length > MAX_VISIBLE) {
+    next.shift();
+  }
+  toastState$.toasts.set(next);
 
-    setTimeout(() => {
-      get().removeToast(id);
-    }, AUTO_DISMISS_MS);
-  },
+  setTimeout(() => {
+    removeToast(id);
+  }, AUTO_DISMISS_MS);
+}
 
-  removeToast: (id: string) => {
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-    }));
-  },
-}));
+function removeToast(id: string) {
+  toastState$.toasts.set(toastState$.toasts.peek().filter((t) => t.id !== id));
+}
+
+// ---------------------------------------------------------------------------
+// Hook -- selector-compatible API for consumers
+// ---------------------------------------------------------------------------
+
+export function useToastStore<T = { toasts: ToastItem[]; addToast: typeof addToast; removeToast: typeof removeToast }>(
+  selector?: (state: { toasts: ToastItem[]; addToast: typeof addToast; removeToast: typeof removeToast }) => T,
+): T {
+  const toasts = useSelector(() => toastState$.toasts.get());
+  const state = { toasts, addToast, removeToast };
+  if (selector) return selector(state);
+  return state as unknown as T;
+}
 
 // ---------------------------------------------------------------------------
 // Convenience helper
 // ---------------------------------------------------------------------------
 
 export function showToast(message: string, type?: ToastType) {
-  useToastStore.getState().addToast(message, type);
+  addToast(message, type);
 }
 
 // ---------------------------------------------------------------------------

@@ -28,10 +28,7 @@ export function getTradeRates(): TradeRate[] {
  * Calculate how much of the output resource you get for a given input amount.
  * Returns 0 if the trade is invalid or the amount is less than the minimum.
  */
-export function calculateTradeOutput(
-  rate: TradeRate,
-  inputAmount: number,
-): number {
+export function calculateTradeOutput(rate: TradeRate, inputAmount: number): number {
   if (inputAmount < rate.fromAmount) return 0;
   const trades = Math.floor(inputAmount / rate.fromAmount);
   return trades * rate.toAmount;

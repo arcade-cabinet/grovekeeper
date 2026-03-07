@@ -121,25 +121,19 @@ describe("tool upgrades system", () => {
 
     it("returns false when lacking any resource", () => {
       const resources = { timber: 19, sap: 10 };
-      expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[0], resources)).toBe(
-        false,
-      );
+      expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[0], resources)).toBe(false);
     });
 
     it("returns false when resource key is missing", () => {
       const resources = { timber: 100 };
-      expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[0], resources)).toBe(
-        false,
-      );
+      expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[0], resources)).toBe(false);
     });
 
     it("checks tier 3 costs (4 resource types)", () => {
       const resources = { timber: 80, sap: 40, fruit: 20, acorns: 10 };
       expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[2], resources)).toBe(true);
       const insufficient = { timber: 80, sap: 40, fruit: 20, acorns: 9 };
-      expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[2], insufficient)).toBe(
-        false,
-      );
+      expect(canAffordToolUpgrade(TOOL_UPGRADE_TIERS[2], insufficient)).toBe(false);
     });
   });
 });

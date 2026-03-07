@@ -1,15 +1,5 @@
-import {
-  createGridCellEntity,
-  createPlayerEntity,
-  createTreeEntity,
-} from "./archetypes";
-import {
-  generateEntityId,
-  gridCellsQuery,
-  playerQuery,
-  treesQuery,
-  world,
-} from "./world";
+import { createGridCellEntity, createPlayerEntity, createTreeEntity } from "./archetypes";
+import { generateEntityId, gridCellsQuery, playerQuery, treesQuery, world } from "./world";
 
 describe("ECS World", () => {
   beforeEach(() => {

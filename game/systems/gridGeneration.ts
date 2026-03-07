@@ -24,11 +24,7 @@ export interface GridTile {
 // Internal helpers
 // ============================================
 
-function getNeighbours(
-  col: number,
-  row: number,
-  size: number,
-): Array<[number, number]> {
+function getNeighbours(col: number, row: number, size: number): Array<[number, number]> {
   const out: Array<[number, number]> = [];
   if (col > 0) out.push([col - 1, row]);
   if (col < size - 1) out.push([col + 1, row]);
@@ -69,10 +65,7 @@ function growPond(
     placed.push([fc, fr]);
 
     for (const [nc, nr] of getNeighbours(fc, fr, size)) {
-      if (
-        grid[nr][nc] === "empty" &&
-        !frontier.some(([fc2, fr2]) => fc2 === nc && fr2 === nr)
-      ) {
+      if (grid[nr][nc] === "empty" && !frontier.some(([fc2, fr2]) => fc2 === nc && fr2 === nr)) {
         frontier.push([nc, nr]);
       }
     }

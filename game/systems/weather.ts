@@ -37,19 +37,13 @@ export interface WeatherState {
 
 const WEATHER_CHECK_INTERVAL = 300; // 5 game minutes
 
-const DURATION_RANGES: Record<
-  Exclude<WeatherType, "clear">,
-  [number, number]
-> = {
+const DURATION_RANGES: Record<Exclude<WeatherType, "clear">, [number, number]> = {
   rain: [60, 120],
   drought: [90, 180],
   windstorm: [30, 60],
 };
 
-const SEASON_PROBABILITIES: Record<
-  string,
-  { rain: number; drought: number; windstorm: number }
-> = {
+const SEASON_PROBABILITIES: Record<string, { rain: number; drought: number; windstorm: number }> = {
   spring: { rain: 0.3, drought: 0.05, windstorm: 0.1 },
   summer: { rain: 0.15, drought: 0.25, windstorm: 0.05 },
   autumn: { rain: 0.2, drought: 0.1, windstorm: 0.2 },
@@ -80,9 +74,7 @@ export function getWeatherStaminaMultiplier(weather: WeatherType): number {
 // State Initialization
 // ============================================
 
-export function initializeWeather(
-  currentGameTimeSeconds: number,
-): WeatherState {
+export function initializeWeather(currentGameTimeSeconds: number): WeatherState {
   return {
     current: {
       type: "clear",
@@ -112,10 +104,7 @@ export function updateWeather(
 
   // Event expired but haven't reached next check time
   if (currentGameTimeSeconds < state.nextCheckTime) {
-    if (
-      state.current.type === "clear" &&
-      state.current.startTime === eventEnd
-    ) {
+    if (state.current.type === "clear" && state.current.startTime === eventEnd) {
       return state;
     }
     return {

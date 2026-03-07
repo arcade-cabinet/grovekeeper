@@ -1,9 +1,5 @@
 import type { PlayerStats } from "./achievements";
-import {
-  ACHIEVEMENTS,
-  checkAchievements,
-  getAchievementById,
-} from "./achievements";
+import { ACHIEVEMENTS, checkAchievements, getAchievementById } from "./achievements";
 
 function makeStats(overrides: Partial<PlayerStats> = {}): PlayerStats {
   return {

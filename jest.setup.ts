@@ -10,5 +10,8 @@ if (typeof g.__ExpoImportMetaRegistry === "undefined") {
   g.__ExpoImportMetaRegistry = { url: null };
 }
 if (typeof g.structuredClone === "undefined") {
+  // Minimal polyfill: handles JSON-serializable values only.
+  // Does NOT support circular refs, Date, Map, Set, RegExp, ArrayBuffer,
+  // undefined holes, or functions. Sufficient for game state objects in tests.
   g.structuredClone = (obj: unknown) => JSON.parse(JSON.stringify(obj));
 }

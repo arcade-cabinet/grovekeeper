@@ -54,12 +54,8 @@ describe("ZONE_ARCHETYPES", () => {
 
   it("sizeRange has valid min <= max for all archetypes", () => {
     for (const arch of ZONE_ARCHETYPES) {
-      expect(arch.sizeRange.minWidth).toBeLessThanOrEqual(
-        arch.sizeRange.maxWidth,
-      );
-      expect(arch.sizeRange.minHeight).toBeLessThanOrEqual(
-        arch.sizeRange.maxHeight,
-      );
+      expect(arch.sizeRange.minWidth).toBeLessThanOrEqual(arch.sizeRange.maxWidth);
+      expect(arch.sizeRange.minHeight).toBeLessThanOrEqual(arch.sizeRange.maxHeight);
     }
   });
 

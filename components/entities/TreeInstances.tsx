@@ -6,8 +6,8 @@
  * to avoid regenerating identical trees.
  */
 
-import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { type ThreeEvent, useFrame } from "@react-three/fiber";
+import { useCallback, useRef } from "react";
 import * as THREE from "three";
 
 import { treesQuery } from "@/game/ecs/world";
@@ -21,7 +21,12 @@ function cacheKey(speciesId: string, stage: number, meshSeed: number): string {
   return `${speciesId}-${stage}-${meshSeed}`;
 }
 
-export const TreeInstances = () => {
+export interface TreeInstancesProps {
+  /** Called when a tree mesh is tapped (entityId, worldX, worldZ). */
+  onTreeTap?: (entityId: string, worldX: number, worldZ: number) => void;
+}
+
+export const TreeInstances = ({ onTreeTap }: TreeInstancesProps = {}) => {
   const groupRef = useRef<THREE.Group>(null);
   const geometryCacheRef = useRef(new Map<string, THREE.BufferGeometry>());
   const meshMapRef = useRef(new Map<string, THREE.Mesh>());
@@ -47,10 +52,7 @@ export const TreeInstances = () => {
 
       // Get or create cached geometry
       if (!cache.has(key)) {
-        cache.set(
-          key,
-          createTreeGeometry(tree.speciesId, tree.stage, tree.meshSeed),
-        );
+        cache.set(key, createTreeGeometry(tree.speciesId, tree.stage, tree.meshSeed));
       }
       // biome-ignore lint/style/noNonNullAssertion: just set above
       const geometry = cache.get(key)!;
@@ -66,6 +68,7 @@ export const TreeInstances = () => {
         mesh = new THREE.Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+        mesh.userData = { entityId: id };
         meshMap.set(id, mesh);
         group.add(mesh);
       }
@@ -81,10 +84,7 @@ export const TreeInstances = () => {
       // Smooth scale lerp
       mesh.visible = renderable.visible;
       const targetScale = renderable.scale;
-      mesh.scale.lerp(
-        _scaleVec.set(targetScale, targetScale, targetScale),
-        lerpFactor,
-      );
+      mesh.scale.lerp(_scaleVec.set(targetScale, targetScale, targetScale), lerpFactor);
     }
 
     // Remove meshes for despawned entities
@@ -98,7 +98,20 @@ export const TreeInstances = () => {
     }
   });
 
-  return <group ref={groupRef} />;
+  const handlePointerDown = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      if (!onTreeTap) return;
+      event.stopPropagation();
+      const obj = event.object;
+      const entityId = obj.userData?.entityId as string | undefined;
+      if (entityId) {
+        onTreeTap(entityId, event.point.x, event.point.z);
+      }
+    },
+    [onTreeTap],
+  );
+
+  return <group ref={groupRef} onPointerDown={handlePointerDown} />;
 };
 
 /** Reusable vector to avoid allocations in the render loop. */

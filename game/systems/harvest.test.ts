@@ -63,6 +63,13 @@ function makeTreeEntity(
       totalGrowthTime: 0,
       plantedAt: 0,
       meshSeed: 0,
+      wild: false,
+      pruned: false,
+      fertilized: false,
+      baseModel: "tree01",
+      winterModel: "",
+      useWinterModel: false,
+      seasonTint: "#228B22",
       ...overrides.tree,
     },
     position: { x: 0, y: 0, z: 0 },
@@ -79,9 +86,7 @@ describe("harvest system", () => {
       const entity = makeTreeEntity("white-oak", 3);
       initHarvestable(entity);
       expect(entity.harvestable).toBeDefined();
-      expect(entity.harvestable!.resources).toEqual([
-        { type: "timber", amount: 2 },
-      ]);
+      expect(entity.harvestable!.resources).toEqual([{ type: "timber", amount: 2 }]);
       expect(entity.harvestable!.cooldownTotal).toBe(45);
       expect(entity.harvestable!.cooldownElapsed).toBe(0);
       expect(entity.harvestable!.ready).toBe(false);

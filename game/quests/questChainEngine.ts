@@ -11,7 +11,7 @@
  * applying results.
  */
 
-import chainData from "./data/questChains.json";
+import chainData from "./data/questChains.json" with { type: "json" };
 import type {
   ChainProgress,
   ChainStepProgress,
@@ -29,12 +29,10 @@ for (const chain of chainData as QuestChainDef[]) {
 }
 
 /** Get a quest chain definition by ID. */
-export const getChainDef = (chainId: string): QuestChainDef | undefined =>
-  chainMap.get(chainId);
+export const getChainDef = (chainId: string): QuestChainDef | undefined => chainMap.get(chainId);
 
 /** Get all quest chain definitions. */
-export const getAllChainDefs = (): QuestChainDef[] =>
-  chainData as QuestChainDef[];
+export const getAllChainDefs = (): QuestChainDef[] => chainData as QuestChainDef[];
 
 // -- State Initialization --
 
@@ -51,18 +49,12 @@ export const initializeChainState = (): QuestChainState => ({
  * Compute which chains are available to start based on level and prerequisites.
  * Does not include already-active or completed chains.
  */
-export const computeAvailableChains = (
-  state: QuestChainState,
-  playerLevel: number,
-): string[] => {
+export const computeAvailableChains = (state: QuestChainState, playerLevel: number): string[] => {
   const available: string[] = [];
 
   for (const chain of chainData as QuestChainDef[]) {
     // Skip already active or completed
-    if (
-      state.activeChains[chain.id] ||
-      state.completedChainIds.includes(chain.id)
-    ) {
+    if (state.activeChains[chain.id] || state.completedChainIds.includes(chain.id)) {
       continue;
     }
 
@@ -150,10 +142,7 @@ export const advanceObjectives = (
       const objDef = stepDef.objectives.find((o) => o.id === obj.objectiveId);
       if (!objDef || objDef.targetType !== eventType) return obj;
 
-      const newProgress = Math.min(
-        obj.currentProgress + amount,
-        objDef.targetAmount,
-      );
+      const newProgress = Math.min(obj.currentProgress + amount, objDef.targetAmount);
       const nowCompleted = newProgress >= objDef.targetAmount;
       stepChanged = true;
 
@@ -290,16 +279,12 @@ export const getCurrentStepProgress = (
 };
 
 /** Check if a chain is active. */
-export const isChainActive = (
-  chainId: string,
-  state: QuestChainState,
-): boolean => chainId in state.activeChains;
+export const isChainActive = (chainId: string, state: QuestChainState): boolean =>
+  chainId in state.activeChains;
 
 /** Check if a chain is completed. */
-export const isChainCompleted = (
-  chainId: string,
-  state: QuestChainState,
-): boolean => state.completedChainIds.includes(chainId);
+export const isChainCompleted = (chainId: string, state: QuestChainState): boolean =>
+  state.completedChainIds.includes(chainId);
 
 /** Get all active chain IDs. */
 export const getActiveChainIds = (state: QuestChainState): string[] =>

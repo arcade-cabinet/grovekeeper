@@ -172,8 +172,7 @@ describe("questChainEngine", () => {
       let state = initializeChainState();
       state = startChain(state, "rowan-history", 1);
       const result = advanceObjectives(state, "trees_planted", 100);
-      const obj =
-        result.state.activeChains["rowan-history"].steps[0].objectives[0];
+      const obj = result.state.activeChains["rowan-history"].steps[0].objectives[0];
       expect(obj.currentProgress).toBe(1); // target is 1
     });
 
@@ -196,8 +195,7 @@ describe("questChainEngine", () => {
       expect(result.completedSteps).toEqual([
         { chainId: "rowan-history", stepId: "rowan-history-1" },
       ]);
-      const blossomObj =
-        result.state.activeChains["blossom-seeds"].steps[0].objectives[0];
+      const blossomObj = result.state.activeChains["blossom-seeds"].steps[0].objectives[0];
       expect(blossomObj.currentProgress).toBe(1);
       expect(blossomObj.completed).toBe(false);
     });
@@ -234,11 +232,7 @@ describe("questChainEngine", () => {
       for (let i = 0; i < def.steps.length; i++) {
         const stepDef = def.steps[i];
         for (const obj of stepDef.objectives) {
-          const result = advanceObjectives(
-            state,
-            obj.targetType,
-            obj.targetAmount,
-          );
+          const result = advanceObjectives(state, obj.targetType, obj.targetAmount);
           state = result.state;
         }
         const claimed = claimStepReward(state, "rowan-history");

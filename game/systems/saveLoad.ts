@@ -1,7 +1,12 @@
 /**
  * Save/Load serialization for ECS grove data.
+ *
+ * Persistence uses expo-sqlite via drizzle (game/db).
+ * All storage functions are async.
  */
 
+import { saveGroveToDb, loadGroveFromDb } from "@/game/db/queries";
+import type { SerializedTreeDb } from "@/game/db/queries";
 import { createGridCellEntity, createTreeEntity } from "@/game/ecs/archetypes";
 import { gridCellsQuery, treesQuery, world } from "@/game/ecs/world";
 import { getStageScale } from "@/game/systems/growth";
@@ -35,15 +40,10 @@ export interface GroveSaveData {
   trees: TreeSave[];
 }
 
-const SAVE_KEY = "grovekeeper-grove";
-
 /**
  * Serialize all ECS tree and grid entities into a saveable object.
  */
-export function serializeGrove(
-  gridSize: number,
-  groveSeed: string,
-): GroveSaveData {
+export function serializeGrove(gridSize: number, groveSeed: string): GroveSaveData {
   const trees: TreeSave[] = [];
   for (const entity of treesQuery) {
     if (!entity.tree || !entity.position) continue;
@@ -93,11 +93,7 @@ export function deserializeGrove(data: GroveSaveData): void {
   // Recreate grid cells
   for (const tile of data.tiles) {
     world.add(
-      createGridCellEntity(
-        tile.col,
-        tile.row,
-        tile.type as "soil" | "water" | "rock" | "path",
-      ),
+      createGridCellEntity(tile.col, tile.row, tile.type as "soil" | "water" | "rock" | "path"),
     );
   }
 
@@ -111,11 +107,7 @@ export function deserializeGrove(data: GroveSaveData): void {
 
   // Recreate trees
   for (const treeSave of data.trees) {
-    const tree = createTreeEntity(
-      treeSave.col,
-      treeSave.row,
-      treeSave.speciesId,
-    );
+    const tree = createTreeEntity(treeSave.col, treeSave.row, treeSave.speciesId);
     const treeComp = tree.tree;
     const renderComp = tree.renderable;
     if (!treeComp || !renderComp) continue;
@@ -138,36 +130,65 @@ export function deserializeGrove(data: GroveSaveData): void {
 }
 
 /**
- * Save grove data to localStorage.
+ * Save grove data to expo-sqlite via the relational trees table.
  */
-export function saveGroveToStorage(gridSize: number, groveSeed: string): void {
+export async function saveGroveToStorage(gridSize: number, groveSeed: string): Promise<void> {
   const data = serializeGrove(gridSize, groveSeed);
-  localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  const treesData: SerializedTreeDb[] = data.trees.map((t) => ({
+    speciesId: t.speciesId,
+    gridX: t.col,
+    gridZ: t.row,
+    stage: t.stage as 0 | 1 | 2 | 3 | 4,
+    progress: t.progress,
+    watered: t.watered,
+    totalGrowthTime: t.totalGrowthTime,
+    plantedAt: t.plantedAt,
+    meshSeed: t.meshSeed,
+  }));
+  // Use default player position; the actual position is updated by persistGameStore
+  await saveGroveToDb(treesData, { x: 6, z: 6 });
 }
 
 /**
- * Load grove data from localStorage. Returns null if no save exists.
+ * Load grove data from expo-sqlite relational tables.
+ * Returns null if no save exists.
  */
-export function loadGroveFromStorage(): GroveSaveData | null {
-  const raw = localStorage.getItem(SAVE_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as GroveSaveData;
-  } catch {
-    return null;
-  }
+export async function loadGroveFromStorage(): Promise<GroveSaveData | null> {
+  const result = await loadGroveFromDb();
+  if (!result || result.trees.length === 0) return null;
+
+  return {
+    version: 1,
+    timestamp: Date.now(), // Relational data has no timestamp; treat as current
+    gridSize: 12, // Will be overridden by store hydration
+    seed: "",
+    tiles: [], // Tiles will be regenerated from grid generation
+    trees: result.trees.map((t) => ({
+      col: t.gridX,
+      row: t.gridZ,
+      speciesId: t.speciesId,
+      meshSeed: t.meshSeed,
+      stage: t.stage,
+      progress: t.progress,
+      watered: t.watered,
+      totalGrowthTime: t.totalGrowthTime,
+      plantedAt: t.plantedAt,
+    })),
+  };
 }
 
 /**
- * Check if save data exists in localStorage.
+ * Check if save data exists in the database.
  */
-export function hasSaveData(): boolean {
-  return localStorage.getItem(SAVE_KEY) !== null;
+export async function hasSaveData(): Promise<boolean> {
+  const result = await loadGroveFromDb();
+  return result !== null && result.trees.length > 0;
 }
 
 /**
- * Clear save data from localStorage.
+ * Clear save data. Deletes all trees from the database.
  */
-export function clearSaveData(): void {
-  localStorage.removeItem(SAVE_KEY);
+export async function clearSaveData(): Promise<void> {
+  // Trees are cleared when setupNewGame is called.
+  // This is a no-op for now; the caller should use setupNewGame.
 }

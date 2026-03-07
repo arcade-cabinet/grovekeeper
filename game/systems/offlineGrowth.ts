@@ -11,7 +11,7 @@
  * - Water state resets to false (water evaporates while away)
  */
 
-import growthConfig from "@/config/game/growth.json";
+import growthConfig from "@/config/game/growth.json" with { type: "json" };
 
 const MAX_STAGE: number = growthConfig.maxStage;
 const MAX_OFFLINE_SECONDS = 86400; // 24 hours
@@ -45,14 +45,10 @@ export interface OfflineSpeciesData {
   evergreen: boolean;
 }
 
-function offlineGrowthRate(
-  baseGrowthTime: number,
-  difficultyMultiplier: number,
-): number {
+function offlineGrowthRate(baseGrowthTime: number, difficultyMultiplier: number): number {
   if (baseGrowthTime <= 0 || difficultyMultiplier <= 0) return 0;
   return (
-    (OFFLINE_SEASON_MULTIPLIER * OFFLINE_WATER_BONUS) /
-    (baseGrowthTime * difficultyMultiplier)
+    (OFFLINE_SEASON_MULTIPLIER * OFFLINE_WATER_BONUS) / (baseGrowthTime * difficultyMultiplier)
   );
 }
 
@@ -64,10 +60,7 @@ export function calculateOfflineGrowth(
   elapsedSeconds: number,
   speciesData: OfflineSpeciesData,
 ): OfflineGrowthResult {
-  let remainingTime = Math.min(
-    Math.max(elapsedSeconds, 0),
-    MAX_OFFLINE_SECONDS,
-  );
+  let remainingTime = Math.min(Math.max(elapsedSeconds, 0), MAX_OFFLINE_SECONDS);
 
   let stage = tree.stage;
   let progress = tree.progress;

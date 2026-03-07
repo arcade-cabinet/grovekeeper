@@ -1,0 +1,141 @@
+{
+  "recipes": [
+    {
+      "id": "roasted-apple",
+      "name": "Roasted Apple",
+      "ingredients": [{ "cropId": "apple", "amount": 1 }],
+      "cookingTimeSec": 15,
+      "output": {
+        "foodId": "roasted-apple",
+        "name": "Roasted Apple",
+        "saturation": 25,
+        "healing": 1
+      }
+    },
+    {
+      "id": "carrot-stew",
+      "name": "Carrot Stew",
+      "ingredients": [{ "cropId": "carrot", "amount": 3 }],
+      "cookingTimeSec": 30,
+      "output": {
+        "foodId": "carrot-stew",
+        "name": "Carrot Stew",
+        "saturation": 40,
+        "healing": 2
+      }
+    },
+    {
+      "id": "cucumber-salad",
+      "name": "Cucumber Salad",
+      "ingredients": [{ "cropId": "cucumber", "amount": 2 }],
+      "cookingTimeSec": 10,
+      "output": {
+        "foodId": "cucumber-salad",
+        "name": "Cucumber Salad",
+        "saturation": 20,
+        "healing": 1
+      }
+    },
+    {
+      "id": "pumpkin-soup",
+      "name": "Pumpkin Soup",
+      "ingredients": [{ "cropId": "pumpkin", "amount": 1 }],
+      "cookingTimeSec": 45,
+      "output": {
+        "foodId": "pumpkin-soup",
+        "name": "Pumpkin Soup",
+        "saturation": 50,
+        "healing": 3
+      }
+    },
+    {
+      "id": "tomato-sauce",
+      "name": "Tomato Sauce",
+      "ingredients": [{ "cropId": "tomato", "amount": 3 }],
+      "cookingTimeSec": 25,
+      "output": {
+        "foodId": "tomato-sauce",
+        "name": "Tomato Sauce",
+        "saturation": 35,
+        "healing": 2
+      }
+    },
+    {
+      "id": "harvest-feast",
+      "name": "Harvest Feast",
+      "ingredients": [
+        { "cropId": "apple", "amount": 2 },
+        { "cropId": "pumpkin", "amount": 1 },
+        { "cropId": "carrot", "amount": 2 }
+      ],
+      "cookingTimeSec": 60,
+      "output": {
+        "foodId": "harvest-feast",
+        "name": "Harvest Feast",
+        "saturation": 80,
+        "healing": 5
+      }
+    },
+    {
+      "id": "garden-medley",
+      "name": "Garden Medley",
+      "ingredients": [
+        { "cropId": "tomato", "amount": 2 },
+        { "cropId": "cucumber", "amount": 2 },
+        { "cropId": "carrot", "amount": 1 }
+      ],
+      "cookingTimeSec": 35,
+      "output": {
+        "foodId": "garden-medley",
+        "name": "Garden Medley",
+        "saturation": 55,
+        "healing": 3
+      }
+    },
+    {
+      "id": "apple-pie",
+      "name": "Apple Pie",
+      "ingredients": [{ "cropId": "apple", "amount": 4 }],
+      "cookingTimeSec": 50,
+      "output": {
+        "foodId": "apple-pie",
+        "name": "Apple Pie",
+        "saturation": 60,
+        "healing": 4
+      }
+    },
+    {
+      "id": "pumpkin-pie",
+      "name": "Pumpkin Pie",
+      "ingredients": [
+        { "cropId": "pumpkin", "amount": 2 },
+        { "cropId": "apple", "amount": 1 }
+      ],
+      "cookingTimeSec": 55,
+      "output": {
+        "foodId": "pumpkin-pie",
+        "name": "Pumpkin Pie",
+        "saturation": 70,
+        "healing": 4
+      }
+    },
+    {
+      "id": "grove-stew",
+      "name": "Grove Stew",
+      "ingredients": [
+        { "cropId": "carrot", "amount": 2 },
+        { "cropId": "tomato", "amount": 2 },
+        { "cropId": "pumpkin", "amount": 1 },
+        { "cropId": "cucumber", "amount": 1 },
+        { "cropId": "apple", "amount": 1 }
+      ],
+      "cookingTimeSec": 90,
+      "output": {
+        "foodId": "grove-stew",
+        "name": "Grove Stew",
+        "saturation": 100,
+        "healing": 8
+      }
+    }
+  ]
+}

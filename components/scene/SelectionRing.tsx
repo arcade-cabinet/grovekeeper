@@ -68,9 +68,7 @@ export const SelectionRing = ({ position, visible }: SelectionRingProps) => {
       position={[position[0], GROUND_Y, position[2]]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
-      <torusGeometry
-        args={[TORUS_DIAMETER / 2, TORUS_THICKNESS, 8, TORUS_SEGMENTS]}
-      />
+      <torusGeometry args={[TORUS_DIAMETER / 2, TORUS_THICKNESS, 8, TORUS_SEGMENTS]} />
       <meshBasicMaterial
         ref={matRef}
         color={GLOW_COLOR}

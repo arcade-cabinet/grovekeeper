@@ -37,10 +37,7 @@ export function scheduleRegrowth(
   delayDays: number = DEFAULT_REGROWTH_DAYS,
 ): RegrowthState {
   return {
-    timers: [
-      ...state.timers,
-      { gridX, gridZ, speciesId, expiresAtDay: currentDay + delayDays },
-    ],
+    timers: [...state.timers, { gridX, gridZ, speciesId, expiresAtDay: currentDay + delayDays }],
   };
 }
 
@@ -69,14 +66,8 @@ export function checkRegrowth(
 }
 
 /** Cancel a regrowth timer at a specific position. */
-export function cancelRegrowth(
-  state: RegrowthState,
-  gridX: number,
-  gridZ: number,
-): RegrowthState {
-  const filtered = state.timers.filter(
-    (t) => t.gridX !== gridX || t.gridZ !== gridZ,
-  );
+export function cancelRegrowth(state: RegrowthState, gridX: number, gridZ: number): RegrowthState {
+  const filtered = state.timers.filter((t) => t.gridX !== gridX || t.gridZ !== gridZ);
   if (filtered.length === state.timers.length) return state;
   return { timers: filtered };
 }

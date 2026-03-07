@@ -7,23 +7,66 @@
       "components/**",
       "game/**",
       "config/**",
+      "lib/**",
       "*.ts",
       "*.tsx",
-      "*.json"
+      "*.json",
+      "*.css"
     ],
     "ignoreUnknown": true
   },
   "linter": {
     "enabled": true,
-    "rules": { "recommended": true }
+    "domains": {
+      "react": "all",
+      "test": "all",
+      "project": "all"
+    },
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedImports": "warn",
+        "useExhaustiveDependencies": "warn",
+        "noUnresolvedImports": "off"
+      },
+      "suspicious": {
+        "noConsole": "off",
+        "noUnknownAtRules": "off"
+      },
+      "style": {
+        "useImportType": "warn",
+        "noDefaultExport": "off",
+        "useComponentExportOnlyModules": "off"
+      },
+      "nursery": {
+        "noLeakedRender": "warn"
+      }
+    }
   },
   "css": {
-    "parser": { "tailwindDirectives": true }
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2
+    },
+    "linter": {
+      "enabled": true
+    },
+    "parser": {
+      "tailwindDirectives": true
+    }
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
-    "indentWidth": 2
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "trailingCommas": "all"
+    }
   },
   "overrides": [
     {
@@ -56,6 +99,22 @@
       "linter": {
         "rules": {
           "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["app/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "style": { "noDefaultExport": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["jest.config.ts", "jest.setup.ts", "metro.config.js"],
+      "linter": {
+        "rules": {
+          "style": { "noDefaultExport": "off" }
         }
       }
     }

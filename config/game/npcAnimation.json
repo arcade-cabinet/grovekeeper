@@ -1,0 +1,50 @@
+{
+  "animations": {
+    "idle": {
+      "bodyBob": { "amplitude": 0.02, "frequency": 1.5 },
+      "headTurn": { "maxAngle": 0, "frequency": 0 },
+      "armSwing": { "maxAngle": 0, "frequency": 0 },
+      "legSwing": { "maxAngle": 0, "frequency": 0 }
+    },
+    "walk": {
+      "bodyBob": { "amplitude": 0.04, "frequency": 3.0 },
+      "headTurn": { "maxAngle": 0.05, "frequency": 0.5 },
+      "armSwing": { "maxAngle": 0.6, "frequency": 3.0 },
+      "legSwing": { "maxAngle": 0.5, "frequency": 3.0 }
+    },
+    "talk": {
+      "bodyBob": { "amplitude": 0.01, "frequency": 2.0 },
+      "headTurn": { "maxAngle": 0.25, "frequency": 1.0 },
+      "armSwing": { "maxAngle": 0.15, "frequency": 1.5 },
+      "legSwing": { "maxAngle": 0, "frequency": 0 }
+    },
+    "work": {
+      "bodyBob": { "amplitude": 0.03, "frequency": 2.5 },
+      "headTurn": { "maxAngle": 0.1, "frequency": 0.3 },
+      "armSwing": { "maxAngle": 0.8, "frequency": 2.5 },
+      "legSwing": { "maxAngle": 0.1, "frequency": 1.0 }
+    },
+    "sleep": {
+      "bodyBob": { "amplitude": 0.015, "frequency": 0.8 },
+      "headTurn": { "maxAngle": 0, "frequency": 0 },
+      "armSwing": { "maxAngle": 0, "frequency": 0 },
+      "legSwing": { "maxAngle": 0, "frequency": 0 }
+    }
+  },
+  "transitions": {
+    "blendDuration": 0.3,
+    "idleToWalk": 0.2,
+    "walkToIdle": 0.3,
+    "anyToTalk": 0.25,
+    "anyToWork": 0.2,
+    "anyToSleep": 0.5
+  },
+  "bodyParts": {
+    "head": { "pivotY": 0.65, "rotationAxis": "y" },
+    "torso": { "pivotY": 0.35, "rotationAxis": "y" },
+    "leftArm": { "pivotY": 0.55, "rotationAxis": "x", "phaseOffset": 0 },
+    "rightArm": { "pivotY": 0.55, "rotationAxis": "x", "phaseOffset": 3.14159 },
+    "leftLeg": { "pivotY": 0.15, "rotationAxis": "x", "phaseOffset": 3.14159 },
+    "rightLeg": { "pivotY": 0.15, "rotationAxis": "x", "phaseOffset": 0 }
+  }
+}

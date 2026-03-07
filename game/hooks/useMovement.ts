@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import type * as THREE from "three";
-import gridConfig from "@/config/game/grid.json";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 const PLAYER_SPEED = gridConfig.playerSpeed;
 

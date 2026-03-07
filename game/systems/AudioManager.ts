@@ -250,10 +250,7 @@ class AudioManagerImpl {
     const g = ctx.createGain();
     osc.type = type;
     osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(
-      freqEnd,
-      ctx.currentTime + duration,
-    );
+    osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + duration);
     g.gain.setValueAtTime(gain, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
@@ -263,12 +260,7 @@ class AudioManagerImpl {
     osc.stop(ctx.currentTime + duration + 0.01);
   }
 
-  private playChime(
-    ctx: AudioContext,
-    freqs: number[],
-    noteDuration: number,
-    gain: number,
-  ): void {
+  private playChime(ctx: AudioContext, freqs: number[], noteDuration: number, gain: number): void {
     for (let i = 0; i < freqs.length; i++) {
       this.playTone(ctx, {
         freq: freqs[i],
@@ -280,12 +272,7 @@ class AudioManagerImpl {
     }
   }
 
-  private playArpeggio(
-    ctx: AudioContext,
-    freqs: number[],
-    noteGap: number,
-    gain: number,
-  ): void {
+  private playArpeggio(ctx: AudioContext, freqs: number[], noteGap: number, gain: number): void {
     for (let i = 0; i < freqs.length; i++) {
       this.playTone(ctx, {
         freq: freqs[i],
@@ -297,12 +284,7 @@ class AudioManagerImpl {
     }
   }
 
-  private playChord(
-    ctx: AudioContext,
-    freqs: number[],
-    duration: number,
-    gain: number,
-  ): void {
+  private playChord(ctx: AudioContext, freqs: number[], duration: number, gain: number): void {
     for (const freq of freqs) {
       this.playTone(ctx, { freq, duration, type: "sine", gain });
     }

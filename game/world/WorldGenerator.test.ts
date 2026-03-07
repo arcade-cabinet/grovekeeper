@@ -84,9 +84,7 @@ describe("generateWorld", () => {
       for (const conn of zone.connections) {
         const targetZone = world.zones.find((z) => z.id === conn.targetZoneId);
         expect(targetZone).toBeDefined();
-        const reverseConn = targetZone!.connections.find(
-          (c) => c.targetZoneId === zone.id,
-        );
+        const reverseConn = targetZone!.connections.find((c) => c.targetZoneId === zone.id);
         expect(reverseConn).toBeDefined();
       }
     }
@@ -106,9 +104,7 @@ describe("generateWorld", () => {
   it("zones have tile overrides", () => {
     const world = generateWorld("tiles-test", 10);
     // At least some zones should have tile overrides
-    const zonesWithTiles = world.zones.filter(
-      (z) => z.tiles && z.tiles.length > 0,
-    );
+    const zonesWithTiles = world.zones.filter((z) => z.tiles && z.tiles.length > 0);
     expect(zonesWithTiles.length).toBeGreaterThanOrEqual(0); // grove may not have tiles
   });
 

@@ -1,135 +1,235 @@
 import { World } from "miniplex";
 
-// Component types
-export interface Position {
-  x: number;
-  y: number;
-  z: number;
-}
+// Re-export all component types for backward compatibility
+export * from "./components/core";
+export * from "./components/npc";
+export * from "./components/combat";
+export * from "./components/building";
+export * from "./components/structures";
+export * from "./components/items";
+export * from "./components/vegetation";
+export * from "./components/terrain";
+export * from "./components/procedural";
+export * from "./components/dialogue";
 
-export interface TreeComponent {
-  speciesId: string;
-  stage: 0 | 1 | 2 | 3 | 4;
-  progress: number; // [0, 1) within current stage
-  watered: boolean;
-  totalGrowthTime: number; // cumulative seconds grown
-  plantedAt: number;
-  meshSeed: number; // for deterministic procedural generation
-  wild?: boolean; // true for trees spawned naturally in wild zones
-  pruned?: boolean; // pruned for harvest yield bonus
-  fertilized?: boolean; // fertilized for 2x growth for 1 stage cycle
-}
+import type {
+  Position,
+  Renderable,
+  PlayerComponent,
+  GridCellComponent,
+  FarmerState,
+  ZoneComponent,
+  PropComponent,
+  RainCatcherComponent,
+  ScarecrowComponent,
+  Harvestable,
+  ChunkComponent,
+} from "./components/core";
 
-export interface PlayerComponent {
-  coins: number;
-  xp: number;
-  level: number;
-  currentTool: string;
-  unlockedTools: string[];
-  unlockedSpecies: string[];
-}
+import type { NpcComponent } from "./components/npc";
 
-export interface GridCellComponent {
-  gridX: number;
-  gridZ: number;
-  type: "soil" | "water" | "rock" | "path";
-  occupied: boolean;
-  treeEntityId: string | null;
-}
+import type {
+  EnemyComponent,
+  HealthComponent,
+  CombatComponent,
+  LootDropComponent,
+} from "./components/combat";
 
-export interface Renderable {
-  visible: boolean;
-  scale: number;
-}
+import type {
+  ModularPieceComponent,
+  BuildableComponent,
+  LightSourceComponent,
+} from "./components/building";
 
-export interface FarmerState {
-  stamina: number;
-  maxStamina: number;
-}
+import type {
+  StructureComponent,
+  CampfireComponent,
+  CropComponent,
+} from "./components/structures";
 
-export interface ZoneComponent {
-  zoneId: string;
-  localX: number;
-  localZ: number;
-}
+import type {
+  FoodComponent,
+  ToolComponent,
+  TrapComponent,
+} from "./components/items";
 
-export interface PropComponent {
-  propId: string;
-}
+import type {
+  TreeComponent,
+  BushComponent,
+  GrassComponent,
+} from "./components/vegetation";
 
-export interface StructureComponent {
-  templateId: string;
-  effectType?: "growth_boost" | "harvest_boost" | "stamina_regen" | "storage";
-  effectRadius?: number;
-  effectMagnitude?: number;
-}
+import type {
+  FenceComponent,
+  RockComponent,
+  HedgeComponent,
+  HedgeDecorationComponent,
+} from "./components/terrain";
 
-export interface RainCatcherComponent {
-  radius: number;
-}
+import type {
+  TerrainChunkComponent,
+  PathSegmentComponent,
+  WaterBodyComponent,
+  SkyComponent,
+  DayNightComponent,
+  WeatherComponent,
+  FogVolumeComponent,
+  ParticleEmitterComponent,
+  AmbientZoneComponent,
+  GrovekeeperSpiritComponent,
+} from "./components/procedural";
 
-export interface ScarecrowComponent {
-  radius: number;
-}
+import type {
+  DialogueComponent,
+  QuestBranchComponent,
+} from "./components/dialogue";
 
-export type NpcFunction =
-  | "trading"
-  | "quests"
-  | "tips"
-  | "seeds"
-  | "crafting"
-  | "lore";
-
-export interface NpcComponent {
-  templateId: string;
-  function: NpcFunction;
-  interactable: boolean;
-  requiredLevel: number;
-}
-
-// Entity definition
+/** Unified entity definition — all components optional. */
 export interface Entity {
   id: string;
+
+  // Core spatial
   position?: Position;
   renderable?: Renderable;
-  tree?: TreeComponent;
+  chunk?: ChunkComponent;
+
+  // Player
   player?: PlayerComponent;
-  gridCell?: GridCellComponent;
-  farmerState?: FarmerState;
-  harvestable?: {
-    resources: { type: string; amount: number }[];
-    cooldownElapsed: number;
-    cooldownTotal: number;
-    ready: boolean;
-  };
-  zone?: ZoneComponent;
-  prop?: PropComponent;
+
+  // Trees & vegetation
+  tree?: TreeComponent;
+  harvestable?: Harvestable;
+  bush?: BushComponent;
+  grass?: GrassComponent;
+  crop?: CropComponent;
+
+  // NPCs (appearance + personality + animation all in NpcComponent)
+  npc?: NpcComponent;
+
+  // Combat & enemies
+  enemy?: EnemyComponent;
+  health?: HealthComponent;
+  combat?: CombatComponent;
+  lootDrop?: LootDropComponent;
+
+  // Structures
   structure?: StructureComponent;
+  campfire?: CampfireComponent;
+
+  // Base building (Fallout-style kitbashing)
+  modularPiece?: ModularPieceComponent;
+  buildable?: BuildableComponent;
+  lightSource?: LightSourceComponent;
+
+  // Terrain features
+  fence?: FenceComponent;
+  rock?: RockComponent;
+  hedge?: HedgeComponent;
+  hedgeDecoration?: HedgeDecorationComponent;
+
+  // Items
+  food?: FoodComponent;
+  tool?: ToolComponent;
+  trap?: TrapComponent;
+
+  // Props & effects
+  prop?: PropComponent;
   rainCatcher?: RainCatcherComponent;
   scarecrow?: ScarecrowComponent;
-  npc?: NpcComponent;
+
+  // Procedural (shader/particle — no GLB models)
+  terrainChunk?: TerrainChunkComponent;
+  pathSegment?: PathSegmentComponent;
+  waterBody?: WaterBodyComponent;
+  sky?: SkyComponent;
+  dayNight?: DayNightComponent;
+  weather?: WeatherComponent;
+  fogVolume?: FogVolumeComponent;
+  particleEmitter?: ParticleEmitterComponent;
+  ambientZone?: AmbientZoneComponent;
+  grovekeeperSpirit?: GrovekeeperSpiritComponent;
+
+  // Dialogue & quest branching
+  dialogue?: DialogueComponent;
+  questBranch?: QuestBranchComponent;
+
+  // LEGACY: Remove during Phase 0-1 (grid→chunk, zone→chunk)
+  gridCell?: GridCellComponent;
+  farmerState?: FarmerState;
+  zone?: ZoneComponent;
   zoneId?: string;
 }
 
 // Create the ECS world
 export const world = new World<Entity>();
 
-// Helper to generate unique IDs — uses timestamp prefix to avoid collisions
-// after page reload (restored entities get new IDs from this counter)
 let entityIdCounter = 0;
 export const generateEntityId = (): string => {
   entityIdCounter += 1;
   return `entity_${Date.now()}_${entityIdCounter}`;
 };
 
-// Query helpers
+// --- Queries ---
+
+// Trees & vegetation
 export const treesQuery = world.with("tree", "position", "renderable");
-export const playerQuery = world.with("player", "position");
-export const farmerQuery = world.with("farmerState", "position");
-export const gridCellsQuery = world.with("gridCell", "position");
 export const harvestableQuery = world.with("tree", "harvestable");
+export const bushesQuery = world.with("bush", "position", "renderable");
+export const grassQuery = world.with("grass", "position");
+export const cropsQuery = world.with("crop", "position", "renderable");
+
+// NPCs
+export const npcsQuery = world.with("npc", "position", "renderable");
+
+// Combat & enemies
+export const enemiesQuery = world.with("enemy", "position", "renderable");
+export const combatQuery = world.with("combat", "health", "position");
+export const lootDropsQuery = world.with("lootDrop", "position");
+
+// Structures
 export const structuresQuery = world.with("structure", "position");
-export const propsQuery = world.with("prop", "position");
+export const campfiresQuery = world.with("campfire", "position");
 export const rainCatchersQuery = world.with("rainCatcher", "position");
 export const scarecrowsQuery = world.with("scarecrow", "position");
-export const npcsQuery = world.with("npc", "position", "renderable");
+
+// Base building
+export const modularPiecesQuery = world.with("modularPiece", "position");
+export const buildablesQuery = world.with("buildable");
+export const lightSourcesQuery = world.with("lightSource", "position");
+
+// Terrain features
+export const fencesQuery = world.with("fence", "position", "renderable");
+export const rocksQuery = world.with("rock", "position", "renderable");
+export const hedgesQuery = world.with("hedge", "position");
+export const hedgeDecorationsQuery = world.with("hedgeDecoration", "position");
+
+// Items
+export const foodQuery = world.with("food", "position");
+export const trapsQuery = world.with("trap", "position");
+
+// Props
+export const propsQuery = world.with("prop", "position");
+
+// Player
+export const playerQuery = world.with("player", "position");
+
+// Procedural
+export const terrainChunksQuery = world.with("terrainChunk", "position");
+export const pathSegmentsQuery = world.with("pathSegment", "position");
+export const waterBodiesQuery = world.with("waterBody", "position");
+export const skyQuery = world.with("sky");
+export const dayNightQuery = world.with("dayNight");
+export const weatherQuery = world.with("weather");
+export const fogVolumesQuery = world.with("fogVolume", "position");
+export const particleEmittersQuery = world.with("particleEmitter", "position");
+export const ambientZonesQuery = world.with("ambientZone", "position");
+export const grovekeeperSpiritsQuery = world.with("grovekeeperSpirit", "position");
+
+// Dialogue & quest branching
+export const dialogueQuery = world.with("dialogue");
+export const activeDialogueQuery = world.with("dialogue", "position");
+export const questBranchQuery = world.with("questBranch");
+
+// LEGACY queries — remove during Phase 0-1
+export const farmerQuery = world.with("farmerState", "position");
+export const gridCellsQuery = world.with("gridCell", "position");

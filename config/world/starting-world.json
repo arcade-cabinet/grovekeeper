@@ -120,9 +120,7 @@
         { "x": 4, "z": 5, "type": "water" },
         { "x": 4, "z": 7, "type": "path" }
       ],
-      "structures": [
-        { "templateId": "bench", "localX": 1, "localZ": 1, "rotation": 90 }
-      ],
+      "structures": [{ "templateId": "bench", "localX": 1, "localZ": 1, "rotation": 90 }],
       "props": [
         { "propId": "stump", "localX": 7, "localZ": 1 },
         { "propId": "wild-flowers", "localX": 0, "localZ": 6 }
@@ -437,10 +435,7 @@
       "origin": { "x": 20, "z": 9 },
       "size": { "width": 6, "height": 6 },
       "groundMaterial": "grass",
-      "tiles": [
-        { "x": 2, "z": 2, "type": "water" },
-        { "x": 3, "z": 2, "type": "water" }
-      ],
+      "tiles": [{ "x": 2, "z": 2, "type": "water" }, { "x": 3, "z": 2, "type": "water" }],
       "props": [
         { "propId": "mushroom-cluster", "localX": 0, "localZ": 0 },
         { "propId": "mushroom-cluster", "localX": 5, "localZ": 0 },

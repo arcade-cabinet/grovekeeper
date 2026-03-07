@@ -1,38 +1,45 @@
 # Tech Context -- Grovekeeper
 
-## Tech Stack (Expo/R3F)
+## Tech Stack
 
 | Layer | Technology | Version | Notes |
 |-------|-----------|---------|-------|
 | Platform | Expo | SDK 55 | Universal: iOS + Android + Web |
-| Runtime | React | 19.2 | UI layer |
+| Runtime | React | 19 | UI layer |
 | Native | React Native | 0.83 | Mobile runtime |
-| 3D Engine | React Three Fiber | latest | Declarative Three.js for React Native |
-| 3D Helpers | @react-three/drei | latest | Useful R3F abstractions (OrbitControls, Sky, etc.) |
-| ECS | Miniplex | 2.x | Entity-component-system (unchanged) |
+| 3D Engine | React Three Fiber | 9 | Declarative Three.js for React Native |
+| 3D Helpers | @react-three/drei | 10 | Instanced meshes, sky, controls |
+| ECS | Miniplex | 2.x | Entity-component-system |
 | ECS + React | miniplex-react | latest | createReactAPI for reactive UI |
-| State | Zustand | 5.x | Persistent state management |
+| State | Legend State | 3.x (beta) | Persistent state via expo-sqlite |
 | Database | expo-sqlite | latest | Native SQLite for persistence |
 | ORM | drizzle-orm | latest | Type-safe SQL queries |
 | NPC AI | Yuka | 0.7.x | Lightweight game AI |
+| NPC Animation | anime.js | latest | Lego-style rigid body part tweening |
+| Audio | Tone.js | latest | Procedural synthesis, spatial audio, scheduling |
 | Styling | NativeWind | 4.x | Tailwind CSS for React Native |
-| UI Components | React Native Reusables | latest | Replaces shadcn/ui + Radix |
-| Language | TypeScript | 5.7+ | Strict mode |
-| Lint/Fmt | Biome | 2.3+ | Single tool for lint + format |
+| Language | TypeScript | 5.9 | Strict mode |
+| Lint/Fmt | Biome | 2.4 | Single tool for lint + format |
 | Testing | Jest | latest | Unit + integration tests |
-| E2E Testing | Maestro | latest | Mobile E2E tests (replaces Playwright) |
+| E2E Testing | Maestro | latest | Mobile E2E tests |
 | Package Mgr | pnpm | 9.x | Fast, strict |
 
-### Removed from Stack
-- **BabylonJS** -- Replaced by React Three Fiber
-- **Vite** -- Replaced by Expo/Metro bundler
-- **Vitest** -- Replaced by Jest
-- **happy-dom** -- No longer needed (Jest uses its own environment)
-- **Capacitor** -- Replaced by Expo (native bridge built-in)
-- **nipplejs** -- Replaced by custom virtual joystick component
-- **shadcn/ui + Radix** -- Replaced by React Native Reusables
-- **sql.js** -- Replaced by expo-sqlite
-- **Framer Motion** -- Replaced by React Native Animated / Reanimated
+### Key Technology Choices
+
+- **Legend State 3.x** (NOT Zustand) for persistent state -- reactive observables with built-in expo-sqlite persistence
+- **Tone.js** for ALL audio -- user mandate: never reduce quality for bundle size. ~150KB gzipped, worth it for FM synthesis, spatial API, iOS context handling, and scheduled ambient layers
+- **anime.js** for NPC animation -- Lego-style rigid body part rotation (no skeletal rigs). Arms/legs rotate at joints, head turns, torso bobs. PSX-authentic animation style
+- **3DPSX GLB models** as the visual foundation -- NOT procedural geometry for entities
+
+### Removed/Not Used
+- BabylonJS (replaced by R3F)
+- Zustand (replaced by Legend State)
+- Vite (replaced by Expo/Metro)
+- Vitest (replaced by Jest)
+- nipplejs (replaced by custom joystick)
+- shadcn/ui + Radix (replaced by React Native Reusables)
+- ESLint/Prettier (replaced by Biome)
+- npm/yarn (pnpm only)
 
 ## Development Setup
 
@@ -40,133 +47,77 @@
 # Prerequisites
 node >= 20
 pnpm >= 9
-# For iOS: Xcode + CocoaPods
-# For Android: Android Studio + SDK
 
-# Install
+# Install + Run
 pnpm install
+pnpm dev              # Expo dev server
+pnpm ios / android    # Platform-specific
+pnpm web              # Web browser
 
-# Dev server (Expo)
-pnpm start           # Expo dev server
-pnpm ios             # Run on iOS simulator
-pnpm android         # Run on Android emulator
-pnpm web             # Run in browser
-
-# Build
-pnpm build:web       # Web production build
-eas build            # Native builds via EAS
-
-# Test
-pnpm test            # Jest watch mode
-pnpm test:run        # Jest single run (CI)
-pnpm test:coverage   # With coverage
-
-# E2E
-maestro test         # Mobile E2E tests
-
-# Lint/Format
-pnpm lint
-pnpm format
-pnpm check           # lint + format together
+# Quality
+pnpm test             # Jest
+pnpm test:coverage    # Coverage report
+pnpm lint             # Biome lint + format check
+pnpm format           # Biome format (write)
+pnpm check            # Full check (lint + format, write fixes)
+npx tsc --noEmit      # TypeScript type check
 ```
 
 ## Build Configuration
 
-### Expo (app.json / app.config.ts)
-- SDK version: 55
-- Scheme: `grovekeeper`
-- Web output: `single` (SPA)
-- Plugins configured for expo-sqlite, etc.
+- **Expo SDK 55** with New Architecture required
+- **Metro Bundler** (not Vite) with NativeWind CSS interop
+- **TypeScript strict mode**, path alias `@/` maps to project root
+- **Biome 2.4+** for lint + format (`ignoreUnknown: true`)
 
-### Metro Bundler
-- Replaces Vite for JS bundling
-- Configured via `metro.config.js`
-- NativeWind requires Metro CSS interop setup
+## Configuration
 
-### TypeScript (`tsconfig.json`)
-- `strict: true`
-- Expo-compatible module resolution
-- Path alias: `@/` maps to project root (e.g., `@/game/stores/gameStore`)
-
-### Biome (`biome.json`)
-- Version 2.3+
-- Organize imports via `assist.actions.source.organizeImports`
-- Indent: 2 spaces
-- Overrides for tests, type declarations, UI components
-
-### NativeWind Setup
-- `tailwind.config.ts` with custom design tokens
-- `global.css` with Tailwind directives
-- Metro CSS interop for React Native
-- Custom theme extending Tailwind defaults (earth tones, Fredoka/Nunito fonts)
-
-## Test Infrastructure
-
-- **Jest** for unit and integration tests
-- Test files live adjacent to source: `*.test.ts(x)`
-- **Maestro** for mobile E2E tests (replaces Playwright)
-- Key test areas: stores, systems, utils, world, ECS
-
-### Testing Patterns
-- Mock Three.js/R3F objects in unit tests
-- ECS systems are pure functions -- easy to test without rendering
-- Zustand store actions tested via state transitions
-- `queueMicrotask()` needed to defer side effects from Zustand `set()` calls in tests
-
-## Configuration Files
-
-Game data stored as JSON in `config/` directory:
+All game tuning constants in `config/game/*.json`:
 ```
-config/
-  theme.json              # Colors, typography, spacing
-  game/
-    species.json          # 15 species (12 base + 3 prestige)
-    tools.json            # 8 tools with stamina costs
-    resources.json        # Resource type definitions
-    growth.json           # Growth stage parameters
-    weather.json          # Event probabilities, multipliers
-    achievements.json     # 15 achievements
-    prestige.json         # Tiers, bonuses, cosmetic themes
-    grid.json             # Expansion tiers, costs, sizes
-    npcs.json             # NPC template definitions
-    dialogues.json        # Dialogue trees
-    quests.json           # Quest chain definitions
-    difficulty.json       # Difficulty multipliers
-  world/
-    starting-world.json   # Zone definitions
-    blocks.json           # Block catalog
-    structures.json       # Structure recipes
-    encounters.json       # Random encounters
-    festivals.json        # Seasonal festivals
+config/game/
+  species.json        # 15 tree species catalog
+  tools.json          # Tool definitions + stamina costs + tiers
+  resources.json      # 12 resource type definitions
+  growth.json         # Growth stage parameters
+  weather.json        # Event probabilities, multipliers
+  achievements.json   # 45 achievements
+  prestige.json       # NG+ tiers, bonuses, cosmetics
+  grid.json           # Expansion tiers, costs
+  npcs.json           # NPC template definitions
+  dialogues.json      # Dialogue trees
+  quests.json         # Quest chain definitions
+  difficulty.json     # Difficulty tier multipliers
 ```
 
-## Database (expo-sqlite + drizzle-orm)
+## Database
 
-Replaces localStorage-based persistence:
-- Native SQLite on iOS/Android
-- drizzle-orm for type-safe schema and queries
-- Zustand persist middleware adapted for SQLite storage
-- Supports larger save data than localStorage's ~5MB limit
-- Offline-first by nature
+- **expo-sqlite + drizzle-orm** for persistence
+- **Delta-only storage:** only store what the player changed (ChunkDelta)
+- Same seed = same world regeneration. Unmodified chunks have zero storage cost.
+- Save file budget: < 1 MB for 100 hours of play
 
-## Known Constraints
+## Asset Pipeline
 
-### React Three Fiber on Mobile
-- Three.js WebGL on mobile is GPU-constrained
-- Instanced meshes for same-species same-stage trees (replaces BabylonJS Mesh.clone)
-- Minimize draw calls (target < 50)
-- Use `drei` helpers for performance (Instances, Merged, etc.)
+- **3DPSX GLBs** are the primary visual assets (PSX-native models, 2-65 KB each)
+- Asset library at `/Volumes/home/assets/3DPSX/` (1,240+ GLBs)
+- PSX Mega Pack II (549 GLBs) for survival structures/props
+- `useGLTF.preload()` for critical models
+- Lazy load biome-specific models on chunk entry
+- Composite GLBs need Blender split (Villager_NPCs_glb.glb, Buildings.glb)
+- Audio assets at `/Volumes/home/assets/Audio/` (retro SFX, foley, music loops)
 
-### React Native Specifics
-- No DOM -- all UI must be React Native components
-- NativeWind provides Tailwind-like API but compiles to RN StyleSheet
-- Gesture handling via React Native Gesture Handler
-- Animations via React Native Reanimated for 60fps
+## Performance Budget
 
-### Expo Constraints
-- EAS Build for production native binaries
-- Some native modules require custom dev client
-- Web support via `expo-web` (renders to DOM)
+| Metric | Target |
+|--------|--------|
+| FPS mobile | >= 55 |
+| FPS desktop | >= 60 |
+| Draw calls | < 50 |
+| Visible vertices | < 30K |
+| Time to interactive | < 3s |
+| Memory mobile | < 100 MB |
+| Chunk generation | < 16ms |
+| Labyrinth generation | < 100ms |
 
 ## Project Structure
 
@@ -175,48 +126,37 @@ grovekeeper/
   app/                    # Expo Router screens
   components/             # React Native + R3F components
     ui/                   # Base UI (button, text, icon)
-    game/                 # Game UI (HUD, menus, popups)
+    game/                 # Game UI (HUD, menus, dialogs)
     scene/                # R3F scene (Camera, Lighting, Sky, Ground)
     entities/             # R3F entities (Player, Trees, NPCs)
   config/                 # JSON game data files
-    theme.json            # Colors, typography, spacing
-    game/                 # Game balance (species, tools, growth, etc.)
-    world/                # World data (zones, blocks, structures)
   game/                   # Game logic (engine-agnostic)
     ecs/                  # Miniplex world, queries, archetypes
-    systems/              # Pure game systems (growth, weather, etc.)
-    stores/               # Zustand stores
-    hooks/                # Custom hooks (useInput, useMovement)
+    systems/              # Pure game systems
+    stores/               # Legend State persistent store
+    hooks/                # Custom hooks
     ai/                   # Yuka NPC AI
     npcs/                 # NPC management
     quests/               # Quest system
-    events/               # Event system
-    world/                # World/zone data layer
-    structures/           # Structure system
+    events/               # Event scheduler
+    world/                # World generation, chunk loading
+    structures/           # Structure placement + effects
     actions/              # Game action dispatcher
     config/               # Runtime config loaders
+    constants/            # Codex + derived constants
     db/                   # expo-sqlite + drizzle-orm
-    ui/                   # Game-specific UI utilities
-    utils/                # Pure utilities (treeGeometry, seedRNG)
-  lib/                    # Shared utilities (cn(), etc.)
-  assets/                 # Textures, fonts, etc.
+    utils/                # Pure utilities (seedRNG, treeGeometry)
+  assets/                 # Textures, models, fonts
+  docs/                   # Game design + architecture docs
+  .claude/                # Agent infrastructure (hooks, agents, commands)
+  .maestro/               # Maestro E2E test flows
 ```
 
-## Dependencies Worth Noting
+## Key Constraints
 
-### Active and Essential
-- `expo` -- Platform framework
-- `react-native` -- Native runtime
-- `@react-three/fiber` + `@react-three/drei` -- 3D rendering
-- `three` -- 3D engine (peer dep of R3F)
-- `miniplex` + `miniplex-react` -- ECS
-- `zustand` -- State management
-- `expo-sqlite` + `drizzle-orm` -- Persistence
-- `nativewind` -- Styling
-- `yuka` -- NPC AI
-
-### Development
-- `jest` -- Testing
-- `maestro` -- Mobile E2E
-- `@biomejs/biome` -- Lint + format
-- `typescript` -- Type checking
+- **No Math.random()** -- all randomness via `scopedRNG(scope, worldSeed, ...extra)`
+- **No inline constants** -- all tuning values in `config/game/*.json`
+- **No files over 300 lines** -- decompose into subpackage with index.ts barrel
+- **Named exports only** -- never `export default`
+- **Systems are pure functions** -- `(world, deltaTime, ...context) => void`
+- **PSX aesthetic enforced** -- no antialiasing, pixel ratio 1, flat shading, NearestFilter

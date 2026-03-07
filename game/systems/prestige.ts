@@ -131,21 +131,15 @@ export function calculatePrestigeBonus(prestigeCount: number): PrestigeBonus {
   };
 }
 
-export function getUnlockedPrestigeSpecies(
-  prestigeCount: number,
-): PrestigeSpecies[] {
+export function getUnlockedPrestigeSpecies(prestigeCount: number): PrestigeSpecies[] {
   return PRESTIGE_SPECIES.filter((s) => prestigeCount >= s.requiredPrestiges);
 }
 
-export function getUnlockedCosmetics(
-  prestigeCount: number,
-): PrestigeCosmetic[] {
+export function getUnlockedCosmetics(prestigeCount: number): PrestigeCosmetic[] {
   return PRESTIGE_COSMETICS.filter((c) => prestigeCount >= c.prestigeRequired);
 }
 
-export function getActiveCosmetic(
-  prestigeCount: number,
-): PrestigeCosmetic | null {
+export function getActiveCosmetic(prestigeCount: number): PrestigeCosmetic | null {
   const unlocked = getUnlockedCosmetics(prestigeCount);
   return unlocked.length > 0 ? unlocked[unlocked.length - 1] : null;
 }

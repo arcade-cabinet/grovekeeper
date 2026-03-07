@@ -82,7 +82,7 @@
         "id": "harvest-collect-100",
         "description": "Collect 100 total resources",
         "targetType": "harvest",
-        "targetAmount": 20
+        "targetAmount": 100
       },
       {
         "id": "harvest-plant-8",

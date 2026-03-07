@@ -15,10 +15,10 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "arcade_cabinet.grovekeeper"
+      "bundleIdentifier": "com.arcadecabinet.grovekeeper"
     },
     "android": {
-      "package": "arcade_cabinet.grovekeeper",
+      "package": "com.arcadecabinet.grovekeeper",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -39,7 +39,9 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true

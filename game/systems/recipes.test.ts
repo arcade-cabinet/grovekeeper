@@ -121,15 +121,9 @@ describe("recipes system", () => {
 
     it("checks all inputs for multi-input recipes", () => {
       const recipe = getRecipeById("simple-fertilizer")!; // 5 fruit + 3 acorns
-      expect(canCraft(recipe, makeResources({ fruit: 5, acorns: 3 }))).toBe(
-        true,
-      );
-      expect(canCraft(recipe, makeResources({ fruit: 5, acorns: 2 }))).toBe(
-        false,
-      );
-      expect(canCraft(recipe, makeResources({ fruit: 4, acorns: 3 }))).toBe(
-        false,
-      );
+      expect(canCraft(recipe, makeResources({ fruit: 5, acorns: 3 }))).toBe(true);
+      expect(canCraft(recipe, makeResources({ fruit: 5, acorns: 2 }))).toBe(false);
+      expect(canCraft(recipe, makeResources({ fruit: 4, acorns: 3 }))).toBe(false);
     });
   });
 

@@ -234,15 +234,11 @@ describe("eventScheduler", () => {
     it("does not advance already completed challenges", () => {
       let state = stateWithFestival();
       state = advanceFestivalChallenge(state, "plant", 10);
-      const before = state.activeFestival!.challenges.find(
-        (c) => c.targetType === "plant",
-      );
+      const before = state.activeFestival!.challenges.find((c) => c.targetType === "plant");
       expect(before!.completed).toBe(true);
 
       state = advanceFestivalChallenge(state, "plant", 5);
-      const after = state.activeFestival!.challenges.find(
-        (c) => c.targetType === "plant",
-      );
+      const after = state.activeFestival!.challenges.find((c) => c.targetType === "plant");
       expect(after!.currentProgress).toBe(10);
     });
   });

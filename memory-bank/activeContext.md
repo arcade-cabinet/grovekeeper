@@ -1,70 +1,91 @@
 # Active Context -- Grovekeeper
 
-## Current State (2026-03-06)
+## Current State (2026-03-07)
 
-Migration from BabylonJS to Expo/R3F is well underway. The project has been rebuilt on a new tech stack (Expo SDK 55, React Three Fiber, NativeWind, expo-sqlite) while preserving all game design, ECS patterns, and game logic.
+The unified game design document is complete. Grovekeeper has been fully redesigned from a cozy idle grove-tending sim into a first-person survival game with PSX aesthetic, infinite procedural world, and a narrative spine built around 14 Grovekeepers hidden in hedge labyrinths.
 
-### Archive
+**The design phase is complete. Implementation is next.**
 
-The complete BabylonJS implementation is archived at `/Users/jbogaty/src/arcade-cabinet/grovekeeper-babylonjs-archive/` (READ ONLY reference). This was a fully feature-complete implementation with 1188 tests across 58 files, all 32 spec sections implemented.
+### Design Documents Complete
+- **`docs/plans/2026-03-07-unified-game-design.md`** -- Master synthesis (THE source of truth)
+- 10+ domain-specific design docs covering every system
+- Architecture docs for all major subsystems
+- Grok integration plan as forward vision baseline
 
-### New Stack
-
+### Current Tech Stack
 - **Expo SDK 55** -- Universal app (iOS + Android + Web)
-- **React 19.2 + React Native 0.83** -- UI runtime
-- **React Three Fiber + @react-three/drei** -- Declarative 3D (replaces BabylonJS)
-- **NativeWind 4 + React Native Reusables** -- Styling (replaces shadcn/Radix)
-- **expo-sqlite + drizzle-orm** -- Persistence (replaces localStorage)
-- **Jest** -- Testing (replaces Vitest)
-- **Maestro** -- Mobile E2E (replaces Playwright)
-- **Miniplex 2.x** -- ECS (unchanged)
-- **Zustand 5.x** -- State management (unchanged)
-- **Yuka 0.7.x** -- NPC AI (unchanged)
-- **Biome** -- Lint/format (unchanged)
+- **React 19 + React Native 0.83** -- UI runtime
+- **React Three Fiber 9 + drei 10** -- Declarative 3D
+- **Miniplex 2.x** -- ECS (runtime game state)
+- **Legend State 3.x** -- Persistent state (expo-sqlite)
+- **Yuka 0.7** -- NPC AI behaviors
+- **anime.js** -- NPC animation (Lego-style rigid body part rotation)
+- **Tone.js** -- Audio synthesis, spatial sound, scheduling
+- **Biome 2.4** -- Lint/format
+- **Jest + Maestro** -- Testing
 
-## Active Work
+### What Exists (Built)
+- Expo project structure, R3F integration, NativeWind setup
+- Miniplex ECS world + queries + archetypes
+- Legend State gameStore (persistent player state)
+- Core game systems as pure functions: growth, weather, time, stamina, harvest, achievements, prestige
+- R3F scene components: Camera, Lighting, Sky, Ground, SelectionRing
+- React Native UI: HUD, MainMenu, PauseMenu, ResourceBar, ToolBelt, etc.
+- Input hooks: useInput, useMovement
+- ~1,057 tests across 57 test files
+- 23,260 source lines, 9,917 test lines, 0 TypeScript errors
 
-The migration is in progress across multiple phases. Foundation (Phase 0), game systems port (Phase 1), scene components (Phase 2), UI layer (Phase 3), and audio (Phase 4) are underway concurrently. See `memory-bank/progress.md` for detailed phase status.
+### What Needs Building (Implementation Priority)
 
-## What Carries Over (Unchanged)
+**Phase 0: Foundation**
+- SeededNoise utility (AdvancedSeededNoise: Perlin + fBm + ridged + domain warping)
+- Config JSON files for new systems (terrain, water, audio, npcAnimation, seasons)
+- Wire difficulty multipliers to existing systems
+- Copy 3DPSX GLBs to assets/ directory
+- Tone.js integration + AudioManager refactor
+- Split composite GLBs in Blender
 
-These game systems are pure logic with no rendering dependency -- they transferred directly:
-- ECS world + queries + archetypes (Miniplex)
-- Zustand gameStore (state shape, actions, persist middleware adapter)
-- Growth system (5-stage, spec formula)
-- Weather system (pure functions)
-- Achievement system (pure functions)
-- Prestige system (pure functions)
-- Season/time system
-- Stamina system
-- Harvest system (late-binding multipliers)
-- Quest system
-- Grid expansion logic
-- Offline growth calculation
-- Pathfinding (A*)
-- World/zone data layer (types, generator, loader)
-- Structure system (placement validation, effect queries)
-- NPC system + Yuka AI
-- All config/data JSON files
+**Phase 1: Core Visual Identity**
+- GLB tree system (8 base trees, scale-per-stage, InstancedMesh)
+- GLB seasonal bush system (262 bushes, season swap)
+- ChibiCharacter NPC system (GLB loader + mix-and-match + anime.js animation)
+- Terrain heightmap with SeededNoise
+- GLB structure loader + grid-snap placement
 
-## What Must Be Rebuilt
+**Phase 2: Interaction & Feel**
+- Tool view model positioning + keyframe animations
+- Raycast interaction (per-tool layers, crosshair)
+- Impact effects (shake, particles, sound, haptics)
 
-These depend on BabylonJS or web-specific APIs:
-- 3D scene rendering (BabylonJS -> R3F components) -- **done** (components/scene/)
-- Camera system (BabylonJS ArcRotateCamera -> R3F/drei camera) -- **done**
-- Lighting (BabylonJS lights -> R3F/drei lights) -- **done**
-- Ground/terrain (BabylonJS DynamicTexture -> R3F mesh) -- **done**
-- Skybox (BabylonJS HDRCubeTexture -> drei Sky) -- **done**
-- Tree meshes (BabylonJS SPS -> Three.js procedural geometry) -- **done** (game/utils/treeGeometry.ts)
-- Player mesh (BabylonJS primitives -> R3F mesh) -- in progress
-- Structure meshes (BlockMeshFactory -> R3F components) -- in progress
-- All UI components (DOM/shadcn -> React Native/NativeWind) -- **done** (components/game/)
-- Input system (DOM events -> React Native gesture handlers) -- **done** (game/hooks/useInput.ts)
-- Virtual joystick (nipplejs/custom DOM -> React Native component) -- **done**
-- Persistence layer (localStorage -> expo-sqlite) -- in progress (game/db/)
-- Service worker / PWA (replaced by native app via Expo) -- N/A
-- CSS weather overlays (DOM CSS -> React Native animated views or R3F effects) -- pending
+**Phase 3: Open World**
+- Chunk-based world system (16x16, 3x3 active, 5x5 buffer)
+- Delta-only persistence (ChunkDelta)
+- Biome noise system (8 biomes)
+- Feature placement system (discovery cadence)
+- Procedural village + NPC generators
+- Garden Labyrinth feature (seeded maze + hedge GLBs)
+
+**Phase 4-8: Water, Audio, Content, UI, Polish**
+- Gerstner wave water shader
+- Tone.js ambient soundscape + spatial audio
+- Quest system expansion (65+ templates)
+- Survival HUD (hearts, hunger, temperature)
+- NG+ and base building/raids
+- Performance verification
+
+## Key Design Decisions Made
+
+1. **Survival game** -- no exploration/creative mode. Every resource earned.
+2. **Infinite procedural world** -- chunk-based, delta-only persistence, seeded determinism
+3. **14 Grovekeepers** as narrative spine -- hedge labyrinths, species unlocks, escalating difficulty
+4. **3DPSX GLBs** as visual foundation -- NOT procedural geometry for entities
+5. **Tool upgrade tiers** -- Basic -> Iron (Forge) -> Grovekeeper (Grove Essence from labyrinths)
+6. **12 resources** from 7 survival activities -- interlocking economy
+7. **Cooking + Forging systems** -- campfire recipes + forge smelting
+8. **NG+ transforms the game** -- base building mode, base raids, prestige cosmetics
+9. **Tone.js** for all audio (user mandate: quality over bundle size)
+10. **anime.js** for NPC animation (Lego-style, PSX-authentic)
 
 ## Known Issues
 
-None critical -- migration is progressing steadily.
+None critical. Design is complete and coherent. Implementation has not begun for the new survival/open-world systems.

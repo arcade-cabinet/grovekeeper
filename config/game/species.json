@@ -47,10 +47,7 @@
       "unlockLevel": 3,
       "biome": "Mountain",
       "baseGrowthTimes": [12, 16, 22, 28, 35],
-      "yield": [
-        { "resource": "timber", "amount": 2 },
-        { "resource": "sap", "amount": 1 }
-      ],
+      "yield": [{ "resource": "timber", "amount": 2 }, { "resource": "sap", "amount": 1 }],
       "harvestCycleSec": 50,
       "seedCost": { "timber": 5 },
       "special": "Grows at 30% in Winter",
@@ -90,10 +87,7 @@
       "unlockLevel": 6,
       "biome": "Tundra Edge",
       "baseGrowthTimes": [14, 20, 28, 36, 42],
-      "yield": [
-        { "resource": "sap", "amount": 2 },
-        { "resource": "acorns", "amount": 1 }
-      ],
+      "yield": [{ "resource": "sap", "amount": 2 }, { "resource": "acorns", "amount": 1 }],
       "harvestCycleSec": 55,
       "seedCost": { "sap": 6, "acorns": 2 },
       "special": "50% growth in Winter; night glow",
@@ -177,10 +171,7 @@
       "unlockLevel": 9,
       "biome": "Temperate",
       "baseGrowthTimes": [10, 14, 18, 24, 30],
-      "yield": [
-        { "resource": "sap", "amount": 2 },
-        { "resource": "timber", "amount": 1 }
-      ],
+      "yield": [{ "resource": "sap", "amount": 2 }, { "resource": "timber", "amount": 1 }],
       "harvestCycleSec": 45,
       "seedCost": { "sap": 4 },
       "special": "+20% growth near water tiles",
@@ -240,10 +231,7 @@
       "unlockLevel": 22,
       "biome": "Enchanted",
       "baseGrowthTimes": [12, 18, 26, 36, 44],
-      "yield": [
-        { "resource": "sap", "amount": 2 },
-        { "resource": "fruit", "amount": 1 }
-      ],
+      "yield": [{ "resource": "sap", "amount": 2 }, { "resource": "fruit", "amount": 1 }],
       "harvestCycleSec": 55,
       "seedCost": { "sap": 8, "fruit": 4 },
       "special": "+15% growth per adjacent tree (max +60%)",
@@ -286,10 +274,7 @@
       "unlockLevel": 25,
       "biome": "Enchanted",
       "baseGrowthTimes": [18, 28, 40, 55, 70],
-      "yield": [
-        { "resource": "sap", "amount": 3 },
-        { "resource": "acorns", "amount": 2 }
-      ],
+      "yield": [{ "resource": "sap", "amount": 3 }, { "resource": "acorns", "amount": 2 }],
       "harvestCycleSec": 90,
       "seedCost": { "sap": 15, "acorns": 10 },
       "special": "Grows only at night; silver shimmer",

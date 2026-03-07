@@ -1,12 +1,7 @@
 import type { LucideIcon } from "lucide-react-native";
-import {
-  AppleIcon,
-  DropletIcon,
-  NutIcon,
-  TreesIcon,
-} from "lucide-react-native";
-import { useEffect } from "react";
-import { View } from "react-native";
+import { AppleIcon, DropletIcon, NutIcon, TreesIcon } from "lucide-react-native";
+import React, { useEffect } from "react";
+import { AccessibilityInfo, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -32,30 +27,37 @@ const RESOURCE_ICONS: Record<ResourceType, LucideIcon> = {
 
 const RESOURCE_TYPES: ResourceType[] = ["timber", "sap", "fruit", "acorns"];
 
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = React.useState(false);
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduced);
+    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduced);
+    return () => sub.remove();
+  }, []);
+  return reduced;
+}
+
 function ResourceCell({ type, value }: ResourceCellProps) {
   const scale = useSharedValue(1);
+  const reduceMotion = useReducedMotion();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scale is a shared value ref, stable across renders
   useEffect(() => {
+    if (reduceMotion) return;
     scale.value = withSequence(
       withTiming(1.12, { duration: 80 }),
       withTiming(1, { duration: 320 }),
     );
-  }, [value, scale]);
+  }, [value, scale, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
   return (
-    <Animated.View
-      className="flex-row items-center gap-1 rounded px-1"
-      style={animatedStyle}
-    >
+    <Animated.View className="flex-row items-center gap-1 rounded px-1" style={animatedStyle}>
       <Icon as={RESOURCE_ICONS[type]} className="text-forest-green" size={14} />
-      <Text className="text-xs font-bold text-soil-dark tabular-nums">
-        {value}
-      </Text>
+      <Text className="text-xs font-bold text-soil-dark tabular-nums">{value}</Text>
     </Animated.View>
   );
 }

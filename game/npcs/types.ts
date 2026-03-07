@@ -7,13 +7,7 @@
 
 import type { ResourceType } from "@/game/config/resources";
 
-export type NpcFunction =
-  | "trading"
-  | "quests"
-  | "tips"
-  | "seeds"
-  | "crafting"
-  | "lore";
+export type NpcFunction = "trading" | "quests" | "tips" | "seeds" | "crafting" | "lore";
 export type HatStyle = "pointed" | "flat" | "wide" | "round" | "none";
 
 export interface NpcAppearance {

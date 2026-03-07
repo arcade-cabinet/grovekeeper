@@ -56,14 +56,8 @@ export const Player = () => {
 
   return (
     <mesh ref={meshRef} castShadow>
-      <capsuleGeometry
-        args={[CAPSULE_RADIUS, CAPSULE_LENGTH, CAP_SEGMENTS, RADIAL_SEGMENTS]}
-      />
-      <meshStandardMaterial
-        color={PLAYER_COLOR}
-        roughness={0.7}
-        metalness={0.1}
-      />
+      <capsuleGeometry args={[CAPSULE_RADIUS, CAPSULE_LENGTH, CAP_SEGMENTS, RADIAL_SEGMENTS]} />
+      <meshStandardMaterial color={PLAYER_COLOR} roughness={0.7} metalness={0.1} />
     </mesh>
   );
 };

@@ -1,5 +1,17 @@
 # Performance
 
+> **PARTIALLY SUPERSEDED (2026-03-07):** Performance budgets are updated in `docs/plans/2026-03-07-unified-game-design.md` Sections 2 and 4. Key additions:
+>
+> - **Chunk generation budget:** <16ms per chunk (must not cause frame drops). Heavy chunks generate across 2-3 frames.
+> - **Labyrinth generation budget:** <100ms (can be async/background).
+> - **Vertex budget per chunk:** ~30,000 (GLB trees are 100-400 verts vs 200-1,300 for old SPS procedural).
+> - **Draw call target:** <50 on mobile. Tree instancing key: `${speciesId}_${stage}_${season}`.
+> - **Trees use GLB models** (not procedural SPS geometry) -- dramatically cheaper.
+> - **Instanced rendering** for same-model repetitions (InstancedMesh).
+> - **Visible vertices:** <30K across active chunks.
+>
+> The general budgets and optimization patterns below remain valid.
+
 Grovekeeper targets mobile-first performance with a secondary desktop profile. Performance budgets are enforced through architectural choices, not runtime monitoring.
 
 ## Performance Budgets
@@ -108,13 +120,13 @@ All animations use `Math.min(1, delta * speed)` as the lerp factor, ensuring con
 
 ## Texture Budget
 
-Tree textures are sourced at 1K resolution (1024x1024). Each texture set includes:
+3DPSX GLB models have embedded textures (packed via Blender export). PSX-style pixel-art texture atlases at 128x128 or 512x512:
 
-- Color map (~50-100 KB)
-- Normal map (~50-100 KB)
-- Roughness or opacity map (~30-50 KB)
+- Tools share `Tools_Texture.png` (128x128)
+- PSX Mega Pack uses 512x512 atlases
+- Individual tree/bush/prop GLBs: 2-65 KB each with embedded textures
 
-With 5 bark sets and 2 leaf sets, total texture budget is approximately 1 MB uncompressed, loaded on demand when the game scene initializes.
+Total asset budget is minimal -- PSX aesthetic means intentionally small textures. Models loaded on demand per chunk.
 
 ## Mobile-Specific Considerations
 

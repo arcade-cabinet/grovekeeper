@@ -1,9 +1,5 @@
 import { View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useDerivedValue,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue, withTiming } from "react-native-reanimated";
 import { Text } from "@/components/ui/text";
 
 export interface StaminaGaugeProps {
@@ -12,19 +8,16 @@ export interface StaminaGaugeProps {
 }
 
 export function StaminaGauge({ stamina, maxStamina }: StaminaGaugeProps) {
-  const pct = maxStamina > 0 ? Math.round((stamina / maxStamina) * 100) : 0;
+  const pct = maxStamina > 0 ? Math.round(Math.max(0, Math.min(1, stamina / maxStamina)) * 100) : 0;
   const isLow = pct < 25;
 
-  const animatedHeight = useDerivedValue(() =>
-    withTiming(pct, { duration: 300 }),
-  );
+  const animatedHeight = useDerivedValue(() => withTiming(pct, { duration: 300 }));
 
   const fillStyle = useAnimatedStyle(() => ({
     height: `${animatedHeight.value}%`,
   }));
 
-  const fillColor =
-    pct < 25 ? "bg-red-500" : pct < 50 ? "bg-orange-400" : "bg-emerald-500";
+  const fillColor = pct < 25 ? "bg-red-500" : pct < 50 ? "bg-orange-400" : "bg-emerald-500";
 
   return (
     <View className="items-center gap-1" style={{ width: 28 }}>
