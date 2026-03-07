@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T14:18:48.117Z",
-  "currentIteration": 74,
+  "updatedAt": "2026-03-07T14:22:43.098Z",
+  "currentIteration": 75,
   "maxIterations": 0,
-  "tasksCompleted": 74,
+  "tasksCompleted": 75,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -460,8 +460,8 @@
       {
         "id": "US-075",
         "title": "Write Jest tests for village generation",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-076",
@@ -1781,6 +1781,16 @@
       "durationMs": 381923,
       "startedAt": "2026-03-07T14:11:28.961Z",
       "endedAt": "2026-03-07T14:17:50.884Z"
+    },
+    {
+      "iteration": 75,
+      "status": "completed",
+      "taskId": "US-075",
+      "taskTitle": "Write Jest tests for village generation",
+      "taskCompleted": true,
+      "durationMs": 56098,
+      "startedAt": "2026-03-07T14:17:52.017Z",
+      "endedAt": "2026-03-07T14:18:48.115Z"
     }
   ],
   "skippedTaskIds": [],

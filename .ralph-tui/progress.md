@@ -78,6 +78,27 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-076
+- Created `game/systems/fastTravel.ts` — pure fast travel functions (discoverCampfire, isCampfireDiscovered, canDiscoverMore, getTeleportTarget)
+- Created `game/systems/fastTravel.test.ts` — 18 tests covering all pure functions
+- Modified `game/stores/gameStore.ts` — added `discoveredCampfires: FastTravelPoint[]` state, `discoverCampfirePoint()` action, `removeCampfirePoint()` action
+- Created `components/game/FastTravelMenu.tsx` — React Native modal UI for selecting campfire destination; calls `onTeleport({x, z})` callback
+- **Files changed:**
+  - `game/systems/fastTravel.ts` — new file (pure system)
+  - `game/systems/fastTravel.test.ts` — new file (18 tests)
+  - `game/stores/gameStore.ts` — added discoveredCampfires state + actions
+  - `components/game/FastTravelMenu.tsx` — new file (UI component)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2218 tests, 0 failures (114 suites, +18 new tests)
+- **Learnings:**
+  - **FastTravelPoint discovery pattern**: Same pure-function pattern as `discovery.ts` — state passed in, new state returned, no side effects. `discoverCampfire()` returns `{ newPoints, isNew, isFull }` so callers know whether to show "network full" toast vs "discovered" toast.
+  - **isFull flag design**: Returning `isFull` directly from `discoverCampfire()` avoids a separate `canDiscoverMore()` call at the store action level — both the result and the capacity status arrive together.
+  - **FastTravelMenu teleport callback**: UI calls `onTeleport({ x, z })` — actual player position update belongs in the game loop, not the UI. Clean separation keeps the modal testable and ECS-agnostic.
+  - **campfire network state belongs in Legend State**: `discoveredCampfires` persists across sessions (player re-discovers campfires over multiple play sessions), so it belongs in gameStore, not ECS. ECS holds runtime campfire entities; Legend State holds the discovered network.
+
+---
+
 ## 2026-03-07 - US-075
 - Work already complete — `game/world/villageGenerator.test.ts` (26 tests) was created as part of US-074
 - All acceptance criteria already satisfied: building count range, NPC population, campfire presence, determinism from seed

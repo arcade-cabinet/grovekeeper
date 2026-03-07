@@ -63,6 +63,10 @@ import {
 import type { Season } from "@/game/systems/time";
 import { canAffordToolUpgrade, getToolUpgradeTier } from "@/game/systems/toolUpgrades";
 import {
+  discoverCampfire as discoverCampfirePure,
+  type FastTravelPoint,
+} from "@/game/systems/fastTravel";
+import {
   initializeMerchantState,
   type MerchantState,
   purchaseOffer,
@@ -232,6 +236,9 @@ const initialState = {
   hasSeenRules: false,
   hapticsEnabled: true,
   soundEnabled: true,
+
+  /** Discovered campfire fast travel points. Spec §17.6 */
+  discoveredCampfires: [] as FastTravelPoint[],
 };
 
 type GameStateData = typeof initialState;
@@ -1030,6 +1037,32 @@ const actions = {
     const [first, ...rest] = state.pendingCodexUnlocks;
     gameState$.pendingCodexUnlocks.set(rest);
     return first;
+  },
+
+  // Fast travel actions (Spec §17.6)
+  discoverCampfirePoint(point: FastTravelPoint): boolean {
+    const state = getState();
+    const result = discoverCampfirePure(state.discoveredCampfires, point);
+    if (!result.isNew) return false;
+    gameState$.discoveredCampfires.set(result.newPoints);
+    if (result.isFull) {
+      queueMicrotask(() => {
+        showToast("Campfire network full (8/8). Remove one to add more.", "info");
+      });
+    } else {
+      queueMicrotask(() => {
+        showToast(`Campfire discovered: ${point.label}`, "success");
+      });
+    }
+    return true;
+  },
+
+  removeCampfirePoint(id: string): boolean {
+    const state = getState();
+    const filtered = state.discoveredCampfires.filter((p) => p.id !== id);
+    if (filtered.length === state.discoveredCampfires.length) return false;
+    gameState$.discoveredCampfires.set(filtered);
+    return true;
   },
 
   // Settings actions
