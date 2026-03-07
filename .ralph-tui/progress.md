@@ -78,6 +78,9 @@ after each iteration and it's included in prompts for context.
 - **yuka.d.ts ambient declaration**: The project ships a hand-written `yuka.d.ts` at the repo root (no @types/yuka package). New yuka classes must be added there. Before importing a new yuka symbol, grep for `yuka.d.ts` first — if it doesn't declare the class, add it.
 - **buildMultiChunkWalkabilityGrid for cross-chunk nav**: Pass cells (world-space coords) and optional heightmaps (chunk-local indexing) from all active + neighbor chunks. The function computes combined bounds, merges all data, and returns a single `WalkabilityGrid`. A* runs on it directly — no cross-chunk coordination needed at pathfind time.
 - **Slope blocking is entry-cost in A* expansion**: Check `|h[neighbor] - h[current]| > maxSlope` in the neighbor-expansion loop and `continue` to skip that neighbor. This is directional — slope going up vs down are both checked. Keep `maxSlope` on the `WalkabilityGrid` struct so callers set it at grid-build time, not in the A* hot path.
+- **seenInWild feeds discoveryCount automatically**: `discoveryCount` in `useGameLoop.ts` counts `speciesProgress[*].tier >= 1`. Adding `seenInWild: true` → `tier=1` flows into existing achievement checks ("Keen Eye", "Codex Scholar") without extra wiring in the loop.
+- **Non-React class using useGameStore imperatively**: Plain classes (e.g. `ChunkManager`) use `useGameStore.getState()` for imperative store access — works outside React render cycle.
+- **Dedup before calling store on chunk load**: Collect unique species IDs with a local `Set` before calling `discoverWildSpecies`. The store is idempotent but dedup avoids N identical calls for N trees of the same species in one chunk.
 
 ---
 
@@ -2699,4 +2702,24 @@ after each iteration and it's included in prompts for context.
   - **TOOL_UPGRADE_TIERS[i] = upgrade step, not tier definition**: Index 0 = "what you need to reach tier 1 (iron)", index 2 = "what you need to reach tier 3 (grovekeeper)". `getToolTierName(n)` searches by `t.tier === n`, not by array index. Keeping this distinction backward-compatible means zero changes to gameStore.upgradeToolTier.
   - **requiresForge as pure predicate**: Forge proximity check belongs at the UI/action layer, not inside upgradeToolTier. Export `requiresForgeForUpgrade(currentTier)` as a pure query function — the store action calls it before showing the upgrade UI, gating the interaction at the presentation layer.
   - **Config separation keeps arrays clean**: tools.json stays as an array of tool definitions. toolTiers.json holds the upgrade progression. Avoid merging unrelated shapes into the same file even if the AC says "tools.json" — the spirit of the requirement is config-driven, not literally the same file.
+---
+
+## 2026-03-07 - US-149
+- Updated `game/systems/speciesDiscovery.ts`: added `seenInWild?: boolean` to `SpeciesProgress`, updated `computeDiscoveryTier` to return tier 1 when `seenInWild` is true (alongside `timesPlanted >= 1`), updated `createEmptyProgress` to include `seenInWild: false`, added `encounterWildSpecies()` pure function.
+- Added `config/game/growth.json` `discoveryXpReward: 25` — XP awarded per new species discovered.
+- Added `discoverWildSpecies(speciesId)` action to `game/stores/gameStore.ts`: calls `encounterWildSpecies`, writes updated `speciesProgress`, grants XP, queues codex unlock, shows toast. Idempotent.
+- Wired `useGameStore.getState().discoverWildSpecies` in `game/world/ChunkManager.ts`: on visible chunk load, deduplicates species with a local `Set` and calls once per new species.
+- Files changed:
+  - `config/game/growth.json` — added `discoveryXpReward`
+  - `game/systems/speciesDiscovery.ts` — `seenInWild` field, `encounterWildSpecies`, updated tier check + empty progress
+  - `game/systems/speciesDiscovery.test.ts` — 7 new tests for `seenInWild` tier and `encounterWildSpecies`
+  - `game/stores/gameStore.ts` — import `growthConfig` + `encounterWildSpecies`, added `discoverWildSpecies` action
+  - `game/world/ChunkManager.ts` — import `useGameStore`, discovery call on visible tree spawn
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3476 tests, 147 suites pass
+- **Learnings:**
+  - **seenInWild feeds existing discoveryCount**: `discoveryCount` in `useGameLoop.ts` aggregates `speciesProgress[*].tier >= 1`. Since `seenInWild=true` sets tier=1, the existing achievement checks for "Keen Eye" and "Codex Scholar" fire automatically — zero extra wiring needed in the game loop.
+  - **Dedup species per chunk load**: Collect unique species IDs with a local `Set` before calling the store action. The store is idempotent anyway but deduplication avoids N identical calls for N trees of the same species in one chunk load.
+  - **encounterWildSpecies returns same reference on no-op**: When `isNew=false`, returns `{ isNew: false, updated: progress }` where `updated === progress`. No copy allocation on repeated loads.
+  - **Non-React class can import useGameStore**: `ChunkManager` is a plain class (not a React hook). `useGameStore.getState()` works imperatively from non-React code — same pattern as other game loop systems.
+
 ---

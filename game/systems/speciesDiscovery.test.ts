@@ -2,12 +2,13 @@ import {
   checkDiscoveryProgress,
   computeDiscoveryTier,
   createEmptyProgress,
+  encounterWildSpecies,
   getVisibleCodexFields,
   type SpeciesProgress,
 } from "./speciesDiscovery";
 
-describe("computeDiscoveryTier", () => {
-  it("returns tier 0 for never-planted species", () => {
+describe("computeDiscoveryTier (Spec §8, §25)", () => {
+  it("returns tier 0 for never-seen species", () => {
     expect(
       computeDiscoveryTier({
         timesPlanted: 0,
@@ -27,6 +28,30 @@ describe("computeDiscoveryTier", () => {
         totalYield: 0,
       }),
     ).toBe(1);
+  });
+
+  it("returns tier 1 when seenInWild is true even if never planted", () => {
+    expect(
+      computeDiscoveryTier({
+        timesPlanted: 0,
+        maxStageReached: 0,
+        timesHarvested: 0,
+        totalYield: 0,
+        seenInWild: true,
+      }),
+    ).toBe(1);
+  });
+
+  it("returns tier 0 when seenInWild is false and never planted", () => {
+    expect(
+      computeDiscoveryTier({
+        timesPlanted: 0,
+        maxStageReached: 0,
+        timesHarvested: 0,
+        totalYield: 0,
+        seenInWild: false,
+      }),
+    ).toBe(0);
   });
 
   it("returns tier 2 when max stage >= 3 (Mature)", () => {
@@ -86,7 +111,7 @@ describe("computeDiscoveryTier", () => {
 });
 
 describe("createEmptyProgress", () => {
-  it("returns zeroed progress with tier 0", () => {
+  it("returns zeroed progress with tier 0 and seenInWild false", () => {
     const progress = createEmptyProgress();
     expect(progress).toEqual({
       timesPlanted: 0,
@@ -94,7 +119,58 @@ describe("createEmptyProgress", () => {
       timesHarvested: 0,
       totalYield: 0,
       discoveryTier: 0,
+      seenInWild: false,
     });
+  });
+});
+
+describe("encounterWildSpecies (Spec §8, §25)", () => {
+  it("returns isNew=true and sets seenInWild on first encounter", () => {
+    const progress = createEmptyProgress();
+    const result = encounterWildSpecies(progress);
+    expect(result.isNew).toBe(true);
+    expect(result.updated.seenInWild).toBe(true);
+  });
+
+  it("sets discoveryTier to 1 on first encounter when never planted", () => {
+    const progress = createEmptyProgress();
+    const result = encounterWildSpecies(progress);
+    expect(result.updated.discoveryTier).toBe(1);
+  });
+
+  it("returns isNew=false when already seen in wild", () => {
+    const progress: SpeciesProgress = { ...createEmptyProgress(), seenInWild: true, discoveryTier: 1 };
+    const result = encounterWildSpecies(progress);
+    expect(result.isNew).toBe(false);
+    expect(result.updated).toBe(progress); // same reference -- no copy
+  });
+
+  it("is idempotent -- repeated calls yield isNew=false after first", () => {
+    const first = encounterWildSpecies(createEmptyProgress());
+    const second = encounterWildSpecies(first.updated);
+    expect(second.isNew).toBe(false);
+  });
+
+  it("does not downgrade discoveryTier if already planted (tier >= 1)", () => {
+    const progress: SpeciesProgress = {
+      ...createEmptyProgress(),
+      timesPlanted: 3,
+      maxStageReached: 2,
+      discoveryTier: 1,
+    };
+    const result = encounterWildSpecies(progress);
+    expect(result.updated.discoveryTier).toBe(1); // still tier 1, not reset
+  });
+
+  it("does not downgrade higher tiers (tier 2+) on wild encounter", () => {
+    const progress: SpeciesProgress = {
+      ...createEmptyProgress(),
+      timesPlanted: 5,
+      maxStageReached: 3,
+      discoveryTier: 2,
+    };
+    const result = encounterWildSpecies(progress);
+    expect(result.updated.discoveryTier).toBe(2); // stays at tier 2
   });
 });
 

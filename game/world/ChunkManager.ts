@@ -27,6 +27,7 @@ import { generateVillage } from "./villageGenerator";
 import { generateLabyrinth } from "./mazeGenerator";
 import { resolveEmissiveColor } from "@/game/utils/spiritColors";
 import { scopedRNG } from "@/game/utils/seedWords";
+import { useGameStore } from "@/game/stores/gameStore";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -533,6 +534,19 @@ export class ChunkManager {
 
     // Spawn biome-appropriate vegetation and terrain entities
     const spawned = spawnChunkEntities(this.worldSeed, chunkX, chunkZ, biome as BiomeType, terrainData.heightmap);
+
+    // Trigger species discovery for unique wild species in visible chunks (Spec §8, §25)
+    if (visible && spawned.trees.length > 0) {
+      const store = useGameStore.getState();
+      const seenSpecies = new Set<string>();
+      for (const tp of spawned.trees) {
+        const sid = tp.tree.speciesId;
+        if (!seenSpecies.has(sid)) {
+          seenSpecies.add(sid);
+          store.discoverWildSpecies(sid);
+        }
+      }
+    }
 
     for (const tp of spawned.trees) {
       children.push(

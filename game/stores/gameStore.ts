@@ -59,9 +59,11 @@ import {
 } from "@/game/systems/prestige";
 import { clearAllChunkDiffs } from "@/game/world/chunkPersistence";
 import type { ActiveQuest } from "@/game/systems/quests";
+import growthConfig from "@/config/game/growth.json" with { type: "json" };
 import {
   computeDiscoveryTier,
   createEmptyProgress,
+  encounterWildSpecies,
   type SpeciesProgress,
 } from "@/game/systems/speciesDiscovery";
 import {
@@ -1088,6 +1090,35 @@ const actions = {
     const [first, ...rest] = state.pendingCodexUnlocks;
     gameState$.pendingCodexUnlocks.set(rest);
     return first;
+  },
+
+  /**
+   * Record a first wild sighting of a species in an unexplored chunk. Spec §8, §25.
+   * Grants XP and queues a codex unlock on the first encounter.
+   * Idempotent -- safe to call every time the chunk loads.
+   * Returns true if this was a new discovery, false if already known.
+   */
+  discoverWildSpecies(speciesId: string): boolean {
+    const state = getState();
+    const existing = state.speciesProgress[speciesId] ?? createEmptyProgress();
+    const { isNew, updated } = encounterWildSpecies(existing);
+    if (!isNew) return false;
+
+    batch(() => {
+      gameState$.speciesProgress.set({ ...state.speciesProgress, [speciesId]: updated });
+      if (updated.discoveryTier > existing.discoveryTier) {
+        gameState$.pendingCodexUnlocks.set([...state.pendingCodexUnlocks, speciesId]);
+      }
+    });
+
+    actions.addXp(growthConfig.discoveryXpReward);
+
+    const sp = getSpeciesById(speciesId);
+    queueMicrotask(() => {
+      showToast(`Discovered: ${sp?.name ?? speciesId}!`, "achievement");
+    });
+
+    return true;
   },
 
   // Fast travel actions (Spec §17.6)

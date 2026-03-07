@@ -2,8 +2,8 @@
  * Species Discovery System -- pure functions for codex progress computation.
  *
  * Discovery tier is computed from interaction stats:
- * Tier 0: Never planted
- * Tier 1: timesPlanted >= 1
+ * Tier 0: Never seen
+ * Tier 1: seenInWild (encountered in unexplored chunk) OR timesPlanted >= 1
  * Tier 2: maxStageReached >= 3 (Mature)
  * Tier 3: maxStageReached >= 4 (Old Growth)
  * Tier 4: timesHarvested >= 10
@@ -24,6 +24,8 @@ export interface SpeciesProgress {
   timesHarvested: number;
   totalYield: number;
   discoveryTier: DiscoveryTier;
+  /** Set true the first time a wild tree of this species is encountered in a chunk. Spec §8, §25. */
+  seenInWild?: boolean;
 }
 
 export interface CodexStats {
@@ -54,7 +56,7 @@ export function computeDiscoveryTier(
   if (progress.timesHarvested >= LEGENDARY_HARVEST_THRESHOLD) return 4;
   if (progress.maxStageReached >= OLD_GROWTH_STAGE) return 3;
   if (progress.maxStageReached >= MATURE_STAGE) return 2;
-  if (progress.timesPlanted >= 1) return 1;
+  if (progress.timesPlanted >= 1 || progress.seenInWild) return 1;
   return 0;
 }
 
@@ -65,7 +67,25 @@ export function createEmptyProgress(): SpeciesProgress {
     timesHarvested: 0,
     totalYield: 0,
     discoveryTier: 0,
+    seenInWild: false,
   };
+}
+
+/**
+ * Record a first wild sighting of a species (Spec §8, §25).
+ * Returns isNew=true and the updated progress if this is the first encounter.
+ * Returns isNew=false (no-op) if already seen.
+ * PURE -- no side effects.
+ */
+export function encounterWildSpecies(
+  progress: SpeciesProgress,
+): { isNew: boolean; updated: SpeciesProgress } {
+  if (progress.seenInWild) {
+    return { isNew: false, updated: progress };
+  }
+  const updated: SpeciesProgress = { ...progress, seenInWild: true };
+  updated.discoveryTier = computeDiscoveryTier(updated);
+  return { isNew: true, updated };
 }
 
 export function checkDiscoveryProgress(allProgress: Record<string, SpeciesProgress>): CodexStats {
