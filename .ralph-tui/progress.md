@@ -78,6 +78,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-133
+- Implemented day/night cycle system (Spec §31.3).
+- Files changed:
+  - `config/game/dayNight.json` — new: day length (600s), 8 time slot boundaries, per-slot lighting params (ambientColor, ambientIntensity, directionalColor, directionalIntensity, shadowOpacity), star intensity table, season config (7 days/season)
+  - `game/systems/dayNight.ts` — new: pure functions (computeGameHour, classifyTimeOfDay, computeSunAngle, computeStarIntensity, computeLighting, computeSeason, initDayNight) + tickDayNight mutator
+  - `game/systems/dayNight.test.ts` — new: 73 tests, all passing
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3229 tests, 140 suites pass
+- **Learnings:**
+  - **Cosine sun angle formula**: `(PI/2) * cos(PI * (h-12) / 12)` naturally peaks at noon (h=12), crosses horizon at h=6 and h=18, reaches −PI/2 at midnight. More readable than a phase-shifted sine and matches the spec's "0 = horizon, PI/2 = zenith" semantics directly.
+  - **Time slot boundary design**: midnight (23h→5h) wraps across midnight and is handled last — all other named slots have `hourStart < hourEnd` so a linear range check works. Midnight is the fallthrough default, covering both [23,24) and [0,5).
+  - **tickDayNight drives both components**: a single mutator updates DayNightComponent AND SkyComponent in one call. Callers (R3F useFrame hooks) only need to hold refs to both ECS entities and call tick — no need for separate sky/lighting update loops.
+
+---
+
 ## 2026-03-07 - US-130
 - Implemented 6-layer ambient soundscape system (Spec §27.2).
 - Files changed:
