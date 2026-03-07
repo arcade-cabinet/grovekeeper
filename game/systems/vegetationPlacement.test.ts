@@ -177,3 +177,89 @@ describe("vegetationPlacement", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Chunk-based vegetation placement (Spec §6, §17.1)
+// ---------------------------------------------------------------------------
+
+import { spawnChunkVegetation } from "./vegetationPlacement";
+
+const CHUNK_SIZE = 16;
+
+function flatHeightmap(): Float32Array {
+  return new Float32Array(CHUNK_SIZE * CHUNK_SIZE).fill(0);
+}
+
+describe("spawnChunkVegetation (Spec §6, §17.1)", () => {
+  it("returns trees and bushes arrays for a known biome", () => {
+    const result = spawnChunkVegetation("TestSeed", 0, 0, "starting-grove", flatHeightmap());
+    expect(Array.isArray(result.trees)).toBe(true);
+    expect(Array.isArray(result.bushes)).toBe(true);
+  });
+
+  it("is deterministic for the same inputs", () => {
+    const hm = flatHeightmap();
+    const a = spawnChunkVegetation("WorldA", 3, 5, "meadow", hm);
+    const b = spawnChunkVegetation("WorldA", 3, 5, "meadow", hm);
+    expect(a.trees.length).toBe(b.trees.length);
+    expect(a.bushes.length).toBe(b.bushes.length);
+    if (a.trees.length > 0) {
+      expect(a.trees[0].position).toEqual(b.trees[0].position);
+      expect(a.trees[0].tree.speciesId).toBe(b.trees[0].tree.speciesId);
+    }
+  });
+
+  it("varies output across different chunks", () => {
+    const hm = flatHeightmap();
+    const a = spawnChunkVegetation("WorldA", 0, 0, "starting-grove", hm);
+    const b = spawnChunkVegetation("WorldA", 7, 3, "starting-grove", hm);
+    // Positions must differ (different chunk offsets produce different world coords)
+    if (a.trees.length > 0 && b.trees.length > 0) {
+      expect(a.trees[0].position).not.toEqual(b.trees[0].position);
+    }
+  });
+
+  it("tree positions are within chunk world bounds", () => {
+    const result = spawnChunkVegetation("BoundsTest", 2, 4, "ancient-forest", flatHeightmap());
+    const originX = 2 * CHUNK_SIZE;
+    const originZ = 4 * CHUNK_SIZE;
+    for (const tp of result.trees) {
+      expect(tp.position.x).toBeGreaterThanOrEqual(originX);
+      expect(tp.position.x).toBeLessThan(originX + CHUNK_SIZE);
+      expect(tp.position.z).toBeGreaterThanOrEqual(originZ);
+      expect(tp.position.z).toBeLessThan(originZ + CHUNK_SIZE);
+    }
+  });
+
+  it("trees use species from the biome species pool", () => {
+    const result = spawnChunkVegetation("SpeciesTest", 1, 1, "wetlands", flatHeightmap());
+    const wetlandsPool = ["weeping-willow", "redwood"];
+    for (const tp of result.trees) {
+      expect(wetlandsPool).toContain(tp.tree.speciesId);
+    }
+  });
+
+  it("trees have valid model fields resolved via speciesToTreeModel", () => {
+    const result = spawnChunkVegetation("ModelTest", 0, 0, "orchard-valley", flatHeightmap());
+    for (const tp of result.trees) {
+      expect(tp.tree.baseModel).toBeTruthy();
+      expect(typeof tp.tree.winterModel).toBe("string");
+      expect(typeof tp.tree.useWinterModel).toBe("boolean");
+    }
+  });
+
+  it("bushes have valid modelKey resolved via resolveBushModelKey", () => {
+    const result = spawnChunkVegetation("BushTest", 0, 0, "starting-grove", flatHeightmap());
+    for (const bp of result.bushes) {
+      expect(bp.bush.modelKey).toBeTruthy();
+      expect(bp.bush.modelKey).toMatch(/^bushes\//);
+    }
+  });
+
+  it("falls back to starting-grove template for unknown biome", () => {
+    const known = spawnChunkVegetation("X", 0, 0, "starting-grove", flatHeightmap());
+    const unknown = spawnChunkVegetation("X", 0, 0, "unknown-biome", flatHeightmap());
+    expect(unknown.trees.length).toBe(known.trees.length);
+    expect(unknown.bushes.length).toBe(known.bushes.length);
+  });
+});

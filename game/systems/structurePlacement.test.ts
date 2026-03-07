@@ -169,3 +169,86 @@ describe("Structure Placement System", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Chunk-based world-gen structure placement (Spec §18, §17.1)
+// ---------------------------------------------------------------------------
+
+import { spawnChunkStructures } from "@/game/systems/structurePlacement";
+
+const CHUNK_SIZE = 16;
+
+function flatHeightmap(): Float32Array {
+  return new Float32Array(CHUNK_SIZE * CHUNK_SIZE).fill(0);
+}
+
+describe("spawnChunkStructures (Spec §18, §17.1)", () => {
+  it("returns an array for a known biome", () => {
+    const result = spawnChunkStructures("TestSeed", 0, 0, "starting-grove", flatHeightmap());
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("is deterministic for the same inputs", () => {
+    const hm = flatHeightmap();
+    const a = spawnChunkStructures("MySeed", 4, 7, "meadow", hm);
+    const b = spawnChunkStructures("MySeed", 4, 7, "meadow", hm);
+    expect(a.length).toBe(b.length);
+    if (a.length > 0) {
+      expect(a[0].position).toEqual(b[0].position);
+      expect(a[0].structure.templateId).toBe(b[0].structure.templateId);
+    }
+  });
+
+  it("placed structure templateId is in the biome's allowedIds", () => {
+    // Use many chunk coords to find a chunk that spawns a structure
+    const allowed = ["water-post", "bird-house", "campfire-1"]; // starting-grove
+    for (let cx = 0; cx < 20; cx++) {
+      const result = spawnChunkStructures("SearchSeed", cx, 0, "starting-grove", flatHeightmap());
+      for (const sp of result) {
+        expect(allowed).toContain(sp.structure.templateId);
+      }
+    }
+  });
+
+  it("structure positions are within chunk world bounds", () => {
+    for (let cx = 0; cx < 30; cx++) {
+      const result = spawnChunkStructures("BoundSeed", cx, 2, "orchard-valley", flatHeightmap());
+      for (const sp of result) {
+        expect(sp.position.x).toBeGreaterThanOrEqual(cx * CHUNK_SIZE);
+        expect(sp.position.x).toBeLessThan((cx + 1) * CHUNK_SIZE);
+        expect(sp.position.z).toBeGreaterThanOrEqual(2 * CHUNK_SIZE);
+        expect(sp.position.z).toBeLessThan(3 * CHUNK_SIZE);
+      }
+    }
+  });
+
+  it("structure has required StructureComponent fields", () => {
+    for (let cx = 0; cx < 30; cx++) {
+      const result = spawnChunkStructures("FieldSeed", cx, 0, "starting-grove", flatHeightmap());
+      for (const sp of result) {
+        expect(sp.structure.templateId).toBeTruthy();
+        expect(sp.structure.modelPath).toBeTruthy();
+        expect(sp.structure.category).toBeTruthy();
+        expect(typeof sp.structure.level).toBe("number");
+        expect(Array.isArray(sp.structure.buildCost)).toBe(true);
+      }
+    }
+  });
+
+  it("returns empty array for frozen-peaks biome with low probability across most chunks", () => {
+    // frozen-peaks probability is 0.05 — very few chunks should have a structure
+    let spawnCount = 0;
+    for (let cx = 0; cx < 10; cx++) {
+      const result = spawnChunkStructures("FreezeSeed", cx, 0, "frozen-peaks", flatHeightmap());
+      spawnCount += result.length;
+    }
+    // At 5% probability, 10 chunks → expected ~0.5 — most runs will have 0 or 1
+    expect(spawnCount).toBeLessThanOrEqual(3);
+  });
+
+  it("falls back to starting-grove template for unknown biome", () => {
+    // Should not throw
+    const result = spawnChunkStructures("FallbackSeed", 0, 0, "unknown-biome", flatHeightmap());
+    expect(Array.isArray(result)).toBe(true);
+  });
+});

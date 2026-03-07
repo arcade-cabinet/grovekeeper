@@ -1,12 +1,17 @@
 /**
  * Vegetation placement system -- maps species to GLB models,
- * handles seasonal bush swaps, and provides grass density rules.
+ * handles seasonal bush swaps, provides grass density rules,
+ * and spawns chunk vegetation from biome template config (Spec §6, §17.1).
  *
  * All randomness via scopedRNG. All tuning values from config JSON.
  */
 import { createRNG, hashString } from "@/game/utils/seedRNG";
-import type { BushComponent, VegetationSeason } from "@/game/ecs/components/vegetation";
+import { scopedRNG } from "@/game/utils/seedWords";
+import type { BushComponent, TreeComponent, VegetationSeason } from "@/game/ecs/components/vegetation";
 import vegetationConfig from "@/config/game/vegetation.json";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
+
+const CHUNK_SIZE: number = gridConfig.chunkSize;
 
 /**
  * Maps a game species ID to a base tree model key.
@@ -148,4 +153,117 @@ export function selectRandomBushShape(seed: number): {
   const shape = shapes[index];
   const hasRoots = rng() < vegetationConfig.bushRootsProbability;
   return { bushShape: shape, hasRoots };
+}
+
+// ---------------------------------------------------------------------------
+// Chunk-based placement (Spec §6, §17.1)
+// ---------------------------------------------------------------------------
+
+/** A tree entity ready to be added to ECS (from vegetation placement pipeline). */
+export interface ChunkVegTreePlacement {
+  position: { x: number; y: number; z: number };
+  tree: TreeComponent;
+  rotationY: number;
+}
+
+/** A bush entity ready to be added to ECS (from vegetation placement pipeline). */
+export interface ChunkVegBushPlacement {
+  position: { x: number; y: number; z: number };
+  bush: BushComponent;
+  rotationY: number;
+}
+
+/** Combined result of chunk vegetation placement. */
+export interface ChunkVegetationResult {
+  trees: ChunkVegTreePlacement[];
+  bushes: ChunkVegBushPlacement[];
+}
+
+/**
+ * Spawn trees and bushes for a chunk using biome template config.
+ *
+ * Uses scopedRNG('vegetation', worldSeed, chunkX, chunkZ) so placement is
+ * deterministic and independent from other entity spawners.
+ * Model paths resolved via speciesToTreeModel and resolveBushModelKey.
+ * Density and species pool sourced from vegetation.json biomeVegetationTemplates.
+ *
+ * @param worldSeed  World seed string.
+ * @param chunkX     Chunk X grid coordinate.
+ * @param chunkZ     Chunk Z grid coordinate.
+ * @param biome      Biome type string (BiomeType).
+ * @param heightmap  CHUNK_SIZE × CHUNK_SIZE Float32Array (row-major: z*size+x).
+ */
+export function spawnChunkVegetation(
+  worldSeed: string,
+  chunkX: number,
+  chunkZ: number,
+  biome: string,
+  heightmap: Float32Array,
+): ChunkVegetationResult {
+  const templates = vegetationConfig.biomeVegetationTemplates;
+  const template =
+    templates[biome as keyof typeof templates] ??
+    templates["starting-grove"];
+
+  const rng = scopedRNG("vegetation", worldSeed, chunkX, chunkZ);
+  const trees: ChunkVegTreePlacement[] = [];
+  const bushes: ChunkVegBushPlacement[] = [];
+
+  // Place trees using model-resolution pipeline
+  for (let i = 0; i < template.treesPerChunk; i++) {
+    const localX = rng() * CHUNK_SIZE;
+    const localZ = rng() * CHUNK_SIZE;
+    const xi = Math.floor(Math.min(localX, CHUNK_SIZE - 1));
+    const zi = Math.floor(Math.min(localZ, CHUNK_SIZE - 1));
+    const y = heightmap[zi * CHUNK_SIZE + xi];
+
+    const pool = template.speciesPool;
+    const speciesId = pool[Math.floor(rng() * pool.length)];
+    const models = speciesToTreeModel(speciesId);
+    const rotationY = rng() * Math.PI * 2;
+    const meshSeed = Math.floor(rng() * 0xffffffff);
+
+    trees.push({
+      position: { x: chunkX * CHUNK_SIZE + localX, y, z: chunkZ * CHUNK_SIZE + localZ },
+      rotationY,
+      tree: {
+        speciesId,
+        stage: 2,
+        progress: 0,
+        watered: false,
+        totalGrowthTime: 1800,
+        plantedAt: 0,
+        meshSeed,
+        wild: true,
+        pruned: false,
+        fertilized: false,
+        baseModel: models.baseModel,
+        winterModel: models.winterModel,
+        useWinterModel: models.winterModel !== "",
+        seasonTint: "#388E3C",
+      },
+    });
+  }
+
+  // Place bushes using model-resolution pipeline
+  for (let i = 0; i < template.bushesPerChunk; i++) {
+    const localX = rng() * CHUNK_SIZE;
+    const localZ = rng() * CHUNK_SIZE;
+    const xi = Math.floor(Math.min(localX, CHUNK_SIZE - 1));
+    const zi = Math.floor(Math.min(localZ, CHUNK_SIZE - 1));
+    const y = heightmap[zi * CHUNK_SIZE + xi];
+
+    const shapeSeed = Math.floor(rng() * 0xffffff);
+    const { bushShape, hasRoots } = selectRandomBushShape(shapeSeed);
+    const rotationY = rng() * Math.PI * 2;
+    const modelKey = resolveBushModelKey(bushShape, "summer", hasRoots);
+
+    bushes.push({
+      position: { x: chunkX * CHUNK_SIZE + localX, y, z: chunkZ * CHUNK_SIZE + localZ },
+      rotationY,
+      bush: { bushShape, season: "summer", hasRoots, modelKey },
+    });
+  }
+
+  return { trees, bushes };
 }

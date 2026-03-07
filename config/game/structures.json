@@ -293,5 +293,15 @@
         { "resource": "timber", "amount": 8 }
       ]
     }
-  ]
+  ],
+  "biomeTemplates": {
+    "starting-grove": { "probability": 0.3, "allowedIds": ["water-post", "bird-house", "campfire-1"] },
+    "meadow":         { "probability": 0.2, "allowedIds": ["notice-board", "water-post", "bird-house"] },
+    "ancient-forest": { "probability": 0.15, "allowedIds": ["bird-house", "lamp"] },
+    "wetlands":       { "probability": 0.2, "allowedIds": ["water-post"] },
+    "rocky-highlands":{ "probability": 0.1, "allowedIds": ["campfire-1", "lamp"] },
+    "orchard-valley": { "probability": 0.4, "allowedIds": ["water-post", "bird-house", "notice-board"] },
+    "frozen-peaks":   { "probability": 0.05, "allowedIds": ["campfire-1"] },
+    "twilight-glade": { "probability": 0.15, "allowedIds": ["bird-house", "lamp", "notice-board"] }
+  }
 }

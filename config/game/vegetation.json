@@ -247,5 +247,15 @@
     "major": { "minChunks": 8, "maxChunks": 12, "types": ["hedge_labyrinth", "village", "large_rock_formation"] },
     "minor": { "minChunks": 3, "maxChunks": 4, "types": ["pond", "overlook", "camp", "grove"] },
     "micro": { "minChunks": 1, "maxChunks": 1, "types": ["individual_trees", "flower_patches", "rock_clusters"] }
+  },
+  "biomeVegetationTemplates": {
+    "starting-grove": { "treesPerChunk": 2, "bushesPerChunk": 2, "speciesPool": ["white-oak", "cherry-blossom", "silver-birch"] },
+    "meadow":         { "treesPerChunk": 1, "bushesPerChunk": 3, "speciesPool": ["white-oak", "baobab", "silver-birch"] },
+    "ancient-forest": { "treesPerChunk": 3, "bushesPerChunk": 2, "speciesPool": ["mystic-fern", "white-oak", "silver-birch"] },
+    "wetlands":       { "treesPerChunk": 2, "bushesPerChunk": 3, "speciesPool": ["weeping-willow", "redwood"] },
+    "rocky-highlands":{ "treesPerChunk": 1, "bushesPerChunk": 1, "speciesPool": ["elder-pine", "flame-maple", "ironbark"] },
+    "orchard-valley": { "treesPerChunk": 2, "bushesPerChunk": 2, "speciesPool": ["golden-apple", "white-oak", "cherry-blossom"] },
+    "frozen-peaks":   { "treesPerChunk": 1, "bushesPerChunk": 1, "speciesPool": ["elder-pine", "ghost-birch"] },
+    "twilight-glade": { "treesPerChunk": 2, "bushesPerChunk": 2, "speciesPool": ["mystic-fern", "crystal-oak", "moonwood-ash"] }
   }
 }

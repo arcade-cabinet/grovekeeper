@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T21:16:27.377Z",
-  "currentIteration": 149,
+  "updatedAt": "2026-03-07T21:27:01.274Z",
+  "currentIteration": 150,
   "maxIterations": 0,
-  "tasksCompleted": 149,
+  "tasksCompleted": 150,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -910,8 +910,8 @@
       {
         "id": "US-150",
         "title": "Update MiniMap for open world navigation",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-151",
@@ -2531,6 +2531,16 @@
       "durationMs": 404983,
       "startedAt": "2026-03-07T20:57:03.105Z",
       "endedAt": "2026-03-07T21:03:48.088Z"
+    },
+    {
+      "iteration": 150,
+      "status": "completed",
+      "taskId": "US-150",
+      "taskTitle": "Update MiniMap for open world navigation",
+      "taskCompleted": true,
+      "durationMs": 758143,
+      "startedAt": "2026-03-07T21:03:49.231Z",
+      "endedAt": "2026-03-07T21:16:27.374Z"
     }
   ],
   "skippedTaskIds": [],

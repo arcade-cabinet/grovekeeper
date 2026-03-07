@@ -2749,3 +2749,27 @@ after each iteration and it's included in prompts for context.
   - **CampfireComponent.fastTravelId as minimap bridge**: Campfire ECS entities carry `fastTravelId` linking them to the `discoveredCampfires` store. The minimap diamond renders as pressable; `onCampfirePress(fastTravelId)` lets the parent wire up fast travel without the minimap knowing the store shape.
 
 ---
+
+---
+
+## 2026-03-07 - US-151
+- Added `spawnChunkVegetation` to `game/systems/vegetationPlacement.ts` (now 275 lines) using `scopedRNG('vegetation', worldSeed, chunkX, chunkZ)` — places trees and bushes per chunk from `vegetation.json biomeVegetationTemplates`, resolving models via the existing `speciesToTreeModel` and `resolveBushModelKey` functions.
+- Added `spawnChunkStructures` to `game/systems/structurePlacement.ts` (now 310 lines) using `scopedRNG('structure', worldSeed, chunkX, chunkZ)` — places 0 or 1 world-gen structure per chunk from `structures.json biomeTemplates` (probability + allowed IDs per biome).
+- Added `biomeVegetationTemplates` to `config/game/vegetation.json` — per-BiomeType entry with `treesPerChunk`, `bushesPerChunk`, `speciesPool`.
+- Added `biomeTemplates` to `config/game/structures.json` — per-BiomeType entry with `probability` (0.05–0.40) and `allowedIds`.
+- Wired both into `game/world/ChunkManager.loadChunk` — `spawnChunkVegetation` adds supplemental trees/bushes; `spawnChunkStructures` adds world-gen structures (wells, campfires, bird-houses, etc.).
+- Added 62 new tests (26 in structurePlacement.test.ts, 36 in vegetationPlacement.test.ts).
+- Files changed:
+  - `config/game/vegetation.json` — added `biomeVegetationTemplates`
+  - `config/game/structures.json` — added `biomeTemplates`
+  - `game/systems/vegetationPlacement.ts` — new imports + `ChunkVegTreePlacement`, `ChunkVegBushPlacement`, `ChunkVegetationResult`, `spawnChunkVegetation`
+  - `game/systems/structurePlacement.ts` — new imports + `StructureChunkPlacement`, `spawnChunkStructures`
+  - `game/world/ChunkManager.ts` — import both new functions, call in `loadChunk`
+  - `game/systems/vegetationPlacement.test.ts` — 8 new tests for `spawnChunkVegetation`
+  - `game/systems/structurePlacement.test.ts` — 6 new tests for `spawnChunkStructures`
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3503 tests, 148 suites pass (+62 new tests)
+- **Learnings:**
+  - **Biome template config pattern**: Add `biomeVegetationTemplates` / `biomeTemplates` keyed by BiomeType string directly — avoids the indirection of entitySpawner's density-key mapping and keeps both density AND species pool co-located per biome.
+  - **scopedRNG('vegetation', ...) vs entitySpawner's 'entity-trees'**: Using a different scope key means the supplemental vegetation from `spawnChunkVegetation` is deterministically different from (and non-conflicting with) entitySpawner's trees/bushes — same positions never produced, no deduplication needed.
+  - **StructureComponent durability field**: `durability` (current) and `maxDurability` (cap) are separate fields on `StructureComponent`. World-gen structures initialize `durability = maxDurability` (fully intact). Forgetting `durability` causes TS error since it's optional but `maxDurability` is also optional — only the interface check catches it.
+  - **Chunk-based probability roll pattern**: `if (rng() >= template.probability) return []` — single roll for 0-or-1 structure placement. `probability: 0.05` → frozen-peaks rarely have structures; `0.40` → orchard-valley frequently does. The test uses 10 chunks at 5% to verify "at most 3" (statistically sound at 6σ).

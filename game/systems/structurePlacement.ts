@@ -2,12 +2,17 @@
  * Structure placement system.
  *
  * Handles placement validation, grid snapping, build cost verification,
- * and radius-based buff activation for placed structures.
+ * radius-based buff activation, and chunk-based world-gen structure placement
+ * (Spec §18, §17.1).
  */
 
 import structuresConfig from "@/config/game/structures.json" with { type: "json" };
 import type { ResourceType } from "@/game/config/resources";
-import type { FarmStructureCategory, StructureEffectType } from "@/game/ecs/components/structures";
+import type { FarmStructureCategory, StructureComponent, StructureEffectType } from "@/game/ecs/components/structures";
+import { scopedRNG } from "@/game/utils/seedWords";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
+
+const CHUNK_SIZE: number = gridConfig.chunkSize;
 
 // ---------------------------------------------------------------------------
 // Structure definition (loaded from config)
@@ -178,4 +183,77 @@ export function getTotalEffect(
   return effects
     .filter((e) => e.effectType === effectType)
     .reduce((sum, e) => sum + e.magnitude, 0);
+}
+
+// ---------------------------------------------------------------------------
+// Chunk-based world-gen structure placement (Spec §18, §17.1)
+// ---------------------------------------------------------------------------
+
+/** A world-gen structure entity ready to be added to ECS. */
+export interface StructureChunkPlacement {
+  position: { x: number; y: number; z: number };
+  structure: StructureComponent;
+  rotationY: number;
+}
+
+/**
+ * Spawn world-gen structures in a chunk based on biome template config.
+ *
+ * Uses scopedRNG('structure', worldSeed, chunkX, chunkZ).
+ * Probability and allowed structure IDs sourced from structures.json biomeTemplates.
+ * Returns 0 or 1 structure per chunk depending on the biome roll.
+ *
+ * @param worldSeed  World seed string.
+ * @param chunkX     Chunk X grid coordinate.
+ * @param chunkZ     Chunk Z grid coordinate.
+ * @param biome      Biome type string (BiomeType).
+ * @param heightmap  CHUNK_SIZE × CHUNK_SIZE Float32Array (row-major: z*size+x).
+ */
+export function spawnChunkStructures(
+  worldSeed: string,
+  chunkX: number,
+  chunkZ: number,
+  biome: string,
+  heightmap: Float32Array,
+): StructureChunkPlacement[] {
+  const biomeTemplates = structuresConfig.biomeTemplates;
+  const template =
+    biomeTemplates[biome as keyof typeof biomeTemplates] ??
+    biomeTemplates["starting-grove"];
+
+  const rng = scopedRNG("structure", worldSeed, chunkX, chunkZ);
+
+  // Roll probability — most chunks will have no world-gen structure
+  if (rng() >= template.probability) return [];
+
+  const allowedIds = template.allowedIds as string[];
+  const templateId = allowedIds[Math.floor(rng() * allowedIds.length)];
+  const def = getStructureById(templateId);
+  if (!def) return [];
+
+  const localX = rng() * CHUNK_SIZE;
+  const localZ = rng() * CHUNK_SIZE;
+  const xi = Math.floor(Math.min(localX, CHUNK_SIZE - 1));
+  const zi = Math.floor(Math.min(localZ, CHUNK_SIZE - 1));
+  const y = heightmap[zi * CHUNK_SIZE + xi];
+  const rotationY = rng() * Math.PI * 2;
+
+  return [
+    {
+      position: { x: chunkX * CHUNK_SIZE + localX, y, z: chunkZ * CHUNK_SIZE + localZ },
+      structure: {
+        templateId: def.id,
+        category: def.category,
+        modelPath: def.modelPath,
+        effectType: def.effectType,
+        effectRadius: def.effectRadius,
+        effectMagnitude: def.effectMagnitude,
+        durability: def.maxDurability,
+        maxDurability: def.maxDurability,
+        level: def.level,
+        buildCost: def.buildCost,
+      },
+      rotationY,
+    },
+  ];
 }

@@ -28,6 +28,8 @@ import { generateLabyrinth } from "./mazeGenerator";
 import { resolveEmissiveColor } from "@/game/utils/spiritColors";
 import { scopedRNG } from "@/game/utils/seedWords";
 import { useGameStore } from "@/game/stores/gameStore";
+import { spawnChunkStructures } from "@/game/systems/structurePlacement";
+import { spawnChunkVegetation } from "@/game/systems/vegetationPlacement";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -589,6 +591,48 @@ export class ChunkManager {
           position: rp.position,
           rotationY: rp.rotationY,
           rock: rp.rock,
+          renderable: { visible, scale: 1 },
+        }),
+      );
+    }
+
+    // Spawn supplemental vegetation via model-resolution pipeline (Spec §6, §17.1)
+    const vegPlacements = spawnChunkVegetation(this.worldSeed, chunkX, chunkZ, biome, terrainData.heightmap);
+
+    for (const tp of vegPlacements.trees) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: tp.position,
+          rotationY: tp.rotationY,
+          tree: tp.tree,
+          renderable: { visible, scale: 1 },
+        }),
+      );
+    }
+
+    for (const bp of vegPlacements.bushes) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: bp.position,
+          rotationY: bp.rotationY,
+          bush: bp.bush,
+          renderable: { visible, scale: 1 },
+        }),
+      );
+    }
+
+    // Spawn world-gen structures based on biome template (Spec §18, §17.1)
+    const structurePlacements = spawnChunkStructures(this.worldSeed, chunkX, chunkZ, biome, terrainData.heightmap);
+
+    for (const sp of structurePlacements) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: sp.position,
+          rotationY: sp.rotationY,
+          structure: sp.structure,
           renderable: { visible, scale: 1 },
         }),
       );
