@@ -1831,3 +1831,21 @@ after each iteration and it's included in prompts for context.
   - **applyTierUpgrade baseEffectPower pattern**: Pass `baseEffectPower` (basic-tier value from tools.json) separately to `applyTierUpgrade`. Multiply by `upgrade.effectMultiplier` (absolute vs basic). Avoids drift from chaining upgrades on an already-multiplied value. Caller stores/passes the base, system applies math.
   - **ForgeEntity minimal-interface for FPS**: `{ forge: { active: boolean } }` — single field. Type guard checks `"forge" in entity && forge !== null`. Matches CampfireEntity pattern from cooking.ts. Pure functions, no ECS imports.
   - **SmeltStatus omits "failed"**: Unlike cooking (which can fail if campfire goes out), smelting always completes once started. Three states only: idle/smelting/done. Simpler state machine, cleaner tests.
+
+---
+
+## 2026-03-07 - US-096
+- Work already complete — `game/systems/forging.test.ts` was written as part of US-095
+- 43 tests covering all acceptance criteria:
+  - Smelting recipes: load all 3, lookup by id, input/output shapes (6 tests)
+  - `canSmelt`: exact/surplus/insufficient/missing/empty inventory (5 tests)
+  - `deductSmeltCost`: deducts inputs, does not mutate original (2 tests)
+  - Smelt slot progress: start, advance, done transition, overshoot clamp, idle/done guards, collect, null cases (10 tests)
+  - Tool tier upgrades: basic→iron, iron→grovekeeper, max-tier null, canUpgrade, deduct cost, applyTierUpgrade (13 tests)
+  - FPS forge interaction: type guard, label, resolver (7 tests)
+- **Files changed:** None (already done in US-095)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern=forging` → 43 tests, 0 failures
+- **Learnings:**
+  - No new patterns — test file was co-written with implementation per docs>tests>code workflow

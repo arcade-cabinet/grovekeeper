@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T16:09:07.672Z",
-  "currentIteration": 94,
+  "updatedAt": "2026-03-07T16:10:10.519Z",
+  "currentIteration": 95,
   "maxIterations": 0,
-  "tasksCompleted": 94,
+  "tasksCompleted": 95,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -580,8 +580,8 @@
       {
         "id": "US-095",
         "title": "Implement forging system",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-096",
@@ -1981,6 +1981,16 @@
       "durationMs": 67012,
       "startedAt": "2026-03-07T16:00:12.871Z",
       "endedAt": "2026-03-07T16:01:19.883Z"
+    },
+    {
+      "iteration": 95,
+      "status": "completed",
+      "taskId": "US-095",
+      "taskTitle": "Implement forging system",
+      "taskCompleted": true,
+      "durationMs": 466665,
+      "startedAt": "2026-03-07T16:01:21.005Z",
+      "endedAt": "2026-03-07T16:09:07.670Z"
     }
   ],
   "skippedTaskIds": [],
