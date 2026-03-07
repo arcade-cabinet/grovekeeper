@@ -34,6 +34,33 @@ after each iteration and it's included in prompts for context.
 - **useGLTF + Rules of Hooks**: Wrap `useGLTF` in a dedicated sub-component (`TreeGLBModel`) that's only mounted when the GLB stage is needed. This satisfies Rules of Hooks while avoiding an unconditional load of all GLBs at all stages. Parent component conditionally renders the sub-component with `{stage >= 2 && <TreeGLBModel ...>}`.
 - **resolveGLBPath as testable seam**: Export pure config-lookup functions from R3F components so they can be unit tested without WebGL/R3F context. Tests import the pure function directly and mock `@react-three/drei`/`@react-three/fiber` at the module level.
 - **species.json glbPath field**: Added `glbPath: "assets/models/trees/{speciesId}.glb"` to all 15 species in `config/game/species.json`. Convention: `assets/models/trees/{kebab-id}.glb`. Both base and prestige arrays have the field.
+- **InstancedMesh entitiesRef pattern**: Outer batch component holds `Map<modelPath, MutableRefObject<StaticEntityInput[]>>`; clears and repopulates refs each `useFrame`. Inner `StaticModelInstances` reads from the ref in its own `useFrame` — entity data flows imperatively with zero React state updates per frame. Capacity Map grows-only; `mesh.count` set each frame to active count.
+- **Multi-mesh GLB InstancedMesh**: `scene.traverse(obj => { if (obj instanceof THREE.Mesh) result.push({ geo, mat }) })` collects all sub-meshes. Render one `<instancedMesh>` per sub-mesh, all sharing the same per-entity world matrix. Callback ref `ref={(el) => { instancedRefs.current[i] = el; }}` handles dynamic sub-mesh ref array without hooks changes.
+
+---
+
+## 2026-03-07 - US-050
+- Implemented InstancedMesh batching for static entities (structures, fences, props)
+- **Files changed:**
+  - `game/ecs/world.ts` — added `rotationY?: number` to Entity interface
+  - `components/entities/StaticInstances.tsx` — new: `StaticEntityInput` interface, `groupByModelPath` pure function, `StaticModelInstances` inner component (multi-mesh GLB support via scene traversal, one InstancedMesh per sub-mesh, entitiesRef pattern for zero re-renders per frame)
+  - `components/entities/StructureInstances.tsx` — new: reads `structuresQuery`, groups by `structure.modelPath`, mounts `StaticModelInstances` per modelPath
+  - `components/entities/FenceInstances.tsx` — new: reads `fencesQuery`, skips invisible fences, groups by `fence.modelPath`
+  - `components/entities/PropInstances.tsx` — new: reads `propsQuery`, skips props without modelPath (optional field), groups by `prop.modelPath`
+  - `components/entities/StaticInstances.test.ts` — 15 tests for `groupByModelPath` + component export
+  - `components/entities/StructureInstances.test.ts` — 2 tests for component export
+  - `components/entities/FenceInstances.test.ts` — 2 tests for component export
+  - `components/entities/PropInstances.test.ts` — 2 tests for component export
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern "StaticInstances|StructureInstances|FenceInstances|PropInstances"` → 20 tests, 0 failures
+  - `npx jest --no-coverage` → 1813 tests, 0 failures (99 suites)
+- **Learnings:**
+  - **Multi-mesh GLB InstancedMesh**: traverse the GLB scene and collect all `THREE.Mesh` children into an array; render one `<instancedMesh>` per sub-mesh sharing the same per-entity transform. Callback ref pattern `ref={(el) => { instancedRefs.current[i] = el; }}` handles dynamic array of sub-mesh refs cleanly.
+  - **entitiesRef pattern (zero re-renders)**: outer component holds `Map<modelPath, MutableRefObject<StaticEntityInput[]>>`; clears and repopulates refs in `useFrame` before sub-components run. Inner component reads from the ref inside its `useFrame` — entity data flows imperatively without React state updates per frame.
+  - **Grows-only capacity**: same as GrassInstances — capacity Map only grows, never shrinks. `mesh.count` is set each frame to actual active count so inactive capacity is never rendered.
+  - **rotationY in Entity**: added `rotationY?: number` to `Entity` interface for forward-compatible rotation storage. All batch renderers use `entity.rotationY ?? 0` as a safe default.
+  - **PropComponent.modelPath is optional**: PropInstances skips entities where `prop.modelPath` is undefined — no throw, just silent skip (props can exist without a placed model).
 
 ---
 

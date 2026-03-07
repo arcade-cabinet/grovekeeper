@@ -88,6 +88,8 @@ export interface Entity {
   // Core spatial
   position?: Position;
   renderable?: Renderable;
+  /** Y-axis rotation in radians. Used by static entity batch renderers. */
+  rotationY?: number;
   chunk?: ChunkComponent;
   zoneId?: string;
 
