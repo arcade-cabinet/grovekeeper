@@ -2374,3 +2374,13 @@ after each iteration and it's included in prompts for context.
   - **discoveredSpiritIds and npcRelationships were already carrying over via `...getState()` spread** — but making them explicit in the prestige set call documents the intent and prevents future accidental omission if the spread pattern changes.
 
 ---
+
+## 2026-03-07 - US-126
+- Tests for prestige already existed in `game/systems/prestige.test.ts` (written as part of US-125)
+- 35 tests pass across: `canPrestige`, `calculatePrestigeBonus`, `getUnlockedPrestigeSpecies`, `getUnlockedCosmetics`, `getActiveCosmetic`, `getCosmeticById`, `getPrestigeResetState`, `buildCostMultiplier bonus`, `generateNewWorldSeed`
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 35 tests pass in prestige suite
+- **Learnings:**
+  - **Pure-function prestige system = zero-mock tests**: All prestige functions are pure (no ECS/store/React), so tests import directly from `./prestige` with no Jest mock setup.
+  - **`emptyResources()` as canonical zero-state**: Use the shared factory from `game/config/resources.ts` as the `expect()` value for reset resource assertions — avoids fragile inline `{ timber: 0, ... }` objects that drift when resource types are added.
+  - **`buildCostMultiplier` floor test**: Asymptote behavior (`Math.max(floor, ...)`) requires an explicit high-prestige test case — linear-region tests alone won't catch floor bugs.
+---

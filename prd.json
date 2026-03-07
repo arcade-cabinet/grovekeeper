@@ -2052,8 +2052,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 126,
-      "passes": false,
-      "notes": "Phase 9: Raids + NG+. Tests for US-125."
+      "passes": true,
+      "notes": "Phase 9: Raids + NG+. Tests for US-125.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-127",
@@ -2846,6 +2847,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T19:00:07.981Z"
+    "updatedAt": "2026-03-07T19:01:25.770Z"
   }
 }
