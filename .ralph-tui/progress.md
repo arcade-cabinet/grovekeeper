@@ -22,6 +22,26 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-014
+- Exported `getCameraPosition(players, eyeHeight, defaultPos)` pure function from `components/player/FPSCamera.tsx` — mirrors the `useFrame` camera follow logic so it can be tested without R3F context
+- Refactored `useFrame` in `FPSCamera.tsx` to call `getCameraPosition` (removed direct `copy` branch, now always uses `set`)
+- Exported `MOUSE_SENSITIVITY` (previously unexported `const`) from `game/hooks/useMouseLook.ts`
+- Added 6 new tests to `components/player/FPSCamera.test.ts` (getCameraPosition describe block): player x unchanged, player y + EYE_HEIGHT offset, player z unchanged, empty entities → default position, negative coords, multiple entities → uses first
+- Added 3 new tests to `game/hooks/useMouseLook.test.ts` (MOUSE_SENSITIVITY describe block): matches grid config, is positive finite, is < 0.1 rad/pixel
+- **Files changed:**
+  - `components/player/FPSCamera.tsx`: extracted + exported `getCameraPosition`; refactored `useFrame` to use it
+  - `components/player/FPSCamera.test.ts`: added 6 `getCameraPosition` tests (8 total in file)
+  - `game/hooks/useMouseLook.ts`: exported `MOUSE_SENSITIVITY`
+  - `game/hooks/useMouseLook.test.ts`: added `MOUSE_SENSITIVITY` import + 3 tests (9 total in file)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 76 suites, 1282 tests, 0 failures
+- **Learnings:**
+  - Extracting the frame callback logic into a named pure function (e.g., `getCameraPosition`) is the cleanest way to test React component behavior — no need to capture `useFrame` callbacks or mock `useRef`, just call the function with plain objects
+  - The pattern `export function getCameraPosition(players, eyeHeight, defaultPos)` exactly mirrors the `isGrounded` / `rotateByYaw` / `clampPitch` precedents established in prior stories
+  - Exporting sensitivity/impulse constants as named exports (not just `const`) allows regression tests that verify config round-trips — if config changes, tests fail immediately
+---
+
 ## 2026-03-07 - US-013
 - Gap analysis: 17 tests across PlayerCapsule.test.ts (4), usePhysicsMovement.test.ts (7), useJump.test.ts (6) covered capsule creation, movement vectors, and ground detection — but jump impulse was not verified (only a hook smoke test existed).
 - Exported `JUMP_IMPULSE` and `GROUND_CHECK_DISTANCE` from `game/hooks/useJump.ts` (previously unexported constants).

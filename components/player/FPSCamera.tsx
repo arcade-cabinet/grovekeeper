@@ -21,6 +21,25 @@ const FOV = 65;
 /** Default camera position before the player entity exists. */
 const DEFAULT_POSITION = new THREE.Vector3(0, EYE_HEIGHT, 0);
 
+type Vec3 = { x: number; y: number; z: number };
+
+/**
+ * Computes the camera world position from ECS player entities.
+ * Returns the first player's position with eyeHeight offset, or defaultPos if no player exists.
+ * Exported for unit testing without requiring R3F context (Spec §9).
+ */
+export function getCameraPosition(
+  players: ReadonlyArray<{ position: Vec3 }>,
+  eyeHeight: number,
+  defaultPos: Vec3,
+): Vec3 {
+  if (players.length > 0) {
+    const pos = players[0].position;
+    return { x: pos.x, y: pos.y + eyeHeight, z: pos.z };
+  }
+  return { x: defaultPos.x, y: defaultPos.y, z: defaultPos.z };
+}
+
 /** FPS camera that follows the player capsule at eye height each frame (Spec §9). */
 export const FPSCamera = () => {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
@@ -30,13 +49,8 @@ export const FPSCamera = () => {
     const cam = cameraRef.current;
     if (!cam) return;
 
-    const players = playerQuery.entities;
-    if (players.length > 0) {
-      const pos = players[0].position;
-      cam.position.set(pos.x, pos.y + EYE_HEIGHT, pos.z);
-    } else {
-      cam.position.copy(DEFAULT_POSITION);
-    }
+    const { x, y, z } = getCameraPosition(playerQuery.entities, EYE_HEIGHT, DEFAULT_POSITION);
+    cam.position.set(x, y, z);
   });
 
   return (

@@ -21,7 +21,8 @@ jest.mock("@react-three/fiber", () => ({
   }),
 }));
 
-import { clampPitch, PITCH_CLAMP_RAD, useMouseLook } from "./useMouseLook";
+import { clampPitch, PITCH_CLAMP_RAD, MOUSE_SENSITIVITY, useMouseLook } from "./useMouseLook";
+import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 describe("clampPitch (Spec §23)", () => {
   it("returns pitch unchanged when within ±85°", () => {
@@ -53,5 +54,20 @@ describe("PITCH_CLAMP_RAD (Spec §23)", () => {
 describe("useMouseLook (Spec §23)", () => {
   it("exports useMouseLook as a function", () => {
     expect(typeof useMouseLook).toBe("function");
+  });
+});
+
+describe("MOUSE_SENSITIVITY (Spec §23)", () => {
+  it("matches the mouseSensitivity value from grid config", () => {
+    expect(MOUSE_SENSITIVITY).toBe(gridConfig.mouseSensitivity);
+  });
+
+  it("is a positive finite number (camera moves in response to mouse input)", () => {
+    expect(MOUSE_SENSITIVITY).toBeGreaterThan(0);
+    expect(Number.isFinite(MOUSE_SENSITIVITY)).toBe(true);
+  });
+
+  it("is small enough to avoid jerky camera (less than 0.1 rad/pixel)", () => {
+    expect(MOUSE_SENSITIVITY).toBeLessThan(0.1);
   });
 });

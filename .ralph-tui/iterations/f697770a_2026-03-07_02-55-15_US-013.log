@@ -1,0 +1,86 @@
+# Iteration 13 Log
+
+## Metadata
+
+- **Task ID**: US-013
+- **Task Title**: Write Jest tests for player physics
+- **Description**: As a developer, I want comprehensive tests for the player physics system so that capsule creation, movement vectors, jump impulse, and ground detection are verified. See GAME_SPEC.md §9.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T08:55:15.507Z
+- **Ended At**: 2026-03-07T08:58:08.351Z
+- **Duration**: 2m 52s
+- **Input Tokens**: 83
+- **Output Tokens**: 9958
+- **Total Tokens**: 10041
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96m**/*.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player[0m pattern: [96m**/*.test.ts[0m
+Let me read the existing test files and source files for the player physics system.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.test.ts[0m
+Let me read the source files to understand what can be tested:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.test.ts[0m
+`★ Insight ─────────────────────────────────────`
+The existing tests (US-008 through US-012) cover 17 tests across capsule creation, movement vectors, and ground detection — but "jump impulse" (the `JUMP_IMPULSE` value itself) is never directly verified. The `useJump.test.ts` only has a smoke test for the hook export. To satisfy the "jump impulse" AC coverage, I need to export `JUMP_IMPULSE` and add dedicated tests for it.
+`─────────────────────────────────────────────────`
+
+The existing 17 tests cover capsule creation, movement vectors, and ground detection. The gap is **jump impulse** — it's mentioned in the AC but not tested. I'll export `JUMP_IMPULSE` (and related constants) from `useJump.ts` and add focused tests.
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit,Bash[0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.ts[0m edit: "const JUMP_IMPULSE = gridConfig.jumpImpulse;
+const..." → "/** Upward impulse applied when the player jumps (..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Testing physics constants by importing them from the source (rather than hardcoding expected values) gives you a live regression check: if someone changes `jumpImpulse` in `grid.json` but forgets to recalibrate the config, the test for "positive impulse" and "impulse matches config" will still catch incorrect values, while a test that asserts `toBe(5)` would silently accept any value that happens to be 5.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.test.ts[0m edit: "import { isGrounded, useJump } from "./useJump";
+i..." → "import { isGrounded, useJump, JUMP_IMPULSE, GROUND..."
+Now add the jump impulse tests after the existing `useJump` smoke test:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.test.ts[0m edit: "describe("useJump (Spec §9)", () => {
+  it("export..." → "describe("useJump (Spec §9)", () => {
+  it("export..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run player physics test files $ npx jest --no-coverage --testPathPattern="useJump|usePhysicsMovement|PlayerCapsule" 2>&1 | tail -30
+22 tests pass (was 17). Let me run the full suite to confirm nothing broke:
+[94m[Bash][0m Full jest run $ npx jest --no-coverage 2>&1 | tail -10
+76 suites, 1273 tests, 0 failures. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-012" → "## 2026-03-07 - US-013
+- Gap analysis: 17 tests ac..."
+[94m[TodoWrite][0m
+Done. Here's the summary:
+
+**What was missing:** `JUMP_IMPULSE` was an unexported private constant — "jump impulse" was untested despite being an explicit AC requirement.
+
+**Changes:**
+- `game/hooks/useJump.ts`: exported `JUMP_IMPULSE` and `GROUND_CHECK_DISTANCE`
+- `game/hooks/useJump.test.ts`: +5 tests (jump impulse value, positive direction, sane range; ground check distance value and positive direction)
+
+**AC status:**
+| Area | Tests |
+|------|-------|
+| Capsule creation | 4 (PlayerCapsule.test.ts) |
+| Movement vectors | 7 (usePhysicsMovement.test.ts) |
+| Jump impulse | 3 new (JUMP_IMPULSE suite) |
+| Ground detection | 5 (isGrounded suite) |
+| **Total** | **22** |
+
+- `npx tsc --noEmit` → 0 errors  
+- `npx jest --no-coverage` → 76 suites, **1273 tests**, 0 failures
+
+<promise>COMPLETE</promise>

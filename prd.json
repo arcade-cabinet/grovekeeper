@@ -210,8 +210,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": "Phase 0-B: Rapier Physics + FPS Camera. Tests for US-009, US-012."
+      "passes": true,
+      "notes": "Phase 0-B: Rapier Physics + FPS Camera. Tests for US-009, US-012.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-015",
@@ -2734,6 +2735,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T08:58:08.352Z"
+    "updatedAt": "2026-03-07T09:05:27.199Z"
   }
 }

@@ -14,7 +14,8 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
-const MOUSE_SENSITIVITY = gridConfig.mouseSensitivity;
+/** Mouse sensitivity in radians per pixel. Exported for unit testing (Spec §23). */
+export const MOUSE_SENSITIVITY = gridConfig.mouseSensitivity;
 
 /** Pitch clamp in radians (±pitchClampDeg°). */
 export const PITCH_CLAMP_RAD = gridConfig.pitchClampDeg * (Math.PI / 180);
