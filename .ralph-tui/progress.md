@@ -37,6 +37,30 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-046
+- Created `components/entities/StructureModel.tsx`:
+  - `resolveStructureGLBPath(templateId)` — pure lookup from `structures.json`; throws for unknown (no fallback)
+  - `StructureGLBModel` — internal sub-component wrapping `useGLTF` + scene clone (Rules of Hooks)
+  - `StructureModel` — public component; accepts `templateId`, `position`, `rotationY`
+- Created `components/entities/StructureModel.test.ts` — 18 tests (all green):
+  - `resolveStructureGLBPath`: correct paths for barn/windmill/water-well/house-1/house-5/campfires/notice-board/wooden-frame
+  - All 20 paths end in `.glb`, are unique, include templateId substring, are under `assets/models/structures/farm/`
+  - All 20 known template IDs resolve without throwing
+  - Throws for unknown, empty string, and partial match (chicken-coop)
+  - `StructureModel` exports as function component
+- **Files changed:**
+  - `components/entities/StructureModel.tsx`: new file
+  - `components/entities/StructureModel.test.ts`: new file — 18 tests
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern StructureModel` → 18 tests, 0 failures
+- **Learnings:**
+  - structures.json has 20 entries (not 85 as stated in task spec — "85" likely refers to available 3DPSX library assets, not current catalog entries). Implement for what's in config.
+  - `StructureComponent.modelPath` is already on the ECS entity, but `resolveStructureGLBPath(templateId)` provides the testable seam (same pattern as TreeModel/NpcModel).
+  - `scene.clone(true)` without material traversal/tint is sufficient for structures — no seasonal tint needed (unlike trees).
+
+---
+
 ## 2026-03-07 - US-041
 - Created `components/entities/NpcModel.tsx`:
   - `resolveBaseModelPath(baseModelId)` — pure lookup from `npcAssets.json`; throws for unknown (no fallback)
