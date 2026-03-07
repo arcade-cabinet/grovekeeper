@@ -91,6 +91,15 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-112
+- Work was already complete from US-111 iteration: `game/quests/proceduralQuests.test.ts` (37 tests) was created alongside the implementation.
+- Verified: `npx jest game/quests/proceduralQuests.test.ts --no-coverage` → 37/37 pass; `npx tsc --noEmit` → 0 errors.
+- **Learnings:**
+  - **Controlled-RNG helper for per-category tests**: `makeRng([0, 0, 0])` returns a closure over a circular array. Lets tests assert on pool membership and range bounds without needing real world seeds.
+  - **Test file written in same iteration as implementation**: Splitting tests into a separate story when the test file already exists just means verifying and re-running — no new code needed.
+
+---
+
 ## 2026-03-07 - US-110
 - Work already complete — tests for the quest state machine were written as part of US-107, US-108, and US-109
 - Files confirmed existing with full coverage:
