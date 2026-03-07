@@ -13,6 +13,7 @@
 
 import { observable, observe, batch } from "@legendapp/state";
 import { useSelector } from "@legendapp/state/react";
+import { chunkDiffs$ } from "@/game/world/chunkPersistence";
 
 import { emptyResources, type ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
@@ -276,6 +277,13 @@ export async function initPersistence(): Promise<void> {
           return cleaned as GameStateData;
         },
       },
+    },
+  });
+
+  syncObservable(chunkDiffs$, {
+    persist: {
+      name: "chunkDiffs",
+      plugin: observablePersistSqlite(Storage),
     },
   });
 }

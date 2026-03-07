@@ -556,3 +556,20 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - No new patterns discovered -- all test approaches already captured in US-025/026/027 entries above.
 ---
+
+## 2026-03-07 - US-029
+- Verified existing save/load implementation is complete and all tests pass (1487 tests)
+- Added missing chunk delta SQLite persistence wiring in `initPersistence()`
+- **Files changed:**
+  - `game/stores/gameStore.ts` -- added `import { chunkDiffs$ }` + `syncObservable(chunkDiffs$, { persist: { name: "chunkDiffs", plugin: observablePersistSqlite(Storage) } })` in `initPersistence()`
+- **Implementation verified:**
+  - `game/stores/gameStore.ts` -- `gameState$` synced to expo-sqlite (player state, quest progress, settings, world state, resources, unlocks, etc.)
+  - `game/world/chunkPersistence.ts` -- `chunkDiffs$` observable with delta-only storage; now wired to expo-sqlite via `initPersistence()`
+  - `game/hooks/useAutoSave.ts` -- AppState listener saves on "background"/"inactive"; debounced 2s save on store changes
+  - `game/db/queries.ts` -- relational SQLite tables (player, resources, seeds, unlocks, achievements, trees, structures, quests, tracking, settings, world_state, time_state) with `hydrateGameStore` + `persistGameStore` + `saveGroveToDb`
+  - `game/hooks/usePersistence.ts` -- startup hydration: localStorage migration → hydrateGameStore → offline growth calculation → deserializeGrove
+- **Learnings:**
+  - **Two-layer persistence architecture**: `gameState$` uses Legend State `syncObservable` with expo-sqlite kv-store (JSON blob, simple). Grove trees and structured game data use drizzle-orm relational tables (via `game/db/queries.ts`). Both coexist — kv-store for reactive observables, relational for structured queries.
+  - **`chunkDiffs$` is a separate observable from `gameState$`**: Chunk diffs live in `game/world/chunkPersistence.ts` and must be independently wired to SQLite. Adding a second `syncObservable` call in `initPersistence()` is the right pattern — both use the same plugin instance but different `name` keys.
+  - **EPHEMERAL_KEYS transform on save**: Strip `screen`, `groveData`, `buildMode`, `buildTemplateId` from the Legend State kv-store serialization. These are runtime-only fields that should never persist (groveData is saved via relational trees table instead).
+---

@@ -1,0 +1,52 @@
+# Iteration 28 Log
+
+## Metadata
+
+- **Task ID**: US-028
+- **Task Title**: Write Jest tests for input system
+- **Description**: As a developer, I want tests for the input system so that InputFrame normalization, keyboard mapping, joystick direction, and touch zones are verified. See GAME_SPEC.md §10.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:02:52.942Z
+- **Ended At**: 2026-03-07T10:03:53.823Z
+- **Duration**: 1m 0s
+- **Input Tokens**: 65
+- **Output Tokens**: 2522
+- **Total Tokens**: 2587
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/**/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/input/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/TouchProvider.test.ts[0m
+The test files already exist. Let me verify they pass and check the implementation files.
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.ts[0m
+[94m[Bash][0m Run input system tests $ npx jest --no-coverage game/input/ 2>&1 | tail -40
+All 64 tests pass. Let me also verify TypeScript compiles cleanly.
+[94m[Bash][0m TypeScript typecheck $ npx tsc --noEmit 2>&1 | tail -20
+Both checks pass. The work for US-028 was already completed in a previous iteration. Let me append to the progress log.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Bash][0m Show end of progress.md $ tail -20 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **moveX/moveZ are held state**: Joystick displ..." → "  - **moveX/moveZ are held state**: Joystick displ..."
+`★ Insight ─────────────────────────────────────`
+The input system test suite is a good example of **layered testing strategy**: `InputManager.test.ts` tests the merge/normalization logic in pure TS (no DOM needed), while `KeyboardMouseProvider.test.ts` and `TouchProvider.test.ts` use `@jest-environment jsdom` only where browser APIs are required. This minimizes the overhead of DOM environment setup to only the files that need it.
+`─────────────────────────────────────────────────`
+
+US-028 is already complete. All 64 tests across the three input system test files pass:
+
+- `InputManager.test.ts` — 9 tests: frame shape, provider merging, unit-circle clamping, OR booleans, first-wins toolSwap, disabled/unregistered providers
+- `KeyboardMouseProvider.test.ts` — 28 tests: WASD/arrows, opposing key cancel, edge-triggered actions, pointer lock guard, delta accumulation, postFrame reset
+- `TouchProvider.test.ts` — 27 tests: joystick direction/clamping, onTouchMove/End lifecycle, viewport swipe look, multi-touch isolation, action buttons, isAvailable, dispose
+
+Both `npx tsc --noEmit` and `npx jest --no-coverage` pass cleanly.
+
+<promise>COMPLETE</promise>
