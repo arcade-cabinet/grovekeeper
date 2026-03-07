@@ -1,0 +1,125 @@
+# Iteration 141 Log
+
+## Metadata
+
+- **Task ID**: US-141
+- **Task Title**: Implement 11-step tutorial with existing overlay component
+- **Description**: As a new player, I want a guided tutorial (look, move, equip, dig, plant, water, wait, harvest, talk, campfire, explore) using the existing TutorialOverlay.tsx (188 lines) for UI and a new tutorial st...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T20:08:39.783Z
+- **Ended At**: 2026-03-07T20:14:32.686Z
+- **Duration**: 5m 52s
+- **Input Tokens**: 122
+- **Output Tokens**: 21021
+- **Total Tokens**: 21143
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+Let me read the relevant existing files to understand what's already there.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/TutorialOverlay.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/tutorial*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (256.5KB) exceeds maximum allowed size (256KB). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§27|tutorial|Tutorial[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 25\. Tutorial System[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+Let me look at the InputFrame type and any existing game systems for patterns.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/useInput*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInput.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/combat.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mTutorialOverlay[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/growth.ts[0m
+Let me look at the GameUI.tsx to understand the full context for the tutorial.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m pattern: [96mtutorialTargetRect|tutorialLabel[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The signal-based tutorial pattern mirrors how quest objectives work: game actions emit string signals (`"action:plant"`, `"action:dig"`), and the state machine checks the signal against the current step's expected trigger. This keeps the tutorial system fully decoupled from the input system and ECS — no imports of Three.js, Rapier, or React needed. Tests can call `tickTutorial(state, signal)` directly with no mocks.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/tutorial.ts[0m "/**
+ * Tutorial state machine — pure functions for the 11-step guided tutorial.
+ * Spec §25.1 Tutorial Village
+ *
+ * Steps: look → move → equip → dig → plant → water → wait → harvest →
+ *        talk ... (5216 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/tutorial.test.ts[0m "/**
+ * Tutorial state machine tests — Spec §25.1
+ */
+
+import {
+  initialTutorialState,
+  tickTutorial,
+  advanceStep,
+  skipTutorial,
+  isTutorialComplete,
+  currentStepDef,
+  currentStepLabel,
+  TUTO... (5854 chars)"
+[94m[TodoWrite][0m
+Now add `tutorialState` to the game store — both the initial state and two actions:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "import { applyDialogueEffects } from "@/game/syste..." → "import { applyDialogueEffects } from "@/game/syste..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  /** Discovered Grovekeeper Spirit IDs. Spec §32...." → "  /** Discovered Grovekeeper Spirit IDs. Spec §32...."
+Now add the two actions. I'll insert them just before the `hydrateFromDb` action at the end:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  // Database hydration -- bulk-set state from SQL..." → "  // Tutorial actions (Spec §25.1)
+
+  /**
+   * Adv..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+When a component needs both external props (for legacy use cases like HUD element highlighting) and internal store state (for tutorial step label), read both sources and merge: store label takes priority when the tutorial is active. The `label` prop remains as a fallback, preserving backward compatibility with the existing `GameUI.tsx` callers without requiring them to change.
+`─────────────────────────────────────────────────`
+
+Now update `TutorialOverlay.tsx` to read from the store and add a Skip button:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/TutorialOverlay.tsx[0m "/**
+ * TutorialOverlay -- Pulsing highlight ring that draws attention to a
+ * target UI element, with an instruction label nearby and a Skip button.
+ *
+ * Reads tutorial state from the game store dire... (7866 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+TypeScript clean. Now run the tests:
+[94m[Bash][0m Run tutorial tests $ npx jest --no-coverage --testPathPattern=tutorial 2>&1 | tail -30
+23/23 tests pass. Let me also verify the TutorialOverlay doesn't have a React hooks rules violation (hooks called conditionally):
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/TutorialOverlay.tsx[0m
+There's a Rules of Hooks violation — `useRef` and `useEffect` are called after a conditional `return null`. I need to move all hooks before the early return:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/TutorialOverlay.tsx[0m "/**
+ * TutorialOverlay -- Pulsing highlight ring that draws attention to a
+ * target UI element, with an instruction label nearby and a Skip button.
+ *
+ * Reads tutorial state from the game store dire... (7550 chars)"
+[94m[Bash][0m Full TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run full jest test suite $ npx jest --no-coverage 2>&1 | tail -20
+146 suites, 3387 tests — all pass. Let me mark the final task complete.
+[94m[TodoWrite][0m
+Now append learnings to progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Show end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-141 learnings to progress.md $ unit-testable with zero mocks.   - **Store action name collision with imported pure function**: When...
+`★ Insight ─────────────────────────────────────`
+The `pointerEvents="box-none"` on the overlay container (rather than `"none"`) is important: `"none"` would block all touch events (including the Skip button press), while `"box-none"` passes through touches that hit the container itself but lets child views (like `Pressable`) still receive input. This is the correct pattern for transparent overlay containers that host interactive children.
+`─────────────────────────────────────────────────`
+
+All done. Here's a summary of what was implemented:
+
+**Files created:**
+- `game/systems/tutorial.ts` — Pure state machine: 11 steps (look → move → equip → dig → plant → water → wait → harvest → talk → campfire → explore → done), signal-based advancement, skip, persistence-safe
+- `game/systems/tutorial.test.ts` — 23 tests, all passing
+
+**Files modified:**
+- `game/stores/gameStore.ts` — `tutorialState` added to `initialState` (persists via expo-sqlite), `advanceTutorial(signal)` and `completeTutorialSkip()` actions added
+- `components/game/TutorialOverlay.tsx` — reads tutorial step label from store, shows Skip button (44px Pressable, bottom-right, `accessibilityRole="button"`)
+
+**Quality gates:** `npx tsc --noEmit` → 0 errors | `npx jest --no-coverage` → 3387 tests, 146 suites, all pass
+
+<promise>COMPLETE</promise>

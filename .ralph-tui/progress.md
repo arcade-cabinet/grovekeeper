@@ -2586,3 +2586,13 @@ after each iteration and it's included in prompts for context.
   - **Signal-based tutorial mirrors quest objectives**: `tickTutorial(state, signal)` is the same pattern as `advanceObjectives(state, eventType, amount)` — game actions dispatch string signals, the system checks them against the current step's expected trigger. Fully decoupled from React, ECS, and Three.js; unit-testable with zero mocks.
   - **Store action name collision with imported pure function**: When the game store action has the same name as an imported pure function (`skipTutorial`), import the pure function with an alias (`skipTutorial as skipTutorialPure`) and give the store action a different name (`completeTutorialSkip`). Matches the `discoverCampfire as discoverCampfirePure` pattern already in the codebase.
 ---
+
+## 2026-03-07 - US-142
+- Work was already complete — `game/systems/tutorial.test.ts` was written as part of US-141
+- Files: `game/systems/tutorial.test.ts` (23 tests), `game/systems/tutorial.ts` (pure state machine)
+- 23 tests pass, `tsc --noEmit` clean
+- **Learnings:**
+  - **Already-complete check**: US-142 tests were shipped inside US-141. Always verify existence and acceptance criteria before writing new code.
+  - **Pure state machine = zero-mock tests**: Because `tutorial.ts` has no React/RN/ECS/Three.js imports, the test file needs zero `jest.mock()` calls. Import real production functions and call them directly.
+  - **Identity-return optimization is testable**: `tickTutorial` returns the same state reference on wrong signal — `expect(next).toBe(state)` tests this allocation optimization as a first-class assertion.
+---
