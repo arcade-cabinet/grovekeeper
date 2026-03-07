@@ -2,11 +2,11 @@
   "maxStage": 4,
   "stageNames": ["Seed", "Sprout", "Sapling", "Mature", "Old Growth"],
   "stageVisuals": [
-    { "name": "Seed", "scale": 0.08 },
-    { "name": "Sprout", "scale": 0.15 },
-    { "name": "Sapling", "scale": 0.4 },
+    { "name": "Seed", "scale": 0.2 },
+    { "name": "Sprout", "scale": 0.4 },
+    { "name": "Sapling", "scale": 0.6 },
     { "name": "Mature", "scale": 0.8 },
-    { "name": "Old Growth", "scale": 1.2 }
+    { "name": "Old Growth", "scale": 1.0 }
   ],
   "seasonMultipliers": {
     "spring": 1.5,

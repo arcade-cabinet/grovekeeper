@@ -1,0 +1,146 @@
+# Iteration 33 Log
+
+## Metadata
+
+- **Task ID**: US-033
+- **Task Title**: Create tree GLB loader with species mapping
+- **Description**: As a developer, I want a TreeModel component that maps speciesId to GLB path via config/game/species.json and loads with useGLTF so that each tree species renders its correct model. See GAME_SPEC.md §...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:16:57.063Z
+- **Ended At**: 2026-03-07T10:22:02.454Z
+- **Duration**: 5m 5s
+- **Input Tokens**: 126
+- **Output Tokens**: 17772
+- **Total Tokens**: 17898
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeInstances.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/vegetation.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/treeGeometry.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mGLB|glb|glbPath|useGLTF|gltf[0m
+Now let me look at the GAME_SPEC §8 and existing test patterns:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§8|Section 8|## 8\.[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/NpcMeshes.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/**/*.test.*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/TerrainChunk.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `TreeModel` component needs to satisfy React's Rules of Hooks while routing between procedural geometry (stages 0-1) and GLB loading (stages 2-4). The key pattern: wrap `useGLTF` in a child component (`TreeGLBModel`) that's only mounted when `stage >= 2` — hooks inside a component only execute when that component renders. This is the correct alternative to calling hooks conditionally.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit,Write,Bash[0m
+Now let me implement everything. Starting with adding `glbPath` to `species.json`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "white-oak",
+      "name": "White Oak"..." → "      "id": "white-oak",
+      "name": "White Oak"..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "weeping-willow",
+      "name": "Weepi..." → "      "id": "weeping-willow",
+      "name": "Weepi..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "elder-pine",
+      "name": "Elder Pin..." → "      "id": "elder-pine",
+      "name": "Elder Pin..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "cherry-blossom",
+      "name": "Cherr..." → "      "id": "cherry-blossom",
+      "name": "Cherr..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "ghost-birch",
+      "name": "Ghost Bi..." → "      "id": "ghost-birch",
+      "name": "Ghost Bi..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "redwood",
+      "name": "Redwood",
+  ..." → "      "id": "redwood",
+      "name": "Redwood",
+  ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "flame-maple",
+      "name": "Flame Ma..." → "      "id": "flame-maple",
+      "name": "Flame Ma..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "baobab",
+      "name": "Baobab",
+    ..." → "      "id": "baobab",
+      "name": "Baobab",
+    ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "silver-birch",
+      "name": "Silver ..." → "      "id": "silver-birch",
+      "name": "Silver ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "ironbark",
+      "name": "Ironbark",
+..." → "      "id": "ironbark",
+      "name": "Ironbark",
+..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "golden-apple",
+      "name": "Golden ..." → "      "id": "golden-apple",
+      "name": "Golden ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "mystic-fern",
+      "name": "Mystic F..." → "      "id": "mystic-fern",
+      "name": "Mystic F..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "crystal-oak",
+      "name": "Crystall..." → "      "id": "crystal-oak",
+      "name": "Crystall..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "moonwood-ash",
+      "name": "Moonwoo..." → "      "id": "moonwood-ash",
+      "name": "Moonwoo..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/species.json[0m edit: "      "id": "worldtree",
+      "name": "Worldtree"..." → "      "id": "worldtree",
+      "name": "Worldtree"..."
+[94m[TodoWrite][0m
+Now create `TreeModel.tsx`:
+
+`★ Insight ─────────────────────────────────────`
+The `resolveGLBPath` function is extracted as a named export so it can be unit tested in isolation — without rendering any React or Three.js context. This is the key "seam" that makes the species mapping testable. The `TreeGLBModel` sub-component exists solely to satisfy the Rules of Hooks: since `useGLTF` must be called unconditionally, it lives inside a component that is only mounted when `stage >= 2`.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.tsx[0m "/**
+ * TreeModel — renders a single tree entity at the correct visual for its growth stage.
+ *
+ * Stages 0 (Seed) and 1 (Sprout) use hardcoded geometry.
+ * Stages 2 (Sapling), 3 (Mature), and 4 (Old G... (4455 chars)"
+[94m[TodoWrite][0m
+Now create the test file:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.test.ts[0m "/**
+ * Tests for TreeModel — species GLB path mapping and stage scales (Spec §8.1).
+ *
+ * Tests the exported pure functions and constants without WebGL/R3F context.
+ */
+
+jest.mock("@react-three/drei",... (4816 chars)"
+Now run type check and tests:
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run TreeModel tests only $ npx jest --no-coverage --testPathPattern="TreeModel" 2>&1
+19 tests passing. Now run the full suite:
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -15
+87 suites, 1530 tests, all passing.
+[94m[TodoWrite][0m
+Now update the progress file:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **Rapier ColliderDesc.trimesh requires Uint32Arr..." → "- **Rapier ColliderDesc.trimesh requires Uint32Arr..."
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-024" → "## 2026-03-07 - US-033
+- Created `components/entit..."
+All done. Here's a summary:
+
+**Implemented US-033:**
+
+- **`config/game/species.json`** — added `glbPath: "assets/models/trees/{id}.glb"` to all 15 species (12 base + 3 prestige)
+
+- **`components/entities/TreeModel.tsx`** (new):
+  - `resolveGLBPath(speciesId)` — pure config lookup, throws on unknown speciesId
+  - `STAGE_SCALES` — `{0: 0.05, 1: 0.15, 2: 0.5, 3: 1.0, 4: 1.3}` per Spec §8.1
+  - `PROCEDURAL_STAGE_MAX = 1` — boundary between hardcoded geometry and GLB
+  - `TreeModel` — routes stage 0/1 to hardcoded meshes, stage 2-4 to `TreeGLBModel`
+  - `TreeGLBModel` — sub-component wrapping `useGLTF` (only mounted for stage >= 2)
+
+- **`components/entities/TreeModel.test.ts`** (new) — 19 tests covering all exported symbols
+
+**Quality:** `tsc --noEmit` clean, 87 suites / 1530 tests all pass.
+
+<promise>COMPLETE</promise>

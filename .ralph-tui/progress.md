@@ -37,6 +37,34 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-034
+- Updated `config/game/growth.json` stageVisuals scales to (0.2, 0.4, 0.6, 0.8, 1.0) per acceptance criteria
+- Created `game/systems/treeScaleSystem.ts`:
+  - `TreeScaleEntity` interface — minimal entity shape for testing
+  - `applyTreeScale(entity)` — pure function: writes `getStageScale(stage, progress)` → `entity.renderable.scale`
+  - `treeScaleSystem(query?)` — system runner; iterates over treesQuery (or mock in tests)
+- Created `game/systems/treeScaleSystem.test.ts` — 11 tests (all green):
+  - Each stage 0-4 maps to correct base scale
+  - Stage 0 < stage 4 (visible size difference)
+  - Scale monotonically increasing
+  - Interpolation increases with progress > 0
+  - Max stage scale unchanged by progress
+  - System updates all entities, handles empty query, reflects stage changes on re-tick
+- **Files changed:**
+  - `config/game/growth.json`: stageVisuals (0.2, 0.4, 0.6, 0.8, 1.0)
+  - `game/systems/treeScaleSystem.ts`: new file
+  - `game/systems/treeScaleSystem.test.ts`: new file — 11 tests
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 88 suites, 1543 tests, 0 failures
+- **Learnings:**
+  - `applyTreeScale` (pure) + `treeScaleSystem` (runner) split is the canonical testability pattern — avoids Miniplex mock in tests
+  - `as unknown as { entities: Iterable<MinimalInterface> }` is the safe cast pattern to accept live query with minimal interface
+  - `growth.test.ts` tests survived the stageVisuals config change unmodified — they read from `STAGE_VISUALS[n].scale` dynamically, so only stale comments needed updating (not code)
+  - TreeInstances.tsx already reads `renderable.scale` and lerps the mesh — treeScaleSystem is the missing writer that completes the pipeline
+
+---
+
 ## 2026-03-07 - US-033
 - Created `components/entities/TreeModel.tsx`:
   - `resolveGLBPath(speciesId)` — pure config lookup from `species.json`; throws for unknown speciesId (no fallback)
