@@ -28,6 +28,13 @@
         { "resource": "sap", "min": 1, "max": 2, "chance": 0.4 }
       ],
       "rareDrop": { "resource": "fruit", "min": 2, "max": 4, "chance": 0.08 }
+    },
+    "sprite-loot": {
+      "drops": [
+        { "resource": "sap", "min": 1, "max": 1, "chance": 0.6 },
+        { "resource": "fruit", "min": 1, "max": 1, "chance": 0.2 }
+      ],
+      "rareDrop": { "resource": "acorns", "min": 1, "max": 2, "chance": 0.04 }
     }
   },
   "despawnTimerSeconds": 60,

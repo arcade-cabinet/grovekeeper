@@ -67,6 +67,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-087
+- Updated `game/systems/lootSystem.ts` — added `rollLootForEnemy(enemyId, lootTableId, tier, worldSeed)` that uses `scopedRNG("loot", worldSeed, enemyId)` internally, then calls `rollLoot` + `createLootDrop`
+- Updated `config/game/loot.json` — added missing `sprite-loot` table (referenced by `thorn-sprite` in enemies.json)
+- Updated `game/systems/lootSystem.test.ts` — added 5 new tests for `rollLootForEnemy` covering despawn timer, determinism, different-enemy-id diversity, different-seed diversity, and sprite-loot table
+- **Files changed:** lootSystem.ts (+import scopedRNG, +rollLootForEnemy), lootSystem.test.ts (+5 tests), loot.json (+sprite-loot table)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2356 tests, 0 failures (118 suites, +5 new)
+- **Learnings:**
+  - **rollLootForEnemy = scopedRNG wrapper pattern**: The low-level `rollLoot(lootTableId, tier, rng)` stays generic (good for unit testing with any RNG). The high-level `rollLootForEnemy` wraps it with the project-standard `scopedRNG("loot", worldSeed, enemyId)` call. This two-layer design keeps both testability and the scoped-seed contract.
+  - **Missing loot table = silent empty drops**: enemies.json referenced `sprite-loot` but loot.json didn't have it — `rollLoot` silently returns `[]` for unknown tables. Always cross-check all `lootTableId` values against loot.json keys.
+
+---
+
 ## 2026-03-07 - US-086
 - Created `game/systems/combat.ts` — 7 pure exported functions for combat mechanics
   - `computePlayerDamage(effectPower, damageMultiplier)` — Spec §34.2

@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T15:23:37.782Z",
-  "currentIteration": 85,
+  "updatedAt": "2026-03-07T15:27:24.686Z",
+  "currentIteration": 86,
   "maxIterations": 0,
-  "tasksCompleted": 85,
+  "tasksCompleted": 86,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -526,8 +526,8 @@
       {
         "id": "US-086",
         "title": "Implement combat system",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-087",
@@ -1891,6 +1891,16 @@
       "durationMs": 499944,
       "startedAt": "2026-03-07T15:07:45.039Z",
       "endedAt": "2026-03-07T15:16:04.983Z"
+    },
+    {
+      "iteration": 86,
+      "status": "completed",
+      "taskId": "US-086",
+      "taskTitle": "Implement combat system",
+      "taskCompleted": true,
+      "durationMs": 451663,
+      "startedAt": "2026-03-07T15:16:06.116Z",
+      "endedAt": "2026-03-07T15:23:37.779Z"
     }
   ],
   "skippedTaskIds": [],

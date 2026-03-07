@@ -1,0 +1,184 @@
+# Iteration 86 Log
+
+## Metadata
+
+- **Task ID**: US-086
+- **Task Title**: Implement combat system
+- **Description**: As a player in Survival mode, I want to fight enemies with my tools so that I can defend my grove. Tool damage = effectPower * difficulty multiplier. Knockback on hit. See GAME_SPEC.md §20.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:16:06.116Z
+- **Ended At**: 2026-03-07T15:23:37.779Z
+- **Duration**: 7m 31s
+- **Input Tokens**: 157
+- **Output Tokens**: 24946
+- **Total Tokens**: 25103
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,Glob,Grep,TodoWrite,Bash,Edit,Write[0m
+[94m[Skill][0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+No `combat.ts` yet. Let me read the spec §20 and the combat ECS components in parallel.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§20|section 20|## 20\.|20\. Combat[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/combat.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m[Cc]ombat|enemy.*damage|player.*damage|knockback[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/combat.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Now let me read the relevant configs and the loot system for context.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/enemyAI.ts[0m
+[94m[Bash][0m Read difficulty.json config $ cat config/game/difficulty.json | head -60
+[94m[Bash][0m Read first 3 tool entries from tools.json to see effectPower field $ print(json.dumps(list(data.items())[:3], indent=2))"
+
+[91m[Error: Exit code 1
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import json,sys; data=json.load(sys.stdin); print(json.dumps(list(data.items())[:3], indent=2))
+                                                                      ^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'items'][0m
+[94m[Bash][0m Read first 2 tools from tools.json $ print(json.dumps(data[:2], indent=2))"
+[94m[Bash][0m Find damageMultiplier fields in difficulty.json $ grep -n "damageMultiplier\|incomingDamage\|outgoing" config/game/difficulty.json | head -20
+[94m[Bash][0m Find effectPower and damageMultiplier in configs $ grep -n "effectPower\|damageMultiplier\|incomingDamage" config/game/tools.json config/game/difficult...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/harvest.ts[0m
+[94m[Bash][0m Print all tool fields from tools.json $ print(json.dumps([{k:v for k,v in t.items()} for t in data], indent=2))" 2>/dev/null | head -80
+[94m[Bash][0m Print first 2 difficulty entries $ [print(json.dumps(d, indent=2)) for d in data[:2]]" 2>/dev/null | head -80
+[94m[Bash][0m Read enemies.json $ cat config/game/enemies.json
+[94m[Bash][0m Print all difficulty entries to find missing multiplier fields $ print(json.dumps(data, indent=2))" | tail -80
+[94m[TodoWrite][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mdifficulty\.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/difficulty.ts[0m
+[94m[Bash][0m List all game config files $ ls config/game/
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config[0m
+
+[91m[Error: EISDIR: illegal operation on a directory, read '/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config'][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/config/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m
+Now I have everything I need. Let me proceed with TDD.
+
+`★ Insight ─────────────────────────────────────`
+- The combat system is kept purely functional (no ECS world, no Rapier) — damage and knockback are computed and returned as values, then applied by the caller with Rapier. This keeps the system fully testable without any game runtime.
+- Knockback is computed as a directional impulse vector `(normalized_dir * force)`, not a Rapier impulse directly — the R3F component translates this to a physics call.
+- `invulnFrames` acts as a timer in seconds (decremented by `dt`), not an actual frame counter — decoupling it from frame rate.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+**Step 1: Create `config/game/combat.json`**
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/combat.json[0m "{
+  "invulnSeconds": 0.5,
+  "enemyKnockbackForce": 5.0,
+  "playerKnockbackForce": 3.0,
+  "playerBaseHealth": 20,
+  "playerMaxHealth": 20
+}
+"
+**Step 2: Add `effectPower` to combat-capable tools in `tools.json`**
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m edit: "  {
+    "id": "pruning-shears",
+    "name": "Pruni..." → "  {
+    "id": "pruning-shears",
+    "name": "Pruni..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m edit: "  {
+    "id": "shovel",
+    "name": "Shovel",
+    ..." → "  {
+    "id": "shovel",
+    "name": "Shovel",
+    ..."
+**Step 3: Add `damageMultiplier` + `incomingDamageMultiplier` to each difficulty**
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "windstormDamageChance": 0,
+    "rainGrowthBon..." → "    "windstormDamageChance": 0,
+    "rainGrowthBon..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "windstormDamageChance": 0.1,
+    "rainGrowthB..." → "    "windstormDamageChance": 0.1,
+    "rainGrowthB..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "windstormDamageChance": 0.15,
+    "rainGrowth..." → "    "windstormDamageChance": 0.15,
+    "rainGrowth..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "windstormDamageChance": 0.2,
+    "rainGrowthB..." → "    "windstormDamageChance": 0.2,
+    "rainGrowthB..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "windstormDamageChance": 0.25,
+    "rainGrowth..." → "    "windstormDamageChance": 0.25,
+    "rainGrowth..."
+**Step 4: Update `DifficultyConfig` interface and `ToolData` interface**
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/difficulty.ts[0m edit: "  windstormDamageChance: number;
+  rainGrowthBonus..." → "  windstormDamageChance: number;
+  rainGrowthBonus..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.ts[0m edit: "  /** Maximum uses before the tool breaks (0 = no ..." → "  /** Maximum uses before the tool breaks (0 = no ..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.ts[0m edit: "  /** Maximum uses before the tool breaks (0 = no ..." → "  /** Maximum uses before the tool breaks (0 = no ..."
+**Step 5: Write failing tests (RED)**
+
+`★ Insight ─────────────────────────────────────`
+- The tests import only from `./combat` and `@/game/ecs/components/combat` — no ECS world, no R3F, no Rapier. This keeps the test suite fast and isolated from game runtime.
+- `makeHealth()` and `makeCombat()` factory helpers create minimal plain objects matching the component interfaces — the same minimal-interface injection pattern used throughout the codebase.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/combat.test.ts[0m "/**
+ * Combat System tests (Spec §34)
+ *
+ * All functions are pure — no ECS world, no Rapier, no R3F.
+ * Tests reference GAME_SPEC.md §34.2 (Combat Mechanics).
+ */
+
+import {
+  computePlayerDamage,
+  c... (8314 chars)"
+Now verify the tests fail (RED):
+[94m[Bash][0m Run combat tests to confirm RED (expected to fail) $ npx jest --no-coverage game/systems/combat.test.ts 2>&1 | tail -20
+Tests fail as expected (module not found). Now implement `combat.ts` (GREEN):
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `combat.ts` imports `invulnSeconds` from `config/game/combat.json` rather than hardcoding it — satisfying the "no inline tuning constants" rule. The JSON import uses `with { type: "json" }` (Bun/ESM style), consistent with every other config import in the codebase.
+- `computeKnockback` guards with `dist < 0.001` instead of `=== 0` to handle floating-point coincidence — avoids a division-by-zero / NaN that would propagate into physics.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/combat.ts[0m "/**
+ * Combat system — pure functions for damage, knockback, and health tracking.
+ *
+ * No ECS world, no Rapier, no R3F dependencies.
+ * Callers (R3F components) translate knockback vectors into Rapie... (3858 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run combat tests to confirm GREEN $ npx jest --no-coverage game/systems/combat.test.ts 2>&1
+All 32 tests pass. Now run the full suite to check for regressions:
+[94m[Bash][0m Run full test suite for regressions $ npx jest --no-coverage 2>&1 | tail -15
+All 2351 tests pass (118 suites, +32 new). Now typecheck:
+[94m[Bash][0m TypeScript type check — must be 0 errors $ npx tsc --noEmit 2>&1
+0 TypeScript errors. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **EnemyEntityManager as module-level registry**:..." → "- **EnemyEntityManager as module-level registry**:..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-085" → "## 2026-03-07 - US-086
+- Created `game/systems/com..."
+[94m[TodoWrite][0m
+US-086 is complete. Here's the summary:
+
+## What was implemented
+
+**New file: `game/systems/combat.ts`** — 7 pure functions:
+| Function | Purpose |
+|----------|---------|
+| `computePlayerDamage` | `effectPower × damageMultiplier` (Spec §34.2) |
+| `computeEnemyDamage` | `attackPower × incomingDamageMultiplier` |
+| `applyDamageToHealth` | Reduces HP, sets invuln window, skips if still invulnerable |
+| `isDefeated` | Returns true when `health.current <= 0` |
+| `tickInvulnFrames` | Decrements invuln timer by `dt`, clamps to 0 |
+| `computeKnockback` | Returns normalized direction × force vector (Rapier-ready) |
+| `tickAttackCooldown` | Decrements `cooldownRemaining`, clamps to 0 |
+
+**Config additions:**
+- `config/game/combat.json` — tuning constants (`invulnSeconds`, knockback forces, player health)
+- `config/game/tools.json` — `effectPower` on axe (5.0), shovel (3.0), pruning-shears (2.0)
+- `config/game/difficulty.json` — `damageMultiplier` + `incomingDamageMultiplier` on all 5 difficulties (explore=0/0 → ultra-brutal=2/2)
+
+**32 tests, 0 TypeScript errors, 2351 total tests passing.**
+
+<promise>COMPLETE</promise>

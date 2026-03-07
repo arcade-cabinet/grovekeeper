@@ -1,6 +1,7 @@
 import lootConfig from "@/config/game/loot.json" with { type: "json" };
 import enemiesConfig from "@/config/game/enemies.json" with { type: "json" };
 import type { LootDropComponent } from "@/game/ecs/components/combat";
+import { scopedRNG } from "@/game/utils/seedWords";
 
 const { tables, despawnTimerSeconds } = lootConfig;
 const { tierScaling } = enemiesConfig;
@@ -62,4 +63,21 @@ export function updateLootDespawn(
     Math.sin(loot.despawnTimer * lootConfig.floatBobSpeed) *
     lootConfig.floatBobAmplitude;
   return loot.despawnTimer <= 0;
+}
+
+/**
+ * Roll loot for a defeated enemy using a deterministic scoped RNG.
+ * Combines scopedRNG('loot', worldSeed, enemyId) with the enemy's
+ * loot table and tier to produce a ready-to-spawn LootDropComponent.
+ * Spec §34 — combat rewards.
+ */
+export function rollLootForEnemy(
+  enemyId: string,
+  lootTableId: string,
+  tier: number,
+  worldSeed: string,
+): LootDropComponent {
+  const rng = scopedRNG("loot", worldSeed, enemyId);
+  const rolls = rollLoot(lootTableId, tier, rng);
+  return createLootDrop(rolls);
 }

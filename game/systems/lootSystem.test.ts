@@ -1,4 +1,4 @@
-import { rollLoot, createLootDrop, updateLootDespawn } from "./lootSystem";
+import { rollLoot, createLootDrop, updateLootDespawn, rollLootForEnemy } from "./lootSystem";
 import { createRNG } from "@/game/utils/seedRNG";
 
 describe("Loot System", () => {
@@ -67,6 +67,46 @@ describe("Loot System", () => {
       updateLootDespawn(drop, 1);
       expect(drop.floatHeight).not.toBe(0);
     });
+  });
+});
+
+describe("rollLootForEnemy (Spec §34)", () => {
+  it("returns a LootDropComponent with despawn timer", () => {
+    const drop = rollLootForEnemy("enemy-1", "bat-loot", 1, "TestSeed");
+    expect(drop.despawnTimer).toBe(60);
+    expect(Array.isArray(drop.resources)).toBe(true);
+  });
+
+  it("is deterministic for the same enemyId + worldSeed", () => {
+    const a = rollLootForEnemy("enemy-42", "skeleton-loot", 2, "SameWorld");
+    const b = rollLootForEnemy("enemy-42", "skeleton-loot", 2, "SameWorld");
+    expect(a.resources).toEqual(b.resources);
+  });
+
+  it("produces different results for different enemyIds", () => {
+    const results = new Set<string>();
+    for (let i = 0; i < 20; i++) {
+      const drop = rollLootForEnemy(`enemy-${i}`, "bat-loot", 1, "WorldA");
+      results.add(JSON.stringify(drop.resources));
+    }
+    // At least 2 distinct outcomes across 20 different enemy IDs
+    expect(results.size).toBeGreaterThan(1);
+  });
+
+  it("produces different results for different worldSeeds", () => {
+    const a = rollLootForEnemy("enemy-1", "knight-loot", 3, "SeedAlpha");
+    const b = rollLootForEnemy("enemy-1", "knight-loot", 3, "SeedBeta");
+    // Two distinct seeds should yield different RNG streams
+    expect(JSON.stringify(a.resources)).not.toBe(JSON.stringify(b.resources));
+  });
+
+  it("handles sprite-loot table", () => {
+    const drop = rollLootForEnemy("sprite-1", "sprite-loot", 1, "World");
+    expect(drop.despawnTimer).toBe(60);
+    const validTypes = ["sap", "fruit", "acorns"];
+    for (const item of drop.resources) {
+      expect(validTypes).toContain(item.type);
+    }
   });
 });
 
