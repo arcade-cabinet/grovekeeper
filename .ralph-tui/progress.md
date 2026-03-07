@@ -71,6 +71,23 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-106
+- Added 11 tests to `game/systems/dialogueBranch.test.ts` covering the missing dialogue gating cases
+  - `evaluateCondition — has_relationship` (7 tests): meets threshold, exceeds, below, unknown NPC (default 0), minValue 0, negation both ways
+  - `evaluateCondition — has_discovered` (2 tests): location found/not found
+  - `evaluateCondition — time_of_day` (2 tests): matches/doesn't match
+- All 3 acceptance criteria test areas confirmed covered:
+  - Schedule position at specific hours → `npcSchedule.test.ts` `resolveScheduleEntry` suite (35 tests from US-105)
+  - Relationship level changes → `npcRelationship.test.ts` (34 tests from US-104)
+  - Dialogue gating → `dialogueBranch.test.ts` `evaluateCondition — has_relationship` (new, 7 tests)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 118 tests pass across 3 suites
+- **Learnings:**
+  - **`has_relationship` value encoding**: The condition `value` field encodes both npcId and minValue as a colon-separated string (`"elder-rowan:25"`). Tests must cover the string-split parse path — a malformed value would produce `NaN` for minValue, which `>=` comparisons treat as `false`.
+  - **Coverage gap from deferred testing**: `has_discovered` and `time_of_day` were fully implemented in `evaluateCondition` but had zero test coverage — discovered by reading all `case` branches vs the test file. Always audit every `switch` case against the test file.
+  - **Test-as-documentation**: The `has_relationship` tests double as the primary documentation for the `"npcId:minValue"` encoding convention — no other comment in the codebase explains this format as clearly.
+
+---
+
 ## 2026-03-07 - US-105
 - Created `game/systems/npcSchedule.ts` — NPC daily routine system driven by `NpcScheduleEntry[]`
   - `resolveScheduleEntry(schedule, hour)` — finds active entry for current hour; wraps overnight (hour before first entry → last entry)

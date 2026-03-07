@@ -1,0 +1,87 @@
+# Iteration 105 Log
+
+## Metadata
+
+- **Task ID**: US-105
+- **Task Title**: Implement NPC schedule system
+- **Description**: As a developer, I want NPCs to follow daily routines driven by NpcScheduleEntry[] so that NPCs move between positions based on game hour. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:49:08.421Z
+- **Ended At**: 2026-03-07T16:54:17.626Z
+- **Duration**: 5m 9s
+- **Input Tokens**: 104
+- **Output Tokens**: 17809
+- **Total Tokens**: 17913
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+Let me check the spec section for §15 and the NPC component structure.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|section 15|NpcSchedule|schedule[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## §15|^## 15|NPC.*schedule|schedule.*NPC|daily.routin|routin.*NPC[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/time.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/npcs/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs/NpcManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs/types.ts[0m
+Let me check the relationship system (US-104) as it's the most recent:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/npcs/npcRelationship*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mnpcRelationship|npcSchedule[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcRelationship.ts[0m
+`★ Insight ─────────────────────────────────────`
+The schedule system follows the same pattern as other pure systems in this codebase: pure query/computation functions + a thin stateful layer (module-level Map) for tracking last-triggered state per entity. The key insight is tracking which schedule _slot_ (by its `hour` field) was last triggered per NPC, so movement is initiated only on slot transitions — not on every tick.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcSchedule.ts[0m "/**
+ * NPC Schedule system (Spec §19.5).
+ *
+ * NPCs follow daily routines driven by NpcScheduleEntry[]. Each entry
+ * specifies the hour at which the NPC moves to a new position and
+ * adopts a new ac... (5173 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcSchedule.test.ts[0m "import type { NpcScheduleEntry } from "@/game/ecs/components/npc";
+import type { WalkabilityGrid } from "./pathfinding";
+import {
+  activityToAnimState,
+  clearAllScheduleStates,
+  clearScheduleState,... (10262 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run npcSchedule tests only $ npx jest --no-coverage --testPathPattern="npcSchedule" 2>&1
+36/36 pass. Now full suite:
+[94m[Bash][0m Run full test suite, show last 10 lines $ npx jest --no-coverage 2>&1 | tail -10
+2753 tests, 0 failures (+36 new). Updating progress log:
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-102" → "---
+
+## 2026-03-07 - US-105
+- Created `game/system..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Slot-keyed state over hour-keyed state**: The Map stores `entry.hour` (the schedule slot's start hour) rather than the current game hour. This means hour 10 and hour 15 both resolve to the "8am work" slot and correctly skip re-triggering movement — the comparison is against the canonical slot identifier, not the ticking clock.
+- **Overnight wrap is a single fallback**: After scanning forward through sorted entries, `if (active === undefined)` catches the pre-first-entry case and returns the last entry. No modular arithmetic or 24-wrapping needed — just a single array tail access.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria met:
+- `game/systems/npcSchedule.ts` exists with `NpcScheduleEntry[]`-driven schedule logic
+- NPCs move between schedule positions via `startNpcPath` on slot transitions
+- NPCs follow daily routines (dawn/day/dusk/night via hour-keyed entries)
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 2753 tests, 0 failures
+
+<promise>COMPLETE</promise>

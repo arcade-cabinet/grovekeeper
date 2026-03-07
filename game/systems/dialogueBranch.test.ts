@@ -343,6 +343,89 @@ describe("evaluateCondition — spirit_discovered (Spec §33.4)", () => {
   });
 });
 
+describe("evaluateCondition — has_relationship (Spec §33.4, §15)", () => {
+  it("passes when NPC relationship meets the required minimum", () => {
+    const ctx = makeContext({ npcRelationships: { "elder-rowan": 25 } });
+    expect(
+      evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx),
+    ).toBe(true);
+  });
+
+  it("passes when NPC relationship exceeds the required minimum", () => {
+    const ctx = makeContext({ npcRelationships: { "elder-rowan": 60 } });
+    expect(
+      evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx),
+    ).toBe(true);
+  });
+
+  it("fails when NPC relationship is below the required minimum", () => {
+    const ctx = makeContext({ npcRelationships: { "elder-rowan": 10 } });
+    expect(
+      evaluateCondition({ type: "has_relationship", value: "elder-rowan:25" }, ctx),
+    ).toBe(false);
+  });
+
+  it("fails for unknown NPC (defaults to 0) when minValue > 0", () => {
+    const ctx = makeContext({ npcRelationships: {} });
+    expect(
+      evaluateCondition({ type: "has_relationship", value: "stranger-npc:1" }, ctx),
+    ).toBe(false);
+  });
+
+  it("passes when minValue is 0, even for unknown NPC", () => {
+    const ctx = makeContext({ npcRelationships: {} });
+    expect(
+      evaluateCondition({ type: "has_relationship", value: "stranger-npc:0" }, ctx),
+    ).toBe(true);
+  });
+
+  it("negation inverts has_relationship — true when relationship is insufficient", () => {
+    const ctx = makeContext({ npcRelationships: { hazel: 5 } });
+    expect(
+      evaluateCondition({ type: "has_relationship", value: "hazel:25", negate: true }, ctx),
+    ).toBe(true);
+  });
+
+  it("negation inverts has_relationship — false when relationship is sufficient", () => {
+    const ctx = makeContext({ npcRelationships: { hazel: 50 } });
+    expect(
+      evaluateCondition({ type: "has_relationship", value: "hazel:25", negate: true }, ctx),
+    ).toBe(false);
+  });
+});
+
+describe("evaluateCondition — has_discovered (Spec §33.4)", () => {
+  it("passes when location has been discovered", () => {
+    const ctx = makeContext({ discoveredLocations: ["maze-north", "waterfall"] });
+    expect(
+      evaluateCondition({ type: "has_discovered", value: "maze-north" }, ctx),
+    ).toBe(true);
+  });
+
+  it("fails when location has not been discovered", () => {
+    const ctx = makeContext({ discoveredLocations: [] });
+    expect(
+      evaluateCondition({ type: "has_discovered", value: "maze-north" }, ctx),
+    ).toBe(false);
+  });
+});
+
+describe("evaluateCondition — time_of_day (Spec §33.4)", () => {
+  it("passes when current time of day matches", () => {
+    const ctx = makeContext({ timeOfDay: "evening" });
+    expect(
+      evaluateCondition({ type: "time_of_day", value: "evening" }, ctx),
+    ).toBe(true);
+  });
+
+  it("fails when current time of day does not match", () => {
+    const ctx = makeContext({ timeOfDay: "morning" });
+    expect(
+      evaluateCondition({ type: "time_of_day", value: "evening" }, ctx),
+    ).toBe(false);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // filterAvailableBranches (Spec §33.4)
 // ---------------------------------------------------------------------------

@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T16:54:17.629Z",
-  "currentIteration": 104,
+  "updatedAt": "2026-03-07T16:57:44.402Z",
+  "currentIteration": 105,
   "maxIterations": 0,
-  "tasksCompleted": 104,
+  "tasksCompleted": 105,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -640,8 +640,8 @@
       {
         "id": "US-105",
         "title": "Implement NPC schedule system",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-106",
@@ -2081,6 +2081,16 @@
       "durationMs": 323087,
       "startedAt": "2026-03-07T16:43:44.202Z",
       "endedAt": "2026-03-07T16:49:07.289Z"
+    },
+    {
+      "iteration": 105,
+      "status": "completed",
+      "taskId": "US-105",
+      "taskTitle": "Implement NPC schedule system",
+      "taskCompleted": true,
+      "durationMs": 309205,
+      "startedAt": "2026-03-07T16:49:08.421Z",
+      "endedAt": "2026-03-07T16:54:17.626Z"
     }
   ],
   "skippedTaskIds": [],
