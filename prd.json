@@ -677,8 +677,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 43,
-      "passes": false,
-      "notes": "Phase 1-B: NPCs + Animation + Structures."
+      "passes": true,
+      "notes": "Phase 1-B: NPCs + Animation + Structures.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-044",
@@ -2763,6 +2764,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T10:55:04.753Z"
+    "updatedAt": "2026-03-07T10:59:12.768Z"
   }
 }

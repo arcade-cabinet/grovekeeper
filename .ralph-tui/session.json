@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T10:55:04.754Z",
-  "currentIteration": 41,
+  "updatedAt": "2026-03-07T10:59:12.769Z",
+  "currentIteration": 42,
   "maxIterations": 0,
-  "tasksCompleted": 41,
+  "tasksCompleted": 42,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -262,8 +262,8 @@
       {
         "id": "US-042",
         "title": "Write Jest tests for NPC appearance determinism",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-043",
@@ -1451,6 +1451,16 @@
       "durationMs": 238619,
       "startedAt": "2026-03-07T10:48:42.634Z",
       "endedAt": "2026-03-07T10:52:41.253Z"
+    },
+    {
+      "iteration": 42,
+      "status": "completed",
+      "taskId": "US-042",
+      "taskTitle": "Write Jest tests for NPC appearance determinism",
+      "taskCompleted": true,
+      "durationMs": 142340,
+      "startedAt": "2026-03-07T10:52:42.412Z",
+      "endedAt": "2026-03-07T10:55:04.752Z"
     }
   ],
   "skippedTaskIds": [],

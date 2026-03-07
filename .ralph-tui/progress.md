@@ -785,3 +785,15 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - The Docs > Tests > Code mandatory workflow eliminates "write tests for X" follow-up stories — tests ship with the implementation. US-039 already shipped 28 tests covering all US-040 acceptance criteria (density controls, deterministic placement from seed).
 ---
+
+## 2026-03-07 - US-043
+- Implemented `game/systems/npcAnimation.ts` — pure TypeScript NPC walk cycle system
+- Two exported functions: `advanceNpcAnimation(npc, dt)` mutates `animProgress`; `computeNpcLimbRotations(npc)` returns `NpcLimbRotations` for R3F mesh consumption
+- Created `game/systems/npcAnimation.test.ts` — 18 tests, all passing
+- Files changed: `game/systems/npcAnimation.ts` (new), `game/systems/npcAnimation.test.ts` (new)
+- **Learnings:**
+  - `config/game/npcAnimation.json` already existed with per-state params (frequency, maxAngle, phase offsets for each limb) — always check config dir before writing constants
+  - Returning a shared `ZERO_ROTATIONS` constant (not a fresh `{...}` object) for non-walk states avoids per-frame GC allocation on mobile
+  - Phase offsets from config (`leftArm=0, rightArm=π, leftLeg=π, rightLeg=0`) wire up counter-swing automatically; the system just reads them
+  - Pure system pattern (no Three.js refs, no anime.js dependency): computes values, R3F component applies them — keeps system fully testable without WebGL
+---
