@@ -15,7 +15,11 @@
  * produces identical path data. All randomness via scopedRNG.
  */
 
-import type { PathSegmentComponent } from "@/game/ecs/components/procedural/terrain";
+import type {
+  PathSegmentComponent,
+  SignpostComponent,
+  SignpostDirection,
+} from "@/game/ecs/components/procedural/terrain";
 import { scopedRNG } from "@/game/utils/seedWords";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import proceduralConfig from "@/config/game/procedural.json" with { type: "json" };
@@ -42,6 +46,27 @@ export interface PathSegmentPlacement {
   /** Full PathSegmentComponent data. */
   pathSegment: PathSegmentComponent;
 }
+
+/** A signpost placement ready to be added to ECS. */
+export interface SignpostPlacement {
+  /** World-space position of the signpost (at the landmark center). */
+  position: { x: number; y: number; z: number };
+  /** Full SignpostComponent data. */
+  signpost: SignpostComponent;
+}
+
+// ── Cardinal direction lookup ─────────────────────────────────────────────────
+
+const CARDINAL_DIRS: ReadonlyArray<{
+  dx: number;
+  dz: number;
+  dir: SignpostDirection;
+}> = [
+  { dx: 0, dz: -1, dir: "N" },
+  { dx: 1, dz: 0, dir: "E" },
+  { dx: 0, dz: 1, dir: "S" },
+  { dx: -1, dz: 0, dir: "W" },
+];
 
 // ── Landmark detection ───────────────────────────────────────────────────────
 
@@ -282,4 +307,75 @@ export function generatePathsForChunk(
   }
 
   return placements;
+}
+
+// ── Signpost generation ───────────────────────────────────────────────────────
+
+/**
+ * Generate a signpost placement for a landmark chunk that is a path
+ * intersection (2+ connected landmark neighbors).
+ *
+ * The signpost faces toward the nearest major landmark: a village neighbor is
+ * preferred; if none, the first connected cardinal neighbor is used.
+ *
+ * Returns null when:
+ *   - This chunk is not a landmark.
+ *   - Fewer than 2 neighbors are landmarks (no intersection to mark).
+ *
+ * Spec §17.6: Signposts at minor features point toward nearest major feature.
+ *
+ * @param worldSeed  World seed string.
+ * @param chunkX     Chunk X grid coordinate.
+ * @param chunkZ     Chunk Z grid coordinate.
+ * @param heightmap  CHUNK_SIZE×CHUNK_SIZE Float32Array for Y sampling.
+ * @returns          SignpostPlacement or null.
+ */
+export function generateSignpostForChunk(
+  worldSeed: string,
+  chunkX: number,
+  chunkZ: number,
+  heightmap: Float32Array,
+): SignpostPlacement | null {
+  if (!isLandmarkChunk(worldSeed, chunkX, chunkZ)) return null;
+
+  // Find all cardinal neighbors that are also landmarks.
+  const connected = CARDINAL_DIRS.filter(({ dx, dz }) =>
+    isLandmarkChunk(worldSeed, chunkX + dx, chunkZ + dz),
+  );
+
+  // A signpost only makes sense at an intersection (2+ paths).
+  if (connected.length < 2) return null;
+
+  // Prefer pointing toward a village neighbor (major feature); fall back to first.
+  const target =
+    connected.find(
+      ({ dx, dz }) => getLandmarkType(worldSeed, chunkX + dx, chunkZ + dz) === "village",
+    ) ?? connected[0];
+
+  const targetChunkX = chunkX + target.dx;
+  const targetChunkZ = chunkZ + target.dz;
+  const targetLocalPos = getLandmarkLocalPos(worldSeed, targetChunkX, targetChunkZ);
+  const targetWorldX = targetChunkX * CHUNK_SIZE + targetLocalPos.localX;
+  const targetWorldZ = targetChunkZ * CHUNK_SIZE + targetLocalPos.localZ;
+  const targetLandmarkType = getLandmarkType(worldSeed, targetChunkX, targetChunkZ);
+
+  // Signpost sits at this chunk's landmark position.
+  const { localX, localZ } = getLandmarkLocalPos(worldSeed, chunkX, chunkZ);
+  const hix = Math.min(Math.floor(localX), CHUNK_SIZE - 1);
+  const hiz = Math.min(Math.floor(localZ), CHUNK_SIZE - 1);
+  const worldY = heightmap[hiz * CHUNK_SIZE + hix];
+
+  return {
+    position: {
+      x: chunkX * CHUNK_SIZE + localX,
+      y: worldY,
+      z: chunkZ * CHUNK_SIZE + localZ,
+    },
+    signpost: {
+      facingDirection: target.dir,
+      targetLandmarkType,
+      targetWorldX,
+      targetWorldZ,
+    },
+  };
 }

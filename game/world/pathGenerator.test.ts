@@ -10,6 +10,7 @@ import {
   bezierPoint,
   carveSplineIntoHeightmap,
   generatePathsForChunk,
+  generateSignpostForChunk,
   LANDMARK_PROBABILITY,
 } from "./pathGenerator";
 
@@ -391,5 +392,198 @@ describe("generatePathsForChunk (Spec §31.1)", () => {
       expect(p.position.x).toBeCloseTo(8);
       expect(p.position.z).toBeCloseTo(8);
     }
+  });
+});
+
+// ── generateSignpostForChunk ─────────────────────────────────────────────────
+
+describe("generateSignpostForChunk (Spec §17.6)", () => {
+  const SEED = "Gentle Mossy Hollow";
+
+  it("returns null for a non-landmark chunk", () => {
+    // Find a non-landmark chunk.
+    let nonLandmark: { x: number; z: number } | null = null;
+    for (let x = 1; x <= 20 && !nonLandmark; x++) {
+      for (let z = 1; z <= 20 && !nonLandmark; z++) {
+        if (!isLandmarkChunk(SEED, x, z)) nonLandmark = { x, z };
+      }
+    }
+    if (!nonLandmark) return; // extremely unlikely
+    const hm = flatHeightmap(0);
+    expect(generateSignpostForChunk(SEED, nonLandmark.x, nonLandmark.z, hm)).toBeNull();
+  });
+
+  it("returns null for an isolated landmark (< 2 connected neighbors)", () => {
+    // Find a landmark chunk with 0 or 1 landmark neighbors.
+    let isolated: { x: number; z: number } | null = null;
+    outer: for (let x = -20; x <= 20; x++) {
+      for (let z = -20; z <= 20; z++) {
+        if (x === 0 && z === 0) continue;
+        if (!isLandmarkChunk(SEED, x, z)) continue;
+        const connectedCount = [
+          [0, -1], [1, 0], [0, 1], [-1, 0],
+        ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
+        if (connectedCount < 2) {
+          isolated = { x, z };
+          break outer;
+        }
+      }
+    }
+    if (!isolated) return; // very unlikely with 40x40 search
+    const hm = flatHeightmap(0);
+    expect(generateSignpostForChunk(SEED, isolated.x, isolated.z, hm)).toBeNull();
+  });
+
+  it("returns a placement at an intersection (2+ connected landmark neighbors)", () => {
+    // Find a landmark chunk with 2+ landmark neighbors.
+    let intersection: { x: number; z: number } | null = null;
+    outer: for (let x = -20; x <= 20; x++) {
+      for (let z = -20; z <= 20; z++) {
+        if (!isLandmarkChunk(SEED, x, z)) continue;
+        const connectedCount = [
+          [0, -1], [1, 0], [0, 1], [-1, 0],
+        ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
+        if (connectedCount >= 2) {
+          intersection = { x, z };
+          break outer;
+        }
+      }
+    }
+    if (!intersection) return; // seed has no intersections in range
+    const hm = flatHeightmap(0);
+    const result = generateSignpostForChunk(SEED, intersection.x, intersection.z, hm);
+    expect(result).not.toBeNull();
+  });
+
+  it("facing direction is a valid cardinal direction", () => {
+    let intersection: { x: number; z: number } | null = null;
+    outer: for (let x = -20; x <= 20; x++) {
+      for (let z = -20; z <= 20; z++) {
+        if (!isLandmarkChunk(SEED, x, z)) continue;
+        const connectedCount = [
+          [0, -1], [1, 0], [0, 1], [-1, 0],
+        ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
+        if (connectedCount >= 2) {
+          intersection = { x, z };
+          break outer;
+        }
+      }
+    }
+    if (!intersection) return;
+    const hm = flatHeightmap(0);
+    const result = generateSignpostForChunk(SEED, intersection.x, intersection.z, hm);
+    expect(["N", "E", "S", "W"]).toContain(result?.signpost.facingDirection);
+  });
+
+  it("target world coords match the targeted neighbor landmark position", () => {
+    let intersection: { x: number; z: number } | null = null;
+    outer: for (let x = -20; x <= 20; x++) {
+      for (let z = -20; z <= 20; z++) {
+        if (!isLandmarkChunk(SEED, x, z)) continue;
+        const connectedCount = [
+          [0, -1], [1, 0], [0, 1], [-1, 0],
+        ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
+        if (connectedCount >= 2) {
+          intersection = { x, z };
+          break outer;
+        }
+      }
+    }
+    if (!intersection) return;
+    const { x, z } = intersection;
+    const hm = flatHeightmap(0);
+    const result = generateSignpostForChunk(SEED, x, z, hm);
+    if (!result) return;
+
+    const dirMap = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] } as const;
+    const [ddx, ddz] = dirMap[result.signpost.facingDirection];
+    const targetCX = x + ddx;
+    const targetCZ = z + ddz;
+    const targetLocal = getLandmarkLocalPos(SEED, targetCX, targetCZ);
+    const expectedX = targetCX * SIZE + targetLocal.localX;
+    const expectedZ = targetCZ * SIZE + targetLocal.localZ;
+
+    expect(result.signpost.targetWorldX).toBeCloseTo(expectedX);
+    expect(result.signpost.targetWorldZ).toBeCloseTo(expectedZ);
+  });
+
+  it("prefers a village neighbor over other landmark types", () => {
+    // Origin (0,0) is always a village. Any of its neighbors that are also landmarks
+    // should cause a signpost pointing toward (0,0) from those neighbors if they
+    // have 2+ connections including origin.
+    // Test from (0,0) perspective: if it has 2+ landmark neighbors, the signpost
+    // should NOT point toward a village (since (0,0) itself is the village and
+    // the signpost is placed AT the village pointing toward a neighbor).
+    const seed = "Test Village Preference Seed";
+    // Find a non-origin landmark with 2+ connections where one neighbor is origin.
+    let candidate: { x: number; z: number } | null = null;
+    const dirsFromOriginNeighbor = [[0,-1],[1,0],[0,1],[-1,0]] as const;
+    outer: for (const [dx, dz] of dirsFromOriginNeighbor) {
+      const nx = 0 + dx;
+      const nz = 0 + dz;
+      if (!isLandmarkChunk(seed, nx, nz)) continue;
+      // This neighbor sees origin (0,0) as a connected landmark.
+      const connectedCount = [[0,-1],[1,0],[0,1],[-1,0]]
+        .filter(([ddx, ddz]) => isLandmarkChunk(seed, nx + ddx, nz + ddz)).length;
+      if (connectedCount >= 2) {
+        candidate = { x: nx, z: nz };
+        break outer;
+      }
+    }
+    if (!candidate) return;
+    const hm = flatHeightmap(0);
+    const result = generateSignpostForChunk(seed, candidate.x, candidate.z, hm);
+    if (!result) return;
+    // Should prefer the village (0,0) as the target.
+    expect(result.signpost.targetLandmarkType).toBe("village");
+  });
+
+  it("signpost position is at the chunk's landmark world-space location", () => {
+    let intersection: { x: number; z: number } | null = null;
+    outer: for (let x = -20; x <= 20; x++) {
+      for (let z = -20; z <= 20; z++) {
+        if (!isLandmarkChunk(SEED, x, z)) continue;
+        const connectedCount = [
+          [0, -1], [1, 0], [0, 1], [-1, 0],
+        ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
+        if (connectedCount >= 2) {
+          intersection = { x, z };
+          break outer;
+        }
+      }
+    }
+    if (!intersection) return;
+    const { x, z } = intersection;
+    const hm = flatHeightmap(0);
+    const result = generateSignpostForChunk(SEED, x, z, hm);
+    if (!result) return;
+
+    const localPos = getLandmarkLocalPos(SEED, x, z);
+    expect(result.position.x).toBeCloseTo(x * SIZE + localPos.localX);
+    expect(result.position.z).toBeCloseTo(z * SIZE + localPos.localZ);
+  });
+
+  it("is deterministic — same inputs produce the same output", () => {
+    let intersection: { x: number; z: number } | null = null;
+    outer: for (let x = -20; x <= 20; x++) {
+      for (let z = -20; z <= 20; z++) {
+        if (!isLandmarkChunk(SEED, x, z)) continue;
+        const connectedCount = [
+          [0, -1], [1, 0], [0, 1], [-1, 0],
+        ].filter(([dx, dz]) => isLandmarkChunk(SEED, x + dx, z + dz)).length;
+        if (connectedCount >= 2) {
+          intersection = { x, z };
+          break outer;
+        }
+      }
+    }
+    if (!intersection) return;
+    const { x, z } = intersection;
+    const r1 = generateSignpostForChunk(SEED, x, z, flatHeightmap(0));
+    const r2 = generateSignpostForChunk(SEED, x, z, flatHeightmap(0));
+    expect(r1?.signpost.facingDirection).toBe(r2?.signpost.facingDirection);
+    expect(r1?.signpost.targetLandmarkType).toBe(r2?.signpost.targetLandmarkType);
+    expect(r1?.signpost.targetWorldX).toBeCloseTo(r2?.signpost.targetWorldX ?? 0);
+    expect(r1?.signpost.targetWorldZ).toBeCloseTo(r2?.signpost.targetWorldZ ?? 0);
   });
 });

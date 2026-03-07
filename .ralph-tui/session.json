@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T14:22:43.098Z",
-  "currentIteration": 75,
+  "updatedAt": "2026-03-07T14:30:21.439Z",
+  "currentIteration": 76,
   "maxIterations": 0,
-  "tasksCompleted": 75,
+  "tasksCompleted": 76,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -466,8 +466,8 @@
       {
         "id": "US-076",
         "title": "Create campfire fast travel system",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-077",
@@ -1791,6 +1791,16 @@
       "durationMs": 56098,
       "startedAt": "2026-03-07T14:17:52.017Z",
       "endedAt": "2026-03-07T14:18:48.115Z"
+    },
+    {
+      "iteration": 76,
+      "status": "completed",
+      "taskId": "US-076",
+      "taskTitle": "Create campfire fast travel system",
+      "taskCompleted": true,
+      "durationMs": 233850,
+      "startedAt": "2026-03-07T14:18:49.246Z",
+      "endedAt": "2026-03-07T14:22:43.096Z"
     }
   ],
   "skippedTaskIds": [],

@@ -28,3 +28,23 @@ export interface PathSegmentComponent {
   /** Width in world units. */
   width: number;
 }
+
+/** Cardinal direction a signpost faces. */
+export type SignpostDirection = "N" | "E" | "S" | "W";
+
+/**
+ * Signpost placed at a path intersection (landmark chunk with 2+ connected
+ * landmark neighbors). Points toward the nearest major landmark.
+ *
+ * Spec §17.6: Signposts at minor features point toward nearest major feature.
+ */
+export interface SignpostComponent {
+  /** Cardinal direction this signpost points toward the nearest major landmark. */
+  facingDirection: SignpostDirection;
+  /** Type string of the target landmark ("village", "shrine", "ancient-tree", "campfire"). */
+  targetLandmarkType: string;
+  /** World-space X coordinate of the target landmark. */
+  targetWorldX: number;
+  /** World-space Z coordinate of the target landmark. */
+  targetWorldZ: number;
+}

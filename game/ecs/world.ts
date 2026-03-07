@@ -66,6 +66,7 @@ import type {
 import type {
   TerrainChunkComponent,
   PathSegmentComponent,
+  SignpostComponent,
   WaterBodyComponent,
   SkyComponent,
   DayNightComponent,
@@ -141,6 +142,7 @@ export interface Entity {
   // Procedural (shader/particle — no GLB models)
   terrainChunk?: TerrainChunkComponent;
   pathSegment?: PathSegmentComponent;
+  signpost?: SignpostComponent;
   waterBody?: WaterBodyComponent;
   sky?: SkyComponent;
   dayNight?: DayNightComponent;
@@ -211,6 +213,7 @@ export const playerQuery = world.with("player", "position");
 // Procedural
 export const terrainChunksQuery = world.with("terrainChunk", "position");
 export const pathSegmentsQuery = world.with("pathSegment", "position");
+export const signpostsQuery = world.with("signpost", "position");
 export const waterBodiesQuery = world.with("waterBody", "position");
 export const skyQuery = world.with("sky");
 export const dayNightQuery = world.with("dayNight");

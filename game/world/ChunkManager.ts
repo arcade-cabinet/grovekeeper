@@ -22,7 +22,7 @@ import type { BiomeType } from "./biomeMapper";
 import { placeWaterBodies } from "./waterPlacer";
 import { placeAudioZones } from "./audioZonePlacer";
 import { spawnChunkEntities } from "./entitySpawner";
-import { generatePathsForChunk } from "./pathGenerator";
+import { generatePathsForChunk, generateSignpostForChunk } from "./pathGenerator";
 import { generateVillage } from "./villageGenerator";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
@@ -406,6 +406,23 @@ export class ChunkManager {
           id: generateEntityId(),
           position: psp.position,
           pathSegment: psp.pathSegment,
+        }),
+      );
+    }
+
+    // Place a signpost at path intersections (landmark with 2+ connected neighbors).
+    const signpostPlacement = generateSignpostForChunk(
+      this.worldSeed,
+      chunkX,
+      chunkZ,
+      terrainData.heightmap,
+    );
+    if (signpostPlacement) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: signpostPlacement.position,
+          signpost: signpostPlacement.signpost,
         }),
       );
     }

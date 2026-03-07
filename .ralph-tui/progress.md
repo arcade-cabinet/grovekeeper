@@ -99,6 +99,30 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-077
+- Compass widget was already complete in `components/game/HUD.tsx` with full tests in `HUD.test.ts` — `resolveCompassBearing`, `findNearestUndiscoveredSpirit`, and the `Compass` component all existed
+- Added `SignpostComponent` + `SignpostDirection` to `game/ecs/components/procedural/terrain.ts`
+- Added `signpost?` field to `Entity` interface and `signpostsQuery` to `game/ecs/world.ts`
+- Added `generateSignpostForChunk()` to `game/world/pathGenerator.ts`: returns a `SignpostPlacement` for landmark chunks with 2+ connected landmark neighbors (path intersections); prefers village neighbors as the target; returns null otherwise
+- Wired `generateSignpostForChunk` in `ChunkManager.ts` `loadChunk` immediately after path placement
+- Added 8 tests for `generateSignpostForChunk` to `game/world/pathGenerator.test.ts` (null cases, placement, direction validity, target coords, village preference, position accuracy, determinism)
+- **Files changed:**
+  - `game/ecs/components/procedural/terrain.ts` — added `SignpostComponent`, `SignpostDirection`
+  - `game/ecs/world.ts` — added `signpost` to `Entity`, `signpostsQuery`
+  - `game/world/pathGenerator.ts` — added `SignpostPlacement`, `CARDINAL_DIRS`, `generateSignpostForChunk`
+  - `game/world/pathGenerator.test.ts` — 8 new signpost tests
+  - `game/world/ChunkManager.ts` — wired signpost generation in `loadChunk`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2226 tests, 0 failures (114 suites, +8 new tests)
+- **Learnings:**
+  - **Verify before implementing**: Compass widget was already implemented — always check spec coverage before building anything new
+  - **Signpost intersection definition**: A "path intersection" = landmark chunk with 2+ connected landmark neighbors. This aligns with `generatePathsForChunk` which generates one segment per neighbor.
+  - **CARDINAL_DIRS as module-level const**: Defining the 4-direction lookup at module level (not inside the function) avoids per-call allocation in a hot path while keeping the code readable
+  - **Village-preference signpost target**: `connected.find(type === "village") ?? connected[0]` — the `??` fallback keeps it ergonomic without an `if/else`
+
+---
+
 ## 2026-03-07 - US-075
 - Work already complete — `game/world/villageGenerator.test.ts` (26 tests) was created as part of US-074
 - All acceptance criteria already satisfied: building count range, NPC population, campfire presence, determinism from seed
