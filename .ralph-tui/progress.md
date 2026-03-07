@@ -15,6 +15,33 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-011
+- Created `game/hooks/useJump.ts` with:
+  - `isGrounded(body, world, rapier)` — pure-ish function: casts a ray 0.01m below the capsule bottom (outside the collider) downward with `solid=true`; returns `castRay(...) !== null`. Starting outside avoids self-intersection; `solid=true` means ground-inside-origin counts as grounded.
+  - `useJump(rigidBodyRef)` — `useEffect` adds/removes `keydown` listener for `Space` (sets `jumpPendingRef.current = true`); `useFrame` checks pending + grounded, clears flag, calls `body.applyImpulse({ x:0, y:JUMP_IMPULSE, z:0 }, true)`. Gravity provided by Rapier `<Physics>` world (always active).
+- Updated `components/player/PlayerCapsule.tsx`:
+  - Added `useJump(rigidBodyRef)` call alongside `usePhysicsMovement`
+  - Added `lockRotations` prop to `<RigidBody>` — prevents capsule from tipping over when colliding; essential for FPS character controller
+- Updated `components/player/PlayerCapsule.test.ts`: added `jest.mock("@/game/hooks/useJump", ...)` to prevent module-level Rapier/useRapier calls from throwing
+- Added to `config/game/grid.json`: `capsuleHeight: 1.8`, `jumpImpulse: 5`, `groundCheckDistance: 0.15`
+- Created `game/hooks/useJump.test.ts` with 6 tests (all green): isGrounded returns true on hit, false on null, ray origin just below capsule bottom, ray direction = -Y, solid=true confirmed; smoke test for useJump export
+- **Files changed:**
+  - `config/game/grid.json`: added 3 new physics config values
+  - `game/hooks/useJump.ts`: new file
+  - `game/hooks/useJump.test.ts`: new file — 6 tests, all green
+  - `components/player/PlayerCapsule.tsx`: added `useJump` import + call + `lockRotations`
+  - `components/player/PlayerCapsule.test.ts`: added mock for `@/game/hooks/useJump`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 75 suites, 1262 tests, 0 failures
+- **Learnings:**
+  - Rapier ground detection: start ray 0.01m BELOW capsule bottom (`pos.y - capsuleHeight/2 - 0.01`) to avoid self-intersection. `solid=true` means "count it as a hit if ray origin is inside a solid" — useful if the player slightly sinks into the ground.
+  - `capsuleHeight / 2` = distance from body center to capsule bottom. This is always true for a capsule: total_height/2 = half_height + radius = distance to bottom endpoint.
+  - `lockRotations` on `<RigidBody>` is essential for FPS capsule character — without it the capsule tips over on collision, invalidating camera and movement.
+  - `useRapier()` requires Rapier context → mock the whole `@react-three/rapier` module in tests; expose `isGrounded` as a named export so it can be unit-tested by passing mock body/world/rapier objects directly.
+  - Jump pending flag `jumpPendingRef.current = false` must be cleared in BOTH branches (grounded and not-grounded) to prevent a queued jump from firing as soon as the player lands after a miss.
+---
+
 ## 2026-03-07 - US-010
 - Created `game/hooks/usePhysicsMovement.ts` with:
   - `rotateByYaw(input, yaw)` — pure math: rotates normalised XZ input by camera yaw to get world-space velocity direction

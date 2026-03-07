@@ -1,0 +1,121 @@
+# Iteration 10 Log
+
+## Metadata
+
+- **Task ID**: US-010
+- **Task Title**: Add WASD movement via capsule velocity
+- **Description**: As a player, I want to move with WASD keys so that I can walk around the grove in first-person. Movement reads InputFrame in useFrame and applies linvel to the capsule RigidBody relative to camera yaw...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T08:36:57.552Z
+- **Ended At**: 2026-03-07T08:43:55.608Z
+- **Duration**: 6m 58s
+- **Input Tokens**: 147
+- **Output Tokens**: 22995
+- **Total Tokens**: 23142
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[ToolSearch][0m query: [93mselect:Skill,Bash[0m
+[94m[Skill][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*.test.ts[0m
+Now let me look at the existing player components and input system:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInput.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMovement.ts[0m
+Now let me look at the GAME_SPEC.md section 10 and the existing player component tests:
+[94m[Bash][0m Find movement/WASD spec sections $ grep -n "§10\|§ 10\|section 10\|## 10\|movement\|WASD\|linvel\|velocity" /Users/jbogaty/src/arcade-c...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.test.ts[0m
+Let me check the grid config and look at the FPSCamera test for mocking patterns:
+[94m[Bash][0m Read grid config for player speed $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m
+Let me check the relevant game spec sections:
+[94m[Bash][0m List all section headers in GAME_SPEC.md $ grep -n "## [0-9]\+\." /Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md | head -60
+[94m[Bash][0m List remaining sections in GAME_SPEC.md $ grep -n "## [0-9]\+\." /Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md | tail -40
+[94m[Bash][0m Find FPS/physics/movement spec entries $ grep -n "FPS\|first.person\|physics\|rapier\|linvel\|capsule\|camera.*yaw\|yaw\|player.*movement\|mo...
+[94m[Bash][0m Read the FPS pivot spec section $ sed -n '850,900p' /Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md
+[94m[Bash][0m Check Rapier RigidBodyApi types $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@react-three/rapier/dist/react-three-...
+[94m[Bash][0m Find Rapier type definition files $ find /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@react-three/rapier -name "*.d.ts" |...
+[94m[Bash][0m Check Rapier package entry points $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@react-three/rapier/package.json | gr...
+[94m[Bash][0m Find RigidBodyApi type in Rapier $ grep -n "RigidBodyApi\|linvel\|setLinvel\|RapierRigidBody\|interface Rigid" /Users/jbogaty/src/arcad...
+[94m[Bash][0m Find RigidBodyApi type in Rapier types.d.ts $ grep -n "RigidBodyApi\|linvel\|setLinvel\|RapierRigidBody\|interface Rigid" /Users/jbogaty/src/arcad...
+[94m[Bash][0m Find linvel/setLinvel in Rapier types $ grep -n "linvel\|setLinvel" /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@dimforge/rap...
+[94m[Bash][0m Find Rapier-related type definition files $ find /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@dimforge -name "*.d.ts" 2>/dev/null...
+[94m[Bash][0m Find linvel/setLinvel in dimforge types $ grep -n "linvel\|setLinvel\|RigidBody" /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@d...
+[94m[Bash][0m Check dimforge types file structure $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@dimforge/rapier3d-compat/rapier.d.ts...
+[94m[Bash][0m Find which file contains setLinvel $ find /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@dimforge/rapier3d-compat -name "exp...
+[94m[Bash][0m Find RigidBody methods in dimforge types $ grep -n "linvel\|setLinvel\|class RigidBody" /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modu...
+Now let me check the game screen to understand the wiring:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+Let me check the Player entity component:
+[94m[Bash][0m Check Player entity component $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/Player.tsx 2>/dev/null || echo...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The movement math: `worldX = input.x * cos(yaw) - input.z * sin(yaw)` and `worldZ = -input.x * sin(yaw) - input.z * cos(yaw)`. At yaw=0 (camera faces -Z), W/forward (z=1) correctly produces (0, -1) in XZ — moving along -Z in world space.
+- The yaw extraction from Three.js: `Math.atan2(-dir.x, -dir.z)` where `dir = camera.getWorldDirection()`. Since `getWorldDirection()` returns `(-sin(θ), 0, -cos(θ))` for yaw θ, negating both components gives `atan2(sin(θ), cos(θ)) = θ` exactly.
+- Extracting `rotateByYaw` as a pure function decouples the math from R3F/Rapier hooks, making it trivially testable without any mocks.
+`─────────────────────────────────────────────────`
+
+Now writing the test first (RED):
+[94m[ToolSearch][0m query: [93mselect:Write,Edit[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.test.ts[0m "/**
+ * Tests for usePhysicsMovement — WASD velocity applied to Rapier capsule (Spec §23).
+ *
+ * rotateByYaw is a pure function and tested without mocks.
+ * usePhysicsMovement itself is exported as a h... (2214 chars)"
+Now verify the test fails for the right reason (missing implementation):
+[94m[Bash][0m Run failing test to verify RED phase $ npx jest --no-coverage game/hooks/usePhysicsMovement.test.ts 2>&1 | tail -20
+RED confirmed — module not found. Now implementing (GREEN phase):
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.ts[0m "/**
+ * usePhysicsMovement — Apply WASD velocity to a Rapier RigidBody
+ * relative to camera yaw each frame (Spec §23).
+ *
+ * Movement is camera-relative: forward (W) moves along the camera's
+ * look d... (2636 chars)"
+[94m[Bash][0m Run test to verify GREEN phase $ npx jest --no-coverage game/hooks/usePhysicsMovement.test.ts 2>&1 | tail -20
+GREEN - all 7 tests pass. Now wire `usePhysicsMovement` into `PlayerCapsule`:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m edit: "/**
+ * PlayerCapsule — Physics body for the player..." → "/**
+ * PlayerCapsule — Physics body for the player..."
+Now update the `PlayerCapsule` test to mock the new dependencies:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.test.ts[0m edit: "/**
+ * Tests for PlayerCapsule physics body (Spec ..." → "/**
+ * Tests for PlayerCapsule physics body (Spec ..."
+Now run all tests to verify GREEN:
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+[94m[Bash][0m Run all Jest tests $ npx jest --no-coverage 2>&1 | tail -20
+74 suites, 1256 tests, 0 failures. `tsc --noEmit` clean. Now appending to progress.md:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-009" → "## 2026-03-07 - US-010
+- Created `game/hooks/usePh..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The `useRef(moveDirection); moveRef.current = moveDirection` pattern is essential for R3F hooks: `useFrame` captures a closure at mount time, so reading `moveRef.current` (not the prop directly) always gets the latest frame's input without stale values.
+- `body.linvel().y` must be preserved when calling `setLinvel` — Rapier doesn't accumulate gravity if you overwrite Y every frame with 0. Only the XZ components are driven by player input.
+- When a new hook import is added to a component under test, ALL module-level side effects in that hook (e.g., `new THREE.Vector3()`) run at `import` time in Jest — so the hook itself must be mocked in the component test, even if it's your own code.
+`─────────────────────────────────────────────────`
+
+All done. Summary of what was implemented:
+
+- **`game/hooks/usePhysicsMovement.ts`** — new hook with:
+  - `rotateByYaw(input, yaw)`: pure math, no deps — rotates WASD input vector by camera yaw into world XZ space
+  - `usePhysicsMovement(rigidBodyRef, moveDirection)`: calls `body.setLinvel()` each frame with camera-relative velocity, preserving Y for gravity
+
+- **`components/player/PlayerCapsule.tsx`** — updated to accept optional `moveDirection` prop, create an internal `RapierRigidBody` ref, and call `usePhysicsMovement`
+
+- **`game/hooks/usePhysicsMovement.test.ts`** — 7 tests covering `rotateByYaw` at 0°, 90°, 180°, arbitrary angles, zero input, and magnitude preservation
+
+- **Verification**: `npx tsc --noEmit` → 0 errors | `npx jest --no-coverage` → 74 suites, 1256 tests, 0 failures
+
+<promise>COMPLETE</promise>

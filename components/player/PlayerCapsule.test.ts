@@ -22,6 +22,10 @@ jest.mock("@/game/hooks/usePhysicsMovement", () => ({
   usePhysicsMovement: jest.fn(),
 }));
 
+jest.mock("@/game/hooks/useJump", () => ({
+  useJump: jest.fn(),
+}));
+
 import {
   CAPSULE_HALF_HEIGHT,
   CAPSULE_HEIGHT,
