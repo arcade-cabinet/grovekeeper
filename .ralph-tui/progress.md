@@ -21,7 +21,39 @@ after each iteration and it's included in prompts for context.
 - **useThree() vs cameraRef for look**: `useThree().camera` returns the R3F default camera — same object as the `<PerspectiveCamera makeDefault>` ref. For rotation, use `useThree().camera` directly in the hook; for position (which needs an initial ref-guard), `cameraRef.current` is still useful in `FPSCamera`.
 - **Seamless chunk terrain — use global coords, single seed**: For continuous terrain across chunk boundaries, create ONE `SeededNoise` from `hashString(worldSeed)` and sample it at `(chunkX * CHUNK_SIZE + localX) * scale`. Per-chunk seeds cause discontinuous seams.
 - **ECS entity tracking in ChunkManager**: Store `world.add()` return value in a local `Map<string, Entity>`. Use `world.remove(entity)` directly from the Map for O(1) unload. Never search `world.entities` by field.
+- **Biome distance metric — use Chebyshev**: `Math.max(Math.abs(chunkX), Math.abs(chunkZ))` gives chunk distance that matches the square ring topology. Euclidean distance creates a circular exclusion zone that doesn't align with the 3x3/5x5 buffer rings used elsewhere in ChunkManager.
+- **Priority-order biome dispatch**: List biome rules as `if (condition) return biome` in priority order (first match wins). Avoids ambiguity at spec boundary overlaps (e.g. temp=0.5 is on the edge of multiple biomes). Easy to unit test each rule in isolation.
 
+---
+
+## 2026-03-07 - US-020
+- Created `game/world/biomeMapper.ts` with exported `BiomeType`, `BIOME_COLORS`, `assignBiome`, `getBiomeColor`
+  - All 8 biomes from Spec §17.3: starting-grove, meadow, ancient-forest, wetlands, rocky-highlands, orchard-valley, frozen-peaks, twilight-glade
+  - Priority-order dispatch: frozen-peaks (temp<0.2) → wetlands (moisture>0.8) → rocky-highlands → orchard-valley → twilight-glade (distance-gated ≥20 chunks) → ancient-forest → meadow → starting-grove
+  - `distanceFromOrigin` param (Chebyshev: `Math.max(|chunkX|, |chunkZ|)`) gates Twilight Glade
+  - Pure functions only — no SeededNoise dependency; noise sampling stays in callers
+- Updated `game/world/ChunkManager.ts`:
+  - Removed inline `determineBiome` and `BIOME_COLORS` record (6-biome incomplete version)
+  - Imported `assignBiome` and `getBiomeColor` from `./biomeMapper`
+  - `generateChunkData` and `getChunkBiome` both now compute `distanceFromOrigin` and pass to `assignBiome`
+- Created `game/world/biomeMapper.test.ts` with 18 tests:
+  - Each of the 8 biome types tested with representative temp+moisture values
+  - Twilight Glade distance gate: assigned at dist≥20, NOT assigned at dist<20 (including default 0)
+  - Priority test: frozen-peaks beats wetlands at temp=0.1, moisture=0.9
+  - Determinism: 8 input combos each called twice, both calls equal
+  - BIOME_COLORS: all 8 biomes have entries, all are valid 6-char hex, all are distinct
+  - getBiomeColor: consistent with BIOME_COLORS record
+- **Files changed:**
+  - `game/world/biomeMapper.ts`: new file — pure biome mapping, 8 types
+  - `game/world/biomeMapper.test.ts`: new file — 18 tests, all green
+  - `game/world/ChunkManager.ts`: removed inline biome logic, imported biomeMapper
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 80 suites, 1372 tests, 0 failures
+- **Learnings:**
+  - Chebyshev distance (`Math.max(|chunkX|, |chunkZ|)`) matches the square chunk ring topology — a player 20 chunks away in any direction (including diagonal) triggers Twilight Glade. Euclidean would create a circular exclusion zone misaligned with the square buffer rings.
+  - Priority-order dispatch avoids ambiguity at spec boundary overlaps (e.g. temp=0.5 sits on the edge of multiple biomes). First-match-wins is deterministic and easy to test.
+  - Extracting biome logic to a separate pure module (no SeededNoise dependency) makes it independently testable without any mock setup. Noise sampling is a caller concern; the mapper just does the lookup.
 ---
 
 ## 2026-03-07 - US-019

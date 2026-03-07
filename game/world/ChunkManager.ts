@@ -15,32 +15,11 @@ import { SeededNoise } from "@/game/utils/seededNoise";
 import { hashString } from "@/game/utils/seedRNG";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import { generateHeightmap } from "./terrainGenerator";
+import { assignBiome, getBiomeColor } from "./biomeMapper";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
 export const BUFFER_RADIUS: number = gridConfig.bufferRadius;
-
-// ─── Biome table (Spec §17.3) ─────────────────────────────────────────────────
-
-const BIOME_COLORS: Record<string, string> = {
-  "starting-grove": "#4a7c3f",
-  meadow: "#7ab648",
-  "ancient-forest": "#2d5a27",
-  wetlands: "#3a6b4e",
-  "rocky-highlands": "#7a6b5a",
-  "orchard-valley": "#8ab640",
-  "frozen-peaks": "#d4e8f0",
-  "twilight-glade": "#5a3a7c",
-};
-
-function determineBiome(temperature: number, moisture: number): string {
-  if (temperature < 0.2) return "frozen-peaks";
-  if (moisture > 0.8) return "wetlands";
-  if (temperature > 0.6 && moisture > 0.5) return "orchard-valley";
-  if (temperature < 0.5 && moisture > 0.6) return "ancient-forest";
-  if (temperature > 0.5 && moisture < 0.5) return "meadow";
-  return "starting-grove";
-}
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 
@@ -100,11 +79,12 @@ export function generateChunkData(
   const cz = (chunkZ + 0.5) * 0.1;
   const temperature = (tempNoise.perlin(cx, cz) + 1) * 0.5;
   const moisture = (moistNoise.perlin(cx, cz) + 1) * 0.5;
-  const biome = determineBiome(temperature, moisture);
+  const distanceFromOrigin = Math.max(Math.abs(chunkX), Math.abs(chunkZ));
+  const biome = assignBiome(temperature, moisture, distanceFromOrigin);
 
   return {
     heightmap,
-    baseColor: BIOME_COLORS[biome] ?? "#4a7c3f",
+    baseColor: getBiomeColor(biome),
     biomeBlend: [0, 0, 0, 0],
     dirty: false,
   };
@@ -118,7 +98,8 @@ export function getChunkBiome(worldSeed: string, chunkX: number, chunkZ: number)
   const cz = (chunkZ + 0.5) * 0.1;
   const temperature = (tempNoise.perlin(cx, cz) + 1) * 0.5;
   const moisture = (moistNoise.perlin(cx, cz) + 1) * 0.5;
-  return determineBiome(temperature, moisture);
+  const distanceFromOrigin = Math.max(Math.abs(chunkX), Math.abs(chunkZ));
+  return assignBiome(temperature, moisture, distanceFromOrigin);
 }
 
 // ─── ChunkManager class ───────────────────────────────────────────────────────
