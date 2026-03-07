@@ -1,0 +1,102 @@
+# Iteration 93 Log
+
+## Metadata
+
+- **Task ID**: US-093
+- **Task Title**: Update cooking system for FPS interaction + campfire raycast
+- **Description**: As a player, I want to look at a campfire and press E to open a cooking UI, match ingredients to recipes from config/game/cooking.json, and produce cooked food. The existing cooking.ts (160 lines) nee...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:56:31.260Z
+- **Ended At**: 2026-03-07T16:00:11.741Z
+- **Duration**: 3m 40s
+- **Input Tokens**: 107
+- **Output Tokens**: 11160
+- **Total Tokens**: 11267
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/cooking.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/cooking*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/campfire*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/cooking.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/cooking.json[0m
+Now let me check the GAME_SPEC.md §22 and look at existing FPS raycast patterns:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§22|campfire|cooking|raycast[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mraycast|RaycastHit|FpsInteract|interact[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInteraction.ts[0m
+Let me look at campfire-related components and the ECS structure:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/structures.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mcampfire|CampfireComponent[0m
+Let me check the fishing system (similar FPS interaction) and action dispatcher for patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/fishing.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.ts[0m
+Let me check the ECS world queries and the useRaycast test to understand the test patterns:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m pattern: [96mcampfireQuery|campfire.*query|structuresQuery[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.test.ts[0m
+Let me check the action dispatcher's full content and see what the campfire ECS entity looks like:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m pattern: [96mcampfire[0m
+`★ Insight ─────────────────────────────────────`
+The cooking system follows the "minimal-interface injection" pattern — keep it a pure function module with no ECS world import, export minimal `CampfireEntity` interface that callers satisfy. This enables full unit testing without any WebGL/R3F context.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit[0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/cooking.ts[0m edit: "import cookingConfig from "@/config/game/cooking.j..." → "import cookingConfig from "@/config/game/cooking.j..."
+Now add the FPS interaction section at the end of cooking.ts:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/cooking.ts[0m edit: "/** Collect finished food from a done cooking slot..." → "/** Collect finished food from a done cooking slot..."
+[94m[TodoWrite][0m
+Now add the FPS interaction tests to cooking.test.ts:
+
+`★ Insight ─────────────────────────────────────`
+Following the "WaterEntity minimal-interface injection" pattern: the test creates plain objects with `{ campfire: { lit, cookingSlots } }` — no ECS world needed. This mirrors how `fishing.test.ts` tests pure state machines with plain object inputs.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/cooking.test.ts[0m edit: "/**
+ * Cooking system tests.
+ */
+import {
+  advanc..." → "/**
+ * Cooking system tests.
+ */
+import {
+  advanc..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/cooking.test.ts[0m edit: "    it("should return null for idle slots", () => ..." → "    it("should return null for idle slots", () => ..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -20
+[94m[Bash][0m Run cooking tests only $ npx jest --no-coverage --testPathPattern="cooking" 2>&1 | tail -30
+All 28 tests pass. Let me do a quick full test run to confirm nothing is broken:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -10
+2504 tests, 0 failures. Now update the progress log:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-092" → "---
+
+## 2026-03-07 - US-093
+- Updated `game/system..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `typeof null === "object"` gotcha is the most common bug in type guards — always guard `entity !== null` separately before checking `"campfire" in entity`. The `in` operator also throws on primitives, so the primitive check must come first. This 3-step pattern (`object check → null check → property check`) is the correct order.
+`─────────────────────────────────────────────────`
+
+**US-093 complete.** Summary of what was added to `game/systems/cooking.ts`:
+
+| Export | Purpose |
+|--------|---------|
+| `CampfireEntity` | Minimal interface — `{ campfire: { lit, cookingSlots } }` |
+| `isCampfireEntity(entity)` | Type guard for raycast-hit entity |
+| `isCampfireLit(entity)` | Returns `campfire.lit` |
+| `getCampfireInteractionLabel(entity)` | `"Cook"` (lit) / `"Light Campfire"` (unlit) for HUD |
+| `resolveCampfireInteraction(entity)` | E-key resolver → `{ isCampfire, isLit, canCookNow, interactionLabel }` |
+
+The core cooking logic (recipes, ingredient deduction, slot progress, food collection) was already complete and remains unchanged. 15 new tests added, 2504 total pass.
+
+<promise>COMPLETE</promise>

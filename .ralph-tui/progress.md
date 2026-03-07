@@ -1799,3 +1799,15 @@ after each iteration and it's included in prompts for context.
   - **Fishing spec scattered across §10/§11/§18/§37**: No dedicated fishing section. Pieced together from: Fish resource (§10), Fishing Rod tool (§11.1), Fishing Dock +30% yield (§18.1), scopedRNG "fish" domain (§37).
 
 ---
+
+## 2026-03-07 - US-094
+- Verified `game/systems/cooking.test.ts` (28 tests) — already implemented as part of US-093
+- Files: `game/systems/cooking.test.ts`, `game/systems/cooking.ts`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern=cooking.test` → 28 tests, 0 failures
+- **Learnings:**
+  - **No-op US pattern**: When acceptance criteria are already satisfied by a previous story's deliverables (US-093 wrote both implementation and tests), verify and signal completion immediately — no new code needed.
+  - **collectCookedFood returns FoodComponent shape**: `modelPath: ""` is required because `FoodComponent` has that field, even for cooked results where no model path is relevant. Tests assert on `foodId`, `name`, `raw`, `saturation`, `healing` — not `modelPath`.
+  - **Pure cooking system = trivially testable**: No ECS/R3F imports in cooking.ts means tests run in under 200ms with zero mocks.
+---
