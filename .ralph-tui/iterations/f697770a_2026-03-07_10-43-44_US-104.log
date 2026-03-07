@@ -1,0 +1,154 @@
+# Iteration 104 Log
+
+## Metadata
+
+- **Task ID**: US-104
+- **Task Title**: Implement NPC relationship tracking
+- **Description**: As a developer, I want trust/friendship levels per NPC that increase from trading, quests, and gifts and affect available dialogue so that NPC interactions have depth. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:43:44.202Z
+- **Ended At**: 2026-03-07T16:49:07.289Z
+- **Duration**: 5m 23s
+- **Input Tokens**: 158
+- **Output Tokens**: 18288
+- **Total Tokens**: 18446
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (60124 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/stores/*.ts[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/stores/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/trading.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/quests.ts[0m
+Now let me look at the dialogue system and GAME_SPEC §15 for NPC relationships:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|npc.relationship|NpcRelationship|relationship[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mNPC Relationship|npc relationship|relationship tracking|trust|friendship level[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mRelationship-gated|npcRelationships|relationship[0m
+Now let me look at the dialogue components and existing NPC structures to understand what I need to build on:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/trading.test.ts[0m
+Let me check if the npcRelationship system already exists, and look at how the dialogue conditions are evaluated:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/npcRelationship*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mevaluateCondition|DialogueCondition|DialogueContext[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m
+Now I have enough context. Let me set up the todos and implement:
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The NPC relationship system follows the same "pure function + store state" split used throughout this codebase: logic lives in `game/systems/` as engine-agnostic pure functions, and persistence state lives in `gameStore`. This pattern means the system is fully testable without any ECS/R3F/Expo context.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/relationships.json[0m "{
+  "tradingXp": 5,
+  "questCompletionXp": 20,
+  "giftXp": 10,
+  "maxRelationship": 100,
+  "levelThresholds": {
+    "stranger": 0,
+    "acquaintance": 10,
+    "friendly": 25,
+    "trusted": 50,
+    "b... (218 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcRelationship.ts[0m "/**
+ * NPC Relationship system (Spec §15, §33.4).
+ *
+ * Tracks trust/friendship levels per NPC. Relationships increase through:
+ *  - Trading with the NPC
+ *  - Completing quests assigned by the NPC
+ ... (4762 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `giftMultiplier` parameter allows callers to express gift quality without needing a new config section — a 3x favourite item still reads from the base `giftXp` value. This is the minimum complexity needed while keeping tuning centralized in JSON.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcRelationship.test.ts[0m "/**
+ * NPC Relationship system tests (Spec §15).
+ *
+ * Tests cover all pure functions: querying relationship values,
+ * tier classification, and immutable XP award operations.
+ */
+
+import {
+  awardGif... (8470 chars)"
+[94m[TodoWrite][0m
+Now I'll extend the gameStore with `npcRelationships` state and actions:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "import {
+  discoverCampfire as discoverCampfirePur..." → "import {
+  discoverCampfire as discoverCampfirePur..."
+Now add `npcRelationships` to the initial state:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  /** Discovered campfire fast travel points. Spec..." → "  /** Discovered campfire fast travel points. Spec..."
+Now I need to add the actions. Let me find where other actions are defined:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mdiscoverCampfire\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mdiscoverCampfire|fastTravel|FastTravel[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  // Database hydration -- bulk-set state from SQL..." → "  // NPC Relationship actions (Spec §15)
+  awardNp..."
+[94m[TodoWrite][0m
+Now extend the dialogue system with `has_relationship`. First add it to the condition type and context:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m edit: "export type DialogueConditionType =
+  | "has_item"..." → "export type DialogueConditionType =
+  | "has_item"..."
+Now add `npcRelationships` to `DialogueContext`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m edit: "  /** Current time of day: "dawn" | "morning" | "a..." → "  /** Current time of day: "dawn" | "morning" | "a..."
+Now handle `has_relationship` in `evaluateCondition`. The condition value encodes `"npcId:threshold"`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m edit: "import { scopedRNG } from "@/game/utils/seedWords"..." → "import { scopedRNG } from "@/game/utils/seedWords"..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m edit: "    case "spirit_discovered":
+      result = conte..." → "    case "spirit_discovered":
+      result = conte..."
+[94m[TodoWrite][0m
+Now run the tests and typecheck:
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run npcRelationship tests $ npx jest --no-coverage --testPathPattern="npcRelationship" 2>&1 | tail -40
+All 34 tests pass. Now run the dialogue branch tests to verify the new `has_relationship` condition works:
+[94m[Bash][0m Run dialogueBranch tests $ npx jest --no-coverage --testPathPattern="dialogueBranch" 2>&1 | tail -30
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+The existing test fixture needs `npcRelationships`. Let me fix it:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m edit: "function makeContext(overrides: Partial<DialogueCo..." → "function makeContext(overrides: Partial<DialogueCo..."
+[94m[Bash][0m TypeScript type check after fix $ npx tsc --noEmit 2>&1 | head -30
+TypeScript passes cleanly. Now run the full test suite to confirm nothing is broken:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+128 suites, 2717 tests — all pass. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Show end of progress.md $ tail -20 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-104 entry to progress.md $ cat >> /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md << 'EOF'  ## 2026-03-07 ...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `has_relationship` condition uses value encoding (`"elder-rowan:25"`) rather than adding new fields to `DialogueCondition`. This keeps the existing interface stable while supporting the new compound check — a common trick when the interface is already in use across multiple test fixtures and config files.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria are met:
+
+| Criterion | Status |
+|-----------|--------|
+| `game/systems/npcRelationship.ts` exists | ✓ |
+| Trust/friendship levels per NPC | ✓ `getRelationship` / `getRelationshipLevel` |
+| Increase from trading | ✓ `awardTradingXp` (+5) |
+| Increase from quest completion | ✓ `awardQuestCompletionXp` (+20) |
+| Increase from gifts | ✓ `awardGiftXp` (+10, with multiplier) |
+| Affects available dialogue options | ✓ `has_relationship` condition in `dialogueBranch.ts` |
+| Persist across sessions | ✓ `npcRelationships` in `gameStore` (auto-persisted via Legend State) |
+| `npx tsc --noEmit` passes | ✓ 0 errors |
+| `npx jest --no-coverage` passes | ✓ 2717 tests, 128 suites |
+
+<promise>COMPLETE</promise>

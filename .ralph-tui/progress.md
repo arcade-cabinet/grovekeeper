@@ -71,6 +71,28 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-105
+- Created `game/systems/npcSchedule.ts` — NPC daily routine system driven by `NpcScheduleEntry[]`
+  - `resolveScheduleEntry(schedule, hour)` — finds active entry for current hour; wraps overnight (hour before first entry → last entry)
+  - `activityToAnimState(activity)` — maps activity string to `NpcAnimState` (sleep/walk/talk/work → same; unknown → "idle")
+  - `isAtPosition(curX, curZ, tgtX, tgtZ, tolerance)` — proximity check via `Math.hypot`, default tolerance 0.5
+  - `tickNpcSchedule(schedule, entityId, curX, curZ, hour, grid)` → `ScheduleTickResult` — triggers `startNpcPath` only on slot change, returns animState + target position
+  - `clearScheduleState(entityId)` / `clearAllScheduleStates()` — lifecycle management
+- Created `game/systems/npcSchedule.test.ts` — 36 tests across 6 describe blocks
+  - `resolveScheduleEntry`: 11 tests (empty, single-entry, exact match, between entries, overnight wrap, unsorted, boundaries)
+  - `activityToAnimState`: 5 tests (all known + unknown fallback)
+  - `isAtPosition`: 6 tests (exact, within tolerance, beyond, custom tolerance, far)
+  - `tickNpcSchedule`: 10 tests (empty, first tick, animState, no re-trigger, advance slot, target pos, no path, overnight, multi-NPC)
+  - `clearScheduleState`: 3 tests (re-trigger, safe call, isolation)
+  - `clearAllScheduleStates`: 2 tests (re-trigger all, safe call)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2753 tests, 0 failures (129 suites, +36 new)
+- **Learnings:**
+  - **Schedule slot tracking by entry.hour not currentHour**: Store `entry.hour` (the slot identifier) in the Map, not the current game hour. This correctly detects slot changes even when the NPC is called at different hours within the same slot (e.g., hour 10 and hour 11 both belong to the "8am work" slot).
+  - **Overnight wrap via sorted + fallback**: Sort schedule ascending, iterate to find last `entry.hour <= currentHour`. If `active === undefined` (current hour before first entry), fall back to `sorted[sorted.length - 1]` — the last nighttime slot. No special-casing needed.
+  - **Mock npcMovement in schedule tests**: `jest.mock("./npcMovement", ...)` isolates schedule slot-change logic from real pathfinding. Tests control `startNpcPath` return value to verify `triggered` result without needing a real WalkabilityGrid.
+
+---
+
 ## 2026-03-07 - US-102
 - Created `components/entities/SpeechBubble.tsx` — world-space billboarded speech bubble for dialogue
   - `computeOpacity(visible, currentOpacity, dt, fadeDuration)` — fade in/out math, clamped [0,1]
