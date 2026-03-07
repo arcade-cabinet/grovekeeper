@@ -500,8 +500,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 32,
-      "passes": false,
-      "notes": "Phase 0-D: Input + Save + Difficulty. Tests for US-031."
+      "passes": true,
+      "notes": "Phase 0-D: Input + Save + Difficulty. Tests for US-031.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-033",
@@ -2752,6 +2753,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T10:15:54.299Z"
+    "updatedAt": "2026-03-07T10:16:55.939Z"
   }
 }

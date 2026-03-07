@@ -597,3 +597,15 @@ after each iteration and it's included in prompts for context.
   - Pattern: `getDifficultyById(state.difficulty)?.affectsGameplay ?? true` gives safe default (survival) for unknown IDs
   - Optional param with default (`affectsGameplay = true`) keeps all existing call sites unchanged — no refactor needed
 ---
+
+## 2026-03-07 - US-032
+- Work already complete from a prior iteration — `game/config/difficulty.test.ts` existed with 14 passing tests
+- Tests cover: DIFFICULTIES array loads all 5 entries, correct IDs, explore.affectsGameplay=false, survival modes affectsGameplay=true, explore.staminaDrainMult=0, getDifficultyById (valid id, unknown id, explore), isExplorationMode (all 5 tiers + unknown)
+- **Files changed:** None (already implemented)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest game/config/difficulty.test.ts --no-coverage` → 14 passed, 0 failures
+- **Learnings:**
+  - Flat JSON → typed array pattern: `import data from "...json" with { type: "json" }` cast to typed array; no mock needed in tests — JSON import works directly in Jest
+  - `isExplorationMode` safe default is `false` (survival), not `true` — unknown difficulty IDs are treated as survival to avoid accidentally disabling danger systems
+---
