@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T15:50:26.556Z",
-  "currentIteration": 90,
+  "updatedAt": "2026-03-07T15:56:30.133Z",
+  "currentIteration": 91,
   "maxIterations": 0,
-  "tasksCompleted": 90,
+  "tasksCompleted": 91,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -556,8 +556,8 @@
       {
         "id": "US-091",
         "title": "Implement fishing mini-game",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-092",
@@ -1941,6 +1941,16 @@
       "durationMs": 316058,
       "startedAt": "2026-03-07T15:35:22.235Z",
       "endedAt": "2026-03-07T15:40:38.293Z"
+    },
+    {
+      "iteration": 91,
+      "status": "completed",
+      "taskId": "US-091",
+      "taskTitle": "Implement fishing mini-game",
+      "taskCompleted": true,
+      "durationMs": 587129,
+      "startedAt": "2026-03-07T15:40:39.425Z",
+      "endedAt": "2026-03-07T15:50:26.554Z"
     }
   ],
   "skippedTaskIds": [],

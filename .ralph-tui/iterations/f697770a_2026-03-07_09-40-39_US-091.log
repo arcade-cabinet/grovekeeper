@@ -1,0 +1,228 @@
+# Iteration 91 Log
+
+## Metadata
+
+- **Task ID**: US-091
+- **Task Title**: Implement fishing mini-game
+- **Description**: As a player, I want to cast a line into water and play a timing mini-game to catch fish so that water bodies are interactive. Fish species from biome+season (seeded). See GAME_SPEC.md §22.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:40:39.425Z
+- **Ended At**: 2026-03-07T15:50:26.554Z
+- **Duration**: 9m 47s
+- **Input Tokens**: 6681
+- **Output Tokens**: 34137
+- **Total Tokens**: 40818
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,Glob,Grep,TodoWrite[0m
+[94m[Skill][0m
+Now let me explore the codebase to understand what's needed.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§22|fishing|Fishing[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/survival.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§22|22\.|Fishing|fishing|fish|Fish[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mmini-game|minigame|timing|cast.*line|rod|bait[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs[0m pattern: [96mfishing|mini.game|timing.indicator[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/water.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/combat.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/resources.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/loot.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mBiomeType|biome.*type|type.*Biome[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mSeason|season.*type|type.*season[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mexport type.*Biome|Biome.*=.*\|[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/biomeMapper.ts[0m
+Now I have a complete picture. Let me set up the todo list and implement the fishing system TDD-style.
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The GAME_SPEC.md §22 is "Crafting & Forging" — the fishing mini-game spec is scattered across §10 (Fish resource), §11.1 (Fishing Rod tool), §18.1 (Fishing Dock structure), and §37 (scopedRNG "fish" domain). Fishing lives in Phase 5 (Survival Systems).
+- All tuning values must go in `config/game/fishing.json` — the hooks enforce no inline constants in game code.
+- Following the pure-function pattern: no ECS/R3F/Rapier imports; callers translate state changes to their respective layers.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Bash[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/fishing.json[0m "{
+  "castDuration": 0.5,
+  "minWaitDuration": 3.0,
+  "maxWaitDuration": 10.0,
+  "biteDuration": 4.0,
+  "timingBarSpeed": 0.8,
+  "zoneWidth": 0.25,
+  "baseYield": 1,
+  "fishingDockYieldBonus": 0.30,
+  ... (773 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `biomeSpecies` keys match `BiomeType` from `game/world/biomeMapper.ts` exactly — keeps the systems aligned without importing across boundaries.
+- `seasonWeights` is sparse: unlisted species default to weight 1.0 — lets autumn boost pike/catfish without touching trout's base weight.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/fishing.test.ts[0m "/**
+ * Fishing system tests — Spec §22 (P5 Survival Systems).
+ *
+ * Covers:
+ * - isWaterFishable: water body type check for raycast hits
+ * - createFishingState: initial state
+ * - startFishing: phase... (16961 chars)"
+Now verify tests fail (RED phase):
+[94m[Bash][0m Run fishing tests to confirm RED phase failure $ npx jest --no-coverage game/systems/fishing.test.ts 2>&1 | tail -20
+Tests fail because `fishing.ts` doesn't exist yet — correct RED behavior.
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The timing mini-game uses a bouncing cursor (reflect off 0 and 1): `p = 2 - p` when overshooting 1, `p = -p` when going below 0. This handles arbitrary large `dt` correctly without loops (since max single-frame overshoot is bounded by frame rate).
+- `selectFishSpecies` uses cumulative weight subtraction rather than building a CDF array — O(n) with no allocations per call.
+- Seasonal weights are sparse — missing species default to 1.0 via `?? 1.0`, making the config concise without needing to enumerate every species × season pair.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/fishing.ts[0m "/**
+ * Fishing mini-game system — pure state machine + species selection.
+ *
+ * No ECS world, no R3F, no Rapier dependencies.
+ * Callers integrate the returned state with their UI + inventory layers.
+... (8956 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run fishing tests to verify GREEN phase $ npx jest --no-coverage game/systems/fishing.test.ts 2>&1
+
+[91m[Error: Exit code 1
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL game/systems/fishing.test.ts
+  isWaterFishable (Spec §22)
+    ✓ returns true for pond (1 ms)
+    ✓ returns true for river
+    ✓ returns true for stream
+    ✓ returns true for ocean
+    ✓ returns false for waterfall (not fishable)
+    ✓ returns false for unknown water type
+  createFishingState (Spec §22)
+    ✓ starts in idle phase
+    ✓ initializes timingProgress to 0
+    ✓ initializes timingDirection to +1
+    ✓ initializes elapsed to 0
+    ✓ initializes zoneStart and zoneEnd to 0 (1 ms)
+  startFishing (Spec §22)
+    ✓ transitions from idle to casting
+    ✓ resets elapsed to 0
+    ✓ sets zoneStart and zoneEnd with correct width
+    ✓ zoneEnd does not exceed 1
+    ✓ zoneStart is 0 when zone rng returns 0
+    ✓ resets timingProgress to 0 and direction to +1
+  tickFishing: casting phase (Spec §22)
+    ✓ stays casting before castDuration elapses
+    ✓ transitions to waiting after castDuration (1 ms)
+    ✓ does nothing in idle phase
+  tickFishing: waiting phase (Spec §22)
+    ✓ transitions to biting after waitDuration
+    ✓ stays waiting before waitDuration
+  tickFishing: biting phase timeout (Spec §22)
+    ✓ stays biting within biteDuration
+    ✓ transitions to escaped when biting times out
+  pressFishingAction: biting → minigame (Spec §22)
+    ✓ transitions biting to minigame on press
+    ✓ resets elapsed on transition to minigame
+    ✓ resets timingProgress to 0 on minigame start
+    ✓ does nothing when not in biting phase
+  tickFishing: minigame cursor (Spec §22)
+    ✓ advances timingProgress each tick
+    ✓ timingProgress stays within [0, 1] across many ticks (2 ms)
+    ✓ cursor reverses direction after hitting 1
+    ✕ cursor reverses direction after hitting 0 (1 ms)
+  pressFishingAction: minigame outcome (Spec §22)
+    ✓ transitions to caught when cursor is inside success zone
+    ✓ transitions to escaped when cursor is outside success zone
+    ✓ does nothing when not in minigame phase
+  isFishingComplete (Spec §22)
+    ✓ returns false when idle
+    ✓ returns false when casting
+    ✓ returns false when minigame active
+    ✓ returns true when caught
+    ✓ returns true when escaped
+  selectFishSpecies (Spec §22)
+    ✓ returns a species from the biome list
+    ✓ returns null for unknown biome (no fish) (1 ms)
+    ✓ is deterministic with the same rng sequence
+    ✓ winter boosts arctic-char in frozen-peaks (rng=0.1 → arctic-char)
+    ✓ high rng selects last species in weighted list
+    ✓ twilight-glade returns magical fish species
+    ✓ species from same biome/season with scopedRNG-style usage is stable
+  computeFishYield (Spec §22)
+    ✓ returns baseYield without fishing dock
+    ✓ returns ceil(baseYield * 1.3) with fishing dock (+30% bonus)
+    ✓ fishing dock yield is greater than base yield
+  full fishing round trip (Spec §22)
+    ✓ completes: idle → casting → waiting → biting → minigame → caught
+    ✓ fails: biting timeout → escaped (1 ms)
+    ✓ fails: missed timing → escaped
+
+  ● tickFishing: minigame cursor (Spec §22) › cursor reverses direction after hitting 0
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 0
+    Received:   0
+
+      279 |     // Overshoot to 1 first (direction becomes -1), then overshoot back to 0
+      280 |     tickFishing(state, 2.0 / timingBarSpeed + 0.4);
+    > 281 |     expect(state.timingProgress).toBeGreaterThan(0);
+          |                                  ^
+      282 |     expect(state.timingDirection).toBe(1);
+      283 |   });
+      284 | });
+
+      at Object.toBeGreaterThan (game/systems/fishing.test.ts:281:34)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 52 passed, 53 total
+Snapshots:   0 total
+Time:        0.299 s
+Ran all test suites matching /game\/systems\/fishing.test.ts/i.][0m
+One test fails — the cursor double-bounce in a single large-dt tick. My implementation only handles one reflection per tick. Let me fix `_advanceCursor` to use a while loop:
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/fishing.ts[0m edit: "/**
+ * Advance the timing bar cursor, bouncing off..." → "/**
+ * Advance the timing bar cursor, bouncing off..."
+[94m[Bash][0m Re-run fishing tests after cursor fix $ npx jest --no-coverage game/systems/fishing.test.ts 2>&1 | tail -15
+53/53 pass. Now run the full suite + tsc:
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Full jest suite $ npx jest --no-coverage 2>&1 | tail -10
+120 suites, 2457 tests — all pass. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Append US-091 entry to progress.md $ unlisted species default to `?? 1.0`. Keeps fishing.json concise without enumerating all species × s...
+[94m[TodoWrite][0m
+All acceptance criteria met:
+
+| Criterion | Status |
+|-----------|--------|
+| `game/systems/fishing.ts` exists | ✅ |
+| Raycast hits water body → `isWaterFishable()` | ✅ |
+| Timing indicator mini-game (bouncing cursor + zone) | ✅ |
+| Fish species from biome+season (seeded) | ✅ |
+| Fishing catches fish (`computeFishYield`) | ✅ |
+| `npx tsc --noEmit` passes | ✅ |
+| `npx jest --no-coverage` passes | ✅ (2457 tests) |
+
+**Files created:**
+- `config/game/fishing.json` — all tuning constants (biomeSpecies, seasonWeights, timing params)
+- `game/systems/fishing.ts` — pure state machine (8 exports)
+- `game/systems/fishing.test.ts` — 53 tests across all functions
+
+`★ Insight ─────────────────────────────────────`
+- The while-loop reflection (`while (p < 0 || p > 1)`) is essential for any bouncing-cursor system — single `if/else if` silently clips to 0 when the cursor overshoots both walls in one tick (e.g., large dt in tests or low-fps devices).
+- `selectFishSpecies` returns `null` for unknown biomes rather than throwing — callers can treat null as "no fish here" without try/catch. This is the pattern used throughout the pure systems (`rollLoot` returns `[]` for unknown tables).
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

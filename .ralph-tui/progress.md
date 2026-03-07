@@ -65,6 +65,29 @@ after each iteration and it's included in prompts for context.
 - **effectPower on optional tool field**: Added `effectPower?: number` to `ToolData` in `game/config/tools.ts` and populated it on combat tools in tools.json (axe=5.0, shovel=3.0, shears=2.0). Non-combat tools simply omit the field — callers treat undefined as 0.
 - **damageMultiplier + incomingDamageMultiplier in difficulty.json**: explore=0/0 (no combat), normal=1/1, hard=1.3/1.3, brutal=1.5/1.5, ultra-brutal=2/2. Added to `DifficultyConfig` interface so TypeScript validates config shape.
 
+- **Trap cooldown in TrapComponent is runtime state**: `TrapComponent.cooldown` tracks *remaining* seconds (counts down to 0). Config stores `cooldownDuration` (the full reset value) in `config/game/traps.json` keyed by `trapType`. `triggerTrap()` reads config to set `cooldown = cooldownDuration`; no need for a second component field.
+- **Trap system reuses applyDamageToHealth from combat.ts**: traps automatically respect the 0.5s invuln window. `applyTrapDamageToHealth` just delegates to `applyDamageToHealth(health, trap.damage, "trap:<type>")`.
+- **break after first trap hit per tick**: The inner enemy loop breaks immediately after the first in-range hit. This ensures one trigger per armed trap per frame. Without break, remaining enemies would be scanned inside an already-disarmed `if (trap.armed)` block.
+
+---
+
+## 2026-03-07 - US-092
+- Created `config/game/traps.json` — 3 trap types: spike (8dmg/1.5r/5s cd), snare (4dmg/1.2r/3s cd), fire (12dmg/2.0r/8s cd)
+- Created `game/systems/traps.ts` — 6 pure exported functions:
+  - `createTrapComponent(trapType)` — factory, arms on placement, bakes config values in
+  - `isEnemyInTrapRange(trapX, trapZ, enemyX, enemyZ, radius)` — 2D XZ Euclidean check
+  - `triggerTrap(trap)` — disarms + starts cooldown from config
+  - `tickTrapCooldown(trap, dt)` — decrements cooldown, re-arms at 0
+  - `applyTrapDamageToHealth(health, trap)` — delegates to `combat.applyDamageToHealth`
+  - `tickTraps(traps, enemies, dt)` — per-frame scan: armed traps check enemies, unarmed traps tick cooldown
+- Exported `TrapEntity` and `EnemyTargetEntity` minimal interfaces (no ECS world import)
+- Created `game/systems/traps.test.ts` — 35 tests covering all functions + integration
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2492 tests, 0 failures (121 suites, +35 new)
+- **Learnings:**
+  - See new Codebase Patterns entries above
+
 ---
 
 ## 2026-03-07 - US-089
