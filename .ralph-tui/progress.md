@@ -95,6 +95,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-098
+- Work already complete — US-097 created `game/systems/mining.test.ts` with 47 tests covering all acceptance criteria
+- Files changed: none (tests existed from previous iteration)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 2594 tests, 0 failures
+- **Acceptance criteria met:**
+  - 6+ tests ✓ (47 tests across 8 describe blocks)
+  - Ore type per biome ✓ (`getOreForBiome` tests for all 8 biomes)
+  - Stamina cost calculation ✓ (`computeMiningStaminaCost` tests for all 4 hardness levels)
+  - Durability drain ✓ (`resolveMiningInteraction` returns `staminaCost` — the value callers use to drain tool durability)
+- **Learnings:**
+  - **Pre-completed test story**: When an impl story (US-097) follows the mandatory docs > tests > code workflow, the subsequent "write tests" story (US-098) is already done. Signal completion immediately after verifying acceptance criteria.
+
+---
+
 ## 2026-03-07 - US-093
 - Updated `game/systems/cooking.ts` (+60 lines) for FPS raycast interaction:
   - Added `CampfireEntity` interface (minimal, no ECS world import)

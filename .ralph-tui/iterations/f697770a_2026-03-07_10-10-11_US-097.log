@@ -1,0 +1,134 @@
+# Iteration 97 Log
+
+## Metadata
+
+- **Task ID**: US-097
+- **Task Title**: Implement mining system
+- **Description**: As a player, I want to mine rocks with a pick tool to extract ore based on biome type so that I can gather materials for forging. See GAME_SPEC.md §22.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:10:11.644Z
+- **Ended At**: 2026-03-07T16:15:27.744Z
+- **Duration**: 5m 16s
+- **Input Tokens**: 8301
+- **Output Tokens**: 16136
+- **Total Tokens**: 24437
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/terrain.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/forging.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/combat.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§22|§ 22|mining|Mining[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/items.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m22\.|mining|Mining|pick|ore|Ore[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 22|## 21|## 23|pick|pickaxe|hardness|vein|biome.*ore|ore.*biome[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/resources.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/forging.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world[0m pattern: [96mbiome|BiomeType|forest|meadow|desert|swamp|tundra|mountain|beach|volcanic[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/biomeMapper.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/config/tools.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/traps.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.ts[0m
+Now I have all the context I need. Let me implement the mining system following the docs > tests > code workflow.
+
+`★ Insight ─────────────────────────────────────`
+The mining system follows the exact same structural pattern as `forging.ts` and `traps.ts`: pure functions with no ECS/Rapier/R3F imports, config-driven values in `config/game/mining.json`, and a minimal "entity interface" for FPS raycast interaction. The `RockComponent` already exists in `terrain.ts` — I just need to wrap it with the FPS type guard pattern.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,Bash,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/mining.json[0m "{
+  "baseStaminaPerHardness": 8,
+  "rockHardness": {
+    "default": 1,
+    "granite": 2,
+    "iron-vein": 3,
+    "obsidian": 4
+  },
+  "oreTable": {
+    "starting-grove":  { "oreType": "stone", "minAmo... (785 chars)"
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m edit: "  {
+    "id": "axe",
+    "name": "Axe"," → "  {
+    "id": "pick",
+    "name": "Pick",
+    "des..."
+[94m[TodoWrite][0m
+Now the test file (RED phase first):
+
+`★ Insight ─────────────────────────────────────`
+The test file uses a fixed `rngValue` (a float between 0–1) rather than mocking `scopedRNG` — this keeps tests pure and deterministic without needing to inject a fake RNG. The caller is responsible for passing an RNG value; the mining system just does math on it. This is the same seam pattern used elsewhere (e.g., `resolveGLBPath` as a testable seam).
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/mining.test.ts[0m "/**
+ * Mining system tests (Spec §22)
+ *
+ * Covers:
+ * - Rock hardness lookup from config
+ * - Stamina cost scaling with hardness
+ * - Ore type determined by biome
+ * - mineRock produces correct resou... (10121 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `mineRock` amount formula uses `Math.floor(rngValue * (range + 1))` clamped to `maxAmount`. This gives a uniform distribution over `[minAmount, maxAmount]` inclusive when `rngValue ∈ [0, 1)`. At `rngValue = 0.99`, `Math.floor(0.99 * 3) = 2` for a range of 2 — which maps correctly to `maxAmount`. The `+ 1` in `range + 1` is the same trick used in standard dice-roll math.
+`─────────────────────────────────────────────────`
+
+Now the implementation:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/mining.ts[0m "/**
+ * Mining system — pick tool interaction with RockComponent (Spec §22).
+ *
+ * Pure functions only — no ECS, Rapier, or R3F imports.
+ * Rocks are mined with the pick tool to produce stone or ore
+ *... (6252 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run only mining tests $ npx jest --no-coverage --testPathPattern="mining" 2>&1
+47/47 tests pass. Let me run the full suite to verify nothing is broken:
+[94m[Bash][0m Full test suite $ npx jest --no-coverage 2>&1 | tail -20
+One test needs updating — `tools.test.ts` hardcodes the count at 12 (before adding pick). Let me fix it:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.test.ts[0m edit: "    it("contains 12 tools", () => {
+      expect(T..." → "    it("contains 13 tools", () => {
+      expect(T..."
+[94m[Bash][0m Full test suite after fix $ npx jest --no-coverage 2>&1 | tail -10
+2594/2594 tests pass, 0 failures.
+[94m[TodoWrite][0m
+Now update the progress log:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-093" → "---
+
+## 2026-03-07 - US-097
+- Created `config/game..."
+All done. Summary of what was implemented:
+
+**Files created:**
+- `config/game/mining.json` — ore table (8 biomes), rock hardness (4 types), `baseStaminaPerHardness: 8`
+- `game/systems/mining.ts` — 9 pure functions, zero ECS/Rapier/R3F dependencies
+- `game/systems/mining.test.ts` — 47 tests, all green
+
+**Files modified:**
+- `config/game/tools.json` — pick tool added (action: `"MINE"`, unlockLevel: 6)
+- `game/config/tools.test.ts` — count assertion updated 12 → 13
+
+**All acceptance criteria met:**
+- `game/systems/mining.ts` exists
+- `RockComponent` interaction via pick tool (`isPickTool`, `resolveMiningInteraction`)
+- Ore type determined by biome (`getOreForBiome` — stone in 5 biomes, ore in 3)
+- Stamina scales with hardness (`computeMiningStaminaCost`)
+- Mining produces ore resources (`mineRock` → `MineResult`)
+- `tsc --noEmit` → 0 errors, `jest --no-coverage` → 2594/2594 passing
+
+<promise>COMPLETE</promise>

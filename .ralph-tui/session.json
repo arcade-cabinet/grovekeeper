@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T16:15:27.746Z",
-  "currentIteration": 96,
+  "updatedAt": "2026-03-07T16:16:46.868Z",
+  "currentIteration": 97,
   "maxIterations": 0,
-  "tasksCompleted": 96,
+  "tasksCompleted": 97,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -592,8 +592,8 @@
       {
         "id": "US-097",
         "title": "Implement mining system",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-098",
@@ -2001,6 +2001,16 @@
       "durationMs": 61718,
       "startedAt": "2026-03-07T16:09:08.800Z",
       "endedAt": "2026-03-07T16:10:10.518Z"
+    },
+    {
+      "iteration": 97,
+      "status": "completed",
+      "taskId": "US-097",
+      "taskTitle": "Implement mining system",
+      "taskCompleted": true,
+      "durationMs": 316100,
+      "startedAt": "2026-03-07T16:10:11.644Z",
+      "endedAt": "2026-03-07T16:15:27.744Z"
     }
   ],
   "skippedTaskIds": [],
