@@ -35,7 +35,7 @@
       "title": "Remove ZoneComponent references from game systems",
       "description": "As a developer, I want to remove all ZoneComponent usage so that spatial logic uses chunk coordinates instead of zones. See GAME_SPEC.md §6 for chunk-based architecture.",
       "acceptanceCriteria": [
-        "grep -r 'ZoneComponent' game/ returns 0 matches (except core.ts legacy comment if needed)",
+        "grep -r 'ZoneComponent' game/ returns 0 matches",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
@@ -987,19 +987,20 @@
     },
     {
       "id": "US-067",
-      "title": "Create HUD overlay",
-      "description": "As a player, I want a HUD showing my stamina bar, tool belt, resource counts, day/time, and compass so that I always know my status. Mobile: 44px buttons. See GAME_SPEC.md §16.",
+      "title": "Update HUD overlay for FPS perspective",
+      "description": "As a player, I want the HUD updated for FPS perspective showing stamina bar, tool belt, resource counts, day/time, compass, and crosshair. The existing components/game/HUD.tsx (128 lines) was built for 3rd-person and needs updating for the new FPS view. See GAME_SPEC.md §16.",
       "acceptanceCriteria": [
-        "New file components/game/HUD.tsx exists",
-        "Shows stamina bar, tool belt, resource counts, day/time, compass",
-        "Mobile: 44px touch targets",
-        "HUD visible with live data from game state",
+        "Update existing components/game/HUD.tsx for FPS perspective",
+        "Shows stamina bar, tool belt, resource counts, day/time, compass, crosshair",
+        "Mobile: 44px touch targets, no overlap with virtual joystick",
+        "HUD reads live data from ECS queries and Legend State",
+        "Compass points toward nearest undiscovered POI",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 67,
       "passes": false,
-      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD."
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. HUD.tsx already exists (128 lines) — update, don't recreate."
     },
     {
       "id": "US-068",
@@ -1264,19 +1265,21 @@
     },
     {
       "id": "US-085",
-      "title": "Implement enemy spawning and AI",
-      "description": "As a developer, I want enemies spawned from biome templates with patrol/guard/swarm/ambush behaviors using Yuka AI so that Survival mode has threats. See GAME_SPEC.md §20.",
+      "title": "Update enemy AI and spawning for chunk-based world",
+      "description": "As a developer, I want the existing enemyAI.ts (126 lines) and enemySpawning.ts (115 lines) updated to use chunk-based biome templates and Yuka AI behaviors (patrol/guard/swarm/ambush) so that Survival mode has threats that spawn contextually per biome. See GAME_SPEC.md §20.",
       "acceptanceCriteria": [
-        "New file game/systems/enemyAI.ts exists",
-        "Spawns from biome templates",
-        "Patrol/guard/swarm/ambush behaviors using Yuka",
-        "Enemies move with AI behaviors",
+        "Update existing game/systems/enemyAI.ts for Yuka AI behaviors",
+        "Update existing game/systems/enemySpawning.ts for chunk-based biome spawning",
+        "5 enemy types from config/game/enemies.json spawn per biome template",
+        "Patrol/guard/swarm/ambush behaviors using Yuka EntityManager",
+        "Enemies only spawn in Survival mode (check affectsGameplay flag)",
+        "Seeded spawn positions via scopedRNG('enemy', worldSeed, chunkX, chunkZ)",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 85,
       "passes": false,
-      "notes": "Phase 4: Maze + Combat + Spirits."
+      "notes": "Phase 4: Maze + Combat + Spirits. enemyAI.ts (126 lines) and enemySpawning.ts (115 lines) already exist — update for new vision."
     },
     {
       "id": "US-086",
@@ -1298,20 +1301,20 @@
     },
     {
       "id": "US-087",
-      "title": "Create loot drop system",
-      "description": "As a developer, I want LootDropComponent entities to spawn on enemy death with seeded loot table rolls and a despawn timer so that combat has rewards. See GAME_SPEC.md §20.",
+      "title": "Update loot drop system for ECS + config",
+      "description": "As a developer, I want the existing lootSystem.ts (65 lines) updated to use LootDropComponent ECS entities with seeded loot table rolls from config/game/loot.json and a despawn timer so that combat has rewards. See GAME_SPEC.md §20.",
       "acceptanceCriteria": [
-        "New file game/systems/lootSystem.ts exists",
-        "LootDropComponent spawns on enemy death",
-        "Seeded loot table rolls",
-        "Despawn timer",
-        "Loot appears after killing enemy",
+        "Update existing game/systems/lootSystem.ts for ECS LootDropComponent entities",
+        "Loot tables driven by config/game/loot.json",
+        "Seeded rolls via scopedRNG('loot', worldSeed, enemyId)",
+        "Despawn timer (configurable, default 30s)",
+        "Loot spawns on enemy death and despawns after timer",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 87,
       "passes": false,
-      "notes": "Phase 4: Maze + Combat + Spirits. Depends on US-086."
+      "notes": "Phase 4: Maze + Combat + Spirits. Depends on US-086. lootSystem.ts (65 lines) already exists."
     },
     {
       "id": "US-088",
@@ -1395,20 +1398,20 @@
     },
     {
       "id": "US-093",
-      "title": "Implement cooking system",
-      "description": "As a player, I want to interact with a campfire to open a cooking UI, match ingredients to recipes, and produce cooked food so that I can restore hunger/health. See GAME_SPEC.md §22.",
+      "title": "Update cooking system for FPS interaction + campfire raycast",
+      "description": "As a player, I want to look at a campfire and press E to open a cooking UI, match ingredients to recipes from config/game/cooking.json, and produce cooked food. The existing cooking.ts (160 lines) needs updating for FPS raycast interaction and chunk-based campfire entities. See GAME_SPEC.md §22.",
       "acceptanceCriteria": [
-        "New file game/systems/cooking.ts exists",
-        "Interact with campfire triggers cooking UI",
+        "Update existing game/systems/cooking.ts for FPS raycast interaction",
+        "Campfire raycast hit + E key opens cooking UI",
         "Match ingredients to recipes (config/game/cooking.json)",
-        "Timer produces cooked food",
-        "Cooking produces correct output item",
+        "Timer produces cooked food with correct stat values",
+        "Cooking consumes ingredients from inventory",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 93,
       "passes": false,
-      "notes": "Phase 5: Survival Systems."
+      "notes": "Phase 5: Survival Systems. cooking.ts (160 lines) already exists — update for FPS vision."
     },
     {
       "id": "US-094",
@@ -1708,19 +1711,20 @@
     },
     {
       "id": "US-113",
-      "title": "Create quest UI",
-      "description": "As a player, I want a quest panel showing active quests with objectives and checkmarks plus completion notifications so that I can track my progress. See GAME_SPEC.md §16.",
+      "title": "Update quest panel UI for FPS HUD integration",
+      "description": "As a player, I want the quest panel updated for FPS HUD overlay showing active quests with objectives, checkmarks, and completion notifications. The existing QuestPanel.tsx (184 lines) needs updating to read from QuestBranchComponent ECS queries. See GAME_SPEC.md §16, §17.",
       "acceptanceCriteria": [
-        "New file components/game/QuestPanel.tsx exists",
+        "Update existing components/game/QuestPanel.tsx for ECS QuestBranchComponent queries",
         "Shows active quests with objectives and checkmarks",
-        "Completion notification popup",
-        "Quest objectives visible and update in real-time",
+        "Completion notification popup (use existing Toast component)",
+        "Quest objectives update in real-time from ECS state",
+        "Panel toggleable via HUD button, 44px touch targets",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 113,
       "passes": false,
-      "notes": "Phase 7: Quest System."
+      "notes": "Phase 7: Quest System. QuestPanel.tsx (184 lines) already exists — update for ECS integration."
     },
     {
       "id": "US-114",
@@ -1739,20 +1743,20 @@
     },
     {
       "id": "US-115",
-      "title": "Create snap point validation system",
-      "description": "As a developer, I want a kitbashing snap point validator that checks direction matching (N<->S, E<->W, up<->down), clearance, and ground contact so that building placement is structurally sound. See GAME_SPEC.md §14.",
+      "title": "Update kitbashing snap validation for Rapier physics",
+      "description": "As a developer, I want the existing kitbashing.ts (219 lines) updated to use Rapier physics raycasts for snap point detection, direction matching (N<->S, E<->W, up<->down), clearance via collision queries, and ground contact checks. See GAME_SPEC.md §14.",
       "acceptanceCriteria": [
-        "New file game/systems/kitbashing.ts exists",
+        "Update existing game/systems/kitbashing.ts for Rapier physics raycasts",
         "Validates snap direction matching (N<->S, E<->W, up<->down)",
-        "Clearance check",
-        "Ground contact check",
+        "Clearance check via Rapier collision query",
+        "Ground contact check via Rapier raycast",
         "Valid snaps accepted, invalid rejected",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 115,
       "passes": false,
-      "notes": "Phase 8: Base Building."
+      "notes": "Phase 8: Base Building. kitbashing.ts (219 lines) already exists — update for Rapier physics."
     },
     {
       "id": "US-116",
@@ -1770,30 +1774,31 @@
     },
     {
       "id": "US-117",
-      "title": "Create building radial menu",
-      "description": "As a player, I want a radial menu for selecting building categories and pieces with build cost display and 44px touch targets so that building is intuitive. See GAME_SPEC.md §14.",
+      "title": "Update BuildPanel for radial category selection",
+      "description": "As a player, I want the existing BuildPanel.tsx (176 lines) updated with radial category selection, piece list with build cost display, and 44px touch targets so that building is intuitive in FPS view. See GAME_SPEC.md §14.",
       "acceptanceCriteria": [
-        "New file components/game/BuildMenu.tsx exists",
-        "Radial category selection then piece list",
-        "Shows build cost",
-        "44px touch targets",
-        "Menu navigates categories and pieces",
+        "Update existing components/game/BuildPanel.tsx with radial category selection",
+        "Category -> piece list navigation",
+        "Shows build cost per piece from config/game/building.json",
+        "44px touch targets on all interactive elements",
+        "Locked pieces show lock icon + level requirement",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 117,
       "passes": false,
-      "notes": "Phase 8: Base Building."
+      "notes": "Phase 8: Base Building. BuildPanel.tsx (176 lines) already exists — update, don't recreate."
     },
     {
       "id": "US-118",
-      "title": "Implement ghost preview with validation",
-      "description": "As a player, I want a translucent ghost mesh at the snap position that turns green for valid and red for invalid placements so that I get visual feedback before building. See GAME_SPEC.md §14.",
+      "title": "Update PlacementGhost for Rapier-based snap validation",
+      "description": "As a player, I want the existing PlacementGhost.tsx (209 lines) updated to use Rapier physics raycasts for snap detection, showing a translucent ghost mesh that turns green for valid and red for invalid placements. See GAME_SPEC.md §14.",
       "acceptanceCriteria": [
-        "Translucent mesh at snap position",
+        "Update existing components/game/PlacementGhost.tsx for Rapier raycast snap detection",
+        "Translucent ghost mesh at snap position from kitbashing.ts validation",
         "Green = valid placement, red = invalid",
-        "Rotates with controls",
-        "Ghost follows cursor/touch with color feedback",
+        "Rotates with controls (Q/E keys or touch gesture)",
+        "Ghost follows camera center raycast with color feedback",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
@@ -1863,20 +1868,21 @@
     },
     {
       "id": "US-123",
-      "title": "Implement raid probability and wave generation",
-      "description": "As a developer, I want raid probability that scales with base value + day number and seeded wave generation (enemy count, types, directions) that triggers only at night so that Survival mode has escalating threats. See GAME_SPEC.md §23.",
+      "title": "Update raid system for chunk-based world + DayNight integration",
+      "description": "As a developer, I want the existing baseRaids.ts (150 lines) updated so raid probability scales with base value + day number from DayNightComponent, seeded wave generation uses chunk coordinates for approach directions, and raids only trigger at night. See GAME_SPEC.md §23.",
       "acceptanceCriteria": [
-        "New file game/systems/baseRaids.ts exists",
-        "Probability scales with base value + day number",
-        "Wave: enemy count, types, approach directions (seeded)",
-        "Night only trigger",
-        "Raids trigger with appropriate probability",
+        "Update existing game/systems/baseRaids.ts for DayNightComponent integration",
+        "Probability scales with base value + day number from DayNightComponent.gameHour",
+        "Wave composition seeded via scopedRNG('raid', worldSeed, dayNumber)",
+        "Enemy count, types from config/game/raids.json, approach directions from chunk edges",
+        "Night-only trigger (DayNightComponent.timeOfDay === 'night')",
+        "Only triggers in Survival mode (check affectsGameplay flag)",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 123,
       "passes": false,
-      "notes": "Phase 9: Raids + NG+."
+      "notes": "Phase 9: Raids + NG+. baseRaids.ts (150 lines) already exists — update for new vision."
     },
     {
       "id": "US-124",
@@ -1894,20 +1900,21 @@
     },
     {
       "id": "US-125",
-      "title": "Implement New Game+ prestige system",
-      "description": "As a player, I want to start New Game+ after completing the main quest, resetting world/resources/level but carrying cosmetics and prestige tier bonuses (growth speed, stamina, build cost). See GAME_SPEC.md §24.",
+      "title": "Update prestige system for chunk-based world reset",
+      "description": "As a player, I want the existing prestige.ts (173 lines) updated so NG+ properly resets chunk deltas and world seed while carrying cosmetics and prestige tier bonuses (growth speed, stamina, build cost) from config/game/prestige.json. See GAME_SPEC.md §24.",
       "acceptanceCriteria": [
-        "New file game/systems/prestige.ts exists",
-        "After main quest: reset world/resources/level",
-        "Carry cosmetics and prestige tier",
-        "Apply prestige bonuses (growth speed, stamina, build cost)",
+        "Update existing game/systems/prestige.ts for chunk-based world reset",
+        "After main quest: reset all chunk deltas, resources, level, quest state",
+        "Carry cosmetics, prestige tier, and discovered species",
+        "Apply prestige bonuses from config/game/prestige.json (growth speed, stamina, build cost)",
+        "New world seed generated or player-chosen on NG+",
         "NG+ resets and applies bonuses correctly",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 125,
       "passes": false,
-      "notes": "Phase 9: Raids + NG+. Depends on US-108."
+      "notes": "Phase 9: Raids + NG+. Depends on US-108. prestige.ts (173 lines) already exists."
     },
     {
       "id": "US-126",
@@ -1925,20 +1932,23 @@
     },
     {
       "id": "US-127",
-      "title": "Implement achievement system",
-      "description": "As a player, I want 45 achievements that trigger on specific conditions (first harvest, all species, etc.) with popup notifications so that I have goals to chase. See GAME_SPEC.md §25.",
+      "title": "Update achievement system + decompose (over 300 lines)",
+      "description": "As a player, I want the existing achievements.ts (401 lines — OVER 300 LINE LIMIT) decomposed into a subpackage and updated to track chunk-based exploration achievements, spirit discoveries, and NG+ achievements. See GAME_SPEC.md §25.",
       "acceptanceCriteria": [
-        "New file game/systems/achievements.ts exists",
+        "Decompose game/systems/achievements.ts (401 lines) into game/systems/achievements/ subpackage with index.ts barrel",
         "45 achievements from config/game/achievements.json",
-        "Trigger on conditions (first harvest, all species, etc.)",
-        "Popup notification on achievement",
-        "Achievements trigger and persist",
+        "Add chunk exploration achievements (discover N biomes, visit N chunks)",
+        "Add spirit discovery achievements (find N spirits)",
+        "Add NG+ achievements (reach prestige tier N)",
+        "Trigger conditions use ECS queries",
+        "Popup via existing AchievementPopup.tsx component",
+        "Achievements persist via Legend State",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 127,
       "passes": false,
-      "notes": "Phase 9: Raids + NG+."
+      "notes": "Phase 9: Raids + NG+. achievements.ts is 401 lines — MUST decompose. AchievementPopup.tsx (309 lines) also exists."
     },
     {
       "id": "US-128",
@@ -2105,21 +2115,22 @@
     },
     {
       "id": "US-138",
-      "title": "Implement new game modal",
-      "description": "As a player, I want a new game modal with mode selection (Exploration/Survival), seed input ('Adj Adj Noun'), shuffle button, and difficulty selector so that I can customize my grove. See GAME_SPEC.md §26.",
+      "title": "Update new game modal for game modes + seed phrases",
+      "description": "As a player, I want the existing NewGameModal.tsx (273 lines) and SeedSelect.tsx (283 lines) updated with Exploration/Survival mode selection, 'Adjective Adjective Noun' seed phrases from game/utils/seedWords.ts, shuffle button, and Survival sub-difficulty selector (Gentle/Standard/Harsh/Ironwood). See GAME_SPEC.md §26, §37.",
       "acceptanceCriteria": [
-        "New file components/game/NewGameModal.tsx exists",
-        "Mode selection: Exploration/Survival",
-        "Seed input with 'Adj Adj Noun' format",
-        "Shuffle button generates new phrase",
-        "Difficulty selector for Survival mode",
-        "Modal produces valid game config",
+        "Update existing components/game/NewGameModal.tsx for game mode selection",
+        "Update existing components/game/SeedSelect.tsx for 'Adj Adj Noun' seed phrases",
+        "Mode selection: Exploration (no survival pressure) / Survival (hearts + hunger)",
+        "Seed input uses seedWords.ts word lists, displays 'Adj Adj Noun' format",
+        "Shuffle button generates new random phrase via scopedRNG",
+        "Survival sub-difficulty selector: Gentle/Standard/Harsh/Ironwood",
+        "Modal produces valid game config that feeds into gameStore",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 138,
       "passes": false,
-      "notes": "Phase 11: Tutorial + Menu + Polish."
+      "notes": "Phase 11: Tutorial + Menu + Polish. NewGameModal.tsx (273 lines) and SeedSelect.tsx (283 lines) already exist."
     },
     {
       "id": "US-139",
@@ -2154,19 +2165,22 @@
     },
     {
       "id": "US-141",
-      "title": "Implement 11-step tutorial",
-      "description": "As a new player, I want a guided tutorial (look, move, equip, dig, plant, water, wait, harvest, talk, campfire, explore) where each step completes on my action so that I learn the game naturally. See GAME_SPEC.md §27.",
+      "title": "Implement 11-step tutorial with existing overlay component",
+      "description": "As a new player, I want a guided tutorial (look, move, equip, dig, plant, water, wait, harvest, talk, campfire, explore) using the existing TutorialOverlay.tsx (188 lines) for UI and a new tutorial state machine. Each step completes on my action. See GAME_SPEC.md §27.",
       "acceptanceCriteria": [
-        "New file game/systems/tutorial.ts exists",
+        "New file game/systems/tutorial.ts with tutorial state machine",
+        "Update existing components/game/TutorialOverlay.tsx to read tutorial state",
         "11 steps: look, move, equip, dig, plant, water, wait, harvest, talk, campfire, explore",
-        "Each step completes on correct player action",
+        "Each step detects correct player action via InputFrame + action dispatch",
+        "Tutorial state persists (don't repeat on reload)",
+        "Skip button available, 44px touch target",
         "Tutorial advances on correct action",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 141,
       "passes": false,
-      "notes": "Phase 11: Tutorial + Menu + Polish."
+      "notes": "Phase 11: Tutorial + Menu + Polish. TutorialOverlay.tsx (188 lines) already exists for UI."
     },
     {
       "id": "US-142",
@@ -2184,35 +2198,526 @@
     },
     {
       "id": "US-143",
-      "title": "Integration testing and bug fixes",
-      "description": "As a developer, I want the full test suite and Maestro E2E flows to pass with 0 failures and 0 TypeScript errors so that the game is stable for release. See GAME_SPEC.md §28.",
+      "title": "Full game loop integration test",
+      "description": "As a developer, I want to verify the complete game loop works end-to-end: main menu -> new game (seed + mode) -> loading screen -> tutorial -> FPS movement -> plant tree -> water -> growth tick -> harvest -> talk to NPC -> quest advance -> save -> reload -> verify state persists. See GAME_SPEC.md §28.",
       "acceptanceCriteria": [
         "npx jest --no-coverage passes with 0 failures",
         "npx tsc --noEmit passes with 0 errors",
-        "Maestro E2E flows pass on mobile",
-        "No mobile-specific rendering issues"
+        "Integration test: menu -> new game -> tutorial -> plant -> harvest -> save -> load round-trip",
+        "Integration test: NPC dialogue -> quest start -> quest advance -> quest complete",
+        "Integration test: chunk load -> chunk unload -> chunk reload (delta persistence)",
+        "All ECS queries return expected entities after state transitions",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
       ],
       "priority": 143,
       "passes": false,
-      "notes": "Phase 11: Tutorial + Menu + Polish. Final integration pass."
+      "notes": "Phase 11: Tutorial + Menu + Polish. Specific integration scenarios, not vague 'bug fixes'."
     },
     {
       "id": "US-144",
-      "title": "Performance optimization",
-      "description": "As a developer, I want draw calls < 50, FPS >= 55 on mobile, and all performance budgets met so that the game runs smoothly on target devices. See GAME_SPEC.md §28.",
+      "title": "Mobile E2E tests with Maestro",
+      "description": "As a developer, I want Maestro E2E flows covering the critical user paths on mobile: main menu tap, new game creation, tutorial completion, tree planting via touch, and pause menu. See GAME_SPEC.md §28.",
       "acceptanceCriteria": [
-        "Draw calls < 50 for typical scene",
-        "FPS >= 55 on mobile",
-        "InstancedMesh for repeated models",
-        "Code split via Expo Router",
-        "Freeze static world matrices",
-        "Meets all performance budgets from GAME_SPEC.md §28",
+        "Maestro flow: tap New Grove -> select mode -> enter seed -> start game",
+        "Maestro flow: complete tutorial steps via touch controls",
+        "Maestro flow: plant tree via virtual joystick + action button",
+        "Maestro flow: open pause menu -> settings -> resume",
+        "All flows pass on iOS simulator (375px viewport)",
+        "Touch targets >= 44px verified in each flow",
         "npx tsc --noEmit passes",
         "npx jest --no-coverage passes"
       ],
       "priority": 144,
       "passes": false,
-      "notes": "Phase 11: Tutorial + Menu + Polish. Final performance pass."
+      "notes": "Phase 11: Tutorial + Menu + Polish. Specific Maestro flows, not vague 'mobile issues'."
+    },
+    {
+      "id": "US-145",
+      "title": "Wire NPC movement + pathfinding to Yuka AI",
+      "description": "As a developer, I want the existing npcMovement.ts (98 lines), pathfinding.ts (167 lines), and pathFollowing.ts (79 lines) updated to use Yuka EntityManager with NavMesh for chunk-based NPC navigation. NPCs should walk between schedule positions using A* on terrain heightmap. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/npcMovement.ts for Yuka EntityManager",
+        "Update existing game/systems/pathfinding.ts for A* on terrain heightmap",
+        "Update existing game/systems/pathFollowing.ts for Yuka SteeringBehavior",
+        "NPCs navigate between schedule positions on terrain",
+        "Pathfinding respects chunk boundaries (request adjacent chunk data)",
+        "NPCs avoid water bodies and structures",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 145,
+      "passes": false,
+      "notes": "Phase 1-B (late). npcMovement.ts, pathfinding.ts, pathFollowing.ts all exist — update for chunk world + Yuka."
+    },
+    {
+      "id": "US-146",
+      "title": "Update npcAppearance for ChibiCharacter GLB assembly",
+      "description": "As a developer, I want the existing npcAppearance.ts (176 lines) updated to assemble ChibiCharacter GLBs with seeded item selection (hair, outfit, armor, accessories) from config/game/npcAssets.json using scopedRNG('npc-appearance', worldSeed, npcId). See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/npcAppearance.ts for ChibiCharacter GLB assembly",
+        "Seeded selection: base model + 33 mix-and-match items from npcAssets.json",
+        "scopedRNG('npc-appearance', worldSeed, npcId) for deterministic appearance",
+        "Color palette selection from seeded index",
+        "Same seed always produces same NPC appearance",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 146,
+      "passes": false,
+      "notes": "Phase 1-B (late). npcAppearance.ts (176 lines) already exists — update for ChibiCharacter GLBs."
+    },
+    {
+      "id": "US-147",
+      "title": "Wire haptics to tool actions",
+      "description": "As a developer, I want the existing haptics.ts (37 lines) wired to the action dispatch system so that DIG/CHOP/WATER/PLANT/PRUNE each trigger distinct haptic patterns on mobile. See GAME_SPEC.md §11.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/haptics.ts with per-action haptic patterns",
+        "DIG: heavy impact, CHOP: sharp tap, WATER: soft pulse, PLANT: medium tap, PRUNE: light snip",
+        "Haptics fire on action dispatch (wire to actionDispatcher.ts)",
+        "No-op on desktop (check Platform.OS)",
+        "Haptic intensity from config (not inline constants)",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 147,
+      "passes": false,
+      "notes": "Phase 2 (late). haptics.ts (37 lines) already exists — wire to action system."
+    },
+    {
+      "id": "US-148",
+      "title": "Wire toolUpgrades + levelUnlocks to progression",
+      "description": "As a developer, I want the existing toolUpgrades.ts (61 lines) and levelUnlocks.ts (80 lines) updated to read from config/game/tools.json tier definitions and gate unlocks by player level from Legend State. See GAME_SPEC.md §11, §25.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/toolUpgrades.ts for tier progression (basic->iron->grovekeeper)",
+        "Update existing game/systems/levelUnlocks.ts for config-driven level gates",
+        "Tool tiers read from config/game/tools.json",
+        "Level gates read from config (not inline constants)",
+        "Upgrade requires resources + forge interaction",
+        "Unlocks persist via Legend State",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 148,
+      "passes": false,
+      "notes": "Phase 2 (late). toolUpgrades.ts (61 lines) and levelUnlocks.ts (80 lines) already exist."
+    },
+    {
+      "id": "US-149",
+      "title": "Wire speciesDiscovery to open world exploration",
+      "description": "As a developer, I want the existing speciesDiscovery.ts (122 lines) updated so discovering new tree species in unexplored chunks triggers the codex entry, XP reward, and achievement check. See GAME_SPEC.md §8, §25.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/speciesDiscovery.ts for chunk-based exploration",
+        "First encounter with a species in any chunk triggers discovery",
+        "Discovery adds to codex (game/constants/codex.ts)",
+        "XP reward on discovery",
+        "Achievement check on discovery milestones",
+        "Discovery state persists via Legend State",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 149,
+      "passes": false,
+      "notes": "Phase 3 (late). speciesDiscovery.ts (122 lines) already exists — update for chunk world."
+    },
+    {
+      "id": "US-150",
+      "title": "Update MiniMap for open world navigation",
+      "description": "As a developer, I want the existing MiniMap.tsx (421 lines — OVER 300 LINE LIMIT) decomposed and updated to show the procedural open world with biome colors, discovered chunks, player position, campfire markers, and NPC dots. See GAME_SPEC.md §16.",
+      "acceptanceCriteria": [
+        "Decompose components/game/MiniMap.tsx (421 lines) into components/game/minimap/ subpackage",
+        "Show procedural world map with biome colors from TerrainChunkComponent",
+        "Fog of war for undiscovered chunks",
+        "Player position indicator",
+        "Campfire fast-travel markers (clickable)",
+        "NPC dots for nearby NPCs",
+        "MiniMapOverlay.tsx (156 lines) integrated",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 150,
+      "passes": false,
+      "notes": "Phase 3 (late). MiniMap.tsx is 421 lines — MUST decompose. MiniMapOverlay.tsx (156 lines) also exists."
+    },
+    {
+      "id": "US-151",
+      "title": "Wire structurePlacement + vegetationPlacement to chunk generation",
+      "description": "As a developer, I want the existing structurePlacement.ts (181 lines) and vegetationPlacement.ts (151 lines) updated to place structures and vegetation during chunk generation based on biome templates and seeded positions. See GAME_SPEC.md §6.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/structurePlacement.ts for chunk-based placement",
+        "Update existing game/systems/vegetationPlacement.ts for chunk-based placement",
+        "Placement positions seeded via scopedRNG('structure', worldSeed, chunkX, chunkZ)",
+        "Structure density from biome template config",
+        "Vegetation density and species from biome template config",
+        "Placed entities added to ECS world on chunk load",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 151,
+      "passes": false,
+      "notes": "Phase 3 (late). structurePlacement.ts (181 lines) and vegetationPlacement.ts (151 lines) already exist."
+    },
+    {
+      "id": "US-152",
+      "title": "Wire hedgePlacement to maze generator",
+      "description": "As a developer, I want the existing hedgePlacement.ts (280 lines) updated to read maze layouts from mazeGenerator.ts and place modular hedge GLB pieces with proper rotation and connection. See GAME_SPEC.md §18.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/hedgePlacement.ts to consume maze grid from mazeGenerator",
+        "Map grid cells to modular hedge piece types (basic/diagonal/round/slope/triangle)",
+        "Correct rotation for each piece based on wall direction",
+        "Place dressing entities: flowerbeds, vases, stone decorations",
+        "Center pieces: fountain GLB + benches + spirit spawn point",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 152,
+      "passes": false,
+      "notes": "Phase 4 (late). hedgePlacement.ts (280 lines) already exists — wire to maze generator. Depends on US-079."
+    },
+    {
+      "id": "US-153",
+      "title": "Wire cropGrowth to chunk-based farming",
+      "description": "As a developer, I want the existing cropGrowth.ts (160 lines) updated to manage crop entities within chunks, with growth driven by season, weather, and watering state from ECS components. Crops use GLB models from config/game/crops.json. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/cropGrowth.ts for ECS CropComponent entities",
+        "Growth rate affected by season (DayNightComponent.season) and weather (WeatherComponent)",
+        "Watering doubles growth rate",
+        "Crop species and stage models from config/game/crops.json",
+        "Harvesting yields resources to player inventory",
+        "Crop state persists via chunk delta system",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 153,
+      "passes": false,
+      "notes": "Phase 5 (early). cropGrowth.ts (160 lines) already exists — update for chunk/ECS vision."
+    },
+    {
+      "id": "US-154",
+      "title": "Wire trading + TradeDialog to NPC economy",
+      "description": "As a developer, I want the existing trading.ts (trading logic) and TradeDialog.tsx (193 lines) updated for FPS NPC interaction — look at NPC, press E to open trade UI with buy/sell prices driven by supplyDemand.ts. See GAME_SPEC.md §15, §22.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/trading.ts for NPC raycast interaction",
+        "Update existing components/game/TradeDialog.tsx for FPS HUD overlay",
+        "Prices driven by existing game/systems/supplyDemand.ts",
+        "Buy/sell UI with 44px touch targets",
+        "Trading affects NPC relationship (trust +1 per trade)",
+        "Resource exchange updates Legend State inventory",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 154,
+      "passes": false,
+      "notes": "Phase 6 (late). trading.ts, TradeDialog.tsx (193 lines), supplyDemand.ts (159 lines) all exist."
+    },
+    {
+      "id": "US-155",
+      "title": "Wire market systems to world economy",
+      "description": "As a developer, I want the existing marketEvents.ts (193 lines), supplyDemand.ts (159 lines), travelingMerchant.ts (328 lines — OVER LIMIT), and seasonalMarket.ts (49 lines) updated and wired to the chunk-based world economy. Traveling merchants spawn at villages, market events affect region prices. See GAME_SPEC.md §22.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/marketEvents.ts for chunk-based regional events",
+        "Update existing game/systems/supplyDemand.ts for biome-based supply curves",
+        "Decompose game/systems/travelingMerchant.ts (328 lines) to under 300 lines",
+        "Update existing game/systems/seasonalMarket.ts for seasonal price modifiers",
+        "Traveling merchants spawn at discovered villages with seeded inventory",
+        "Market events fire on configurable schedule, affect regional prices",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 155,
+      "passes": false,
+      "notes": "Phase 6 (late). All 4 market system files exist. travelingMerchant.ts is 328 lines — MUST decompose."
+    },
+    {
+      "id": "US-156",
+      "title": "Wire NpcDialogue component to speech bubble system",
+      "description": "As a developer, I want the existing NpcDialogue.tsx (171 lines) updated to display dialogue from DialogueComponent ECS state, showing speech bubbles above NPCs/spirits with branch choice buttons. Integrates with SpeechBubble.tsx from US-102. See GAME_SPEC.md §15.",
+      "acceptanceCriteria": [
+        "Update existing components/game/NpcDialogue.tsx for ECS DialogueComponent queries",
+        "Reads active dialogue tree from DialogueComponent.activeTreeId",
+        "Displays current node text with speaker name",
+        "Branch choice buttons with 44px touch targets",
+        "Auto-advance after 3s uses seed-biased branch selection",
+        "Triggers DialogueEffect on branch selection (advance_quest, give_item, etc.)",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 156,
+      "passes": false,
+      "notes": "Phase 6 (late). NpcDialogue.tsx (171 lines) already exists — update for ECS dialogue system."
+    },
+    {
+      "id": "US-157",
+      "title": "Wire WeatherOverlay + FloatingParticles to ECS weather system",
+      "description": "As a developer, I want the existing WeatherOverlay.tsx (249 lines) and FloatingParticles.tsx (189 lines) updated to read from WeatherComponent and ParticleEmitterComponent ECS queries so that weather visuals match the procedural weather state. See GAME_SPEC.md §12, §36.",
+      "acceptanceCriteria": [
+        "Update existing components/game/WeatherOverlay.tsx for ECS WeatherComponent queries",
+        "Update existing components/game/FloatingParticles.tsx for ECS ParticleEmitterComponent queries",
+        "Rain/snow/wind particle counts from config/game/procedural.json",
+        "Weather intensity affects particle density and opacity",
+        "Smooth transitions between weather states",
+        "Particles respect wind direction from WeatherComponent.windDirection",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 157,
+      "passes": false,
+      "notes": "Phase 10 (late). WeatherOverlay.tsx (249 lines) and FloatingParticles.tsx (189 lines) already exist."
+    },
+    {
+      "id": "US-158",
+      "title": "Create Settings screen",
+      "description": "As a player, I want a Settings screen accessible from the main menu and pause menu with controls for audio volume (master/SFX/ambient), graphics quality (PSX pixel ratio, draw distance), touch sensitivity, and reduced motion toggle. See GAME_SPEC.md §26.",
+      "acceptanceCriteria": [
+        "New file components/game/SettingsScreen.tsx",
+        "Audio sliders: master volume, SFX volume, ambient volume",
+        "Graphics: PSX pixel ratio toggle, draw distance slider",
+        "Touch sensitivity slider for mobile look controls",
+        "Reduced motion toggle (respects prefers-reduced-motion)",
+        "Settings persist via Legend State gameStore.settings",
+        "Accessible from MainMenu.tsx and PauseMenu.tsx",
+        "44px touch targets, 375px min viewport",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 158,
+      "passes": false,
+      "notes": "Phase 11 (late). New component — no existing file."
+    },
+    {
+      "id": "US-159",
+      "title": "Update MainMenu for brand styling + game mode flow",
+      "description": "As a developer, I want the existing MainMenu.tsx (314 lines — OVER 300 LINE LIMIT) decomposed and updated with brand-aligned vertical gradient, Logo.tsx SVG, tagline, Continue button (only if save exists), and New Grove button that opens NewGameModal. See GAME_SPEC.md §26.",
+      "acceptanceCriteria": [
+        "Decompose components/game/MainMenu.tsx (314 lines) to under 300 lines",
+        "Use existing components/game/Logo.tsx for brand logo",
+        "Vertical gradient background from config/theme.json colors",
+        "Tagline: 'Every forest begins with a single seed.'",
+        "Continue button visible only when Legend State has save data",
+        "New Grove button opens NewGameModal.tsx",
+        "Settings button opens SettingsScreen.tsx",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 159,
+      "passes": false,
+      "notes": "Phase 11. MainMenu.tsx (314 lines) OVER LIMIT — must decompose. Logo.tsx exists."
+    },
+    {
+      "id": "US-160",
+      "title": "Decompose gameStore.ts into subpackage",
+      "description": "As a developer, I want the existing gameStore.ts (1083 lines — MASSIVELY over 300 line limit) decomposed into game/stores/ subpackage with separate files for player state, inventory, quest state, settings, chunk deltas, and the barrel index. See GAME_SPEC.md §5.",
+      "acceptanceCriteria": [
+        "Decompose game/stores/gameStore.ts (1083 lines) into game/stores/ subpackage",
+        "Separate files: playerState.ts, inventory.ts, questState.ts, settings.ts, chunkDeltas.ts",
+        "Barrel index.ts re-exports all stores",
+        "Each file under 300 lines",
+        "All existing imports of gameStore continue to work via barrel",
+        "gameStore.test.ts (836 lines) also decomposed into matching test files",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 160,
+      "passes": false,
+      "notes": "Phase 11. gameStore.ts is 1083 lines — the most critical decomposition. Test file is 836 lines."
+    },
+    {
+      "id": "US-161",
+      "title": "Decompose oversized game systems",
+      "description": "As a developer, I want all game system files over 300 lines decomposed into subpackages with barrel indexes. Critical files: quests.ts (995 lines), recipes.ts (535 lines), GameActions.ts (407 lines), WorldGenerator.ts (399 lines), useGameLoop.ts (400 lines), useInteraction.ts (380 lines). See CLAUDE.md 300-line rule.",
+      "acceptanceCriteria": [
+        "game/systems/quests.ts (995 lines) decomposed into game/systems/quests/ subpackage",
+        "game/systems/recipes.ts (535 lines) decomposed into game/systems/recipes/ subpackage",
+        "game/actions/GameActions.ts (407 lines) decomposed into game/actions/ subpackage",
+        "game/world/WorldGenerator.ts (399 lines) decomposed into game/world/ subpackage",
+        "game/hooks/useGameLoop.ts (400 lines) decomposed into game/hooks/ subpackage",
+        "game/hooks/useInteraction.ts (380 lines) decomposed",
+        "All files under 300 lines after decomposition",
+        "All barrel index.ts files re-export correctly",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 161,
+      "passes": false,
+      "notes": "Phase 11. Multiple files over 300 lines — mandatory decomposition per CLAUDE.md."
+    },
+    {
+      "id": "US-162",
+      "title": "Decompose oversized UI components",
+      "description": "As a developer, I want all UI component files over 300 lines decomposed. Critical files: PauseMenu.tsx (755 lines), GameUI.tsx (484 lines), AchievementPopup.tsx (309 lines). See CLAUDE.md 300-line rule.",
+      "acceptanceCriteria": [
+        "components/game/PauseMenu.tsx (755 lines) decomposed into subpackage",
+        "components/game/GameUI.tsx (484 lines) decomposed into subpackage",
+        "components/game/AchievementPopup.tsx (309 lines) decomposed into subpackage",
+        "All files under 300 lines after decomposition",
+        "Barrel index.ts files re-export correctly",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 162,
+      "passes": false,
+      "notes": "Phase 11. PauseMenu.tsx is 755 lines — wildly over limit. GameUI.tsx is 484 lines."
+    },
+    {
+      "id": "US-163",
+      "title": "Wire VirtualJoystick + MobileActionButtons to TouchProvider",
+      "description": "As a developer, I want the existing VirtualJoystick.tsx (285 lines) and MobileActionButtons.tsx (127 lines) integrated with the TouchProvider input system so that mobile touch controls produce correct InputFrame values. See GAME_SPEC.md §10.",
+      "acceptanceCriteria": [
+        "Update existing components/game/VirtualJoystick.tsx to feed into TouchProvider",
+        "Update existing components/game/MobileActionButtons.tsx to feed into TouchProvider",
+        "Joystick produces moveX/moveZ in InputFrame (-1 to 1)",
+        "Action buttons produce jump, interact, toolSwap in InputFrame",
+        "Right-side look zone produces lookDeltaX/lookDeltaY in InputFrame",
+        "44px minimum touch targets on all buttons",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 163,
+      "passes": false,
+      "notes": "Phase 0-D (late). VirtualJoystick.tsx (285 lines) and MobileActionButtons.tsx (127 lines) already exist."
+    },
+    {
+      "id": "US-164",
+      "title": "Wire offlineGrowth to chunk-based world",
+      "description": "As a developer, I want the existing offlineGrowth.ts (133 lines) updated to calculate growth progress for trees in persisted chunk deltas while the app was backgrounded, using elapsed time and season/weather modifiers. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/offlineGrowth.ts for chunk delta persistence",
+        "Calculate elapsed time since last save",
+        "Apply growth progress to all trees in persisted chunk deltas",
+        "Respect season and weather modifiers from saved state",
+        "Trees that crossed stage boundaries during offline time show new stage on reload",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 164,
+      "passes": false,
+      "notes": "Phase 0-D (late). offlineGrowth.ts (133 lines) already exists — update for chunk deltas."
+    },
+    {
+      "id": "US-165",
+      "title": "Wire wildTreeRegrowth to chunk-based ecology",
+      "description": "As a developer, I want the existing wildTreeRegrowth.ts (74 lines) updated to spawn wild trees in visited chunks over time based on biome species tables and season, creating a living ecology. See GAME_SPEC.md §8.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/wildTreeRegrowth.ts for chunk-based spawning",
+        "Wild trees spawn in visited chunks based on biome species tables",
+        "Spawn rate affected by season (spring=high, winter=low)",
+        "Wild trees marked with TreeComponent.wild=true",
+        "Respects maximum tree density per chunk",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 165,
+      "passes": false,
+      "notes": "Phase 1-A (late). wildTreeRegrowth.ts (74 lines) already exists."
+    },
+    {
+      "id": "US-166",
+      "title": "Performance optimization: draw calls + instancing",
+      "description": "As a developer, I want draw calls under 50 by batching all same-model entities into InstancedMesh, freezing static world matrices, and using LOD for distant chunks. See GAME_SPEC.md §28.",
+      "acceptanceCriteria": [
+        "Audit current draw call count (log via renderer.info)",
+        "Batch same-model trees into InstancedMesh per species per stage",
+        "Batch same-model structures/fences/props into InstancedMesh",
+        "Freeze world matrices on static meshes (matrixAutoUpdate=false)",
+        "Distant chunks use simplified geometry or hidden",
+        "Draw calls < 50 for typical scene (3x3 active chunks)",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 166,
+      "passes": false,
+      "notes": "Phase 11 (final). Specific optimization targets, not vague 'performance pass'."
+    },
+    {
+      "id": "US-167",
+      "title": "Performance optimization: memory + FPS profiling",
+      "description": "As a developer, I want memory under 100MB and FPS >= 55 on mobile by profiling texture sizes, geometry reuse, code splitting via Expo Router lazy routes, and disposing unloaded chunk geometries. See GAME_SPEC.md §28.",
+      "acceptanceCriteria": [
+        "Profile memory usage on mobile (target < 100MB)",
+        "Profile FPS on mobile (target >= 55)",
+        "Dispose geometry + material for unloaded chunks",
+        "Code split game screen via Expo Router lazy loading",
+        "Texture atlas for terrain (NearestFilter, no antialiasing)",
+        "No barrel imports from three — import specific modules",
+        "FPS >= 55 on mobile, >= 60 on desktop",
+        "Memory < 100MB on mobile",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 167,
+      "passes": false,
+      "notes": "Phase 11 (final). Specific memory + FPS targets with concrete techniques."
+    },
+    {
+      "id": "US-168",
+      "title": "Wire ToolWheel + RadialActionMenu to FPS controls",
+      "description": "As a developer, I want the existing ToolWheel.tsx (185 lines) and RadialActionMenu.tsx (291 lines) updated for FPS perspective — ToolWheel opens on Tab/long-press for tool selection, RadialActionMenu opens on context for entity-specific actions. See GAME_SPEC.md §11, §16.",
+      "acceptanceCriteria": [
+        "Update existing components/game/ToolWheel.tsx for FPS tool selection",
+        "Update existing components/game/RadialActionMenu.tsx for entity-specific actions",
+        "ToolWheel: Tab key or long-press opens radial tool selector",
+        "RadialActionMenu: context action on interactable entity (harvest, water, talk, trade)",
+        "Both close on selection or cancel",
+        "44px touch targets, centered on screen",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 168,
+      "passes": false,
+      "notes": "Phase 2 (late). ToolWheel.tsx (185 lines) and RadialActionMenu.tsx (291 lines) already exist."
+    },
+    {
+      "id": "US-169",
+      "title": "Decompose treeGeometry.ts and PlayerGovernor.ts",
+      "description": "As a developer, I want the existing treeGeometry.ts (950 lines — legacy SPS generator, may be largely replaced by GLB loading) assessed and either decomposed or removed, and PlayerGovernor.ts (611 lines) decomposed into focused modules. See CLAUDE.md 300-line rule.",
+      "acceptanceCriteria": [
+        "Assess game/utils/treeGeometry.ts (950 lines) — remove if fully replaced by GLB models, or decompose if any functions still needed",
+        "Decompose game/ai/PlayerGovernor.ts (611 lines) into game/ai/governor/ subpackage",
+        "Decompose game/ai/NpcBrain.ts (373 lines) into game/ai/npc/ subpackage",
+        "All files under 300 lines after decomposition",
+        "Barrel index.ts files re-export correctly",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 169,
+      "passes": false,
+      "notes": "Phase 11. treeGeometry.ts is 950 lines of legacy SPS code — likely removable. PlayerGovernor.ts needs decomposition."
+    },
+    {
+      "id": "US-170",
+      "title": "Wire saveLoad system to chunk-based persistence",
+      "description": "As a developer, I want the existing saveLoad.ts (195 lines) updated to save/load chunk deltas, quest branch paths, NPC relationship levels, discovered species, campfire locations, and prestige state via Legend State + expo-sqlite. See GAME_SPEC.md §7, §26.",
+      "acceptanceCriteria": [
+        "Update existing game/systems/saveLoad.ts for chunk delta persistence",
+        "Save: chunk deltas, quest state, NPC relationships, discovered species, campfires, prestige",
+        "Load: reconstruct game state from save data",
+        "Auto-save on app background event",
+        "Save file migration for schema changes",
+        "Round-trip test: save -> clear -> load -> verify equality",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 170,
+      "passes": false,
+      "notes": "Phase 0-D (late). saveLoad.ts (195 lines) already exists — update for chunk-based world."
+    },
+    {
+      "id": "US-171",
+      "title": "Wire GameUI orchestration component",
+      "description": "As a developer, I want the existing GameUI.tsx (484 lines — OVER LIMIT) decomposed and updated to orchestrate all HUD elements, overlays, and modals for the FPS game view. It should conditionally render HUD, dialogue, quest panel, weather overlay, build panel, trade dialog, and pause menu based on game state. See GAME_SPEC.md §16.",
+      "acceptanceCriteria": [
+        "Decompose components/game/GameUI.tsx (484 lines) into subpackage",
+        "Orchestrates: HUD, DialogueUI, QuestPanel, WeatherOverlay, BuildPanel, TradeDialog, PauseMenu",
+        "Conditionally renders based on game state (inDialogue, building, trading, paused)",
+        "Mobile: no overlap between HUD elements and touch controls",
+        "All sub-components receive data from ECS queries or Legend State",
+        "Each file under 300 lines",
+        "npx tsc --noEmit passes",
+        "npx jest --no-coverage passes"
+      ],
+      "priority": 171,
+      "passes": false,
+      "notes": "Phase 11. GameUI.tsx is 484 lines — must decompose. Central UI orchestrator."
     }
   ]
 }
