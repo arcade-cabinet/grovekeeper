@@ -25,5 +25,7 @@
   "interactionRadius": 1.5,
   "capsuleHeight": 1.8,
   "jumpImpulse": 5,
-  "groundCheckDistance": 0.15
+  "groundCheckDistance": 0.15,
+  "mouseSensitivity": 0.002,
+  "pitchClampDeg": 85
 }

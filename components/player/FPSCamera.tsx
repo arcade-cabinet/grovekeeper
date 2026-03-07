@@ -10,6 +10,7 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
 import { playerQuery } from "@/game/ecs/world";
+import { useMouseLook } from "@/game/hooks/useMouseLook";
 
 /** Eye height offset above the player's ground-level ECS position in meters (Spec §9). */
 export const EYE_HEIGHT = 1.6;
@@ -23,6 +24,7 @@ const DEFAULT_POSITION = new THREE.Vector3(0, EYE_HEIGHT, 0);
 /** FPS camera that follows the player capsule at eye height each frame (Spec §9). */
 export const FPSCamera = () => {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  useMouseLook();
 
   useFrame(() => {
     const cam = cameraRef.current;

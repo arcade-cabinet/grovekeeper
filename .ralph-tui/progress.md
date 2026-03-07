@@ -5,6 +5,9 @@ after each iteration and it's included in prompts for context.
 
 ## Codebase Patterns (Study These First)
 
+- **useMouseLook pointer lock guard**: In `mousemove` handler always check `document.pointerLockElement !== canvas` and return early if not locked — mousemove fires globally, not just when locked.
+- **FPS camera Euler order**: Always set `camera.rotation.order = "YXZ"` before writing yaw/pitch. Three.js default "XYZ" causes gimbal lock in FPS look.
+
 - **WalkabilityCell mapping pattern**: When removing GridCellComponent from a call site that passes `gridCellsQuery` to `buildWalkabilityGrid`, map inline: `walkCells.push({ x: gridX, z: gridZ, walkable: type === "soil" || type === "path" })` before calling `buildWalkabilityGrid(walkCells, bounds)`.
 - **Chunk-based tile state**: `occupied` = `!!tree || !!rock` via ECS queries; `cellType` = `rock ? "rock" : "soil"`. No GridCellComponent needed — derive from entity presence at position.
 - **Decoupling system inputs**: Replace `GridCellComponent`-shaped params with a minimal local interface (e.g., `WalkabilityCell`) so systems don't import ECS component types.
@@ -13,6 +16,35 @@ after each iteration and it's included in prompts for context.
 
 - **Interface-to-inline-type removal**: When deleting a widely-used interface, keep the ECS Entity field but change its type to an inline anonymous type. Callers that need a named type can define a local `type TileCell = { ... }` alias. This avoids a full architectural migration while satisfying the "interface deleted" acceptance criterion.
 
+- **useMouseLook pointer lock pattern**: `canvas.addEventListener("click", () => canvas.requestPointerLock())` + `document.addEventListener("mousemove", onMove)` where `onMove` guards on `document.pointerLockElement !== canvas`. The guard is essential — mousemove fires on the document even without pointer lock, so without it every mouse move over the page would rotate the camera.
+- **FPS Euler order "YXZ"**: Set `camera.rotation.order = "YXZ"` before writing `.y` (yaw) and `.x` (pitch). Three.js default is "XYZ" which causes gimbal lock in FPS setups. "YXZ" applies yaw first then pitch, matching physical FPS camera behavior.
+- **useThree() vs cameraRef for look**: `useThree().camera` returns the R3F default camera — same object as the `<PerspectiveCamera makeDefault>` ref. For rotation, use `useThree().camera` directly in the hook; for position (which needs an initial ref-guard), `cameraRef.current` is still useful in `FPSCamera`.
+
+---
+
+## 2026-03-07 - US-012
+- Created `game/hooks/useMouseLook.ts` with:
+  - `clampPitch(pitch)` — pure function, clamps to ±PITCH_CLAMP_RAD (±85°); exported for unit testing
+  - `PITCH_CLAMP_RAD` — derived from `gridConfig.pitchClampDeg` (85°) × π/180; exported for tests
+  - `useMouseLook()` — `useEffect` registers `click` on canvas for `requestPointerLock()` and `mousemove` on document (guarded by `pointerLockElement !== canvas`); `useFrame` writes `camera.rotation.order = "YXZ"`, `.y = yawRef`, `.x = pitchRef`
+- Updated `components/player/FPSCamera.tsx`: added `useMouseLook()` call so look runs alongside position update each frame
+- Updated `components/player/FPSCamera.test.ts`: added `jest.mock("@/game/hooks/useMouseLook", () => ({ useMouseLook: jest.fn() }))` to prevent module-level import from throwing
+- Added to `config/game/grid.json`: `mouseSensitivity: 0.002`, `pitchClampDeg: 85`
+- Created `game/hooks/useMouseLook.test.ts` with 6 tests: clampPitch within range, clampPitch positive/negative overflow, clampPitch(0), PITCH_CLAMP_RAD ≈ 85°, smoke test for useMouseLook export
+- **Files changed:**
+  - `config/game/grid.json`: added 2 mouse look config values
+  - `game/hooks/useMouseLook.ts`: new file
+  - `game/hooks/useMouseLook.test.ts`: new file — 6 tests, all green
+  - `components/player/FPSCamera.tsx`: added `useMouseLook` import + call
+  - `components/player/FPSCamera.test.ts`: added mock for `@/game/hooks/useMouseLook`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 76 suites, 1268 tests, 0 failures
+- **Learnings:**
+  - Euler order "YXZ" is mandatory for FPS cameras — Three.js default "XYZ" causes gimbal lock when looking up/down
+  - `mousemove` guard `document.pointerLockElement !== canvas` is critical: without it, any page mouse movement rotates the camera even when not locked
+  - `useThree().camera` is the same object as `<PerspectiveCamera makeDefault>` ref — safe to write rotation directly in the hook; position can still be controlled separately by the owning component's `useFrame`
+  - Test mock for the new hook must be added to FPSCamera.test.ts before the import line — otherwise the module import throws
 ---
 
 ## 2026-03-07 - US-011

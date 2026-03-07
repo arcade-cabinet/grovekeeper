@@ -22,6 +22,10 @@ jest.mock("@/game/ecs/world", () => ({
   playerQuery: { entities: [] },
 }));
 
+jest.mock("@/game/hooks/useMouseLook", () => ({
+  useMouseLook: jest.fn(),
+}));
+
 import { EYE_HEIGHT, FPSCamera } from "./FPSCamera";
 
 describe("FPSCamera (Spec §9)", () => {
