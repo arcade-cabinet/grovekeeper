@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T11:32:36.358Z",
-  "currentIteration": 49,
+  "updatedAt": "2026-03-07T11:38:49.333Z",
+  "currentIteration": 50,
   "maxIterations": 0,
-  "tasksCompleted": 49,
+  "tasksCompleted": 50,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -310,8 +310,8 @@
       {
         "id": "US-050",
         "title": "Implement InstancedMesh batching for static entities",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-051",
@@ -1531,6 +1531,16 @@
       "durationMs": 137774,
       "startedAt": "2026-03-07T11:20:35.219Z",
       "endedAt": "2026-03-07T11:22:52.993Z"
+    },
+    {
+      "iteration": 50,
+      "status": "completed",
+      "taskId": "US-050",
+      "taskTitle": "Implement InstancedMesh batching for static entities",
+      "taskCompleted": true,
+      "durationMs": 582239,
+      "startedAt": "2026-03-07T11:22:54.117Z",
+      "endedAt": "2026-03-07T11:32:36.356Z"
     }
   ],
   "skippedTaskIds": [],

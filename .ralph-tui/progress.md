@@ -39,6 +39,23 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-051
+- Implemented Gerstner wave ShaderMaterial for water bodies (Spec §31.2)
+- **Files changed:**
+  - `game/shaders/gerstnerWater.ts` — new: `MAX_WAVE_LAYERS` const, `GERSTNER_VERTEX_SHADER` + `GERSTNER_FRAGMENT_SHADER` GLSL strings, `GerstnerUniformMap` interface, `buildGerstnerUniforms(waterBody)` pure factory, `createGerstnerMaterial(waterBody)` ShaderMaterial factory, `updateGerstnerTime(mat, t)` frame-update helper
+  - `game/shaders/gerstnerWater.test.ts` — new: 39 tests covering constant, GLSL string content, buildGerstnerUniforms (pond 1-layer, ocean 4-layer, MAX_WAVE_LAYERS clamping), createGerstnerMaterial, updateGerstnerTime
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage --testPathPattern gerstnerWater` → 39 tests, 0 failures
+  - `npx jest --no-coverage` → 1852 tests, 0 failures (100 suites)
+- **Learnings:**
+  - **Zero-amplitude padding for unused GLSL layers**: Instead of a `break` in the GLSL loop (fragile on some WebGL 1.0 drivers), pad unused array slots with `amplitude=0`. Zero amplitude contributes zero displacement — semantically identical, universally compatible.
+  - **Wavelength padding default = 1**: Padding wavelength with `0` would cause `TWO_PI / 0 = inf` in the shader. Default padding with `1` keeps the k computation finite even for unused layers.
+  - **`depthWrite: false` for transparent water**: Transparent surfaces must disable depth writing or they'll occlude objects behind them. Added to both the material creation and test verification.
+  - **buildGerstnerUniforms as testable seam**: Exporting the pure uniform builder separately from the ShaderMaterial factory allows full coverage of the data-mapping logic without needing WebGL context or THREE.js imports in tests (mocked).
+
+---
+
 ## 2026-03-07 - US-050
 - Implemented InstancedMesh batching for static entities (structures, fences, props)
 - **Files changed:**
