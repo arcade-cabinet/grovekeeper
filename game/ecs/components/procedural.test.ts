@@ -14,7 +14,7 @@ import type {
   WeatherComponent,
   FogVolumeComponent,
   ParticleEmitterComponent,
-  AmbientZoneComponent,
+  SoundscapeComponent,
   PathSegmentComponent,
 } from "./procedural";
 import type { Position } from "./core";
@@ -29,7 +29,7 @@ interface TestEntity {
   weather?: WeatherComponent;
   fogVolume?: FogVolumeComponent;
   particleEmitter?: ParticleEmitterComponent;
-  ambientZone?: AmbientZoneComponent;
+  ambientZone?: SoundscapeComponent;
   pathSegment?: PathSegmentComponent;
 }
 

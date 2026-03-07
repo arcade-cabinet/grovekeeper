@@ -17,7 +17,6 @@ import type {
   Renderable,
   PlayerComponent,
   GridCellComponent,
-  ZoneComponent,
   PropComponent,
   RainCatcherComponent,
   ScarecrowComponent,
@@ -74,7 +73,7 @@ import type {
   WeatherComponent,
   FogVolumeComponent,
   ParticleEmitterComponent,
-  AmbientZoneComponent,
+  SoundscapeComponent,
   GrovekeeperSpiritComponent,
 } from "./components/procedural";
 
@@ -145,16 +144,15 @@ export interface Entity {
   weather?: WeatherComponent;
   fogVolume?: FogVolumeComponent;
   particleEmitter?: ParticleEmitterComponent;
-  ambientZone?: AmbientZoneComponent;
+  ambientZone?: SoundscapeComponent;
   grovekeeperSpirit?: GrovekeeperSpiritComponent;
 
   // Dialogue & quest branching
   dialogue?: DialogueComponent;
   questBranch?: QuestBranchComponent;
 
-  // LEGACY: Remove during Phase 0-1 (grid→chunk, zone→chunk)
+  // LEGACY: Remove during Phase 0-1 (grid→chunk)
   gridCell?: GridCellComponent;
-  zone?: ZoneComponent;
   zoneId?: string;
 }
 

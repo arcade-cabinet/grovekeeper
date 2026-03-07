@@ -63,8 +63,3 @@ export interface GridCellComponent {
   treeEntityId: string | null;
 }
 
-export interface ZoneComponent {
-  zoneId: string;
-  localX: number;
-  localZ: number;
-}

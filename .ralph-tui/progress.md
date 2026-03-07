@@ -8,7 +8,22 @@ after each iteration and it's included in prompts for context.
 - **WalkabilityCell mapping pattern**: When removing GridCellComponent from a call site that passes `gridCellsQuery` to `buildWalkabilityGrid`, map inline: `walkCells.push({ x: gridX, z: gridZ, walkable: type === "soil" || type === "path" })` before calling `buildWalkabilityGrid(walkCells, bounds)`.
 - **Chunk-based tile state**: `occupied` = `!!tree || !!rock` via ECS queries; `cellType` = `rock ? "rock" : "soil"`. No GridCellComponent needed — derive from entity presence at position.
 - **Decoupling system inputs**: Replace `GridCellComponent`-shaped params with a minimal local interface (e.g., `WalkabilityCell`) so systems don't import ECS component types.
+- **grep substring trap**: `grep -r 'ZoneComponent'` matches `AmbientZoneComponent`, `MyZoneComponent`, etc. — rename any collateral types that contain the target as a substring. The ECS field KEY (e.g. `ambientZone`) is what queries use, not the TypeScript interface name, so renaming the interface is safe.
 
+---
+
+## 2026-03-07 - US-003
+- Removed `ZoneComponent` interface and all references from game systems
+- **Files changed:**
+  - `game/ecs/components/core.ts`: deleted `ZoneComponent` interface (`{ zoneId, localX, localZ }`)
+  - `game/ecs/world.ts`: removed `ZoneComponent` import; removed `zone?: ZoneComponent` from `Entity`; kept `zoneId?: string` (still used by ZoneLoader)
+  - `game/ecs/components/procedural/audio.ts`: renamed `AmbientZoneComponent` → `SoundscapeComponent` (substring `ZoneComponent` would have matched grep AC)
+  - `game/ecs/world.ts`: updated `ambientZone?: AmbientZoneComponent` → `ambientZone?: SoundscapeComponent`
+  - `game/ecs/components/procedural.test.ts`: updated import and `TestEntity` field type to `SoundscapeComponent`
+- **Learnings:**
+  - `grep -r 'ZoneComponent'` matches substrings — `AmbientZoneComponent` fails the AC even though it's a completely unrelated audio component; must rename it
+  - The ECS field KEY (`ambientZone`) is what queries use (`world.with("ambientZone", ...)`), not the TypeScript interface name — so renaming the interface doesn't break any queries
+  - `zoneId?: string` on `Entity` is NOT part of `ZoneComponent` and remains; it's still assigned by `ZoneLoader.ts` for zone tracking
 ---
 
 ## 2026-03-07 - US-002

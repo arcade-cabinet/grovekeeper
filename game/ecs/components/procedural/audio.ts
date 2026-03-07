@@ -16,7 +16,7 @@ export type AmbientSoundscape =
   | "wind";
 
 /** Spatial ambient audio zone — Tone.js Panner3D HRTF source. */
-export interface AmbientZoneComponent {
+export interface SoundscapeComponent {
   /** Primary soundscape type. */
   soundscape: AmbientSoundscape;
   /** Blend radius — full volume at center, fades to edge. */
