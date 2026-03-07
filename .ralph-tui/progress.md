@@ -71,6 +71,26 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-093
+- Updated `game/systems/cooking.ts` (+60 lines) for FPS raycast interaction:
+  - Added `CampfireEntity` interface (minimal, no ECS world import)
+  - `isCampfireEntity(entity)` — type guard for raycast-hit entity
+  - `isCampfireLit(entity)` — returns campfire.lit
+  - `getCampfireInteractionLabel(entity)` — "Cook" (lit) / "Light Campfire" (unlit)
+  - `resolveCampfireInteraction(entity)` — E-key resolution: `{ isCampfire, isLit, canCookNow, interactionLabel }`
+  - `CampfireInteraction` interface
+- Updated `game/systems/cooking.test.ts` — 28 tests total (+15 new FPS interaction tests)
+- Existing cooking logic (recipes, ingredient deduction, slot progress, food collection) unchanged
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2504 tests, 0 failures (121 suites, +15 new)
+- **Learnings:**
+  - **CampfireEntity minimal-interface pattern**: Export a minimal interface with only `campfire: Pick<CampfireComponent, "lit" | "cookingSlots">`. Callers (ECS entities) satisfy via structural typing. Tests use plain objects — no ECS world import needed. Identical to WaterEntity pattern.
+  - **Type guard for unknown entity**: `isCampfireEntity(entity: unknown)` checks `"campfire" in entity && typeof entity.campfire === "object" && entity.campfire !== null`. The `null` check is essential — `typeof null === "object"`.
+  - **Pure FPS resolver pattern**: `resolveCampfireInteraction(entity: unknown)` handles the non-campfire case first with an early return, then reads state. No side effects — caller decides to open UI when `canCookNow === true`.
+
+---
+
 ## 2026-03-07 - US-092
 - Created `config/game/traps.json` — 3 trap types: spike (8dmg/1.5r/5s cd), snare (4dmg/1.2r/3s cd), fire (12dmg/2.0r/8s cd)
 - Created `game/systems/traps.ts` — 6 pure exported functions:

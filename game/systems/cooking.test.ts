@@ -8,8 +8,12 @@ import {
   createEmptyCookingSlot,
   deductIngredients,
   getAvailableRecipes,
+  getCampfireInteractionLabel,
   getCookingRecipeById,
   getCookingRecipes,
+  isCampfireEntity,
+  isCampfireLit,
+  resolveCampfireInteraction,
   startCooking,
 } from "@/game/systems/cooking";
 
@@ -131,6 +135,78 @@ describe("Cooking System", () => {
     it("should return null for idle slots", () => {
       const slot = createEmptyCookingSlot();
       expect(collectCookedFood(slot)).toBeNull();
+    });
+  });
+
+  // ── FPS Raycast Interaction (Spec §22) ────────────────────────────────────
+
+  describe("isCampfireEntity", () => {
+    it("returns true for an entity with a campfire component", () => {
+      const entity = { campfire: { lit: true, cookingSlots: 2 } };
+      expect(isCampfireEntity(entity)).toBe(true);
+    });
+
+    it("returns false for null", () => {
+      expect(isCampfireEntity(null)).toBe(false);
+    });
+
+    it("returns false for a non-campfire entity", () => {
+      expect(isCampfireEntity({ tree: { stage: 1 } })).toBe(false);
+    });
+
+    it("returns false for a primitive", () => {
+      expect(isCampfireEntity(42)).toBe(false);
+    });
+  });
+
+  describe("isCampfireLit", () => {
+    it("returns true when campfire.lit is true", () => {
+      expect(isCampfireLit({ campfire: { lit: true, cookingSlots: 2 } })).toBe(true);
+    });
+
+    it("returns false when campfire.lit is false", () => {
+      expect(isCampfireLit({ campfire: { lit: false, cookingSlots: 2 } })).toBe(false);
+    });
+  });
+
+  describe("getCampfireInteractionLabel", () => {
+    it("returns 'Cook' when campfire is lit", () => {
+      expect(getCampfireInteractionLabel({ campfire: { lit: true, cookingSlots: 2 } })).toBe("Cook");
+    });
+
+    it("returns 'Light Campfire' when campfire is unlit", () => {
+      expect(getCampfireInteractionLabel({ campfire: { lit: false, cookingSlots: 2 } })).toBe("Light Campfire");
+    });
+  });
+
+  describe("resolveCampfireInteraction", () => {
+    it("returns isCampfire: false for non-campfire entities", () => {
+      const result = resolveCampfireInteraction({ tree: { stage: 1 } });
+      expect(result.isCampfire).toBe(false);
+      expect(result.canCookNow).toBe(false);
+      expect(result.interactionLabel).toBe("");
+    });
+
+    it("returns canCookNow: true when campfire is lit", () => {
+      const entity = { campfire: { lit: true, cookingSlots: 2 } };
+      const result = resolveCampfireInteraction(entity);
+      expect(result.isCampfire).toBe(true);
+      expect(result.isLit).toBe(true);
+      expect(result.canCookNow).toBe(true);
+      expect(result.interactionLabel).toBe("Cook");
+    });
+
+    it("returns canCookNow: false when campfire is unlit", () => {
+      const entity = { campfire: { lit: false, cookingSlots: 2 } };
+      const result = resolveCampfireInteraction(entity);
+      expect(result.isCampfire).toBe(true);
+      expect(result.isLit).toBe(false);
+      expect(result.canCookNow).toBe(false);
+      expect(result.interactionLabel).toBe("Light Campfire");
+    });
+
+    it("returns isCampfire: false for null", () => {
+      expect(resolveCampfireInteraction(null).isCampfire).toBe(false);
     });
   });
 });

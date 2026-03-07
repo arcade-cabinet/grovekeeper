@@ -6,7 +6,7 @@
  */
 
 import cookingConfig from "@/config/game/cooking.json" with { type: "json" };
-import type { CropId } from "@/game/ecs/components/structures";
+import type { CampfireComponent, CropId } from "@/game/ecs/components/structures";
 import type { FoodComponent } from "@/game/ecs/components/items";
 
 // ---------------------------------------------------------------------------
@@ -156,5 +156,83 @@ export function collectCookedFood(
     saturation: recipe.output.saturation,
     healing: recipe.output.healing,
     modelPath: "",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// FPS Raycast Interaction
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimal entity interface for campfire interaction.
+ * Callers (ECS entities) satisfy this via structural typing.
+ * No ECS world import — keeps this module pure and testable.
+ */
+export interface CampfireEntity {
+  campfire: Pick<CampfireComponent, "lit" | "cookingSlots">;
+}
+
+/** Type guard — returns true if the entity has a campfire component. */
+export function isCampfireEntity(entity: unknown): entity is CampfireEntity {
+  return (
+    typeof entity === "object" &&
+    entity !== null &&
+    "campfire" in entity &&
+    typeof (entity as Record<string, unknown>).campfire === "object" &&
+    (entity as Record<string, unknown>).campfire !== null
+  );
+}
+
+/** Returns true when the campfire is lit and cooking is possible. */
+export function isCampfireLit(entity: CampfireEntity): boolean {
+  return entity.campfire.lit;
+}
+
+/**
+ * Returns the HUD interaction label for a campfire.
+ * Shown in crosshair prompt when player looks at a campfire.
+ */
+export function getCampfireInteractionLabel(entity: CampfireEntity): string {
+  return entity.campfire.lit ? "Cook" : "Light Campfire";
+}
+
+/** Result of resolving an E-key interaction with a potential campfire entity. */
+export interface CampfireInteraction {
+  /** Whether the entity is a campfire at all. */
+  isCampfire: boolean;
+  /** Whether the campfire is currently lit. */
+  isLit: boolean;
+  /** Whether the player can open the cooking UI right now. */
+  canCookNow: boolean;
+  /** Label to display in the HUD interaction prompt. */
+  interactionLabel: string;
+}
+
+/**
+ * Resolves the E-key interaction for any raycast-hit entity.
+ *
+ * Returns `isCampfire: false` for non-campfire entities.
+ * Returns `canCookNow: true` only when the campfire is lit.
+ *
+ * Pure function — no side effects. Callers open the cooking UI when
+ * `canCookNow` is true.
+ */
+export function resolveCampfireInteraction(
+  entity: unknown,
+): CampfireInteraction {
+  if (!isCampfireEntity(entity)) {
+    return {
+      isCampfire: false,
+      isLit: false,
+      canCookNow: false,
+      interactionLabel: "",
+    };
+  }
+  const lit = isCampfireLit(entity);
+  return {
+    isCampfire: true,
+    isLit: lit,
+    canCookNow: lit,
+    interactionLabel: getCampfireInteractionLabel(entity),
   };
 }
