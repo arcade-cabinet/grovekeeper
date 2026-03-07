@@ -53,6 +53,10 @@ export interface DifficultyConfig {
   damageMultiplier: number;
   /** Incoming enemy damage multiplier (0 = no damage, e.g. Explore). Spec §34.2 */
   incomingDamageMultiplier: number;
+  /** Hunger drain per real-time minute (0 = no drain, e.g. Explore). Spec §12.2 */
+  hungerDrainRate: number;
+  /** Maximum hearts for this difficulty. Spec §12.3 */
+  maxHearts: number;
 }
 
 // ---------------------------------------------------------------------------

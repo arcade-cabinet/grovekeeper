@@ -67,6 +67,29 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-089
+- Created `game/systems/survival.ts` — 5 pure exported functions for hearts/hunger/stamina survival drains
+  - `tickHunger(currentHunger, maxHunger, dt, hungerDrainRate, affectsGameplay)` — drain hunger/min (Spec §12.2)
+  - `isWellFed(hunger)` — true when hunger > 80 (+10% stamina regen bonus, Spec §12.2)
+  - `tickHeartsFromStarvation(health, hunger, dt, affectsGameplay)` — 0.25 hearts/min at hunger=0 (Spec §12.2)
+  - `tickHeartsFromExposure(health, dt, exposureDriftRate, exposureEnabled, affectsGameplay)` — drain from weather/environment (Spec §2.2)
+  - `tickStaminaDrain(currentStamina, baseCost, staminaDrainMult, affectsGameplay)` — action stamina cost × difficulty mult (Spec §12.1)
+- Created `game/systems/survival.test.ts` — 31 tests covering all functions + integration scenario
+- Updated `game/ecs/components/core.ts` — added `hunger: number` and `maxHunger: number` to `PlayerComponent`
+- Updated `config/game/difficulty.json` — added `hungerDrainRate` (0/1.0/1.5/2.0/2.0) and `maxHearts` (7/5/4/3/3) to all 5 difficulties
+- Updated `game/config/difficulty.ts` — added `hungerDrainRate: number` and `maxHearts: number` to `DifficultyConfig` interface
+- Updated `game/ecs/archetypes.ts` — added `hunger: 100, maxHunger: 100` to `createPlayerEntity()`
+- Updated `game/actions/GameActions.test.ts`, `game/systems/stamina.test.ts`, `game/ai/PlayerGovernor.test.ts` — added hunger fields to PlayerComponent constructions
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2387 tests, 0 failures (119 suites, +31 new)
+- **Learnings:**
+  - **hunger fields as required on PlayerComponent**: Added `hunger`/`maxHunger` as required (not optional) fields. This required updating 4 construction sites (archetypes.ts + 3 test files) but keeps type safety strict. Optional fields would silently allow uninitialized state.
+  - **hungerDrainRate in difficulty.json not tied to staminaDrainMult**: Hunger drain and stamina drain are separate axes in the design — hard tier has staminaDrainMult=1.3 but hungerDrainRate=1.5. Both are needed independently.
+  - **Pure value return vs mutation pattern split**: `tickHunger`/`tickStaminaDrain` return new values (caller decides mutation), while `tickHeartsFromStarvation`/`tickHeartsFromExposure` mutate `HealthComponent` in-place — consistent with the existing `applyDamageToHealth` mutation pattern in combat.ts.
+
+---
+
 ## 2026-03-07 - US-087
 - Updated `game/systems/lootSystem.ts` — added `rollLootForEnemy(enemyId, lootTableId, tier, worldSeed)` that uses `scopedRNG("loot", worldSeed, enemyId)` internally, then calls `rollLoot` + `createLootDrop`
 - Updated `config/game/loot.json` — added missing `sprite-loot` table (referenced by `thorn-sprite` in enemies.json)

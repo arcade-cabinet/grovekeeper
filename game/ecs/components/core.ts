@@ -25,6 +25,8 @@ export interface PlayerComponent {
   unlockedSpecies: string[];
   stamina: number;
   maxStamina: number;
+  hunger: number;
+  maxHunger: number;
 }
 
 export interface PropComponent { propId: string; modelPath?: string; }

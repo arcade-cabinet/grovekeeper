@@ -60,6 +60,8 @@ function addPlayer(x = 6, z = 6): Entity {
       unlockedSpecies: ["white-oak"],
       stamina: 100,
       maxStamina: 100,
+      hunger: 100,
+      maxHunger: 100,
     },
     renderable: { visible: true, scale: 1 },
   };

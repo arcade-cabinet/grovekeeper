@@ -22,6 +22,8 @@ function createPlayer(x = 5, z = 5) {
       unlockedSpecies: ["white-oak"],
       stamina: 100,
       maxStamina: 100,
+      hunger: 100,
+      maxHunger: 100,
     },
     position: { x, y: 0, z },
   });

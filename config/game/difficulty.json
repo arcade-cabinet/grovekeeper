@@ -34,7 +34,9 @@
     "rainGrowthBonus": 1.3,
     "droughtGrowthPenalty": 0.8,
     "damageMultiplier": 0,
-    "incomingDamageMultiplier": 0
+    "incomingDamageMultiplier": 0,
+    "hungerDrainRate": 0,
+    "maxHearts": 7
   },
   {
     "id": "normal",
@@ -71,7 +73,9 @@
     "rainGrowthBonus": 1.3,
     "droughtGrowthPenalty": 0.5,
     "damageMultiplier": 1.0,
-    "incomingDamageMultiplier": 1.0
+    "incomingDamageMultiplier": 1.0,
+    "hungerDrainRate": 1.0,
+    "maxHearts": 5
   },
   {
     "id": "hard",
@@ -108,7 +112,9 @@
     "rainGrowthBonus": 1.3,
     "droughtGrowthPenalty": 0.4,
     "damageMultiplier": 1.3,
-    "incomingDamageMultiplier": 1.3
+    "incomingDamageMultiplier": 1.3,
+    "hungerDrainRate": 1.5,
+    "maxHearts": 4
   },
   {
     "id": "brutal",
@@ -145,7 +151,9 @@
     "rainGrowthBonus": 1.3,
     "droughtGrowthPenalty": 0.3,
     "damageMultiplier": 1.5,
-    "incomingDamageMultiplier": 1.5
+    "incomingDamageMultiplier": 1.5,
+    "hungerDrainRate": 2.0,
+    "maxHearts": 3
   },
   {
     "id": "ultra-brutal",
@@ -182,6 +190,8 @@
     "rainGrowthBonus": 1.3,
     "droughtGrowthPenalty": 0.2,
     "damageMultiplier": 2.0,
-    "incomingDamageMultiplier": 2.0
+    "incomingDamageMultiplier": 2.0,
+    "hungerDrainRate": 2.0,
+    "maxHearts": 3
   }
 ]

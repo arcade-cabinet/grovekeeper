@@ -75,6 +75,8 @@ describe("stamina system", () => {
           unlockedSpecies: [],
           stamina,
           maxStamina: 100,
+          hunger: 100,
+          maxHunger: 100,
         },
       };
     }
