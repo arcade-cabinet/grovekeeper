@@ -49,6 +49,35 @@ after each iteration and it's included in prompts for context.
 - **One-chunk-per-idle pattern**: Processing one chunk per `requestIdleCallback` invocation (reschedule after each) yields control back to the browser after every expensive generation step. Simpler than tracking `deadline.timeRemaining()` and avoids the question of "how many ms does one chunk take?".
 - **No-seam biome blending via weighted average**: At a shared chunk boundary both chunks compute `(colorA + colorB) / 2` — identical by construction. Use weighted-average blend: `(base*1 + neighbor*w) / (1+w)` where `w = biomeBlend[i] * proximity`. Binary `biomeBlend[i]` (0 or 1) + spatial proximity falloff = smooth gradient without fractional weight complexity.
 - **computeBlendedColor as testable seam for vertex shading**: Export the per-vertex blend function as a pure function (no Three.js) from the R3F component file. Tests call it directly without any WebGL/R3F context. The R3F component imports and calls it in its tight vertex loop.
+- **carveSplineIntoHeightmap export pattern**: Exported as a pure function (Float32Array in, Float32Array mutated, no Three.js). Tests call it directly with flat heightmaps and assert `hm[iz*size+ix] < 0` at path center and `=== original` outside radius. Carve radius = `width/2 + 0.5` for smooth visual edges. Dense sampling (4 samples/unit) via `bezierPoint`.
+- **Boundary exit point path design**: Path splines terminate exactly on the chunk's edge in the direction of the neighbor landmark. Adjacent chunks each generate half a connection independently. No cross-chunk coordination needed — purely per-chunk. Tests can assert `p2.x === 0 || p2.x === SIZE-1 || p2.z === 0 || p2.z === SIZE-1`.
+
+---
+
+## 2026-03-07 - US-073
+- Created `game/world/pathGenerator.ts` — pure path generation following the waterPlacer pattern
+- `isLandmarkChunk(worldSeed, chunkX, chunkZ)` — chunk (0,0) always landmark; others by `scopedRNG("landmark-roll") < 0.15`
+- `getLandmarkLocalPos(worldSeed, chunkX, chunkZ)` — origin returns center (8,8); others seeded within [4, 12) margin zone
+- `getLandmarkType(worldSeed, chunkX, chunkZ)` — village at origin; shrine/ancient-tree/campfire elsewhere
+- `bezierPoint(p0, p1, p2, t)` — quadratic Bézier evaluation (pure math, no deps)
+- `carveSplineIntoHeightmap(heightmap, p0, p1, p2, radius, carveDepth, chunkSize)` — dense sampling (4 samples/unit), cosine falloff blend, in-place Float32Array mutation
+- `generatePathsForChunk(worldSeed, chunkX, chunkZ, heightmap)` — main entry: checks 4 neighbors, builds spline with seeded perpendicular curve offset, carves heightmap, returns PathSegmentPlacement[]
+- Village landmarks use "road" pathType (width=2.5); others use "trail" (width=1.0)
+- Carve radius = width/2 + 0.5 for smooth visual edges beyond nominal width
+- ChunkManager.loadChunk wired: `generatePathsForChunk` called before entity spawn; path segment ECS entities added as chunk children
+- Heightmap is mutated in-place before ECS entity creation — carved terrain baked into TerrainChunkComponent at birth (no dirty flag needed)
+- **Files changed:**
+  - `game/world/pathGenerator.ts` — new file (pure generator, 200 lines)
+  - `game/world/pathGenerator.test.ts` — new test file (28 tests)
+  - `game/world/ChunkManager.ts` — import + wiring in `loadChunk`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2174 tests, 0 failures (112 suites, +28 new tests)
+- **Learnings:**
+  - **Boundary exit point design**: paths terminate on chunk edges; adjacent chunks each generate half-paths that meet at the boundary — no cross-chunk coordination, pure per-chunk computation
+  - **carveSplineIntoHeightmap as testable seam**: exported pure function with no Three.js/R3F; tests call it directly with explicit Float32Arrays and assert on tile heights
+  - **O(V×S) carve complexity**: 256 verts × ~64 samples = ~16k ops per path — fast for idle-time chunk generation
+  - **Trail density via LANDMARK_PROBABILITY**: with p=0.15 and 4 neighbors, expected paths per landmark ≈ 0.6 — tune the constant to adjust world trail density
 
 ---
 

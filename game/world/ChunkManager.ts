@@ -22,6 +22,7 @@ import type { BiomeType } from "./biomeMapper";
 import { placeWaterBodies } from "./waterPlacer";
 import { placeAudioZones } from "./audioZonePlacer";
 import { spawnChunkEntities } from "./entitySpawner";
+import { generatePathsForChunk } from "./pathGenerator";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -392,6 +393,18 @@ export class ChunkManager {
           id: generateEntityId(),
           position: azp.position,
           ambientZone: azp.ambientZone,
+        }),
+      );
+    }
+
+    // Generate trail paths between landmarks — carves heightmap in-place.
+    const pathPlacements = generatePathsForChunk(this.worldSeed, chunkX, chunkZ, terrainData.heightmap);
+    for (const psp of pathPlacements) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: psp.position,
+          pathSegment: psp.pathSegment,
         }),
       );
     }
