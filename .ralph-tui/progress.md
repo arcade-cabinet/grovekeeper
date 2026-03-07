@@ -509,6 +509,11 @@ after each iteration and it's included in prompts for context.
   - `toolSwap` is `number` (not boolean) to support directional semantics: `+1` = next, `-1` = prev, `0` = no change — consistent with arch doc `toolCycle` pattern
   - `IInputProvider.poll()` returns `Partial<InputFrame>` so providers only specify what they contribute; manager merges with defined rules (sum movement, OR booleans, first-non-zero for toolSwap)
   - `inputManager` module-level singleton export is for game code; tests use `new InputManager()` for isolation
+- **TouchProvider uses narrow local interfaces**: Use `interface TouchPoint { identifier, clientX, clientY }` and `interface ZoneRect { left, top, width, height }` instead of DOM `Touch` / `DOMRect` types. Keeps the provider portable across environments and trivially testable with plain objects.
+- **Call-based API for touch providers**: Unlike keyboard/mouse (which use window event listeners), TouchProvider exposes public methods (`onTouchStart`, `onTouchMove`, `onTouchEnd`, `onViewportTouchStart`, etc.) that React overlay components call directly. `dispose()` only zeroes state — no listeners to remove.
+- **Joystick Y inversion**: Screen Y-down maps to world Z-backward. Invert: `moveZ = -(dy / maxRadius)`. "Up" on screen = forward in world.
+- **isAvailable() for touch**: `'ontouchstart' in window || navigator.maxTouchPoints > 0`. Both must be checked — some desktop browsers expose `maxTouchPoints > 0` without true touch support.
+
 ---
 
 ## 2026-03-07 - US-026
@@ -522,4 +527,19 @@ after each iteration and it's included in prompts for context.
   - **jsdom `movementX`/`movementY` not in MouseEvent init dict**: `new MouseEvent('mousemove', { movementX: 100 })` → `event.movementX` is `undefined` in jsdom. Workaround: `Object.defineProperty(event, 'movementX', { value: 100 })` after construction. This is the canonical jsdom pattern for testing pointer lock delta events.
   - **Edge-triggered vs held inputs**: jump/interact use a `pressedThisFrame` flag set on `keydown`, cleared in `postFrame()`. This means even holding Space only fires jump once per keypress — correct FPS behavior. Sprint uses direct `heldKeys.has("ShiftLeft")` for held semantics.
   - **Math.sign for movement**: `Math.sign(right - left)` handles simultaneous key presses cleanly — opposing keys cancel to 0, single key gives ±1. Avoids accumulating raw counts.
+---
+
+## 2026-03-07 - US-027
+- Implemented `game/input/TouchProvider.ts` -- mobile touch input: virtual joystick + viewport swipe-to-look + action buttons (Spec §23)
+- Implemented `game/input/TouchProvider.test.ts` -- 27 tests, all passing
+- **Files changed:**
+  - `game/input/TouchProvider.ts` (new)
+  - `game/input/TouchProvider.test.ts` (new)
+- **Learnings:**
+  - **TouchProvider uses narrow local interfaces**: Use `interface TouchPoint` and `interface ZoneRect` instead of DOM `Touch`/`DOMRect` types. Keeps the provider portable across environments and trivially testable with plain objects.
+  - **Call-based API for touch providers**: Unlike keyboard/mouse (window event listeners), TouchProvider exposes public methods (`onTouchStart`, `onViewportTouchStart`, etc.) that React overlay components call directly. `dispose()` only zeroes state -- no listeners to remove.
+  - **Joystick Y inversion**: Screen Y-down maps to world Z-backward. Invert: `moveZ = -(dy / maxRadius)`. "Up" on screen = forward in world.
+  - **isAvailable() for touch**: `'ontouchstart' in window || navigator.maxTouchPoints > 0`. In jsdom tests, use `Object.defineProperty(window, "ontouchstart", { configurable: true, value: null })`.
+  - **Look deltas use `+=` not `=`**: Accumulate touchmove deltas across multiple events per frame (same as mouse look). Using `=` would discard all but the last event in a frame.
+  - **moveX/moveZ are held state**: Joystick displacement persists across `postFrame()` until `onTouchEnd()` is called. Matches the "held key" model in KeyboardMouseProvider.
 ---
