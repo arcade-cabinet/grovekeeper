@@ -1,6 +1,7 @@
 import type { SerializedTree } from "./gameStore";
 import { levelFromXp, totalXpForLevel, useGameStore, xpToNext } from "./gameStore";
 import { emptyResources } from "@/game/config/resources";
+import { chunkDiffs$, saveChunkDiff } from "@/game/world/chunkPersistence";
 
 describe("Game Store", () => {
   beforeEach(() => {
@@ -494,6 +495,79 @@ describe("Game Store", () => {
       });
       useGameStore.getState().performPrestige();
       expect(useGameStore.getState().unlockedTools).toEqual(["trowel", "watering-can"]);
+    });
+  });
+
+  describe("performPrestige -- chunk-based NG+ (Spec §16.3)", () => {
+    beforeEach(() => {
+      useGameStore.getState().resetGame();
+    });
+
+    it("clears all chunk diffs on prestige", () => {
+      saveChunkDiff("0,0", { plantedTrees: [{ localX: 0, localZ: 0, speciesId: "white-oak", stage: 1, progress: 0.5, plantedAt: 0, meshSeed: 1 }] });
+      saveChunkDiff("1,0", { plantedTrees: [] });
+      expect(Object.keys(chunkDiffs$.peek())).toHaveLength(2);
+
+      useGameStore.setState({ level: 25 });
+      useGameStore.getState().performPrestige();
+
+      expect(chunkDiffs$.peek()).toEqual({});
+    });
+
+    it("generates a new non-empty worldSeed on prestige", () => {
+      useGameStore.setState({ level: 25, worldSeed: "old-seed" });
+      useGameStore.getState().performPrestige();
+      const newSeed = useGameStore.getState().worldSeed;
+      expect(newSeed).not.toBe("old-seed");
+      expect(newSeed.length).toBeGreaterThan(0);
+    });
+
+    it("resets questChainState to fresh state on prestige", () => {
+      // Start a quest chain via spirit discovery
+      useGameStore.getState().discoverSpirit("spirit-0");
+      const prePrestige = useGameStore.getState().questChainState;
+      expect(Object.keys(prePrestige.activeChains)).toHaveLength(1);
+
+      useGameStore.setState({ level: 25 });
+      useGameStore.getState().performPrestige();
+
+      const postPrestige = useGameStore.getState().questChainState;
+      expect(Object.keys(postPrestige.activeChains)).toHaveLength(0);
+    });
+
+    it("resets toolUpgrades on prestige", () => {
+      useGameStore.setState({
+        level: 25,
+        toolUpgrades: { trowel: 2, axe: 1 },
+      });
+      useGameStore.getState().performPrestige();
+      expect(useGameStore.getState().toolUpgrades).toEqual({});
+    });
+
+    it("resets toolDurabilities on prestige", () => {
+      useGameStore.setState({
+        level: 25,
+        toolDurabilities: { trowel: 50, axe: 75 },
+      });
+      useGameStore.getState().performPrestige();
+      expect(useGameStore.getState().toolDurabilities).toEqual({});
+    });
+
+    it("carries over discoveredSpiritIds across prestige", () => {
+      useGameStore.getState().discoverSpirit("spirit-0");
+      useGameStore.getState().discoverSpirit("spirit-1");
+      useGameStore.setState({ level: 25 });
+      useGameStore.getState().performPrestige();
+      const ids = useGameStore.getState().discoveredSpiritIds;
+      expect(ids).toContain("spirit-0");
+      expect(ids).toContain("spirit-1");
+    });
+
+    it("carries over npcRelationships across prestige", () => {
+      useGameStore.getState().setNpcRelationship("elder-oak", 80);
+      useGameStore.setState({ level: 25 });
+      useGameStore.getState().performPrestige();
+      expect(useGameStore.getState().npcRelationships["elder-oak"]).toBe(80);
     });
   });
 

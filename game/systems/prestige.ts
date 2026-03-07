@@ -8,11 +8,14 @@
  * All functions are PURE -- no imports from stores or ECS.
  */
 
+import prestigeConfig from "@/config/game/prestige.json" with { type: "json" };
+
 export interface PrestigeBonus {
   growthSpeedMultiplier: number;
   xpMultiplier: number;
   staminaBonus: number;
   harvestYieldMultiplier: number;
+  buildCostMultiplier: number;
 }
 
 export interface PrestigeSpecies {
@@ -37,7 +40,7 @@ export const PRESTIGE_SPECIES: readonly PrestigeSpecies[] = [
   { id: "worldtree", name: "Worldtree", requiredPrestiges: 3 },
 ] as const;
 
-export const PRESTIGE_MIN_LEVEL = 25;
+export const PRESTIGE_MIN_LEVEL: number = prestigeConfig.minLevel;
 
 export const PRESTIGE_COSMETICS: readonly PrestigeCosmetic[] = [
   {
@@ -85,27 +88,6 @@ export const PRESTIGE_COSMETICS: readonly PrestigeCosmetic[] = [
   },
 ] as const;
 
-const BONUS_TABLE: readonly PrestigeBonus[] = [
-  {
-    growthSpeedMultiplier: 1.1,
-    xpMultiplier: 1.1,
-    staminaBonus: 10,
-    harvestYieldMultiplier: 1.05,
-  },
-  {
-    growthSpeedMultiplier: 1.2,
-    xpMultiplier: 1.2,
-    staminaBonus: 20,
-    harvestYieldMultiplier: 1.1,
-  },
-  {
-    growthSpeedMultiplier: 1.35,
-    xpMultiplier: 1.3,
-    staminaBonus: 30,
-    harvestYieldMultiplier: 1.2,
-  },
-];
-
 export function canPrestige(level: number): boolean {
   return level >= PRESTIGE_MIN_LEVEL;
 }
@@ -117,17 +99,21 @@ export function calculatePrestigeBonus(prestigeCount: number): PrestigeBonus {
       xpMultiplier: 1.0,
       staminaBonus: 0,
       harvestYieldMultiplier: 1.0,
+      buildCostMultiplier: 1.0,
     };
   }
-  if (prestigeCount <= 3) {
-    return { ...BONUS_TABLE[prestigeCount - 1] };
+  const table = prestigeConfig.bonusTable;
+  if (prestigeCount <= table.length) {
+    return { ...table[prestigeCount - 1] };
   }
-  const overflow = prestigeCount - 3;
+  const overflow = prestigeCount - table.length;
+  const sc = prestigeConfig.scalingBeyond3;
   return {
-    growthSpeedMultiplier: 1.35 + 0.05 * overflow,
-    xpMultiplier: 1.3 + 0.05 * overflow,
-    staminaBonus: 30 + 5 * overflow,
-    harvestYieldMultiplier: 1.2 + 0.05 * overflow,
+    growthSpeedMultiplier: sc.growthBase + sc.growthStep * overflow,
+    xpMultiplier: sc.xpBase + sc.xpStep * overflow,
+    staminaBonus: sc.staminaBase + sc.staminaStep * overflow,
+    harvestYieldMultiplier: sc.harvestBase + sc.harvestStep * overflow,
+    buildCostMultiplier: Math.max(sc.buildCostFloor, sc.buildCostBase - sc.buildCostStep * overflow),
   };
 }
 
@@ -170,4 +156,18 @@ export function getPrestigeResetState(): {
     seeds: { "white-oak": 10 },
     groveData: null,
   };
+}
+
+/** Counter ensures uniqueness even when called multiple times within the same millisecond. */
+let _ngPlusSeedCounter = 0;
+
+/**
+ * Generate a unique world seed for a NG+ run.
+ * Uses timestamp + monotonic counter -- no Math.random().
+ */
+export function generateNewWorldSeed(): string {
+  _ngPlusSeedCounter += 1;
+  const ts = Date.now().toString(36);
+  const seq = _ngPlusSeedCounter.toString(36).padStart(4, "0");
+  return `ng${ts}-${seq}`;
 }

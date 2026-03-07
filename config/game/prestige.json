@@ -5,19 +5,22 @@
       "growthSpeedMultiplier": 1.1,
       "xpMultiplier": 1.1,
       "staminaBonus": 10,
-      "harvestYieldMultiplier": 1.05
+      "harvestYieldMultiplier": 1.05,
+      "buildCostMultiplier": 0.95
     },
     {
       "growthSpeedMultiplier": 1.2,
       "xpMultiplier": 1.2,
       "staminaBonus": 20,
-      "harvestYieldMultiplier": 1.1
+      "harvestYieldMultiplier": 1.1,
+      "buildCostMultiplier": 0.9
     },
     {
       "growthSpeedMultiplier": 1.35,
       "xpMultiplier": 1.3,
       "staminaBonus": 30,
-      "harvestYieldMultiplier": 1.2
+      "harvestYieldMultiplier": 1.2,
+      "buildCostMultiplier": 0.85
     }
   ],
   "scalingBeyond3": {
@@ -28,7 +31,10 @@
     "staminaBase": 30,
     "staminaStep": 5,
     "harvestBase": 1.2,
-    "harvestStep": 0.05
+    "harvestStep": 0.05,
+    "buildCostBase": 0.85,
+    "buildCostStep": 0.05,
+    "buildCostFloor": 0.5
   },
   "cosmetics": [
     {

@@ -47,9 +47,11 @@ import {
 import {
   calculatePrestigeBonus,
   canPrestige,
+  generateNewWorldSeed,
   getPrestigeResetState,
   getUnlockedPrestigeSpecies,
 } from "@/game/systems/prestige";
+import { clearAllChunkDiffs } from "@/game/world/chunkPersistence";
 import type { ActiveQuest } from "@/game/systems/quests";
 import {
   computeDiscoveryTier,
@@ -551,12 +553,17 @@ const actions = {
     const bonus = calculatePrestigeBonus(newCount);
     const prestigeSpecies = getUnlockedPrestigeSpecies(newCount);
     const newUnlockedSpecies = ["white-oak", ...prestigeSpecies.map((s) => s.id)];
+    const newWorldSeed = generateNewWorldSeed();
+
+    // Reset all chunk deltas -- the new world seed means a fresh procedural world.
+    clearAllChunkDiffs();
 
     gameState$.set({
       ...getState(),
       ...(resetState as Partial<GameStateData>),
       screen: state.screen, // preserve screen (ephemeral)
       prestigeCount: newCount,
+      worldSeed: newWorldSeed,
       maxStamina: 100 + bonus.staminaBonus,
       stamina: 100 + bonus.staminaBonus,
       gridSize: 12,
@@ -569,10 +576,14 @@ const actions = {
       lifetimeResources: state.lifetimeResources,
       speciesProgress: state.speciesProgress,
       pendingCodexUnlocks: [],
-      questChainState: state.questChainState,
+      // Reset quest state -- NG+ starts fresh narrative (Spec §16.3)
+      questChainState: initializeChainState(),
       placedStructures: [],
       buildMode: false,
       buildTemplateId: null,
+      // Reset tool progression -- spec §16.3 "Resets: tool upgrades"
+      toolUpgrades: {},
+      toolDurabilities: {},
       marketState: initializeMarketState(),
       merchantState: initializeMerchantState(),
       marketEventState: initializeMarketEventState(),
@@ -581,6 +592,9 @@ const actions = {
       hapticsEnabled: state.hapticsEnabled,
       soundEnabled: state.soundEnabled,
       groveData: null,
+      // Carry over spirit discoveries and NPC bonds (Spec §16.3)
+      discoveredSpiritIds: state.discoveredSpiritIds,
+      npcRelationships: state.npcRelationships,
     });
 
     queueMicrotask(() => {

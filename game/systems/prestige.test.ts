@@ -1,6 +1,7 @@
 import {
   calculatePrestigeBonus,
   canPrestige,
+  generateNewWorldSeed,
   getActiveCosmetic,
   getCosmeticById,
   getPrestigeResetState,
@@ -38,6 +39,7 @@ describe("prestige system", () => {
       expect(bonus.xpMultiplier).toBe(1.0);
       expect(bonus.staminaBonus).toBe(0);
       expect(bonus.harvestYieldMultiplier).toBe(1.0);
+      expect(bonus.buildCostMultiplier).toBe(1.0);
     });
 
     it("returns neutral bonuses for negative prestige count", () => {
@@ -181,6 +183,50 @@ describe("prestige system", () => {
     it("nullifies grove data", () => {
       const state = getPrestigeResetState();
       expect(state.groveData).toBeNull();
+    });
+  });
+
+  describe("buildCostMultiplier bonus (Spec §16.3)", () => {
+    it("returns 0.95 build cost discount at prestige 1", () => {
+      expect(calculatePrestigeBonus(1).buildCostMultiplier).toBe(0.95);
+    });
+
+    it("returns 0.9 at prestige 2", () => {
+      expect(calculatePrestigeBonus(2).buildCostMultiplier).toBe(0.9);
+    });
+
+    it("returns 0.85 at prestige 3", () => {
+      expect(calculatePrestigeBonus(3).buildCostMultiplier).toBe(0.85);
+    });
+
+    it("decreases by 0.05 per prestige beyond 3", () => {
+      expect(calculatePrestigeBonus(4).buildCostMultiplier).toBeCloseTo(0.8, 10);
+      expect(calculatePrestigeBonus(5).buildCostMultiplier).toBeCloseTo(0.75, 10);
+    });
+
+    it("floors at 0.5 for very high prestige", () => {
+      const bonus = calculatePrestigeBonus(100);
+      expect(bonus.buildCostMultiplier).toBeGreaterThanOrEqual(0.5);
+      expect(bonus.buildCostMultiplier).toBe(0.5);
+    });
+  });
+
+  describe("generateNewWorldSeed (Spec §16.3)", () => {
+    it("returns a non-empty string", () => {
+      const seed = generateNewWorldSeed();
+      expect(typeof seed).toBe("string");
+      expect(seed.length).toBeGreaterThan(0);
+    });
+
+    it("returns a different seed on each call", () => {
+      const seed1 = generateNewWorldSeed();
+      const seed2 = generateNewWorldSeed();
+      expect(seed1).not.toBe(seed2);
+    });
+
+    it("seed starts with ng prefix to distinguish from manual seeds", () => {
+      const seed = generateNewWorldSeed();
+      expect(seed.startsWith("ng")).toBe(true);
     });
   });
 });

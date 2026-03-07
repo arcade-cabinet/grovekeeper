@@ -2357,3 +2357,20 @@ after each iteration and it's included in prompts for context.
   - **34 tests > 8 minimum** — the breadth came from covering all four named areas (probability, wave composition, night-only, seed determinism) plus loot and approach directions as bonus coverage.
 
 ---
+
+## 2026-03-07 - US-125
+- Updated prestige system for chunk-based NG+ world reset
+- Files changed:
+  - `config/game/prestige.json` — added `buildCostMultiplier` to all 3 bonusTable entries (0.95/0.90/0.85) and to `scalingBeyond3` (base 0.85, step 0.05, floor 0.5)
+  - `game/systems/prestige.ts` — loads config from JSON (removed inline BONUS_TABLE); added `buildCostMultiplier` to `PrestigeBonus`; added `generateNewWorldSeed()` using timestamp+counter (no Math.random()); `PRESTIGE_MIN_LEVEL` now reads from `config.minLevel`
+  - `game/stores/gameStore.ts` — `performPrestige` now: calls `clearAllChunkDiffs()` before setting state; generates new `worldSeed` via `generateNewWorldSeed()`; resets `questChainState` to fresh `initializeChainState()`; resets `toolUpgrades: {}` and `toolDurabilities: {}`; explicitly carries `discoveredSpiritIds` and `npcRelationships`
+  - `game/systems/prestige.test.ts` — added 9 tests: `buildCostMultiplier` at prestiges 0-5 + floor, `generateNewWorldSeed` uniqueness and prefix
+  - `game/stores/gameStore.test.ts` — added 6 NG+ tests: chunk diff cleared, new worldSeed, questChainState reset, toolUpgrades reset, toolDurabilities reset, spirits and NPC relationships carried over
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3037/3037 pass (136 suites)
+- **Learnings:**
+  - **clearAllChunkDiffs must be called before gameState$.set()**: chunk diffs live in a separate Legend State observable (`chunkDiffs$`). The new worldSeed makes old deltas meaningless — clearing before state set ensures consistency.
+  - **generateNewWorldSeed avoids Math.random() via timestamp+counter**: `Date.now().toString(36)` + monotonic `_ngPlusSeedCounter` gives unique seeds without violating the scopedRNG project rule. The rule applies to gameplay mechanics, not one-time meta-game operations.
+  - **Separate observables require separate resets**: gameState$.set() only touches the player store. chunk diffs, which live in `chunkDiffs$`, require an explicit `clearAllChunkDiffs()` call — there is no single "reset everything" that spans multiple observables.
+  - **discoveredSpiritIds and npcRelationships were already carrying over via `...getState()` spread** — but making them explicit in the prestige set call documents the intent and prevents future accidental omission if the spread pattern changes.
+
+---
