@@ -1,0 +1,84 @@
+# Iteration 14 Log
+
+## Metadata
+
+- **Task ID**: US-014
+- **Task Title**: Write Jest tests for camera follow
+- **Description**: As a developer, I want tests for the FPS camera so that position offset, yaw/pitch from mouse delta, and pitch clamping are verified. See GAME_SPEC.md §9.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T08:58:09.475Z
+- **Ended At**: 2026-03-07T09:05:27.197Z
+- **Duration**: 7m 17s
+- **Input Tokens**: 88
+- **Output Tokens**: 25688
+- **Total Tokens**: 25776
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*.test.ts*[0m
+Let me read the existing FPS camera files and the GAME_SPEC.md section 9.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.test.ts[0m
+Let me read the useMouseLook implementation and game config:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+Let me check the Jest config and look at how json imports work:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mjest.config*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+Now I have a clear picture. Here's my plan:
+
+`★ Insight ─────────────────────────────────────`
+The project's test pattern is: **export pure functions from hooks/components, then unit-test them directly**. `isGrounded`, `rotateByYaw`, `clampPitch` are all examples — each is a named export tested by calling it with mock args, no React context needed. For camera follow, I'll extract `getCameraPosition` from FPSCamera the same way.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit,TodoWrite,Bash[0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.tsx[0m edit: "/** FPS camera that follows the player capsule at ..." → "type Vec3 = { x: number; y: number; z: number };
+
+..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.ts[0m edit: "const MOUSE_SENSITIVITY = gridConfig.mouseSensitiv..." → "/** Mouse sensitivity in radians per pixel. Export..."
+[94m[TodoWrite][0m
+Now add the `getCameraPosition` tests to FPSCamera.test.ts:
+
+`★ Insight ─────────────────────────────────────`
+By extracting `getCameraPosition` as a pure function, the tests require zero React/Three.js context — no mocking of `useFrame`, no camera refs, no pointer lock API. The same logic that runs every frame becomes trivially testable by calling it with plain JS objects.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m edit: "import { EYE_HEIGHT, FPSCamera } from "./FPSCamera..." → "import { EYE_HEIGHT, FPSCamera, getCameraPosition ..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.test.ts[0m edit: "import { clampPitch, PITCH_CLAMP_RAD, useMouseLook..." → "import { clampPitch, PITCH_CLAMP_RAD, MOUSE_SENSIT..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.test.ts[0m edit: "describe("useMouseLook (Spec §23)", () => {
+  it("..." → "describe("useMouseLook (Spec §23)", () => {
+  it("..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run FPSCamera and useMouseLook tests only $ npx jest --no-coverage --testPathPattern="FPSCamera|useMouseLook" 2>&1
+All 17 tests pass (8 in FPSCamera.test.ts + 9 in useMouseLook.test.ts). Now full suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+76 suites, 1282 tests, all passing (9 more than the previous 1273 from US-013).
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-013" → "## 2026-03-07 - US-014
+- Exported `getCameraPositi..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `useFrame` in FPSCamera.tsx now delegates to `getCameraPosition` — this is the **"pure core / effectful shell"** pattern. The pure function holds all the testable logic; the hook just calls it and applies the result. This makes the production code and the test code symmetric: same function, same inputs, no mocking.
+`─────────────────────────────────────────────────`
+
+All done. Summary of what was implemented:
+
+**Files changed:**
+- `components/player/FPSCamera.tsx` — extracted + exported `getCameraPosition(players, eyeHeight, defaultPos)` pure function; refactored `useFrame` to use it
+- `components/player/FPSCamera.test.ts` — added 6 `getCameraPosition` tests (position x/y+offset/z, no-player fallback, negative coords, multi-entity)
+- `game/hooks/useMouseLook.ts` — exported `MOUSE_SENSITIVITY` (was unexported `const`)
+- `game/hooks/useMouseLook.test.ts` — added 3 `MOUSE_SENSITIVITY` tests (matches config, positive finite, < 0.1 rad/px)
+
+**Results:** 76 suites, **1282 tests**, 0 failures. Coverage: position offset (6 tests), mouse sensitivity (3 tests), pitch clamping (4 existing tests from US-012).
+
+<promise>COMPLETE</promise>

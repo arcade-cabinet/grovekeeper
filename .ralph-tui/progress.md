@@ -22,6 +22,26 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-015
+- Created `game/utils/seededNoise.ts` with `SeededNoise` class implementing all four noise methods
+- `perlin(x, y)` — classic 2D Perlin noise with seeded permutation table (Fisher-Yates shuffle via Mulberry32 PRNG from `seedRNG`). Returns [-1, 1].
+- `fbm(x, y, octaves, lacunarity, gain)` — fractional Brownian Motion, sums octave layers with halving amplitude; normalized by amplitude sum to stay in [-1, 1].
+- `ridged(x, y, octaves, lacunarity, gain)` — ridged multifractal, inverted abs(Perlin) with weighted feedback per octave for sharp ridge topology. Returns [0, 1].
+- `domainWarp(x, y, warpStrength, octaves)` — Inigo Quilez domain warping: evaluates fBm at coords displaced by another fBm pass. Offset `(x+5.2, y+1.3)` breaks axis symmetry.
+- Created `game/utils/seededNoise.test.ts` with 26 tests covering all 4 methods:
+  - determinism (same seed+coords → same value), isolation (different seeds → different values), range checks (perlin/fbm/domainWarp in [-1,1]; ridged in [0,1]), lattice-point Perlin=0, octave variation, warpStrength=0 identity, cross-method determinism
+- **Files changed:**
+  - `game/utils/seededNoise.ts`: new file — SeededNoise class, 4 exported noise methods
+  - `game/utils/seededNoise.test.ts`: new file — 26 tests, all green
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 77 suites, 1308 tests, 0 failures
+- **Learnings:**
+  - Perlin lattice property: at integer coordinates `xf=0, yf=0` so all `grad2(hash, 0, 0)` calls return 0. This is a well-known Perlin property — a useful zero-cost test for correctness.
+  - Domain warp: `warpStrength=0` collapses the warp to a no-op because `wx=fbm(...)*0=0, wy=fbm(...)*0=0` → evaluates `fbm(x+0, y+0)`. This gives a free identity regression test.
+  - The offset `(5.2, 1.3)` in the Y warp sample is the Quilez convention — irrational-looking values ensure the two warp axes sample structurally different parts of the noise field, preventing uniform directional bias.
+---
+
 ## 2026-03-07 - US-014
 - Exported `getCameraPosition(players, eyeHeight, defaultPos)` pure function from `components/player/FPSCamera.tsx` — mirrors the `useFrame` camera follow logic so it can be tested without R3F context
 - Refactored `useFrame` in `FPSCamera.tsx` to call `getCameraPosition` (removed direct `copy` branch, now always uses `set`)
