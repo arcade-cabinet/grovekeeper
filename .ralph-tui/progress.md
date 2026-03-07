@@ -78,6 +78,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-140
+- Implemented loading screen (Spec §1.3).
+- Files created:
+  - `components/game/loadingScreenLogic.ts` — pure functions: `getPhaseLabel`, `getProgressPercent`, `getTip`, `tipCount`, `LOADING_TIPS` (10 tips). No React/RN imports — testable without JSX runtime.
+  - `components/game/loadingScreenLogic.test.ts` — 19 tests, all pass.
+  - `components/game/LoadingScreen.tsx` — component with `LoadingPhase` (0–4) prop, animated logo (breathing pulse via `RNAnimated.loop`), animated progress bar (`useNativeDriver: false` for layout width), rotating tip with fade transition (`useNativeDriver: true`), `onComplete` callback fires once at phase 4. Respects `prefers-reduced-motion` via `AccessibilityInfo`.
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage --testPathPattern=loadingScreenLogic` → 19 tests pass.
+- **Learnings:**
+  - **`useNativeDriver: false` required for width animations**: Layout props (`width`, `height`) cannot use the native driver — only `transform` and `opacity` can. Progress bar width interpolation must use JS driver or the animation throws at runtime.
+  - **`onComplete` guard ref pattern**: Use a `useRef(false)` guard to fire `onComplete` exactly once when `phase === 4`. Without the ref, React strict-mode double-invocation or re-renders could call `onComplete` multiple times.
+  - **Tip-fade via callback chain**: `RNAnimated.timing(...).start(callback)` enables sequential fade-out → state update → fade-in without `useEffect` dependencies on the animated value.
+
+---
+
 ## 2026-03-07 - US-137
 - Implemented main menu screen (Spec §26).
 - `components/game/MainMenu.tsx` already existed with gradient, Logo, tagline, Continue/New Grove buttons — added Settings button (`variant="ghost"`) and `onSettings` prop. Renamed local `hasSave` boolean to `saveExists` to avoid shadowing the imported function.
