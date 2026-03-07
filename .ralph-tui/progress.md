@@ -496,3 +496,15 @@ after each iteration and it's included in prompts for context.
   - When a system function's input type changes, ALL callers must be updated for tsc to pass, even if those callers are outside the acceptance criteria directories
   - `ChunkComponent` (`chunkX`, `chunkZ`, `biome`) operates at chunk granularity — it can't replace per-tile `GridCellComponent` data directly; tile-level state must be inferred from other ECS entities (rocks, trees) at that position
 ---
+
+## 2026-03-07 - US-025
+- Created `InputManager` singleton with `InputFrame` interface (Spec §23)
+- **Files changed:**
+  - `game/input/InputManager.ts`: new file — `InputFrame` interface, `IInputProvider` interface, `InputManager` class, `inputManager` singleton export
+  - `game/input/InputManager.test.ts`: 10 tests covering all fields, merge rules, clamp, disable, unregister
+- **Learnings:**
+  - The acceptance criteria specifies `jump, interact, toolSwap, sprint` — different from the full arch doc fields (`useTool, altAction, pause, toolSlot, toolCycle`). US-025 is a bootstrap; the full arch fields come later
+  - `toolSwap` is `number` (not boolean) to support directional semantics: `+1` = next, `-1` = prev, `0` = no change — consistent with arch doc `toolCycle` pattern
+  - `IInputProvider.poll()` returns `Partial<InputFrame>` so providers only specify what they contribute; manager merges with defined rules (sum movement, OR booleans, first-non-zero for toolSwap)
+  - `inputManager` module-level singleton export is for game code; tests use `new InputManager()` for isolation
+---
