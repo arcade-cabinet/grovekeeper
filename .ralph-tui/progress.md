@@ -71,6 +71,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-110
+- Work already complete — tests for the quest state machine were written as part of US-107, US-108, and US-109
+- Files confirmed existing with full coverage:
+  - `game/quests/questEngine.test.ts` — 22 tests (transitions, step advancement, completion, failure, objective text, state query helpers)
+  - `game/quests/questChainEngine.test.ts` — 40 tests (chain init, data access, availableChains, startChain, advanceObjectives, claimStepReward, query helpers)
+  - `game/quests/mainQuestSystem.test.ts` — 16 tests (spirit discovery chain, counting, completion gating, worldroots-dream availability)
+  - `game/quests/worldQuestSystem.test.ts` — 36 tests (template structure, variant selections, resolveWorldQuest, unlock gating, getUnlockedWorldQuests)
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage game/quests/` → 114 tests pass (4 suites)
+- **Learnings:**
+  - **Quest test pyramid**: 4 layers tested independently — pure state machine → chain engine → main quest integration → world quest templates. Each layer only tests its own concerns.
+  - **Stop condition applies**: When a task's acceptance criteria are satisfied by prior iteration work, verify and signal completion immediately. Do not re-implement.
+
+---
+
 ## 2026-03-07 - US-107
 - Created `game/quests/questEngine.ts` — general-purpose quest state machine
   - `QuestState`: `"available" | "active" | "completed" | "failed"`

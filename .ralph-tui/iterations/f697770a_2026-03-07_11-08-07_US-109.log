@@ -1,0 +1,99 @@
+# Iteration 109 Log
+
+## Metadata
+
+- **Task ID**: US-109
+- **Task Title**: Implement world quest templates
+- **Description**: As a developer, I want 8 world quest templates from GAME_SPEC.md §30 with seed-driven variant selection (6 slots x 3 options = 729 combos each) so that quests feel varied. See GAME_SPEC.md §30.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T17:08:07.119Z
+- **Ended At**: 2026-03-07T17:17:40.801Z
+- **Duration**: 9m 33s
+- **Input Tokens**: 95
+- **Output Tokens**: 41447
+- **Total Tokens**: 41542
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (63299 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§30|section 30|world quest|World Quest[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui[0m pattern: [96m**/*.progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 30\. World Quest[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/quests/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/types.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/questEngine.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/quests/data/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/mainQuestSystem.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/questChainEngine.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/quests.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils[0m pattern: [96mscopedRNG[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/data/questChains.json[0m
+Now I have a clear picture of the system. Let me plan and implement this.
+
+`★ Insight ─────────────────────────────────────`
+The existing quest system has two layers: `questEngine.ts` (general state machine) and `questChainEngine.ts` (NPC narrative chains). World quests need a third layer — template-based quests with seed-driven variant selection. The key design: 6 variant slots × 3 options = 3^6 = 729 combinations per template.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/worldQuests.json[0m "[
+  {
+    "id": "withered-road",
+    "name": "The Withered Road",
+    "description": "A blighted trail runs through the outer groves. Trees wither and paths crumble where something dark lingers.",
+   ... (27692 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `resolveVariantSelections` function uses `scopedRNG("world-quest", worldSeed, templateId)` — the `templateId` in the scope key ensures each template gets an independent RNG stream even with the same world seed, preventing correlation between quests.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/worldQuestSystem.ts[0m "/**
+ * World Quest System -- seed-driven variant quest templates.
+ *
+ * 8 world quest templates unlock progressively as the player explores further
+ * from the origin. Each template has 6 independent ... (7703 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/worldQuestSystem.test.ts[0m "/**
+ * World Quest System Tests (Spec §30)
+ *
+ * Validates: 8 templates, 6 slots x 3 options = 729 combos, seed determinism,
+ * unlock distance gating, spirit prerequisite gating.
+ */
+
+import {
+  TOTA... (9608 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run world quest system tests $ npx jest --no-coverage --testPathPattern="worldQuestSystem" 2>&1
+39/39 tests pass. Let me verify no regressions in the full suite:
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -10
+All 2851 tests pass (132 suites, +1 new suite with 39 tests). Now update the progress log:
+[94m[TodoWrite][0m
+[94m[Bash][0m Append US-109 progress entry $ `npx jest --no-coverage` → 2851 tests pass (132 suites) - **Learnings:**   - **World quest vs NPC ch...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The key design pattern here: **template-based quest resolution via Map lookup**. Steps declare _which slot_ provides their variable data (`npcSlot`, `targetTypeSlot`) rather than embedding values directly. This separates the static template shape from the dynamic resolution, making both independently testable. The same `Map<slotId, selectedOption>` lookup serves all steps in one pass.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria met:
+
+- **8 world quest templates** — in `config/game/worldQuests.json`, matching GAME_SPEC §30 exactly (names, NPCs, unlock distances)
+- **Variant selection from seed** — `resolveVariantSelections(templateId, worldSeed)` using `scopedRNG("world-quest", worldSeed, templateId)`
+- **6 slots × 3 options = 729 combos** — verified by `TOTAL_VARIANT_COMBINATIONS = 3 ** 6 = 729` constant and test
+- **Seed produces deterministic quest variant** — same-seed tests confirm identical output
+- **npx tsc --noEmit** — 0 errors
+- **npx jest --no-coverage** — 2851 tests pass (132 suites)
+
+<promise>COMPLETE</promise>
