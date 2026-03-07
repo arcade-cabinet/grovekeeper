@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T09:09:18.432Z",
-  "currentIteration": 15,
+  "updatedAt": "2026-03-07T09:16:40.041Z",
+  "currentIteration": 16,
   "maxIterations": 0,
-  "tasksCompleted": 15,
+  "tasksCompleted": 16,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -106,8 +106,8 @@
       {
         "id": "US-016",
         "title": "Write Jest tests for SeededNoise",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-017",
@@ -1191,6 +1191,16 @@
       "durationMs": 168480,
       "startedAt": "2026-03-07T09:05:28.323Z",
       "endedAt": "2026-03-07T09:08:16.803Z"
+    },
+    {
+      "iteration": 16,
+      "status": "completed",
+      "taskId": "US-016",
+      "taskTitle": "Write Jest tests for SeededNoise",
+      "taskCompleted": true,
+      "durationMs": 60508,
+      "startedAt": "2026-03-07T09:08:17.922Z",
+      "endedAt": "2026-03-07T09:09:18.430Z"
     }
   ],
   "skippedTaskIds": [],

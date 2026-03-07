@@ -19,7 +19,38 @@ after each iteration and it's included in prompts for context.
 - **useMouseLook pointer lock pattern**: `canvas.addEventListener("click", () => canvas.requestPointerLock())` + `document.addEventListener("mousemove", onMove)` where `onMove` guards on `document.pointerLockElement !== canvas`. The guard is essential — mousemove fires on the document even without pointer lock, so without it every mouse move over the page would rotate the camera.
 - **FPS Euler order "YXZ"**: Set `camera.rotation.order = "YXZ"` before writing `.y` (yaw) and `.x` (pitch). Three.js default is "XYZ" which causes gimbal lock in FPS setups. "YXZ" applies yaw first then pitch, matching physical FPS camera behavior.
 - **useThree() vs cameraRef for look**: `useThree().camera` returns the R3F default camera — same object as the `<PerspectiveCamera makeDefault>` ref. For rotation, use `useThree().camera` directly in the hook; for position (which needs an initial ref-guard), `cameraRef.current` is still useful in `FPSCamera`.
+- **Seamless chunk terrain — use global coords, single seed**: For continuous terrain across chunk boundaries, create ONE `SeededNoise` from `hashString(worldSeed)` and sample it at `(chunkX * CHUNK_SIZE + localX) * scale`. Per-chunk seeds cause discontinuous seams.
+- **ECS entity tracking in ChunkManager**: Store `world.add()` return value in a local `Map<string, Entity>`. Use `world.remove(entity)` directly from the Map for O(1) unload. Never search `world.entities` by field.
 
+---
+
+## 2026-03-07 - US-017
+- Created `game/world/ChunkManager.ts` with:
+  - Exported constants: `CHUNK_SIZE=16`, `ACTIVE_RADIUS=1`, `BUFFER_RADIUS=2` (from grid.json)
+  - Pure functions: `worldToChunkCoords(pos)`, `getChunkKey(chunkX, chunkZ)`, `getChunksInRadius(cx, cz, r)`, `generateChunkData(seed, cx, cz)`, `getChunkBiome(seed, cx, cz)`
+  - `ChunkManager` class: `update(playerPos)` loads 5x5 buffer ring, marks 3x3 active ring visible, unloads chunks outside buffer on transition
+  - Terrain: seamless fBm heightmap via `SeededNoise` using global world-space coordinates (not local chunk coords) — prevents seam artifacts at chunk boundaries
+  - Biome: determined from temperature+moisture noise at chunk center → 8 biome types from Spec §17.3
+- Created `game/world/ChunkManager.test.ts` with 34 tests (all green):
+  - Config constants (CHUNK_SIZE=16, radii)
+  - `worldToChunkCoords`: origin, boundary, negative coords
+  - `getChunksInRadius`: 3x3=9, 5x5=25, center included, corners, offsets
+  - `getChunkKey`: formatting
+  - `generateChunkData`: determinism, size (256 floats), different chunks differ, dirty=false, baseColor hex format
+  - ChunkManager: 25 loaded on first update, active=visible/buffer=hidden, terrainChunk+chunk components, transitions (loads right column, unloads left column, preserves count=25), entities in world, no-op on same chunk
+- Added to `config/game/grid.json`: `chunkSize: 16`, `activeRadius: 1`, `bufferRadius: 2`
+- **Files changed:**
+  - `config/game/grid.json`: added 3 chunk config values
+  - `game/world/ChunkManager.ts`: new file — ChunkManager class + pure helpers
+  - `game/world/ChunkManager.test.ts`: new file — 34 tests, all green
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 78 suites, 1342 tests, 0 failures
+- **Learnings:**
+  - Seamless chunk terrain requires a SINGLE SeededNoise instance seeded from worldSeed only, sampled at GLOBAL coordinates (`chunkX * CHUNK_SIZE + localX`) — NOT per-chunk seeds. Per-chunk seeds would cause discontinuous terrain at boundaries.
+  - The `initialized` flag (not just `loadedChunks.size > 0`) guards the early-exit on same-chunk updates, which avoids a subtle bug: if the player starts at chunk (0,0), the first call must always process even if coords are the default (0,0).
+  - Real Miniplex world in tests (ZoneLoader.test.ts pattern) works cleanly with `afterEach(() => world.entities.forEach(e => world.remove(e)))`. No mocking needed for ECS world tests.
+  - `world.add()` returns the entity immediately — store it in the Map for O(1) lookup and direct `world.remove(entity)` calls. Do NOT search `world.entities` by field — use the local Map.
 ---
 
 ## 2026-03-07 - US-016

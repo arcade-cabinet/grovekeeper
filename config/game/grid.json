@@ -27,5 +27,8 @@
   "jumpImpulse": 5,
   "groundCheckDistance": 0.15,
   "mouseSensitivity": 0.002,
-  "pitchClampDeg": 85
+  "pitchClampDeg": 85,
+  "chunkSize": 16,
+  "activeRadius": 1,
+  "bufferRadius": 2
 }
