@@ -1080,8 +1080,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 68,
-      "passes": false,
-      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Tests for US-067."
+      "passes": true,
+      "notes": "Phase 2: Tool Viewmodel + Raycast + HUD. Tests for US-067.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-069",
@@ -2788,6 +2789,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T13:36:08.211Z"
+    "updatedAt": "2026-03-07T13:39:54.243Z"
   }
 }

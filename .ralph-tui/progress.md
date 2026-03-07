@@ -47,6 +47,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-068
+- Work already complete — `components/game/HUD.test.ts` was written alongside the HUD implementation in US-067 (14 tests, 0 failures)
+- All acceptance criteria met: 14 tests > 6 minimum, covers HUD data binding via pure function seams (`resolveCompassBearing`, `findNearestUndiscoveredSpirit`), plus HUD component smoke test
+- Tests cover "displays correct values from game state" (bearing/spirit computation from player position + ECS entities) and "updates on state change" (multiple input variations)
+- **Files changed:** None (pre-existing from US-067)
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2077 tests, 0 failures (109 suites)
+- **Learnings:**
+  - **"Tests for X" stories may be pre-satisfied**: when a pipeline story (US-067) follows Docs→Tests→Code strictly and exports testable seams, the downstream "write tests" story (US-068) is already done. Always verify before implementing.
+  - **"Updates on state change" = multiple input variations**: in pure-function test suites, testing different input values (7 bearing cases, 6 spirit cases) is the equivalent of "re-renders with new state". No component rendering required.
+
+---
+
 ## 2026-03-07 - US-066
 - Added `drainToolDurability(toolId, amount?)` to `game/actions/GameActions.ts` (Spec §11.3)
 - Added `toolDurabilities: Record<string, number>` state + `drainToolDurability`/`setToolDurability` methods to `game/stores/gameStore.ts`
