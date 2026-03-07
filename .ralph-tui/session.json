@@ -3,10 +3,10 @@
   "sessionId": "f697770a-7afa-4584-990c-5e36bb5612c0",
   "status": "running",
   "startedAt": "2026-03-07T07:58:36.133Z",
-  "updatedAt": "2026-03-07T19:48:35.234Z",
-  "currentIteration": 135,
+  "updatedAt": "2026-03-07T19:53:16.423Z",
+  "currentIteration": 136,
   "maxIterations": 0,
-  "tasksCompleted": 135,
+  "tasksCompleted": 136,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -826,8 +826,8 @@
       {
         "id": "US-136",
         "title": "Create ambient particle emitters",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-137",
@@ -2391,6 +2391,16 @@
       "durationMs": 314800,
       "startedAt": "2026-03-07T19:37:36.103Z",
       "endedAt": "2026-03-07T19:42:50.903Z"
+    },
+    {
+      "iteration": 136,
+      "status": "completed",
+      "taskId": "US-136",
+      "taskTitle": "Create ambient particle emitters",
+      "taskCompleted": true,
+      "durationMs": 343203,
+      "startedAt": "2026-03-07T19:42:52.029Z",
+      "endedAt": "2026-03-07T19:48:35.232Z"
     }
   ],
   "skippedTaskIds": [],

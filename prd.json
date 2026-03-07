@@ -2246,8 +2246,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 137,
-      "passes": false,
-      "notes": "Phase 11: Tutorial + Menu + Polish."
+      "passes": true,
+      "notes": "Phase 11: Tutorial + Menu + Polish.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-138",
@@ -2857,6 +2858,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-07T19:48:35.234Z"
+    "updatedAt": "2026-03-07T19:53:16.422Z"
   }
 }

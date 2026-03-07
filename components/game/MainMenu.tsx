@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { FarmerMascot } from "./FarmerMascot";
 import { Logo } from "./Logo";
+import { hasSave, primaryButtonLabel, showNewGroveButton, treeSummaryText } from "./mainMenuLogic";
 
 /**
  * Game-specific color constants matching the original BabylonJS project.
@@ -26,6 +27,7 @@ export interface MainMenuProps {
   treesPlanted: number;
   onContinue: () => void;
   onNewGrove: () => void;
+  onSettings: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -160,8 +162,8 @@ function useReducedMotion(): boolean {
 // Main menu component
 // ---------------------------------------------------------------------------
 
-export function MainMenu({ treesPlanted, onContinue, onNewGrove }: MainMenuProps) {
-  const hasSave = treesPlanted > 0;
+export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: MainMenuProps) {
+  const saveExists = hasSave(treesPlanted);
   const reduceMotion = useReducedMotion();
 
   // Memoize leaf configs so they don't re-render
@@ -243,7 +245,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove }: MainMenuProps
 
         {/* Buttons */}
         <View className="z-10 w-full gap-2">
-          {hasSave && (
+          {saveExists && (
             <Button
               className="min-h-[48px] w-full rounded-xl"
               style={{
@@ -262,11 +264,11 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove }: MainMenuProps
 
           <Button
             className={`min-h-[48px] w-full rounded-xl ${
-              hasSave ? "bg-white" : ""
+              saveExists ? "bg-white" : ""
             }`}
-            variant={hasSave ? "outline" : "default"}
+            variant={saveExists ? "outline" : "default"}
             style={
-              hasSave
+              saveExists
                 ? {
                     borderColor: C.forestGreen,
                     borderWidth: 2,
@@ -284,22 +286,30 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove }: MainMenuProps
             onPress={onNewGrove}
           >
             <Text
-              className={`text-base font-bold ${hasSave ? "" : "text-white"}`}
-              style={hasSave ? { color: C.forestGreen } : undefined}
+              className={`text-base font-bold ${saveExists ? "" : "text-white"}`}
+              style={saveExists ? { color: C.forestGreen } : undefined}
             >
-              {hasSave ? "New Grove" : "Start Growing"}
+              {primaryButtonLabel(treesPlanted)}
+            </Text>
+          </Button>
+
+          {/* Settings — always visible */}
+          <Button
+            className="min-h-[44px] w-full rounded-xl"
+            variant="ghost"
+            onPress={onSettings}
+          >
+            <Text className="text-sm font-medium" style={{ color: C.barkBrown }}>
+              Settings
             </Text>
           </Button>
         </View>
 
         {/* Stats */}
-        {hasSave && (
+        {saveExists && (
           <View className="z-10 flex-row items-center gap-2">
-            <Text className="text-xs font-medium" style={{ color: C.barkBrown }}>
-              {treesPlanted}
-            </Text>
             <Text className="text-xs" style={{ color: C.barkBrown }}>
-              {treesPlanted === 1 ? "tree" : "trees"} planted so far
+              {treeSummaryText(treesPlanted)}
             </Text>
           </View>
         )}

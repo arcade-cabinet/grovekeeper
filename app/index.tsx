@@ -22,10 +22,19 @@ export default function MainMenuScreen() {
     router.push("/game");
   }, [router]);
 
+  const handleSettings = useCallback(() => {
+    router.push("/settings");
+  }, [router]);
+
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
-      <MainMenu treesPlanted={treesPlanted} onContinue={handleContinue} onNewGrove={handleNewGrove} />
+      <MainMenu
+        treesPlanted={treesPlanted}
+        onContinue={handleContinue}
+        onNewGrove={handleNewGrove}
+        onSettings={handleSettings}
+      />
     </>
   );
 }

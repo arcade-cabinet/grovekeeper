@@ -78,6 +78,20 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-137
+- Implemented main menu screen (Spec §26).
+- `components/game/MainMenu.tsx` already existed with gradient, Logo, tagline, Continue/New Grove buttons — added Settings button (`variant="ghost"`) and `onSettings` prop. Renamed local `hasSave` boolean to `saveExists` to avoid shadowing the imported function.
+- Created `components/game/mainMenuLogic.ts` — pure functions: `hasSave`, `primaryButtonLabel`, `showNewGroveButton`, `treeSummaryText`. No React/RN imports — testable without JSX runtime.
+- Created `components/game/mainMenuLogic.test.ts` — 10 tests, all pass.
+- Created `app/settings.tsx` — real settings screen with difficulty selector (all 5 tiers from difficulty.json). Required because Expo Router typed routes reject `router.push("/settings")` if the file doesn't exist.
+- Updated `app/index.tsx` — added `handleSettings` callback (`router.push("/settings")`), passed `onSettings` prop to `<MainMenu>`.
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 3337 tests, 143 suites pass.
+- **Learnings:**
+  - **Expo Router typed routes require the file to exist**: `router.push("/settings")` fails TypeScript (`Argument of type '"/settings"' is not assignable...`) if `app/settings.tsx` doesn't exist. The fix is to create the real screen, not cast the type. This is the correct behavior — typed routes prevent dead navigation.
+  - **Import mainMenuLogic.ts not MainMenu.tsx in tests**: Component file pulls in `expo-linear-gradient`, `react-native-svg`, and NativeWind's JSX runtime — all crash in Jest. The pure `.ts` extraction pattern is the only safe path for unit-testing UI logic.
+
+---
+
 ## 2026-03-07 - US-136
 - Implemented ambient particle emitters system (Spec §36.1).
 - Files changed:
