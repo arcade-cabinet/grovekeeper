@@ -1,0 +1,75 @@
+# Iteration 81 Log
+
+## Metadata
+
+- **Task ID**: US-081
+- **Task Title**: Write Jest tests for maze generation
+- **Description**: As a developer, I want tests for maze generation so that solvability, determinism, center reachability, and piece count are verified. See GAME_SPEC.md §18.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T14:45:45.025Z
+- **Ended At**: 2026-03-07T14:50:25.301Z
+- **Duration**: 4m 40s
+- **Input Tokens**: 94
+- **Output Tokens**: 13546
+- **Total Tokens**: 13640
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/maze*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*maze*.test*[0m
+Let me check both the existing test file and the implementation.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.ts[0m
+The test file exists with 26 tests. Let me check if they pass and look at the hedgePlacement system for missing coverage areas (solvability, reachability).
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/hedgePlacement*[0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run maze generator tests $ npx jest --no-coverage game/world/mazeGenerator.test.ts 2>&1 | tail -40
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.ts[0m
+26 tests pass, but I need to verify coverage against the specific acceptance criteria: **solvability**, **center is reachable**, and **correct piece count**. Let me check the hedgePlacement tests too.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/hedgeMaze.json[0m
+All 26 tests pass, but the acceptance criteria requires explicit coverage of **solvability**, **center reachability**, and **correct piece count** — all missing. I'll add these to `hedgePlacement.test.ts` (which has direct grid access) since they need BFS traversal on the maze grid.
+
+`★ Insight ─────────────────────────────────────`
+- A recursive backtracker produces a *perfect maze* (spanning tree) — every cell is reachable from every other. A BFS solvability test validates this property at the algorithm level.
+- For "center is reachable", a BFS from the entrance cell to `[centerX][centerZ]` is the most meaningful test — it mirrors what the player must navigate.
+- Piece count for a 12×12 maze: 144 cells, 143 spanning-tree passages removed from 264 internal walls + 48 boundary walls = ~169 walls remaining. Center clearing removes 4 more, so ~165. Asserting a range [120, 200] is a meaningful sanity check.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.test.ts[0m edit: "  describe("mazeToHedgePieces", () => {
+    it("pr..." → "  describe("generateMaze — solvability (Spec §17.5..."
+Now add the piece count test to `mazeToHedgePieces` describe block:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.test.ts[0m edit: "    it("is deterministic for same seed", () => {
+ ..." → "    it("is deterministic for same seed", () => {
+ ..."
+Now run all the tests to verify:
+[94m[Bash][0m Run hedge placement and maze generator tests $ npx jest --no-coverage game/systems/hedgePlacement.test.ts game/world/mazeGenerator.test.ts 2>&1 | t...
+45 tests pass. Let me run the full suite and TypeScript check:
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -10 && echo "TSC: PASS"
+[94m[Bash][0m Run full Jest suite $ npx jest --no-coverage 2>&1 | tail -10
+All clean. Let me update the progress file:
+[94m[ToolSearch][0m query: [93mselect:Read[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Count lines in progress.md $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Append US-081 entry to progress.md $ cat >> /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md << 'EOF'  ## 2026-03-07 ...
+`★ Insight ─────────────────────────────────────`
+- The existing 26 tests in `mazeGenerator.test.ts` covered world-space structure well but lacked algorithmic guarantees. BFS solvability at the `hedgePlacement.ts` layer is the right level — it tests the maze *algorithm*, not the world-space wrapper.
+- Recursive backtracker is a spanning-tree algorithm by construction: N cells → N-1 removed walls → one connected component. The BFS test directly validates this invariant (rather than trusting the algorithm theory).
+`─────────────────────────────────────────────────`
+
+**Summary:**
+- 26 tests in `mazeGenerator.test.ts` were already passing (determinism, structure, elevation)
+- Added 4 new tests to `game/systems/hedgePlacement.test.ts`:
+  - BFS all-cells solvability from `[0][0]` 
+  - BFS center reachability (single seed + 4-seed sweep)
+  - Piece count range `[120, 312]` for a 12×12 maze
+- Total: **2275 tests, 0 failures** — `tsc --noEmit` clean
+
+<promise>COMPLETE</promise>

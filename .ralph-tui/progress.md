@@ -51,6 +51,33 @@ after each iteration and it's included in prompts for context.
 - **computeBlendedColor as testable seam for vertex shading**: Export the per-vertex blend function as a pure function (no Three.js) from the R3F component file. Tests call it directly without any WebGL/R3F context. The R3F component imports and calls it in its tight vertex loop.
 - **carveSplineIntoHeightmap export pattern**: Exported as a pure function (Float32Array in, Float32Array mutated, no Three.js). Tests call it directly with flat heightmaps and assert `hm[iz*size+ix] < 0` at path center and `=== original` outside radius. Carve radius = `width/2 + 0.5` for smooth visual edges. Dense sampling (4 samples/unit) via `bezierPoint`.
 - **Boundary exit point path design**: Path splines terminate exactly on the chunk's edge in the direction of the neighbor landmark. Adjacent chunks each generate half a connection independently. No cross-chunk coordination needed — purely per-chunk. Tests can assert `p2.x === 0 || p2.x === SIZE-1 || p2.z === 0 || p2.z === SIZE-1`.
+- **Spirit cross-layer utility pattern**: When a pure function (e.g. `resolveEmissiveColor`) is needed by both `game/world/ChunkManager.ts` (entity creation) and `components/entities/GrovekeeperSpirit.tsx` (rendering), put it in `game/utils/` — avoids the illegal `game/ → components/` import direction. The component imports from `game/utils/`, ChunkManager also imports from `game/utils/`. Both share the same logic.
+- **Pulse params derived from spiritId via hash**: `pulseSpeed` and `pulsePhase` are not stored in `GrovekeeperSpiritComponent`. They're derived at render time: `createRNG(hashString(`pulse-${spirit.spiritId}`))`. Wrap in `useMemo([spirit.spiritId])` to avoid recomputing on every render. No new ECS fields needed — stable and deterministic.
+- **Individual SpiritOrb vs InstancedMesh**: Max 8 spirits active at once (one per maze). Use individual `<mesh>` sub-components (`SpiritOrb`) — each has its own `useFrame` for independent bob/pulse animation. InstancedMesh would require matrix sharing and is inappropriate when animation params differ per orb.
+- **Hedge+spirit wiring co-located in loadChunk**: `generateLabyrinth` returns hedges, decorations, centerPosition, and mazeIndex all at once. Wire all three entity types (hedge walls, decorations, spirit) in a single `if (labyrinthResult)` block in `loadChunk`. Splitting them across separate calls would require double-calling the generator.
+
+---
+
+## 2026-03-07 - US-082
+- Created `components/entities/GrovekeeperSpirit.tsx` — Navi-style floating emissive orb renderer
+- IcosahedronGeometry + MeshStandardMaterial with emissive color (no GLB, purely procedural)
+- Color from `scopedRNG("spirit", worldSeed, mazeIndex)` via `game/utils/spiritColors.ts`
+- Bob: `y = hoverHeight + bobAmplitude * sin(time * bobSpeed + bobPhase)` per spirit
+- Pulse: `emissiveIntensity = base + 0.3 * sin(time * pulseSpeed + pulsePhase)` per spirit
+- Pulse speed/phase derived from `spiritId` via `createRNG(hashString(...))` in `useMemo`
+- Wired `ChunkManager.loadChunk` to call `generateLabyrinth` — adds hedge walls, decorations, and spirit entity when a labyrinth chunk loads
+- Created `game/utils/spiritColors.ts` — shared `SPIRIT_COLORS` palette + `resolveEmissiveColor` utility
+- Created `components/entities/GrovekeeperSpirit.test.ts` — 20 tests covering all pure functions + component export
+- **Files changed:**
+  - `components/entities/GrovekeeperSpirit.tsx` — new file (~160 lines)
+  - `components/entities/GrovekeeperSpirit.test.ts` — new file (20 tests)
+  - `game/utils/spiritColors.ts` — new file (~45 lines)
+  - `game/world/ChunkManager.ts` — added `generateLabyrinth` wiring in `loadChunk`
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 2295 tests, 0 failures (117 suites, +20 new tests)
+- **Learnings:**
+  - See new Codebase Patterns entries above
 
 ---
 

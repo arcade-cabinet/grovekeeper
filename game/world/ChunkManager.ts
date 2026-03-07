@@ -24,6 +24,9 @@ import { placeAudioZones } from "./audioZonePlacer";
 import { spawnChunkEntities } from "./entitySpawner";
 import { generatePathsForChunk, generateSignpostForChunk } from "./pathGenerator";
 import { generateVillage } from "./villageGenerator";
+import { generateLabyrinth } from "./mazeGenerator";
+import { resolveEmissiveColor } from "@/game/utils/spiritColors";
+import { scopedRNG } from "@/game/utils/seedWords";
 
 export const CHUNK_SIZE: number = gridConfig.chunkSize;
 export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
@@ -459,6 +462,73 @@ export class ChunkManager {
           }),
         );
       }
+    }
+
+    // Generate hedge labyrinth and Grovekeeper spirit for labyrinth chunks.
+    const labyrinthResult = generateLabyrinth(
+      this.worldSeed,
+      chunkX,
+      chunkZ,
+      terrainData.heightmap,
+    );
+    if (labyrinthResult) {
+      const { hedges, decorations, centerPosition, mazeIndex } = labyrinthResult;
+
+      // Hedge wall pieces (batched by HedgeMaze renderer)
+      for (const hp of hedges) {
+        children.push(
+          world.add({
+            id: generateEntityId(),
+            position: hp.position,
+            rotationY: hp.rotationY,
+            hedge: hp.hedge,
+            renderable: { visible, scale: 1 },
+          }),
+        );
+      }
+
+      // Maze decorations (fountain, benches, flowers, columns)
+      for (const dp of decorations) {
+        children.push(
+          world.add({
+            id: generateEntityId(),
+            position: dp.position,
+            hedgeDecoration: dp.decoration,
+          }),
+        );
+      }
+
+      // Grovekeeper spirit — seeded orb at maze center (Spec §32)
+      const rng = scopedRNG("spirit", this.worldSeed, mazeIndex);
+      const emissiveColor = resolveEmissiveColor(mazeIndex, this.worldSeed);
+      rng(); // advance past the color roll consumed by resolveEmissiveColor
+      const orbRadius = 0.15 + rng() * 0.1;    // 0.15–0.25 units
+      const bobAmplitude = 0.15 + rng() * 0.1;  // 0.15–0.25 units
+      const bobSpeed = 1.5 + rng() * 1.0;       // 1.5–2.5 rad/s
+      const bobPhase = rng() * Math.PI * 2;
+      const hoverHeight = 0.8 + rng() * 0.4;    // 0.8–1.2 units
+
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: centerPosition,
+          grovekeeperSpirit: {
+            spiritId: `spirit-${chunkX}-${chunkZ}`,
+            emissiveColor,
+            emissiveIntensity: 1.5,
+            orbRadius,
+            bobAmplitude,
+            bobSpeed,
+            bobPhase,
+            spawned: false,
+            spawnProgress: 0,
+            hoverHeight,
+            trailColor: emissiveColor,
+            discovered: false,
+            dialogueTreeId: `spirit-dialogue-${mazeIndex}`,
+          },
+        }),
+      );
     }
 
     // Spawn biome-appropriate vegetation and terrain entities
