@@ -5,7 +5,7 @@
  * (imported from its own module to avoid React Native UI dependencies).
  */
 
-import { worldToGrid } from "./useInteraction.ts";
+import { worldToGrid } from "./useInteraction";
 
 describe("worldToGrid", () => {
   it("rounds positive coordinates to nearest integer", () => {

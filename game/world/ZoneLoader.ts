@@ -15,7 +15,7 @@ const gridCellsQuery = world.with("gridCell", "position");
 import { getNpcTemplate } from "@/game/npcs/NpcManager";
 import { createRNG, hashString } from "@/game/utils/seedRNG";
 import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types.ts";
-import { pickWeighted } from "./WorldGenerator.ts";
+import { pickWeighted } from "./WorldGenerator";
 
 /** Map zone ground material to grid cell type. */
 function materialToCellType(material: GroundMaterial): "soil" | "water" | "rock" | "path" {

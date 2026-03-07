@@ -2945,3 +2945,60 @@ after each iteration and it's included in prompts for context.
   - **`gameStore.test.ts` must contain at least one test**: Jest throws "Your test suite must contain at least one test" for empty test files. Even a backward-compat barrel needs a smoke test (assert `typeof useGameStore === "function"`).
   - **`updateSettings` type must use `initialState.settings`**: `Partial<typeof initialState.settings>` is correct — not `Partial<GameStateData["settings"]>` (works too) and not `Partial<ReturnType<typeof getState.prototype>>` (wrong). Import `initialState` into settings.ts to reference it.
 ---
+
+## 2026-03-07 - US-161
+- What was implemented: Decomposed all 6 game system files over 300 lines into subpackages with barrel `index.ts` files. All existing imports continue to work unchanged.
+- Files changed:
+  - **game/systems/quests/** (NEW subpackage, DELETED `quests.ts`):
+    - `types.ts` — GoalCategory, GoalDifficulty, GoalRewardResource, GoalRewardSeed, GoalTemplate, ActiveQuest, QuestGoal
+    - `treeGoals.ts` — PLANTING_GOALS (8), HARVESTING_GOALS (3), WATERING_GOALS (3)
+    - `growthGoals.ts` — GROWTH_GOALS (4), SEASONAL_GOALS (4)
+    - `resourceGoals.ts` — ECONOMIC_GOALS (3), MASTERY_GOALS (4), COLLECTION_GOALS (4), EXPLORATION_GOALS (4)
+    - `registry.ts` — `GOAL_POOLS` assembling all pools (avoids circular: `generation.ts` imports from `registry.ts`, not from `index.ts`)
+    - `generation.ts` — randomInRange, shuffle, selectRandomGoals, generateQuest, generateDailyQuests, updateQuestProgress, getAllGoals
+    - `index.ts` — barrel re-exports
+    - `quests.test.ts` — updated import from `"./quests.ts"` → `"./quests"` (directory resolution)
+  - **game/systems/recipes/** (NEW subpackage, DELETED `recipes.ts`):
+    - `types.ts` — ResourceOutput, SeedOutput, EffectOutput, XpOutput, RecipeOutput, RecipeTier, TIER_LABELS, Recipe
+    - `tier12.ts` — TIER_1_RECIPES (6), TIER_2_RECIPES (6), level 1-10
+    - `tier34.ts` — TIER_3_RECIPES (6), TIER_4_RECIPES (6), level 11-25
+    - `catalog.ts` — RECIPES array + getRecipes, getRecipeById, getRecipesByTier
+    - `queries.ts` — getRecipesForLevel, canCraft, calculateCraftCost
+    - `index.ts` — barrel re-exports
+    - `recipes.test.ts` — updated import from `"./recipes.ts"` → `"./recipes"`
+  - **game/actions/** (MODIFIED subpackage):
+    - `queries.ts` — TileCell type, gridCellsQuery, findCell, findTreeById, findPlantableTiles, findWaterableTrees, findHarvestableTrees, findMatureTrees, getPlayerTile, movePlayerTo
+    - `treeActions.ts` — plantTree, waterTree, harvestTree, pruneTree, fertilizeTree
+    - `tileActions.ts` — clearRock, removeSeedling, placeStructure
+    - `toolActions.ts` — spendToolStamina, drainToolDurability, selectTool, selectSpecies
+    - `index.ts` — barrel re-exports from all 4 files
+    - `GameActions.ts` — thinned to `export * from "./index"` (2 lines)
+  - **game/world/WorldGenerator/** (NEW subpackage, DELETED `WorldGenerator.ts`):
+    - `birchmother.ts` — BIRCHMOTHER_DISTANCE, computeBirmotherSpawn
+    - `helpers.ts` — pickWeighted, rollInt, oppositeDirection, getZoneCount, getAvailableArchetypes
+    - `tileGeneration.ts` — generateTileOverrides, generateProps
+    - `zoneLayout.ts` — OpenEdge, getOpenEdges, computeNewOrigin, createConnectionPair, createZoneFromArchetype
+    - `index.ts` — generateWorld + re-exports BIRCHMOTHER_DISTANCE, computeBirmotherSpawn, pickWeighted
+    - `WorldGenerator.test.ts` — updated import from `"./WorldGenerator.ts"` → `"./WorldGenerator"`
+  - **game/world/ZoneLoader.ts** — fixed import `"./WorldGenerator.ts"` → `"./WorldGenerator"` (critical: file deleted, directory now exists)
+  - **game/hooks/useGameLoop/** (NEW subpackage, DELETED `useGameLoop.ts`):
+    - `tickGrowth.ts` — tickGrowth(timeState, weatherGrowthMult, growthSpeedMult, dt)
+    - `tickSurvival.ts` — tickSurvival(diffConfig, dt)
+    - `tickNpcAI.ts` — tickNpcSchedules, tickNpcAI; uses `{ current: T }` param typing for ref-compatibility
+    - `tickAchievements.ts` — tickAchievements; exports ACHIEVEMENT_CHECK_INTERVAL = 5
+    - `index.ts` — useGameLoop hook orchestrating all sub-ticks via useFrame (~200 lines)
+  - **game/hooks/useInteraction/** (NEW subpackage, DELETED `useInteraction.ts`):
+    - `types.ts` — SelectionType, InteractionSelection, InteractionState, NPC_INTERACT_RANGE
+    - `selectionStore.ts` — module-level external store (getSelection, subscribe, setSelection)
+    - `entityFinders.ts` — worldToGrid, findRockAtGrid, findTreeAtGrid, findNpcNear, findCampfireAtGrid, findForgeAtGrid, findWaterAtGrid, findTrapAtGrid, isPlayerInRange, buildTileState
+    - `actionHandlers.ts` — 11 extracted handler functions (handleTrowelAction, handleWateringCanAction, etc.)
+    - `index.ts` — useInteraction hook; re-exports InteractionSelection, InteractionState, SelectionType, worldToGrid
+    - `useInteraction.test.ts` — updated import from `"./useInteraction.ts"` → `"./useInteraction"`
+- **Verification:** `npx tsc --noEmit` → pre-existing TS5097 errors only (codebase-wide explicit `.ts` extensions), 0 new type errors; `npx jest --no-coverage` → 3838 tests, 161 suites, 0 failures
+- **Learnings:**
+  - **Delete the standalone file before creating the same-named directory**: TypeScript resolves `from "./quests"` to `quests.ts` OR `quests/index.ts` — but the file takes precedence. The standalone `.ts` file MUST be deleted before the directory can be used. This is the #1 ordering mistake to avoid.
+  - **Circular dependency: put `GOAL_POOLS` in `registry.ts`, not `index.ts`**: If `index.ts` both exports `GOAL_POOLS` and imports from `generation.ts` (which needs `GOAL_POOLS`), you get a circular dependency. The fix: `registry.ts` assembles the pools → `generation.ts` imports from `registry.ts` → `index.ts` imports from both. Never let `index.ts` be a dependency of its own sub-modules.
+  - **`{ current: T }` params for non-React tick functions**: Tick functions extracted from hooks that mutate refs (e.g. `npcAiTimer.current -= dt`) should type params as `{ current: number }` instead of `MutableRefObject<number>`. The structural type is satisfied by React refs, enables testing with plain objects, and keeps tick files free of React imports.
+  - **Shared private helpers go in `queries.ts`, not each action file**: When multiple action files need the same low-level helpers (findCell, findTreeById), extract them into a shared `queries.ts` with explicit exports. Avoids copy-paste and keeps each action file focused on its domain.
+  - **Test import extensions must match directory resolution**: Any test file using `from "./foo.ts"` (explicit extension) must be updated to `from "./foo"` after the standalone file becomes a directory. TypeScript extension-less resolution handles both file and directory automatically.
+---

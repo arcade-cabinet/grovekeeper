@@ -4,7 +4,7 @@ import {
   generateQuest,
   getAllGoals,
   updateQuestProgress,
-} from "./quests.ts";
+} from "./quests";
 
 describe("Quest System", () => {
   describe("Goal Pools", () => {

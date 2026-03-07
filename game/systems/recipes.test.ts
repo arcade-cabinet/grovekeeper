@@ -8,7 +8,7 @@ import {
   getRecipesByTier,
   getRecipesForLevel,
   RECIPES,
-} from "./recipes.ts";
+} from "./recipes";
 
 describe("recipes system", () => {
   describe("RECIPES catalog", () => {
