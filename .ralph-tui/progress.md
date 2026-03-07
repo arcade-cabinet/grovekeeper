@@ -15,6 +15,21 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-008
+- Created `components/player/PlayerCapsule.tsx` with `RigidBody type="dynamic"` + `CapsuleCollider args={[0.6, 0.3]}` (halfHeight, radius)
+- Created `components/player/PlayerCapsule.test.ts` with 4 tests verifying exported constants and component type
+- **Files changed:**
+  - `components/player/PlayerCapsule.tsx`: new file — dynamic RigidBody wrapping CapsuleCollider
+  - `components/player/PlayerCapsule.test.ts`: new file — 4 tests, all green
+- **Verification:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npx jest --no-coverage` → 72 suites, 1247 tests, 0 failures
+- **Learnings:**
+  - Rapier `CapsuleCollider args={[halfHeight, radius]}` uses the cylindrical section half-height only (not including caps). For total height 1.8, radius 0.3: `halfHeight = (1.8 - 2*0.3) / 2 = 0.6`
+  - `@react-three/rapier` is not in `transformIgnorePatterns` exclusion list → Jest cannot parse it without mocking. Always mock it with `jest.mock("@react-three/rapier", () => ({ RigidBody: jest.fn(), CapsuleCollider: jest.fn() }))` in component tests
+  - The `components/player/` directory did not exist; Jest and tsc both resolve it automatically from the new file — no index barrel needed for a single file
+---
+
 ## 2026-03-07 - US-007
 - Installed `@react-three/rapier@2.2.0` via pnpm
 - Wrapped all `<Canvas>` children in `<Physics>` provider in `app/game/index.tsx`
