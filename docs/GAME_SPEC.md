@@ -6,7 +6,7 @@ what this document specifies. If code and spec disagree, the spec wins.
 
 **Canonical design:** [`docs/plans/2026-03-07-unified-game-design.md`](plans/2026-03-07-unified-game-design.md)
 
-Last updated: 2026-03-07
+Last updated: 2026-03-08 (§39 implementation status audited — 4,026 tests passing, all phases P0–P4 complete)
 
 ---
 
@@ -46,11 +46,18 @@ Last updated: 2026-03-07
 32. [Grovekeeper Spirits](#32-grovekeeper-spirits)
 33. [Dialogue Branching System](#33-dialogue-branching-system)
 34. [Combat System](#34-combat-system)
-35. [Base Building (Kitbashing)](#35-base-building-kitbashing)
+35. [Base Building (Kitbashing) — SUPERSEDED BY §43](#35-base-building-kitbashing--superseded-by-43)
 36. [Particle Systems](#36-particle-systems)
 37. [Game Modes](#37-game-modes)
 38. [ECS Component Architecture](#38-ecs-component-architecture)
 39. [Implementation Status](#39-implementation-status)
+40. [World Naming System](#40-world-naming-system)
+41. [RPG Combat & Random Encounters](#41-rpg-combat--random-encounters--confirmed-2026-03-07)
+42. [Procedural World Rendering (GLB-Free)](#42-procedural-world-rendering-glb-free)
+43. [Procedural Town Generation (Street-Grid + Blueprints)](#43-procedural-town-generation-street-grid--blueprints)
+44. [Fishing Mechanic](#44-fishing-mechanic)
+45. [Mining Mechanic](#45-mining-mechanic)
+46. [Player Building Flow](#46-player-building-flow)
 
 ---
 
@@ -1299,43 +1306,68 @@ Config: `config/game/dialogues.json` (trees), `config/game/quests.json` (chains)
 ## 34. Combat System
 
 Combat uses Rapier physics for collision and the ECS for state management.
-Active in hedge mazes and night raids. Survival mode only for lethal damage.
+Active throughout the open world, hedge mazes, and night raids. Survival mode
+only (Sapling/Hardwood/Ironwood) for lethal damage. Seedling difficulty has no
+enemies. See §41 for the confirmed design decision.
 
 ### 34.1 Enemies
 
 Spawned from biome templates. Config: `config/game/enemies.json`.
+Models: `assets/models/enemies/` (3DPSX GLBs, all rigged with armatures).
 
-| Enemy | Biome | Behavior | HP | Damage |
-|-------|-------|----------|-----|--------|
-| Thorn Sprite | Forest | Patrol | 3 | 0.5 |
-| Bog Lurker | Swamp | Ambush | 5 | 1.0 |
-| Frost Wisp | Tundra | Swarm | 2 | 0.5 |
-| Stone Golem | Mountains | Guard | 10 | 2.0 |
-| Shadow Root | Maze | Patrol | 4 | 1.0 |
+| Enemy | Key | Biomes | Behavior | Tier | HP | Damage | Night Only |
+|-------|-----|--------|----------|------|----|--------|------------|
+| Bat | bat | forest, labyrinth | swarm | 1 | 8 | 3 | yes |
+| Thorn Sprite | thorn-sprite | forest, meadow | patrol | 1 | 3 | 1 | no |
+| Killer Pig | killer-pig | meadow, wetlands, forest | patrol | 1 | 12 | 4 | no |
+| Abomination | abomination | ruins, wetlands | ambush | 1 | 15 | 5 | no |
+| Elk Demon | elk-demon | forest, wetlands, meadow | patrol | 2 | 30 | 7 | no |
+| Green Goliath | green-goliath | forest, meadow | guard | 2 | 40 | 9 | no |
+| Bigfoot | bigfoot | forest, frozen-peaks | patrol | 2 | 35 | 8 | no |
+| Plague Doctor | plague-doctor | wetlands, ruins | patrol | 2 | 28 | 6 | no |
+| Skeleton Warrior | skeleton-warrior | labyrinth, ruins | guard | 2 | 25 | 8 | no |
+| Knight | knight | ruins, labyrinth | patrol | 3 | 50 | 12 | no |
+| Werewolf | werewolf | forest, frozen-peaks | patrol | 3 | 45 | 11 | yes |
+| Cyclops | cyclops | rocky-highlands, ruins | guard | 3 | 55 | 13 | no |
+| Blood Wraith | blood-wraith | labyrinth, ruins | swarm | 3 | 35 | 10 | yes |
+| Devil | devil | labyrinth | guard | 5 | 120 | 20 | no |
+| Corrupted Hedge | corrupted-hedge | labyrinth | ambush | 4 | 15 | 5 | no |
 
 AI behaviors: patrol (wander path), guard (defend area), swarm (group aggro),
-ambush (hide + surprise). Config-driven speeds, ranges, aggro radius.
+ambush (hide + surprise). Config-driven speeds, ranges, and aggro radius in
+`config/game/enemies.json`.
 
 ### 34.2 Combat Mechanics
 
-- Tool-based melee: axe deals chop damage, pick deals pierce
+- Tool-based melee: axe deals chop damage, pick deals pierce, watering can has no combat use
 - Raycast hit detection from FPS camera
 - Damage = tool.effectPower × difficulty.damageMultiplier
 - Enemy knockback on hit (Rapier impulse)
 - Player damage = enemy.damage × difficulty.incomingDamageMultiplier
 - Loot drops on death (LootDropComponent, despawn timer)
+- Random encounters trigger when player enters a chunk containing spawned enemies and proximity ≤ aggroRange
+- Enemy tier scales with chunk distance from world origin: `tier = Math.min(5, Math.floor(chunkDistance / 8) + 1)`
+- Night multiplies enemy spawn chance by 1.5×
+- Difficulty gating: Seedling — no enemies; Sapling/Hardwood/Ironwood — enemies active with scaling damage and counts per `config/game/difficulty.json`
 
 ### 34.3 Loot
 
-Loot tables in `config/game/loot.json`. Seeded rolls from `scopedRNG("loot", worldSeed, enemyId)`.
+Loot tables in `config/game/loot.json`. All 15 enemy types have loot table entries.
+Resource categories: timber, sap, hide, meat, herbs, fiber, acorns, seeds, metal_scrap, ore.
+Seeded rolls from `scopedRNG("loot", worldSeed, enemyId)`.
 
 ECS: `EnemyComponent`, `HealthComponent`, `CombatComponent`, `LootDropComponent`
+Config: `config/game/enemies.json`, `config/game/loot.json`
 
 ---
 
-## 35. Base Building (Kitbashing)
+## 35. Base Building (Kitbashing) — SUPERSEDED BY §43
 
-Fallout-style modular building using 549 PSX Mega Pack II GLBs.
+> **Note:** GLB-based kitbashing is replaced by the procedural building system (§43).
+> Player-placed structures use the same blueprint-driven procedural geometry.
+> The snap system (§35.1) is preserved; piece categories become procedural box blueprints.
+
+~~Fallout-style modular building using 549 PSX Mega Pack II GLBs.~~
 
 ### 35.1 Snap System
 
@@ -1488,75 +1520,157 @@ No inline magic numbers. Enforced by `.claude/hooks/no-magic-numbers.sh`.
 
 ## 39. Implementation Status
 
-### 39.1 Tested Systems
+**Last audited: 2026-03-08** — 4,026 tests passing across 171 suites. 571 test files.
+All 61 systems in `game/systems/` have corresponding test files.
 
-| System | File | Wired to Loop | Wired to UI |
-|--------|------|---------------|-------------|
-| Growth | `game/systems/growth.ts` | YES | Via tree mesh |
-| Weather | `game/systems/weather.ts` | YES | WeatherOverlay |
-| Time | `game/systems/time.ts` | YES | TimeDisplay |
-| Stamina | `game/systems/stamina.ts` | YES | StaminaGauge |
-| Harvest | `game/systems/harvest.ts` | YES | Via GameActions |
-| Achievements | `game/systems/achievements.ts` | YES | AchievementPopup |
-| Pathfinding | `game/systems/pathfinding.ts` | YES | Via useInput |
-| Quests (daily) | `game/systems/quests.ts` | PARTIAL | QuestPanel |
-| Quest Chains | `game/quests/questChainEngine.ts` | YES (store) | NO chain UI |
-| Species Discovery | `game/systems/speciesDiscovery.ts` | YES (store) | NO codex UI |
-| Recipes | `game/systems/recipes.ts` | NO | NO |
-| Trading | `game/systems/trading.ts` | PARTIAL | TradeDialog |
-| NPC Movement | `game/systems/npcMovement.ts` | YES | Via NpcMeshes |
+### 39.1 System Wiring Status
+
+Systems wired to the game loop (`useGameLoop`) and/or mounted UI:
+
+| System | File | Tests | Wired to Loop | Wired to UI |
+|--------|------|-------|---------------|-------------|
+| Growth (§8) | `game/systems/growth.ts` | YES | YES (tickGrowth) | Via ProceduralTrees |
+| Crop Growth (§8) | `game/systems/cropGrowth.ts` | YES | YES (tickGrowth) | Via ProceduralTrees |
+| Weather (§7) | `game/systems/weather.ts` | YES | YES (useGameLoop) | Via HUD time display |
+| Time (§5) | `game/systems/time.ts` | YES | YES (useGameLoop) | Via HUD time display |
+| Day/Night (§31.3) | `game/systems/dayNight.ts` | YES | YES (syncDayNight) | Via Lighting + Sky |
+| Stamina (§12) | `game/systems/stamina.ts` | YES | YES (useGameLoop) | Via HUD (crosshair ring) |
+| Survival (§12) | `game/systems/survival.ts` | YES | YES (tickSurvival) | Via HUD hearts + store |
+| Harvest (§13) | `game/systems/harvest.ts` | YES | YES (harvestCooldownTick) | Via useInteraction |
+| Achievements (§15) | `game/systems/achievements/` | YES | YES (tickAchievements) | PauseMenu (list only) |
+| Prestige (§16) | `game/systems/prestige.ts` | YES | Via store | PauseMenu |
+| Pathfinding (§19) | `game/systems/pathfinding.ts` | YES | YES (NPC AI) | Via NPC movement |
+| NPC Movement (§19) | `game/systems/npcMovement.ts` | YES | YES (useGameLoop) | Via ChibiNpcScene |
+| NPC Animation (§19) | `game/systems/npcAnimation.ts` | YES | YES (useGameLoop) | Via ChibiNpcScene |
+| NPC Schedule (§19) | `game/systems/npcSchedule.ts` | YES | YES (tickNpcSchedules) | Via NPC movement |
+| NPC Relationship (§19) | `game/systems/npcRelationship.ts` | YES | Via store | NO dedicated UI |
+| Path Following (§19) | `game/systems/pathFollowing.ts` | YES | Via NPC movement | Via ChibiNpcScene |
+| Combat (§34, §41) | `game/systems/combat.ts` | YES | YES (tickInvulnFrames, tickAttackCooldown) | Via ProceduralEnemies |
+| Enemy AI (§34) | `game/systems/enemyAI.ts` | YES | YES (EnemyEntityManager.updateAll) | Via ProceduralEnemies |
+| Enemy Spawning (§34) | `game/systems/enemySpawning.ts` | YES | Via ChunkManager | Via ProceduralEnemies |
+| Trading (§20) | `game/systems/trading.ts` | YES | Via store | TradeDialog |
+| Market Events (§20) | `game/systems/marketEvents.ts` | YES | Via store events | Via store |
+| Supply/Demand (§20) | `game/systems/supplyDemand.ts` | YES | Via store | Via store |
+| Grid Expansion (§17) | `game/systems/gridExpansion.ts` | YES | Via store | PauseMenu |
+| Level Unlocks (§16) | `game/systems/levelUnlocks.ts` | YES | Via store | Via store |
+| Offline Growth (§26) | `game/systems/offlineGrowth.ts` | YES | Via store init | Via store |
+| Wild Tree Regrowth (§17) | `game/systems/wildTreeRegrowth.ts` | YES | YES (useGameLoop) | Via ProceduralTrees |
+| Death/Respawn (§12.5) | `game/systems/deathRespawn.ts` | YES | YES (tickSurvival) | DeathScreen / PermadeathScreen |
+| Tutorial (§25) | `game/systems/tutorial.ts` | YES | YES (advanceTutorial) | TutorialOverlay |
+| Ambient Audio (§27) | `game/systems/ambientAudio.ts` | YES | YES (tickAmbientAudio) | Audio output |
+| Tone Layer Factory (§27) | `game/systems/toneLayerFactory.ts` | YES | Via ambientAudio | Audio output |
+| Audio Manager (§27) | `game/systems/AudioManager.ts` | YES | Via first gesture | Audio output |
+| Water Particles (§36) | `game/systems/waterParticles.ts` | YES | YES (tickWaterParticles) | Via ECS particles |
+| Haptics (§23) | `game/systems/haptics.ts` | YES | Via actions | Device haptics |
+| Dialogue Branch (§33) | `game/systems/dialogueBranch.ts` | YES | Via dialogueBridge | NpcDialogue |
+| Dialogue Effects (§33) | `game/systems/dialogueEffects.ts` | YES | Via dialogueBridge | NpcDialogue |
+| Dialogue Loader (§33) | `game/systems/dialogueLoader.ts` | YES | Via dialogueBridge | NpcDialogue |
+| Building Geometry (§42, §43) | `game/systems/buildingGeometry/` | YES | Via ProceduralTown | ProceduralBuilding |
+| Hedge Geometry (§17) | `game/systems/hedgeGeometry.ts` | YES | Via ChunkManager | ProceduralHedgeMaze |
+| Hedge Placement (§17) | `game/systems/hedgePlacement/` | YES | Via ChunkManager | ProceduralHedgeMaze |
+| Vegetation Placement (§17) | `game/systems/vegetationPlacement.ts` | YES | Via ChunkManager | ProceduralBushes + ProceduralGrass |
+| Structure Placement (§18) | `game/systems/structurePlacement.ts` | YES | Via ChunkManager | ProceduralProps |
+| Kitbashing (§43) | `game/systems/kitbashing/` | YES | Via ProceduralTown | ProceduralBuilding |
+| Save/Load (§26) | `game/systems/saveLoad.ts` | YES | Via usePersistence | Via store |
+| Cooking (§22) | `game/systems/cooking.ts` | YES | Via actionDispatcher | CookingPanel (NOT MOUNTED) |
+| Forging (§22) | `game/systems/forging.ts` | YES | Via actionDispatcher | ForgingPanel (NOT MOUNTED) |
+| Fishing (§22) | `game/systems/fishing.ts` | YES | Via actionDispatcher | Via store |
+| Mining (§22) | `game/systems/mining.ts` | YES | Via actionDispatcher | Via store |
+| Traps (§22) | `game/systems/traps.ts` | YES | Via actionDispatcher | Via store |
+| Tool Upgrades (§11) | `game/systems/toolUpgrades.ts` | YES | Via store | ForgingPanel (NOT MOUNTED) |
+| Fast Travel (§17) | `game/systems/fastTravel.ts` | YES | Via store | FastTravelMenu (NOT MOUNTED) |
+| Species Discovery (§21) | `game/systems/speciesDiscovery.ts` | YES | Via store | NO codex UI |
+| Tree Scale (§42) | `game/systems/treeScaleSystem.ts` | YES | NOT WIRED | NOT WIRED |
+
+Orphaned systems (tested but not imported by any non-test code):
+
+| System | File | Tests | Status |
+|--------|------|-------|--------|
+| Recipes (§22) | `game/systems/recipes/` | YES | NOT IMPORTED by any non-test code |
+| Seasonal Market (§20) | `game/systems/seasonalMarket.ts` | YES | NOT IMPORTED by any non-test code |
+| Discovery (§21) | `game/systems/discovery.ts` | YES | NOT IMPORTED (speciesDiscovery.ts is the active system) |
+| Seasonal Effects (§6) | `game/systems/seasonalEffects.ts` | YES | NOT IMPORTED by any non-test code |
+| Base Raids (§35) | `game/systems/baseRaids.ts` | YES | NOT IMPORTED by any non-test code |
+| Spatial Hash (§17) | `game/systems/spatialHash.ts` | YES | NOT IMPORTED by any non-test code |
+| Zone Bonuses (§17) | `game/systems/zoneBonuses.ts` | YES | NOT IMPORTED by any non-test code |
+| Grid Generation (§17) | `game/systems/gridGeneration.ts` | YES | NOT IMPORTED by any non-test code (legacy) |
+| Loot System (§41.2) | `game/systems/lootSystem.ts` | YES | NOT IMPORTED by any non-test code |
+| Audio Engine (§27) | `game/systems/audioEngine.ts` | YES | NOT IMPORTED (AudioManager.ts is the active system) |
+| Native Audio Manager (§27) | `game/systems/NativeAudioManager.ts` | YES | NOT IMPORTED by any non-test code |
+| Weather Particles (§36) | `game/systems/weatherParticles.ts` | YES | NOT IMPORTED by any non-test code |
+| Ambient Particles (§36) | `game/systems/ambientParticles.ts` | YES | NOT IMPORTED by any non-test code |
 
 ### 39.2 ECS Foundation (Complete)
 
 | System | File | Tests |
 |--------|------|-------|
-| Procedural components | `game/ecs/components/procedural/` (6 files + barrel) | 13 |
-| Dialogue components | `game/ecs/components/dialogue.ts` | Pending |
+| Procedural components | `game/ecs/components/procedural/` (6 files + barrel) | YES |
+| Dialogue components | `game/ecs/components/dialogue.ts` | Via dialogueBridge |
 | Core components | `game/ecs/components/core.ts` | Via world tests |
 | NPC components | `game/ecs/components/npc.ts` (merged: appearance+personality+anim) | Via NpcManager |
 | Combat components | `game/ecs/components/combat.ts` | Via enemySpawning |
 | Building components | `game/ecs/components/building.ts` | Via kitbashing |
-| Vegetation components | `game/ecs/components/vegetation.ts` (GLB-based) | Via vegetationPlacement |
+| Vegetation components | `game/ecs/components/vegetation.ts` | Via vegetationPlacement |
 | Terrain components | `game/ecs/components/terrain.ts` (fences, hedges) | Via hedgePlacement |
+| Structure components | `game/ecs/components/structures.ts` | Via structurePlacement |
+| Item components | `game/ecs/components/items.ts` | Via actionDispatcher |
 | World queries | `game/ecs/world.ts` — 40+ queries, all entity types | Implicit |
 
-### 39.3 Critical Gaps
+### 39.3 Remaining Gaps (audited 2026-03-08)
 
-1. User flow: MainMenu -> Game skips NewGameModal, seed input, loading
-2. Difficulty multipliers not consumed by systems
-3. Math.random() violations in 5 files
-4. Multiple unwired systems (recipes, tool upgrades, codex, merchant UI)
-5. Hearts/hunger systems not implemented
-6. Chunk-based world system not implemented (still zone-based)
-7. Labyrinth generation not implemented
-8. Base building / raids not implemented
-9. Forging / cooking systems not implemented
-10. World quest system not implemented
+Previous gap list (2026-03-07) had 10 items. Status of each:
 
-### 39.4 Priority Order
+1. ~~MainMenu -> Game skips NewGameModal~~ **RESOLVED.** `app/index.tsx` mounts `NewGameModal`, wires seed phrase + difficulty + permadeath to store via `startNewGame()`.
+2. ~~Difficulty multipliers not consumed~~ **RESOLVED.** `useGameLoop` calls `getDifficultyById()` every frame, passes multipliers to growth, stamina, survival. Integration tests in `difficultyMultipliers.test.ts`.
+3. ~~Math.random() violations in 5 files~~ **RESOLVED.** Only 1 occurrence remains in `saveLoad.test.ts` (test mock, acceptable). Comments referencing Math.random() exist but are documentation, not violations.
+4. ~~Multiple unwired systems~~ **PARTIALLY RESOLVED.** Recipes, seasonalMarket, discovery, lootSystem, weatherParticles, ambientParticles remain orphaned (see table above). Tool upgrades wired to store.
+5. ~~Hearts/hunger not implemented~~ **RESOLVED.** `tickSurvival()` runs every frame: hunger drain, heart damage from starvation, body temperature exposure, death detection. HUD shows hearts via `HeartsDisplay`.
+6. ~~Chunk-based world not implemented~~ **RESOLVED.** `ChunkManager` + `ChunkStreamer` (useFrame) + `TerrainChunks` render procedural terrain. 3x3 active chunks, 5x5 buffer.
+7. ~~Labyrinth generation not implemented~~ **RESOLVED.** `mazeGenerator.ts` (Growing Tree algorithm), `hedgePlacement/`, `ProceduralHedgeMaze` mounted in Canvas, `GrovekeeperSpirit` at maze centers.
+8. ~~Base building / raids not implemented~~ **PARTIALLY RESOLVED.** `kitbashing/` system exists with placement + commit + Rapier colliders + unlocks. ProceduralTown renders buildings. `baseRaids.ts` has tests but is NOT IMPORTED by any non-test code.
+9. ~~Forging / cooking not implemented~~ **RESOLVED (systems).** `cooking.ts` and `forging.ts` are implemented + tested + wired to actionDispatcher. **UI NOT MOUNTED:** `CookingPanel` and `ForgingPanel` components exist but are not rendered in `app/game/index.tsx`.
+10. ~~World quest system not implemented~~ **RESOLVED.** `worldQuestSystem.ts`, `proceduralQuests.ts`, `config/game/worldQuests.json`, `config/game/proceduralQuests.json` all exist and are loaded.
 
-12-phase implementation plan (17 tasks). Dependencies enforce ordering.
-Each task includes mandatory Jest unit tests and Maestro E2E flows.
+**Current gaps (2026-03-08):**
 
-| Phase | Task | Blocked By |
-|-------|------|-----------|
-| P0-A | Tear out legacy grid/zone/farmer code | None |
-| P0-B | Rapier physics + FPS camera | P0-A |
-| P0-C | Chunk system + terrain heightmap | P0-A |
-| P0-D | Input system + save + difficulty | P0-A |
-| P1-A | GLB trees + bushes + grass | P0-B, P0-C |
-| P1-B | NPCs + animation + structures | P0-B, P0-C |
-| P1-C | Gerstner water + foam + caustics | P0-B, P0-C |
-| P2 | Tool view model + raycast + HUD | P0-B, P1-A |
-| P3 | Open world streaming + villages | P0-C, P1-A |
-| P4 | Hedge maze + spirits + combat | P2, P3 |
-| P5 | Survival: hunger/fish/hunt/cook/forge | P2, P3 |
-| P6 | Dialogue branching + NPC relationships | P3, P1-B |
-| P7 | Quest system + seed branching | P6, P4 |
-| P8 | Base building (kitbashing) | P3, P5 |
-| P9 | Raids + NG+ + achievements | P7, P8 |
-| P10 | Audio (Tone.js) + weather + particles | P1-A, P3 |
-| P11 | Tutorial + menu + polish | P9, P10 |
+1. **Orphaned systems (13):** recipes, seasonalMarket, discovery, seasonalEffects, baseRaids, spatialHash, zoneBonuses, gridGeneration, lootSystem, audioEngine, NativeAudioManager, weatherParticles, ambientParticles — tested but not imported by any non-test production code.
+2. **Unmounted UI components:** CookingPanel, ForgingPanel, FastTravelMenu, QuestPanel, MiniMap, AchievementPopup, HungerBar, ResourceBar, StaminaGauge (bar version), ToolBelt, XPBar, StatsDashboard, RulesModal, FloatingParticles, ErrorBoundary, WeatherOverlay, WeatherForecast, VirtualJoystick, BuildPanel — exist in `components/game/` but are not rendered in any mounted parent.
+3. **GameUI orchestrator not mounted:** `components/game/GameUI/` was designed to consolidate HUD sub-components (BuildPanel, MiniMap, ToolWheel, WeatherOverlay, etc.) but is not imported by `app/game/index.tsx`. The game screen mounts HUD and other overlays directly.
+4. **Legacy scene components:** `Camera.tsx`, `Ground.tsx`, `SelectionRing.tsx`, `Player.tsx` exist in `components/` but are superseded by FPSCamera, TerrainChunks, raycast system, and PlayerCapsule respectively. Not deleted.
+5. **Config/code mismatch:** `config/game/achievements.json` exists but is never loaded — achievements are hardcoded in `game/systems/achievements/core.ts`. `config/game/npcs.json` exists but NpcManager loads from `game/npcs/data/npcs.json` instead.
+6. **SpeechBubble not mounted:** R3F component exists but not rendered by ChibiNpc or ChibiNpcScene.
+7. **No codex/discovery UI:** Species discovery system tracks progress in store but has no player-facing UI.
+8. **Quest chain UI missing:** Quest chains run via store + engine but have no in-game panel. QuestPanel exists but is not mounted.
+
+### 39.4 Priority Phases (audited 2026-03-08)
+
+| Phase | Task | Status |
+|-------|------|--------|
+| P0-A | Tear out legacy grid/zone/farmer code | COMPLETE |
+| P0-B | Rapier physics + FPS camera | COMPLETE |
+| P0-C | Chunk system + terrain heightmap | COMPLETE |
+| P0-D | Input system + save + difficulty | COMPLETE |
+| P1-A | Procedural trees + bushes + grass | COMPLETE |
+| P1-B | NPCs + animation + structures | COMPLETE |
+| P1-C | Gerstner water + foam + caustics | COMPLETE |
+| P2 | Tool view model + raycast + HUD | COMPLETE |
+| P3 | Open world streaming + villages | COMPLETE |
+| P4 | Hedge maze + spirits + combat | COMPLETE |
+| P5 | Survival: hunger/fish/hunt/cook/forge | COMPLETE (systems); UI NOT MOUNTED |
+| P6 | Dialogue branching + NPC relationships | COMPLETE |
+| P7 | Quest system + seed branching | COMPLETE (engine); UI NOT MOUNTED |
+| P8 | Base building (kitbashing) | COMPLETE (system); raids NOT WIRED |
+| P9 | Raids + NG+ + achievements | PARTIAL — prestige + achievements COMPLETE; raids NOT WIRED |
+| P10 | Audio (Tone.js) + weather + particles | COMPLETE (ambient audio); weather/ambient particles NOT WIRED |
+| P11 | Tutorial + menu + polish | PARTIAL — tutorial + menus COMPLETE; UI polish needed |
+
+### 39.5 Test Coverage Summary
+
+- **Test suites:** 171 passing
+- **Individual tests:** 4,026 passing
+- **Test files:** 571
+- **Systems with tests:** 61/61 (100%)
+- **Math.random() violations:** 0 in production code (1 in test mock, acceptable)
 
 ---
 
@@ -1622,49 +1736,561 @@ Wren, Yarrow
 
 ---
 
-## 41. Combat & Random Encounters
+## 41. RPG Combat & Random Encounters — CONFIRMED 2026-03-07
 
-**Status: DESIGN NEEDED 2026-03-07** — §34 was scaffolded by ralph but has
-not been consciously designed by the team. Below is the current scaffolded
-spec — this section is PENDING design review.
+Combat and random encounters are a **confirmed core feature** of Grovekeeper.
+The game is an open-world RPG grove-tending game with:
 
-### 41.1 Design Question
+- **Tool-based melee combat**: axe deals chop damage, pick deals pierce, watering can has no combat use
+- **Random encounters** throughout the open world — enemy density increases with distance from Rootmere
+- **15 enemy types** across tiers 1–5, biome-matched, many with night-only spawning
+- **Survival mode only** for lethal mechanics; Exploration/Seedling = no enemies
+- **Loot tables** for all enemy types in `config/game/loot.json` — drops are grove-relevant resources (timber, sap, hide, meat, herbs, fiber, acorns, seeds, metal_scrap, ore)
+- **Labyrinth zones** have highest enemy density (skeleton warriors, blood wraiths, devil boss)
+- **Devil** is a rare Tier 5 boss found only in labyrinth centers — defeating it advances the Grovekeeper narrative
+- All enemy models: 3DPSX GLBs + PSX Horror-Fantasy Megapack (PSX aesthetic, rigged armatures)
 
-Combat and random encounters have not been explicitly discussed. The current
-§34 was written autonomously by ralph and may not reflect the intended game
-direction. Key questions:
+### 41.1 Confirmed Environmental Conflict (Non-Enemy)
 
-1. Should the game have enemy combat at all, or is conflict non-violent?
-2. If combat: tool-based melee (axe deals damage) or a distinct combat system?
-3. Random encounters: violent, non-violent, or both?
-4. Are maze enemies (§34 Shadow Root) part of the design intent?
-5. Should loot tables exist for enemy drops, or only for harvested resources?
-
-### 41.2 Current Scaffolded Implementation (Not Confirmed)
-
-The following exists in code and §34 but has NOT been confirmed as design:
-- `EnemyComponent`, `HealthComponent`, `CombatComponent`, `LootDropComponent`
-- `config/game/enemies.json` (not yet populated)
-- `config/game/loot.json` (not yet populated)
-- Enemy types: Thorn Sprite, Bog Lurker, Frost Wisp, Stone Golem, Shadow Root
-- Tool damage: axe/pick raycast hits apply damage to EnemyComponent
-- Base raids (§34.4): settlements attract periodic raid waves
-
-### 41.3 Confirmed Conflict Mechanics (Independent of §41.2 decision)
-
-Regardless of the combat decision, these WILL be implemented:
+These apply regardless of difficulty tier, including Seedling:
 - **Thorny patches** in labyrinths: touching them deals small damage (environmental)
 - **Campfire light** deters night hostility (distance-based passive mechanic)
 - **Weather threats**: lightning strikes deal damage; storms affect visibility
 - **Hunger/exposure death** from survival loop (not combat — environmental)
 
-### 41.4 Loot Tables (Resource Economy — Confirmed)
+### 41.2 Loot Tables (All Resource Sources)
 
-Loot tables exist for resource drops, independent of enemy combat:
-- Tree harvest yields (`config/game/loot.json:treeLoot`)
-- Fishing yields (already implemented, `config/game/fishing.json`)
+Loot tables in `config/game/loot.json` cover all drop sources:
+- Enemy kills (all 15 enemy types — grove-relevant resources only)
+- Tree harvest yields (`loot.json:treeLoot`)
+- Fishing yields (`config/game/fishing.json`)
 - Foraging yields (bushes, herbs, mushrooms)
 - Mining yields (rocks, ore nodes)
 - Seeded rolls: `scopedRNG("loot", worldSeed, entityId, entityType)`
 
-These are CONFIRMED regardless of the §41.2 combat decision.
+Status: Design confirmed. Implementation: `game/systems/enemySpawning.ts`, `game/ecs/components/combat.ts`, `config/game/enemies.json`. See §34 for full spec.
+
+---
+
+## 42. Procedural World Rendering (GLB-Free)
+
+All GLB-based entity renderers are replaced by procedural geometry. No external
+model files are required for trees, fences, props, or bushes. Every visual is
+generated from code using Three.js geometry + canvas textures.
+
+### 42.1 Procedural Trees
+
+Component: `components/entities/ProceduralTrees.tsx`
+
+- **Trunk**: `CylinderGeometry(0.15, 0.3, 1, 8)` — wood canvas texture
+- **Canopy**: `DodecahedronGeometry(1.5, 1)` — leaves canvas texture
+- Stage-to-scale mapping (trunk height multipliers):
+
+| Stage | Name | Trunk Scale | Canopy Scale |
+|-------|------|-------------|--------------|
+| 0 | Seed | 0.3 | 0.2 |
+| 1 | Sprout | 0.5 | 0.4 |
+| 2 | Sapling | 0.7 | 0.7 |
+| 3 | Mature | 1.0 | 1.0 |
+| 4 | Old Growth | 1.4 | 1.5 |
+
+- One `InstancedMesh` per geometry type (trunk / canopy) — two draw calls total
+- Instance matrices updated in `useFrame` — zero React re-renders
+- Per-tree random scale variation via `scopedRNG("tree-mesh", meshSeed)`
+- `onTreeTap` callback for interaction
+- Species meshParams (`trunkRadius`, `canopyRadius`, `color.trunk`, `color.canopy`)
+  drive per-species variation loaded from `config/game/species.json`
+
+### 42.2 Procedural Fences
+
+Component: `components/entities/ProceduralFences.tsx`
+
+- **Posts**: `CylinderGeometry(0.08, 0.08, 1.2, 6)` — wood canvas texture
+- **Rails**: `BoxGeometry(2.0, 0.1, 0.08)` — wood canvas texture
+- Each fence entity produces 2 posts + 2 rails (one fence segment)
+- Y-rotation from `entity.rotationY`
+- Two `InstancedMesh` instances (posts + rails) — two draw calls total
+
+### 42.3 Procedural Props
+
+Component: `components/entities/ProceduralProps.tsx`
+
+Prop type determined from `entity.prop.modelPath` string matching:
+
+| Type | Geometry | Texture |
+|------|----------|---------|
+| barrel | `CylinderGeometry(0.4, 0.4, 0.8, 8)` | wood |
+| crate | `BoxGeometry(0.6, 0.6, 0.6)` | wood |
+| default | `CylinderGeometry(0.3, 0.3, 1.0, 8)` | stone |
+
+Each type has its own `InstancedMesh` — one draw call per prop type.
+
+### 42.4 Procedural Bushes
+
+Component: `components/entities/ProceduralBushes.tsx`
+
+- **Shape**: `SphereGeometry(0.6, 10, 10)` — hedge canvas texture
+- **Season color tints** applied per-instance via `mesh.setColorAt`:
+
+| Season | R | G | B |
+|--------|---|---|---|
+| spring | 0.2 | 0.7 | 0.3 |
+| summer | 0.15 | 0.6 | 0.2 |
+| autumn | 0.7 | 0.5 | 0.2 |
+| winter | 0.6 | 0.6 | 0.65 |
+| dead | 0.3 | 0.2 | 0.15 |
+
+- Random scale variation 0.6–1.2 from `scopedRNG("bush-mesh", entityId hash)`
+- One `InstancedMesh` — one draw call
+
+### 42.5 Texture System
+
+All procedural entities use canvas textures from `game/utils/proceduralTextures.ts`.
+Wrap: `RepeatWrapping` on both axes.
+Filter: `NearestFilter` (PSX aesthetic rule — §28.1).
+Created once at component mount, disposed on unmount.
+
+ECS queries: `treesQuery`, `fencesQuery`, `propsQuery`, `bushesQuery` (existing — no changes to world.ts).
+Config: `config/game/species.json` (tree meshParams), `config/game/proceduralMesh.json` (tuning).
+
+Status: **IMPLEMENTED** — `components/entities/ProceduralTrees.tsx`, `ProceduralFences.tsx`,
+`ProceduralProps.tsx`, `ProceduralBushes.tsx`. Replaces: `TreeInstances`, `FenceInstances`,
+`PropInstances`, `BushScene` in `app/game/index.tsx`.
+
+---
+
+## 43. Procedural Town Generation (Street-Grid + Blueprints)
+
+Procedural villages use a **street-grid layout** with **blueprint-typed buildings**.
+Each building type has a distinct function, interior furnishings, and visual identity
+— all rendered from procedural geometry (zero GLBs). Towns feel designed, not random.
+
+**Design philosophy:** The POC demonstrated that procedural buildings with street connectivity,
+multi-story traversal (including stairs), and per-type variation can feel hand-crafted.
+Blueprint-typed buildings give towns character: a barn looks different from an inn, a forge
+has an anvil visible through its door, a doctor's house has herb planters. But all variation
+is compositional — the same box-based geometry system drives everything.
+
+### 43.1 Street-Grid Layout Algorithm
+
+Villages use a simplified **L-shaped or cross-shaped street grid** instead of radial scatter.
+
+**Algorithm** (pure function in `game/world/villageLayout.ts`):
+
+1. **Determine village footprint**: `gridW × gridD` tiles (seeded 3–6 × 3–6 from config)
+2. **Generate street axes**:
+   - Always one **main street** along longest axis (1 tile wide)
+   - 50% chance (seeded) of one **cross street** perpendicular to main
+   - Streets create 2–4 **building lots** (rectangular zones between streets and edges)
+3. **Assign lots to blueprints**:
+   - Each lot gets a `BlueprintId` chosen from the village's `buildingPool` (seeded)
+   - Lot size determines building footprint (clamped to blueprint min/max)
+   - Buildings orient toward the street they face (door faces street)
+4. **Place buildings in lots**:
+   - Building footprint centered in lot with 0.5-tile margin
+   - Y position sampled from heightmap at lot center
+   - Rotation: 0° (facing +Z street), 90° (facing +X street), etc.
+5. **Place street furniture**:
+   - Lamp posts at intersections (every 3 tiles along streets)
+   - Well/fountain at largest intersection (if cross street exists)
+   - Crates/barrels at building fronts (1–2 per building, seeded)
+
+**Config** (`config/game/structures.json` → `villageLayout`):
+```json
+{
+  "villageLayout": {
+    "minGridW": 3,
+    "maxGridW": 6,
+    "minGridD": 3,
+    "maxGridD": 6,
+    "streetWidth": 1,
+    "lotMargin": 0.5,
+    "crossStreetChance": 0.5,
+    "lampPostSpacing": 3,
+    "streetFurniturePerBuilding": { "min": 1, "max": 2 }
+  }
+}
+```
+
+**Rootmere override**: Chunk (0,0) keeps its §17.3a authored layout. Street-grid only
+applies to procedural villages (non-origin landmark chunks).
+
+### 43.2 Building Blueprints
+
+Each blueprint defines a building's **function, dimensions, stories, material, and interior**.
+Blueprints are config-driven (`config/game/structures.json` → `blueprints`).
+
+| BlueprintId | Name | Footprint | Stories | Material | Functional Feature |
+|-------------|------|-----------|---------|----------|-------------------|
+| `cottage` | Cottage | 3×3 | 1 | plaster | Bed + chest (NPC home) |
+| `townhouse` | Townhouse | 3×4 | 2 | brick | Larger NPC home, balcony box |
+| `barn` | Barn | 4×5 | 1 | timber | Open interior, hay bales, animal pens |
+| `inn` | Inn | 4×4 | 2 | plaster | Counter, fireplace, 2 beds upstairs |
+| `forge` | Forge | 4×3 | 1 | brick | Anvil, coal bin, chimney stack |
+| `kitchen` | Kitchen | 3×3 | 1 | plaster | Cooking pot, counter, shelving |
+| `apothecary` | Apothecary | 3×3 | 1 | plaster | Herb planters, potion shelf |
+| `watchtower` | Watchtower | 2×2 | 3 | brick | Open top floor, viewing platform |
+| `storehouse` | Storehouse | 3×3 | 1 | brick | Crates and barrels fill interior |
+| `chapel` | Chapel | 3×4 | 1 | plaster | Peaked roof (double height), pews |
+
+**Blueprint pool per village size:**
+- Small village (3–4 buildings): 1 cottage, 1 storehouse, 1 random from pool
+- Medium village (5–6): + 1 inn or forge, 1 cottage
+- Large village (7–8): + 1 of every remaining type (seeded selection)
+
+**Every village has exactly 1 campfire** (at the main intersection or village center).
+
+### 43.3 Building Interior Furnishings
+
+Interior furnishings are **additional BoxSpecs** appended to the building geometry.
+Same merged-geometry, single-draw-call approach. Furnishings use existing `BoxMatType`
+plus new types: `"furniture"`, `"chimney"`.
+
+**Furnishing specs** (per blueprint, generated by `generateBlueprintInterior()`):
+
+| Blueprint | Furnishings |
+|-----------|-------------|
+| `cottage` | Bed (box 1.0×0.5×2.0), chest (box 0.6×0.5×0.6) |
+| `inn` | Counter (box 2.5×1.0×0.5), fireplace wall (box 0.8×2.0×0.2), beds upstairs |
+| `forge` | Anvil (box 0.6×0.8×0.4), coal bin (box 0.8×0.5×0.8), chimney (box 0.5×4.0×0.5) |
+| `kitchen` | Cooking pot (cylinder → box approx 0.5×0.4×0.5), counter, shelf (box 0.8×1.5×0.3) |
+| `apothecary` | Planters (2× box 0.8×0.4×0.3), shelf (box 1.5×1.5×0.3) |
+| `barn` | Hay bale (box 1.0×0.8×1.0 × 3), trough (box 1.5×0.4×0.5) |
+| `storehouse` | Crates (3–5× box 0.6×0.6×0.6), barrels (box 0.4×0.8×0.4 × 2) |
+| `watchtower` | Railing (thin box perimeter on top floor) |
+| `chapel` | Pews (4× box 2.0×0.5×0.4, spaced along Z) |
+| `townhouse` | Bed upstairs, table ground floor (box 1.2×0.8×0.8) |
+
+**Color palette additions** (in `config/game/structures.json` → `proceduralBuilding.colors`):
+```json
+{
+  "furniture": [0.50, 0.35, 0.22],
+  "chimney":   [0.30, 0.28, 0.26],
+  "timber":    [0.55, 0.38, 0.22],
+  "hay":       [0.78, 0.72, 0.40]
+}
+```
+
+### 43.4 Door and Window Openings
+
+Doors and windows are **subtractive boxes** — instead of cutting geometry (complex),
+we render the opening as a **dark-colored recessed box** that reads as a void.
+
+- **Door opening**: Box at front wall, `doorWidth × doorHeight × wallThickness`, color `[0.05, 0.05, 0.05]`
+- **Window opening**: Box at side walls, `windowWidth × windowHeight × wallThickness`, at `windowSillHeight` Y offset, color `[0.08, 0.10, 0.15]` (dark blue-grey for glass illusion)
+- Config values already exist in `structures.json.proceduralBuilding`: `doorWidth`, `doorHeight`, `windowWidth`, `windowHeight`, `windowSillHeight`
+
+**Rules** (in `generateBlueprintOpenings()`):
+- Every building gets 1 door on the street-facing wall
+- Every story gets 1–2 windows on side walls (seeded placement)
+- No windows on walls shared with adjacent buildings (lot boundary check)
+- Barn gets double-wide door (2× `doorWidth`)
+- Watchtower: no door on ground floor (accessed from adjacent building's 2nd floor or ladder)
+
+### 43.5 Building Variation (Seeded)
+
+Same blueprint type renders differently based on seed:
+- **Material**: brick vs plaster per-story (e.g., brick ground floor, plaster upper)
+- **Roof style**: flat cap (current) vs peaked (doubled `roofOverhang` + triangular ridge box)
+- **Chimney**: 30% chance per 1-story building (box column from roof)
+- **Balcony**: 20% chance per 2+ story (floor slab extension on front, railing boxes)
+- **Awning**: 40% chance per ground-floor shop (angled box above door)
+
+All variation computed in `deriveVariation(blueprintId, seed)` → stored in `ProceduralBuildingComponent`.
+
+### 43.6 Traversability
+
+**Guaranteed walkability** — the street grid is always traversable:
+
+- **Street surfaces**: Ground-level, flattened heightmap (same approach as Rootmere §17.3a flattening)
+- **Building entries**: Door threshold at street level (no step up)
+- **Stairs**: Existing stair system (§42 `buildingGeometry.ts`) for multi-story buildings
+- **Between buildings**: 0.5-tile gaps between lots allow passage
+- **Rapier colliders**: Every building has TrimeshCollider (already implemented in `ProceduralBuilding.tsx`). Interior furnishings are collidable — player navigates around furniture.
+
+### 43.7 ECS Integration
+
+**ProceduralBuildingComponent** extension:
+```typescript
+interface ProceduralBuildingComponent {
+  footprintW: number;
+  footprintD: number;
+  stories: number;
+  materialType: "brick" | "plaster" | "timber";
+  blueprintId: BlueprintId;           // NEW: determines interior + openings
+  facing: 0 | 90 | 180 | 270;        // NEW: door faces this direction (degrees)
+  variation: number;                   // NEW: seeded variation hash
+}
+```
+
+**New entity pattern** (spawned by ChunkManager during village load):
+```
+entity = {
+  position: { x, y, z },
+  proceduralBuilding: { footprintW, footprintD, stories, materialType, blueprintId, facing, variation },
+  structure: { templateId, category, ... },
+  renderable: { visible: true }
+}
+```
+
+### 43.8 Data Flow
+
+```
+villageLayout.ts (pure function)
+  ├─ Input: worldSeed, chunkX, chunkZ, heightmap, config
+  ├─ Output: VillageLayout { streets, lots, buildingPlacements[], furniturePlacements[] }
+  └─ Algorithm: street grid → lot assignment → blueprint selection → placement
+
+  ↓ (ChunkManager spawns entities)
+
+buildingGeometry.ts (pure function, extended)
+  ├─ generateBuildingBoxes(footprintW, footprintD, stories)     — walls/floors/stairs/roof
+  ├─ generateBlueprintInterior(blueprintId, footprintW, footprintD, stories, variation)  — furniture
+  ├─ generateBlueprintOpenings(blueprintId, footprintW, footprintD, stories, facing)     — doors/windows
+  └─ All return BoxSpec[] → merged into one array per building
+
+  ↓ (ProceduralBuilding.tsx renders)
+
+ProceduralBuilding.tsx (existing, extended)
+  ├─ boxes = [...wallBoxes, ...interiorBoxes, ...openingBoxes]
+  ├─ buildMergedGeometry(boxes, materialType) → one draw call
+  └─ buildColliderArrays(boxes) → Rapier TrimeshCollider
+```
+
+### 43.9 §35 Deprecation
+
+**§35 (Base Building / Kitbashing) references 549 PSX Mega Pack II GLBs.** This is incompatible
+with the GLB-free procedural architecture (§42). Player-placed structures now use the same
+procedural building system:
+
+- Player selects a blueprint from the build menu (§18.4)
+- Ghost preview renders using `ProceduralBuilding` with translucent material
+- On placement, ChunkManager spawns a `proceduralBuilding` entity at the snapped position
+- **Modular snap system (§35.1) is preserved** — but pieces are procedural boxes, not GLBs
+
+### 43.10 Implementation Plan
+
+| Step | File | Description |
+|------|------|-------------|
+| 1 | `config/game/structures.json` | Add `villageLayout` + `blueprints` config sections |
+| 2 | `game/world/villageLayout.ts` | Street-grid generation algorithm (pure function) |
+| 3 | `game/systems/buildingGeometry.ts` | Extend with `generateBlueprintInterior()` + `generateBlueprintOpenings()` |
+| 4 | `game/ecs/components/structures.ts` | Extend `ProceduralBuildingComponent` with `blueprintId`, `facing`, `variation` |
+| 5 | `game/world/villageGenerator.ts` | Replace radial placement with `villageLayout` call |
+| 6 | `game/world/ChunkManager.ts` | Pass new fields when spawning building entities |
+| 7 | `components/scene/ProceduralBuilding.tsx` | Consume `blueprintId` for interior + openings |
+| 8 | Tests | `villageLayout.test.ts`, `buildingGeometry.test.ts` (interiors), `villageGenerator.test.ts` (grid) |
+
+Status: **IMPLEMENTED — tests: 37, wired to game loop: NO (ChunkManager step pending §43.10 step 5-6), wired to UI: NO**
+
+---
+
+## 44. Fishing Mechanic
+
+Player casts a fishing rod at any fishable water body and plays a timing minigame
+to catch fish. Fish species are biome- and season-dependent via seeded RNG.
+
+### 44.1 Fishing Rod Tool
+
+| Parameter | Value |
+|-----------|-------|
+| Tool ID | `fishing-rod` |
+| Stamina cost | 4 |
+| Unlock level | 6 |
+| Action | `FISH` |
+| Craft cost | 5 Timber + 3 Fiber |
+
+Added to `config/game/tools.json`. Uses `dispatchAction` with targetType `water`.
+
+### 44.2 Fishing Flow
+
+```
+Player equips fishing rod
+  -> Raycast/tap hits water body entity
+  -> ActionButton shows "FISH"
+  -> dispatchAction sets activeCraftingStation { type: "fishing" }
+  -> FishingPanel opens (fullscreen overlay)
+  -> State machine: idle -> casting -> waiting -> biting -> minigame -> caught/escaped
+  -> On caught: selectFishSpecies(biome, season, rng) -> computeFishYield(hasDock)
+  -> addResource("fish", yield) + toast
+  -> Panel closes, activeCraftingStation set to null
+```
+
+### 44.3 Timing Minigame
+
+Config from `config/game/fishing.json`:
+
+| Parameter | Value |
+|-----------|-------|
+| Cast duration | 0.5s |
+| Wait duration | 3-10s (seeded) |
+| Bite duration | 4s (window to respond) |
+| Timing bar speed | 0.8 |
+| Success zone width | 0.25 (25% of bar) |
+
+Bouncing cursor on a horizontal bar. Player taps when cursor is inside the
+success zone. Hit = caught, miss = escaped, timeout = escaped.
+
+### 44.4 Species Selection
+
+Per-biome species lists with seasonal weight modifiers.
+8 biomes × 2-3 species each. See `config/game/fishing.json` biomeSpecies.
+
+### 44.5 Yield
+
+- Base yield: 1 fish per catch
+- Fishing Dock structure (§18.1): +30% yield bonus
+- Result is `Math.ceil(baseYield * (1 + bonus))`
+
+### 44.6 Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `game/systems/fishing.ts` | Pure state machine + species selection |
+| `game/systems/fishing.test.ts` | 30+ tests covering all phases |
+| `config/game/fishing.json` | Timing, species, seasonal weights |
+| `components/game/FishingPanel.tsx` | FPS overlay UI for minigame |
+| `components/game/fishingPanelLogic.ts` | Pure display helpers |
+| `game/actions/actionDispatcher.ts` | FISH action wiring |
+
+Status: **System logic COMPLETE, tests COMPLETE, UI panel IMPLEMENTING, wiring to GameUI IMPLEMENTING**
+
+---
+
+## 45. Mining Mechanic
+
+Player equips pickaxe and mines rock/ore nodes for stone and ore resources.
+Stamina cost scales with rock hardness. Ore type depends on chunk biome.
+
+### 45.1 Pickaxe Tool
+
+Already in `config/game/tools.json` as `pick` (id: `pick`, action: `MINE`,
+stamina: 10, unlock level: 6, effectPower: 4.0).
+
+### 45.2 Mining Flow
+
+```
+Player equips pick
+  -> Raycast/tap hits rock entity (RockComponent in ECS)
+  -> ActionButton shows "Mine"
+  -> dispatchAction resolves MINE action
+  -> resolveMiningInteraction checks isRock, computes staminaCost
+  -> If stamina sufficient: deduct stamina, call mineRock(rock, biome, rng)
+  -> addResource(oreType, amount) + incrementToolUse("pick")
+  -> Toast: "Mined rock!"
+```
+
+### 45.3 Rock Hardness & Stamina
+
+From `config/game/mining.json`:
+
+| Rock Type | Hardness | Stamina Cost |
+|-----------|----------|-------------|
+| default | 1 | 8 |
+| granite | 2 | 16 |
+| iron-vein | 3 | 24 |
+| obsidian | 4 | 32 |
+
+Formula: `staminaCost = hardness × baseStaminaPerHardness (8)`
+
+### 45.4 Ore Table (Per Biome)
+
+| Biome | Ore Type | Min | Max |
+|-------|----------|-----|-----|
+| starting-grove | stone | 1 | 2 |
+| meadow | stone | 1 | 2 |
+| ancient-forest | stone | 2 | 3 |
+| wetlands | stone | 1 | 2 |
+| rocky-highlands | ore | 1 | 2 |
+| orchard-valley | stone | 1 | 2 |
+| frozen-peaks | ore | 1 | 3 |
+| twilight-glade | ore | 2 | 3 |
+
+### 45.5 Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `game/systems/mining.ts` | Pure functions: hardness, stamina, ore yield |
+| `game/systems/mining.test.ts` | 25+ tests covering all functions |
+| `config/game/mining.json` | Hardness table, ore table |
+| `game/actions/actionDispatcher.ts` | MINE action wiring |
+| `game/hooks/useInteraction/actionHandlers.ts` | handlePickAction |
+
+Status: **System logic COMPLETE, tests COMPLETE, wired to dispatcher COMPLETE, resource type fix IMPLEMENTING**
+
+---
+
+## 46. Player Building Flow
+
+Player presses B key (desktop) or Build button (mobile) to enter build mode.
+Build panel shows piece categories and material options. Ghost preview follows
+camera raycast with snap-to-grid and Rapier collision validation.
+
+### 46.1 Hammer Tool
+
+| Parameter | Value |
+|-----------|-------|
+| Tool ID | `hammer` |
+| Stamina cost | 8 |
+| Unlock level | 5 |
+| Action | `BUILD` |
+| Craft cost | 8 Timber + 4 Stone |
+
+Added to `config/game/tools.json`.
+
+### 46.2 Build Flow
+
+```
+Player presses B key or taps Build button
+  -> OR: equips hammer + taps ground -> dispatchAction(BUILD)
+  -> store.setActiveCraftingStation({ type: "kitbash" })
+  -> BuildPanel opens (modal bottom sheet)
+  -> Player selects category (radial wheel) -> piece list
+  -> Player selects piece + material (checks level unlock + resource cost)
+  -> store.setBuildMode(true, "pieceType:material")
+  -> BuildPanel closes
+  -> PlacementGhost appears (3D mesh follows camera raycast)
+  -> Ghost snaps to grid (1.0 unit), shows green/red validity
+  -> Q/E rotate (desktop) or overlay buttons (mobile)
+  -> Confirm: deduct resources, spawn ECS entity, award XP
+  -> Cancel: exit build mode, no cost
+```
+
+### 46.3 Piece Categories (§35.2)
+
+6 categories with 11 piece types across 5 materials:
+- Foundation: foundation, floor, platform
+- Walls: wall, window, pillar
+- Roofs: roof, beam
+- Doors: door
+- Stairs: stairs
+- Utility: pipe
+
+### 46.4 Material Unlock Levels
+
+| Material | Unlock Level |
+|----------|-------------|
+| thatch | 1 |
+| wood | 5 |
+| stone | 10 |
+| metal | 15 |
+| reinforced | 16 |
+
+### 46.5 Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `components/game/BuildPanel.tsx` | Category wheel + piece selection UI |
+| `components/game/buildPanelUtils.ts` | Pure cost/unlock logic |
+| `components/game/PlacementGhost.tsx` | 3D ghost mesh + UI overlay |
+| `game/actions/actionDispatcher.ts` | BUILD action wiring |
+| `config/game/building.json` | Build costs, unlock levels, snap points |
+
+Status: **UI panel COMPLETE, ghost preview COMPLETE, B-key shortcut IMPLEMENTING, resource deduction on placement IMPLEMENTING**
+
+Files:
+- `game/world/villageLayout/index.ts` — `generateVillageLayout()` entry point
+- `game/world/villageLayout/types.ts` — `VillageLayout`, `StreetSegment`, `BuildingLot`, `BlueprintPlacement`, `FurniturePlacement`
+- `game/world/villageLayout/lots.ts` — `buildLots()`, `pickBlueprintId()`, blueprint pool
+- `game/world/villageLayout/furniture.ts` — `lampPostsAlongStreet()`, `wellAtIntersection()`, `buildingFrontFurniture()`
+- `game/world/villageLayout.test.ts` — 37 tests covering determinism, grid dims, buildings, lots, furniture, cross-street probability, height sampling
