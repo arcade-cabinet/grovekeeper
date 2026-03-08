@@ -2,18 +2,20 @@ export type {
   AchievementDef,
   AchievementPopupContainerProps,
   AchievementPopupItem,
-} from "./AchievementPopup";
+} from "./AchievementPopup/index.tsx";
 export {
   AchievementPopupContainer,
   showAchievement,
   useAchievementPopupStore,
-} from "./AchievementPopup";
+} from "./AchievementPopup/index.tsx";
 export type { ActionButtonProps, TileState } from "./ActionButton.tsx";
 export { ActionButton, getActionLabel } from "./ActionButton.tsx";
 export type { BatchHarvestButtonProps } from "./BatchHarvestButton.tsx";
 export { BatchHarvestButton } from "./BatchHarvestButton.tsx";
 export type { BuildPanelProps } from "./BuildPanel.tsx";
 export { BuildPanel } from "./BuildPanel.tsx";
+export type { ForgingPanelProps } from "./ForgingPanel.tsx";
+export { ForgingPanel } from "./ForgingPanel.tsx";
 export { GameErrorBoundary } from "./ErrorBoundary.tsx";
 export { FarmerMascot } from "./FarmerMascot.tsx";
 export type { HUDProps } from "./HUD.tsx";
@@ -21,10 +23,8 @@ export { HUD } from "./HUD.tsx";
 export { Logo } from "./Logo.tsx";
 export type { MainMenuProps } from "./MainMenu.tsx";
 export { MainMenu } from "./MainMenu.tsx";
-export type { MinimapSnapshot } from "./minimap/index.ts";
-export { MiniMap, MinimapSVG, readMinimapSnapshot } from "./minimap/index.ts";
-export type { MiniMapOverlayProps } from "./minimap/index.ts";
-export { MiniMapOverlay } from "./minimap/index.ts";
+export type { MiniMapOverlayProps, MinimapSnapshot } from "./minimap/index.ts";
+export { MiniMap, MiniMapOverlay, MinimapSVG, readMinimapSnapshot } from "./minimap/index.ts";
 export type {
   GameMode,
   NewGameConfig,
@@ -40,8 +40,8 @@ export type {
   PauseMenuProps,
   PauseMenuStats,
   PrestigeInfo,
-} from "./PauseMenu";
-export { PauseMenu } from "./PauseMenu";
+} from "./PauseMenu/index.tsx";
+export { PauseMenu } from "./PauseMenu/index.tsx";
 export type { PlacementGhostProps } from "./PlacementGhost.tsx";
 export {
   PlacementGhostMeshLayer,
