@@ -13,10 +13,9 @@
 import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
 import { MeshStandardMaterial, PlaneGeometry, SphereGeometry } from "three";
-
-import type { EnemyComponent, HealthComponent } from "@/game/ecs/world";
+import type { EnemyComponent, Entity } from "@/game/ecs/world";
 import { enemiesQuery } from "@/game/ecs/world";
-import type { Entity } from "@/game/ecs/world";
+import { resolveAssetUrl } from "@/game/utils/resolveAssetUrl";
 
 // ---------------------------------------------------------------------------
 // Pure utility functions (exported for testing)
@@ -84,14 +83,8 @@ const HealthBar = ({ hp, maxHp, position }: HealthBarProps) => {
   const visible = hp < maxHp;
 
   // Geometry is memoised — recreated only when dimensions change
-  const bgGeo = useMemo(
-    () => new PlaneGeometry(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT),
-    [],
-  );
-  const fillGeo = useMemo(
-    () => new PlaneGeometry(fillWidth, HEALTH_BAR_HEIGHT),
-    [fillWidth],
-  );
+  const bgGeo = useMemo(() => new PlaneGeometry(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT), []);
+  const fillGeo = useMemo(() => new PlaneGeometry(fillWidth, HEALTH_BAR_HEIGHT), [fillWidth]);
 
   if (!visible) return null;
 
@@ -158,7 +151,7 @@ interface EnemyGLBProps {
  * (Rules of Hooks). Only mounted when the model path is valid.
  */
 const EnemyGLB = ({ glbPath, position, rotationY, hp, maxHp }: EnemyGLBProps) => {
-  const { scene } = useGLTF(glbPath);
+  const { scene } = useGLTF(resolveAssetUrl(glbPath));
   const cloned = useMemo(() => scene.clone(true), [scene]);
 
   return (
@@ -195,13 +188,7 @@ const EnemyEntityRenderer = ({ entity }: EnemyEntityRendererProps) => {
   }
 
   return (
-    <EnemyGLB
-      glbPath={modelPath}
-      position={worldPos}
-      rotationY={rotationY}
-      hp={hp}
-      maxHp={maxHp}
-    />
+    <EnemyGLB glbPath={modelPath} position={worldPos} rotationY={rotationY} hp={hp} maxHp={maxHp} />
   );
 };
 
@@ -225,7 +212,10 @@ export const EnemyMeshes = () => {
   return (
     <group name="enemy-meshes">
       {entities.map((entity) => (
-        <EnemyEntityRenderer key={entity.id} entity={entity as EnemyEntityRendererProps["entity"]} />
+        <EnemyEntityRenderer
+          key={entity.id}
+          entity={entity as EnemyEntityRendererProps["entity"]}
+        />
       ))}
     </group>
   );

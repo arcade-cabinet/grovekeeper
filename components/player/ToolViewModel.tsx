@@ -17,6 +17,7 @@ import type * as THREE from "three";
 
 import toolVisualsData from "@/config/game/toolVisuals.json" with { type: "json" };
 import { useGameStore } from "@/game/stores";
+import { resolveAssetUrl } from "@/game/utils/resolveAssetUrl";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -204,7 +205,7 @@ const ToolGLBModel = ({
   bobFrequency,
   swapAnimRef,
 }: ToolGLBModelProps) => {
-  const { scene } = useGLTF(glbPath);
+  const { scene } = useGLTF(resolveAssetUrl(glbPath));
   const { camera } = useThree();
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
   const groupRef = useRef<THREE.Group>(null);
@@ -292,7 +293,7 @@ export const ToolViewModel = ({ moveDirection = ZERO_DIRECTION }: ToolViewModelP
         activeAnimRef.current = anime(buildSwapUpParams(swapAnimRef.current, swapConfig.duration));
       }),
     );
-    // biome-ignore lint/react-hooks/exhaustiveDepsList: intentionally omit displayedToolId — only re-trigger on user tool selection, not on internal swap completion
+    // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally omit displayedToolId — only re-trigger on user tool selection, not on internal swap completion
   }, [selectedTool]);
 
   const glbPath = resolveToolGLBPath(displayedToolId, config);

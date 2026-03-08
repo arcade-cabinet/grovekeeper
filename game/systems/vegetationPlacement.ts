@@ -56,12 +56,14 @@ export function resolveTreeModelPath(
   isWinter: boolean,
 ): string {
   if (isWinter && modelKey) {
-    return pack === "retro" ? `trees/winter/${modelKey}.glb` : `trees/base/${modelKey}.glb`;
+    return pack === "retro"
+      ? `assets/models/trees/winter/${modelKey}.glb`
+      : `assets/models/trees/base/${modelKey}.glb`;
   }
   if (pack === "extra") {
-    return `trees/extra/${modelKey}.glb`;
+    return `assets/models/trees/extra/${modelKey}.glb`;
   }
-  return `trees/base/${modelKey}.glb`;
+  return `assets/models/trees/base/${modelKey}.glb`;
 }
 
 /**
@@ -235,8 +237,10 @@ export function spawnChunkVegetation(
         wild: true,
         pruned: false,
         fertilized: false,
-        baseModel: models.baseModel,
-        winterModel: models.winterModel,
+        baseModel: resolveTreeModelPath(models.baseModel, models.pack, false),
+        winterModel: models.winterModel
+          ? resolveTreeModelPath(models.winterModel, models.pack, true)
+          : "",
         useWinterModel: models.winterModel !== "",
         seasonTint: "#388E3C",
       },

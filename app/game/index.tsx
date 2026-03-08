@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { BushModel } from "@/components/entities/BushModel";
+import { EnemyMeshes } from "@/components/entities/EnemyMesh";
 import { FenceInstances } from "@/components/entities/FenceInstances";
 import { GrassInstances } from "@/components/entities/GrassInstances";
 import { GrovekeeperSpirit } from "@/components/entities/GrovekeeperSpirit";
@@ -12,7 +13,6 @@ import { NpcModel } from "@/components/entities/NpcModel";
 import { PropInstances } from "@/components/entities/PropInstances";
 import { StructureInstances } from "@/components/entities/StructureInstances";
 import { TreeInstances } from "@/components/entities/TreeInstances";
-import { ToolViewModel } from "@/components/player/ToolViewModel";
 import { ActionButton } from "@/components/game/ActionButton";
 import { HUD } from "@/components/game/HUD";
 import { PauseMenu } from "@/components/game/PauseMenu";
@@ -20,13 +20,13 @@ import { SeedSelect } from "@/components/game/SeedSelect";
 import { TutorialOverlay } from "@/components/game/TutorialOverlay";
 import { FPSCamera } from "@/components/player/FPSCamera";
 import { PlayerCapsule } from "@/components/player/PlayerCapsule";
+import { ToolViewModel } from "@/components/player/ToolViewModel";
 import { TouchLookZone } from "@/components/player/TouchLookZone";
-import { EnemyMeshes } from "@/components/entities/EnemyMesh";
 import { BirmotherMesh } from "@/components/scene/BirmotherMesh";
 import { Lighting } from "@/components/scene/Lighting";
 import { Sky } from "@/components/scene/Sky";
-import { WaterBodies } from "@/components/scene/WaterBody";
 import { TerrainChunks } from "@/components/scene/TerrainChunk";
+import { WaterBodies } from "@/components/scene/WaterBody";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
 import { bushesQuery, dayNightQuery, npcsQuery } from "@/game/ecs/world";
@@ -38,7 +38,10 @@ import { useRaycast } from "@/game/hooks/useRaycast";
 import { useSpiritProximity } from "@/game/hooks/useSpiritProximity";
 import { ChunkStreamer, useWorldLoader } from "@/game/hooks/useWorldLoader";
 import { useGameStore } from "@/game/stores";
+import { startAudio } from "@/game/systems/AudioManager";
 import { ACHIEVEMENTS } from "@/game/systems/achievements";
+import type { AmbientAudioState } from "@/game/systems/ambientAudio";
+import { initAmbientLayers } from "@/game/systems/ambientAudio";
 import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import {
   calculatePrestigeBonus,
@@ -48,9 +51,6 @@ import {
   PRESTIGE_MIN_LEVEL,
 } from "@/game/systems/prestige";
 import { computeTimeState, getLightIntensity, getSkyColors } from "@/game/systems/time";
-import { startAudio } from "@/game/systems/AudioManager";
-import { initAmbientLayers } from "@/game/systems/ambientAudio";
-import type { AmbientAudioState } from "@/game/systems/ambientAudio";
 import { createToneLayerNode } from "@/game/systems/toneLayerFactory";
 
 /** Null-rendering component that drives all game systems via useFrame. */
@@ -244,7 +244,7 @@ export default function GameScreen() {
   const { moveDirection } = useInput();
 
   // Interaction hook (tile/tree/NPC selection and game actions)
-  const { tileState, onGroundTap, onTreeTap, onNpcTap, executeAction } = useInteraction();
+  const { tileState, onGroundTap: _onGroundTap, onTreeTap, onNpcTap: _onNpcTap, executeAction } = useInteraction();
 
   // Time-of-day visual state for the 3D scene (Lighting + Sky).
   // Prefer ECS DayNightComponent values (8-slot lerped) when available.
@@ -295,7 +295,7 @@ export default function GameScreen() {
       <View style={styles.container} onTouchStart={handleFirstGesture}>
         {/* 3D Canvas — antialias:false + dpr=1 per PSX aesthetic (Spec §28.1).
             No MSAA framebuffer allocation → lower mobile GPU memory. */}
-        <Canvas shadows style={styles.canvas} gl={{ antialias: false }} dpr={1}>
+        <Canvas shadows="percentage" style={styles.canvas} gl={{ antialias: false }} dpr={1}>
           <Physics>
             <GameSystems />
             <FPSCamera />

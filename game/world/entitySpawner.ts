@@ -16,6 +16,7 @@ import type {
   GrassComponent,
   TreeComponent,
 } from "@/game/ecs/components/vegetation";
+import { resolveTreeModelPath } from "@/game/systems/vegetationPlacement";
 import { scopedRNG } from "@/game/utils/seedWords";
 import type { BiomeType } from "./biomeMapper.ts";
 
@@ -148,7 +149,7 @@ export function getBiomeSpeciesPool(biome: BiomeType): string[] {
   return BIOME_SPECIES_POOL[biome];
 }
 
-/** Look up vegetation model keys for a species ID. Falls back to "tree01". */
+/** Look up vegetation model paths for a species ID. Falls back to "tree01". */
 function resolveSpeciesModels(speciesId: string): {
   baseModel: string;
   winterModel: string;
@@ -156,11 +157,16 @@ function resolveSpeciesModels(speciesId: string): {
 } {
   const entry = speciesModelMapping[speciesId];
   if (!entry) {
-    return { baseModel: "tree01", winterModel: "", useWinterModel: false };
+    return {
+      baseModel: resolveTreeModelPath("tree01", "retro", false),
+      winterModel: "",
+      useWinterModel: false,
+    };
   }
+  const pack = (entry.pack ?? "retro") as "retro" | "extra";
   return {
-    baseModel: entry.baseModel,
-    winterModel: entry.winterModel,
+    baseModel: resolveTreeModelPath(entry.baseModel, pack, false),
+    winterModel: entry.winterModel ? resolveTreeModelPath(entry.winterModel, pack, true) : "",
     useWinterModel: entry.winterModel !== "",
   };
 }

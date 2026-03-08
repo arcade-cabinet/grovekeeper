@@ -1,20 +1,80 @@
 {
   "speciesModelMapping": {
-    "white-oak": { "baseModel": "tree01", "winterModel": "tree01_winter", "pack": "retro" },
-    "weeping-willow": { "baseModel": "tree02", "winterModel": "tree02_winter", "pack": "retro" },
-    "elder-pine": { "baseModel": "tree03", "winterModel": "tree03_winter", "pack": "retro" },
-    "cherry-blossom": { "baseModel": "tree04", "winterModel": "tree04_winter", "pack": "retro" },
-    "ghost-birch": { "baseModel": "tree05", "winterModel": "tree05_winter", "pack": "retro" },
-    "redwood": { "baseModel": "tree06", "winterModel": "tree06_winter", "pack": "retro" },
-    "flame-maple": { "baseModel": "tree07", "winterModel": "", "pack": "retro" },
-    "baobab": { "baseModel": "tree08", "winterModel": "", "pack": "retro" },
-    "silver-birch": { "baseModel": "tree01", "winterModel": "tree01_winter", "pack": "extra" },
-    "ironbark": { "baseModel": "tree05", "winterModel": "", "pack": "extra" },
-    "golden-apple": { "baseModel": "tree09", "winterModel": "", "pack": "extra" },
-    "mystic-fern": { "baseModel": "tree15", "winterModel": "", "pack": "extra" },
-    "crystal-oak": { "baseModel": "tree20", "winterModel": "", "pack": "extra" },
-    "moonwood-ash": { "baseModel": "tree25", "winterModel": "", "pack": "extra" },
-    "worldtree": { "baseModel": "tree30", "winterModel": "", "pack": "extra" }
+    "white-oak": {
+      "baseModel": "tree01",
+      "winterModel": "tree01_winter",
+      "pack": "retro"
+    },
+    "weeping-willow": {
+      "baseModel": "tree02",
+      "winterModel": "tree02_winter",
+      "pack": "retro"
+    },
+    "elder-pine": {
+      "baseModel": "tree03",
+      "winterModel": "tree03_winter",
+      "pack": "retro"
+    },
+    "cherry-blossom": {
+      "baseModel": "tree04",
+      "winterModel": "tree04_winter",
+      "pack": "retro"
+    },
+    "ghost-birch": {
+      "baseModel": "tree05",
+      "winterModel": "tree05_winter",
+      "pack": "retro"
+    },
+    "redwood": {
+      "baseModel": "tree06",
+      "winterModel": "tree06_winter",
+      "pack": "retro"
+    },
+    "flame-maple": {
+      "baseModel": "tree07",
+      "winterModel": "",
+      "pack": "retro"
+    },
+    "baobab": {
+      "baseModel": "tree08",
+      "winterModel": "",
+      "pack": "retro"
+    },
+    "silver-birch": {
+      "baseModel": "tree01",
+      "winterModel": "tree01_winter",
+      "pack": "extra"
+    },
+    "ironbark": {
+      "baseModel": "tree05",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "golden-apple": {
+      "baseModel": "tree09",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "mystic-fern": {
+      "baseModel": "tree15",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "crystal-oak": {
+      "baseModel": "tree20",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "moonwood-ash": {
+      "baseModel": "tree25",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "worldtree": {
+      "baseModel": "tree30",
+      "winterModel": "",
+      "pack": "extra"
+    }
   },
   "seasonalTints": {
     "deciduous": {
@@ -114,22 +174,7 @@
     "bush_tall_half_single",
     "bush_tall_open_right",
     "bush_tall_overgrown",
-    "bush_tall_single",
-    "bush_single",
-    "bush_half",
-    "bush_open_right",
-    "bush_corner",
-    "bush_connector_low",
-    "bush_connector_low_end",
-    "bush_connector_high",
-    "bush_long_corner",
-    "bush_long_low",
-    "bush_tall_corner",
-    "bush_tall_low",
-    "bush_overgrown_tall",
-    "bush_overgrown_half",
-    "bush_full",
-    "bush_half_single"
+    "bush_tall_single"
   ],
   "grassScatterRadius": 1.5,
   "bushRootsProbability": 0.3,
@@ -186,37 +231,112 @@
   "biomeGrass": {
     "temperate": {
       "types": [
-        { "grassType": "grass01", "probability": 0.8, "baseDensity": 5, "densityVariance": 0.4 },
-        { "grassType": "grass02", "probability": 0.7, "baseDensity": 4, "densityVariance": 0.3 },
-        { "grassType": "grass03", "probability": 0.5, "baseDensity": 3, "densityVariance": 0.4 },
-        { "grassType": "grass_bush", "probability": 0.3, "baseDensity": 2, "densityVariance": 0.5 },
-        { "grassType": "grass_patch", "probability": 0.4, "baseDensity": 1, "densityVariance": 0.3 }
+        {
+          "grassType": "grass01",
+          "probability": 0.8,
+          "baseDensity": 5,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass02",
+          "probability": 0.7,
+          "baseDensity": 4,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass03",
+          "probability": 0.5,
+          "baseDensity": 3,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass_bush",
+          "probability": 0.3,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass_patch",
+          "probability": 0.4,
+          "baseDensity": 1,
+          "densityVariance": 0.3
+        }
       ]
     },
     "wetland": {
       "types": [
-        { "grassType": "grass04", "probability": 0.9, "baseDensity": 6, "densityVariance": 0.3 },
-        { "grassType": "grass05", "probability": 0.8, "baseDensity": 5, "densityVariance": 0.4 },
-        { "grassType": "grass_bush", "probability": 0.6, "baseDensity": 3, "densityVariance": 0.5 },
-        { "grassType": "grass_patch", "probability": 0.5, "baseDensity": 2, "densityVariance": 0.3 }
+        {
+          "grassType": "grass04",
+          "probability": 0.9,
+          "baseDensity": 6,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass05",
+          "probability": 0.8,
+          "baseDensity": 5,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass_bush",
+          "probability": 0.6,
+          "baseDensity": 3,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass_patch",
+          "probability": 0.5,
+          "baseDensity": 2,
+          "densityVariance": 0.3
+        }
       ]
     },
     "mountain": {
       "types": [
-        { "grassType": "grass06", "probability": 0.5, "baseDensity": 2, "densityVariance": 0.5 },
-        { "grassType": "grass07", "probability": 0.4, "baseDensity": 2, "densityVariance": 0.4 }
+        {
+          "grassType": "grass06",
+          "probability": 0.5,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass07",
+          "probability": 0.4,
+          "baseDensity": 2,
+          "densityVariance": 0.4
+        }
       ]
     },
     "tundra": {
       "types": [
-        { "grassType": "grass08", "probability": 0.3, "baseDensity": 1, "densityVariance": 0.3 },
-        { "grassType": "grass09", "probability": 0.2, "baseDensity": 1, "densityVariance": 0.4 }
+        {
+          "grassType": "grass08",
+          "probability": 0.3,
+          "baseDensity": 1,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass09",
+          "probability": 0.2,
+          "baseDensity": 1,
+          "densityVariance": 0.4
+        }
       ]
     },
     "savanna": {
       "types": [
-        { "grassType": "grass01", "probability": 0.7, "baseDensity": 4, "densityVariance": 0.5 },
-        { "grassType": "grass03", "probability": 0.6, "baseDensity": 3, "densityVariance": 0.4 },
+        {
+          "grassType": "grass01",
+          "probability": 0.7,
+          "baseDensity": 4,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass03",
+          "probability": 0.6,
+          "baseDensity": 3,
+          "densityVariance": 0.4
+        },
         {
           "grassType": "grass_patch_corner",
           "probability": 0.3,
@@ -227,15 +347,40 @@
     },
     "coastal": {
       "types": [
-        { "grassType": "grass02", "probability": 0.6, "baseDensity": 3, "densityVariance": 0.4 },
-        { "grassType": "grass04", "probability": 0.5, "baseDensity": 3, "densityVariance": 0.3 },
-        { "grassType": "grass_bush", "probability": 0.4, "baseDensity": 2, "densityVariance": 0.5 }
+        {
+          "grassType": "grass02",
+          "probability": 0.6,
+          "baseDensity": 3,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass04",
+          "probability": 0.5,
+          "baseDensity": 3,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass_bush",
+          "probability": 0.4,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        }
       ]
     },
     "enchanted": {
       "types": [
-        { "grassType": "grass05", "probability": 0.8, "baseDensity": 5, "densityVariance": 0.3 },
-        { "grassType": "grass_bush", "probability": 0.7, "baseDensity": 4, "densityVariance": 0.4 },
+        {
+          "grassType": "grass05",
+          "probability": 0.8,
+          "baseDensity": 5,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass_bush",
+          "probability": 0.7,
+          "baseDensity": 4,
+          "densityVariance": 0.4
+        },
         {
           "grassType": "grass_patch",
           "probability": 0.5,
@@ -252,9 +397,24 @@
     },
     "highland": {
       "types": [
-        { "grassType": "grass06", "probability": 0.6, "baseDensity": 3, "densityVariance": 0.4 },
-        { "grassType": "grass07", "probability": 0.5, "baseDensity": 2, "densityVariance": 0.5 },
-        { "grassType": "grass09", "probability": 0.3, "baseDensity": 1, "densityVariance": 0.3 }
+        {
+          "grassType": "grass06",
+          "probability": 0.6,
+          "baseDensity": 3,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass07",
+          "probability": 0.5,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass09",
+          "probability": 0.3,
+          "baseDensity": 1,
+          "densityVariance": 0.3
+        }
       ]
     }
   },
@@ -264,7 +424,11 @@
       "maxChunks": 12,
       "types": ["hedge_labyrinth", "village", "large_rock_formation"]
     },
-    "minor": { "minChunks": 3, "maxChunks": 4, "types": ["pond", "overlook", "camp", "grove"] },
+    "minor": {
+      "minChunks": 3,
+      "maxChunks": 4,
+      "types": ["pond", "overlook", "camp", "grove"]
+    },
     "micro": {
       "minChunks": 1,
       "maxChunks": 1,

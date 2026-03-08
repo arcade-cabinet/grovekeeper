@@ -13,6 +13,7 @@ import { useMemo } from "react";
 import { Mesh, MeshStandardMaterial } from "three";
 import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
 import type { VegetationSeason } from "@/game/ecs/components/vegetation";
+import { resolveAssetUrl } from "@/game/utils/resolveAssetUrl";
 
 // ---------------------------------------------------------------------------
 // Constants (Spec §6.3)
@@ -54,7 +55,7 @@ export function resolveBushGLBPath(bushShape: string, season: VegetationSeason):
       `[BushModel] Unknown bushShape: "${bushShape}". Check config/game/vegetation.json bushShapes.`,
     );
   }
-  return `assets/models/bushes/${buildModelKey(bushShape, season)}.glb`;
+  return `assets/models/bushes/${season}/${buildModelKey(bushShape, season)}.glb`;
 }
 
 // ---------------------------------------------------------------------------
@@ -74,7 +75,7 @@ interface BushGLBModelProps {
  * the useGLTF cache.
  */
 const BushGLBModel = ({ glbPath, tintColor }: BushGLBModelProps) => {
-  const { scene } = useGLTF(glbPath);
+  const { scene } = useGLTF(resolveAssetUrl(glbPath));
   const cloned = useMemo(() => {
     const s = scene.clone(true);
     if (tintColor) {

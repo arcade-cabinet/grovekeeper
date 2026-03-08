@@ -19,7 +19,16 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type * as React from "react";
 import { useMemo, useRef } from "react";
-import { BufferGeometry, InstancedMesh, Material, Matrix4, Mesh, Quaternion, Vector3 } from "three";
+import {
+  type BufferGeometry,
+  type InstancedMesh,
+  type Material,
+  Matrix4,
+  Mesh,
+  Quaternion,
+  Vector3,
+} from "three";
+import { resolveAssetUrl } from "@/game/utils/resolveAssetUrl";
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -92,7 +101,7 @@ export const StaticModelInstances = ({
   capacity,
   entitiesRef,
 }: StaticModelInstancesProps) => {
-  const { scene } = useGLTF(glbPath);
+  const { scene } = useGLTF(resolveAssetUrl(glbPath));
 
   /** All Mesh children extracted from the GLB scene, with their geometry + material. */
   const meshInfos = useMemo<Array<{ geo: BufferGeometry; mat: Material }>>(() => {
@@ -146,6 +155,7 @@ export const StaticModelInstances = ({
     <>
       {meshInfos.map(({ geo, mat }, i) => (
         <instancedMesh
+          // biome-ignore lint/suspicious/noArrayIndexKey: instancedMesh list is stable — same geo+mat order per render
           key={i}
           ref={(el: InstancedMesh | null) => {
             if (el) {

@@ -13,7 +13,16 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo } from "react-native";
-import { BackSide, Color, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, ShaderMaterial, Vector3 } from "three";
+import {
+  BackSide,
+  Color,
+  type InstancedMesh,
+  Matrix4,
+  type Mesh,
+  type MeshStandardMaterial,
+  type ShaderMaterial,
+  Vector3,
+} from "three";
 import theme from "@/config/theme.json" with { type: "json" };
 import { createRNG } from "@/game/utils/seedRNG";
 
@@ -202,8 +211,8 @@ export const Sky = ({ skyColors, season, sunIntensity, starIntensity = 0 }: SkyP
 
   return (
     <>
-      {/* Sky dome — inverted sphere with gradient shader */}
-      <mesh ref={meshRef} scale={[-1, 1, 1]}>
+      {/* Sky dome — sphere with BackSide rendering; camera is inside it. */}
+      <mesh ref={meshRef}>
         <sphereGeometry args={[80, 32, 16]} />
         <shaderMaterial
           ref={matRef}

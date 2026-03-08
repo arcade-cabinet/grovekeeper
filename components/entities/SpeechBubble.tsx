@@ -19,7 +19,6 @@ import type * as THREE from "three";
 
 // Font file resolved by Metro/webpack bundler to a URL at runtime.
 // In Jest tests, @react-three/drei is mocked so the font value is never used.
-// biome-ignore lint/style/noCommaOperator: asset require — bundler resolves to URL
 const FREDOKA_FONT =
   require("@expo-google-fonts/fredoka/400Regular/Fredoka_400Regular.ttf") as string;
 

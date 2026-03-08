@@ -18,7 +18,7 @@ case "$CMD" in
     echo "Running pre-commit quality checks..."
     pnpm lint 2>&1 || { echo "Lint failed -- commit blocked"; exit 2; }
     pnpm tsc 2>&1 || { echo "TypeScript check failed -- commit blocked"; exit 2; }
-    pnpm test:run 2>&1 || { echo "Tests failed -- commit blocked"; exit 2; }
+    pnpm test 2>&1 || { echo "Tests failed -- commit blocked"; exit 2; }
     echo "Pre-commit checks passed"
     ;;
 esac

@@ -9,10 +9,10 @@
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import growthConfig from "@/config/game/growth.json" with { type: "json" };
 import type { TreeComponent } from "@/game/ecs/components/vegetation";
+import { resolveTreeModelPath, speciesToTreeModel } from "@/game/systems/vegetationPlacement";
 import { scopedRNG } from "@/game/utils/seedWords";
-import { speciesToTreeModel } from "@/game/systems/vegetationPlacement";
-import { getBiomeSpeciesPool } from "@/game/world/entitySpawner";
 import type { BiomeType } from "@/game/world/biomeMapper";
+import { getBiomeSpeciesPool } from "@/game/world/entitySpawner";
 
 // Constants from config
 const CHUNK_SIZE: number = gridConfig.chunkSize;
@@ -146,8 +146,10 @@ export function buildWildTreeSpawn(
       wild: true,
       pruned: false,
       fertilized: false,
-      baseModel: models.baseModel,
-      winterModel: models.winterModel,
+      baseModel: resolveTreeModelPath(models.baseModel, models.pack, false),
+      winterModel: models.winterModel
+        ? resolveTreeModelPath(models.winterModel, models.pack, true)
+        : "",
       useWinterModel: models.winterModel !== "",
       seasonTint: "#388E3C",
     },

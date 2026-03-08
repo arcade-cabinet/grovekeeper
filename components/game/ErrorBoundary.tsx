@@ -40,6 +40,7 @@ export class GameErrorBoundary extends Component<Props, State> {
     // expo-updates reload is preferred if available; fallback to reset.
     try {
       // Attempt Expo Updates reload if available
+      // biome-ignore lint/correctness/noUndeclaredDependencies: expo-updates is an optional peer dep (may not be installed in all envs)
       const Updates = require("expo-updates");
       if (Updates?.reloadAsync) {
         Updates.reloadAsync();

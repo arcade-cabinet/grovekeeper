@@ -147,7 +147,6 @@ export function getBiomeWaterRule(biome: BiomeType): BiomeWaterRule {
       return { probability: 0.15, riverChance: 0.1, streamChance: 0.0 };
     case "twilight-glade":
       return { probability: 0.2, riverChance: 0.2, streamChance: 0.0 };
-    case "starting-grove":
     default:
       return { probability: 0.1, riverChance: 0.0, streamChance: 0.0 };
   }

@@ -6,18 +6,18 @@
 
 import { observable } from "@legendapp/state";
 import { emptyResources } from "@/game/config/resources";
-import { initializeChainState } from "@/game/quests/questChainEngine";
-import type { QuestChainState } from "@/game/quests/types";
 import { initializeEventState } from "@/game/events/eventScheduler";
 import type { EventState } from "@/game/events/types";
-import { initializeMarketEventState, type MarketEventState } from "@/game/systems/marketEvents";
-import { initializeMarketState, type MarketState } from "@/game/systems/supplyDemand";
-import { initializeMerchantState, type MerchantState } from "@/game/systems/travelingMerchant";
-import { initialTutorialState, type TutorialState } from "@/game/systems/tutorial";
+import { initializeChainState } from "@/game/quests/questChainEngine";
+import type { QuestChainState } from "@/game/quests/types";
 import type { FastTravelPoint } from "@/game/systems/fastTravel";
+import { initializeMarketEventState, type MarketEventState } from "@/game/systems/marketEvents";
 import type { ActiveQuest } from "@/game/systems/quests";
 import type { SpeciesProgress } from "@/game/systems/speciesDiscovery";
+import { initializeMarketState, type MarketState } from "@/game/systems/supplyDemand";
 import type { Season } from "@/game/systems/time";
+import { initializeMerchantState, type MerchantState } from "@/game/systems/travelingMerchant";
+import { initialTutorialState, type TutorialState } from "@/game/systems/tutorial";
 import { chunkDiffs$ } from "@/game/world/chunkPersistence";
 
 // ---------------------------------------------------------------------------
@@ -79,18 +79,16 @@ const INITIAL_GAME_TIME = (() => {
   const day = 1;
   const month = 3; // March (Spring)
   const year = 1;
-  const microsecondsPerSecond = 1_000_000;
-  const secondsPerMinute = 60;
-  const minutesPerHour = 60;
-  const hoursPerDay = 24;
   const daysPerMonth = 30;
   const monthsPerYear = 12;
+  // One game "day" = 600 real seconds (from dayNight.json), not 86400.
+  // MICROSECONDS_PER_DAY must match time.ts: dayLengthSeconds * 1_000_000 = 600_000_000.
+  const MICROSECONDS_PER_DAY = 600 * 1_000_000;
   const totalDays =
     (year - 1) * monthsPerYear * daysPerMonth + (month - 1) * daysPerMonth + (day - 1);
-  const totalHours = totalDays * hoursPerDay + hours;
-  const totalMinutes = totalHours * minutesPerHour;
-  const totalSeconds = totalMinutes * secondsPerMinute;
-  return totalSeconds * microsecondsPerSecond;
+  // 8:00 AM = 8/24 of a compressed game day
+  const hourOffset = (hours / 24) * MICROSECONDS_PER_DAY;
+  return totalDays * MICROSECONDS_PER_DAY + hourOffset;
 })();
 
 // ---------------------------------------------------------------------------
