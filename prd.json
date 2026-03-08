@@ -2848,8 +2848,9 @@
         "npx jest --no-coverage passes"
       ],
       "priority": 169,
-      "passes": false,
-      "notes": "Phase 11. treeGeometry.ts is 950 lines of legacy SPS code — likely removable. PlayerGovernor.ts needs decomposition."
+      "passes": true,
+      "notes": "Phase 11. treeGeometry.ts is 950 lines of legacy SPS code — likely removable. PlayerGovernor.ts needs decomposition.",
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-170",
@@ -2889,6 +2890,6 @@
     }
   ],
   "metadata": {
-    "updatedAt": "2026-03-08T01:04:53.519Z"
+    "updatedAt": "2026-03-08T01:15:06.384Z"
   }
 }

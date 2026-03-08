@@ -3127,3 +3127,18 @@ after each iteration and it's included in prompts for context.
   - **`getFpsScreenCenter()` as pure export**: Pure functions that only call `Dimensions.get("window")` from react-native can be tested without mocking the component. Callsites simply call it at render time for screen-center positioning.
   - **Re-export pattern for sibling modules**: `RadialActionMenu.tsx` re-exports `getActionsForEntity` from `radialActions.ts` so callsites have a single import point — `import { RadialActionMenu, getActionsForEntity } from "@/components/game/RadialActionMenu"`.
 ---
+
+## 2026-03-07 - US-169
+- Assessed and removed dead code; decomposed two oversized AI modules.
+- Files changed:
+  - **Deleted**: `game/utils/treeGeometry.ts` (950 lines, no production imports after US-168 GLB migration) + its test
+  - **New subpackage** `game/ai/governor/`: types.ts, entity.ts, evaluators.ts, targeting.ts, navigation.ts, PlayerGovernor.ts, index.ts (all ≤243 lines)
+  - **New subpackage** `game/ai/npc/`: types.ts, config.ts, entity.ts, evaluators.ts, NpcBrain.ts, index.ts (all ≤243 lines)
+  - **Updated shims**: `game/ai/PlayerGovernor.ts` + `game/ai/NpcBrain.ts` → re-export shims (zero caller churn)
+- **Verification:** `npx tsc --noEmit` → 0 new errors; `npx jest --no-coverage` → 4070 tests, 170 suites pass
+- **Learnings:**
+  - **Shim re-export for zero-churn decomposition**: Replace the original monolith file with `export { X } from "./subpackage/index.ts"` — all callers (tests, game loop, etc.) continue to work without touching a single import path.
+  - **Dead code verification before deletion**: `grep -r "createTreeGeometry" --include="*.ts" --include="*.tsx" -l` (excluding test files) confirms zero production importers — safe to delete. A function with only test importers is dead production code.
+  - **navigation.ts pure-function extraction for 300-line compliance**: `buildNavPath(config, tileX, tileZ)` and `advanceNav(pathState, config)` as free functions accept their dependencies as params rather than closing over `this`. This decouples navigation logic from the class, makes it independently testable, and brings the class file under 300 lines.
+  - **TaggedEvaluator generic constraint**: `GoalEvaluator<TEntity>` from Yuka requires `TEntity extends GameEntity`. A bare `<TEntity>` in an interface that imports via `import("yuka").GoalEvaluator<TEntity>` causes TS2344. Fix: `import type { GameEntity, GoalEvaluator } from "yuka"` at top level + `<TEntity extends GameEntity>` on the interface.
+---
