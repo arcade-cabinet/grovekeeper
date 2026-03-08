@@ -67,6 +67,7 @@ import {
 import { getZoneBonusMagnitude, type ZoneType } from "@/game/systems/zoneBonuses";
 import { hashString } from "@/game/utils/seedRNG";
 import { tickAchievements } from "./tickAchievements.ts";
+import { tickBaseRaids, tickRaidCountdown } from "./tickBaseRaids.ts";
 import { tickCombatDeaths } from "./tickCombatDeaths.ts";
 import { tickGrowth } from "./tickGrowth.ts";
 import { tickNpcAI, tickNpcSchedules } from "./tickNpcAI.ts";
@@ -165,6 +166,10 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
           store.incrementWildTreesRegrown();
         }
       }
+
+      // Base raid check on day change (Spec §18.5, §34). Survival mode only.
+      const dayDiffConfig = getDifficultyById(store.difficulty);
+      tickBaseRaids(timeState.dayNumber, dayDiffConfig?.affectsGameplay ?? false);
     }
 
     if (timeState.season !== lastSeasonRef.current) {
@@ -404,6 +409,9 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
 
     // Combat deaths: detect defeated enemies, roll loot, credit resources (Spec §34).
     tickCombatDeaths(dt);
+
+    // Raid countdown: tick the warning timer for pending raids (Spec §18.5).
+    tickRaidCountdown(dt);
 
     // ── 6d. Water Particles ───────────────────────────────────────────────
 

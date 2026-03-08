@@ -1,12 +1,14 @@
 /**
  * Tree tool actions: plant, water, harvest, prune, fertilize.
  */
+import { getDifficultyById } from "@/game/config/difficulty";
 import type { ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
 import { createTreeEntity } from "@/game/ecs/archetypes";
 import { useGameStore } from "@/game/stores";
 import { collectHarvest, initHarvestable } from "@/game/systems/harvest";
-import { findCell, findTreeById, world } from "./queries";
+import { getZoneBonusMagnitude, type ZoneType } from "@/game/systems/zoneBonuses";
+import { findCell, findTreeById, world } from "./queries.ts";
 
 /**
  * Plant a tree at the given grid position.
@@ -76,7 +78,15 @@ export function harvestTree(treeEntityId: string): { type: string; amount: numbe
   if (!tree?.tree || tree.tree.stage < 3) return null;
 
   const store = useGameStore.getState();
-  const harvestResources = collectHarvest(tree, store.currentSeason);
+  const diffConfig = getDifficultyById(store.difficulty);
+  const baseYieldMult = diffConfig?.resourceYieldMult ?? 1.0;
+  // Apply zone-based harvest_boost (Spec §18). Forest zone +20%.
+  const harvestBoost = getZoneBonusMagnitude(
+    (store.currentZoneId ?? "grove") as ZoneType,
+    "harvest_boost",
+  );
+  const resourceYieldMult = baseYieldMult * (1 + harvestBoost);
+  const harvestResources = collectHarvest(tree, store.currentSeason, resourceYieldMult);
 
   if (harvestResources) {
     for (const r of harvestResources) {

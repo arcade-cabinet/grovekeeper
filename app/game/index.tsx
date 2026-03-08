@@ -75,7 +75,7 @@ import {
 import { computeTimeState, getLightIntensity, getSkyColors } from "@/game/systems/time";
 import { createToneLayerNode } from "@/game/systems/toneLayerFactory";
 import type { TradeRate } from "@/game/systems/trading";
-import { getTradeRates } from "@/game/systems/trading";
+import { getSeasonalTradeRates } from "@/game/systems/trading";
 import { openDialogueSession } from "@/game/ui/dialogueBridge";
 
 /** Inside-Canvas sentinel: fires onReady() once the first terrain chunk appears in ECS (Spec §1.3). */
@@ -350,7 +350,8 @@ export default function GameScreen() {
   const [tradeNpcName, setTradeNpcName] = useState<string | undefined>();
 
   // Trade rates for TradeDialog
-  const tradeRates = useMemo(() => getTradeRates(), []);
+  // Trade rates adjusted for current season (Spec §20).
+  const tradeRates = useMemo(() => getSeasonalTradeRates(currentSeason), [currentSeason]);
 
   /**
    * Opens NPC dialogue for the given entity.
