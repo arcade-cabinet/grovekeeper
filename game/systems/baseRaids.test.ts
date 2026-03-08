@@ -26,7 +26,11 @@ const nightDayNight: DayNightComponent = {
   ambientIntensity: 0.2,
   directionalColor: "#aaaacc",
   directionalIntensity: 0.3,
+  sunIntensity: 0.3,
   shadowOpacity: 0.5,
+  skyZenithColor: "#112244",
+  skyHorizonColor: "#334466",
+  starIntensity: 0.8,
 };
 
 describe("Base Raids System (Spec §18.5, §34)", () => {

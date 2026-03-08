@@ -19,6 +19,7 @@
  */
 
 import { Filter, FMSynth, Noise, Oscillator, Volume } from "tone";
+import type { ToneOscillatorType } from "tone";
 import type { LayerName } from "./ambientAudio";
 
 /** Minimal controllable interface for a single ambient synthesis layer node. */
@@ -45,7 +46,8 @@ export function createToneLayerNode(layer: LayerName): AmbientNode {
     case "insects":
       return makeNoiseFilterNode("white", "bandpass", 5200);
     case "crickets":
-      return makeOscillatorNode("pulse", 2400);
+      // Tone.js Oscillator does not support "pulse" type; "square" is acoustically equivalent
+    return makeOscillatorNode("square", 2400);
     case "water":
       return makeNoiseFilterNode("brown", "lowpass", 240);
     case "vegetation":
@@ -113,9 +115,9 @@ function makeFMSynthNode(): AmbientNode {
   };
 }
 
-function makeOscillatorNode(type: "pulse", freq: number): AmbientNode {
+function makeOscillatorNode(type: ToneOscillatorType, freq: number): AmbientNode {
   const vol = new Volume(-Infinity).toDestination();
-  const osc = new Oscillator({ frequency: freq, type });
+  const osc = new Oscillator(freq, type);
   osc.connect(vol);
 
   return {

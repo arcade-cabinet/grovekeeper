@@ -4,6 +4,9 @@
  * Accepts timeOfDay (0-1 normalized) and season props to drive
  * dynamic light colors and intensities. Ported from BabylonJS
  * LightingManager.ts for R3F.
+ *
+ * Fix W6-B: Now accepts shadowOpacity from ECS DayNightComponent to scale
+ * directional light intensity — 0 at night, 1 at noon (Spec §31.3).
  */
 
 import { useFrame } from "@react-three/fiber";
@@ -19,6 +22,13 @@ export interface LightingProps {
   sunIntensity: number;
   /** Ambient intensity from time system (0.15-0.8). */
   ambientIntensity: number;
+  /**
+   * Shadow opacity from ECS DayNightComponent (0-1).
+   * 0 at night (no shadows), 0.3 at dawn/dusk, 1.0 at noon.
+   * Scales the directional light intensity so shadows fade naturally.
+   * Defaults to sunIntensity when not provided (fallback path).
+   */
+  shadowOpacity?: number;
   /** Sky colors — zenith, horizon, sun, ambient as hex strings. */
   skyColors: {
     zenith: string;
@@ -35,7 +45,13 @@ function hexToColor3(hex: string): THREE.Color {
   return new THREE.Color(hex);
 }
 
-export const Lighting = ({ timeOfDay, sunIntensity, ambientIntensity, skyColors }: LightingProps) => {
+export const Lighting = ({
+  timeOfDay,
+  sunIntensity,
+  ambientIntensity,
+  shadowOpacity,
+  skyColors,
+}: LightingProps) => {
   const sunRef = useRef<THREE.DirectionalLight>(null);
   const ambientRef = useRef<THREE.AmbientLight>(null);
 
@@ -44,10 +60,15 @@ export const Lighting = ({ timeOfDay, sunIntensity, ambientIntensity, skyColors 
     const ambient = ambientRef.current;
     if (!sun || !ambient) return;
 
+    // shadowOpacity (from ECS) scales the directional light intensity.
+    // When absent (fallback path), use sunIntensity directly.
+    const effectiveShadowOpacity = shadowOpacity ?? sunIntensity;
+
     // Update sun color from sky colors
     const sunColor = hexToColor3(skyColors.sun);
     sun.color.copy(sunColor);
-    sun.intensity = sunIntensity * 0.8;
+    // Base intensity scaled by shadow opacity so shadows fade at night/dusk/dawn.
+    sun.intensity = sunIntensity * 0.8 * Math.max(0.05, effectiveShadowOpacity);
 
     // Rotate sun direction based on timeOfDay prop (0=midnight, 0.5=noon, 1=midnight).
     // Derive game hours (0-24) from the normalized dayProgress value.

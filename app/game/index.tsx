@@ -3,8 +3,11 @@ import { Physics } from "@react-three/rapier";
 import { Stack } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { FenceInstances } from "@/components/entities/FenceInstances";
 import { GrassInstances } from "@/components/entities/GrassInstances";
 import { NpcMeshes } from "@/components/entities/NpcMeshes";
+import { PropInstances } from "@/components/entities/PropInstances";
+import { StructureInstances } from "@/components/entities/StructureInstances";
 import { TreeInstances } from "@/components/entities/TreeInstances";
 import { ActionButton } from "@/components/game/ActionButton";
 import { HUD } from "@/components/game/HUD";
@@ -269,6 +272,9 @@ export default function GameScreen() {
             <PlayerCapsule moveDirection={moveDirection} />
             <TreeInstances onTreeTap={onTreeTap} />
             <GrassInstances />
+            <StructureInstances />
+            <FenceInstances />
+            <PropInstances />
             <NpcMeshes onNpcTap={onNpcTap} />
             <BirmotherMesh />
           </Physics>

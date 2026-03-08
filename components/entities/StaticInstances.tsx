@@ -148,6 +148,11 @@ export const StaticModelInstances = ({
         <instancedMesh
           key={i}
           ref={(el: THREE.InstancedMesh | null) => {
+            if (el) {
+              // InstancedMesh sits at origin — position managed via setMatrixAt().
+              // Freeze the world matrix to skip Three.js per-frame recomputation (Spec §28).
+              el.matrixAutoUpdate = false;
+            }
             instancedRefs.current[i] = el;
           }}
           args={[geo, mat, capacity]}

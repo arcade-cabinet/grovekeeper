@@ -81,7 +81,28 @@ after each iteration and it's included in prompts for context.
 - **seenInWild feeds discoveryCount automatically**: `discoveryCount` in `useGameLoop.ts` counts `speciesProgress[*].tier >= 1`. Adding `seenInWild: true` → `tier=1` flows into existing achievement checks ("Keen Eye", "Codex Scholar") without extra wiring in the loop.
 - **Non-React class using useGameStore imperatively**: Plain classes (e.g. `ChunkManager`) use `useGameStore.getState()` for imperative store access — works outside React render cycle.
 - **Dedup before calling store on chunk load**: Collect unique species IDs with a local `Set` before calling `discoverWildSpecies`. The store is idempotent but dedup avoids N identical calls for N trees of the same species in one chunk.
+- **matrixAutoUpdate=false for static InstancedMesh**: InstancedMesh objects at scene origin that manage per-instance transforms via `setMatrixAt()` should set `el.matrixAutoUpdate = false` in their callback ref. Three.js won't auto-decompose position/rotation/scale into a world matrix every frame — saves per-frame work since the cluster position is fixed and instance data flows through `instanceMatrix`.
+- **Terrain chunk matrix freeze pattern**: For imperatively-created static meshes (not JSX), set position once in the creation block, then call `mesh.updateMatrix(); mesh.matrixAutoUpdate = false;`. Bakes the transform so Three.js skips per-frame recompute. Only valid for meshes whose world position never changes after creation.
+- **"Wire vs define" gap**: Instancing components that are fully defined but never mounted in the Canvas are invisible to the renderer. Always search for `<ComponentName />` in app/ and scene files — not just for the component file itself.
 
+---
+
+## 2026-03-07 - US-166
+- Implemented draw call performance optimization (Spec §28).
+- Files changed:
+  - `game/utils/drawCallAudit.ts` — new: pure utilities (`readDrawCalls`, `isOverBudget`, `formatDrawCallReport`, `drawCallHeadroom`, `DRAW_CALL_BUDGET=50`)
+  - `game/utils/drawCallAudit.test.ts` — new: 23 tests covering all pure functions
+  - `app/game/index.tsx` — wired `StructureInstances`, `FenceInstances`, `PropInstances` into Canvas (were defined but never mounted)
+  - `components/entities/StaticInstances.tsx` — added `matrixAutoUpdate = false` on InstancedMesh via callback ref (static world matrix — position managed via `setMatrixAt()`)
+  - `components/scene/TerrainChunk.tsx` — moved `mesh.position.set()` into first-creation block, added `mesh.updateMatrix(); mesh.matrixAutoUpdate = false;` to freeze static terrain chunk matrices
+  - `game/ecs/components/procedural.test.ts` — fixed pre-existing TS error: added missing `DayNightComponent` fields (`sunIntensity`, `skyZenithColor`, `skyHorizonColor`, `starIntensity`) to fixture
+  - `game/systems/baseRaids.test.ts` — fixed pre-existing TS error: same missing fields in `nightDayNight` fixture
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 4032 tests, 167 suites pass (+23 new tests)
+- **Learnings:**
+  - **Batching components existed but were never wired**: `StructureInstances`, `FenceInstances`, `PropInstances` were fully implemented following the `StaticInstances` pattern but not mounted in the game screen. The actual optimization requires both defining the batcher AND mounting it inside the R3F Canvas.
+  - **matrixAutoUpdate=false for InstancedMesh at origin**: InstancedMesh objects that sit at scene origin and manage per-instance transforms via `setMatrixAt()` don't benefit from Three.js's automatic position/rotation/scale → matrix decompose. Setting `matrixAutoUpdate = false` in the callback ref prevents the per-frame wasted recompute.
+  - **Terrain chunk matrix freeze pattern**: For static meshes created imperatively (not via JSX), set position once in the creation block, then call `mesh.updateMatrix(); mesh.matrixAutoUpdate = false;`. This bakes the transform and stops Three.js from recomputing it every frame — correct because chunk world positions never change after initial placement.
+  - **Buffer ring chunks are already "LOD via hidden"**: ChunkManager already sets `renderable.visible = false` on buffer ring (5x5) chunks. TerrainChunk.tsx reads `entity.renderable?.visible` and sets `mesh.visible = visible`. The acceptance criterion "distant chunks use simplified geometry or hidden" is satisfied without new code — just needed to be documented.
 ---
 
 ## 2026-03-07 - US-145

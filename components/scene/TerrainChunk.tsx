@@ -305,6 +305,11 @@ export const TerrainChunks = () => {
         });
         mesh = new THREE.Mesh(geometry, material);
         mesh.receiveShadow = true;
+        // Terrain chunks are static — position never changes after creation.
+        // Set once and freeze the world matrix to skip per-frame recomputation (Spec §28).
+        mesh.position.set(position.x, position.y, position.z);
+        mesh.updateMatrix();
+        mesh.matrixAutoUpdate = false;
         meshMap.set(id, mesh);
         group.add(mesh);
       }
@@ -313,9 +318,6 @@ export const TerrainChunks = () => {
       if (mesh.geometry !== geometry) {
         mesh.geometry = geometry;
       }
-
-      // Position at chunk world-space origin (ChunkManager sets position.x/z = chunkX/Z * CHUNK_SIZE)
-      mesh.position.set(position.x, position.y, position.z);
 
       // Visibility controlled by ChunkManager (active vs buffer ring)
       const visible = entity.renderable?.visible ?? true;

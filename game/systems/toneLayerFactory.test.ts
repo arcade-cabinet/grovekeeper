@@ -112,9 +112,9 @@ describe("createToneLayerNode -- layer-specific synthesis", () => {
 
   it("crickets: constructs pulse Oscillator + Volume (no Noise or Filter)", () => {
     createToneLayerNode("crickets");
-    expect(MockOscillator).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "pulse", frequency: 2400 }),
-    );
+    // Oscillator is called with (frequency, type) positional args since Tone.js
+    // Oscillator does not support "pulse" -- "square" is used instead.
+    expect(MockOscillator).toHaveBeenCalledWith(2400, "square");
     expect(MockNoise).not.toHaveBeenCalled();
     expect(MockFilter).not.toHaveBeenCalled();
     expect(MockVolume).toHaveBeenCalled();

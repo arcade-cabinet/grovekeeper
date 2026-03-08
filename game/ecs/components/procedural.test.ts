@@ -190,7 +190,11 @@ describe("Procedural ECS Components", () => {
           ambientIntensity: 1.0,
           directionalColor: "#fffaee",
           directionalIntensity: 0.9,
+          sunIntensity: 0.9,
           shadowOpacity: 0.8,
+          skyZenithColor: "#87ceeb",
+          skyHorizonColor: "#ffffff",
+          starIntensity: 0,
         },
       });
 
