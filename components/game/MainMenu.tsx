@@ -1,34 +1,24 @@
 /**
  * MainMenu -- entry screen for Grovekeeper.
- * Spec §26. Mobile-first, portrait-primary, brand-aligned vertical gradient.
+ * Spec §26. Dark forest RPG aesthetic. Mobile-first, portrait-primary.
+ *
+ * Brand: docs/plans/2026-03-07-ux-brand-design.md §8
+ * Tokens: components/ui/tokens.ts
  */
 import { LinearGradient } from "expo-linear-gradient";
 import { useMemo } from "react";
 import { View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { FarmerMascot } from "./FarmerMascot.tsx";
-import { Logo } from "./Logo.tsx";
+import { ACCENT, DARK, FONTS, HUD_PANEL, TYPE } from "@/components/ui/tokens";
 import {
-  LEAF_CONFIGS,
   FloatingLeaf,
+  LEAF_CONFIGS,
   LeftTreeSilhouette,
   RightTreeSilhouette,
   useReducedMotion,
 } from "./mainMenuBackground.tsx";
 import { hasSave, primaryButtonLabel, treeSummaryText } from "./mainMenuLogic.ts";
-
-// ---------------------------------------------------------------------------
-// Colors (match theme.json)
-// ---------------------------------------------------------------------------
-
-const C = {
-  forestGreen: "#2D5A27",
-  barkBrown: "#5D4037",
-  soilDark: "#3E2723",
-  leafLight: "#81C784",
-  skyMist: "#E8F5E9",
-} as const;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,7 +32,7 @@ export interface MainMenuProps {
 }
 
 // ---------------------------------------------------------------------------
-// Main menu component
+// Main menu component — Dark Forest RPG
 // ---------------------------------------------------------------------------
 
 export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: MainMenuProps) {
@@ -52,124 +42,125 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
 
   return (
     <LinearGradient
-      colors={[C.skyMist, `${C.leafLight}40`, `${C.forestGreen}30`]}
-      locations={[0, 0.5, 1]}
+      colors={[DARK.bgDeep, DARK.bgCanopy, DARK.bgBark]}
+      locations={[0, 0.6, 1]}
       className="flex-1 items-center justify-center px-4 py-6"
     >
-      {/* Background: silhouettes + floating leaves */}
+      {/* Background: dark silhouettes + bioluminescent particles */}
       <View className="absolute inset-0 overflow-hidden" pointerEvents="none">
         <LeftTreeSilhouette />
         <RightTreeSilhouette />
         {!reduceMotion && leaves.map((leaf, i) => <FloatingLeaf key={`leaf-${i}`} config={leaf} />)}
       </View>
 
-      {/* Card */}
-      <View
-        className="relative w-full items-center gap-4 rounded-2xl p-4"
-        style={{
-          maxWidth: 340,
-          backgroundColor: "white",
-          borderWidth: 3,
-          borderColor: `${C.forestGreen}40`,
-          shadowColor: C.forestGreen,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.19,
-          shadowRadius: 16,
-          elevation: 8,
-        }}
-      >
-        {/* Subtle gradient overlay on card */}
-        <LinearGradient
-          colors={["white", C.skyMist]}
-          locations={[0, 1]}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14 }}
-        />
-
-        {/* Logo */}
-        <View className="z-10">
-          <Logo size={160} />
-        </View>
-
-        {/* Mascot */}
-        <View className="z-10 items-center">
-          <FarmerMascot size={80} animate={!reduceMotion} />
-          <View
-            className="rounded-full"
-            style={{ width: 48, height: 8, marginTop: -4, backgroundColor: `${C.soilDark}30` }}
-          />
-        </View>
-
-        {/* Tagline */}
-        <Text className="z-10 text-center text-sm italic" style={{ color: C.barkBrown }}>
-          "Every forest begins with a single seed."
+      {/* Logo: GROVEKEEPER wordmark */}
+      <View className="z-10 mb-2 items-center">
+        <Text
+          style={{
+            ...TYPE.hero,
+            fontFamily: FONTS.display,
+            color: DARK.textPrimary,
+            letterSpacing: 4,
+            textShadowColor: ACCENT.sap,
+            textShadowOffset: { width: 0, height: 0 },
+            textShadowRadius: 12,
+          }}
+        >
+          GROVEKEEPER
         </Text>
+        <Text
+          style={{
+            ...TYPE.body,
+            fontFamily: FONTS.body,
+            color: DARK.textSecondary,
+            fontStyle: "italic",
+            marginTop: 4,
+          }}
+        >
+          Every forest begins with a single seed.
+        </Text>
+      </View>
 
-        {/* Buttons */}
-        <View className="z-10 w-full gap-2">
-          {/* Continue — only when save exists */}
-          {saveExists && (
-            <Button
-              className="min-h-[48px] w-full rounded-xl"
-              style={{
-                backgroundColor: C.forestGreen,
-                shadowColor: C.forestGreen,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.25,
-                shadowRadius: 12,
-                elevation: 4,
-              }}
-              onPress={onContinue}
-            >
-              <Text className="text-base font-bold text-white">Continue Grove</Text>
-            </Button>
-          )}
-
-          {/* New Grove / Start Growing */}
-          <Button
-            className={`min-h-[48px] w-full rounded-xl ${saveExists ? "bg-white" : ""}`}
-            variant={saveExists ? "outline" : "default"}
-            style={
-              saveExists
-                ? { borderColor: C.forestGreen, borderWidth: 2, backgroundColor: "white" }
-                : {
-                    backgroundColor: C.forestGreen,
-                    shadowColor: C.forestGreen,
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 12,
-                    elevation: 4,
-                  }
-            }
-            onPress={onNewGrove}
-          >
-            <Text
-              className={`text-base font-bold ${saveExists ? "" : "text-white"}`}
-              style={saveExists ? { color: C.forestGreen } : undefined}
-            >
-              {saveExists ? "New Grove" : primaryButtonLabel(treesPlanted)}
-            </Text>
-          </Button>
-
-          {/* Settings — always visible */}
-          <Button className="min-h-[44px] w-full rounded-xl" variant="ghost" onPress={onSettings}>
-            <Text className="text-sm font-medium" style={{ color: C.barkBrown }}>
-              Settings
-            </Text>
-          </Button>
+      {/* Save preview card (if save exists) */}
+      {saveExists && (
+        <View
+          className="z-10 mb-4 w-full"
+          style={{
+            ...HUD_PANEL,
+            maxWidth: 340,
+            padding: 12,
+          }}
+        >
+          <Text style={{ ...TYPE.label, color: DARK.textMuted, marginBottom: 4 }}>SAVED GROVE</Text>
+          <Text style={{ ...TYPE.body, color: DARK.textPrimary }}>
+            {treeSummaryText(treesPlanted)}
+          </Text>
         </View>
+      )}
 
-        {/* Stats */}
+      {/* Buttons */}
+      <View className="z-10 w-full gap-3" style={{ maxWidth: 340 }}>
+        {/* Continue — primary sap gradient */}
         {saveExists && (
-          <View className="z-10 flex-row items-center gap-2">
-            <Text className="text-xs" style={{ color: C.barkBrown }}>
-              {treeSummaryText(treesPlanted)}
-            </Text>
-          </View>
+          <Button
+            className="min-h-[48px] w-full overflow-hidden rounded-xl"
+            onPress={onContinue}
+            testID="btn-continue-grove"
+            style={{
+              backgroundColor: ACCENT.sap,
+              shadowColor: ACCENT.sap,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.35,
+              shadowRadius: 12,
+              elevation: 4,
+            }}
+          >
+            <Text style={{ ...TYPE.heading, color: DARK.bgDeep }}>Continue Grove</Text>
+          </Button>
         )}
+
+        {/* New Grove */}
+        <Button
+          className="min-h-[48px] w-full rounded-xl"
+          variant={saveExists ? "outline" : "default"}
+          style={
+            saveExists
+              ? { borderColor: DARK.borderBranch, borderWidth: 2, backgroundColor: "transparent" }
+              : {
+                  backgroundColor: ACCENT.sap,
+                  shadowColor: ACCENT.sap,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.35,
+                  shadowRadius: 12,
+                  elevation: 4,
+                }
+          }
+          onPress={onNewGrove}
+          testID="btn-new-grove"
+        >
+          <Text
+            style={{
+              ...TYPE.heading,
+              color: saveExists ? DARK.textPrimary : DARK.bgDeep,
+            }}
+          >
+            {saveExists ? "New Grove" : primaryButtonLabel(treesPlanted)}
+          </Text>
+        </Button>
+
+        {/* Settings — ghost button */}
+        <Button
+          className="min-h-[44px] w-full rounded-xl"
+          variant="ghost"
+          onPress={onSettings}
+          testID="btn-settings"
+        >
+          <Text style={{ ...TYPE.body, color: DARK.textMuted }}>Settings</Text>
+        </Button>
       </View>
 
       {/* Version */}
-      <Text className="mt-4 text-xs" style={{ color: `${C.forestGreen}80` }}>
+      <Text className="mt-6" style={{ ...TYPE.caption, color: DARK.textMuted }}>
         Grovekeeper v0.1.0
       </Text>
     </LinearGradient>
