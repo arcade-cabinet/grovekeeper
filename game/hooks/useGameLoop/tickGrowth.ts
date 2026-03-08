@@ -1,5 +1,6 @@
 /**
- * tickGrowth -- advances tree growth and crop growth each frame.
+ * tickGrowth -- advances tree growth and crop growth each frame,
+ * then updates renderable.scale on all trees via treeScaleSystem.
  */
 import { getSpeciesById } from "@/game/config/species";
 import { cropsQuery, treesQuery } from "@/game/ecs/world";
@@ -8,6 +9,7 @@ import { tickCropGrowth } from "@/game/systems/cropGrowth";
 import { calcGrowthRate, MAX_STAGE } from "@/game/systems/growth";
 import { initHarvestable } from "@/game/systems/harvest";
 import type { TimeState } from "@/game/systems/time";
+import { treeScaleSystem } from "@/game/systems/treeScaleSystem";
 
 export function tickGrowth(
   timeState: TimeState,
@@ -64,4 +66,8 @@ export function tickGrowth(
   }
 
   tickCropGrowth(cropsQuery, timeState.season, weatherGrowthMult, dt);
+
+  // Update renderable.scale on all tree entities from stage + progress.
+  // TreeInstances.tsx lerps the Three.js mesh toward this target each frame.
+  treeScaleSystem();
 }

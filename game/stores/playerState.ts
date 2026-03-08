@@ -9,9 +9,10 @@ import { getSpeciesById } from "@/game/config/species";
 import { getToolById } from "@/game/config/tools";
 import { checkNewUnlocks } from "@/game/systems/levelUnlocks";
 import type { Season } from "@/game/systems/time";
+import { getZoneBonusMagnitude, type ZoneType } from "@/game/systems/zoneBonuses";
 import { showToast } from "@/game/ui/Toast";
-import { gameState$, getState, initialState, levelFromXp } from "./core";
-import type { GameScreen, SerializedTree } from "./core";
+import type { GameScreen, SerializedTree } from "./core.ts";
+import { gameState$, getState, initialState, levelFromXp } from "./core.ts";
 
 export function saveGrove(trees: SerializedTree[], playerPos: { x: number; z: number }): void {
   gameState$.groveData.set({ trees, playerPosition: playerPos });
@@ -39,7 +40,10 @@ export function addCoins(amount: number): void {
 
 export function addXp(amount: number): void {
   const state = getState();
-  const newXp = state.xp + amount;
+  // Apply zone-based xp_boost (Spec §18). Settlement +10%, Clearing +15%.
+  const xpBoost = getZoneBonusMagnitude((state.currentZoneId ?? "grove") as ZoneType, "xp_boost");
+  const boostedAmount = Math.round(amount * (1 + xpBoost));
+  const newXp = state.xp + boostedAmount;
   const newLevel = levelFromXp(newXp);
 
   if (newLevel > state.level) {
@@ -169,7 +173,9 @@ export function addPlacedStructure(templateId: string, worldX: number, worldZ: n
 
 export function removePlacedStructure(worldX: number, worldZ: number): void {
   const current = getState().placedStructures;
-  gameState$.placedStructures.set(current.filter((s) => s.worldX !== worldX || s.worldZ !== worldZ));
+  gameState$.placedStructures.set(
+    current.filter((s) => s.worldX !== worldX || s.worldZ !== worldZ),
+  );
 }
 
 export function resetGame(worldSeed?: string): void {
@@ -222,7 +228,6 @@ export function incrementSeasonalPlanting(season: string): void {
 export function incrementSeasonalHarvest(season: string): void {
   if (season === "autumn") gameState$.treesHarvestedInAutumn.set((prev) => prev + 1);
 }
-
 
 export function discoverZone(zoneId: string): boolean {
   const state = getState();

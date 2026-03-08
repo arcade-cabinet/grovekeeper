@@ -1,7 +1,7 @@
 /**
  * actionDispatcher -- Action dispatch system (Spec §11, §22, §35).
  *
- * Maps tool type + target entity type to a game verb (DIG/CHOP/WATER/PLANT/PRUNE
+ * Maps tool type + target entity type to a game verb (DIG/CHOP/WATER/PLANT/PRUNE/FERTILIZE
  * plus crafting: COOK/FORGE/MINE/FISH/PLACE_TRAP/CHECK_TRAP/BUILD) and executes
  * the corresponding system function.
  *
@@ -11,6 +11,7 @@
 
 import {
   clearRock,
+  fertilizeTree,
   harvestTree,
   plantTree,
   pruneTree,
@@ -21,10 +22,10 @@ import type { RockComponent } from "@/game/ecs/components/terrain";
 import type { Entity } from "@/game/ecs/world";
 import type { RaycastEntityType } from "@/game/hooks/useRaycast";
 import { useGameStore } from "@/game/stores";
+import { audioManager } from "@/game/systems/AudioManager";
 import { resolveCampfireInteraction } from "@/game/systems/cooking";
 import { isWaterFishable } from "@/game/systems/fishing";
 import { resolveForgeInteraction } from "@/game/systems/forging";
-import { audioManager } from "@/game/systems/AudioManager";
 import { type ToolAction, triggerActionHaptic } from "@/game/systems/haptics";
 import { mineRock, resolveMiningInteraction } from "@/game/systems/mining";
 import { createTrapComponent } from "@/game/systems/traps";
@@ -48,6 +49,7 @@ export type GameAction =
   | "FORGE"
   | "MINE"
   | "FISH"
+  | "FERTILIZE"
   | "PLACE_TRAP"
   | "CHECK_TRAP"
   | "BUILD";
@@ -107,6 +109,7 @@ export interface DispatchContext {
  *   axe          + tree     -> CHOP
  *   watering-can + tree     -> WATER
  *   pruning-shears + tree   -> PRUNE
+ *   compost-bin  + tree     -> FERTILIZE
  *   trowel       + soil     -> PLANT
  *   trowel       + null     -> PLANT  (empty ground)
  *   shovel       + rock     -> DIG
@@ -130,6 +133,7 @@ export function resolveAction(
   if (toolId === "axe" && targetType === "tree") return "CHOP";
   if (toolId === "watering-can" && targetType === "tree") return "WATER";
   if (toolId === "pruning-shears" && targetType === "tree") return "PRUNE";
+  if (toolId === "compost-bin" && targetType === "tree") return "FERTILIZE";
   if (toolId === "trowel" && (targetType === "soil" || targetType === null)) return "PLANT";
   if (toolId === "shovel" && targetType === "rock") return "DIG";
 
@@ -203,6 +207,11 @@ export function dispatchAction(ctx: DispatchContext): boolean {
     case "DIG": {
       if (ctx.gridX === undefined || ctx.gridZ === undefined) return false;
       success = clearRock(ctx.gridX, ctx.gridZ);
+      break;
+    }
+    case "FERTILIZE": {
+      if (!ctx.entity?.id) return false;
+      success = fertilizeTree(ctx.entity.id);
       break;
     }
 
@@ -329,20 +338,32 @@ export function dispatchAction(ctx: DispatchContext): boolean {
 
   if (success) {
     void triggerActionHaptic(action as unknown as ToolAction);
-    // Play tool SFX for actions with defined SoundIds (Spec §27, §11).
-    // "dig" and "prune" are intentionally omitted -- no SoundId exists yet.
+    // Play tool SFX for each action (Spec §27, §11).
     switch (action) {
       case "PLANT":
         audioManager.playSound("plant");
         break;
       case "CHOP":
         audioManager.playSound("chop");
+        audioManager.playSound("harvest");
         break;
       case "WATER":
         audioManager.playSound("water");
         break;
+      case "DIG":
+        audioManager.playSound("dig");
+        break;
+      case "PRUNE":
+        audioManager.playSound("prune");
+        break;
+      case "FERTILIZE":
+        audioManager.playSound("plant");
+        break;
       case "MINE":
         audioManager.playSound("harvest");
+        break;
+      case "BUILD":
+        audioManager.playSound("build");
         break;
     }
   } else if (action !== null) {
