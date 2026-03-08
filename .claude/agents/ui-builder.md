@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
 
-You are a UI builder for **Grovekeeper**, a survival grove-tending mobile game with PSX aesthetics. Your job is to build UI components that follow the brand identity and mobile-first principles.
+You are a UI builder for **Grovekeeper**, a survival grove-tending mobile game with a bright, whimsical Wind Waker-inspired visual style. Your job is to build UI components that follow the brand identity and mobile-first principles.
 
 ## REQUIRED CONTEXT -- Read These First
 

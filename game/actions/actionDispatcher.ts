@@ -9,6 +9,7 @@
  * `dispatchAction`, following the pattern established in TargetInfo.tsx and ToolViewModel.tsx.
  */
 
+import combatConfig from "@/config/game/combat.json" with { type: "json" };
 import {
   clearRock,
   fertilizeTree,
@@ -19,6 +20,7 @@ import {
 } from "@/game/actions";
 import { getDifficultyById } from "@/game/config/difficulty";
 import type { ResourceType } from "@/game/config/resources";
+import type { CombatComponent } from "@/game/ecs/components/combat";
 import type { RockComponent } from "@/game/ecs/components/terrain";
 import type { Entity } from "@/game/ecs/world";
 import { enemiesQuery } from "@/game/ecs/world";
@@ -52,15 +54,12 @@ export { resolveMiningInteraction } from "@/game/systems/mining";
 // callers invoke from the game loop.
 // ---------------------------------------------------------------------------
 
-import combatConfigForCooldown from "@/config/game/combat.json" with { type: "json" };
-import type { CombatComponent } from "@/game/ecs/components/combat";
-
 /** Module-scope player combat component used for attack rate limiting. */
 export const _playerCombatRef: CombatComponent = {
   attackPower: 5,
   defense: 0,
-  attackRange: combatConfigForCooldown.playerAttackRange,
-  attackCooldown: combatConfigForCooldown.playerAttackCooldown,
+  attackRange: combatConfig.playerAttackRange,
+  attackCooldown: combatConfig.playerAttackCooldown,
   cooldownRemaining: 0,
   blocking: false,
 };
@@ -79,6 +78,45 @@ export function tickPlayerAttackCooldown(dt: number): void {
  */
 export function resetPlayerAttackCooldown(): void {
   _playerCombatRef.cooldownRemaining = 0;
+}
+
+// ---------------------------------------------------------------------------
+// Module-scope attack trigger counter (Spec §34.4.5)
+//
+// Increments each time dispatchAction succeeds for ATTACK.
+// Consumed by ProceduralToolView via useAttackTrigger() to fire the swing
+// animation. Uses the same useSyncExternalStore pattern as useTargetHit().
+// ---------------------------------------------------------------------------
+
+let _attackTriggerCount = 0;
+const _attackTriggerListeners = new Set<() => void>();
+
+function _getAttackTrigger(): number {
+  return _attackTriggerCount;
+}
+
+function _subscribeAttackTrigger(listener: () => void): () => void {
+  _attackTriggerListeners.add(listener);
+  return () => _attackTriggerListeners.delete(listener);
+}
+
+/** Increment the attack trigger counter. Called by dispatchAction on ATTACK success. */
+function _bumpAttackTrigger(): void {
+  _attackTriggerCount += 1;
+  for (const l of _attackTriggerListeners) l();
+}
+
+/**
+ * Returns a counter that increments each time the player successfully swings a melee weapon.
+ * Pass as `attackTrigger` to ProceduralToolView (Spec §34.4.5).
+ *
+ * Must be called from a React component (uses useSyncExternalStore).
+ */
+export { _getAttackTrigger, _subscribeAttackTrigger };
+
+/** Reset attack trigger count (used for tests). */
+export function resetAttackTrigger(): void {
+  _attackTriggerCount = 0;
 }
 
 /** The full set of game verbs mapped by the dispatcher (Spec §11, §22, §34.4, §35). */
@@ -392,7 +430,7 @@ export function dispatchAction(ctx: DispatchContext): boolean {
       if (!ctx.entity?.id) return false;
 
       // Find the target enemy entity in ECS
-      let targetEnemy: (typeof enemiesQuery extends Iterable<infer E> ? E : never) | null = null;
+      let targetEnemy: Entity | null = null;
       for (const e of enemiesQuery) {
         if (e.id === ctx.entity.id) {
           targetEnemy = e;
@@ -425,6 +463,9 @@ export function dispatchAction(ctx: DispatchContext): boolean {
       if (result.staminaCost > 0) {
         store.setStamina(Math.max(0, store.stamina - result.staminaCost));
       }
+
+      // Signal the swing animation counter (Spec §34.4.5).
+      _bumpAttackTrigger();
 
       success = true;
       break;

@@ -18,19 +18,19 @@ You are the spec writer for **Grovekeeper**. Your ONLY job is to translate the u
 
 ## Game Identity
 
-Grovekeeper is a **survival game** with PSX aesthetics and an infinite procedural world. The game spine is **14 Grovekeepers** in hedge labyrinths. No exploration mode. No creative mode. Everything is earned.
+Grovekeeper is a **survival game** with a bright Wind Waker-inspired aesthetic and an infinite procedural world. The game spine is **14 Grovekeepers** in hedge labyrinths. No exploration mode. No creative mode. Everything is earned.
 
 Key design pillars from the unified design:
 - **Survival-only:** Hearts, hunger, stamina, weather impact, temperature
 - **Chunk-based infinite world:** 16x16 tiles, 3x3 active, delta-only persistence
 - **14 Grovekeepers as game spine:** Each unlocks a tree species
-- **3DPSX GLB models** as visual foundation (trees, NPCs, structures, props)
+- **Stylized GLB models** as visual foundation (trees, NPCs, structures, props)
 - **Tone.js** for audio (never raw Web Audio)
 - **anime.js** for NPC animation (Lego-style rigid body rotation, no skeletal rigs)
 - **Seeded determinism:** scopedRNG everywhere, zero Math.random()
 - **Tool upgrade tiers:** Basic -> Iron (Forge) -> Grovekeeper (Grove Essence)
 - **Forging and cooking** as core crafting systems
-- **Base building:** Fallout-style kitbashing with PSX Mega Pack assets
+- **Base building:** Modular kitbashing with Mega Pack assets
 - **Base raids:** Defend settlements from corrupted creatures
 - **New Game+:** After all 14 Grovekeepers + Worldroot
 - **Pokemon-style tutorial** in the Starting Grove village

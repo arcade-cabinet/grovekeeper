@@ -4,7 +4,7 @@
 
 **Name:** Grovekeeper
 **Tagline:** *"Every forest begins with a single seed."*
-**Genre:** First-person survival grove-tending game with PSX aesthetic
+**Genre:** First-person survival grove-tending game with Wind Waker-inspired aesthetic
 **Platform:** Universal app (iOS + Android + Web) via Expo SDK 55
 **Target Session:** 3-15 minutes (commute-friendly), with longer exploration sessions supported
 
@@ -17,10 +17,10 @@ No "exploration mode." No "creative mode." Weather hurts. Nights are dangerous. 
 ## Design Pillars
 
 1. **Become a Grovekeeper** -- The name IS the game. Find 14 dormant Grovekeepers in hedge labyrinths, awaken them, unlock their tree species. The Worldroot (15th species) is the endgame.
-2. **PSX Aesthetic** -- No antialiasing. Pixel ratio 1. Flat shading. Chunky geometry. Pixelated textures (NearestFilter). Intentional art direction.
+2. **Wind Waker-Inspired Aesthetic** -- MSAA antialiasing. Device-native pixel ratio. Smooth PBR shading. Stylized low-poly geometry. Linear texture filtering. Intentional art direction.
 3. **Seeded Determinism** -- Same seed = same world. Zero Math.random(). All via `scopedRNG(scope, worldSeed, ...extra)`. Seed phrases: "Adjective Adjective Noun."
 4. **Mobile-First** -- 375px portrait minimum. 44px touch targets. <50 draw calls. <30K visible vertices. 55+ FPS on mid-range mobile.
-5. **Models Where Craft Matters, Procedural Where Variation Matters** -- 3DPSX GLBs for trees, NPCs, structures, props. Procedural for terrain, water, sky, weather, audio.
+5. **Models Where Craft Matters, Procedural Where Variation Matters** -- Stylized GLBs for trees, NPCs, structures, props. Procedural for terrain, water, sky, weather, audio.
 
 ## Core Requirements
 
@@ -45,7 +45,7 @@ No "exploration mode." No "creative mode." Weather hurts. Nights are dangerous. 
 - Trading with NPC merchants (seasonal modifiers, supply/demand, market events)
 
 ### Tool System
-- 5 base tools (PSX GLBs) + 4 craftable survival tools
+- 5 base tools (stylized GLBs) + 4 craftable survival tools
 - 3 upgrade tiers: Basic -> Iron -> Grovekeeper
 - Durability system with repair at Forge
 - First-person view model with keyframe animations and impact effects
@@ -76,7 +76,7 @@ No "exploration mode." No "creative mode." Weather hurts. Nights are dangerous. 
 - **No multiplayer** -- single-player experience
 - **No microtransactions** -- no real-money purchases
 - **No server backend** -- all data is local (expo-sqlite, delta-only persistence)
-- **3DPSX GLBs** are the visual foundation -- not procedural geometry for entities
+- **Stylized GLBs** are the visual foundation -- not procedural geometry for entities
 - **Tone.js** for all audio -- never raw Web Audio (user mandate)
 
 ## Canonical Design Document

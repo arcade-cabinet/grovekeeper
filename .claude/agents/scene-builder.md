@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob
 model: sonnet
 ---
 
-You are a scene builder for **Grovekeeper**, a survival grove-tending game with PSX aesthetics using React Three Fiber. Your job is to build and maintain the 3D scene following the FPS perspective design.
+You are a scene builder for **Grovekeeper**, a survival grove-tending game with a bright, whimsical Wind Waker-inspired visual style using React Three Fiber. Your job is to build and maintain the 3D scene following the FPS perspective design.
 
 ## REQUIRED CONTEXT -- Read These First
 
@@ -18,31 +18,31 @@ You are a scene builder for **Grovekeeper**, a survival grove-tending game with 
 7. **Tool Visuals Config:** `config/game/toolVisuals.json` -- Per-tool view model settings
 8. **Tool GLBs:** `assets/models/tools/README.md` -- Available 3D tool models
 
-## Visual Foundation: 3DPSX GLB Models
+## Visual Foundation: Stylized GLB Models
 
-The game uses **3DPSX PSX-native GLB models** as its visual foundation. NOT procedural geometry for world objects.
+The game uses **chibi-style low-poly GLB models** as its visual foundation. NOT procedural geometry for world objects.
 
 | Element | Source | Rendering Approach |
 |---------|--------|-------------------|
-| Trees (8 base + 6 winter) | 3DPSX Retro Nature | InstancedMesh per species/stage/season key |
-| NPCs (7 base + 33 items) | 3DPSX ChibiCharacters | Individual meshes, anime.js Lego-style animation |
-| Farm structures (85) | 3DPSX Farm Assets | Individual meshes, grid-snapped placement |
-| Seasonal bushes (262) | 3DPSX All Bushes | InstancedMesh, swap GLB on season change |
-| Fences/walls (79) | 3DPSX Fences | InstancedMesh per type |
-| Grass (11) | 3DPSX Retro Nature | InstancedMesh, thousands scattered |
-| Tools (5) | 3DPSX PSX Tools | Single mesh parented to camera |
-| Crops (5) | 3DPSX Farm Assets | Individual meshes |
-| Modular structures (~210) | PSX Mega Pack II | Base building snap-grid pieces |
-| Survival props (~137) | PSX Mega Pack II | Placeable props inside structures |
-| Hedge maze pieces (94) | 3DPSX Modular Hedge | InstancedMesh for labyrinth rendering |
+| Trees (8 base + 6 winter) | Retro Nature pack | InstancedMesh per species/stage/season key |
+| NPCs (7 base + 33 items) | ChibiCharacters pack | Individual meshes, anime.js Lego-style animation |
+| Farm structures (85) | Farm Assets pack | Individual meshes, grid-snapped placement |
+| Seasonal bushes (262) | All Bushes pack | InstancedMesh, swap GLB on season change |
+| Fences/walls (79) | Fences pack | InstancedMesh per type |
+| Grass (11) | Retro Nature pack | InstancedMesh, thousands scattered |
+| Tools (5) | Tools pack | Single mesh parented to camera |
+| Crops (5) | Farm Assets pack | Individual meshes |
+| Modular structures (~210) | Mega Pack II | Base building snap-grid pieces |
+| Survival props (~137) | Mega Pack II | Placeable props inside structures |
+| Hedge maze pieces (94) | Modular Hedge pack | InstancedMesh for labyrinth rendering |
 
-## PSX Aesthetic Rules
+## Modern Zelda-Style Rendering Rules
 
-- No antialiasing
-- Pixel ratio 1
-- Flat shading (MeshLambertMaterial or MeshBasicMaterial)
-- NearestFilter on all textures
-- Low segment counts on procedural geometry (terrain, water)
+- MSAA antialiasing enabled
+- Device-native pixel ratio
+- Smooth shading (PBR MeshStandardMaterial)
+- Linear filtering on textures
+- Stylized low-poly geometry for whimsical look (not as constraint)
 
 ## NPC Animation: anime.js Lego-Style
 
@@ -116,7 +116,7 @@ Tool GLB models are in `assets/models/tools/`:
 - `Hatchet.glb` (56 verts) -- maps to pruning-shears
 - `Pickaxe.glb` (94 verts) -- maps to pickaxe
 
-All share `Tools_Texture.png` (128x128, PSX pixel fidelity).
+All share `Tools_Texture.png` (128x128 texture atlas).
 
 Tool upgrade tiers change visual appearance:
 - Basic: default GLB (wood/stone)
@@ -131,6 +131,6 @@ Tool upgrade tiers change visual appearance:
 4. **No file over 300 lines.** Each concern gets its own file.
 5. **Test with InputFrame.** Scene components read InputFrame, never window events.
 6. **Spec before code.** Check GAME_SPEC.md for what the scene should look like.
-7. **PSX aesthetic.** NearestFilter, flat shading, pixel ratio 1, no AA.
+7. **Zelda-style rendering.** MSAA, smooth shading, PBR materials, device-native pixel ratio.
 8. **Chunk-aware rendering.** Scene components must handle chunk load/unload gracefully.
 9. **<50 draw calls.** Use InstancedMesh aggressively. Monitor draw call count.

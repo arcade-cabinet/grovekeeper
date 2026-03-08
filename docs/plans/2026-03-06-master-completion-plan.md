@@ -189,7 +189,7 @@ Full spec: `docs/architecture/scene-composition.md`
 ### Scene Tree
 
 ```jsx
-<Canvas shadows gl={{ antialias: false, pixelRatio: 1 }}>
+<Canvas shadows gl={{ antialias: true, toneMapping: ACESFilmicToneMapping, outputColorSpace: SRGBColorSpace }} dpr={[1, 2]}>
   <Physics>
     <Terrain heightAt={worldData.terrain.heightAt} />
     <WorldInstances batches={worldData.instances} />

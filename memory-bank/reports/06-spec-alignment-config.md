@@ -43,7 +43,7 @@ The codebase is substantially implemented with a solid ECS foundation, chunk-bas
 | 25 | Tutorial System | Defined | PARTIAL — tutorial.ts exists |
 | 26 | Save and Persistence | Defined | DONE — drizzle + expo-sqlite, chunkPersistence, delta-only |
 | 27 | Audio | Defined | PARTIAL — AudioManager.ts, audioEngine.ts; Tone.js integration partial |
-| 28 | Visual Identity | Defined | DONE — PSX aesthetic in TerrainChunk, no antialiasing, pixelRatio 1 |
+| 28 | Visual Identity | Defined | DONE — Modern Zelda-style rendering in TerrainChunk, MSAA, device-native DPR |
 | 29 | Seeded RNG | Defined | PARTIAL — createRNG/hashString in seedRNG.ts; scopedRNG in seedWords.ts (wrong file per CLAUDE.md) |
 | 30 | World Quest Narrative | Defined | PARTIAL — worldQuestSystem.ts exists; dialogue branching exists |
 | 31 | Procedural Terrain & Water | Defined | DONE — TerrainChunk, WaterBody, terrainGenerator, waterPlacer |

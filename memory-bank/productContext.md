@@ -15,13 +15,13 @@ Grovekeeper is mobile-first, genuinely survival, and designed for both short com
 
 **Secondary:** Desktop players who enjoy exploration/crafting games (Stardew Valley, Valheim, Animal Crossing fans).
 
-**Persona:** Someone who wants to discover a vast world at their own pace, earn every upgrade, and feel the satisfaction of building something from nothing. They enjoy the PSX aesthetic as intentional art direction.
+**Persona:** Someone who wants to discover a vast world at their own pace, earn every upgrade, and feel the satisfaction of building something from nothing. They enjoy the bright, whimsical Zelda-style aesthetic as intentional art direction.
 
 ## Brand Essence
 
-**Survival with soul. PSX with purpose.**
+**Survival with soul. Whimsy with purpose.**
 
-The PSX aesthetic isn't nostalgia bait -- it's the game's visual identity. Low-poly, flat-shaded, chunky geometry that is coherent, stylish, and performant on mobile.
+The Wind Waker-inspired visual style isn't nostalgic -- it's the game's identity. Bright colors, smooth shading, stylized low-poly geometry that is coherent, charming, and performant on mobile.
 
 ### Brand Pillars
 - **Survival** -- Every resource is earned. Weather hurts. Nights are dangerous. Comfort is built.
@@ -61,7 +61,7 @@ The loop has teeth. You need food to maintain stamina. You need tools to gather 
 
 ## How It Feels
 
-- **Visual:** Chunky PSX models, flat shading, pixel textures, warm earth tones. Like a PS1 game you never played but always wanted.
+- **Visual:** Bright whimsical models, smooth PBR shading, saturated warm palette. Like a Wind Waker-inspired grove adventure.
 - **Audio:** Tone.js procedural synthesis -- FM bird calls, spatial campfire crackle, 6-layer ambient soundscape. Retro SFX library supplements.
 - **Interaction:** First-person tool use with keyframe animations, screen shake, haptic feedback. Physical and embodied.
 - **Pacing:** Survival urgency balanced with discovery wonder. Always something to do, always a reason to explore further.

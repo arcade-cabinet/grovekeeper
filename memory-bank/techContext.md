@@ -28,8 +28,8 @@
 
 - **Legend State 3.x** (NOT Zustand) for persistent state -- reactive observables with built-in expo-sqlite persistence
 - **Tone.js** for ALL audio -- user mandate: never reduce quality for bundle size. ~150KB gzipped, worth it for FM synthesis, spatial API, iOS context handling, and scheduled ambient layers
-- **anime.js** for NPC animation -- Lego-style rigid body part rotation (no skeletal rigs). Arms/legs rotate at joints, head turns, torso bobs. PSX-authentic animation style
-- **3DPSX GLB models** as the visual foundation -- NOT procedural geometry for entities
+- **anime.js** for NPC animation -- Lego-style rigid body part rotation (no skeletal rigs). Arms/legs rotate at joints, head turns, torso bobs. Stylized chibi animation style
+- **Stylized GLB models** as the visual foundation -- NOT procedural geometry for entities
 
 ### Removed/Not Used
 - BabylonJS (replaced by R3F)
@@ -98,9 +98,9 @@ config/game/
 
 ## Asset Pipeline
 
-- **3DPSX GLBs** are the primary visual assets (PSX-native models, 2-65 KB each)
+- **Stylized GLBs** are the primary visual assets (low-poly models, 2-65 KB each)
 - Asset library at `/Volumes/home/assets/3DPSX/` (1,240+ GLBs)
-- PSX Mega Pack II (549 GLBs) for survival structures/props
+- Mega Pack II (549 GLBs) for survival structures/props
 - `useGLTF.preload()` for critical models
 - Lazy load biome-specific models on chunk entry
 - Composite GLBs need Blender split (Villager_NPCs_glb.glb, Buildings.glb)
@@ -159,4 +159,4 @@ grovekeeper/
 - **No files over 300 lines** -- decompose into subpackage with index.ts barrel
 - **Named exports only** -- never `export default`
 - **Systems are pure functions** -- `(world, deltaTime, ...context) => void`
-- **PSX aesthetic enforced** -- no antialiasing, pixel ratio 1, flat shading, NearestFilter
+- **Modern Zelda-style rendering** -- MSAA antialiasing, device-native pixel ratio, smooth PBR shading, linear filtering

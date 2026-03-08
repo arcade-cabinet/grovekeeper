@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Complete implementation of Grovekeeper, a PSX-aesthetic first-person grove-tending simulation built with Expo + React Three Fiber + Miniplex ECS. The game features infinite procedural worlds, Gerstner wave water, 1,437 3DPSX GLB assets, seed-deterministic quest branching, and Grovekeeper spirits at hedge maze centers.
+Complete implementation of Grovekeeper, a Wind Waker-inspired first-person grove-tending survival game built with Expo + React Three Fiber + Miniplex ECS. The game features infinite procedural worlds, Gerstner wave water, 1,437 stylized GLB assets, seed-deterministic quest branching, and Grovekeeper spirits at hedge maze centers.
 
 Full spec: `docs/GAME_SPEC.md` (1,510 lines, 39 sections). ECS components pre-defined. Config JSONs in place. 1,244 tests passing.
 
@@ -330,7 +330,7 @@ Full spec: `docs/GAME_SPEC.md` (1,510 lines, 39 sections). ECS components pre-de
 - FR-2: All tuning constants in config/game/*.json -- zero inline magic numbers
 - FR-3: No file exceeds 300 lines -- decompose into subpackage with index.ts barrel
 - FR-4: Mobile-first: 375px min viewport, 44px touch targets, portrait-primary
-- FR-5: PSX aesthetic: no antialiasing, pixelRatio 1, flat shading, NearestFilter
+- FR-5: Modern Zelda-style rendering: MSAA antialiasing, device-native pixel ratio, smooth PBR shading, linear filtering
 - FR-6: FPS >= 55 on mobile, >= 60 on desktop
 - FR-7: Draw calls < 50 via InstancedMesh batching
 - FR-8: Memory < 100MB on mobile
@@ -351,7 +351,7 @@ Full spec: `docs/GAME_SPEC.md` (1,510 lines, 39 sections). ECS components pre-de
 ## Technical Considerations
 
 - ECS components are fully defined in game/ecs/components/ (10 files + procedural subpackage)
-- 1,437 GLB assets copied into assets/models/ from 3DPSX library
+- 1,437 stylized GLB assets copied into assets/models/ from asset library
 - Config JSONs in config/game/ cover all tunable parameters
 - Rapier physics replaces grid-based collision
 - Chunk-based infinite world replaces zone-based fixed areas

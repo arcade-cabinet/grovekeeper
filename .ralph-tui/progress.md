@@ -90,11 +90,11 @@ after each iteration and it's included in prompts for context.
 ## 2026-03-07 - US-167
 - Implemented memory + FPS performance optimization (Spec §28).
 - Files changed:
-  - `app/game/index.tsx` — added `gl={{ antialias: false }}` + `dpr={1}` to Canvas (PSX aesthetic + mobile GPU memory)
+  - `app/game/index.tsx` — added render quality settings to Canvas (mobile GPU memory optimization)
   - `config/game/performance.json` — new: budget constants (fpsBudgetMobile=55, fpsBudgetDesktop=60, memoryBudgetMb=100, drawCallBudget=50)
   - `game/utils/performanceMonitor.ts` — new: FPS EMA tracker (`createFpsState`, `tickFps`, `isFpsUnderBudgetMobile/Desktop`) + memory sampler (`sampleMemory`, `isMemoryOverBudget`, `formatMemoryReport`, `formatFpsReport`)
   - `game/utils/performanceMonitor.test.ts` — new: 25 tests
-  - `game/utils/applyNearestFilter.ts` — new: PSX NearestFilter traversal (`applyNearestFilter`, `countNearestFilterTextures`)
+  - `game/utils/applyNearestFilter.ts` — new: texture filter traversal (`applyNearestFilter`, `countNearestFilterTextures`)
   - `game/utils/applyNearestFilter.test.ts` — new: 10 tests
   - 19 source files — converted `import * as THREE from "three"` → named imports (tree-shakable, lower bundle size). Files: TerrainChunk, StaticInstances, Lighting, Sky, EnemyMesh, TreeInstances, treeGeometry, gerstnerWater, usePhysicsMovement, WaterBody, PlacementGhost, GrassInstances, useRaycast, FPSCamera, Player, NpcMeshes, Camera, SelectionRing, Ground
   - `components/player/FPSCamera.tsx` — alias `PerspectiveCamera` from drei vs three collision: `import type { PerspectiveCamera as PerspectiveCameraImpl }`
@@ -1430,7 +1430,7 @@ after each iteration and it's included in prompts for context.
   - `npx tsc --noEmit` → 0 errors
   - `npx jest --no-coverage --testPathPattern StructureModel` → 18 tests, 0 failures
 - **Learnings:**
-  - structures.json has 20 entries (not 85 as stated in task spec — "85" likely refers to available 3DPSX library assets, not current catalog entries). Implement for what's in config.
+  - structures.json has 20 entries (not 85 as stated in task spec — "85" likely refers to available asset library entries, not current catalog entries). Implement for what's in config.
   - `StructureComponent.modelPath` is already on the ECS entity, but `resolveStructureGLBPath(templateId)` provides the testable seam (same pattern as TreeModel/NpcModel).
   - `scene.clone(true)` without material traversal/tint is sufficient for structures — no seasonal tint needed (unlike trees).
 
@@ -2934,7 +2934,7 @@ after each iteration and it's included in prompts for context.
   - **Particle counts from procedural.json**: `weather.particleCounts.rain = 500` is the 3D budget. 2D overlay uses `RAIN_DISPLAY_RATIO = 0.06` → 30 particles at intensity=1. Encode ratio as a constant, not inline math.
 
 ## 2026-03-07 - US-158
-- What was implemented: Settings screen with audio volume sliders (master/SFX/ambient), graphics controls (PSX pixel ratio toggle, draw distance), touch sensitivity, and reduced motion toggle. All settings persist via `gameStore.settings` Legend State observable.
+- What was implemented: Settings screen with audio volume sliders (master/SFX/ambient), graphics controls (render quality toggle, draw distance), touch sensitivity, and reduced motion toggle. All settings persist via `gameStore.settings` Legend State observable.
 - Files changed:
   - `game/stores/gameStore.ts` — added `settings` object to initialState + `updateSettings()` action
   - `components/game/settingsLogic.ts` — pure helper functions (clamps, formatters)

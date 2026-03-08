@@ -13,7 +13,7 @@ Document this gameplay concept: $ARGUMENTS
    - Survival-only (no exploration/creative mode)
    - Chunk-based infinite world (not fixed zones)
    - 14 Grovekeepers as game spine
-   - 3DPSX GLB models as visual foundation
+   - Stylized GLB models as visual foundation
    - Tool upgrade tiers (Basic/Iron/Grovekeeper)
    - Difficulty tier scaling (Seedling/Sapling/Hardwood/Ironwood)
 4. Find the right section (or create a new one) for this concept

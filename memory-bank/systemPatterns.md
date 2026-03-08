@@ -164,22 +164,22 @@ Config from `config/game/*.json`. Randomness from `scopedRNG`. No side effects b
 - Static entities: `matrixAutoUpdate = false` (zero per-frame cost)
 
 ### GLB Model System
-- 3DPSX GLBs for all entities (trees, NPCs, structures, props, tools)
+- Stylized GLBs for all entities (trees, NPCs, structures, props, tools)
 - Tree growth = scale on GLB model (seed=0.1x -> old growth=1.3x)
 - Season = winter variant GLB swap OR color tint uniform
 - NPC appearance = mix-and-match ChibiCharacter base + items (seeded)
 - `useGLTF.preload()` for critical models, lazy load biome-specific
 
-### PSX Aesthetic Enforcement
+### Modern Zelda-Style Rendering
 | Rule | Implementation |
 |------|---------------|
-| No antialiasing | `gl={{ antialias: false }}` |
-| Pixel ratio 1 | `gl={{ pixelRatio: 1 }}` |
-| No tone mapping | `gl={{ toneMapping: NoToneMapping }}` |
-| Linear color space | `gl={{ outputColorSpace: LinearSRGBColorSpace }}` |
-| Flat shading | `flatShading: true` on all materials |
-| Nearest filter | `NearestFilter` on all textures |
-| Low segments | Cylinders: 6 radial, Spheres: icosahedron detail 1 |
+| MSAA antialiasing | `gl={{ antialias: true }}` |
+| Device pixel ratio | Device-native `dpr` |
+| ACESFilmic tone mapping | `gl={{ toneMapping: ACESFilmicToneMapping }}` |
+| sRGB color space | `gl={{ outputColorSpace: SRGBColorSpace }}` |
+| Smooth shading | PBR `MeshStandardMaterial` with smooth normals |
+| Linear filtering | Default texture filtering for clean visuals |
+| Stylized geometry | Low-poly shapes for whimsy, not as constraint |
 
 ## NPC Animation Pattern (anime.js)
 
@@ -188,7 +188,7 @@ Lego-style rigid body part rotation (no skeletal rigs):
 - **Walk:** arm swing (shoulder +-30deg) + leg swing (hip +-25deg) + vertical bounce
 - **Look-around:** head yaw +-45deg on seeded random interval
 - **Talk:** head nod + slight arm gesture
-- All easing via anime.js timeline -- PSX-authentic rigid part animation
+- All easing via anime.js timeline -- stylized rigid part animation
 
 ## Save/Load Pattern
 

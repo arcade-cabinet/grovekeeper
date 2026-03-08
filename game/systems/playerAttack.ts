@@ -16,8 +16,13 @@
 import combatConfig from "@/config/game/combat.json" with { type: "json" };
 import toolsData from "@/config/game/tools.json" with { type: "json" };
 import type { CombatComponent, HealthComponent } from "@/game/ecs/components/combat";
-import type { RaycastEntityType } from "@/game/hooks/useRaycast";
 import { applyDamageToHealth, computePlayerDamage, isDefeated } from "@/game/systems/combat";
+
+/**
+ * Narrow string union for attack target resolution — avoids importing R3F-dependent
+ * useRaycast.ts into a pure system module. Must stay in sync with RaycastEntityType.
+ */
+type AttackTargetType = "tree" | "npc" | "structure" | "enemy" | null;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -91,10 +96,7 @@ export function resolveToolStaminaCost(toolId: string): number {
  * Mirrors the pattern of resolveAction() in actionDispatcher.ts.
  * Trees/NPCs/structures are not attackable via this path.
  */
-export function resolvePlayerAttack(
-  toolId: string,
-  targetType: RaycastEntityType | null,
-): "ATTACK" | null {
+export function resolvePlayerAttack(toolId: string, targetType: AttackTargetType): "ATTACK" | null {
   if (targetType !== "enemy") return null;
   if (resolveToolEffectPower(toolId) <= 0) return null;
   return "ATTACK";

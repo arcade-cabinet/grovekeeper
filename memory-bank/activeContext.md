@@ -2,7 +2,7 @@
 
 ## Current State (2026-03-07)
 
-The unified game design document is complete. Grovekeeper has been fully redesigned from a cozy idle grove-tending sim into a first-person survival game with PSX aesthetic, infinite procedural world, and a narrative spine built around 14 Grovekeepers hidden in hedge labyrinths.
+The unified game design document is complete. Grovekeeper has been fully redesigned from a cozy idle grove-tending sim into a first-person survival game with bright, whimsical Wind Waker-inspired aesthetic, infinite procedural world, and a narrative spine built around 14 Grovekeepers hidden in hedge labyrinths.
 
 **The design phase is complete. Implementation is next.**
 
@@ -41,7 +41,7 @@ The unified game design document is complete. Grovekeeper has been fully redesig
 - SeededNoise utility (AdvancedSeededNoise: Perlin + fBm + ridged + domain warping)
 - Config JSON files for new systems (terrain, water, audio, npcAnimation, seasons)
 - Wire difficulty multipliers to existing systems
-- Copy 3DPSX GLBs to assets/ directory
+- Copy stylized GLBs to assets/ directory
 - Tone.js integration + AudioManager refactor
 - Split composite GLBs in Blender
 
@@ -78,13 +78,13 @@ The unified game design document is complete. Grovekeeper has been fully redesig
 1. **Survival game** -- no exploration/creative mode. Every resource earned.
 2. **Infinite procedural world** -- chunk-based, delta-only persistence, seeded determinism
 3. **14 Grovekeepers** as narrative spine -- hedge labyrinths, species unlocks, escalating difficulty
-4. **3DPSX GLBs** as visual foundation -- NOT procedural geometry for entities
+4. **Stylized GLBs** as visual foundation -- NOT procedural geometry for entities
 5. **Tool upgrade tiers** -- Basic -> Iron (Forge) -> Grovekeeper (Grove Essence from labyrinths)
 6. **12 resources** from 7 survival activities -- interlocking economy
 7. **Cooking + Forging systems** -- campfire recipes + forge smelting
 8. **NG+ transforms the game** -- base building mode, base raids, prestige cosmetics
 9. **Tone.js** for all audio (user mandate: quality over bundle size)
-10. **anime.js** for NPC animation (Lego-style, PSX-authentic)
+10. **anime.js** for NPC animation (Lego-style rigid body part rotation)
 
 ## Known Issues
 

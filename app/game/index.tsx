@@ -2,7 +2,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Stack, useRouter } from "expo-router";
 import { AxeIcon, DropletsIcon, ScissorsIcon, SproutIcon } from "lucide-react-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { ChibiNpcScene } from "@/components/entities/ChibiNpcScene";
 import { GrovekeeperSpirit } from "@/components/entities/GrovekeeperSpirit";
@@ -48,6 +48,7 @@ import { ProceduralTown } from "@/components/scene/ProceduralTown";
 import { Sky } from "@/components/scene/Sky";
 import { TerrainChunks } from "@/components/scene/TerrainChunk";
 import { WaterBodies } from "@/components/scene/WaterBody";
+import { _getAttackTrigger, _subscribeAttackTrigger } from "@/game/actions/actionDispatcher";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
 import { useDebugBridge } from "@/game/debug/useDebugBridge";
@@ -163,6 +164,14 @@ export default function GameScreen() {
   const setActiveBorderCosmetic = useGameStore((s) => s.setActiveBorderCosmetic);
   const activeCraftingStation = useGameStore((s) => s.activeCraftingStation);
   const toolUpgrades = useGameStore((s) => s.toolUpgrades);
+
+  // Attack trigger counter — increments each time the player executes a melee attack.
+  // Drives the tool swing animation in ProceduralToolView (Spec §34.4.5).
+  const attackTrigger = useSyncExternalStore(
+    _subscribeAttackTrigger,
+    _getAttackTrigger,
+    _getAttackTrigger,
+  );
 
   // Crafting panel open/close state derived from activeCraftingStation (Spec §7.3, §22.2, §35)
   const craftingPanels = useMemo(
@@ -511,7 +520,7 @@ export default function GameScreen() {
             <ProceduralBushes />
             <ProceduralHedgeMaze />
             <GrovekeeperSpirit />
-            <ProceduralToolView moveDirection={moveDirection} />
+            <ProceduralToolView moveDirection={moveDirection} attackTrigger={attackTrigger} />
             <BirmotherMesh />
             <ProceduralEnemies />
           </Physics>

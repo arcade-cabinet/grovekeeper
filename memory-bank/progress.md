@@ -2,7 +2,7 @@
 
 ## Overall Status
 
-**Design: COMPLETE.** The unified game design document (`docs/plans/2026-03-07-unified-game-design.md`) synthesizes 10+ domain-specific design docs into a coherent survival game with PSX aesthetic, infinite procedural world, and 14-Grovekeeper narrative spine.
+**Design: COMPLETE.** The unified game design document (`docs/plans/2026-03-07-unified-game-design.md`) synthesizes 10+ domain-specific design docs into a coherent survival game with Wind Waker-inspired aesthetic, infinite procedural world, and 14-Grovekeeper narrative spine.
 
 **Implementation: FOUNDATION EXISTS.** Core ECS, state management, pure game systems, R3F scene, and UI components are built. The new survival/open-world/crafting systems need to be implemented.
 
@@ -81,7 +81,7 @@
 - [ ] SeededNoise utility (AdvancedSeededNoise)
 - [ ] New config JSON files (terrain, water, audio, npcAnimation)
 - [ ] Wire difficulty multipliers to systems
-- [ ] Copy 3DPSX GLBs to assets/
+- [ ] Copy GLBs to assets/
 - [ ] Tone.js integration + AudioManager refactor
 - [ ] Split composite GLBs in Blender
 - [ ] Game mode config resolver

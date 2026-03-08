@@ -106,7 +106,7 @@ Terrain geometry is cached per chunk entity by ID in `TerrainChunks` (`TerrainCh
 - `buildTerrainGeometry()` (`TerrainChunk.tsx:120–195`) writes per-vertex RGB colors via `computeBlendedColor()`.
 - Biome blending uses an 8-tile proximity zone (`BLEND_ZONE = 8` at `TerrainChunk.tsx:27`), matching `GAME_SPEC.md §17.3`: "Biome transitions blend over ~8 tiles."
 - Each chunk carries `biomeBlend [N,E,S,W]` and `neighborColors [N,E,S,W]` from `ChunkManager`, and the vertex shader blends continuously across the edge zone.
-- `MeshStandardMaterial` uses `vertexColors: true` and `flatShading: true` for PSX aesthetic (`TerrainChunk.tsx:300–305`).
+- `MeshStandardMaterial` uses `vertexColors: true` and smooth shading (`TerrainChunk.tsx:300–305`).
 - Tests in `biomeBlending.test.ts` and `TerrainChunk.test.ts` verify correctness.
 
 ### 2.4 Rapier Trimesh Collider
@@ -125,7 +125,7 @@ There is no LOD system for terrain. All chunks use identical `CHUNK_SIZE×CHUNK_
 
 **Verdict: N/A (by design)**
 
-Vertex colors are used, not texture splatmaps. This is consistent with the PSX aesthetic (`CLAUDE.md: flatShading, nearest filter`).
+Vertex colors are used, not texture splatmaps. This is consistent with the stylized low-poly aesthetic (vertex colors for biome tinting).
 
 ---
 

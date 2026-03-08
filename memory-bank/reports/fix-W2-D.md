@@ -85,7 +85,7 @@ birch-convergence (terminal)
 
 **File:** `components/scene/BirmotherMesh.tsx`
 
-Procedural tree-of-light assembly using primitive Three.js geometries (PSX aesthetic — no GLBs):
+Procedural tree-of-light assembly using primitive Three.js geometries (stylized low-poly — no GLBs):
 
 | Piece | Geometry | Purpose |
 |-------|----------|---------|

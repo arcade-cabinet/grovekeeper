@@ -13,7 +13,7 @@ The 3D scene is a tree of React components inside a single R3F `<Canvas>`. Each 
 ## Full Scene Tree
 
 ```jsx
-<Canvas shadows gl={{ antialias: false, pixelRatio: 1 }}>
+<Canvas shadows gl={{ antialias: true, toneMapping: ACESFilmicToneMapping, outputColorSpace: SRGBColorSpace }} dpr={[1, 2]}>
   {/* Physics */}
   <Physics>
     {/* World layer: static environment */}

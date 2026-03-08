@@ -320,7 +320,7 @@ export const ProceduralToolView = ({
         activeAnimRef.current = anime(buildSwapUpParams(swapAnimRef.current, swapConfig.duration));
       }),
     );
-  }, [selectedTool, displayedToolId]);
+  }, [selectedTool, displayedToolId, swapConfig]);
 
   // Animate attack swing: rotate -45° on Z then return (Spec §34.4.5).
   // attackTrigger is 0 on mount; only fire when it actually increments.

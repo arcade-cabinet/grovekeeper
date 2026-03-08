@@ -12,11 +12,11 @@ The design intent is well-modeled in code (config JSONs, ECS components, rendere
 | Category | Design Intent | Implementation Quality | Runtime State | Verdict |
 |----------|-------------|----------------------|--------------|---------|
 | Trees (growth stages 0–1) | Procedural hardcoded geometry | Correct per spec | Called at runtime | CORRECT |
-| Trees (growth stages 2–4) | GLB from 3DPSX tree pack | Procedural via `createTreeGeometry` | Active (wrong renderer) | **WRONG** |
+| Trees (growth stages 2–4) | GLB from stylized tree pack | Procedural via `createTreeGeometry` | Active (wrong renderer) | **WRONG** |
 | Bushes | GLB seasonal swap (260 variants) | GLB renderer built correctly | Never mounted in Canvas | **MISSING** |
 | Grass | GLB instanced | GLB InstancedMesh renderer built | Mounted in Canvas | CORRECT |
 | NPCs / Characters | ChibiCharacter GLBs (mix-and-match) | `NpcModel.tsx` fully built | `NpcMeshes.tsx` (capsules) mounted instead | **WRONG** |
-| Structures | GLB (3DPSX Farm Assets) | `StructureInstances.tsx` fully built | Never mounted in Canvas | **MISSING** |
+| Structures | GLB (Farm Assets pack) | `StructureInstances.tsx` fully built | Never mounted in Canvas | **MISSING** |
 | Fences / Walls | GLB (7 fence types) | `FenceInstances.tsx` fully built | Never mounted in Canvas | **MISSING** |
 | Hedge Maze walls | GLB (94 modular pieces, InstancedMesh) | `HedgeMaze.tsx` fully built | Never mounted in Canvas | **MISSING** |
 | Hedge decorations | GLB (fountain, benches, columns) | Part of `HedgeMaze.tsx` | Never mounted in Canvas | **MISSING** |
@@ -37,7 +37,7 @@ The design intent is well-modeled in code (config JSONs, ECS components, rendere
 
 **Design (unified-game-design.md §5):**
 - Stages 0 and 1: hardcoded geometry (~20-30 verts each) — CORRECT
-- Stages 2, 3, 4: species GLB from `3DPSX Retro Nature trees` at scale 0.5x / 1.0x / 1.3x
+- Stages 2, 3, 4: species GLB from stylized tree pack at scale 0.5x / 1.0x / 1.3x
 
 **Implementation:**
 - `components/entities/TreeInstances.tsx:4,14,55` — imports `createTreeGeometry` from `game/utils/treeGeometry.ts` and uses it for ALL stages including 2, 3, 4
@@ -56,7 +56,7 @@ The design intent is well-modeled in code (config JSONs, ECS components, rendere
 - `assets/models/trees/extra/` contains tree01.glb through tree36.glb (all rare species GLBs including tree09, tree15, tree20, tree25, tree30 exist on disk)
 - `assets/models/trees/winter/` contains tree01_winter.glb through tree06_winter.glb (all winter variants exist)
 
-**Impact:** All trees in the running game render as procedural geometry (the legacy BabylonJS SPS port), not the PSX GLB aesthetic. The "PSX Aesthetic" pillar is violated for the most prominent visual element in the game. The vertex budget benefit of GLBs (100-400 verts vs the SPS generator's 200-1,300) is also lost.
+**Impact:** All trees in the running game render as procedural geometry (the legacy BabylonJS SPS port), not the stylized GLB models. The visual identity pillar is violated for the most prominent visual element in the game. The vertex budget benefit of GLBs (100-400 verts vs the SPS generator's 200-1,300) is also lost.
 
 ---
 
@@ -81,7 +81,7 @@ The design intent is well-modeled in code (config JSONs, ECS components, rendere
 - `app/game/index.tsx:7` — imports `NpcMeshes`, not `NpcModel`
 - `NpcModel.tsx` has zero import sites in `app/`
 
-**Impact:** NPCs appear as color-coded capsules in the running game. The carefully built mix-and-match ChibiCharacter assembly system is entirely dead. PSX aesthetic is violated for the second-most-visible entity type.
+**Impact:** NPCs appear as color-coded capsules in the running game. The carefully built mix-and-match ChibiCharacter assembly system is entirely dead. Visual identity is violated for the second-most-visible entity type.
 
 ---
 
@@ -108,7 +108,7 @@ All components below are implemented with correct GLB loading, instancing, and E
 - `components/entities/StructureInstances.tsx` — batched InstancedMesh renderer per `structure.modelPath`
 - `components/entities/StructureModel.tsx` — individual GLB renderer by `templateId`
 - `config/game/structures.json` — 20+ structure templates with `modelPath: "assets/models/structures/farm/..."`
-- `assets/models/structures/farm/` — barn.glb, house-1.glb through house-5.glb, campfire-1.glb, campfire-2.glb, etc. present
+- `assets/models/structures/farm/` — barn.glb, house-1.glb through house-5.glb, campfire-1.glb, campfire-2.glb, etc. present (stylized low-poly models)
 - Not mounted in Canvas
 
 ### MISSING-3: FenceInstances / fence GLBs never rendered

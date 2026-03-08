@@ -1363,19 +1363,19 @@ const treeMaterial = new THREE.MeshLambertMaterial({
 });
 
 // Emissive tree material (Ghost Birch night, Moonwood Ash night)
-const emissiveTreeMaterial = new THREE.MeshLambertMaterial({
+const emissiveTreeMaterial = new THREE.MeshStandardMaterial({
   vertexColors: true,
   side: THREE.DoubleSide,
-  flatShading: true,
+  flatShading: false,
   emissive: new THREE.Color("#88CCFF"),
   emissiveIntensity: 0.35,
 });
 
 // Crystal Oak shimmer material (animated emissive)
-const prismaticMaterial = new THREE.MeshLambertMaterial({
+const prismaticMaterial = new THREE.MeshStandardMaterial({
   vertexColors: true,
   side: THREE.DoubleSide,
-  flatShading: true,
+  flatShading: false,
   emissive: new THREE.Color("#80CBC4"),
   emissiveIntensity: 0.08,  // Subtle baseline shimmer
 });

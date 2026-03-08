@@ -21,13 +21,13 @@ Key design facts every agent must know:
 - **Survival-only.** No exploration mode. No creative mode. Hearts, hunger, stamina, temperature.
 - **Chunk-based infinite world.** 16x16 tiles per chunk, 3x3 active, delta-only persistence.
 - **14 Grovekeepers** in hedge labyrinths are the game spine. Each unlocks a tree species.
-- **3DPSX GLB models** are the visual foundation (trees, NPCs, structures, props, fences, bushes).
+- **Stylized GLB models** are the visual foundation (trees, NPCs, structures, props, fences, bushes).
 - **Tone.js** for audio (PolySynth, FMSynth, Panner3D HRTF). Never raw Web Audio.
 - **anime.js** for NPC animation (Lego-style rigid body part rotation, no skeletal rigs).
 - **Tool upgrade tiers:** Basic -> Iron (Forge + Iron Ingots) -> Grovekeeper (Grove Essence).
 - **Forging:** Smelt ore into Iron Ingots, upgrade tools, craft advanced materials.
 - **Cooking:** Raw food -> cooked meals at Campfire/Cooking Pot. Better stats.
-- **Base building:** Fallout-style kitbashing with PSX Mega Pack assets. Progressive unlock L5-L20.
+- **Base building:** Modular kitbashing with Mega Pack assets. Progressive unlock L5-L20.
 - **Base raids:** Defend settlements from corrupted creatures. Scales with base value.
 - **New Game+:** After all 14 Grovekeepers + Worldroot. Carries over achievements/codex/relationships.
 - **Difficulty tiers:** Seedling (easy) / Sapling (standard) / Hardwood (hard) / Ironwood (permadeath).

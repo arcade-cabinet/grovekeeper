@@ -60,7 +60,7 @@ This is the critical design decision. The Grok conversation demonstrated sophist
 
 ### GLB Models (the visual foundation)
 
-The 3DPSX library provides the game's model foundation. Chibi-style low-poly models with texture atlases, stylistically coherent with the Wind Waker-inspired aesthetic.
+The asset library (3DPSX collection) provides the game's model foundation. Chibi-style low-poly models with texture atlases, stylistically coherent with the Wind Waker-inspired aesthetic.
 
 | Element | Why Models | Source | Count |
 |---------|-----------|--------|-------|

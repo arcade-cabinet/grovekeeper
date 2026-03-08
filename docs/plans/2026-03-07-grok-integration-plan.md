@@ -484,7 +484,7 @@ This evolved across 4 Grok prompts. Final state combines all techniques:
 | RoundedBox from drei | Plain boxGeometry is more stylized |
 | 32-segment spheres | Stylized aesthetic needs low-poly (icosahedron detail 1) |
 | Clouds as spheres | We use CSS sky / Sky component |
-| `Environment` preset | PSX doesn't use HDR environment maps |
+| `Environment` preset | Not needed -- custom lighting setup |
 | `ContactShadows` | We use directional shadow maps |
 
 ---
@@ -493,7 +493,7 @@ This evolved across 4 Grok prompts. Final state combines all techniques:
 
 | Feature | Verts per Instance | Count | Total |
 |---|---|---|---|
-| Chibi NPC (PSX segments) | ~180 | 10 | 1,800 |
+| Chibi NPC (stylized segments) | ~180 | 10 | 1,800 |
 | Water surface (72-seg cylinder) | ~146 | 1-3 | 438 |
 | Caustics projector (64-seg circle) | ~66 | 1-3 | 198 |
 | Splash particles (points) | 1 | 240 | 240 |
@@ -512,7 +512,7 @@ Well within budget. Current scene is ~30K verts with trees + terrain + structure
 - [ ] All tuning constants in `config/game/*.json`
 - [ ] All new components under 300 lines
 - [ ] Water renders at 60fps on desktop, 55fps on mobile (375px viewport)
-- [ ] Chibi NPCs are visually richer than current 4-box version but stay PSX-chunky
+- [ ] Chibi NPCs are visually richer than current 4-box version but stay stylized low-poly
 - [ ] Audio respects mute setting and `prefers-reduced-motion`
 - [ ] Seasonal transitions are smooth (lerp-based, not sudden)
 - [ ] All new systems have adjacent test files

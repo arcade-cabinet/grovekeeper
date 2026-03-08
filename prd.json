@@ -2624,11 +2624,11 @@
     {
       "id": "US-158",
       "title": "Create Settings screen",
-      "description": "As a player, I want a Settings screen accessible from the main menu and pause menu with controls for audio volume (master/SFX/ambient), graphics quality (PSX pixel ratio, draw distance), touch sensitivity, and reduced motion toggle. See GAME_SPEC.md §26.",
+      "description": "As a player, I want a Settings screen accessible from the main menu and pause menu with controls for audio volume (master/SFX/ambient), graphics quality (render quality, draw distance), touch sensitivity, and reduced motion toggle. See GAME_SPEC.md §26.",
       "acceptanceCriteria": [
         "New file components/game/SettingsScreen.tsx",
         "Audio sliders: master volume, SFX volume, ambient volume",
-        "Graphics: PSX pixel ratio toggle, draw distance slider",
+        "Graphics: render quality toggle, draw distance slider",
         "Touch sensitivity slider for mobile look controls",
         "Reduced motion toggle (respects prefers-reduced-motion)",
         "Settings persist via Legend State gameStore.settings",
@@ -2803,7 +2803,7 @@
         "Profile FPS on mobile (target >= 55)",
         "Dispose geometry + material for unloaded chunks",
         "Code split game screen via Expo Router lazy loading",
-        "Texture atlas for terrain (NearestFilter, no antialiasing)",
+        "Texture atlas for terrain (linear filtering, MSAA antialiasing)",
         "No barrel imports from three — import specific modules",
         "FPS >= 55 on mobile, >= 60 on desktop",
         "Memory < 100MB on mobile",

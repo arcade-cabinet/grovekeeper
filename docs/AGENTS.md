@@ -29,7 +29,7 @@ docs/
     tool-action-system.md    5 keyframe animations, impact effects, raycast
     view-model-juice.md      Hand sway, walk bob, sprint FOV, config-driven
     touch-controls.md        Virtual joystick, swipe-to-look, action buttons
-    npc-system.md            Chibi NPCs (3DPSX GLBs), anime.js animation, seeded appearance
+    npc-system.md            Chibi NPCs (GLBs), anime.js animation, seeded appearance
     hud-overlay.md           HUD layout, component specs, design tokens
     day-night-weather-visual-system.md  8-stop sky, 4 weather types, seasons
     performance.md           Mobile performance budgets, instancing, code splitting
@@ -97,7 +97,7 @@ docs/
 - `docs/architecture/performance.md` -- draw call budgets, instancing strategy
 
 ### Working on NPCs (appearance, AI, dialogue, quests)
-- `docs/architecture/npc-system.md` -- chibi NPCs, 3DPSX GLBs, anime.js animation
+- `docs/architecture/npc-system.md` -- chibi NPCs, GLB models, anime.js animation
 - `docs/design/quest-dialogue-system.md` -- personalities, quest chains
 - `docs/plans/2026-03-07-unified-game-design.md` Section 8 -- NPCs, quests, dialogue
 

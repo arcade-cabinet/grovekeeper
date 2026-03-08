@@ -1538,11 +1538,14 @@ Config keys added to `config/game/toolVisuals.json`:
 |------|---------|
 | `game/systems/playerAttack.ts` | Pure function: resolvePlayerAttack + executePlayerAttack |
 | `game/systems/playerAttack.test.ts` | Tests: cooldown, damage, invuln, stamina, death |
-| `game/actions/actionDispatcher.ts` | ATTACK action in GameAction + resolveAction + dispatchAction |
+| `game/systems/playerAttackWiring.test.ts` | Tests: resolveAction ATTACK, tickPlayerAttackCooldown, _playerCombatRef |
+| `game/actions/actionDispatcher.ts` | ATTACK action + resolveAction + dispatchAction + _attackTriggerCount |
+| `game/hooks/useRaycast.ts` | "enemy" in RaycastEntityType; _getHit() exported for game loop |
+| `game/hooks/useGameLoop/index.ts` | §5d: frame.interact + _getHit → dispatchAction; tickPlayerAttackCooldown |
 | `components/player/ProceduralToolView/index.tsx` | attackTrigger prop + swing animation |
-| `game/hooks/useGameLoop/index.ts` | Player CombatComponent ticked via combatQuery (already wired) |
+| `app/game/index.tsx` | attackTrigger wired via useSyncExternalStore(_subscribeAttackTrigger) |
 
-Status: **COMPLETE** — Pure system + tests + dispatcher wiring + swing animation.
+Status: **COMPLETE** — Spec + tests + pure system + dispatcher + FPS interact + swing animation + game screen wiring.
 
 ---
 
@@ -1732,6 +1735,7 @@ Systems wired to the game loop (`useGameLoop`) and/or mounted UI:
 | NPC Relationship (§19) | `game/systems/npcRelationship.ts` | YES | Via store | NO dedicated UI |
 | Path Following (§19) | `game/systems/pathFollowing.ts` | YES | Via NPC movement | Via ChibiNpcScene |
 | Combat (§34, §41) | `game/systems/combat.ts` | YES | YES (tickInvulnFrames, tickAttackCooldown) | Via ProceduralEnemies |
+| Player Attack (§34.4) | `game/systems/playerAttack.ts` | YES | YES (tickPlayerAttackCooldown in useGameLoop, ATTACK in actionDispatcher, FPS interact dispatch in useGameLoop §5d, attackTrigger wired in GameScreen) | ProceduralToolView swing via attackTrigger + _subscribeAttackTrigger |
 | Enemy AI (§34) | `game/systems/enemyAI.ts` | YES | YES (EnemyEntityManager.updateAll) | Via ProceduralEnemies |
 | Enemy Spawning (§34) | `game/systems/enemySpawning.ts` | YES | Via ChunkManager | Via ProceduralEnemies |
 | Trading (§20) | `game/systems/trading.ts` | YES | Via store | TradeDialog |

@@ -11,7 +11,7 @@
 import { useFrame } from "@react-three/fiber";
 import type { MutableRefObject } from "react";
 import { useRef } from "react";
-import { tickPlayerAttackCooldown } from "@/game/actions/actionDispatcher";
+import { dispatchAction, tickPlayerAttackCooldown } from "@/game/actions/actionDispatcher";
 import type { NpcBrain } from "@/game/ai/NpcBrain";
 import { getDifficultyById } from "@/game/config/difficulty";
 import { createWildTreeEntity } from "@/game/ecs/archetypes";
@@ -31,6 +31,7 @@ import {
   weatherQuery,
   world,
 } from "@/game/ecs/world";
+import { _getHit } from "@/game/hooks/useRaycast";
 import { inputManager } from "@/game/input/InputManager";
 import { useGameStore } from "@/game/stores";
 import { advanceTutorial } from "@/game/stores/settings";
@@ -432,6 +433,25 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
           if (toolId !== store.selectedTool) {
             store.setSelectedTool(toolId);
           }
+        }
+      }
+
+      // ── 5d. FPS interact (E key / gamepad A / action button) ─────────
+      // Reads the current raycast hit and dispatches a game action if the
+      // player pressed interact this frame. Handles ATTACK for enemy targets.
+      // Spec §11, §34.4.6.
+      if (frame.interact) {
+        const hit = _getHit();
+        if (hit) {
+          dispatchAction({
+            toolId: store.selectedTool,
+            targetType: hit.entityType,
+            entity: hit.entity,
+            gridX: Math.round(hit.point.x),
+            gridZ: Math.round(hit.point.z),
+            speciesId: store.selectedSpecies,
+            biome: store.currentZoneId,
+          });
         }
       }
     }

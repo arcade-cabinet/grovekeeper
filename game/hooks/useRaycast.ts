@@ -44,7 +44,12 @@ const _screenCenter = new Vector2(0, 0);
 let _currentHit: RaycastHit | null = null;
 const _hitListeners = new Set<() => void>();
 
-function _getHit(): RaycastHit | null {
+/**
+ * Returns the current RaycastHit synchronously.
+ * Use inside useFrame callbacks or the game loop — not in React render paths.
+ * For React components outside Canvas, use useTargetHit() instead.
+ */
+export function _getHit(): RaycastHit | null {
   return _currentHit;
 }
 
