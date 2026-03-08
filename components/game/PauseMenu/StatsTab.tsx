@@ -1,8 +1,12 @@
 import { View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { StatItem } from "./StatItem";
-import type { PauseMenuStats } from "./types";
+import { ACCENT, DARK, FONTS } from "@/components/ui/tokens";
+import { StatItem } from "./StatItem.tsx";
+import type { PauseMenuStats } from "./types.ts";
+
+const cardBg = "rgba(26,58,30,0.7)";
+const cardBorder = "rgba(61,92,65,0.4)";
 
 interface StatsTabProps {
   stats: PauseMenuStats;
@@ -12,38 +16,37 @@ interface StatsTabProps {
 export function StatsTab({ stats, onOpenStats }: StatsTabProps) {
   return (
     <View className="gap-3">
-      <View className="rounded-xl bg-white p-4">
+      <View
+        className="rounded-xl p-4"
+        style={{
+          backgroundColor: cardBg,
+          borderWidth: 1,
+          borderColor: cardBorder,
+        }}
+      >
         <View className="flex-row flex-wrap gap-x-8 gap-y-3">
           <StatItem label="Level" value={stats.level} />
           <StatItem label="XP" value={stats.xp} />
-          <StatItem label="Coins" value={stats.coins} color="text-autumn-gold" />
-          <StatItem
-            label="Trees Planted"
-            value={stats.treesPlanted}
-            color="text-leaf-light"
-          />
-          <StatItem
-            label="Trees Matured"
-            value={stats.treesMatured}
-            color="text-leaf-light"
-          />
+          <StatItem label="Coins" value={stats.coins} color={ACCENT.amber} />
+          <StatItem label="Trees Planted" value={stats.treesPlanted} color={ACCENT.sap} />
+          <StatItem label="Trees Matured" value={stats.treesMatured} color={ACCENT.sap} />
           <StatItem label="Grid Size" value={`${stats.gridSize}x${stats.gridSize}`} />
         </View>
       </View>
 
       <View className="gap-1">
-        <Text className="text-sm text-gray-600">
+        <Text style={{ fontSize: 12, color: DARK.textSecondary }}>
           Species: {stats.unlockedSpeciesCount}/{stats.totalSpeciesCount}
         </Text>
-        <Text className="text-sm text-gray-600">
+        <Text style={{ fontSize: 12, color: DARK.textSecondary }}>
           Tools: {stats.unlockedToolsCount}/{stats.totalToolsCount}
         </Text>
         {stats.prestigeCount > 0 && (
-          <Text className="text-sm text-autumn-gold">
+          <Text style={{ fontSize: 12, color: ACCENT.amber }}>
             Prestige: {stats.prestigeCount}
           </Text>
         )}
-        {stats.difficultyName && (
+        {stats.difficultyName ? (
           <View className="mt-1 flex-row items-center gap-1.5">
             <View
               className="rounded-full px-2 py-0.5"
@@ -51,22 +54,34 @@ export function StatsTab({ stats, onOpenStats }: StatsTabProps) {
                 backgroundColor: stats.difficultyColor ?? "#9E9E9E",
               }}
             >
-              <Text className="text-xs font-bold text-white">{stats.difficultyName}</Text>
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: "700",
+                  fontFamily: FONTS.data,
+                  color: DARK.textPrimary,
+                }}
+              >
+                {stats.difficultyName}
+              </Text>
             </View>
-            <Text className="text-xs text-gray-400">difficulty (locked)</Text>
+            <Text style={{ fontSize: 10, color: DARK.textMuted }}>difficulty (locked)</Text>
           </View>
-        )}
+        ) : null}
       </View>
 
-      {onOpenStats && (
+      {onOpenStats ? (
         <Button
-          className="min-h-[44px] w-full rounded-xl border-2 border-bark-brown bg-transparent"
+          className="min-h-[44px] w-full rounded-xl bg-transparent"
+          style={{ borderWidth: 2, borderColor: DARK.borderBranch }}
           variant="outline"
           onPress={onOpenStats}
         >
-          <Text className="text-sm font-bold text-soil-dark">Full Stats Dashboard</Text>
+          <Text style={{ fontSize: 12, fontWeight: "700", color: DARK.textPrimary }}>
+            Full Stats Dashboard
+          </Text>
         </Button>
-      )}
+      ) : null}
     </View>
   );
 }
