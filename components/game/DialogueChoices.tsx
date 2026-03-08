@@ -15,6 +15,7 @@
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { ACCENT, DARK, TYPE } from "@/components/ui/tokens";
 import type { DialogueBranch } from "@/game/ecs/components/dialogue";
 import { selectDefaultBranchNode } from "@/game/systems/dialogueBranch";
 
@@ -125,12 +126,17 @@ export const DialogueChoices = ({
       {branches.map((branch, index) => (
         <Pressable
           key={`branch-${branch.targetNodeId}-${index}`}
-          className="mb-2 min-h-[44px] justify-center rounded-xl border-2 border-forest-green/40 bg-forest-green/10 px-4 py-2.5 active:opacity-80"
+          className="mb-2 min-h-[44px] justify-center rounded-xl px-4 py-2.5 active:opacity-80"
+          style={{
+            borderWidth: 2,
+            borderColor: DARK.borderBranch,
+            backgroundColor: DARK.bgCanopy,
+          }}
           onPress={() => handlePress(branch)}
           accessibilityLabel={branch.label}
           accessibilityRole="button"
         >
-          <Text className="text-sm font-medium text-forest-green">{branch.label}</Text>
+          <Text style={{ ...TYPE.body, fontWeight: "500", color: ACCENT.sap }}>{branch.label}</Text>
         </Pressable>
       ))}
     </View>

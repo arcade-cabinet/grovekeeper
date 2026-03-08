@@ -15,7 +15,7 @@ import { useCallback, useRef } from "react";
 import { Animated, type GestureResponderEvent, PanResponder, View } from "react-native";
 import { sharedTouchProvider } from "@/game/input/sharedTouchProvider";
 import { triggerHaptic } from "@/game/systems/haptics";
-import { computeJoystickZoneRect, type JoystickProvider } from "./joystickHandlers";
+import { computeJoystickZoneRect, type JoystickProvider } from "./joystickHandlers.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -61,12 +61,12 @@ const DEAD_ZONE = 5; // ~15% of maxRadius
 // Colors (matches original)
 // ---------------------------------------------------------------------------
 
-const OUTER_BG = "rgba(245, 240, 227, 0.85)";
-const OUTER_BORDER = "#5D4037";
-const KNOB_COLOR_START = "#4A7C59";
+const OUTER_BG = "rgba(13, 31, 15, 0.35)";
+const OUTER_BORDER = "rgba(61, 92, 65, 0.5)";
+const KNOB_COLOR_START = "rgba(36, 59, 39, 0.7)";
 // Note: linear gradient not natively supported; using KNOB_COLOR_START as solid fallback
-const KNOB_BORDER = "#3E2723";
-const DOT_COLOR = "rgba(93, 64, 55, 0.3)";
+const KNOB_BORDER = "rgba(61, 92, 65, 0.6)";
+const DOT_COLOR = "rgba(90, 122, 93, 0.3)";
 
 // ---------------------------------------------------------------------------
 // Cardinal dot positions (N, S, E, W)
@@ -248,9 +248,9 @@ export function VirtualJoystick({
           backgroundColor: OUTER_BG,
           borderWidth: 3,
           borderColor: OUTER_BORDER,
-          shadowColor: "#1A3A2A",
+          shadowColor: "#000",
           shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.15,
+          shadowOpacity: 0.2,
           shadowRadius: 12,
           elevation: 4,
         }}

@@ -1,0 +1,61 @@
+# Flow: New game creation end-to-end
+# Verifies: tap New Grove -> seed phrase screen -> select difficulty -> start game
+#           -> loading screen -> game screen with Canvas + HUD
+# Touch targets: all buttons min-h-[44px] or min-h-[48px] per component styles
+# Platform: iOS/Android (375px viewport portrait)
+# Spec: §26 (Main Menu), §37 (NewGameModal), §1.3 (Loading)
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+
+# Main menu renders
+- assertVisible: "GROVEKEEPER"
+
+# Tap the primary CTA — "Start Growing" on fresh install (0 trees planted)
+- tapOn:
+    id: "btn-new-grove"
+
+# NewGameModal opens — title "New Grove" is visible
+- assertVisible: "New Grove"
+
+# World Seed field is visible
+- assertVisible:
+    accessibilityLabel: "World seed phrase"
+
+# Shuffle button is visible and tappable
+- assertVisible:
+    accessibilityLabel: "Shuffle seed phrase"
+
+# DIFFICULTY label visible
+- assertVisible: "DIFFICULTY"
+
+# All four difficulty tiers should be visible
+- assertVisible: "Seedling"
+- assertVisible: "Sapling"
+- assertVisible: "Hardwood"
+- assertVisible: "Ironwood"
+
+# Sapling is selected by default — verify tagline shows
+- assertVisible: "The intended experience"
+
+# Select a different difficulty (Hardwood)
+- tapOn:
+    accessibilityLabel: "Hardwood: Nature fights back"
+
+# Verify tagline updates
+- assertVisible: "Nature fights back"
+
+# Switch back to Sapling for the test
+- tapOn:
+    accessibilityLabel: "Sapling: The intended experience"
+
+# Tap "Begin Your Grove" to start the game
+- tapOn:
+    id: "btn-begin-grove"
+
+# Game screen should load — wait for HUD menu button to appear
+# (Loading screen shows first, then transitions to game)
+- assertVisible:
+    id: "btn-open-menu"
+    timeout: 15000

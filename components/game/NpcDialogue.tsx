@@ -21,15 +21,10 @@
  * See GAME_SPEC.md §33.5.
  */
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { ACCENT, DARK, FONTS, TYPE } from "@/components/ui/tokens";
 import type { DialogueBranch } from "@/game/ecs/components/dialogue";
 import { activeDialogueQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores";
@@ -39,11 +34,8 @@ import {
   getDialogueSession,
   subscribeDialogueSession,
 } from "@/game/ui/dialogueBridge";
-import { DialogueChoices } from "./DialogueChoices";
-import {
-  getActiveDialogueNode,
-  resolveEntityDisplayName,
-} from "./NpcDialogue.logic";
+import { DialogueChoices } from "./DialogueChoices.tsx";
+import { getActiveDialogueNode, resolveEntityDisplayName } from "./NpcDialogue.logic.ts";
 
 // ---------------------------------------------------------------------------
 // NpcDialogue component
@@ -89,9 +81,7 @@ export const NpcDialogue = () => {
     }
 
     // Find the matching entity in ECS (must have dialogue.inConversation).
-    let found: (typeof activeDialogueQuery extends Iterable<infer E>
-      ? E
-      : never) | null = null;
+    let found: (typeof activeDialogueQuery extends Iterable<infer E> ? E : never) | null = null;
     for (const entity of activeDialogueQuery) {
       if (entity.id === session.entityId && entity.dialogue.inConversation) {
         found = entity;
@@ -105,11 +95,7 @@ export const NpcDialogue = () => {
       return;
     }
 
-    const name = resolveEntityDisplayName(
-      found.npc,
-      found.grovekeeperSpirit,
-      session.entityId,
-    );
+    const name = resolveEntityDisplayName(found.npc, found.grovekeeperSpirit, session.entityId);
 
     const tid = found.dialogue.activeTreeId;
     const tree = tid ? getDialogueTreeById(tid) : undefined;
@@ -124,10 +110,7 @@ export const NpcDialogue = () => {
   // Derived values
   // ---------------------------------------------------------------------------
 
-  const tree = useMemo(
-    () => (treeId ? getDialogueTreeById(treeId) : undefined),
-    [treeId],
-  );
+  const tree = useMemo(() => (treeId ? getDialogueTreeById(treeId) : undefined), [treeId]);
 
   const currentNode = useMemo(
     () => getActiveDialogueNode(tree, currentNodeId),
@@ -191,7 +174,13 @@ export const NpcDialogue = () => {
   if (!isVisible) return null;
 
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={handleClose}>
+    <Modal
+      visible
+      transparent
+      animationType="fade"
+      onRequestClose={handleClose}
+      testID="npc-dialogue-modal"
+    >
       <View className="flex-1 justify-end bg-black/40">
         {/* Tap backdrop to close */}
         <Pressable
@@ -201,24 +190,39 @@ export const NpcDialogue = () => {
         />
 
         {/* Dialogue card */}
-        <View className="mx-3 mb-6 rounded-2xl border-2 border-bark-brown bg-parchment shadow-lg">
+        <View
+          className="mx-3 mb-6 rounded-2xl shadow-lg"
+          style={{
+            backgroundColor: "rgba(10, 12, 8, 0.95)",
+            borderWidth: 2,
+            borderColor: DARK.borderBranch,
+          }}
+        >
           {/* Speaker header */}
-          <View className="flex-row items-center border-b border-bark-brown/30 px-4 py-2.5">
-            <Text className="font-heading text-base font-bold text-soil-dark">
+          <View
+            className="flex-row items-center px-4 py-2.5"
+            style={{ borderBottomWidth: 1, borderBottomColor: DARK.borderBranch }}
+          >
+            <Text
+              style={{
+                ...TYPE.body,
+                fontFamily: FONTS.heading,
+                fontWeight: "700",
+                color: ACCENT.sap,
+              }}
+            >
               {speakerName}
             </Text>
           </View>
 
           {/* Node text with speaker attribution */}
-          <View className="border-b border-bark-brown/10 px-4 py-3">
-            <View
-              className="rounded-lg p-3"
-              style={{ backgroundColor: "rgba(255,255,255,0.7)" }}
-            >
-              <Text className="text-sm leading-5 text-soil-dark">
-                <Text className="font-medium text-forest-green">
-                  {currentNode.speaker}:
-                </Text>
+          <View
+            className="px-4 py-3"
+            style={{ borderBottomWidth: 1, borderBottomColor: "rgba(61, 92, 65, 0.3)" }}
+          >
+            <View className="rounded-lg p-3" style={{ backgroundColor: DARK.surfaceMoss }}>
+              <Text style={{ ...TYPE.body, lineHeight: 20, color: DARK.textPrimary }}>
+                <Text style={{ fontWeight: "500", color: ACCENT.sap }}>{currentNode.speaker}:</Text>
                 {"  "}
                 {currentNode.text}
               </Text>
@@ -238,12 +242,24 @@ export const NpcDialogue = () => {
             {/* Terminal node (no branches): show a farewell button */}
             {currentNode.branches.length === 0 && (
               <Pressable
-                className="mx-4 mb-2 min-h-[44px] justify-center rounded-xl border-2 border-bark-brown/40 bg-bark-brown/10 px-4 py-2.5 active:opacity-80"
+                className="mx-4 mb-2 min-h-[44px] justify-center rounded-xl px-4 py-2.5 active:opacity-80"
+                style={{
+                  borderWidth: 2,
+                  borderColor: DARK.borderBranch,
+                  backgroundColor: DARK.bgCanopy,
+                }}
                 onPress={handleClose}
                 accessibilityLabel="Close dialogue"
                 accessibilityRole="button"
               >
-                <Text className="text-center text-sm font-medium text-soil-dark">
+                <Text
+                  style={{
+                    ...TYPE.body,
+                    textAlign: "center",
+                    fontWeight: "500",
+                    color: DARK.textSecondary,
+                  }}
+                >
                   Farewell
                 </Text>
               </Pressable>

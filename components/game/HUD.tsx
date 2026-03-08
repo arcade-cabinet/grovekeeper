@@ -1,33 +1,35 @@
 /**
- * HUD -- Full FPS HUD overlay (Spec §24).
+ * HUD -- Zelda-inspired minimal FPS overlay (Spec §24).
  *
- * Self-contained: reads live data from ECS queries and Legend State.
- * Renders: top bar (resources, XP, time, menu), compass arrow toward the
- * nearest undiscovered Grovekeeper spirit, center crosshair, target info,
- * and a right-side panel with stamina gauge + tool belt.
+ * Design philosophy: The world IS the UI. The HUD should be nearly invisible.
+ * - Hearts: top-left, always visible (like every Zelda game since 1986)
+ * - Hunger: tiny icon below hearts, only when < 100%
+ * - Compass: golden arrow toward nearest spirit (Navi-style guidance)
+ * - Crosshair: subtle dot, not a thick cross
+ * - Target info: context text when looking at something interactable
+ * - Stamina: ring around crosshair, only visible when draining
  *
- * Mobile-first: all touch targets >= 44px, no overlap with virtual joystick zone.
+ * REMOVED from HUD (accessible via Pause Menu only):
+ * - Resource bars (timber, sap, fruit, acorns)
+ * - XP bar
+ * - Tool belt / tool grid
+ * - Stamina gauge bar
+ *
+ * Tool switching: via Tool Wheel (Tab / long-press). Tool appears in 3D hand.
  */
 
-import { MenuIcon, ScrollIcon } from "lucide-react-native";
-import { useMemo, useState } from "react";
+import { MenuIcon } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TargetInfo } from "@/components/player/TargetInfo";
 import { Icon } from "@/components/ui/icon";
-import { TOOLS } from "@/game/config/tools";
+import { ACCENT, DARK } from "@/components/ui/tokens";
 import { grovekeeperSpiritsQuery, playerQuery } from "@/game/ecs/world";
-import { totalXpForLevel, useGameStore, xpToNext } from "@/game/stores";
+import { useGameStore } from "@/game/stores";
 import { computeTimeState } from "@/game/systems/time";
-import { ConnectedQuestPanel } from "./QuestPanel.tsx";
-import { ResourceBar } from "./ResourceBar.tsx";
-import { StaminaGauge } from "./StaminaGauge.tsx";
-import { type GameTime, TimeDisplayCompact } from "./TimeDisplay.tsx";
-import { ToolBelt } from "./ToolBelt.tsx";
-import { XPBar } from "./XPBar.tsx";
+import { HeartsDisplay } from "./HeartsDisplay.tsx";
 
 // ── Pure exports (testable seams) ────────────────────────────────────────────
-
 /**
  * Compass bearing in degrees from player to target.
  * 0 = North (−Z axis), 90 = East (+X), 180 = South (+Z), 270 = West (−X).
@@ -71,29 +73,19 @@ export function findNearestUndiscoveredSpirit(
   return nearest;
 }
 
-// ── Stable module-level tool data (no per-render allocation) ─────────────────
-
-const TOOL_BELT_DATA = TOOLS.map((t) => ({
-  id: t.id,
-  name: t.name,
-  unlockLevel: t.unlockLevel,
-}));
-
-// ── Crosshair ─────────────────────────────────────────────────────────────────
+// ── Crosshair — Zelda-style subtle dot ───────────────────────────────────────
 
 function Crosshair() {
   return (
     <View style={styles.crosshairWrap} pointerEvents="none">
-      <View style={styles.crosshairH} />
-      <View style={styles.crosshairV} />
+      <View style={styles.crosshairDot} />
     </View>
   );
 }
 
-// ── Compass ───────────────────────────────────────────────────────────────────
+// ── Compass — golden arrow toward nearest spirit ─────────────────────────────
 
 function Compass({ playerX, playerZ }: { playerX: number; playerZ: number }) {
-  // Snapshot query — refreshes on every re-render (gameTimeMicroseconds drives ~60fps updates)
   const poi = findNearestUndiscoveredSpirit([...grovekeeperSpiritsQuery], playerX, playerZ);
   if (!poi) return null;
 
@@ -103,11 +95,58 @@ function Compass({ playerX, playerZ }: { playerX: number; playerZ: number }) {
     <View style={styles.compassWrap} pointerEvents="none">
       <Text
         style={[styles.compassArrow, { transform: [{ rotate: `${bearing}deg` }] }]}
-        accessibilityLabel={`Compass: spirit at bearing ${Math.round(bearing)} degrees`}
+        accessibilityLabel={`Spirit at bearing ${Math.round(bearing)} degrees`}
       >
-        ↑
+        ◆
       </Text>
     </View>
+  );
+}
+
+// ── Hunger indicator — tiny, only when < 100% ───────────────────────────────
+
+function HungerIndicator({ hunger }: { hunger: number }) {
+  if (hunger >= 99.5) return null;
+  const pct = Math.round(hunger);
+  const color = hunger < 25 ? ACCENT.ember : hunger < 50 ? ACCENT.amber : DARK.textSecondary;
+  return (
+    <Text style={[styles.hungerText, { color }]} pointerEvents="none">
+      {hunger < 25 ? "🍖" : ""} {pct}%
+    </Text>
+  );
+}
+
+// ── Stamina ring — appears around crosshair only when < max ──────────────────
+
+function StaminaRing({ stamina, maxStamina }: { stamina: number; maxStamina: number }) {
+  if (stamina >= maxStamina - 0.5) return null;
+  const pct = stamina / maxStamina;
+  const color = pct < 0.25 ? ACCENT.ember : pct < 0.5 ? ACCENT.amber : ACCENT.sap;
+  // Simple text-based stamina near crosshair
+  return (
+    <View style={styles.staminaWrap} pointerEvents="none">
+      <Text style={[styles.staminaText, { color }]}>{Math.round(stamina)}</Text>
+    </View>
+  );
+}
+
+// ── Time — tiny corner display ───────────────────────────────────────────────
+
+function TimeChip({
+  gameTimeMicroseconds,
+  currentSeason,
+}: {
+  gameTimeMicroseconds: number;
+  currentSeason: string;
+}) {
+  const ts = computeTimeState(gameTimeMicroseconds);
+  const hour = ts.hour;
+  const period = hour < 6 ? "Night" : hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
+  const seasonCap = currentSeason.charAt(0).toUpperCase() + currentSeason.slice(1);
+  return (
+    <Text style={styles.timeChip} pointerEvents="none">
+      {period} {seasonCap}
+    </Text>
   );
 }
 
@@ -120,95 +159,48 @@ export interface HUDProps {
   onOpenSeedSelect: () => void;
 }
 
-export function HUD({ onOpenMenu, onOpenSeedSelect }: HUDProps) {
-  const resources = useGameStore((s) => s.resources);
-  const level = useGameStore((s) => s.level);
-  const xp = useGameStore((s) => s.xp);
+export function HUD({ onOpenMenu }: HUDProps) {
   const stamina = useGameStore((s) => s.stamina);
   const maxStamina = useGameStore((s) => s.maxStamina);
-  const selectedTool = useGameStore((s) => s.selectedTool);
   const gameTimeMicroseconds = useGameStore((s) => s.gameTimeMicroseconds);
   const currentSeason = useGameStore((s) => s.currentSeason);
-  const unlockedTools = useGameStore((s) => s.unlockedTools);
-  const seeds = useGameStore((s) => s.seeds);
-  const selectedSpecies = useGameStore((s) => s.selectedSpecies);
+  const hearts = useGameStore((s) => s.hearts ?? 5);
+  const maxHearts = useGameStore((s) => s.maxHearts ?? 5);
+  const hunger = useGameStore((s) => s.hunger ?? 100);
 
-  const [questPanelVisible, setQuestPanelVisible] = useState(false);
-
-  const xpProgress = useMemo(() => {
-    const base = totalXpForLevel(level);
-    const needed = xpToNext(level);
-    return needed <= 0 ? 1 : (xp - base) / needed;
-  }, [xp, level]);
-
-  const gameTime: GameTime = useMemo(() => {
-    const ts = computeTimeState(gameTimeMicroseconds);
-    return {
-      hours: ts.hour,
-      minutes: Math.floor((ts.dayProgress * 24 - ts.hour) * 60),
-      day: ts.dayNumber,
-      season: currentSeason,
-    };
-  }, [gameTimeMicroseconds, currentSeason]);
-
-  // Player position snapshot from ECS — updated on every Legend State re-render.
-  // gameTimeMicroseconds ticks every frame, so this refreshes at game-loop frequency.
+  // Player position from ECS for compass
   const [playerEntity] = [...playerQuery];
   const playerX = playerEntity?.position?.x ?? 0;
   const playerZ = playerEntity?.position?.z ?? 0;
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {/* ── Top safe-area bar ─────────────────────────────────────── */}
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none" testID="hud-overlay">
+      {/* ── Top-left: Hearts + hunger (Zelda-style) ──────────────── */}
       <SafeAreaView edges={["top"]} pointerEvents="box-none" style={styles.safeTop}>
-        <View style={styles.topBar}>
-          <View style={styles.topLeft}>
-            <ResourceBar resources={resources} />
-            <XPBar level={level} progress={xpProgress} />
-            <TimeDisplayCompact time={gameTime} />
+        <View style={styles.topRow}>
+          <View style={styles.heartsColumn}>
+            <HeartsDisplay current={hearts} max={maxHearts} />
+            <HungerIndicator hunger={hunger} />
           </View>
-          <Pressable
-            style={styles.menuButton}
-            onPress={() => setQuestPanelVisible((v) => !v)}
-            accessibilityLabel="Toggle quest panel"
-          >
-            <Icon as={ScrollIcon} size={22} className="text-white" />
-          </Pressable>
-          <Pressable style={styles.menuButton} onPress={onOpenMenu} accessibilityLabel="Open menu">
-            <Icon as={MenuIcon} size={22} className="text-white" />
-          </Pressable>
+          <View style={styles.topRight}>
+            <TimeChip gameTimeMicroseconds={gameTimeMicroseconds} currentSeason={currentSeason} />
+            <Compass playerX={playerX} playerZ={playerZ} />
+            <Pressable
+              style={styles.menuButton}
+              onPress={onOpenMenu}
+              accessibilityLabel="Open menu"
+              testID="btn-open-menu"
+            >
+              <Icon as={MenuIcon} size={20} className="text-white/60" />
+            </Pressable>
+          </View>
         </View>
-        {/* Compass — arrow pointing toward nearest undiscovered spirit */}
-        <Compass playerX={playerX} playerZ={playerZ} />
       </SafeAreaView>
 
-      {/* ── Center: crosshair + target info ───────────────────────── */}
+      {/* ── Center: crosshair + stamina ring + target info ────────── */}
       <Crosshair />
+      <StaminaRing stamina={stamina} maxStamina={maxStamina} />
       <TargetInfo />
-
-      {/* ── Left quest panel (toggled via quest button) ──────────── */}
-      {questPanelVisible && (
-        <View style={styles.questPanel} pointerEvents="box-none">
-          <ConnectedQuestPanel onDismiss={() => setQuestPanelVisible(false)} />
-        </View>
-      )}
-
-      {/* ── Right-side panel: stamina gauge + tool belt ───────────── */}
-      <View style={styles.rightPanel} pointerEvents="box-none">
-        <StaminaGauge stamina={stamina} maxStamina={maxStamina} />
-        <ToolBelt
-          tools={TOOL_BELT_DATA}
-          selectedTool={selectedTool}
-          unlockedTools={unlockedTools}
-          level={level}
-          selectedSpecies={selectedSpecies}
-          seedCount={seeds[selectedSpecies] ?? 0}
-          onSelectTool={(id) => {
-            useGameStore.getState().setSelectedTool(id);
-            if (id === "trowel") onOpenSeedSelect();
-          }}
-        />
-      </View>
     </View>
   );
 }
@@ -220,19 +212,20 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  topBar: {
+  topRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  topLeft: {
-    flex: 1,
+  heartsColumn: {
+    gap: 2,
+  },
+  topRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    minWidth: 0,
+    gap: 8,
   },
   menuButton: {
     minWidth: 44,
@@ -240,7 +233,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 22,
+    opacity: 0.5,
   },
+  // Crosshair: subtle white dot (not thick cross)
   crosshairWrap: {
     position: "absolute",
     top: 0,
@@ -250,40 +245,62 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  crosshairH: {
-    position: "absolute",
-    width: 20,
-    height: 2,
-    backgroundColor: "rgba(255,255,255,0.85)",
+  crosshairDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.7)",
+    // Glow effect via shadow
+    shadowColor: "#fff",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
   },
-  crosshairV: {
-    position: "absolute",
-    width: 2,
-    height: 20,
-    backgroundColor: "rgba(255,255,255,0.85)",
-  },
+  // Compass: golden diamond pointing to spirits
   compassWrap: {
-    paddingHorizontal: 16,
-    paddingBottom: 4,
+    alignItems: "center",
+    justifyContent: "center",
   },
   compassArrow: {
-    fontSize: 22,
-    color: "#FFDD88",
-    fontWeight: "bold",
+    fontSize: 16,
+    color: ACCENT.biolum,
+    textShadowColor: "rgba(57,255,20,0.6)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
+  // Hunger: tiny text under hearts
+  hungerText: {
+    fontSize: 11,
+    fontWeight: "600",
+    textShadowColor: "rgba(0,0,0,0.8)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  // Stamina: appears below crosshair when draining
+  staminaWrap: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 40,
+  },
+  staminaText: {
+    fontSize: 12,
+    fontWeight: "700",
     textShadowColor: "rgba(0,0,0,0.8)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
-  rightPanel: {
-    position: "absolute",
-    right: 16,
-    bottom: 100,
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  questPanel: {
-    position: "absolute",
-    top: 80,
-    left: 8,
+  // Time: tiny chip in top-right
+  timeChip: {
+    fontSize: 11,
+    color: DARK.textMuted,
+    fontWeight: "500",
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });

@@ -1,37 +1,33 @@
-# Flow: Tutorial completion via touch controls
-# Verifies: complete tutorial steps via touch controls (skip path)
-# The tutorial auto-starts on first play. Skip Tutorial button is 44px min-h.
+# Flow: Tutorial — RETIRED
+# The 11-step overlay tutorial has been replaced by the elder-awakening quest
+# chain for organic onboarding (Spec §25.1). TutorialOverlay renders null.
+#
+# This flow now verifies the game loads without a tutorial overlay and the
+# quest-driven onboarding is active instead.
 # Platform: iOS simulator (375px viewport portrait)
 appId: ${APP_ID}
-url: ${APP_URL}
 ---
-- launchApp
-- assertVisible: "Grovekeeper"
+- launchApp:
+    clearState: true
+- assertVisible: "GROVEKEEPER"
 
 # Start a new game via NewGameModal
 - tapOn:
-    text: "Start Growing"
+    id: "btn-new-grove"
 - assertVisible: "New Grove"
 - tapOn:
-    accessibilityLabel: "Exploration mode"
+    accessibilityLabel: "Sapling: The intended experience"
 - tapOn:
-    accessibilityLabel: "Begin Your Grove"
+    id: "btn-begin-grove"
 
 # Wait for game screen to settle
 - assertVisible:
-    accessibilityLabel: "Open menu"
+    id: "btn-open-menu"
+    timeout: 15000
 
-# Tutorial overlay should be active — first step label visible
-- assertVisible: "Look around"
+# Tutorial overlay is RETIRED — "Skip Tutorial" should NOT be visible
+- assertNotVisible: "Skip tutorial"
 
-# Verify Skip Tutorial button exists and is reachable (44px touch target per component)
+# Game should be immediately playable (no blocking overlay)
 - assertVisible:
-    accessibilityLabel: "Skip tutorial"
-
-# Tap Skip Tutorial — completes the tutorial immediately
-- tapOn:
-    accessibilityLabel: "Skip tutorial"
-
-# Tutorial is done — "Skip Tutorial" button should no longer be visible
-- assertNotVisible:
-    accessibilityLabel: "Skip tutorial"
+    id: "hud-overlay"

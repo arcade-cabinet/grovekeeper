@@ -15,13 +15,18 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { ACCENT, DARK, FONTS, HUD_PANEL, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
 import { useGameStore } from "@/game/stores";
-import { canCook, deductIngredients, getCookingRecipeById, startCooking } from "@/game/systems/cooking";
+import {
+  canCook,
+  deductIngredients,
+  getCookingRecipeById,
+  startCooking,
+} from "@/game/systems/cooking";
 import { showToast } from "@/game/ui/Toast";
 import {
-  type RecipeDisplay,
   buildAllRecipeDisplays,
   formatCookingTime,
   formatRecipeEffect,
+  type RecipeDisplay,
 } from "./cookingPanelLogic.ts";
 
 // ---------------------------------------------------------------------------
@@ -90,15 +95,11 @@ export function CookingPanel({ open, onClose }: CookingPanelProps) {
       />
 
       {/* Panel */}
-      <View style={styles.panel}>
+      <View style={styles.panel} testID="cooking-panel">
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Campfire Cooking</Text>
-          <Pressable
-            style={styles.closeButton}
-            onPress={onClose}
-            accessibilityLabel="Close"
-          >
+          <Pressable style={styles.closeButton} onPress={onClose} accessibilityLabel="Close">
             <Text style={styles.closeText}>X</Text>
           </Pressable>
         </View>

@@ -4,7 +4,7 @@ import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS } from "@/components/ui/tokens";
+import { ACCENT, DARK, FONTS, TYPE } from "@/components/ui/tokens";
 import { SettingsScreen } from "../SettingsScreen.tsx";
 import { ProgressTab } from "./ProgressTab.tsx";
 import { SettingsTab } from "./SettingsTab.tsx";
@@ -20,8 +20,8 @@ export type {
   PrestigeInfo,
 } from "./types.ts";
 
-const panelBg = "rgba(13,31,15,0.92)";
-const borderColor = "rgba(61,92,65,0.6)";
+const panelBg = "rgba(10,12,8,0.92)";
+const borderColor = DARK.borderBranch;
 
 export function PauseMenu({
   open,
@@ -91,6 +91,7 @@ export function PauseMenu({
                   fontWeight: "700",
                   color: DARK.textPrimary,
                 }}
+                testID="pause-menu-title"
               >
                 Grove Stats
               </Text>
@@ -115,16 +116,13 @@ export function PauseMenu({
                     key={tab}
                     className="min-h-[44px] flex-1 items-center justify-center"
                     style={
-                      isActive
-                        ? { borderBottomWidth: 2, borderBottomColor: ACCENT.sap }
-                        : undefined
+                      isActive ? { borderBottomWidth: 2, borderBottomColor: ACCENT.sap } : undefined
                     }
                     onPress={() => setActiveTab(tab)}
                   >
                     <Text
                       style={{
-                        fontSize: 12,
-                        fontWeight: "500",
+                        ...TYPE.label,
                         textTransform: "capitalize",
                         color: isActive ? ACCENT.sap : DARK.textMuted,
                       }}

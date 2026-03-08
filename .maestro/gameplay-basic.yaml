@@ -1,0 +1,48 @@
+# Flow: Basic gameplay verification
+# Verifies: HUD elements visible (hearts, crosshair area, compass, time chip),
+#           tool view in 3D scene, pause menu open/close
+# Platform: iOS/Android (375px viewport portrait)
+# Spec: §24 (HUD), §9 (Player), §23 (FPS Camera)
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+
+# Start a new game
+- tapOn:
+    id: "btn-new-grove"
+- tapOn:
+    accessibilityLabel: "Sapling: The intended experience"
+- tapOn:
+    id: "btn-begin-grove"
+
+# Wait for game screen to load (loading screen -> terrain chunks -> game)
+- assertVisible:
+    id: "game-screen"
+    timeout: 15000
+
+# HUD overlay should be present
+- assertVisible:
+    id: "hud-overlay"
+
+# Menu button (hamburger) visible in top-right
+- assertVisible:
+    id: "btn-open-menu"
+
+# Open pause menu and verify it shows
+- tapOn:
+    id: "btn-open-menu"
+
+# Pause menu title visible
+- assertVisible: "Grove Stats"
+
+# Close pause menu via "Continue Playing"
+- tapOn:
+    text: "Continue Playing"
+
+# Back in game — menu button visible again
+- assertVisible:
+    id: "btn-open-menu"
+
+# Pause menu should be dismissed
+- assertNotVisible: "Grove Stats"

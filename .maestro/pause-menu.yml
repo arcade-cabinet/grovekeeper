@@ -1,38 +1,35 @@
-# Flow: Pause menu -> settings -> resume
+# Flow: Pause menu -> settings -> resume (legacy — updated for retired tutorial)
 # Verifies: open pause menu, navigate to settings tab, resume game
 # Touch targets: all tabs 44px min-h, action buttons 44px min-h
 # Platform: iOS simulator (375px viewport portrait)
 appId: ${APP_ID}
-url: ${APP_URL}
 ---
-- launchApp
-- assertVisible: "Grovekeeper"
+- launchApp:
+    clearState: true
+- assertVisible: "GROVEKEEPER"
 
 # Navigate to game
 - tapOn:
-    text: "Start Growing"
+    id: "btn-new-grove"
 - assertVisible: "New Grove"
 - tapOn:
-    accessibilityLabel: "Exploration mode"
+    accessibilityLabel: "Sapling: The intended experience"
 - tapOn:
-    accessibilityLabel: "Begin Your Grove"
+    id: "btn-begin-grove"
 
 # Game screen loaded
 - assertVisible:
-    accessibilityLabel: "Open menu"
-
-# Skip tutorial
-- tapOn:
-    accessibilityLabel: "Skip tutorial"
+    id: "btn-open-menu"
+    timeout: 15000
 
 # Open pause menu via HUD menu button (44px touch target)
 - tapOn:
-    accessibilityLabel: "Open menu"
+    id: "btn-open-menu"
 
 # Pause menu is open — "Grove Stats" heading visible
 - assertVisible: "Grove Stats"
 
-# Navigate to Settings tab (44px touch target, lowercase "settings" text)
+# Navigate to Settings tab (44px touch target)
 - tapOn:
     text: "settings"
 
@@ -45,5 +42,5 @@ url: ${APP_URL}
 
 # Pause menu dismissed — back to game (menu button visible again)
 - assertVisible:
-    accessibilityLabel: "Open menu"
+    id: "btn-open-menu"
 - assertNotVisible: "Grove Stats"

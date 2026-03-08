@@ -12,13 +12,12 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { ACCENT, DARK, FONTS, RADIUS, SPACE } from "@/components/ui/tokens";
-import type { SmeltRecipe } from "@/game/systems/forging";
-import type { ToolTierUpgrade } from "@/game/systems/forging";
+import type { SmeltRecipe, ToolTierUpgrade } from "@/game/systems/forging";
 import {
   buildSmeltRows,
   buildUpgradeRows,
-  formatSmeltTime,
   type ForgingTab,
+  formatSmeltTime,
   type SmeltRecipeRow,
   type ToolUpgradeRow,
 } from "./forgingPanelLogic.ts";
@@ -79,15 +78,11 @@ export function ForgingPanel({
         />
 
         {/* Panel */}
-        <View style={styles.panel}>
+        <View style={styles.panel} testID="forging-panel">
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>The Forge</Text>
-            <Pressable
-              style={styles.closeButton}
-              onPress={onClose}
-              accessibilityLabel="Close"
-            >
+            <Pressable style={styles.closeButton} onPress={onClose} accessibilityLabel="Close">
               <Icon as={XIcon} size={20} className="text-white" />
             </Pressable>
           </View>
@@ -99,20 +94,12 @@ export function ForgingPanel({
               return (
                 <Pressable
                   key={tab.key}
-                  style={[
-                    styles.tab,
-                    isActive && styles.tabActive,
-                  ]}
+                  style={[styles.tab, isActive && styles.tabActive]}
                   onPress={() => setActiveTab(tab.key)}
                   accessibilityLabel={`${tab.label} tab`}
                   accessibilityRole="tab"
                 >
-                  <Text
-                    style={[
-                      styles.tabLabel,
-                      isActive && styles.tabLabelActive,
-                    ]}
-                  >
+                  <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
                     {tab.label}
                   </Text>
                 </Pressable>
@@ -122,12 +109,8 @@ export function ForgingPanel({
 
           {/* Content */}
           <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
-            {activeTab === "smelt" && (
-              <SmeltTab rows={smeltRows} onSmelt={onSmelt} />
-            )}
-            {activeTab === "upgrade" && (
-              <UpgradeTab rows={upgradeRows} onUpgrade={onUpgrade} />
-            )}
+            {activeTab === "smelt" && <SmeltTab rows={smeltRows} onSmelt={onSmelt} />}
+            {activeTab === "upgrade" && <UpgradeTab rows={upgradeRows} onUpgrade={onUpgrade} />}
           </ScrollView>
 
           {/* Close button */}
@@ -172,12 +155,7 @@ function SmeltTab({
             {row.inputRows.map((input) => (
               <View key={input.label} style={styles.costRow}>
                 <Text style={styles.costLabel}>{input.label}</Text>
-                <Text
-                  style={[
-                    styles.costAmount,
-                    !input.enough && styles.costInsufficient,
-                  ]}
-                >
+                <Text style={[styles.costAmount, !input.enough && styles.costInsufficient]}>
                   {input.have}/{input.amount}
                 </Text>
               </View>
@@ -189,19 +167,13 @@ function SmeltTab({
 
           {/* Forge button */}
           <Pressable
-            style={[
-              styles.forgeButton,
-              !row.canAfford && styles.forgeButtonDisabled,
-            ]}
+            style={[styles.forgeButton, !row.canAfford && styles.forgeButtonDisabled]}
             onPress={() => onSmelt(row.recipe)}
             disabled={!row.canAfford}
             accessibilityLabel={`Smelt ${row.recipe.name}`}
           >
             <Text
-              style={[
-                styles.forgeButtonText,
-                !row.canAfford && styles.forgeButtonTextDisabled,
-              ]}
+              style={[styles.forgeButtonText, !row.canAfford && styles.forgeButtonTextDisabled]}
             >
               Smelt
             </Text>
@@ -245,12 +217,7 @@ function UpgradeTab({
                 {row.costRows.map((cost) => (
                   <View key={cost.label} style={styles.costRow}>
                     <Text style={styles.costLabel}>{cost.label}</Text>
-                    <Text
-                      style={[
-                        styles.costAmount,
-                        !cost.enough && styles.costInsufficient,
-                      ]}
-                    >
+                    <Text style={[styles.costAmount, !cost.enough && styles.costInsufficient]}>
                       {cost.have}/{cost.amount}
                     </Text>
                   </View>
@@ -259,19 +226,14 @@ function UpgradeTab({
 
               {/* Upgrade button */}
               <Pressable
-                style={[
-                  styles.forgeButton,
-                  !row.canAfford && styles.forgeButtonDisabled,
-                ]}
+                style={[styles.forgeButton, !row.canAfford && styles.forgeButtonDisabled]}
+                // biome-ignore lint/style/noNonNullAssertion: guarded by row.upgrade ternary on line 208
                 onPress={() => onUpgrade(row.toolId, row.upgrade!)}
                 disabled={!row.canAfford}
                 accessibilityLabel={`Upgrade ${row.toolName} to ${row.nextTierLabel}`}
               >
                 <Text
-                  style={[
-                    styles.forgeButtonText,
-                    !row.canAfford && styles.forgeButtonTextDisabled,
-                  ]}
+                  style={[styles.forgeButtonText, !row.canAfford && styles.forgeButtonTextDisabled]}
                 >
                   Upgrade
                 </Text>
