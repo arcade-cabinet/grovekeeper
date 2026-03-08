@@ -21,6 +21,7 @@ describe("InputFrame (Spec §23)", () => {
       "jump",
       "interact",
       "toolSwap",
+      "toolSelect",
       "sprint",
     ];
 
@@ -40,6 +41,7 @@ describe("InputFrame (Spec §23)", () => {
     expect(frame.jump).toBe(false);
     expect(frame.interact).toBe(false);
     expect(frame.toolSwap).toBe(0);
+    expect(frame.toolSelect).toBe(0);
     expect(frame.sprint).toBe(false);
   });
 });
@@ -56,6 +58,7 @@ describe("InputManager (Spec §23)", () => {
     expect(frame.jump).toBe(false);
     expect(frame.interact).toBe(false);
     expect(frame.toolSwap).toBe(0);
+    expect(frame.toolSelect).toBe(0);
     expect(frame.sprint).toBe(false);
   });
 

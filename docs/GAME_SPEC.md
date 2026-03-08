@@ -6,7 +6,7 @@ what this document specifies. If code and spec disagree, the spec wins.
 
 **Canonical design:** [`docs/plans/2026-03-07-unified-game-design.md`](plans/2026-03-07-unified-game-design.md)
 
-Last updated: 2026-03-08 (§39 re-audited — 4,071 tests passing, 12 failing; crafting panels now mounted; 13 orphaned systems confirmed)
+Last updated: 2026-03-08 (evening re-audit — 4,105 tests passing, 0 failing; all 178 suites green; crafting panels mounted; 12 orphaned systems confirmed)
 
 ---
 
@@ -36,7 +36,7 @@ Last updated: 2026-03-08 (§39 re-audited — 4,071 tests passing, 12 failing; c
 22. [Crafting & Forging](#22-crafting--forging)
 23. [Input System](#23-input-system)
 24. [HUD Layout](#24-hud-layout)
-25. [Tutorial System](#25-tutorial-system)
+25. [Onboarding System](#25-onboarding-system)
 26. [Save and Persistence](#26-save-and-persistence)
 27. [Audio](#27-audio)
 28. [Visual Identity](#28-visual-identity)
@@ -263,8 +263,8 @@ Procedural cloud noise in horizon band (zero draw calls).
 
 ### 6.3 Seasonal Visuals
 
-- GLB seasonal bush swap: 52 shapes x 5 seasons (262 3DPSX GLBs)
-- Tree color tint via material uniform OR winter variant GLB swap
+- Procedural bush season color tints via `setColorAt` on InstancedMesh (see §42.4)
+- Tree species meshParams color per season (procedural canopy tint)
 - Variable day length: summer 165s real daylight vs winter 105s
 - 5-day season transition blend
 
@@ -305,11 +305,11 @@ Weather uses `scopedRNG("weather", worldSeed, nextCheckTime)`.
 
 | Stage | Name | Visual |
 |-------|------|--------|
-| 0 | Seed | Tiny mound (hardcoded geometry, ~20 verts) |
-| 1 | Sprout | Small stem (hardcoded, ~30 verts) |
-| 2 | Sapling | Species GLB at 0.5x scale |
-| 3 | Mature | Species GLB at 1.0x scale, harvestable |
-| 4 | Old Growth | Species GLB at 1.3x scale, frozen matrix |
+| 0 | Seed | Tiny mound (procedural geometry, ~20 verts) |
+| 1 | Sprout | Small stem (procedural, ~30 verts) |
+| 2 | Sapling | Procedural tree at 0.7x scale (see §42.1) |
+| 3 | Mature | Procedural tree at 1.0x scale, harvestable |
+| 4 | Old Growth | Procedural tree at 1.4x scale, frozen matrix |
 
 ### 8.2 Growth Formula
 
@@ -697,10 +697,10 @@ when `chunkX === 0 && chunkZ === 0`.
 14 hedge labyrinths scattered across the world. Each contains a dormant
 Grovekeeper who unlocks a tree species when awakened.
 
-- Seeded recursive backtracker on 8x8 to 20x20 grid
-- Modular hedge GLBs (94 pieces) from 3DPSX pack
+- Growing Tree algorithm (70/30 DFS+Prim's), starts from center, BFS pathfinding
+- Procedural hedge wall geometry via `hedgePlacement/` + `ProceduralHedgeMaze.tsx`
 - Maze enemies: bats (corridor patrol), skeleton warrior (inner ring), thorny patches
-- Center: fountain + columns + stone table + the Grovekeeper NPC
+- Center: fountain + columns + stone table + the Grovekeeper Spirit (procedural emissive orb)
 - Fog-of-war within maze, explored paths persist in delta
 - Campfire at entrance for rest + fast travel
 
@@ -778,12 +778,12 @@ base value and difficulty tier.
 | Sage | Lore keeper | Thoughtful, ancient |
 | Ember | Alchemist | Eccentric, curious |
 
-### 19.2 NPC Visuals (3DPSX ChibiCharacters)
+### 19.2 NPC Visuals (Procedural Chibi)
 
-- 7 base characters + 33 mix-and-match items
+- Assembled from primitive shapes (box body, sphere head, cylinder limbs)
 - Seeded appearance via `scopedRNG('npc-appearance', worldSeed, npcId)`
 - Lego-style animation via anime.js (rigid body part rotation, no skeletal rigs)
-- "pr" emission variants for night glow
+- Rendered by `ChibiNpcScene.tsx` + `ChibiNpc.tsx`
 
 ### 19.3 Procedural NPCs
 
@@ -900,10 +900,11 @@ Raw food restores hunger with minimal healing. Cooking at campfire or Cooking Po
 | 1-8 | `useInput` hook | Tool selection |
 | Escape | `useInput` hook | Pause menu |
 
-### 23.3 FPS Pivot (Planned)
+### 23.3 FPS Camera (Active)
 
-Mouse look (desktop), swipe-to-look (mobile), raycast from camera center with
-per-tool range and crosshair feedback.
+Mouse look (desktop via `KeyboardMouseProvider`), swipe-to-look (mobile via `TouchLookZone` + `TouchProvider`),
+raycast from camera center (`useRaycast`). Player capsule with Rapier physics (`PlayerCapsule.tsx`).
+Full implementation in `game/input/InputManager.ts` and `components/player/FPSCamera.tsx`.
 
 ---
 
@@ -1038,20 +1039,32 @@ Supplementary retro SFX and ambient files from `/Volumes/home/assets/Audio/`.
 
 Headings: Fredoka (500/700). Body: Nunito (400/600/700).
 
-### 28.4 GLB Models (3DPSX)
+### 28.4 Procedural Geometry (GLB-Free)
 
-The visual foundation. PSX-native models with pixel-art textures.
+**All visuals are procedural.** No GLB model files are loaded at runtime. Every entity
+(trees, bushes, fences, props, buildings, enemies, tools) is rendered from Three.js
+primitives + canvas textures. See §42 for full procedural rendering spec.
 
-| Category | Count | Source |
-|----------|-------|--------|
-| Trees | 14 | 3DPSX Retro Nature |
-| NPCs | 7 base + 33 items | 3DPSX ChibiCharacters |
-| Farm structures | 85 | 3DPSX Farm Assets |
-| Seasonal bushes | 262 | 3DPSX All Bushes |
-| Fences | 79 | 3DPSX Fences |
-| Tools | 5 | 3DPSX PSX Tools |
-| Modular structures | ~210 | PSX Mega Pack II |
-| Survival props | ~137 | PSX Mega Pack II |
+| Category | Rendering | Component |
+|----------|-----------|-----------|
+| Trees | Cylinder trunk + dodecahedron canopy | `ProceduralTrees.tsx` |
+| Bushes | Sphere + season color tint | `ProceduralBushes.tsx` |
+| Fences | Cylinder posts + box rails | `ProceduralFences.tsx` |
+| Props | Cylinders (barrels) + boxes (crates) | `ProceduralProps.tsx` |
+| Buildings | Merged box geometry + interiors | `ProceduralBuilding.tsx` / `ProceduralTown.tsx` |
+| Grass | Instanced planes | `ProceduralGrass.tsx` |
+| Hedges | Box-based wall pieces | `ProceduralHedgeMaze.tsx` |
+| Enemies | Composed primitive shapes per tier | `ProceduralEnemies/` |
+| NPCs | Assembled chibi body parts | `ChibiNpcScene.tsx` |
+| Tools | Composed primitive shapes | `ProceduralToolView/` |
+| Terrain | Heightmap plane mesh | `TerrainChunk.tsx` |
+| Water | Gerstner wave plane mesh | `WaterBody.tsx` |
+| Spirits | IcosahedronGeometry + emissive | `GrovekeeperSpirit.tsx` |
+
+**Design heritage:** The original design referenced 3DPSX GLB packs (trees, bushes,
+fences, ChibiCharacters, PSX Mega Pack II). These were replaced by the procedural
+rendering system (§42) to eliminate GLB loading, reduce bundle size, and enable
+infinite instanced rendering with minimal draw calls.
 
 ---
 
@@ -1299,7 +1312,7 @@ a vanishingly small chance of producing the same overall narrative.
 - Bubble fades in/out with 0.3s animation
 
 ECS: `DialogueComponent`, `QuestBranchComponent` in `game/ecs/components/dialogue.ts`
-Config: `config/game/dialogues.json` (trees), `config/game/quests.json` (chains)
+Config: `config/game/dialogue-trees.json` (trees), `game/quests/data/questChains.json` (chains)
 
 ---
 
@@ -1313,7 +1326,7 @@ enemies. See §41 for the confirmed design decision.
 ### 34.1 Enemies
 
 Spawned from biome templates. Config: `config/game/enemies.json`.
-Models: `assets/models/enemies/` (3DPSX GLBs, all rigged with armatures).
+Rendered by `ProceduralEnemies/` -- composed primitive shapes per tier (no GLB models).
 
 | Enemy | Key | Biomes | Behavior | Tier | HP | Damage | Night Only |
 |-------|-----|--------|----------|------|----|--------|------------|
@@ -1403,7 +1416,7 @@ defenses and prestige rewards.
 - Resource deduction on placement
 
 ECS: `ModularPieceComponent`, `BuildableComponent`, `LightSourceComponent`
-Config: `config/game/building.json`, `config/game/megapackAssets.json`
+Config: `config/game/building.json`
 
 ---
 
@@ -1520,8 +1533,9 @@ No inline magic numbers. Enforced by `.claude/hooks/no-magic-numbers.sh`.
 
 ## 39. Implementation Status
 
-**Last audited: 2026-03-08** — 4,071 tests passing (12 failing across 3 suites) in 176 total suites. 178 test files.
+**Last audited: 2026-03-08 (evening re-audit)** — 4,105 tests passing, 0 failing across 178 suites. 178 test files.
 All systems in `game/systems/` (98 non-test .ts files across flat files + subdirectories) have corresponding test files.
+Audio test failures from earlier audit (Tone.js ESM import) have been resolved.
 
 ### 39.1 System Wiring Status
 
@@ -1642,7 +1656,7 @@ Previous gap list (2026-03-07) had 10 items. Status of each:
 6. **SpeechBubble not mounted:** R3F component exists with tests but not rendered by ChibiNpc or ChibiNpcScene.
 7. **No codex/discovery UI:** Species discovery system tracks progress in store but has no player-facing UI.
 8. **Quest chain UI missing:** Quest chains run via store + engine but have no in-game panel. QuestPanel exists but is not mounted.
-9. **3 test suites failing (12 tests):** `audioEngine.test.ts`, `AudioManager.test.ts`, and `fishingWiring.test.ts` fail due to Tone.js ESM import issues in the Jest environment. Not a runtime bug — audio works at runtime via first-gesture bootstrap.
+9. ~~3 test suites failing (12 tests)~~ **RESOLVED.** All 178 test suites now pass (4,105 tests). Tone.js ESM import issues in Jest have been fixed.
 
 ### 39.4 Priority Phases (audited 2026-03-08)
 
@@ -1668,11 +1682,11 @@ Previous gap list (2026-03-07) had 10 items. Status of each:
 
 ### 39.5 Test Coverage Summary
 
-- **Test suites:** 173 passing, 3 failing (176 total)
-- **Individual tests:** 4,071 passing, 12 failing (4,083 total)
+- **Test suites:** 178 passing, 0 failing (178 total)
+- **Individual tests:** 4,105 passing, 0 failing (4,105 total)
 - **Test files:** 178 (+ 3 `.pending` files not yet active)
 - **Systems with tests:** all `game/systems/` files have corresponding test files
-- **Failing suites:** `audioEngine.test.ts`, `AudioManager.test.ts`, `fishingWiring.test.ts` — Tone.js ESM import issue in Jest only
+- **Failing suites:** None (previously `audioEngine.test.ts`, `AudioManager.test.ts`, `fishingWiring.test.ts` failed due to Tone.js ESM import — now resolved)
 - **Math.random() violations:** 0 in production code (1 in test mock in `saveLoad.test.ts`, acceptable; 3 comment references in documentation, not violations)
 
 ---
@@ -1751,7 +1765,7 @@ The game is an open-world RPG grove-tending game with:
 - **Loot tables** for all enemy types in `config/game/loot.json` — drops are grove-relevant resources (timber, sap, hide, meat, herbs, fiber, acorns, seeds, metal_scrap, ore)
 - **Labyrinth zones** have highest enemy density (skeleton warriors, blood wraiths, devil boss)
 - **Devil** is a rare Tier 5 boss found only in labyrinth centers — defeating it advances the Grovekeeper narrative
-- All enemy models: 3DPSX GLBs + PSX Horror-Fantasy Megapack (PSX aesthetic, rigged armatures)
+- All enemies rendered procedurally via `ProceduralEnemies/` (tier-based primitive shapes, PSX aesthetic)
 
 ### 41.1 Confirmed Environmental Conflict (Non-Enemy)
 
@@ -2084,7 +2098,7 @@ procedural building system:
 | 7 | `components/scene/ProceduralBuilding.tsx` | Consume `blueprintId` for interior + openings |
 | 8 | Tests | `villageLayout.test.ts`, `buildingGeometry.test.ts` (interiors), `villageGenerator.test.ts` (grid) |
 
-Status: **IMPLEMENTED — tests: 37, wired to game loop: NO (ChunkManager step pending §43.10 step 5-6), wired to UI: NO**
+Status: **IMPLEMENTED — tests: 37, ProceduralTown mounted in Canvas (`app/game/index.tsx`). Full ChunkManager-driven procedural village spawning (§43.10 steps 5-6) still pending; Rootmere uses authored layout.**
 
 ---
 
@@ -2155,8 +2169,9 @@ Per-biome species lists with seasonal weight modifiers.
 | `components/game/FishingPanel.tsx` | FPS overlay UI for minigame |
 | `components/game/fishingPanelLogic.ts` | Pure display helpers |
 | `game/actions/actionDispatcher.ts` | FISH action wiring |
+| `game/systems/fishingWiring.test.ts` | 8 wiring integration tests |
 
-Status: **System logic COMPLETE, tests COMPLETE, UI panel IMPLEMENTING, wiring to GameUI IMPLEMENTING**
+Status: **COMPLETE** -- System logic, tests (38+), UI panel, action dispatcher wiring, FishingPanel all live.
 
 ---
 
@@ -2218,8 +2233,9 @@ Formula: `staminaCost = hardness × baseStaminaPerHardness (8)`
 | `config/game/mining.json` | Hardness table, ore table |
 | `game/actions/actionDispatcher.ts` | MINE action wiring |
 | `game/hooks/useInteraction/actionHandlers.ts` | handlePickAction |
+| `game/systems/miningWiring.test.ts` | 11 wiring integration tests |
 
-Status: **System logic COMPLETE, tests COMPLETE, wired to dispatcher COMPLETE, resource type fix IMPLEMENTING**
+Status: **COMPLETE** -- System logic, tests (36+), dispatcher wiring, resource types (ore/stone/fish) all live.
 
 ---
 
@@ -2288,8 +2304,10 @@ Player presses B key or taps Build button
 | `components/game/PlacementGhost.tsx` | 3D ghost mesh + UI overlay |
 | `game/actions/actionDispatcher.ts` | BUILD action wiring |
 | `config/game/building.json` | Build costs, unlock levels, snap points |
+| `game/hooks/useBuildMode.ts` | B-key shortcut + open/close state |
+| `game/hooks/useBuildMode.test.ts` | 3 hook integration tests |
 
-Status: **UI panel COMPLETE, ghost preview COMPLETE, B-key shortcut IMPLEMENTING, resource deduction on placement IMPLEMENTING**
+Status: **COMPLETE** -- UI panel, ghost preview, B-key shortcut (useBuildMode), BUILD action wiring all live.
 
 Files:
 - `game/world/villageLayout/index.ts` — `generateVillageLayout()` entry point

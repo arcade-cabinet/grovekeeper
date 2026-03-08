@@ -28,6 +28,14 @@ jest.mock("@/game/hooks/useMouseLook", () => ({
   useMouseLook: jest.fn(),
 }));
 
+jest.mock("@/game/input/InputManager", () => ({
+  inputManager: { getFrame: () => ({ moveX: 0, moveZ: 0 }) },
+}));
+
+jest.mock("@/game/utils/headBob", () => ({
+  computeHeadBob: () => 0,
+}));
+
 import { EYE_HEIGHT, FPSCamera, getCameraPosition } from "./FPSCamera.tsx";
 
 describe("FPSCamera (Spec §9)", () => {

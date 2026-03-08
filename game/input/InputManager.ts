@@ -27,6 +27,8 @@ export interface InputFrame {
   interact: boolean;
   /** Tool swap: -1 = prev slot, 0 = no change, +1 = next slot */
   toolSwap: number;
+  /** Direct tool slot selection via number keys (1-9). 0 = no selection. */
+  toolSelect: number;
   /** Sprint modifier */
   sprint: boolean;
 }
@@ -40,6 +42,7 @@ function emptyFrame(): InputFrame {
     jump: false,
     interact: false,
     toolSwap: 0,
+    toolSelect: 0,
     sprint: false,
   };
 }
@@ -101,6 +104,9 @@ export class InputManager {
       if (partial.sprint) frame.sprint = true;
       if (partial.toolSwap !== undefined && partial.toolSwap !== 0 && frame.toolSwap === 0) {
         frame.toolSwap = partial.toolSwap;
+      }
+      if (partial.toolSelect !== undefined && partial.toolSelect !== 0 && frame.toolSelect === 0) {
+        frame.toolSelect = partial.toolSelect;
       }
     }
 

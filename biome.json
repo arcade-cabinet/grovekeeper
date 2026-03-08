@@ -27,7 +27,8 @@
       "correctness": {
         "noUnusedImports": "warn",
         "useExhaustiveDependencies": "warn",
-        "noUnresolvedImports": "off"
+        "noUnresolvedImports": "off",
+        "noUndeclaredDependencies": "warn"
       },
       "suspicious": {
         "noConsole": "off",

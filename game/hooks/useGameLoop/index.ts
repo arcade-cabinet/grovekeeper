@@ -9,16 +9,18 @@
  */
 
 import { useFrame } from "@react-three/fiber";
-import { useRef } from "react";
 import type { MutableRefObject } from "react";
-import { NpcBrain } from "@/game/ai/NpcBrain";
+import { useRef } from "react";
+import type { NpcBrain } from "@/game/ai/NpcBrain";
 import { getDifficultyById } from "@/game/config/difficulty";
 import { createWildTreeEntity } from "@/game/ecs/archetypes";
+import type { TimeOfDay } from "@/game/ecs/components/procedural/atmosphere";
 import {
   ambientZonesQuery,
   combatQuery,
   dayNightQuery,
   enemiesQuery,
+  generateEntityId,
   harvestableQuery,
   npcsQuery,
   playerQuery,
@@ -26,21 +28,31 @@ import {
   waterBodiesQuery,
   world,
 } from "@/game/ecs/world";
-import { generateEntityId } from "@/game/ecs/world";
-import { initDayNight, tickDayNight } from "@/game/systems/dayNight";
-import type { TimeOfDay } from "@/game/ecs/components/procedural/atmosphere";
-import { advanceTutorial } from "@/game/stores/settings";
+import { inputManager } from "@/game/input/InputManager";
 import { useGameStore } from "@/game/stores";
+import { advanceTutorial } from "@/game/stores/settings";
+import {
+  type AmbientAudioState,
+  computeAmbientMix,
+  tickAmbientAudio,
+  type ZoneInput,
+} from "@/game/systems/ambientAudio";
+import { tickAttackCooldown, tickInvulnFrames } from "@/game/systems/combat";
+import { initDayNight, syncDayNight } from "@/game/systems/dayNight";
+import { EnemyEntityManager } from "@/game/systems/enemyAI";
 import { harvestCooldownTick } from "@/game/systems/harvest";
 import { advanceNpcAnimation } from "@/game/systems/npcAnimation";
 import { updateNpcMovement } from "@/game/systems/npcMovement";
+import type { WalkabilityGrid } from "@/game/systems/pathfinding";
 import { regenStamina } from "@/game/systems/stamina";
+import { computeStaminaRegenMult } from "@/game/systems/survival";
 import {
   advanceTime,
   MICROSECONDS_PER_GAME_SECOND,
   setGameTime,
   type TimeState,
 } from "@/game/systems/time";
+import { tickWaterParticles, type WaterParticlesState } from "@/game/systems/waterParticles";
 import {
   getWeatherGrowthMultiplier,
   initializeWeather,
@@ -52,25 +64,14 @@ import {
   initializeRegrowthState,
   type RegrowthState,
 } from "@/game/systems/wildTreeRegrowth";
-import {
-  computeAmbientMix,
-  tickAmbientAudio,
-  type AmbientAudioState,
-  type ZoneInput,
-} from "@/game/systems/ambientAudio";
-import {
-  tickWaterParticles,
-  type WaterParticlesState,
-} from "@/game/systems/waterParticles";
-import { tickAttackCooldown, tickInvulnFrames } from "@/game/systems/combat";
-import { EnemyEntityManager } from "@/game/systems/enemyAI";
-import { inputManager } from "@/game/input/InputManager";
+import { getZoneBonusMagnitude, type ZoneType } from "@/game/systems/zoneBonuses";
 import { hashString } from "@/game/utils/seedRNG";
-import { tickAchievements } from "./tickAchievements";
-import { tickGrowth } from "./tickGrowth";
-import { tickNpcAI, tickNpcSchedules } from "./tickNpcAI";
-import { tickSurvival } from "./tickSurvival";
-import type { WalkabilityGrid } from "@/game/systems/pathfinding";
+import { tickAchievements } from "./tickAchievements.ts";
+import { tickCombatDeaths } from "./tickCombatDeaths.ts";
+import { tickGrowth } from "./tickGrowth.ts";
+import { tickNpcAI, tickNpcSchedules } from "./tickNpcAI.ts";
+import { tickSeasonalEffects } from "./tickSeasonalEffects.ts";
+import { tickSurvival } from "./tickSurvival.ts";
 
 /** Maximum delta to prevent death spirals (100 ms). */
 const MAX_DELTA = 0.1;
@@ -170,6 +171,8 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
       lastSeasonRef.current = timeState.season;
       store.setCurrentSeason(timeState.season);
       store.trackSeason(timeState.season);
+      // Apply seasonal tint / model swaps to vegetation ECS entities (Spec §6.3).
+      tickSeasonalEffects(timeState.season);
     }
 
     store.setGameTime(timeState.totalMicroseconds);
@@ -177,9 +180,11 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
     // ── 1b. Day/Night ECS Tick ───────────────────────────────────────────
 
     // Bootstrap the singleton DayNight + Sky ECS entities on first frame.
+    // Pass the authoritative gameTimeMicroseconds so a resumed game starts at
+    // the correct hour/day/season rather than always at dawn (hour 6).
     if (!dayNightEntityInitialized.current) {
       if (dayNightQuery.entities.length === 0) {
-        const dnComponent = initDayNight();
+        const dnComponent = initDayNight(timeState.totalMicroseconds);
         world.add({
           id: generateEntityId(),
           dayNight: dnComponent,
@@ -197,13 +202,14 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
       dayNightEntityInitialized.current = true;
     }
 
-    // Tick the day/night system each frame — mutates the ECS entity in-place
-    // so Sky + Lighting can read lerped values from dayNightQuery.entities[0].
+    // Sync the DayNight ECS entity to the authoritative time from time.ts
+    // each frame. This replaces the old independent tickDayNight(dt) call
+    // which could drift from the canonical clock over many frames.
     for (const entity of dayNightQuery) {
       const skyEntities = skyQuery.entities;
       const skyEntity = skyEntities.length > 0 ? skyEntities[0] : null;
       if (entity.dayNight && skyEntity?.sky) {
-        tickDayNight(entity.dayNight, skyEntity.sky, dt);
+        syncDayNight(entity.dayNight, skyEntity.sky, timeState.totalMicroseconds);
       }
       break; // singleton — only one DayNight entity
     }
@@ -253,20 +259,46 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
     // ── 3. Growth System ─────────────────────────────────────────────────
 
     const frameDiffConfig = getDifficultyById(store.difficulty);
-    const growthSpeedMult = frameDiffConfig?.growthSpeedMult ?? 1.0;
+    const baseGrowthSpeedMult = frameDiffConfig?.growthSpeedMult ?? 1.0;
+    // Apply zone-based growth_boost bonus (Spec §18). Returns 0 for unknown zones.
+    const zoneGrowthBonus = getZoneBonusMagnitude(
+      (store.currentZoneId ?? "grove") as ZoneType,
+      "growth_boost",
+    );
+    const growthSpeedMult = baseGrowthSpeedMult * (1 + zoneGrowthBonus);
 
     tickGrowth(timeState, weatherGrowthMult, growthSpeedMult, dt);
 
     // ── 4. Stamina Regeneration ──────────────────────────────────────────
+    // Regen rate is gated by hunger state and scaled by difficulty staminaRegenMult.
+    // Spec §12.1: zero hunger = no regen. Well Fed (>80) = +10% bonus.
 
-    for (const entity of playerQuery) {
-      if (!entity.player) continue;
-      const newStamina = regenStamina(entity.player.stamina, entity.player.maxStamina, dt);
-      if (newStamina !== entity.player.stamina) {
-        entity.player.stamina = newStamina;
-        const rounded = Math.round(newStamina * 10) / 10;
-        if (Math.abs(rounded - store.stamina) >= 0.5) {
-          store.setStamina(rounded);
+    {
+      const baseRegenMult = frameDiffConfig?.staminaRegenMult ?? 1.0;
+      const affectsGameplay = frameDiffConfig?.affectsGameplay ?? true;
+      // Apply zone-based stamina_regen bonus (Spec §18). Stacks multiplicatively.
+      const zoneStaminaBonus = getZoneBonusMagnitude(
+        (store.currentZoneId ?? "grove") as ZoneType,
+        "stamina_regen",
+      );
+      const effectiveRegenMult =
+        computeStaminaRegenMult(store.hunger, baseRegenMult, affectsGameplay) *
+        (1 + zoneStaminaBonus);
+
+      for (const entity of playerQuery) {
+        if (!entity.player) continue;
+        const newStamina = regenStamina(
+          entity.player.stamina,
+          entity.player.maxStamina,
+          dt,
+          effectiveRegenMult,
+        );
+        if (newStamina !== entity.player.stamina) {
+          entity.player.stamina = newStamina;
+          const rounded = Math.round(newStamina * 10) / 10;
+          if (Math.abs(rounded - store.stamina) >= 0.5) {
+            store.setStamina(rounded);
+          }
         }
       }
     }
@@ -283,14 +315,28 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
 
     // ── 5b. Look Tutorial (fires once when player first looks around) ─────
 
-    if (!hasFirefiredLookTutorial) {
+    {
       const frame = inputManager.getFrame();
-      const lookMagnitude = Math.sqrt(
-        frame.lookDeltaX * frame.lookDeltaX + frame.lookDeltaY * frame.lookDeltaY,
-      );
-      if (lookMagnitude > 0.1) {
-        advanceTutorial("action:look");
-        hasFirefiredLookTutorial = true;
+      if (!hasFirefiredLookTutorial) {
+        const lookMagnitude = Math.sqrt(
+          frame.lookDeltaX * frame.lookDeltaX + frame.lookDeltaY * frame.lookDeltaY,
+        );
+        if (lookMagnitude > 0.1) {
+          advanceTutorial("action:look");
+          hasFirefiredLookTutorial = true;
+        }
+      }
+
+      // ── 5c. Number key tool selection (1-9) ───────────────────────────
+      if (frame.toolSelect > 0) {
+        const slotIndex = frame.toolSelect - 1;
+        const unlocked = store.unlockedTools;
+        if (slotIndex < unlocked.length) {
+          const toolId = unlocked[slotIndex];
+          if (toolId !== store.selectedTool) {
+            store.setSelectedTool(toolId);
+          }
+        }
       }
     }
 
@@ -355,6 +401,9 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
       if (entity.health) tickInvulnFrames(entity.health, dt);
       if (entity.combat) tickAttackCooldown(entity.combat, dt);
     }
+
+    // Combat deaths: detect defeated enemies, roll loot, credit resources (Spec §34).
+    tickCombatDeaths(dt);
 
     // ── 6d. Water Particles ───────────────────────────────────────────────
 

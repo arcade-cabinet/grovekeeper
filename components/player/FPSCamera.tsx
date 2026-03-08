@@ -3,6 +3,7 @@
  *
  * Positions the Three.js camera at eye height above the player's ECS position
  * each frame. Look direction (yaw/pitch) is driven by the input system separately.
+ * Adds subtle vertical head bob when the player is moving (Spec §9).
  */
 
 import { PerspectiveCamera } from "@react-three/drei";
@@ -12,6 +13,8 @@ import type { PerspectiveCamera as PerspectiveCameraImpl } from "three";
 import { Vector3 } from "three";
 import { playerQuery } from "@/game/ecs/world";
 import { useMouseLook } from "@/game/hooks/useMouseLook";
+import { inputManager } from "@/game/input/InputManager";
+import { computeHeadBob } from "@/game/utils/headBob";
 
 /** Eye height offset above the player's ground-level ECS position in meters (Spec §9). */
 export const EYE_HEIGHT = 1.6;
@@ -46,12 +49,19 @@ export const FPSCamera = () => {
   const cameraRef = useRef<PerspectiveCameraImpl>(null);
   useMouseLook();
 
-  useFrame(() => {
+  useFrame((state) => {
     const cam = cameraRef.current;
     if (!cam) return;
 
     const { x, y, z } = getCameraPosition(playerQuery.entities, EYE_HEIGHT, DEFAULT_POSITION);
-    cam.position.set(x, y, z);
+
+    // Compute movement speed from InputManager for head bob (Spec §9).
+    // Use R3F's state.clock for elapsed time (avoids deprecated THREE.Clock import).
+    const frame = inputManager.getFrame();
+    const speed = Math.sqrt(frame.moveX * frame.moveX + frame.moveZ * frame.moveZ);
+    const bobOffset = computeHeadBob(state.clock.elapsedTime, speed);
+
+    cam.position.set(x, y + bobOffset, z);
   });
 
   return (
@@ -60,7 +70,7 @@ export const FPSCamera = () => {
       makeDefault
       fov={FOV}
       near={0.1}
-      far={100}
+      far={200}
       position={[DEFAULT_POSITION.x, DEFAULT_POSITION.y, DEFAULT_POSITION.z]}
     />
   );

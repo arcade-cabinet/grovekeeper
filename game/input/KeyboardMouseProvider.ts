@@ -8,6 +8,7 @@
  *   E                  -> interact (edge-triggered, resets each postFrame)
  *   Shift              -> sprint (held)
  *   Scroll wheel       -> toolSwap (-1 / 0 / +1, first non-zero wins)
+ *   1-9                -> toolSelect (direct tool slot, edge-triggered)
  *
  * Registers on window events. Requires pointer lock for mouse look.
  */
@@ -27,6 +28,7 @@ export class KeyboardMouseProvider implements IInputProvider {
   private jumpPressed = false;
   private interactPressed = false;
   private toolSwapAccum = 0;
+  private toolSelectSlot = 0;
 
   constructor() {
     window.addEventListener("keydown", this.onKeyDown);
@@ -45,6 +47,10 @@ export class KeyboardMouseProvider implements IInputProvider {
     }
     if (e.code === "KeyE") {
       this.interactPressed = true;
+    }
+    // Number keys 1-9 for direct tool slot selection (Spec §11, §23)
+    if (e.code >= "Digit1" && e.code <= "Digit9") {
+      this.toolSelectSlot = Number.parseInt(e.code.charAt(5), 10);
     }
   };
 
@@ -79,6 +85,7 @@ export class KeyboardMouseProvider implements IInputProvider {
       interact: this.interactPressed,
       sprint: this.heldKeys.has("ShiftLeft") || this.heldKeys.has("ShiftRight"),
       toolSwap: this.toolSwapAccum > 0 ? 1 : this.toolSwapAccum < 0 ? -1 : 0,
+      toolSelect: this.toolSelectSlot,
     };
   }
 
@@ -89,6 +96,7 @@ export class KeyboardMouseProvider implements IInputProvider {
     this.jumpPressed = false;
     this.interactPressed = false;
     this.toolSwapAccum = 0;
+    this.toolSelectSlot = 0;
   }
 
   isAvailable(): boolean {
