@@ -26,6 +26,7 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import type { ToolData } from "@/game/config/tools";
 import { TOOLS } from "@/game/config/tools";
+import { useToolWheelTabKey } from "./toolWheelLogic";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -33,6 +34,8 @@ import { TOOLS } from "@/game/config/tools";
 
 export interface ToolWheelProps {
   open: boolean;
+  /** Called to open the wheel. Used internally for Tab key / long-press wiring. */
+  onOpen?: () => void;
   onClose: () => void;
   unlockedTools: string[];
   selectedTool: string;
@@ -79,6 +82,7 @@ const COLORS = {
 
 export function ToolWheel({
   open,
+  onOpen,
   onClose,
   unlockedTools,
   selectedTool,
@@ -86,6 +90,10 @@ export function ToolWheel({
   onSelectTool,
   onUnlockTool,
 }: ToolWheelProps) {
+  // Tab key (web) toggles the wheel open/closed.
+  // On mobile, the parent should wire a long-press gesture to onOpen/onClose.
+  useToolWheelTabKey(() => (open ? onClose() : onOpen?.()));
+
   const handleSelectTool = (tool: ToolData) => {
     if (unlockedTools.includes(tool.id)) {
       onSelectTool(tool.id);

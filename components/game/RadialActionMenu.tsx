@@ -11,6 +11,9 @@
 
 import React, { useEffect, useMemo } from "react";
 import { AccessibilityInfo, Dimensions, Pressable, View } from "react-native";
+
+// Re-export FPS entity action builder for convenience at callsites.
+export { getActionsForEntity } from "./radialActions";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -208,6 +211,23 @@ function RadialLabel({
       </Text>
     </Animated.View>
   );
+}
+
+// ---------------------------------------------------------------------------
+// FPS screen-center helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the screen center coordinates for FPS radial menus.
+ *
+ * In FPS mode the menu should open at the crosshair position (screen center).
+ * Pass the returned `{ cx, cy }` as `centerX` / `centerY` to <RadialActionMenu>.
+ *
+ * Pure function — safe to call outside React render.
+ */
+export function getFpsScreenCenter(): { cx: number; cy: number } {
+  const { width, height } = Dimensions.get("window");
+  return { cx: width / 2, cy: height / 2 };
 }
 
 // ---------------------------------------------------------------------------

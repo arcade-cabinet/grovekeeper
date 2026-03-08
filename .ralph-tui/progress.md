@@ -3111,3 +3111,19 @@ after each iteration and it's included in prompts for context.
   - **Batch writes + test in single Bash command**: Write growth.json AND run jest in the same Bash command so the config is available when jest imports the module. Separate Bash calls risk the config being reverted between writes and the test run.
   - **WILD_CONFIG comes from growth.json via static JSON import**: TypeScript infers the type from the JSON shape. After adding `wildTreeRegrowth` key to growth.json, `growthConfig.wildTreeRegrowth` types correctly — no cast needed. But the JSON must be written before jest runs (same Bash command).
 ---
+
+## 2026-03-07 - US-168
+- Updated ToolWheel + RadialActionMenu for FPS perspective controls (Spec §11, §16).
+- Files changed:
+  - `components/game/radialActions.ts` — added `getActionsForEntity(hit, selectedTool)` for center-screen raycast → action mapping (npc→talk+trade, structure→use+inspect, tree→tool-specific+inspect)
+  - `components/game/toolWheelLogic.ts` — new file; exports `shouldToggleToolWheel(e)` pure predicate + `useToolWheelTabKey(onToggle)` hook (Tab key, web-only)
+  - `components/game/ToolWheel.tsx` — added `onOpen?: () => void` prop; integrated `useToolWheelTabKey` internally; Tab key toggles open/close
+  - `components/game/RadialActionMenu.tsx` — added `getFpsScreenCenter()` helper (returns `{cx, cy}` at screen center); re-exports `getActionsForEntity` for callsite convenience
+  - `components/game/radialActions.test.ts` — new; 16 tests for `getActionsForEntity` (all entity types, tool mapping, fallback) + regression on `getActionsForTile`
+  - `components/game/toolWheelLogic.test.ts` — new; 5 tests for `shouldToggleToolWheel` pure predicate
+- **Verification:** `pnpm test --no-coverage` → 4088 tests, all pass (21 new)
+- **Learnings:**
+  - **`shouldToggleToolWheel` extraction pattern**: `instanceof HTMLInputElement` in source code requires a browser environment (jsdom). Extract the predicate as a pure function so tests can run with `@jest-environment jsdom` on just the test file — the module re-runs in jsdom context when the test file uses that env.
+  - **`getFpsScreenCenter()` as pure export**: Pure functions that only call `Dimensions.get("window")` from react-native can be tested without mocking the component. Callsites simply call it at render time for screen-center positioning.
+  - **Re-export pattern for sibling modules**: `RadialActionMenu.tsx` re-exports `getActionsForEntity` from `radialActions.ts` so callsites have a single import point — `import { RadialActionMenu, getActionsForEntity } from "@/components/game/RadialActionMenu"`.
+---
