@@ -8,7 +8,7 @@
 
 import { type ThreeEvent, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
-import * as THREE from "three";
+import { BufferGeometry, Color, LineSegments, Mesh, MeshStandardMaterial, Vector3 } from "three";
 
 export interface GroundProps {
   /** Grid size in tiles (e.g. 16 for 16x16). */
@@ -26,22 +26,22 @@ export interface GroundProps {
 }
 
 /** Biome base colors — vibrant and distinct. */
-const BIOME_COLORS: Record<string, THREE.Color> = {
-  grass: new THREE.Color(0.4, 0.62, 0.25),
-  soil: new THREE.Color(0.52, 0.38, 0.22),
-  dirt: new THREE.Color(0.58, 0.48, 0.32),
-  stone: new THREE.Color(0.56, 0.54, 0.5),
+const BIOME_COLORS: Record<string, Color> = {
+  grass: new Color(0.4, 0.62, 0.25),
+  soil: new Color(0.52, 0.38, 0.22),
+  dirt: new Color(0.58, 0.48, 0.32),
+  stone: new Color(0.56, 0.54, 0.5),
 };
 
 /** Wilderness color for areas outside zones — deep forest green. */
-const WILDERNESS_COLOR = new THREE.Color(0.18, 0.32, 0.12);
+const WILDERNESS_COLOR = new Color(0.18, 0.32, 0.12);
 
 /** Seasonal tints applied to ground material. */
-const SEASON_TINTS: Record<string, THREE.Color> = {
-  spring: new THREE.Color(1.0, 1.05, 0.95),
-  summer: new THREE.Color(1.05, 1.0, 0.9),
-  autumn: new THREE.Color(1.1, 0.95, 0.8),
-  winter: new THREE.Color(0.9, 0.95, 1.05),
+const SEASON_TINTS: Record<string, Color> = {
+  spring: new Color(1.0, 1.05, 0.95),
+  summer: new Color(1.05, 1.0, 0.9),
+  autumn: new Color(1.1, 0.95, 0.8),
+  winter: new Color(0.9, 0.95, 1.05),
 };
 
 /** Padding beyond the grid for the ground plane. */
@@ -55,8 +55,8 @@ export const Ground = ({
   center = [0, 0],
   onPointerDown,
 }: GroundProps) => {
-  const groundRef = useRef<THREE.Mesh>(null);
-  const gridRef = useRef<THREE.LineSegments>(null);
+  const groundRef = useRef<Mesh>(null);
+  const gridRef = useRef<LineSegments>(null);
 
   // Ground extends beyond the playable grid
   const groundSize = gridSize + WORLD_PADDING * 2;
@@ -66,7 +66,7 @@ export const Ground = ({
   // Current biome color with seasonal tint
   const groundColor = useMemo(() => {
     const base = BIOME_COLORS[biome]?.clone() ?? WILDERNESS_COLOR.clone();
-    const tint = SEASON_TINTS[season] ?? new THREE.Color(1, 1, 1);
+    const tint = SEASON_TINTS[season] ?? new Color(1, 1, 1);
     return base.multiply(tint);
   }, [biome, season]);
 
@@ -74,22 +74,22 @@ export const Ground = ({
   const gridGeometry = useMemo(() => {
     if (!showGrid) return null;
 
-    const points: THREE.Vector3[] = [];
+    const points: Vector3[] = [];
     const originX = center[0];
     const originZ = center[1];
 
     // Horizontal lines
     for (let i = 0; i <= gridSize; i++) {
-      points.push(new THREE.Vector3(originX, 0.01, originZ + i));
-      points.push(new THREE.Vector3(originX + gridSize, 0.01, originZ + i));
+      points.push(new Vector3(originX, 0.01, originZ + i));
+      points.push(new Vector3(originX + gridSize, 0.01, originZ + i));
     }
     // Vertical lines
     for (let i = 0; i <= gridSize; i++) {
-      points.push(new THREE.Vector3(originX + i, 0.01, originZ));
-      points.push(new THREE.Vector3(originX + i, 0.01, originZ + gridSize));
+      points.push(new Vector3(originX + i, 0.01, originZ));
+      points.push(new Vector3(originX + i, 0.01, originZ + gridSize));
     }
 
-    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const geo = new BufferGeometry().setFromPoints(points);
     return geo;
   }, [gridSize, showGrid, center]);
 
@@ -97,7 +97,7 @@ export const Ground = ({
   useFrame(() => {
     const mesh = groundRef.current;
     if (!mesh) return;
-    const mat = mesh.material as THREE.MeshStandardMaterial;
+    const mat = mesh.material as MeshStandardMaterial;
     mat.color.lerp(groundColor, 0.05);
   });
 

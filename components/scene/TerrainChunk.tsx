@@ -15,7 +15,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
 import { useRef } from "react";
-import * as THREE from "three";
+import { BufferAttribute, BufferGeometry, Color, Group, Material, Mesh, MeshStandardMaterial } from "three";
 
 import { terrainChunksQuery } from "@/game/ecs/world";
 import { CHUNK_SIZE } from "@/game/world/ChunkManager";
@@ -122,7 +122,7 @@ export function buildTerrainGeometry(
   baseColor: string,
   biomeBlend: [number, number, number, number] = [0, 0, 0, 0],
   neighborColors: [string, string, string, string] = [baseColor, baseColor, baseColor, baseColor],
-): THREE.BufferGeometry {
+): BufferGeometry {
   const n = CHUNK_SIZE; // 16 vertices per side
   const segments = n - 1; // 15 quads per side
 
@@ -130,8 +130,8 @@ export function buildTerrainGeometry(
   const colors = new Float32Array(n * n * 3);
 
   // Parse hex colors to linear RGB
-  const base = new THREE.Color(baseColor);
-  const nColors = neighborColors.map((hex) => new THREE.Color(hex));
+  const base = new Color(baseColor);
+  const nColors = neighborColors.map((hex) => new Color(hex));
   const neighborRGB: [
     [number, number, number],
     [number, number, number],
@@ -185,9 +185,9 @@ export function buildTerrainGeometry(
     }
   }
 
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  const geometry = new BufferGeometry();
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new BufferAttribute(colors, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
 
@@ -248,11 +248,11 @@ export function buildTrimeshArgs(heightmap: Float32Array): {
  * load/unload via ChunkManager.
  */
 export const TerrainChunks = () => {
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<Group>(null);
   // Per-entity geometry cache (chunk heightmap is immutable unless dirty)
-  const geometryCacheRef = useRef(new Map<string, THREE.BufferGeometry>());
+  const geometryCacheRef = useRef(new Map<string, BufferGeometry>());
   // Per-entity mesh map for O(1) lookup
-  const meshMapRef = useRef(new Map<string, THREE.Mesh>());
+  const meshMapRef = useRef(new Map<string, Mesh>());
   // Per-entity Rapier static rigid body (trimesh collider attached)
   const rigidBodyMapRef = useRef(new Map<string, RapierBody>());
 
@@ -297,13 +297,13 @@ export const TerrainChunks = () => {
       // Create mesh on first encounter
       let mesh = meshMap.get(id);
       if (!mesh) {
-        const material = new THREE.MeshStandardMaterial({
+        const material = new MeshStandardMaterial({
           vertexColors: true,
           roughness: 0.95,
           metalness: 0,
           flatShading: true, // PSX aesthetic (Spec §1.4)
         });
-        mesh = new THREE.Mesh(geometry, material);
+        mesh = new Mesh(geometry, material);
         mesh.receiveShadow = true;
         // Terrain chunks are static — position never changes after creation.
         // Set once and freeze the world matrix to skip per-frame recomputation (Spec §28).
@@ -347,7 +347,7 @@ export const TerrainChunks = () => {
           geo.dispose();
           geometryCache.delete(id);
         }
-        (mesh.material as THREE.Material).dispose();
+        (mesh.material as Material).dispose();
         meshMap.delete(id);
 
         // Remove Rapier rigid body (also removes its attached collider)

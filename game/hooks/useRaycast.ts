@@ -11,7 +11,7 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef, useSyncExternalStore } from "react";
-import * as THREE from "three";
+import { Raycaster, Vector2, Vector3 } from "three";
 
 import type { Entity } from "@/game/ecs/world";
 import { npcsQuery, structuresQuery, treesQuery } from "@/game/ecs/world";
@@ -32,12 +32,12 @@ export interface RaycastHit {
   /** Distance from camera to hit in meters. */
   distance: number;
   /** World-space hit point. */
-  point: THREE.Vector3;
+  point: Vector3;
 }
 
 // Module-level objects reused each frame to avoid per-frame allocation.
-const _raycaster = new THREE.Raycaster();
-const _screenCenter = new THREE.Vector2(0, 0);
+const _raycaster = new Raycaster();
+const _screenCenter = new Vector2(0, 0);
 
 // ── Shared hit store (for React Native HUD components outside Canvas) ─────────
 

@@ -11,7 +11,7 @@ import { useFrame } from "@react-three/fiber";
 import type { RapierRigidBody } from "@react-three/rapier";
 import type { RefObject } from "react";
 import { useRef } from "react";
-import * as THREE from "three";
+import { Vector3 } from "three";
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 
 const PLAYER_SPEED = gridConfig.playerSpeed;
@@ -39,7 +39,7 @@ export function rotateByYaw(
   };
 }
 
-const _dir = new THREE.Vector3();
+const _dir = new Vector3();
 
 /**
  * Each frame, reads camera yaw and applies horizontal linvel to the

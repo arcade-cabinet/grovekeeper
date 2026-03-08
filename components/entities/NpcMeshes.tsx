@@ -7,19 +7,19 @@
 
 import { type ThreeEvent, useFrame } from "@react-three/fiber";
 import { useCallback, useEffect, useRef } from "react";
-import * as THREE from "three";
+import { CapsuleGeometry, Color, Group, Mesh, MeshStandardMaterial } from "three";
 
 import type { NpcFunction } from "@/game/ecs/world";
 import { npcsQuery } from "@/game/ecs/world";
 
 /** NPC function type to color mapping. */
-const NPC_COLORS: Record<NpcFunction, THREE.Color> = {
-  trading: new THREE.Color("#DAA520"), // gold
-  quests: new THREE.Color("#4169E1"), // royal blue
-  tips: new THREE.Color("#2E8B57"), // sea green
-  seeds: new THREE.Color("#8B4513"), // saddle brown
-  crafting: new THREE.Color("#7B2D8B"), // purple
-  lore: new THREE.Color("#C0C0C0"), // silver
+const NPC_COLORS: Record<NpcFunction, Color> = {
+  trading: new Color("#DAA520"), // gold
+  quests: new Color("#4169E1"), // royal blue
+  tips: new Color("#2E8B57"), // sea green
+  seeds: new Color("#8B4513"), // saddle brown
+  crafting: new Color("#7B2D8B"), // purple
+  lore: new Color("#C0C0C0"), // silver
 };
 
 /** Capsule dimensions for NPC mesh. */
@@ -32,7 +32,7 @@ const RADIAL_SEGMENTS = 10;
 const Y_OFFSET = CAPSULE_LENGTH / 2 + CAPSULE_RADIUS;
 
 /** Shared capsule geometry for all NPCs. */
-const sharedGeometry = new THREE.CapsuleGeometry(
+const sharedGeometry = new CapsuleGeometry(
   CAPSULE_RADIUS,
   CAPSULE_LENGTH,
   CAP_SEGMENTS,
@@ -45,9 +45,9 @@ export interface NpcMeshesProps {
 }
 
 export const NpcMeshes = ({ onNpcTap }: NpcMeshesProps = {}) => {
-  const groupRef = useRef<THREE.Group>(null);
-  const meshMapRef = useRef(new Map<string, THREE.Mesh>());
-  const materialCacheRef = useRef(new Map<NpcFunction, THREE.MeshStandardMaterial>());
+  const groupRef = useRef<Group>(null);
+  const meshMapRef = useRef(new Map<string, Mesh>());
+  const materialCacheRef = useRef(new Map<NpcFunction, MeshStandardMaterial>());
 
   // Dispose cached materials on unmount to prevent GPU memory leaks
   useEffect(() => {
@@ -77,10 +77,10 @@ export const NpcMeshes = ({ onNpcTap }: NpcMeshesProps = {}) => {
 
       // Get or create material for this function type
       if (!materialCache.has(npc.function)) {
-        const color = NPC_COLORS[npc.function] ?? new THREE.Color("#888888");
+        const color = NPC_COLORS[npc.function] ?? new Color("#888888");
         materialCache.set(
           npc.function,
-          new THREE.MeshStandardMaterial({
+          new MeshStandardMaterial({
             color,
             roughness: 0.6,
             metalness: 0.15,
@@ -92,7 +92,7 @@ export const NpcMeshes = ({ onNpcTap }: NpcMeshesProps = {}) => {
       let mesh = meshMap.get(id);
       if (!mesh) {
         // biome-ignore lint/style/noNonNullAssertion: just set above
-        mesh = new THREE.Mesh(sharedGeometry, materialCache.get(npc.function)!);
+        mesh = new Mesh(sharedGeometry, materialCache.get(npc.function)!);
         mesh.castShadow = true;
         mesh.userData = { entityId: id };
         meshMap.set(id, mesh);

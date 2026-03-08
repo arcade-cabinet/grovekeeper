@@ -1,0 +1,6 @@
+{
+  "fpsBudgetMobile": 55,
+  "fpsBudgetDesktop": 60,
+  "memoryBudgetMb": 100,
+  "drawCallBudget": 50
+}

@@ -18,7 +18,7 @@
 import { useFrame } from "@react-three/fiber";
 import type * as React from "react";
 import { useRef, useState } from "react";
-import * as THREE from "three";
+import { CylinderGeometry, Group, Material, Mesh, MeshStandardMaterial, Object3D, SphereGeometry, Vector3 } from "three";
 
 import { treesQuery } from "@/game/ecs/world";
 import { gameState$ } from "@/game/stores/core";
@@ -148,13 +148,13 @@ export function partitionTreeEntities(
 // ---------------------------------------------------------------------------
 
 /** Reusable scale vector — avoids per-frame allocations. */
-const _scaleVec = new THREE.Vector3();
+const _scaleVec = new Vector3();
 
 /** Lerp speed for smooth scale transitions on procedural meshes. */
 const SCALE_LERP_SPEED = 4;
 
 interface ProceduralTreeMesh {
-  mesh: THREE.Mesh;
+  mesh: Mesh;
   stage: 0 | 1;
 }
 
@@ -170,7 +170,7 @@ interface ProceduralTreeMesh {
 const ProceduralTreeRenderer = ({
   groupRef,
 }: {
-  groupRef: React.RefObject<THREE.Group | null>;
+  groupRef: React.RefObject<Group | null>;
 }) => {
   const meshMapRef = useRef(new Map<string, ProceduralTreeMesh>());
 
@@ -195,7 +195,7 @@ const ProceduralTreeRenderer = ({
         if (entry) {
           group.remove(entry.mesh);
           entry.mesh.geometry.dispose();
-          (entry.mesh.material as THREE.Material).dispose();
+          (entry.mesh.material as Material).dispose();
         }
         const mesh = _makeProceduralMesh(tree.stage as 0 | 1);
         mesh.userData = { entityId: id };
@@ -216,7 +216,7 @@ const ProceduralTreeRenderer = ({
       if (!aliveIds.has(id)) {
         group.remove(entry.mesh);
         entry.mesh.geometry.dispose();
-        (entry.mesh.material as THREE.Material).dispose();
+        (entry.mesh.material as Material).dispose();
         meshMap.delete(id);
       }
     }
@@ -226,18 +226,18 @@ const ProceduralTreeRenderer = ({
 };
 
 /** Create a raw Three.js Mesh for a procedural stage (0 or 1). */
-function _makeProceduralMesh(stage: 0 | 1): THREE.Mesh {
+function _makeProceduralMesh(stage: 0 | 1): Mesh {
   if (stage === 0) {
-    const geo = new THREE.SphereGeometry(0.15, 8, 6);
-    const mat = new THREE.MeshStandardMaterial({ color: "#795548", roughness: 0.9 });
-    const mesh = new THREE.Mesh(geo, mat);
+    const geo = new SphereGeometry(0.15, 8, 6);
+    const mat = new MeshStandardMaterial({ color: "#795548", roughness: 0.9 });
+    const mesh = new Mesh(geo, mat);
     mesh.castShadow = true;
     return mesh;
   }
   // Stage 1: Sprout
-  const geo = new THREE.CylinderGeometry(0.04, 0.06, 0.3, 8);
-  const mat = new THREE.MeshStandardMaterial({ color: "#4CAF50", roughness: 0.8 });
-  const mesh = new THREE.Mesh(geo, mat);
+  const geo = new CylinderGeometry(0.04, 0.06, 0.3, 8);
+  const mat = new MeshStandardMaterial({ color: "#4CAF50", roughness: 0.8 });
+  const mesh = new Mesh(geo, mat);
   mesh.castShadow = true;
   return mesh;
 }
@@ -357,11 +357,11 @@ export interface TreeInstancesProps {
  * See GAME_SPEC.md §8.1, §6.3, §28.
  */
 export const TreeInstances = ({ onTreeTap }: TreeInstancesProps = {}) => {
-  const proceduralGroupRef = useRef<THREE.Group>(null);
+  const proceduralGroupRef = useRef<Group>(null);
 
   const handlePointerDown = (event: {
     stopPropagation: () => void;
-    object: THREE.Object3D;
+    object: Object3D;
     point: { x: number; z: number };
   }) => {
     if (!onTreeTap) return;

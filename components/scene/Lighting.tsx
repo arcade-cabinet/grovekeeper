@@ -11,7 +11,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import * as THREE from "three";
+import { AmbientLight, Color, DirectionalLight, Fog } from "three";
 
 export interface LightingProps {
   /** Normalized time of day, 0 = midnight, 0.5 = noon, 1 = midnight. */
@@ -41,8 +41,8 @@ export interface LightingProps {
 /** Earthy green fog base — blends the horizon into misty forest. */
 const FOG_BASE = { r: 0.3, g: 0.42, b: 0.25 };
 
-function hexToColor3(hex: string): THREE.Color {
-  return new THREE.Color(hex);
+function hexToColor3(hex: string): Color {
+  return new Color(hex);
 }
 
 export const Lighting = ({
@@ -52,8 +52,8 @@ export const Lighting = ({
   shadowOpacity,
   skyColors,
 }: LightingProps) => {
-  const sunRef = useRef<THREE.DirectionalLight>(null);
-  const ambientRef = useRef<THREE.AmbientLight>(null);
+  const sunRef = useRef<DirectionalLight>(null);
+  const ambientRef = useRef<AmbientLight>(null);
 
   useFrame((state) => {
     const sun = sunRef.current;
@@ -89,17 +89,17 @@ export const Lighting = ({
     const fogG = Math.min(1, FOG_BASE.g + zenithColor.g * 0.1);
     const fogB = Math.min(1, FOG_BASE.b + zenithColor.b * 0.08);
 
-    if (scene.fog instanceof THREE.Fog) {
+    if (scene.fog instanceof Fog) {
       scene.fog.color.setRGB(fogR, fogG, fogB);
     } else {
-      scene.fog = new THREE.Fog(new THREE.Color(fogR, fogG, fogB), 20, 40);
+      scene.fog = new Fog(new Color(fogR, fogG, fogB), 20, 40);
     }
 
     // Match scene background to fog for seamless horizon blend
-    if (scene.background instanceof THREE.Color) {
+    if (scene.background instanceof Color) {
       scene.background.setRGB(fogR, fogG, fogB);
     } else {
-      scene.background = new THREE.Color(fogR, fogG, fogB);
+      scene.background = new Color(fogR, fogG, fogB);
     }
   });
 

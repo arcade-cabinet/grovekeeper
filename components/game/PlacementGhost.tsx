@@ -11,7 +11,7 @@ import { useRapier } from "@react-three/rapier";
 import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
-import * as THREE from "three";
+import { Color, DoubleSide, Mesh, MeshStandardMaterial, Vector3 } from "three";
 
 import { Text } from "@/components/ui/text";
 import type { ModularPieceComponent } from "@/game/ecs/components/building";
@@ -31,8 +31,8 @@ export { buildGhostPiece, rotateIncrement, snapToGrid } from "./PlacementGhostUt
 // Constants
 // ---------------------------------------------------------------------------
 
-const VALID_COLOR = new THREE.Color(0.3, 0.8, 0.3);
-const INVALID_COLOR = new THREE.Color(0.8, 0.2, 0.2);
+const VALID_COLOR = new Color(0.3, 0.8, 0.3);
+const INVALID_COLOR = new Color(0.8, 0.2, 0.2);
 const GHOST_OPACITY = 0.4;
 const RAYCAST_MAX_DIST = 20;
 
@@ -55,13 +55,13 @@ interface PlacementGhostMeshProps {
 }
 
 function PlacementGhostMesh({ template, gridPosRef, rotationRef }: PlacementGhostMeshProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const matRef = useRef<THREE.MeshStandardMaterial>(null);
+  const meshRef = useRef<Mesh>(null);
+  const matRef = useRef<MeshStandardMaterial>(null);
   const { camera } = useThree();
   const { rapier, world: rapierWorld } = useRapier();
 
   // Reused each frame — avoids per-frame allocations
-  const rayDir = useRef(new THREE.Vector3());
+  const rayDir = useRef(new Vector3());
 
   // Q/E keyboard rotation (desktop)
   useEffect(() => {
@@ -145,7 +145,7 @@ function PlacementGhostMesh({ template, gridPosRef, rotationRef }: PlacementGhos
         color={VALID_COLOR}
         transparent
         opacity={GHOST_OPACITY}
-        side={THREE.DoubleSide}
+        side={DoubleSide}
         depthWrite={false}
         roughness={0.6}
         metalness={0}

@@ -7,12 +7,12 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import * as THREE from "three";
+import { Color, Mesh, Vector3 } from "three";
 
 import { playerQuery } from "@/game/ecs/world";
 
 /** Forest green player color. */
-const PLAYER_COLOR = new THREE.Color("#2D5A27");
+const PLAYER_COLOR = new Color("#2D5A27");
 
 /** Lerp speed for smooth position interpolation. */
 const LERP_SPEED = 8;
@@ -26,10 +26,10 @@ const RADIAL_SEGMENTS = 12;
 /** Y offset so the capsule sits on the ground plane. */
 const Y_OFFSET = CAPSULE_LENGTH / 2 + CAPSULE_RADIUS;
 
-const _targetPos = new THREE.Vector3();
+const _targetPos = new Vector3();
 
 export const Player = () => {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<Mesh>(null);
 
   useFrame((_state, delta) => {
     const mesh = meshRef.current;

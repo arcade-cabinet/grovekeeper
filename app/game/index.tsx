@@ -3,12 +3,16 @@ import { Physics } from "@react-three/rapier";
 import { Stack } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { BushModel } from "@/components/entities/BushModel";
 import { FenceInstances } from "@/components/entities/FenceInstances";
 import { GrassInstances } from "@/components/entities/GrassInstances";
-import { NpcMeshes } from "@/components/entities/NpcMeshes";
+import { GrovekeeperSpirit } from "@/components/entities/GrovekeeperSpirit";
+import { HedgeMaze } from "@/components/entities/HedgeMaze";
+import { NpcModel } from "@/components/entities/NpcModel";
 import { PropInstances } from "@/components/entities/PropInstances";
 import { StructureInstances } from "@/components/entities/StructureInstances";
 import { TreeInstances } from "@/components/entities/TreeInstances";
+import { ToolViewModel } from "@/components/player/ToolViewModel";
 import { ActionButton } from "@/components/game/ActionButton";
 import { HUD } from "@/components/game/HUD";
 import { PauseMenu } from "@/components/game/PauseMenu";
@@ -17,6 +21,7 @@ import { TutorialOverlay } from "@/components/game/TutorialOverlay";
 import { FPSCamera } from "@/components/player/FPSCamera";
 import { PlayerCapsule } from "@/components/player/PlayerCapsule";
 import { TouchLookZone } from "@/components/player/TouchLookZone";
+import { EnemyMeshes } from "@/components/entities/EnemyMesh";
 import { BirmotherMesh } from "@/components/scene/BirmotherMesh";
 import { Lighting } from "@/components/scene/Lighting";
 import { Sky } from "@/components/scene/Sky";
@@ -24,7 +29,7 @@ import { WaterBodies } from "@/components/scene/WaterBody";
 import { TerrainChunks } from "@/components/scene/TerrainChunk";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
-import { dayNightQuery } from "@/game/ecs/world";
+import { bushesQuery, dayNightQuery, npcsQuery } from "@/game/ecs/world";
 import { useBirmotherEncounter } from "@/game/hooks/useBirmotherEncounter";
 import { useGameLoop } from "@/game/hooks/useGameLoop";
 import { useInput } from "@/game/hooks/useInput";
@@ -68,6 +73,45 @@ const ACHIEVEMENT_DEFS = ACHIEVEMENTS.map((a) => ({
   description: a.description,
 }));
 
+/** Renders all ECS NPC entities as GLB ChibiCharacter assemblies (Spec §15). */
+interface NpcSceneProps {
+  worldSeed: string;
+}
+
+function NpcScene({ worldSeed }: NpcSceneProps) {
+  // NpcMeshes handled onNpcTap via pointer events on capsule meshes.
+  // NpcModel renders GLB assemblies; tap handling is deferred to a future overlay.
+  return (
+    <>
+      {npcsQuery.entities.map((entity) => (
+        <NpcModel
+          key={entity.id}
+          npcId={entity.npc.templateId}
+          worldSeed={worldSeed}
+          role={entity.npc.function}
+          position={[entity.position.x, entity.position.y, entity.position.z]}
+        />
+      ))}
+    </>
+  );
+}
+
+/** Renders all ECS bush entities as seasonal GLBs (Spec §6.3, §8). */
+function BushScene() {
+  return (
+    <>
+      {bushesQuery.entities.map((entity) => (
+        <BushModel
+          key={entity.id}
+          bushShape={entity.bush.bushShape}
+          season={entity.bush.season}
+          position={[entity.position.x, entity.position.y, entity.position.z]}
+        />
+      ))}
+    </>
+  );
+}
+
 export default function GameScreen() {
   const resources = useGameStore((s) => s.resources);
   const level = useGameStore((s) => s.level);
@@ -91,6 +135,7 @@ export default function GameScreen() {
   const seeds = useGameStore((s) => s.seeds);
   const selectedSpecies = useGameStore((s) => s.selectedSpecies);
   const setSelectedSpecies = useGameStore((s) => s.setSelectedSpecies);
+  const worldSeed = useGameStore((s) => s.worldSeed);
   const _hasSeenRules = useGameStore((s) => s.hasSeenRules);
   const setHasSeenRules = useGameStore((s) => s.setHasSeenRules);
   const activeBorderCosmetic = useGameStore((s) => s.activeBorderCosmetic);
@@ -248,8 +293,9 @@ export default function GameScreen() {
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
       <View style={styles.container} onTouchStart={handleFirstGesture}>
-        {/* 3D Canvas */}
-        <Canvas shadows style={styles.canvas}>
+        {/* 3D Canvas — antialias:false + dpr=1 per PSX aesthetic (Spec §28.1).
+            No MSAA framebuffer allocation → lower mobile GPU memory. */}
+        <Canvas shadows style={styles.canvas} gl={{ antialias: false }} dpr={1}>
           <Physics>
             <GameSystems />
             <FPSCamera />
@@ -275,8 +321,13 @@ export default function GameScreen() {
             <StructureInstances />
             <FenceInstances />
             <PropInstances />
-            <NpcMeshes onNpcTap={onNpcTap} />
+            <NpcScene worldSeed={worldSeed} />
+            <BushScene />
+            <HedgeMaze />
+            <GrovekeeperSpirit />
+            <ToolViewModel moveDirection={moveDirection} />
             <BirmotherMesh />
+            <EnemyMeshes />
           </Physics>
         </Canvas>
 

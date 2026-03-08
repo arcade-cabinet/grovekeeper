@@ -19,7 +19,7 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type * as React from "react";
 import { useMemo, useRef } from "react";
-import * as THREE from "three";
+import { BufferGeometry, InstancedMesh, Material, Matrix4, Mesh, Quaternion, Vector3 } from "three";
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -95,10 +95,10 @@ export const StaticModelInstances = ({
   const { scene } = useGLTF(glbPath);
 
   /** All Mesh children extracted from the GLB scene, with their geometry + material. */
-  const meshInfos = useMemo<Array<{ geo: THREE.BufferGeometry; mat: THREE.Material }>>(() => {
-    const result: Array<{ geo: THREE.BufferGeometry; mat: THREE.Material }> = [];
+  const meshInfos = useMemo<Array<{ geo: BufferGeometry; mat: Material }>>(() => {
+    const result: Array<{ geo: BufferGeometry; mat: Material }> = [];
     scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh && obj.geometry) {
+      if (obj instanceof Mesh && obj.geometry) {
         const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
         if (mat) result.push({ geo: obj.geometry, mat });
       }
@@ -107,14 +107,14 @@ export const StaticModelInstances = ({
   }, [scene]);
 
   /** One ref slot per sub-mesh (dynamic length, updated via callback ref). */
-  const instancedRefs = useRef<Array<THREE.InstancedMesh | null>>([]);
+  const instancedRefs = useRef<Array<InstancedMesh | null>>([]);
 
   // Reusable Three.js objects — avoids per-frame heap allocations
-  const _pos = useMemo(() => new THREE.Vector3(), []);
-  const _quat = useMemo(() => new THREE.Quaternion(), []);
-  const _scale = useMemo(() => new THREE.Vector3(1, 1, 1), []);
-  const _matrix = useMemo(() => new THREE.Matrix4(), []);
-  const _yAxis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  const _pos = useMemo(() => new Vector3(), []);
+  const _quat = useMemo(() => new Quaternion(), []);
+  const _scale = useMemo(() => new Vector3(1, 1, 1), []);
+  const _matrix = useMemo(() => new Matrix4(), []);
+  const _yAxis = useMemo(() => new Vector3(0, 1, 0), []);
 
   useFrame(() => {
     const entities = entitiesRef.current;
@@ -147,7 +147,7 @@ export const StaticModelInstances = ({
       {meshInfos.map(({ geo, mat }, i) => (
         <instancedMesh
           key={i}
-          ref={(el: THREE.InstancedMesh | null) => {
+          ref={(el: InstancedMesh | null) => {
             if (el) {
               // InstancedMesh sits at origin — position managed via setMatrixAt().
               // Freeze the world matrix to skip Three.js per-frame recomputation (Spec §28).

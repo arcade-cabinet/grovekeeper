@@ -8,7 +8,8 @@
 import { PerspectiveCamera } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import * as THREE from "three";
+import type { PerspectiveCamera as PerspectiveCameraImpl } from "three";
+import { Vector3 } from "three";
 import { playerQuery } from "@/game/ecs/world";
 import { useMouseLook } from "@/game/hooks/useMouseLook";
 
@@ -19,7 +20,7 @@ export const EYE_HEIGHT = 1.6;
 const FOV = 65;
 
 /** Default camera position before the player entity exists. */
-const DEFAULT_POSITION = new THREE.Vector3(0, EYE_HEIGHT, 0);
+const DEFAULT_POSITION = new Vector3(0, EYE_HEIGHT, 0);
 
 type Vec3 = { x: number; y: number; z: number };
 
@@ -42,7 +43,7 @@ export function getCameraPosition(
 
 /** FPS camera that follows the player capsule at eye height each frame (Spec §9). */
 export const FPSCamera = () => {
-  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  const cameraRef = useRef<PerspectiveCameraImpl>(null);
   useMouseLook();
 
   useFrame(() => {

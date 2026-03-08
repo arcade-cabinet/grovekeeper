@@ -8,7 +8,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import * as THREE from "three";
+import { Color, DoubleSide, Mesh, MeshBasicMaterial } from "three";
 
 export interface SelectionRingProps {
   /** World position of the ring [x, y, z]. */
@@ -32,11 +32,11 @@ const ALPHA_MIN = 0.55;
 const ALPHA_MAX = 0.85;
 
 /** Green-gold glow color. */
-const GLOW_COLOR = new THREE.Color("#A5D6A7");
+const GLOW_COLOR = new Color("#A5D6A7");
 
 export const SelectionRing = ({ position, visible }: SelectionRingProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const matRef = useRef<THREE.MeshBasicMaterial>(null);
+  const meshRef = useRef<Mesh>(null);
+  const matRef = useRef<MeshBasicMaterial>(null);
   const phaseRef = useRef(0);
 
   useFrame((_state, delta) => {
@@ -74,7 +74,7 @@ export const SelectionRing = ({ position, visible }: SelectionRingProps) => {
         color={GLOW_COLOR}
         transparent
         opacity={ALPHA_MAX}
-        side={THREE.DoubleSide}
+        side={DoubleSide}
         depthWrite={false}
       />
     </mesh>

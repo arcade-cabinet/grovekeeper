@@ -13,7 +13,7 @@
  * See GAME_SPEC.md §31.2.
  */
 
-import * as THREE from "three";
+import { AdditiveBlending, Color, DoubleSide, IUniform, ShaderMaterial, Vector2 } from "three";
 
 import type { GerstnerWaveLayer, WaterBodyComponent } from "@/game/ecs/components/procedural/water";
 
@@ -94,7 +94,7 @@ export const GERSTNER_FRAGMENT_SHADER = `
 /** Typed uniform map for a Gerstner water ShaderMaterial. */
 export interface GerstnerUniformMap {
   uTime: { value: number };
-  uWaterColor: { value: THREE.Color };
+  uWaterColor: { value: Color };
   uOpacity: { value: number };
   uFoamEnabled: { value: boolean };
   uFoamThreshold: { value: number };
@@ -103,7 +103,7 @@ export interface GerstnerUniformMap {
   uWavelength: { value: number[] };
   uSpeed: { value: number[] };
   uSteepness: { value: number[] };
-  uDirection: { value: THREE.Vector2[] };
+  uDirection: { value: Vector2[] };
 }
 
 // ─── Pure Factory Functions ────────────────────────────────────────────────────
@@ -122,9 +122,9 @@ export function buildGerstnerUniforms(waterBody: WaterBodyComponent): GerstnerUn
   const wavelength = new Array<number>(MAX_WAVE_LAYERS).fill(1);
   const speed = new Array<number>(MAX_WAVE_LAYERS).fill(0);
   const steepness = new Array<number>(MAX_WAVE_LAYERS).fill(0);
-  const direction: THREE.Vector2[] = Array.from(
+  const direction: Vector2[] = Array.from(
     { length: MAX_WAVE_LAYERS },
-    () => new THREE.Vector2(1, 0),
+    () => new Vector2(1, 0),
   );
 
   for (let i = 0; i < count; i++) {
@@ -133,12 +133,12 @@ export function buildGerstnerUniforms(waterBody: WaterBodyComponent): GerstnerUn
     wavelength[i] = layer.wavelength;
     speed[i] = layer.speed;
     steepness[i] = layer.steepness;
-    direction[i] = new THREE.Vector2(layer.direction[0], layer.direction[1]);
+    direction[i] = new Vector2(layer.direction[0], layer.direction[1]);
   }
 
   return {
     uTime: { value: 0 },
-    uWaterColor: { value: new THREE.Color(waterBody.color) },
+    uWaterColor: { value: new Color(waterBody.color) },
     uOpacity: { value: waterBody.opacity },
     uFoamEnabled: { value: waterBody.foamEnabled },
     uFoamThreshold: { value: waterBody.foamThreshold },
@@ -157,15 +157,15 @@ export function buildGerstnerUniforms(waterBody: WaterBodyComponent): GerstnerUn
  * The returned material is transparent + double-sided (for planar water planes).
  * Call `updateGerstnerTime(mat, clock.elapsedTime)` each frame from useFrame.
  */
-export function createGerstnerMaterial(waterBody: WaterBodyComponent): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
+export function createGerstnerMaterial(waterBody: WaterBodyComponent): ShaderMaterial {
+  return new ShaderMaterial({
     vertexShader: GERSTNER_VERTEX_SHADER,
     fragmentShader: GERSTNER_FRAGMENT_SHADER,
     uniforms: buildGerstnerUniforms(waterBody) as unknown as {
-      [uniform: string]: THREE.IUniform;
+      [uniform: string]: IUniform;
     },
     transparent: true,
-    side: THREE.DoubleSide,
+    side: DoubleSide,
     depthWrite: false,
   });
 }
@@ -176,7 +176,7 @@ export function createGerstnerMaterial(waterBody: WaterBodyComponent): THREE.Sha
  * @param material  The ShaderMaterial returned by createGerstnerMaterial.
  * @param time      Elapsed time in seconds (e.g. three.Clock.elapsedTime).
  */
-export function updateGerstnerTime(material: THREE.ShaderMaterial, time: number): void {
+export function updateGerstnerTime(material: ShaderMaterial, time: number): void {
   material.uniforms.uTime.value = time;
 }
 
@@ -243,8 +243,8 @@ export const CAUSTICS_FRAGMENT_SHADER = `
  * pattern appears to project light onto the terrain below.
  * Call `updateCausticsTime(mat, clock.elapsedTime)` each frame.
  */
-export function createCausticsMaterial(): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
+export function createCausticsMaterial(): ShaderMaterial {
+  return new ShaderMaterial({
     vertexShader: CAUSTICS_VERTEX_SHADER,
     fragmentShader: CAUSTICS_FRAGMENT_SHADER,
     uniforms: {
@@ -253,7 +253,7 @@ export function createCausticsMaterial(): THREE.ShaderMaterial {
       uCausticsSpeed: { value: CAUSTICS_SPEED },
     },
     transparent: true,
-    blending: THREE.AdditiveBlending,
+    blending: AdditiveBlending,
     depthWrite: false,
   });
 }
@@ -264,6 +264,6 @@ export function createCausticsMaterial(): THREE.ShaderMaterial {
  * @param material  The ShaderMaterial returned by createCausticsMaterial.
  * @param time      Elapsed time in seconds.
  */
-export function updateCausticsTime(material: THREE.ShaderMaterial, time: number): void {
+export function updateCausticsTime(material: ShaderMaterial, time: number): void {
   material.uniforms.uTime.value = time;
 }

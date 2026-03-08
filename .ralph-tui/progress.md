@@ -87,6 +87,27 @@ after each iteration and it's included in prompts for context.
 
 ---
 
+## 2026-03-07 - US-167
+- Implemented memory + FPS performance optimization (Spec §28).
+- Files changed:
+  - `app/game/index.tsx` — added `gl={{ antialias: false }}` + `dpr={1}` to Canvas (PSX aesthetic + mobile GPU memory)
+  - `config/game/performance.json` — new: budget constants (fpsBudgetMobile=55, fpsBudgetDesktop=60, memoryBudgetMb=100, drawCallBudget=50)
+  - `game/utils/performanceMonitor.ts` — new: FPS EMA tracker (`createFpsState`, `tickFps`, `isFpsUnderBudgetMobile/Desktop`) + memory sampler (`sampleMemory`, `isMemoryOverBudget`, `formatMemoryReport`, `formatFpsReport`)
+  - `game/utils/performanceMonitor.test.ts` — new: 25 tests
+  - `game/utils/applyNearestFilter.ts` — new: PSX NearestFilter traversal (`applyNearestFilter`, `countNearestFilterTextures`)
+  - `game/utils/applyNearestFilter.test.ts` — new: 10 tests
+  - 19 source files — converted `import * as THREE from "three"` → named imports (tree-shakable, lower bundle size). Files: TerrainChunk, StaticInstances, Lighting, Sky, EnemyMesh, TreeInstances, treeGeometry, gerstnerWater, usePhysicsMovement, WaterBody, PlacementGhost, GrassInstances, useRaycast, FPSCamera, Player, NpcMeshes, Camera, SelectionRing, Ground
+  - `components/player/FPSCamera.tsx` — alias `PerspectiveCamera` from drei vs three collision: `import type { PerspectiveCamera as PerspectiveCameraImpl }`
+  - `components/scene/Camera.tsx` — same alias fix
+- **Verification:** `npx tsc --noEmit` → 0 errors; `npx jest --no-coverage` → 4067 tests, 169 suites pass (+35 new tests)
+- **Learnings:**
+  - **Barrel import alias collision**: After converting `import * as THREE` → named imports, files that already imported the same symbol name from `@react-three/drei` (e.g. `PerspectiveCamera`) got a "Duplicate identifier" TS error. Fix: `import type { PerspectiveCamera as PerspectiveCameraImpl } from "three"` for the type-only usage, keep the drei import for the JSX component.
+  - **Python re.sub for bulk barrel import conversion**: `re.sub(r'THREE\.([A-Z][a-zA-Z0-9]*)', r'\1', content)` reliably converts all namespace-qualified refs to bare names. Run after replacing the import line. Cross-file consistent since the pattern only matches uppercase-initial identifiers (all three.js exports).
+  - **Mock Mesh constructor signature mismatch**: Real `THREE.Mesh(geometry?, material?)` vs mock `Mesh(material?)` causes TS type errors in tests even with `jest.mock`. Fix: `const MockMesh = Mesh as unknown as { new(material?: unknown): InstanceType<typeof Mesh> }` — cast the class before calling `new`.
+  - **dpr=1 + antialias:false on Canvas**: Both are required for mobile GPU memory targets. `antialias:false` prevents the MSAA framebuffer (4x memory). `dpr=1` prevents the extra render buffer on high-DPI screens. The R3F Canvas `dpr` prop is the right lever (not `gl.pixelRatio` — that's set after init).
+  - **Geometry/material disposal already complete**: TerrainChunk.tsx already disposes both geometry and material in the chunk unload block (from prior US). The acceptance criterion was met before this story.
+---
+
 ## 2026-03-07 - US-166
 - Implemented draw call performance optimization (Spec §28).
 - Files changed:

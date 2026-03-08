@@ -12,7 +12,7 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useState } from "react";
-import * as THREE from "three";
+import { BufferGeometry, InstancedMesh, Material, Matrix4, Mesh, Quaternion, Vector3 } from "three";
 import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
 import { grassQuery } from "@/game/ecs/world";
 import { createRNG, hashString } from "@/game/utils/seedRNG";
@@ -111,21 +111,21 @@ interface GrassTypeInstancesProps {
 const GrassTypeInstances = ({ grassType, capacity }: GrassTypeInstancesProps) => {
   const glbPath = resolveGrassGLBPath(grassType);
   const { scene } = useGLTF(glbPath);
-  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const meshRef = useRef<InstancedMesh>(null);
 
   // Reusable Three.js objects — avoids per-frame heap allocations
-  const _pos = useMemo(() => new THREE.Vector3(), []);
-  const _quat = useMemo(() => new THREE.Quaternion(), []);
-  const _scale = useMemo(() => new THREE.Vector3(1, 1, 1), []);
-  const _matrix = useMemo(() => new THREE.Matrix4(), []);
-  const _yAxis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  const _pos = useMemo(() => new Vector3(), []);
+  const _quat = useMemo(() => new Quaternion(), []);
+  const _scale = useMemo(() => new Vector3(1, 1, 1), []);
+  const _matrix = useMemo(() => new Matrix4(), []);
+  const _yAxis = useMemo(() => new Vector3(0, 1, 0), []);
 
   // Extract geometry + material from the first Mesh in the GLB scene
-  const [geometry, material] = useMemo<[THREE.BufferGeometry | null, THREE.Material | null]>(() => {
-    let geo: THREE.BufferGeometry | null = null;
-    let mat: THREE.Material | null = null;
+  const [geometry, material] = useMemo<[BufferGeometry | null, Material | null]>(() => {
+    let geo: BufferGeometry | null = null;
+    let mat: Material | null = null;
     scene.traverse((obj) => {
-      if (obj instanceof THREE.Mesh && !geo) {
+      if (obj instanceof Mesh && !geo) {
         geo = obj.geometry;
         mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
       }

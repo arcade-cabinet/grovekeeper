@@ -13,7 +13,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo } from "react-native";
-import * as THREE from "three";
+import { BackSide, Color, InstancedMesh, Matrix4, Mesh, MeshStandardMaterial, ShaderMaterial, Vector3 } from "three";
 import theme from "@/config/theme.json" with { type: "json" };
 import { createRNG } from "@/game/utils/seedRNG";
 
@@ -38,11 +38,11 @@ export interface SkyProps {
 }
 
 /** Seasonal tint applied to the sky gradient. */
-const SEASONAL_TINTS: Record<string, THREE.Color> = {
-  spring: new THREE.Color(theme.colors.springGreen),
-  summer: new THREE.Color(theme.colors.summerYellow),
-  autumn: new THREE.Color(theme.colors.autumnOrange),
-  winter: new THREE.Color(theme.colors.winterBlue),
+const SEASONAL_TINTS: Record<string, Color> = {
+  spring: new Color(theme.colors.springGreen),
+  summer: new Color(theme.colors.summerYellow),
+  autumn: new Color(theme.colors.autumnOrange),
+  winter: new Color(theme.colors.winterBlue),
 };
 
 /** Intensity range for day/night cycle. */
@@ -63,9 +63,9 @@ const STAR_SEED = 0xdeadbeef;
  * Uses Mulberry32 PRNG (createRNG) with a fixed constant seed so positions
  * are identical every session. Returns an array of world-space positions.
  */
-function generateStarPositions(count: number, radius: number): THREE.Vector3[] {
+function generateStarPositions(count: number, radius: number): Vector3[] {
   const rng = createRNG(STAR_SEED);
-  const positions: THREE.Vector3[] = [];
+  const positions: Vector3[] = [];
 
   for (let i = 0; i < count; i++) {
     const u = rng();
@@ -78,7 +78,7 @@ function generateStarPositions(count: number, radius: number): THREE.Vector3[] {
     const z = radius * Math.cos(phi);
 
     // Only place stars in upper hemisphere — ground hides lower half
-    positions.push(new THREE.Vector3(x, Math.abs(y) * 0.8 + 5, z));
+    positions.push(new Vector3(x, Math.abs(y) * 0.8 + 5, z));
   }
 
   return positions;
@@ -88,10 +88,10 @@ function generateStarPositions(count: number, radius: number): THREE.Vector3[] {
 const STAR_POSITIONS = generateStarPositions(STAR_COUNT, STAR_SHELL_RADIUS);
 
 export const Sky = ({ skyColors, season, sunIntensity, starIntensity = 0 }: SkyProps) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const matRef = useRef<THREE.ShaderMaterial>(null);
-  const starMatRef = useRef<THREE.MeshStandardMaterial>(null);
-  const starMeshRef = useRef<THREE.InstancedMesh>(null);
+  const meshRef = useRef<Mesh>(null);
+  const matRef = useRef<ShaderMaterial>(null);
+  const starMatRef = useRef<MeshStandardMaterial>(null);
+  const starMeshRef = useRef<InstancedMesh>(null);
 
   const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
@@ -103,10 +103,10 @@ export const Sky = ({ skyColors, season, sunIntensity, starIntensity = 0 }: SkyP
   // biome-ignore lint/correctness/useExhaustiveDependencies: create once, update in useFrame
   const uniforms = useMemo(
     () => ({
-      uZenithColor: { value: new THREE.Color(skyColors.zenith) },
-      uHorizonColor: { value: new THREE.Color(skyColors.horizon) },
+      uZenithColor: { value: new Color(skyColors.zenith) },
+      uHorizonColor: { value: new Color(skyColors.horizon) },
       uSeasonTint: {
-        value: SEASONAL_TINTS[season]?.clone() ?? new THREE.Color(1, 1, 1),
+        value: SEASONAL_TINTS[season]?.clone() ?? new Color(1, 1, 1),
       },
       uIntensity: {
         value: NIGHT_INTENSITY + (DAY_INTENSITY - NIGHT_INTENSITY) * sunIntensity,
@@ -121,7 +121,7 @@ export const Sky = ({ skyColors, season, sunIntensity, starIntensity = 0 }: SkyP
     const mesh = starMeshRef.current;
     if (!mesh) return;
 
-    const matrix = new THREE.Matrix4();
+    const matrix = new Matrix4();
     for (let i = 0; i < STAR_COUNT; i++) {
       const pos = STAR_POSITIONS[i];
       matrix.setPosition(pos.x, pos.y, pos.z);
@@ -210,7 +210,7 @@ export const Sky = ({ skyColors, season, sunIntensity, starIntensity = 0 }: SkyP
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}
           uniforms={uniforms}
-          side={THREE.BackSide}
+          side={BackSide}
           depthWrite={false}
         />
       </mesh>

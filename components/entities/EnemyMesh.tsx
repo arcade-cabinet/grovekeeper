@@ -12,7 +12,7 @@
 
 import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
-import * as THREE from "three";
+import { MeshStandardMaterial, PlaneGeometry, SphereGeometry } from "three";
 
 import type { EnemyComponent, HealthComponent } from "@/game/ecs/world";
 import { enemiesQuery } from "@/game/ecs/world";
@@ -85,11 +85,11 @@ const HealthBar = ({ hp, maxHp, position }: HealthBarProps) => {
 
   // Geometry is memoised — recreated only when dimensions change
   const bgGeo = useMemo(
-    () => new THREE.PlaneGeometry(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT),
+    () => new PlaneGeometry(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT),
     [],
   );
   const fillGeo = useMemo(
-    () => new THREE.PlaneGeometry(fillWidth, HEALTH_BAR_HEIGHT),
+    () => new PlaneGeometry(fillWidth, HEALTH_BAR_HEIGHT),
     [fillWidth],
   );
 
@@ -122,8 +122,8 @@ const HealthBar = ({ hp, maxHp, position }: HealthBarProps) => {
 // Fallback renderer (missing GLB — renders an obvious red sphere)
 // ---------------------------------------------------------------------------
 
-const FALLBACK_SPHERE_GEO = new THREE.SphereGeometry(0.5, 8, 8);
-const FALLBACK_MATERIAL = new THREE.MeshStandardMaterial({ color: "#ff0000" });
+const FALLBACK_SPHERE_GEO = new SphereGeometry(0.5, 8, 8);
+const FALLBACK_MATERIAL = new MeshStandardMaterial({ color: "#ff0000" });
 
 interface FallbackEnemyMeshProps {
   position: [number, number, number];

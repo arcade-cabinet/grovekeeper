@@ -16,7 +16,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import * as THREE from "three";
+import { Group, Material, Mesh, PlaneGeometry, ShaderMaterial } from "three";
 
 import type { WaterBodyComponent } from "@/game/ecs/components/procedural/water";
 import { waterBodiesQuery } from "@/game/ecs/world";
@@ -47,8 +47,8 @@ export const CAUSTICS_DEPTH_OFFSET = 0.05;
  *
  * Exported as a pure testable seam.
  */
-export function buildWaterPlaneGeometry(size: WaterBodyComponent["size"]): THREE.PlaneGeometry {
-  return new THREE.PlaneGeometry(
+export function buildWaterPlaneGeometry(size: WaterBodyComponent["size"]): PlaneGeometry {
+  return new PlaneGeometry(
     size.width,
     size.depth,
     WATER_PLANE_SEGMENTS,
@@ -65,11 +65,11 @@ export function buildWaterPlaneGeometry(size: WaterBodyComponent["size"]): THREE
  * For causticsEnabled bodies, creates/destroys a caustic plane below the surface.
  */
 export const WaterBodies = () => {
-  const groupRef = useRef<THREE.Group>(null);
-  const meshMapRef = useRef(new Map<string, THREE.Mesh>());
-  const materialMapRef = useRef(new Map<string, THREE.ShaderMaterial>());
-  const causticMeshMapRef = useRef(new Map<string, THREE.Mesh>());
-  const causticMaterialMapRef = useRef(new Map<string, THREE.ShaderMaterial>());
+  const groupRef = useRef<Group>(null);
+  const meshMapRef = useRef(new Map<string, Mesh>());
+  const materialMapRef = useRef(new Map<string, ShaderMaterial>());
+  const causticMeshMapRef = useRef(new Map<string, Mesh>());
+  const causticMaterialMapRef = useRef(new Map<string, ShaderMaterial>());
 
   useFrame(({ clock }) => {
     const group = groupRef.current;
@@ -91,7 +91,7 @@ export const WaterBodies = () => {
         const geometry = buildWaterPlaneGeometry(waterBody.size);
         const material = createGerstnerMaterial(waterBody);
 
-        const mesh = new THREE.Mesh(geometry, material);
+        const mesh = new Mesh(geometry, material);
         // Rotate from XY plane (Three.js default) to horizontal XZ surface
         mesh.rotation.x = -Math.PI / 2;
 
@@ -114,7 +114,7 @@ export const WaterBodies = () => {
           const causticGeometry = buildWaterPlaneGeometry(waterBody.size);
           const causticMaterial = createCausticsMaterial();
 
-          const causticMesh = new THREE.Mesh(causticGeometry, causticMaterial);
+          const causticMesh = new Mesh(causticGeometry, causticMaterial);
           causticMesh.rotation.x = -Math.PI / 2;
 
           causticMaterialMap.set(id, causticMaterial);
@@ -136,7 +136,7 @@ export const WaterBodies = () => {
       if (!aliveIds.has(id)) {
         group.remove(mesh);
         mesh.geometry.dispose();
-        (mesh.material as THREE.Material).dispose();
+        (mesh.material as Material).dispose();
         meshMap.delete(id);
         materialMap.delete(id);
       }
@@ -147,7 +147,7 @@ export const WaterBodies = () => {
       if (!aliveIds.has(id)) {
         group.remove(causticMesh);
         causticMesh.geometry.dispose();
-        (causticMesh.material as THREE.Material).dispose();
+        (causticMesh.material as Material).dispose();
         causticMeshMap.delete(id);
         causticMaterialMap.delete(id);
       }

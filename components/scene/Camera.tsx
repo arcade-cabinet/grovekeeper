@@ -9,7 +9,8 @@
 import { PerspectiveCamera } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
-import * as THREE from "three";
+import type { PerspectiveCamera as PerspectiveCameraImpl } from "three";
+import { Vector3 } from "three";
 import { playerQuery } from "@/game/ecs/world";
 
 /** Camera tilt from vertical (radians). ~77deg — over-the-shoulder, looking forward. */
@@ -25,14 +26,14 @@ const LERP_SPEED = 3;
 /** Camera target height — focus on character torso, not ground. */
 const TARGET_Y = 1.5;
 /** Default player position when no entity exists yet. */
-const DEFAULT_TARGET = new THREE.Vector3(5.5, TARGET_Y, 5.5);
+const DEFAULT_TARGET = new Vector3(5.5, TARGET_Y, 5.5);
 
 const prefersReducedMotion =
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
 
 /** Convert spherical (alpha, beta, radius) to Cartesian offset from target. */
-function sphericalOffset(alpha: number, beta: number, radius: number): THREE.Vector3 {
-  return new THREE.Vector3(
+function sphericalOffset(alpha: number, beta: number, radius: number): Vector3 {
+  return new Vector3(
     radius * Math.sin(beta) * Math.cos(alpha),
     radius * Math.cos(beta),
     radius * Math.sin(beta) * Math.sin(alpha),
@@ -40,7 +41,7 @@ function sphericalOffset(alpha: number, beta: number, radius: number): THREE.Vec
 }
 
 export const Camera = () => {
-  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  const cameraRef = useRef<PerspectiveCameraImpl>(null);
   const currentTarget = useRef(DEFAULT_TARGET.clone());
   const { size } = useThree();
 
@@ -59,7 +60,7 @@ export const Camera = () => {
 
     // Read player position from ECS
     const players = playerQuery.entities;
-    const desiredTarget = new THREE.Vector3(DEFAULT_TARGET.x, TARGET_Y, DEFAULT_TARGET.z);
+    const desiredTarget = new Vector3(DEFAULT_TARGET.x, TARGET_Y, DEFAULT_TARGET.z);
     if (players.length > 0) {
       const pos = players[0].position;
       desiredTarget.set(pos.x, TARGET_Y, pos.z);
