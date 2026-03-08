@@ -32,7 +32,7 @@ import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import type { DialogueBranch } from "@/game/ecs/components/dialogue";
 import { activeDialogueQuery } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { getDialogueTreeById } from "@/game/systems/dialogueLoader";
 import {
   closeDialogueSession,

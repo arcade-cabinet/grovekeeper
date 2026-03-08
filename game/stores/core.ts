@@ -177,6 +177,8 @@ export const initialState = {
   discoveredSpiritIds: [] as string[],
   /** Tutorial state. Spec §25.1 */
   tutorialState: initialTutorialState() as TutorialState,
+  /** Unix timestamp (ms) of the last successful save. 0 = never saved. Spec §26.3 */
+  lastSavedAt: 0,
   /** Current hunger level. Spec §12.2 */
   hunger: 100,
   maxHunger: 100,

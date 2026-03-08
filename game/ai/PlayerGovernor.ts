@@ -25,7 +25,7 @@ import {
   selectTool,
   spendToolStamina,
   waterTree,
-} from "@/game/actions/GameActions";
+} from "@/game/actions";
 import type { ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
 import { playerQuery, world } from "@/game/ecs/world";
@@ -34,7 +34,7 @@ type TileCell = { gridX: number; gridZ: number };
 
 const gridCellsQuery = world.with("gridCell", "position");
 
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import {
   advancePathFollow,
   createPathFollow,

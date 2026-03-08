@@ -38,7 +38,7 @@ jest.mock("@/components/player/TargetInfo", () => ({
   TargetInfo: jest.fn().mockReturnValue(null),
 }));
 
-jest.mock("@/game/stores/gameStore", () => ({
+jest.mock("@/game/stores", () => ({
   useGameStore: jest.fn().mockReturnValue({}),
   totalXpForLevel: jest.fn().mockReturnValue(0),
   xpToNext: jest.fn().mockReturnValue(100),

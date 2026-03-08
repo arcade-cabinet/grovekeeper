@@ -2,7 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { MainMenu } from "@/components/game/MainMenu";
 import { type NewGameConfig, NewGameModal } from "@/components/game/NewGameModal";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 
 const SCREEN_OPTIONS = {
   headerShown: false,

@@ -10,7 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { AccessibilityInfo, Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import {
   applySettingsUpdate,
   clampDrawDistance,

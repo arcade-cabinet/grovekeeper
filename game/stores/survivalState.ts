@@ -5,6 +5,8 @@
 
 import { batch } from "@legendapp/state";
 import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
+import { startChain } from "@/game/quests/questChainEngine";
+import { showToast } from "@/game/ui/Toast";
 import { gameState$, getState, initialState } from "./core";
 
 /** Start a new game. Sets hearts/maxHearts from difficulty config. Spec §12. */
@@ -13,6 +15,11 @@ export function startNewGame(difficultyId: string): void {
     (d) => d.id === difficultyId,
   );
   const maxHearts = tier?.maxHearts ?? 3;
+
+  // Auto-start the opening quest spine. Spec §25.1.
+  const state = getState();
+  const chainState = startChain(state.questChainState, "elder-awakening", state.currentDay);
+
   batch(() => {
     gameState$.difficulty.set(difficultyId);
     gameState$.hearts.set(maxHearts);
@@ -22,6 +29,11 @@ export function startNewGame(difficultyId: string): void {
     gameState$.bodyTemp.set(37.0);
     gameState$.lastCampfireId.set(null);
     gameState$.lastCampfirePosition.set(null);
+    gameState$.questChainState.set(chainState);
+  });
+
+  queueMicrotask(() => {
+    showToast("Speak with the village elder near the well.", "info");
   });
 }
 

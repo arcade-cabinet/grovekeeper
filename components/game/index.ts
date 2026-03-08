@@ -21,10 +21,10 @@ export { HUD } from "./HUD.tsx";
 export { Logo } from "./Logo.tsx";
 export type { MainMenuProps } from "./MainMenu.tsx";
 export { MainMenu } from "./MainMenu.tsx";
-export type { MinimapSnapshot } from "./MiniMap/index.ts";
-export { MiniMap, MinimapSVG, readMinimapSnapshot } from "./MiniMap/index.ts";
-export type { MiniMapOverlayProps } from "./MiniMapOverlay.tsx";
-export { MiniMapOverlay } from "./MiniMapOverlay.tsx";
+export type { MinimapSnapshot } from "./minimap/index.ts";
+export { MiniMap, MinimapSVG, readMinimapSnapshot } from "./minimap/index.ts";
+export type { MiniMapOverlayProps } from "./minimap/index.ts";
+export { MiniMapOverlay } from "./minimap/index.ts";
 export type {
   GameMode,
   NewGameConfig,

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Platform, View } from "react-native";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { BatchHarvestButton } from "../BatchHarvestButton.tsx";
 import { BuildPanel } from "../BuildPanel.tsx";
 import { HUD } from "../HUD.tsx";
-import { MiniMap } from "../MiniMap/index.ts";
+import { MiniMap } from "../minimap/index.ts";
 import { MobileActionButtons } from "../MobileActionButtons.tsx";
 import { NpcDialogue } from "../NpcDialogue.tsx";
 import { PauseMenu } from "../PauseMenu/index.tsx";

@@ -21,7 +21,7 @@ import { useRef } from "react";
 import type { DialogueComponent } from "@/game/ecs/components/dialogue";
 import { birmotherQuery, generateEntityId, playerQuery, world } from "@/game/ecs/world";
 import { isMainQuestComplete } from "@/game/quests/mainQuestSystem";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { showToast } from "@/game/ui/Toast";
 import { computeBirmotherSpawn } from "@/game/world/WorldGenerator";
 

@@ -2,7 +2,7 @@
  * tickSurvival -- hunger, body temperature, hearts, and death detection.
  */
 import type { DifficultyConfig } from "@/game/config/difficulty";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import {
   isPlayerDead,
   tickHeartsFromExposure,

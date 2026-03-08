@@ -2,7 +2,7 @@
  * tickAchievements -- checks and unlocks achievements (throttled ~5s).
  */
 import { treesQuery } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { checkAchievements, type PlayerStats } from "@/game/systems/achievements";
 import type { TimeState } from "@/game/systems/time";
 

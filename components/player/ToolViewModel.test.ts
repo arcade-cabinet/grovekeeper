@@ -23,7 +23,7 @@ jest.mock("three", () => ({
   Group: jest.fn().mockImplementation(() => ({ add: jest.fn(), remove: jest.fn() })),
 }));
 
-jest.mock("@/game/stores/gameStore", () => ({
+jest.mock("@/game/stores", () => ({
   useGameStore: jest.fn(),
 }));
 

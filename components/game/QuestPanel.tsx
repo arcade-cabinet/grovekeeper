@@ -15,7 +15,7 @@ import {
   getCurrentStepProgress,
 } from "@/game/quests/questChainEngine";
 import type { QuestChainState } from "@/game/quests/types";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { showToast } from "./Toast.tsx";
 
 // ---------------------------------------------------------------------------

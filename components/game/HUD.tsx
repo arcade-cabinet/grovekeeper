@@ -17,7 +17,7 @@ import { TargetInfo } from "@/components/player/TargetInfo";
 import { Icon } from "@/components/ui/icon";
 import { TOOLS } from "@/game/config/tools";
 import { grovekeeperSpiritsQuery, playerQuery } from "@/game/ecs/world";
-import { totalXpForLevel, useGameStore, xpToNext } from "@/game/stores/gameStore";
+import { totalXpForLevel, useGameStore, xpToNext } from "@/game/stores";
 import { computeTimeState } from "@/game/systems/time";
 import { ConnectedQuestPanel } from "./QuestPanel.tsx";
 import { ResourceBar } from "./ResourceBar.tsx";

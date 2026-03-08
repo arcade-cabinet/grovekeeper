@@ -13,7 +13,7 @@ import { ActivityIndicator, View } from "react-native";
 import { getSpeciesById } from "@/game/config/species";
 import { useAutoSave } from "@/game/hooks/useAutoSave";
 import { usePersistence } from "@/game/hooks/usePersistence";
-import { initPersistence } from "@/game/stores/gameStore";
+import { initPersistence } from "@/game/stores";
 import type { OfflineSpeciesData } from "@/game/systems/offlineGrowth";
 import { NAV_THEME } from "@/lib/theme";
 

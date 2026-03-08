@@ -8,8 +8,8 @@
 
 import type { ThreeEvent } from "@react-three/fiber";
 import { useCallback, useRef, useSyncExternalStore } from "react";
-import { spendToolStamina } from "@/game/actions/GameActions";
-import { useGameStore } from "@/game/stores/gameStore";
+import { spendToolStamina } from "@/game/actions";
+import { useGameStore } from "@/game/stores";
 import { showToast } from "@/game/ui/Toast";
 import {
   handleAxeAction,

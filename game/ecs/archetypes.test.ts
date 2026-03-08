@@ -1,4 +1,4 @@
-import type { SerializedTree } from "@/game/stores/gameStore";
+import type { SerializedTree } from "@/game/stores";
 import {
   createGridCellEntity,
   createPlayerEntity,

@@ -1,5 +1,5 @@
 import growthConfig from "@/config/game/growth.json" with { type: "json" };
-import type { SerializedTree } from "@/game/stores/gameStore";
+import type { SerializedTree } from "@/game/stores";
 import { hashString } from "@/game/utils/seedRNG";
 import type { Entity, NpcFunction } from "./world.ts";
 import { generateEntityId } from "./world.ts";

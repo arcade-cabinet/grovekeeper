@@ -2,7 +2,7 @@ import { AxeIcon, DropletsIcon, ScissorsIcon, SproutIcon } from "lucide-react-na
 import { useMemo } from "react";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { ACHIEVEMENTS } from "@/game/systems/achievements";
 import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import {

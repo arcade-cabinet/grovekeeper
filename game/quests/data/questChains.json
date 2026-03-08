@@ -1,5 +1,63 @@
 [
   {
+    "id": "elder-awakening",
+    "name": "The Elder's Warning",
+    "description": "The village elder has sensed a disturbance in the old hedge mazes. Seek them out.",
+    "icon": "📜",
+    "category": "main_story",
+    "npcId": "elder-rowan",
+    "requiredLevel": 1,
+    "isStartingQuest": true,
+    "steps": [
+      {
+        "id": "ea-talk-to-elder",
+        "name": "Find the Elder",
+        "description": "Speak with Elder Rowan near the well at the heart of the village.",
+        "npcDialogueId": "rowan-greeting",
+        "objectives": [
+          {
+            "id": "ea1-talk",
+            "description": "Speak with Elder Rowan",
+            "targetType": "talk_to_npc",
+            "targetAmount": 1,
+            "npcId": "elder-rowan"
+          }
+        ],
+        "reward": { "xp": 25 }
+      },
+      {
+        "id": "ea-plant-something",
+        "name": "Tend the Grove",
+        "description": "Plant a tree to show the Elder you are ready to be a Grovekeeper.",
+        "npcDialogueId": "rowan-greeting",
+        "objectives": [
+          {
+            "id": "ea2-plant",
+            "description": "Plant a tree",
+            "targetType": "trees_planted",
+            "targetAmount": 1
+          }
+        ],
+        "reward": { "xp": 25 }
+      },
+      {
+        "id": "ea-find-labyrinth",
+        "name": "Into the Wild",
+        "description": "Leave the village and find one of the ancient hedge labyrinths the Elder spoke of.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "ea3-labyrinth",
+            "description": "Find a hedge labyrinth",
+            "targetType": "labyrinth_discovered",
+            "targetAmount": 1
+          }
+        ],
+        "reward": { "xp": 50, "compassActivated": true }
+      }
+    ]
+  },
+  {
     "id": "rowan-history",
     "name": "Roots of the Past",
     "description": "Elder Rowan shares the history of Grovekeeper Valley, step by step.",

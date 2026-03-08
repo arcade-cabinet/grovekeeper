@@ -20,7 +20,7 @@ import { useRef } from "react";
 
 import type { DialogueComponent } from "@/game/ecs/components/dialogue";
 import { grovekeeperSpiritsQuery, playerQuery, world } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { showToast } from "@/game/ui/Toast";
 import { openDialogueSession } from "@/game/ui/dialogueBridge";
 

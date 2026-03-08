@@ -9,7 +9,7 @@ import {
   plantTree,
   pruneTree,
   waterTree,
-} from "@/game/actions/GameActions";
+} from "@/game/actions";
 import { dispatchAction } from "@/game/actions/actionDispatcher";
 import { getToolById } from "@/game/config/tools";
 import type { Entity } from "@/game/ecs/world";
@@ -19,7 +19,7 @@ import {
   trapsQuery,
   waterBodiesQuery,
 } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { showToast } from "@/game/ui/Toast";
 import { findRockAtGrid, findTreeAtGrid } from "./entityFinders";
 import { setSelection } from "./selectionStore";

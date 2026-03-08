@@ -11,7 +11,7 @@
 
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { getTeleportTarget } from "@/game/systems/fastTravel";
 
 export interface FastTravelMenuProps {

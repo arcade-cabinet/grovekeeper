@@ -11,7 +11,7 @@
 
 jest.mock("@/components/ui/text", () => ({ Text: "Text" }));
 jest.mock("@/game/ecs/world", () => ({ questBranchQuery: [] }));
-jest.mock("@/game/stores/gameStore", () => ({
+jest.mock("@/game/stores", () => ({
   useGameStore: jest.fn().mockReturnValue({}),
 }));
 jest.mock("./Toast", () => ({ showToast: jest.fn() }));

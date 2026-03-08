@@ -8,7 +8,7 @@ import { XIcon } from "lucide-react-native";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 
 export interface StatsDashboardProps {
   open: boolean;

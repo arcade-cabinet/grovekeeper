@@ -23,7 +23,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { playerQuery } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { ChunkManager } from "@/game/world/ChunkManager";
 
 // ─── Module-level singleton ───────────────────────────────────────────────────

@@ -637,6 +637,45 @@ interface ChunkDelta {
 Biome transitions blend over ~8 tiles. Starting Grove forced at (0,0) in 2-chunk
 radius. Twilight Glade only 20+ chunks from origin.
 
+### 17.3a Fixed Starting Village (AUTHORED — NOT PROCEDURAL)
+
+**Design rationale:** The starting village is the player's critical first impression.
+Procedural generation is powerful but unpredictable; the first 5 minutes must be
+fully authored and controlled. Once the player departs the village, everything is
+procedural. NPCs in the village naturally reference the unknown world around them:
+*"Nobody knows what lies past the Thornwood..."* This contrast (safe/known village
+vs. unknown world) is the game's central emotional arc.
+
+**The starting village is named Rootmere.** This name is fixed — not seed-derived.
+It references the grove's roots (thematic) and "mere" (a small woodland lake — cozy,
+English countryside). It bookends with "The Worldroot's Dream" (the game's final
+quest). Village name appears on the notice board, in dialogue, and on the minimap.
+
+**Village layout is fixed at world origin (tile 8,8 within chunk 0,0):**
+
+| Structure | Tile (relative to village center) | Source |
+|-----------|----------------------------------|--------|
+| Elder Rowan's Hut | (0, 0) | Fixed |
+| Village Well | (3, 0) | Fixed |
+| Campfire Ring | (-3, 2) | Fixed |
+| Seed Merchant's Stall | (2, 3) | Fixed |
+| Storage Shed | (-2, -3) | Fixed |
+| Notice Board | (0, 3) | Fixed |
+| Village Gate (toward world) | (0, -8) | Fixed |
+
+**NPC spawn positions are fixed per village layout** (they then follow schedules).
+
+**Terrain flattening:** `heightmap` values in the 14-tile radius around village
+center are clamped to `baseFlatLevel` before terrain mesh is built. The perimeter
+blends back to natural terrain over 4 tiles. This is applied in `terrainGenerator.ts`
+when `chunkX === 0 && chunkZ === 0`.
+
+**Procedural still applies:**
+- Trees and bushes grow at the village perimeter (not inside the flat zone)
+- The biome, ambient audio, weather, and time-of-day all apply normally
+- NPC dialogue is seed-keyed (different seeds = different dialogue personalities)
+- The rest of chunk (0,0) and all neighboring chunks are fully procedural
+
 ### 17.4 Discovery Cadence
 
 | Feature Level | Frequency | Examples |
@@ -717,7 +756,7 @@ base value and difficulty tier.
 
 ## 19. NPC System
 
-### 19.1 Named NPCs (Tutorial Village)
+### 19.1 Named NPCs (Fixed Starting Village)
 
 | NPC | Role | Personality |
 |-----|------|------------|
@@ -885,19 +924,29 @@ per-tool range and crosshair feedback.
 
 ---
 
-## 25. Tutorial System
+## 25. Onboarding System
 
-### 25.1 Tutorial Village (Pokemon-Style Departure)
+**Status: REVISED 2026-03-07** — The 11-step overlay tutorial has been retired.
+Onboarding is now handled entirely by the Elder Awakening starting quest chain.
 
-The tutorial IS the opening. No modals, no separate mode. Player wakes in a
-handcrafted village at chunk (0,0). ~8-10 minutes, all gameplay.
+### 25.1 Elder Awakening Quest (Starting Quest)
 
-**Act 1: Waking Up (~2 min)** -- Fade in, Elder Rowan, camera + movement tutorial.
-**Act 2: Learning Tools (~3 min)** -- Receive tools, chop tree, plant, water.
-**Act 3: Village Life (~2 min)** -- Meet Blossom, get seeds, HUD tour (toast callouts).
-**Act 4: The Departure (~2 min)** -- Satchel + Compass, Grovekeeper hint, walk through gate, title card.
+Onboarding is organic and quest-driven. No overlay modals, no scripted step
+sequences. On `startNewGame()`, the `"elder-awakening"` quest chain is
+automatically started and the player receives a toast: "Speak with the village
+elder near the well."
 
-Skip option: dumps starter gear, teleports to gate.
+**Quest chain: `elder-awakening`** (see `game/quests/data/questChains.json`)
+
+| Step | Objective | Reward |
+|------|-----------|--------|
+| Find the Elder | Talk to Elder Rowan | 25 XP |
+| Tend the Grove | Plant 1 tree | 25 XP |
+| Into the Wild | Discover a hedge labyrinth | 50 XP + compass activated |
+
+Action signals from `actionDispatcher.ts` (`action:plant`, `action:harvest`,
+`action:water`) are forwarded to the quest engine via `ONBOARDING_SIGNAL_MAP`
+in `game/systems/tutorial.ts`. No overlay UI is rendered.
 
 ### 25.2 Progressive Hints (20+)
 
@@ -1508,3 +1557,114 @@ Each task includes mandatory Jest unit tests and Maestro E2E flows.
 | P9 | Raids + NG+ + achievements | P7, P8 |
 | P10 | Audio (Tone.js) + weather + particles | P1-A, P3 |
 | P11 | Tutorial + menu + polish | P9, P10 |
+
+---
+
+## 40. World Naming System
+
+**Status: NEW 2026-03-07** — Seeded, deterministic names for all procedural
+areas, POIs, and NPCs. Same world seed = same names everywhere.
+
+### 40.1 Starting Village Name
+
+**Fixed name: Rootmere.** Not seed-derived. Appears on notice board, NPC
+dialogue, minimap legend. Rootmere is the home base — the only permanently
+named location.
+
+### 40.2 Procedural Area Names
+
+All other named locations are generated from a seeded word bank.
+Format: `generateAreaName(type, worldSeed, chunkX, chunkZ)`
+
+**Labyrinth names:** `[Adjective] [Noun] Labyrinth`
+- Adjective pool: Thorn, Briar, Hollow, Pale, Ember, Moss, Silver, Veil, Dusk,
+  Ancient, Gnarled, Verdant, Twilight, Ashen
+- Noun pool: Wood, Root, Glen, Mere, Rise, Stone, Gate, Arch, Ring, Veil, Watch
+- Example: "The Emberveil Labyrinth", "The Pale Root Labyrinth"
+
+**Procedural village names:** `[Prefix][Suffix]`
+- Prefix pool: Briar, Fern, Moss, Oak, Ash, Thorn, Elm, Reed, Rowan, Birch,
+  Alder, Heather
+- Suffix pool: wick, holm, dale, mere, haven, ford, shaw, hollow, fell, gate
+- Example: "Fernwick", "Mosshollow", "Brierhaven"
+
+**Landmark names (ruins, towers, camps):** `The [Adjective] [Type]`
+- Adjective pool: Pale, Crumbled, Mossy, Forgotten, Overgrown, Weathered, Still
+- Type pool: Tower, Ruin, Camp, Ring, Mound, Hollow, Crossing, Well
+- Example: "The Forgotten Tower", "The Mossy Ring"
+
+### 40.3 Procedural NPC Names
+
+Named starting-village NPCs (Elder Rowan, Hazel, Bramble, etc.) are fixed.
+All procedural NPCs (scattered world encounters) have seed-derived names.
+
+Format: `generateNpcName(worldSeed, npcId)` — stable for the life of the NPC.
+
+**First names (nature-rooted, gender-neutral):**
+Alder, Ash, Birch, Brier, Cedar, Clover, Dusk, Elder, Elm, Fern, Finch, Flint,
+Garnet, Haze, Hazel, Ivy, Juniper, Lichen, Linden, Maple, Marsh, Mist, Mossy,
+Needle, Oak, Pine, Reed, Robin, Rowan, Rush, Sage, Sedge, Slate, Sorrel, Thorn,
+Wren, Yarrow
+
+**Optional descriptive titles (10% chance):**
+"the Young", "of the Grove", "Far-Walker", "Root-Finder", "Storm-Watcher",
+"Seed-Bearer", "Thorn-Hand"
+
+**Implementation:** `game/utils/worldNames.ts` — all pure functions using
+`scopedRNG("area-name" | "npc-name", worldSeed, ...extraSeeds)`.
+
+### 40.4 Compass / Minimap Integration
+
+- First time a named location comes within ~2 chunk radius: "Discovered: Fernwick"
+  toast + minimap label appears
+- Labyrinth names appear in the labyrinth compass system
+- NPC name appears above speech bubble on first encounter
+
+---
+
+## 41. Combat & Random Encounters
+
+**Status: DESIGN NEEDED 2026-03-07** — §34 was scaffolded by ralph but has
+not been consciously designed by the team. Below is the current scaffolded
+spec — this section is PENDING design review.
+
+### 41.1 Design Question
+
+Combat and random encounters have not been explicitly discussed. The current
+§34 was written autonomously by ralph and may not reflect the intended game
+direction. Key questions:
+
+1. Should the game have enemy combat at all, or is conflict non-violent?
+2. If combat: tool-based melee (axe deals damage) or a distinct combat system?
+3. Random encounters: violent, non-violent, or both?
+4. Are maze enemies (§34 Shadow Root) part of the design intent?
+5. Should loot tables exist for enemy drops, or only for harvested resources?
+
+### 41.2 Current Scaffolded Implementation (Not Confirmed)
+
+The following exists in code and §34 but has NOT been confirmed as design:
+- `EnemyComponent`, `HealthComponent`, `CombatComponent`, `LootDropComponent`
+- `config/game/enemies.json` (not yet populated)
+- `config/game/loot.json` (not yet populated)
+- Enemy types: Thorn Sprite, Bog Lurker, Frost Wisp, Stone Golem, Shadow Root
+- Tool damage: axe/pick raycast hits apply damage to EnemyComponent
+- Base raids (§34.4): settlements attract periodic raid waves
+
+### 41.3 Confirmed Conflict Mechanics (Independent of §41.2 decision)
+
+Regardless of the combat decision, these WILL be implemented:
+- **Thorny patches** in labyrinths: touching them deals small damage (environmental)
+- **Campfire light** deters night hostility (distance-based passive mechanic)
+- **Weather threats**: lightning strikes deal damage; storms affect visibility
+- **Hunger/exposure death** from survival loop (not combat — environmental)
+
+### 41.4 Loot Tables (Resource Economy — Confirmed)
+
+Loot tables exist for resource drops, independent of enemy combat:
+- Tree harvest yields (`config/game/loot.json:treeLoot`)
+- Fishing yields (already implemented, `config/game/fishing.json`)
+- Foraging yields (bushes, herbs, mushrooms)
+- Mining yields (rocks, ore nodes)
+- Seeded rolls: `scopedRNG("loot", worldSeed, entityId, entityType)`
+
+These are CONFIRMED regardless of the §41.2 combat decision.

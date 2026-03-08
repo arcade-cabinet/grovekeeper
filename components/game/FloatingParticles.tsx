@@ -24,7 +24,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Text } from "@/components/ui/text";
 import { particleEmittersQuery, weatherQuery } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { scopedRNG } from "@/game/utils/seedWords";
 import {
   computeDisplayParticleCount,

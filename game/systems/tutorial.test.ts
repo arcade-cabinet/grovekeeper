@@ -1,5 +1,10 @@
 /**
- * Tutorial state machine tests — Spec §25.1
+ * Onboarding bridge tests — Spec §25.1
+ *
+ * The overlay tutorial has been retired and replaced by the elder-awakening
+ * quest chain. These tests verify the new behaviour: tutorial state is always
+ * complete, tickTutorial is a no-op, and ONBOARDING_SIGNAL_MAP correctly maps
+ * action signals to quest objective event types.
  */
 
 import {
@@ -8,183 +13,96 @@ import {
   currentStepLabel,
   initialTutorialState,
   isTutorialComplete,
+  ONBOARDING_SIGNAL_MAP,
   skipTutorial,
   TUTORIAL_STEPS,
   tickTutorial,
 } from "./tutorial.ts";
 
-describe("Tutorial system (Spec §25.1)", () => {
+describe("Onboarding bridge (Spec §25.1)", () => {
   describe("initialTutorialState", () => {
-    it("starts on 'look' step, not completed", () => {
+    it("returns step 'done' and completed:true — overlay tutorial is retired", () => {
       const state = initialTutorialState();
-      expect(state.currentStep).toBe("look");
-      expect(state.completed).toBe(false);
-    });
-  });
-
-  describe("currentStepDef", () => {
-    it("returns step definition for current step", () => {
-      const state = initialTutorialState();
-      const def = currentStepDef(state);
-      expect(def).not.toBeNull();
-      expect(def?.id).toBe("look");
-    });
-
-    it("returns null when completed", () => {
-      const done = skipTutorial(initialTutorialState());
-      expect(currentStepDef(done)).toBeNull();
-    });
-
-    it("returns null when currentStep is 'done'", () => {
-      const done = { currentStep: "done" as const, completed: true };
-      expect(currentStepDef(done)).toBeNull();
-    });
-  });
-
-  describe("currentStepLabel", () => {
-    it("returns label string for current step", () => {
-      const state = initialTutorialState();
-      const label = currentStepLabel(state);
-      expect(typeof label).toBe("string");
-      expect((label ?? "").length).toBeGreaterThan(0);
-    });
-
-    it("returns null when done", () => {
-      expect(currentStepLabel(skipTutorial(initialTutorialState()))).toBeNull();
-    });
-  });
-
-  describe("tickTutorial", () => {
-    it("advances step on correct signal", () => {
-      const state = initialTutorialState(); // step: look
-      const next = tickTutorial(state, "action:look");
-      expect(next.currentStep).toBe("move");
-    });
-
-    it("does not advance on wrong signal", () => {
-      const state = initialTutorialState(); // expects action:look
-      const next = tickTutorial(state, "action:move"); // wrong signal
-      expect(next.currentStep).toBe("look");
-      expect(next).toBe(state); // same reference — no new object allocated
-    });
-
-    it("does not advance if already done", () => {
-      const done = skipTutorial(initialTutorialState());
-      const next = tickTutorial(done, "action:look");
-      expect(next).toBe(done); // same reference
-    });
-
-    it("advances through all 11 steps in order", () => {
-      const expectedOrder = [
-        "look",
-        "move",
-        "equip",
-        "dig",
-        "plant",
-        "water",
-        "wait",
-        "harvest",
-        "talk",
-        "campfire",
-        "explore",
-      ];
-
-      let state = initialTutorialState();
-      for (const stepId of expectedOrder) {
-        expect(state.currentStep).toBe(stepId);
-        const def = TUTORIAL_STEPS.find((s) => s.id === stepId);
-        expect(def).toBeDefined();
-        state = tickTutorial(state, def!.signal);
-      }
-
       expect(state.currentStep).toBe("done");
       expect(state.completed).toBe(true);
-    });
-
-    it("produces a new state object when advancing", () => {
-      const state = initialTutorialState();
-      const next = tickTutorial(state, "action:look");
-      expect(next).not.toBe(state);
-    });
-  });
-
-  describe("advanceStep", () => {
-    it("moves from first step to second", () => {
-      const state = initialTutorialState();
-      const next = advanceStep(state);
-      expect(next.currentStep).toBe("move");
-      expect(next.completed).toBe(false);
-    });
-
-    it("marks completed when advancing past last step", () => {
-      const state = { currentStep: "explore" as const, completed: false };
-      const next = advanceStep(state);
-      expect(next.currentStep).toBe("done");
-      expect(next.completed).toBe(true);
-    });
-
-    it("returns done if called on 'done' step", () => {
-      const state = { currentStep: "done" as const, completed: true };
-      const next = advanceStep(state);
-      expect(next.currentStep).toBe("done");
-      expect(next.completed).toBe(true);
-    });
-  });
-
-  describe("skipTutorial", () => {
-    it("marks tutorial as done immediately", () => {
-      const state = initialTutorialState();
-      const done = skipTutorial(state);
-      expect(done.currentStep).toBe("done");
-      expect(done.completed).toBe(true);
-    });
-
-    it("is idempotent when called on an already-done state", () => {
-      const done = skipTutorial(initialTutorialState());
-      const done2 = skipTutorial(done);
-      expect(done2.currentStep).toBe("done");
-      expect(done2.completed).toBe(true);
-    });
-  });
-
-  describe("isTutorialComplete", () => {
-    it("returns false for a new tutorial", () => {
-      expect(isTutorialComplete(initialTutorialState())).toBe(false);
-    });
-
-    it("returns false mid-tutorial", () => {
-      const midState = { currentStep: "plant" as const, completed: false };
-      expect(isTutorialComplete(midState)).toBe(false);
-    });
-
-    it("returns true after skip", () => {
-      expect(isTutorialComplete(skipTutorial(initialTutorialState()))).toBe(true);
-    });
-
-    it("returns true after completing all steps", () => {
-      let state = initialTutorialState();
-      for (const step of TUTORIAL_STEPS) {
-        state = tickTutorial(state, step.signal);
-      }
-      expect(isTutorialComplete(state)).toBe(true);
     });
   });
 
   describe("TUTORIAL_STEPS", () => {
-    it("has exactly 11 steps", () => {
-      expect(TUTORIAL_STEPS).toHaveLength(11);
+    it("is empty — no overlay steps remain", () => {
+      expect(TUTORIAL_STEPS).toHaveLength(0);
+    });
+  });
+
+  describe("currentStepDef", () => {
+    it("always returns null — overlay is retired", () => {
+      expect(currentStepDef(initialTutorialState())).toBeNull();
+    });
+  });
+
+  describe("currentStepLabel", () => {
+    it("always returns null — overlay is retired", () => {
+      expect(currentStepLabel(initialTutorialState())).toBeNull();
+    });
+  });
+
+  describe("isTutorialComplete", () => {
+    it("always returns true — overlay tutorial is perpetually complete", () => {
+      expect(isTutorialComplete(initialTutorialState())).toBe(true);
+    });
+  });
+
+  describe("tickTutorial", () => {
+    it("is a no-op — returns same state reference for any signal", () => {
+      const state = initialTutorialState();
+      const next = tickTutorial(state, "action:plant");
+      expect(next).toBe(state);
     });
 
-    it("all step signals are unique", () => {
-      const signals = TUTORIAL_STEPS.map((s) => s.signal);
-      const unique = new Set(signals);
-      expect(unique.size).toBe(TUTORIAL_STEPS.length);
+    it("is a no-op for unknown signals", () => {
+      const state = initialTutorialState();
+      const next = tickTutorial(state, "action:look");
+      expect(next).toBe(state);
+    });
+  });
+
+  describe("advanceStep", () => {
+    it("is a no-op — returns same state reference", () => {
+      const state = initialTutorialState();
+      expect(advanceStep(state)).toBe(state);
+    });
+  });
+
+  describe("skipTutorial", () => {
+    it("is a no-op — returns same state reference", () => {
+      const state = initialTutorialState();
+      expect(skipTutorial(state)).toBe(state);
+    });
+  });
+
+  describe("ONBOARDING_SIGNAL_MAP", () => {
+    it("maps action:plant to trees_planted", () => {
+      expect(ONBOARDING_SIGNAL_MAP["action:plant"]).toBe("trees_planted");
     });
 
-    it("all steps have non-empty labels", () => {
-      for (const step of TUTORIAL_STEPS) {
-        expect(step.label.length).toBeGreaterThan(0);
-      }
+    it("maps action:harvest to trees_harvested", () => {
+      expect(ONBOARDING_SIGNAL_MAP["action:harvest"]).toBe("trees_harvested");
+    });
+
+    it("maps action:water to trees_watered", () => {
+      expect(ONBOARDING_SIGNAL_MAP["action:water"]).toBe("trees_watered");
+    });
+
+    it("does not map overlay-only signals like action:look", () => {
+      expect(ONBOARDING_SIGNAL_MAP["action:look"]).toBeUndefined();
+    });
+
+    it("does not map action:move", () => {
+      expect(ONBOARDING_SIGNAL_MAP["action:move"]).toBeUndefined();
+    });
+
+    it("does not map action:equip", () => {
+      expect(ONBOARDING_SIGNAL_MAP["action:equip"]).toBeUndefined();
     });
   });
 });

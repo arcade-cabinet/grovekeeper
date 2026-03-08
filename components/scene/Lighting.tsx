@@ -35,7 +35,7 @@ function hexToColor3(hex: string): THREE.Color {
   return new THREE.Color(hex);
 }
 
-export const Lighting = ({ sunIntensity, ambientIntensity, skyColors }: LightingProps) => {
+export const Lighting = ({ timeOfDay, sunIntensity, ambientIntensity, skyColors }: LightingProps) => {
   const sunRef = useRef<THREE.DirectionalLight>(null);
   const ambientRef = useRef<THREE.AmbientLight>(null);
 
@@ -49,9 +49,11 @@ export const Lighting = ({ sunIntensity, ambientIntensity, skyColors }: Lighting
     sun.color.copy(sunColor);
     sun.intensity = sunIntensity * 0.8;
 
-    // Rotate sun direction based on time (hours derived from timeOfDay prop)
+    // Rotate sun direction based on timeOfDay prop (0=midnight, 0.5=noon, 1=midnight).
+    // Derive game hours (0-24) from the normalized dayProgress value.
     const scene = state.scene;
-    const hours = scene.userData.gameHours ?? 12;
+    const hours = timeOfDay * 24;
+    scene.userData.gameHours = hours;
     const sunAngle = (hours / 24) * Math.PI * 2 - Math.PI / 2;
     sun.position.set(-Math.cos(sunAngle) * 10, 10, -Math.sin(sunAngle) * 6);
 

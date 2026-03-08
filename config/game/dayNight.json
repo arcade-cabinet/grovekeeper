@@ -80,5 +80,15 @@
     "evening": 0.7,
     "night": 1.0,
     "midnight": 1.0
+  },
+  "skyColors": {
+    "dawn":      { "zenith": "#4a6fa1", "horizon": "#e8a87c" },
+    "morning":   { "zenith": "#5b8fd4", "horizon": "#fce4b0" },
+    "noon":      { "zenith": "#87ceeb", "horizon": "#e0f0ff" },
+    "afternoon": { "zenith": "#6ab0d8", "horizon": "#f7d59a" },
+    "dusk":      { "zenith": "#6a4c93", "horizon": "#e07050" },
+    "evening":   { "zenith": "#1a1a4a", "horizon": "#3a2060" },
+    "night":     { "zenith": "#0b1a3e", "horizon": "#1a2f5a" },
+    "midnight":  { "zenith": "#050515", "horizon": "#0b1020" }
   }
 }

@@ -1,6 +1,6 @@
 /**
  * index.ts -- Barrel that assembles all domain action files into the Zustand-compatible
- * useGameStore API. Consumers can import from "@/game/stores" or "@/game/stores/gameStore".
+ * useGameStore API. Import from "@/game/stores".
  * Spec §5
  */
 

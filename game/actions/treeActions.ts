@@ -4,7 +4,7 @@
 import type { ResourceType } from "@/game/config/resources";
 import { getSpeciesById } from "@/game/config/species";
 import { createTreeEntity } from "@/game/ecs/archetypes";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { collectHarvest, initHarvestable } from "@/game/systems/harvest";
 import { findCell, findTreeById, world } from "./queries";
 

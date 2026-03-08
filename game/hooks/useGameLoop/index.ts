@@ -20,11 +20,12 @@ import {
   harvestableQuery,
   npcsQuery,
   playerQuery,
+  waterBodiesQuery,
   world,
 } from "@/game/ecs/world";
 import type { TimeOfDay } from "@/game/ecs/components/procedural/atmosphere";
 import { advanceTutorial } from "@/game/stores/settings";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { harvestCooldownTick } from "@/game/systems/harvest";
 import { advanceNpcAnimation } from "@/game/systems/npcAnimation";
 import { updateNpcMovement } from "@/game/systems/npcMovement";
@@ -52,6 +53,10 @@ import {
   type AmbientAudioState,
   type ZoneInput,
 } from "@/game/systems/ambientAudio";
+import {
+  tickWaterParticles,
+  type WaterParticlesState,
+} from "@/game/systems/waterParticles";
 import { tickAttackCooldown, tickInvulnFrames } from "@/game/systems/combat";
 import { EnemyEntityManager } from "@/game/systems/enemyAI";
 import { inputManager } from "@/game/input/InputManager";
@@ -101,6 +106,11 @@ export function useGameLoop(): void {
 
   const regrowthRef = useRef<RegrowthState>(initializeRegrowthState());
   const ambientAudioRef = useRef<AmbientAudioState | null>(null);
+  const waterParticlesStateRef = useRef<WaterParticlesState>({
+    prevWaterState: "above",
+    splashEntity: null,
+    bubblesEntity: null,
+  });
 
   useFrame((_state, delta) => {
     const dt = Math.min(delta, MAX_DELTA);
@@ -292,6 +302,26 @@ export function useGameLoop(): void {
     for (const entity of combatQuery) {
       if (entity.health) tickInvulnFrames(entity.health, dt);
       if (entity.combat) tickAttackCooldown(entity.combat, dt);
+    }
+
+    // ── 6d. Water Particles ───────────────────────────────────────────────
+
+    {
+      let playerPos: { x: number; y: number; z: number } | null = null;
+      for (const p of playerQuery) {
+        if (p.position) {
+          playerPos = { x: p.position.x, y: p.position.y, z: p.position.z };
+        }
+        break;
+      }
+      if (playerPos) {
+        tickWaterParticles(
+          world as Parameters<typeof tickWaterParticles>[0],
+          playerPos,
+          waterBodiesQuery.entities,
+          waterParticlesStateRef.current,
+        );
+      }
     }
 
     // ── 7. Achievement Checks (throttled ~5s) ────────────────────────────

@@ -13,7 +13,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { getSpeciesById } from "@/game/config/species";
 import type { RaycastEntityType, RaycastHit } from "@/game/hooks/useRaycast";
 import { useTargetHit } from "@/game/hooks/useRaycast";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 
 // ── Pure functions (testable seams) ──────────────────────────────────────────
 

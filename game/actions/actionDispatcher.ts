@@ -15,12 +15,12 @@ import {
   plantTree,
   pruneTree,
   waterTree,
-} from "@/game/actions/GameActions";
+} from "@/game/actions";
 import type { ResourceType } from "@/game/config/resources";
 import type { RockComponent } from "@/game/ecs/components/terrain";
 import type { Entity } from "@/game/ecs/world";
 import type { RaycastEntityType } from "@/game/hooks/useRaycast";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { resolveCampfireInteraction } from "@/game/systems/cooking";
 import { isWaterFishable } from "@/game/systems/fishing";
 import { resolveForgeInteraction } from "@/game/systems/forging";

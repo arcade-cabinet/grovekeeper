@@ -16,7 +16,7 @@ jest.mock("@/game/ecs/world", () => ({
   world: { addComponent: jest.fn() },
 }));
 
-jest.mock("@/game/stores/gameStore", () => ({
+jest.mock("@/game/stores", () => ({
   useGameStore: {
     getState: jest.fn().mockReturnValue({
       discoverSpirit: jest.fn().mockReturnValue(true),

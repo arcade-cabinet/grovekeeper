@@ -10,10 +10,10 @@ import {
   selectTool,
   spendToolStamina,
   waterTree,
-} from "@/game/actions/GameActions";
+} from "@/game/actions";
 import type { Entity } from "@/game/ecs/world";
 import { generateEntityId, world } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 
 // Mock harvest module
 jest.mock("@/game/systems/harvest", () => ({

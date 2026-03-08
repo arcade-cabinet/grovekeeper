@@ -1,7 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Stack } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { GrassInstances } from "@/components/entities/GrassInstances";
 import { NpcMeshes } from "@/components/entities/NpcMeshes";
@@ -15,9 +15,9 @@ import { FPSCamera } from "@/components/player/FPSCamera";
 import { PlayerCapsule } from "@/components/player/PlayerCapsule";
 import { TouchLookZone } from "@/components/player/TouchLookZone";
 import { BirmotherMesh } from "@/components/scene/BirmotherMesh";
-import { Ground } from "@/components/scene/Ground";
 import { Lighting } from "@/components/scene/Lighting";
 import { Sky } from "@/components/scene/Sky";
+import { WaterBodies } from "@/components/scene/WaterBody";
 import { TerrainChunks } from "@/components/scene/TerrainChunk";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
@@ -28,7 +28,7 @@ import { useInteraction } from "@/game/hooks/useInteraction";
 import { useRaycast } from "@/game/hooks/useRaycast";
 import { useSpiritProximity } from "@/game/hooks/useSpiritProximity";
 import { ChunkStreamer, useWorldLoader } from "@/game/hooks/useWorldLoader";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { ACHIEVEMENTS } from "@/game/systems/achievements";
 import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import {
@@ -39,6 +39,10 @@ import {
   PRESTIGE_MIN_LEVEL,
 } from "@/game/systems/prestige";
 import { computeTimeState, getLightIntensity, getSkyColors } from "@/game/systems/time";
+import { startAudio } from "@/game/systems/AudioManager";
+import { initAmbientLayers } from "@/game/systems/ambientAudio";
+import type { AmbientAudioState } from "@/game/systems/ambientAudio";
+import { createToneLayerNode } from "@/game/systems/toneLayerFactory";
 
 /** Null-rendering component that drives all game systems via useFrame. */
 function GameSystems() {
@@ -90,6 +94,21 @@ export default function GameScreen() {
 
   // Seed select modal state
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
+
+  // Ambient audio state — initialized on first user gesture (satisfies browser autoplay policy).
+  const ambientAudioRef = useRef<AmbientAudioState | null>(null);
+  const audioStarted = useRef(false);
+
+  /** Called on first touch/click — unlocks Web Audio and sets up ambient synthesis nodes. */
+  const handleFirstGesture = useCallback(() => {
+    if (audioStarted.current) return;
+    audioStarted.current = true;
+    void startAudio().then(() => {
+      if (!ambientAudioRef.current) {
+        ambientAudioRef.current = initAmbientLayers(createToneLayerNode);
+      }
+    });
+  }, []);
 
   // Grid expansion info for PauseMenu
   const gridExpansionInfo = useMemo(() => {
@@ -200,7 +219,7 @@ export default function GameScreen() {
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
-      <View style={styles.container}>
+      <View style={styles.container} onTouchStart={handleFirstGesture}>
         {/* 3D Canvas */}
         <Canvas shadows style={styles.canvas}>
           <Physics>
@@ -219,12 +238,7 @@ export default function GameScreen() {
               sunIntensity={timeVisuals.sunIntensity}
             />
             <TerrainChunks />
-            <Ground
-              gridSize={gridSize}
-              biome="grass"
-              season={currentSeason}
-              onPointerDown={onGroundTap}
-            />
+            <WaterBodies />
             <PlayerCapsule moveDirection={moveDirection} />
             <TreeInstances onTreeTap={onTreeTap} />
             <GrassInstances />

@@ -2,7 +2,7 @@
  * Tool stamina/durability and selection actions.
  */
 import { getToolById } from "@/game/config/tools";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 
 /**
  * Spend stamina for a tool action (checks tool cost and spends stamina).

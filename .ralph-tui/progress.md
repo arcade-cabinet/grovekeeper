@@ -3033,3 +3033,24 @@ after each iteration and it's included in prompts for context.
   - **PanResponder closure captures first-render provider**: `useRef(PanResponder.create({...})).current` is evaluated once. Variables closed over (like `provider`) come from the first render. For a stable singleton this is safe; for mutable `providerOverride` it would be stale after re-render. In tests we don't render the component — we test pure helper functions instead.
   - **Pure handler extraction for testability vs full buildHandlers factory**: When a handler factory would need to accept Animated.Value objects (which are not plain JS), it's simpler to extract only the pure math (e.g., `computeJoystickZoneRect`) and test that, letting the component call the provider directly in its PanResponder callbacks. Full factory extraction (like buildLookZoneHandlers) only makes sense when the handler logic is pure.
 ---
+
+## 2026-03-07 - US-164
+- Updated `game/systems/offlineGrowth.ts` (133→206 lines) to apply offline growth to persisted chunk deltas using elapsed time and season/weather modifiers from saved state
+- Added `lastSavedAt: 0` to `initialState` in `game/stores/core.ts` — persists via Legend State syncObservable; provides elapsed time calculation on resume
+- Updated `game/hooks/useAutoSave.ts` — records `lastSavedAt = Date.now()` before each save via `gameState$.lastSavedAt.set()`; added `isTimestampUpdate` module-level flag to prevent Legend State subscription cascade (flag is visible synchronously when observer fires during `set()`)
+- Added `ChunkGrowthSummary` interface and `applyOfflineGrowthToChunkDeltas(lastSavedAt, season, weatherType?, lookupSpecies?)` to `offlineGrowth.ts`; added `seasonMultiplier`/`weatherMultiplier` params (default 1.0) to `calculateOfflineGrowth` and `calculateAllOfflineGrowth`
+- Season multipliers from `growth.json` (spring=1.5, summer=1.0, autumn=0.8, winter=0.0); weather multipliers from `weather.json` (rain=1.3, drought=0.5, clear/windstorm=1.0)
+- Winter short-circuits before iterating chunks (seasonMultiplier=0 → no growth regardless of elapsed)
+- `lookupSpecies` injectable parameter enables testing without mocking `@/game/config/species`; production uses `getSpeciesById` as default
+- `applyOfflineGrowthToChunkDeltas` only calls `saveChunkDiff` when at least one tree actually changed — avoids writing unchanged diffs
+- Expanded test suite: 33 tests total (was 12); 21 new tests covering season/weather multipliers and all `applyOfflineGrowthToChunkDeltas` scenarios
+- **Files changed:**
+  - `game/stores/core.ts` — `lastSavedAt: 0` in initialState
+  - `game/hooks/useAutoSave.ts` — `isTimestampUpdate` flag + `gameState$.lastSavedAt.set(Date.now())` in `performSave()`
+  - `game/systems/offlineGrowth.ts` — season/weather multipliers + `applyOfflineGrowthToChunkDeltas`
+  - `game/systems/offlineGrowth.test.ts` — expanded from 163 to 276 lines
+- **Learnings:**
+  - **Legend State synchronous notification prevents cascade saves**: `observe(gameState$, listener)` fires synchronously during `.set()`. Setting a module-level `isTimestampUpdate = true` before `gameState$.lastSavedAt.set(...)` and `= false` after ensures the subscription handler sees the flag and returns early — one-liner cascade prevention without async complexity.
+  - **Injectable `lookupSpecies` default with structural typing**: `(id) => getSpeciesById(id)` has type `(id: string) => TreeSpeciesData | undefined`; TypeScript's structural typing allows this to satisfy `(id: string) => OfflineSpeciesData | undefined` because `TreeSpeciesData` has all fields of `OfflineSpeciesData`. No cast needed.
+  - **Winter short-circuit before chunk iteration**: When `seasonMultiplier <= 0` (winter), skip iterating `chunkDiffs$` entirely. Returns the `elapsedSeconds` in summary so the caller can display "offline time" without implying growth happened.
+---

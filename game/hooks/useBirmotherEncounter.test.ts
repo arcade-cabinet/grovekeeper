@@ -21,7 +21,7 @@ jest.mock("@/game/ecs/world", () => ({
   generateEntityId: jest.fn().mockReturnValue("entity_test_1"),
 }));
 
-jest.mock("@/game/stores/gameStore", () => ({
+jest.mock("@/game/stores", () => ({
   useGameStore: {
     getState: jest.fn().mockReturnValue({
       worldSeed: "test-seed",

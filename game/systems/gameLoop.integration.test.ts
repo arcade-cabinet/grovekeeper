@@ -19,7 +19,7 @@ import {
   initializeChainState,
   startChain,
 } from "@/game/quests/questChainEngine";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { TUTORIAL_STEPS } from "@/game/systems/tutorial";
 import {
   applyChunkDiff,
@@ -60,27 +60,22 @@ describe("Integration: Menu → New Game → Tutorial → Plant → Harvest → 
     expect(useGameStore.getState().worldSeed).toBe("integration-seed-001");
   });
 
-  it("tutorial advances through all 11 steps in order via store actions", () => {
+  it("onboarding: tutorial state is immediately complete — overlay tutorial is retired", () => {
+    // The 11-step overlay tutorial has been replaced by the elder-awakening
+    // quest chain (Spec §25.1). tutorialState is always done so no overlay renders.
     const store = useGameStore.getState();
-
-    expect(store.tutorialState.currentStep).toBe("look");
-    expect(store.tutorialState.completed).toBe(false);
-
-    for (const stepDef of TUTORIAL_STEPS) {
-      store.advanceTutorial(stepDef.signal);
-    }
-
-    const after = useGameStore.getState().tutorialState;
-    expect(after.currentStep).toBe("done");
-    expect(after.completed).toBe(true);
+    // TUTORIAL_STEPS is empty after the overlay retirement.
+    expect(TUTORIAL_STEPS).toHaveLength(0);
+    expect(store.tutorialState.currentStep).toBe("done");
+    expect(store.tutorialState.completed).toBe(true);
   });
 
-  it("tutorial step signal mismatch does not advance step", () => {
+  it("onboarding: advanceTutorial is a no-op on overlay state but forwards signals to quest engine", () => {
     const store = useGameStore.getState();
-    // Step 1 expects "action:look"; send wrong signal
-    store.advanceTutorial("action:move");
-
-    expect(useGameStore.getState().tutorialState.currentStep).toBe("look");
+    // Sending any signal does not change the (already-complete) tutorial state.
+    store.advanceTutorial("action:plant");
+    expect(useGameStore.getState().tutorialState.currentStep).toBe("done");
+    expect(useGameStore.getState().tutorialState.completed).toBe(true);
   });
 
   it("planting a tree increments treesPlanted and spends a seed", () => {

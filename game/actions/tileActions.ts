@@ -3,7 +3,7 @@
  */
 import type { ResourceType } from "@/game/config/resources";
 import type { Entity } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { canPlace, getTemplate } from "@/game/structures/StructureManager";
 import { findCell, findTreeById, generateEntityId, gridCellsQuery, world } from "./queries";
 

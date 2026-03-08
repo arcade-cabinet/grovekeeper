@@ -16,7 +16,7 @@ import {
   playerQuery,
   terrainChunksQuery,
 } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { isLabyrinthChunk } from "@/game/world/mazeGenerator";
 
 import { DISCOVERED_FALLBACK_COLOR } from "./colors.ts";

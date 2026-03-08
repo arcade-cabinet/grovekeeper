@@ -43,16 +43,24 @@ export interface DayNightComponent {
   dayNumber: number;
   /** Current season. */
   season: "spring" | "summer" | "autumn" | "winter";
-  /** Ambient light color for current time. */
+  /** Ambient light color for current time (lerped between slots). */
   ambientColor: string;
-  /** Ambient light intensity 0-1. */
+  /** Ambient light intensity 0-1 (lerped between slots). */
   ambientIntensity: number;
-  /** Directional (sun/moon) light color. */
+  /** Directional (sun/moon) light color (lerped between slots). */
   directionalColor: string;
-  /** Directional light intensity 0-1. */
+  /** Directional light intensity 0-1 — alias for sun/moon intensity. */
   directionalIntensity: number;
+  /** Convenience alias so renderers can read sunIntensity directly. */
+  sunIntensity: number;
   /** Shadow opacity 0-1 (fades at dawn/dusk). */
   shadowOpacity: number;
+  /** Sky zenith color hex string (lerped between 8 config stops). */
+  skyZenithColor: string;
+  /** Sky horizon color hex string (lerped between 8 config stops). */
+  skyHorizonColor: string;
+  /** Star visibility 0-1 (0 = day, 1 = full night, lerped between slots). */
+  starIntensity: number;
 }
 
 export type WeatherType = "clear" | "rain" | "snow" | "fog" | "windstorm" | "thunderstorm";

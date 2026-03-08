@@ -20,7 +20,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { weatherQuery } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import type { WeatherType } from "@/game/systems/weather";
 import { scopedRNG } from "@/game/utils/seedWords";
 import {

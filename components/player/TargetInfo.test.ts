@@ -10,7 +10,7 @@ jest.mock("@/game/hooks/useRaycast", () => ({
   _setHit: jest.fn(),
 }));
 
-jest.mock("@/game/stores/gameStore", () => ({
+jest.mock("@/game/stores", () => ({
   useGameStore: jest.fn().mockReturnValue("axe"),
 }));
 

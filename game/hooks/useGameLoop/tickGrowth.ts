@@ -3,7 +3,7 @@
  */
 import { getSpeciesById } from "@/game/config/species";
 import { cropsQuery, treesQuery } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { tickCropGrowth } from "@/game/systems/cropGrowth";
 import { calcGrowthRate, MAX_STAGE } from "@/game/systems/growth";
 import { initHarvestable } from "@/game/systems/harvest";

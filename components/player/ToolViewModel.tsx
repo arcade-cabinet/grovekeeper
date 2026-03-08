@@ -16,7 +16,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type * as THREE from "three";
 
 import toolVisualsData from "@/config/game/toolVisuals.json" with { type: "json" };
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 
 // ---------------------------------------------------------------------------
 // Types

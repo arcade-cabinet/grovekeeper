@@ -12,9 +12,18 @@ import { useEffect, useRef } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import type { SerializedTreeDb } from "@/game/db/queries";
 import { persistGameStore, saveGroveToDb } from "@/game/db/queries";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
+import { gameState$ } from "@/game/stores/core";
 
 const DEBOUNCE_MS = 2_000;
+
+/**
+ * Flag that prevents the store subscription from scheduling a new auto-save
+ * when we update lastSavedAt from within performSave(). Legend State notifies
+ * subscribers synchronously on set(), so the flag is still true when the
+ * subscription callback fires during the set() call.
+ */
+let isTimestampUpdate = false;
 
 /**
  * Persist the full Zustand store state into relational SQLite tables.
@@ -35,8 +44,15 @@ async function persistStoreState(): Promise<void> {
 
 /**
  * Full save: grove ECS data (via relational trees table) + store state.
+ * Records lastSavedAt before saving so offline growth can calculate elapsed time.
  */
 async function performSave(): Promise<void> {
+  // Record save timestamp. Use flag to prevent cascade: Legend State notifies
+  // subscribers synchronously, so isTimestampUpdate is true when subscription fires.
+  isTimestampUpdate = true;
+  gameState$.lastSavedAt.set(Date.now());
+  isTimestampUpdate = false;
+
   const state = useGameStore.getState();
 
   // Save grove tree data to the trees table
@@ -66,6 +82,8 @@ export function useAutoSave(): void {
   // Debounced save on store changes
   useEffect(() => {
     const unsubscribe = useGameStore.subscribe(() => {
+      // Skip saves triggered by our own lastSavedAt update to prevent cascade loops.
+      if (isTimestampUpdate) return;
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         if (!isSaving.current) {

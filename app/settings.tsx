@@ -6,7 +6,7 @@ import { SettingsScreen } from "@/components/game/SettingsScreen";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 
 const SCREEN_OPTIONS = { headerShown: false };
 

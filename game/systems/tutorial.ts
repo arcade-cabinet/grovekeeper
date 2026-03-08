@@ -1,192 +1,136 @@
 /**
- * Tutorial state machine — pure functions for the 11-step guided tutorial.
+ * tutorial.ts -- Onboarding event bridge.
  * Spec §25.1 Tutorial Village
  *
- * Steps: look → move → equip → dig → plant → water → wait → harvest →
- *        talk → campfire → explore → done
+ * The old 11-step linear overlay tutorial has been replaced by organic
+ * quest-driven onboarding via the "elder-awakening" quest chain (see
+ * game/quests/data/questChains.json). This file is now a thin event bridge
+ * that maps game action signals to quest objective advances so that existing
+ * `advanceTutorial(signal)` call sites in actionDispatcher.ts continue to
+ * work without modification.
  *
- * State persists via gameStore. Callers dispatch signals via
- * `useGameStore.getState().advanceTutorial(signal)` from game actions.
+ * There is no overlay UI state. `TutorialState` and `TutorialStepDef` are
+ * kept as inert stubs so that imports elsewhere (gameStore, settings.ts)
+ * continue to compile without changes.
  *
  * No React, no ECS, no Three.js imports — fully unit-testable.
  */
 
 // ---------------------------------------------------------------------------
-// Types
+// Stub types (kept for backward compatibility — no longer drive overlay UI)
 // ---------------------------------------------------------------------------
 
-export type TutorialStep =
-  | "look"
-  | "move"
-  | "equip"
-  | "dig"
-  | "plant"
-  | "water"
-  | "wait"
-  | "harvest"
-  | "talk"
-  | "campfire"
-  | "explore"
-  | "done";
+/** @deprecated No longer used for overlay rendering. Kept for store type compat. */
+export type TutorialStep = "done";
 
+/** @deprecated No longer used for overlay rendering. Kept for store type compat. */
 export interface TutorialState {
-  /** Current step, or "done" if complete or skipped. */
+  /** Always "done" — the overlay tutorial is retired. */
   currentStep: TutorialStep;
-  /** True once tutorial has been completed or skipped. Persists across sessions. */
+  /** Always true — the overlay tutorial is retired. */
   completed: boolean;
 }
 
+/** @deprecated No longer used. Kept so existing imports compile. */
 export interface TutorialStepDef {
   id: TutorialStep;
-  /** Signal string that advances this step when dispatched. */
   signal: string;
-  /** Instruction label shown in the overlay. */
   label: string;
 }
 
 // ---------------------------------------------------------------------------
-// Step definitions — 11 steps in order
+// No-op step list (empty — no overlay steps)
 // ---------------------------------------------------------------------------
 
-export const TUTORIAL_STEPS: readonly TutorialStepDef[] = [
-  {
-    id: "look",
-    signal: "action:look",
-    label: "Look around — swipe or move your mouse",
-  },
-  {
-    id: "move",
-    signal: "action:move",
-    label: "Move — use the joystick or WASD",
-  },
-  {
-    id: "equip",
-    signal: "action:equip",
-    label: "Equip a tool from your tool belt",
-  },
-  {
-    id: "dig",
-    signal: "action:dig",
-    label: "Dig the soil with your equipped tool",
-  },
-  {
-    id: "plant",
-    signal: "action:plant",
-    label: "Plant a seed in the prepared soil",
-  },
-  {
-    id: "water",
-    signal: "action:water",
-    label: "Water the seedling",
-  },
-  {
-    id: "wait",
-    signal: "action:wait",
-    label: "Wait for the seedling to sprout...",
-  },
-  {
-    id: "harvest",
-    signal: "action:harvest",
-    label: "Harvest the grown tree",
-  },
-  {
-    id: "talk",
-    signal: "action:talk",
-    label: "Talk to a villager",
-  },
-  {
-    id: "campfire",
-    signal: "action:campfire",
-    label: "Rest at the campfire",
-  },
-  {
-    id: "explore",
-    signal: "action:explore",
-    label: "Explore beyond the village gate",
-  },
-];
+/** @deprecated No overlay steps remain. Empty array. */
+export const TUTORIAL_STEPS: readonly TutorialStepDef[] = [];
 
-/** Ordered step IDs including sentinel "done" at the end. */
-const STEP_ORDER: readonly TutorialStep[] = [
-  "look",
-  "move",
-  "equip",
-  "dig",
-  "plant",
-  "water",
-  "wait",
-  "harvest",
-  "talk",
-  "campfire",
-  "explore",
-  "done",
-];
+// ---------------------------------------------------------------------------
+// Event-to-quest-objective mapping
+// ---------------------------------------------------------------------------
+
+/**
+ * Map from action signal to quest objective event type for the
+ * elder-awakening onboarding chain. Signals that match a key here will be
+ * forwarded to the quest engine when `tickTutorial` is called.
+ *
+ * This map is intentionally minimal — only signals that correspond to real
+ * objectives in the elder-awakening quest chain are listed.
+ */
+export const ONBOARDING_SIGNAL_MAP: Readonly<Record<string, string>> = {
+  "action:plant": "trees_planted",
+  "action:harvest": "trees_harvested",
+  "action:water": "trees_watered",
+} as const;
 
 // ---------------------------------------------------------------------------
 // Factory
 // ---------------------------------------------------------------------------
 
+/**
+ * Returns the inert tutorial state. The overlay tutorial is retired; the
+ * returned object marks the tutorial as immediately complete so no overlay
+ * is ever shown.
+ */
 export function initialTutorialState(): TutorialState {
-  return { currentStep: "look", completed: false };
-}
-
-// ---------------------------------------------------------------------------
-// Pure state machine functions
-// ---------------------------------------------------------------------------
-
-/**
- * Returns the step definition for the current step, or null if done/skipped.
- */
-export function currentStepDef(state: TutorialState): TutorialStepDef | null {
-  if (state.completed || state.currentStep === "done") return null;
-  return TUTORIAL_STEPS.find((s) => s.id === state.currentStep) ?? null;
-}
-
-/**
- * Returns the instruction label for the current step, or null if done.
- */
-export function currentStepLabel(state: TutorialState): string | null {
-  return currentStepDef(state)?.label ?? null;
-}
-
-/**
- * Advance to the next step if the given signal matches the current step's
- * expected signal. Returns the same state reference if the signal does not
- * match or the tutorial is already complete.
- */
-export function tickTutorial(state: TutorialState, signal: string): TutorialState {
-  if (state.completed || state.currentStep === "done") return state;
-
-  const stepDef = TUTORIAL_STEPS.find((s) => s.id === state.currentStep);
-  if (!stepDef || stepDef.signal !== signal) return state;
-
-  return advanceStep(state);
-}
-
-/**
- * Unconditionally advance to the next step. Returns { currentStep: "done",
- * completed: true } when called on the last step.
- */
-export function advanceStep(state: TutorialState): TutorialState {
-  const currentIndex = STEP_ORDER.indexOf(state.currentStep);
-  if (currentIndex === -1 || currentIndex >= STEP_ORDER.length - 1) {
-    return { currentStep: "done", completed: true };
-  }
-  const nextStep = STEP_ORDER[currentIndex + 1];
-  const completed = nextStep === "done";
-  return { currentStep: nextStep, completed };
-}
-
-/**
- * Skip the tutorial entirely. Idempotent.
- */
-export function skipTutorial(_state: TutorialState): TutorialState {
   return { currentStep: "done", completed: true };
 }
 
+// ---------------------------------------------------------------------------
+// Pure functions — kept so settings.ts and hook imports compile
+// ---------------------------------------------------------------------------
+
 /**
- * Returns true if the tutorial is complete (all steps done or skipped).
+ * No-op: returns null. The overlay tutorial is retired.
+ * @deprecated
  */
-export function isTutorialComplete(state: TutorialState): boolean {
-  return state.completed || state.currentStep === "done";
+export function currentStepDef(_state: TutorialState): TutorialStepDef | null {
+  return null;
+}
+
+/**
+ * No-op: returns null. The overlay tutorial is retired.
+ * @deprecated
+ */
+export function currentStepLabel(_state: TutorialState): string | null {
+  return null;
+}
+
+/**
+ * Thin event bridge. If `signal` maps to a quest objective event, the caller
+ * (settings.ts `advanceTutorial`) is responsible for forwarding to the quest
+ * engine. This function itself returns the same state reference unchanged
+ * (state machine retired — no state transitions to perform).
+ *
+ * The signal-to-objective mapping is exposed via `ONBOARDING_SIGNAL_MAP` so
+ * `advanceTutorial` in settings.ts can read it without creating a circular
+ * dependency.
+ */
+export function tickTutorial(state: TutorialState, _signal: string): TutorialState {
+  // Overlay tutorial is retired. State never changes.
+  return state;
+}
+
+/**
+ * No-op: the tutorial is already always complete.
+ * @deprecated
+ */
+export function advanceStep(state: TutorialState): TutorialState {
+  return state;
+}
+
+/**
+ * No-op: already complete.
+ * @deprecated
+ */
+export function skipTutorial(state: TutorialState): TutorialState {
+  return state;
+}
+
+/**
+ * Always returns true — the overlay tutorial is retired and considered
+ * perpetually complete.
+ */
+export function isTutorialComplete(_state: TutorialState): boolean {
+  return true;
 }

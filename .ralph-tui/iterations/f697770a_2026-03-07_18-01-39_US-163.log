@@ -1,0 +1,186 @@
+# Iteration 163 Log
+
+## Metadata
+
+- **Task ID**: US-163
+- **Task Title**: Wire VirtualJoystick + MobileActionButtons to TouchProvider
+- **Description**: As a developer, I want the existing VirtualJoystick.tsx (285 lines) and MobileActionButtons.tsx (127 lines) integrated with the TouchProvider input system so that mobile touch controls produce correct...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-08T00:01:39.912Z
+- **Ended At**: 2026-03-08T00:14:39.449Z
+- **Duration**: 12m 59s
+- **Input Tokens**: 212
+- **Output Tokens**: 43123
+- **Total Tokens**: 43335
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.tsx[0m
+Now let me examine the TouchProvider and InputFrame types:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/TouchProvider*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/InputFrame*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/TouchProvider.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/input/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/TouchLookZone*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TouchLookZone.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/game/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+Now let me look at the HUD component and how VirtualJoystick is currently used:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/game/HUD*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mVirtualJoystick|MobileActionButtons[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mobileActionHelpers.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/TouchProvider.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture/touch-controls.md[0m
+Let me check how movement input flows through the game currently:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInput.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/GameUI/types.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/types.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m pattern: [96mmovementRef|moveDirection[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TouchLookZone.test.ts[0m
+Let me check what uses `touchLookZoneProvider`:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mtouchLookZoneProvider|touchProvider[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96minputManager.register|TouchProvider[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mtouchLookZoneProvider|sharedTouchProvider[0m
+Now I have a complete picture. Let me set up todos and implement:
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit,Write[0m
+`★ Insight ─────────────────────────────────────`
+- `TouchLookZone` already created a module-level `touchProvider` singleton — the core issue is that `VirtualJoystick` and `MobileActionButtons` need to share the **same** `TouchProvider` instance so `InputManager` gets one merged frame
+- The "testable seam" pattern (extract pure factories like `buildLookZoneHandlers`, inject provider via param) is already established — we follow it exactly
+- Creating `sharedTouchProvider.ts` in the input layer keeps UI components decoupled from each other while still sharing state
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/sharedTouchProvider.ts[0m "/**
+ * sharedTouchProvider -- Module-level singleton shared by all mobile touch UI components.
+ *
+ * VirtualJoystick, TouchLookZone, and MobileActionButtons all call methods on
+ * this single instance... (478 chars)"
+[94m[TodoWrite][0m
+Now update `TouchLookZone.tsx` to use the shared singleton:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TouchLookZone.tsx[0m edit: "import { useMemo, useRef } from "react";
+import { ..." → "import { useMemo, useRef } from "react";
+import { ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TouchLookZone.tsx[0m edit: "// ── Module-level singleton ─────────────────────..." → "// ── Module-level singleton ─────────────────────..."
+[94m[TodoWrite][0m
+Now create the pure joystick handler helpers:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/joystickHandlers.ts[0m "/**
+ * joystickHandlers.ts -- Pure helpers for VirtualJoystick -> TouchProvider wiring (Spec §23).
+ *
+ * No React Native imports — Animated values are abstracted via a duck-typed
+ * interface so this ... (1399 chars)"
+[94m[TodoWrite][0m
+Now update `VirtualJoystick.tsx` to feed into the shared provider:
+
+`★ Insight ─────────────────────────────────────`
+- The `PanResponder` callbacks reference `Animated.Value` objects (`knobX`, `knobY`) which can't be duck-typed easily — so we call provider methods inline in the handlers rather than extracting a full `buildJoystickHandlers` factory
+- The `computeJoystickZoneRect` pure function provides the testable seam; the full handler wiring is tested via `TouchProvider.test.ts` which already verifies `onTouchStart/Move/End` produce correct `InputFrame` values
+- We keep `movementRef` writes for backward compat with `PlayerCapsule` which reads them via the legacy `useInput` hook
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m edit: "import type React from "react";
+import { useCallba..." → "import type React from "react";
+import { useCallba..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m edit: "export interface VirtualJoystickProps {
+  /** Ref ..." → "export interface VirtualJoystickProps {
+  /** Ref ..."
+Now update the component body to use the provider:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m edit: "export function VirtualJoystick({
+  movementRef,
+ ..." → "export function VirtualJoystick({
+  movementRef,
+ ..."
+Now add provider calls in the PanResponder grant handler:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m edit: "      onPanResponderGrant: (evt: GestureResponderE..." → "      onPanResponderGrant: (evt: GestureResponderE..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m edit: "      onPanResponderMove: (evt: GestureResponderEv..." → "      onPanResponderMove: (evt: GestureResponderEv..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m edit: "      onPanResponderRelease: () => {
+        isAct..." → "      onPanResponderRelease: () => {
+        isAct..."
+Let me verify the current state of VirtualJoystick.tsx:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.tsx[0m
+VirtualJoystick looks good — 295 lines total, under the limit. Now update `mobileActionHelpers.ts`:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mobileActionHelpers.ts[0m edit: "/**
+ * Pure helper for MobileActionButtons -- no R..." → "/**
+ * Pure helper for MobileActionButtons -- no R..."
+[94m[TodoWrite][0m
+Now update `MobileActionButtons.tsx` to call the provider and add the CYCLE button:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.tsx[0m edit: "/**
+ * MobileActionButtons -- Quick-action buttons..." → "/**
+ * MobileActionButtons -- Quick-action buttons..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.tsx[0m edit: "export interface MobileActionButtonsProps {
+  sele..." → "export interface MobileActionButtonsProps {
+  sele..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.tsx[0m edit: "export function MobileActionButtons({
+  selectedTo..." → "export function MobileActionButtons({
+  selectedTo..."
+Let me verify the final state of MobileActionButtons.tsx:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.tsx[0m
+Now create the tests:
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.test.ts[0m "/**
+ * Tests for VirtualJoystick -> TouchProvider wiring helpers (Spec §23).
+ *
+ * Tests the pure computeJoystickZoneRect helper and the JoystickProvider
+ * interface contract. The component itself is... (5009 chars)"
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.test.ts[0m edit: "/**
+ * Tests for MobileActionButtons helper functi..." → "/**
+ * Tests for MobileActionButtons helper functi..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+These are pre-existing errors (they don't involve my files). Let me check only the files I touched:
+[94m[Bash][0m Check TS errors in modified files only $ npx tsc --noEmit 2>&1 | grep -E "(sharedTouchProvider|joystickHandlers|VirtualJoystick|MobileActionB...
+[94m[Bash][0m Count total TS errors $ npx tsc --noEmit 2>&1 | grep "error TS" | wc -l
+[94m[Bash][0m Check pre-existing error count on baseline $ git stash && npx tsc --noEmit 2>&1 | grep "error TS" | wc -l
+The stash confirmed 289 errors pre-existed. Let me restore my changes:
+[94m[Bash][0m Restore stashed changes $ git stash pop
+The system-reminder showed `TouchLookZone.tsx` was reverted to using the old `const touchProvider = new TouchProvider()` pattern during the stash. Let me check its current state:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TouchLookZone.tsx[0m
+Good — my changes survived the stash pop correctly. Now let me check the MobileActionButtons.test.ts state:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.test.ts[0m
+All changes are in place. Now run the tests:
+[94m[Bash][0m Run relevant test suites $ pnpm jest --no-coverage --testPathPattern="VirtualJoystick|MobileActionButtons|TouchProvider|TouchLo...
+All 83 tests pass. Now run the full test suite:
+[94m[Bash][0m Full test suite run $ pnpm jest --no-coverage 2>&1 | tail -20
+**3,864 tests pass, 0 failures.**
+[94m[TodoWrite][0m
+Now append to the progress log:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Find the end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-163 progress entry $ for mutable `providerOverride` it would be stale after re-render. In tests we don't render the compo...
+`★ Insight ─────────────────────────────────────`
+- **Singleton placement matters for dependency direction**: `sharedTouchProvider.ts` lives in `game/input/` (logic layer), so UI components in `components/game/` and `components/player/` both import from the same direction — down into the logic layer, never cross-sideways. This avoids `components/game → components/player` coupling while still sharing state.
+- **Pure seam extraction strategy**: Not all handlers justify a full factory extraction. For `VirtualJoystick`, only `computeJoystickZoneRect` needed extraction (the one non-trivial coordinate transform). The provider calls themselves are in the component; the factory pattern is reserved for cases where the entire handler body is pure.
+- **handleActionButtonPress as contract enforcer**: By making the "active press = interact, inactive press = tool switch" logic a named, tested pure function, the provider call becomes structurally guaranteed — impossible to add a new button and forget the `onInteractStart()` call.
+`─────────────────────────────────────────────────`
+
+All done. Here's a summary of what was implemented:
+
+## US-163 — VirtualJoystick + MobileActionButtons → TouchProvider
+
+**New files:**
+- `game/input/sharedTouchProvider.ts` — module-level `TouchProvider` singleton shared by all mobile touch components
+- `components/game/joystickHandlers.ts` — pure `computeJoystickZoneRect()` + `JoystickProvider` interface (no RN deps, fully testable)
+- `components/game/VirtualJoystick.test.ts` — 12 tests for zone rect math + interface contract
+
+**Modified files:**
+- `components/player/TouchLookZone.tsx` — now re-exports `sharedTouchProvider as touchLookZoneProvider` instead of creating its own instance
+- `components/game/VirtualJoystick.tsx` — calls `provider.onTouchStart/Move/End` in each PanResponder handler; accepts optional `providerOverride` for testing
+- `components/game/mobileActionHelpers.ts` — added `MobileActionProvider` interface + `handleActionButtonPress()` pure helper
+- `components/game/MobileActionButtons.tsx` — uses `handleActionButtonPress` (which calls `onInteractStart` on active button press), added 44px CYCLE button calling `onToolCycleStart`
+- `components/game/MobileActionButtons.test.ts` — 7 new `handleActionButtonPress` tests
+
+**Result:** 3,864 tests pass ✓
+
+<promise>COMPLETE</promise>

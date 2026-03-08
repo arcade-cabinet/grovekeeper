@@ -11,7 +11,7 @@
 import { useEffect, useState } from "react";
 import { migrateFromLocalStorage } from "@/game/db/migrate-localStorage";
 import { hydrateGameStore } from "@/game/db/queries";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import {
   calculateAllOfflineGrowth,
   type OfflineSpeciesData,

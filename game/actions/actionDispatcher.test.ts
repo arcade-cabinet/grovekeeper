@@ -13,7 +13,7 @@ import {
 } from "@/game/actions/actionDispatcher";
 
 // Mock the GameActions module — dispatcher tests verify routing only.
-jest.mock("@/game/actions/GameActions", () => ({
+jest.mock("@/game/actions", () => ({
   harvestTree: jest.fn(() => [{ type: "timber", amount: 2 }]),
   waterTree: jest.fn(() => true),
   pruneTree: jest.fn(() => true),
@@ -33,7 +33,7 @@ const mockAddResource = jest.fn();
 const mockIncrementToolUse = jest.fn();
 const mockAdvanceTutorial = jest.fn();
 
-jest.mock("@/game/stores/gameStore", () => ({
+jest.mock("@/game/stores", () => ({
   useGameStore: {
     getState: () => ({
       stamina: 100,
@@ -118,7 +118,7 @@ import {
   plantTree,
   pruneTree,
   waterTree,
-} from "@/game/actions/GameActions";
+} from "@/game/actions";
 import { triggerActionHaptic } from "@/game/systems/haptics";
 
 const mockHarvestTree = harvestTree as jest.Mock;

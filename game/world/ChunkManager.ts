@@ -14,7 +14,7 @@
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import type { Entity } from "@/game/ecs/world";
 import { generateEntityId, world } from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores/gameStore";
+import { useGameStore } from "@/game/stores";
 import { spawnChunkStructures } from "@/game/systems/structurePlacement";
 import { spawnChunkVegetation } from "@/game/systems/vegetationPlacement";
 import { SeededNoise } from "@/game/utils/seededNoise";

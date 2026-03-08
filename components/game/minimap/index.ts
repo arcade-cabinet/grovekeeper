@@ -2,7 +2,7 @@
  * Minimap subpackage barrel (Spec §17.6).
  *
  * Public surface for all minimap functionality. Consumers import from
- * "@/components/game/minimap" or "@/components/game/MiniMap" (re-export).
+ * "@/components/game/minimap" or "@/components/game" (barrel).
  */
 
 export type { MiniMapProps } from "./MiniMap.tsx";

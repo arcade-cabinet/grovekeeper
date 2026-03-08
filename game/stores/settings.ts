@@ -13,7 +13,11 @@ import {
   awardTradingXp as awardTradingXpPure,
   setRelationship as setRelationshipPure,
 } from "@/game/systems/npcRelationship";
-import { skipTutorial as skipTutorialPure, tickTutorial } from "@/game/systems/tutorial";
+import {
+  ONBOARDING_SIGNAL_MAP,
+  skipTutorial as skipTutorialPure,
+  tickTutorial,
+} from "@/game/systems/tutorial";
 import {
   computeDiscoveryTier,
   createEmptyProgress,
@@ -96,9 +100,17 @@ export function discoverSpirit(spiritId: string): boolean {
 
 export function advanceTutorial(signal: string): void {
   const state = getState();
+  // Overlay tutorial is retired. tickTutorial is now a no-op that returns
+  // the same reference, so the state$.set below is intentionally skipped.
   const newTutorialState = tickTutorial(state.tutorialState, signal);
   if (newTutorialState !== state.tutorialState) {
     gameState$.tutorialState.set(newTutorialState);
+  }
+
+  // Forward matching signals to the onboarding quest chain.
+  const objectiveType = ONBOARDING_SIGNAL_MAP[signal];
+  if (objectiveType) {
+    advanceQuestObjective(objectiveType, 1);
   }
 }
 
