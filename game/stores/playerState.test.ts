@@ -1,7 +1,7 @@
 import { emptyResources } from "@/game/config/resources";
 import { chunkDiffs$, saveChunkDiff } from "@/game/world/chunkPersistence";
-import type { SerializedTree } from "./core";
-import { levelFromXp, totalXpForLevel, useGameStore, xpToNext } from "./index";
+import type { SerializedTree } from "./core.ts";
+import { levelFromXp, totalXpForLevel, useGameStore, xpToNext } from "./index.ts";
 
 describe("Player State Store (Spec §3, §11, §12, §13, §16)", () => {
   beforeEach(() => {
@@ -205,9 +205,9 @@ describe("Player State Store (Spec §3, §11, §12, §13, §16)", () => {
     it("unlockAchievement does not duplicate", () => {
       useGameStore.getState().unlockAchievement("first-seed");
       useGameStore.getState().unlockAchievement("first-seed");
-      expect(
-        useGameStore.getState().achievements.filter((a) => a === "first-seed"),
-      ).toHaveLength(1);
+      expect(useGameStore.getState().achievements.filter((a) => a === "first-seed")).toHaveLength(
+        1,
+      );
     });
   });
 
@@ -357,7 +357,13 @@ describe("Player State Store (Spec §3, §11, §12, §13, §16)", () => {
       useGameStore.setState({
         level: 25,
         xp: 99999,
-        lifetimeResources: { ...emptyResources(), timber: 5000, sap: 3000, fruit: 2000, acorns: 1000 },
+        lifetimeResources: {
+          ...emptyResources(),
+          timber: 5000,
+          sap: 3000,
+          fruit: 2000,
+          acorns: 1000,
+        },
       });
       useGameStore.getState().performPrestige();
       expect(useGameStore.getState().lifetimeResources.timber).toBe(5000);
@@ -426,7 +432,15 @@ describe("Player State Store (Spec §3, §11, §12, §13, §16)", () => {
     it("clears all chunk diffs on prestige", () => {
       saveChunkDiff("0,0", {
         plantedTrees: [
-          { localX: 0, localZ: 0, speciesId: "white-oak", stage: 1, progress: 0.5, plantedAt: 0, meshSeed: 1 },
+          {
+            localX: 0,
+            localZ: 0,
+            speciesId: "white-oak",
+            stage: 1,
+            progress: 0.5,
+            plantedAt: 0,
+            meshSeed: 1,
+          },
         ],
       });
       saveChunkDiff("1,0", { plantedTrees: [] });
@@ -936,7 +950,7 @@ describe("Player State Store (Spec §3, §11, §12, §13, §16)", () => {
       useGameStore.getState().resetGame();
       const state = useGameStore.getState();
       expect(state.hunger).toBe(100);
-      expect(state.hearts).toBe(3);
+      expect(state.hearts).toBe(5);
       expect(state.bodyTemp).toBe(37.0);
       expect(state.lastCampfireId).toBeNull();
       expect(state.lastCampfirePosition).toBeNull();

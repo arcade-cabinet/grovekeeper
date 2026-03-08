@@ -119,13 +119,7 @@ jest.mock("@/game/utils/seedWords", () => ({
   scopedRNG: jest.fn(() => () => 0.5),
 }));
 
-import {
-  clearRock,
-  harvestTree,
-  plantTree,
-  pruneTree,
-  waterTree,
-} from "@/game/actions";
+import { clearRock, harvestTree, plantTree, pruneTree, waterTree } from "@/game/actions";
 import { triggerActionHaptic } from "@/game/systems/haptics";
 
 const mockHarvestTree = harvestTree as jest.Mock;
@@ -784,5 +778,96 @@ describe("dispatchAction tutorial advancement (Spec §25.1)", () => {
   it("does not call advanceTutorial for non-grove actions (BUILD)", () => {
     dispatchAction({ toolId: "hammer", targetType: null });
     expect(mockAdvanceTutorial).not.toHaveBeenCalled();
+  });
+});
+
+// ── Audio SFX wiring (Spec §27) ──────────────────────────────────────────────
+
+// Access the mocked audioManager.playSound for SFX assertions.
+import { audioManager } from "@/game/systems/AudioManager";
+
+const mockPlaySound = audioManager.playSound as jest.Mock;
+
+describe("dispatchAction SFX (Spec §27)", () => {
+  const mockTreeEntity = { id: "tree_001", tree: { speciesId: "white-oak", stage: 3 } };
+
+  it("plays 'plant' SFX on successful PLANT", () => {
+    dispatchAction({
+      toolId: "trowel",
+      targetType: "soil",
+      gridX: 3,
+      gridZ: 5,
+      speciesId: "white-oak",
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("plant");
+  });
+
+  it("plays 'chop' + 'harvest' SFX on successful CHOP", () => {
+    dispatchAction({
+      toolId: "axe",
+      targetType: "tree",
+      entity: mockTreeEntity as never,
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("chop");
+    expect(mockPlaySound).toHaveBeenCalledWith("harvest");
+  });
+
+  it("plays 'water' SFX on successful WATER", () => {
+    dispatchAction({
+      toolId: "watering-can",
+      targetType: "tree",
+      entity: mockTreeEntity as never,
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("water");
+  });
+
+  it("plays 'dig' SFX on successful DIG", () => {
+    dispatchAction({
+      toolId: "shovel",
+      targetType: "rock",
+      gridX: 1,
+      gridZ: 2,
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("dig");
+  });
+
+  it("plays 'prune' SFX on successful PRUNE", () => {
+    dispatchAction({
+      toolId: "pruning-shears",
+      targetType: "tree",
+      entity: mockTreeEntity as never,
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("prune");
+  });
+
+  it("plays 'build' SFX on successful BUILD", () => {
+    dispatchAction({ toolId: "hammer", targetType: null });
+    expect(mockPlaySound).toHaveBeenCalledWith("build");
+  });
+
+  it("plays 'harvest' SFX on successful MINE", () => {
+    const rockEntity = { id: "rock_001", rock: { rockType: "granite" } };
+    dispatchAction({
+      toolId: "pick",
+      targetType: "rock",
+      entity: rockEntity as never,
+      biome: "starting-grove",
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("harvest");
+  });
+
+  it("plays 'error' SFX when action fails execution", () => {
+    mockHarvestTree.mockReturnValueOnce(null);
+    dispatchAction({
+      toolId: "axe",
+      targetType: "tree",
+      entity: { id: "tree_002", tree: { speciesId: "white-oak", stage: 1 } } as never,
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("error");
+  });
+
+  it("does not play any SFX when no valid action mapping", () => {
+    dispatchAction({ toolId: "almanac", targetType: "tree" });
+    expect(mockPlaySound).not.toHaveBeenCalled();
   });
 });

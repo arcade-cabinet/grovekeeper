@@ -13,8 +13,8 @@ import {
   treesQuery,
   waterBodiesQuery,
 } from "@/game/ecs/world";
-import { NPC_INTERACT_RANGE } from "./types";
-import type { InteractionSelection } from "./types";
+import type { InteractionSelection } from "./types.ts";
+import { NPC_INTERACT_RANGE } from "./types.ts";
 
 /** Convert world position to grid coords (round to nearest integer). */
 export function worldToGrid(worldX: number, worldZ: number): { gridX: number; gridZ: number } {

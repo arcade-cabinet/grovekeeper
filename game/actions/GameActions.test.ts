@@ -367,13 +367,13 @@ describe("GameActions", () => {
     it("drains 1 durability on standard use", () => {
       // Lazy init: absent from map = maxDurability (100)
       drainToolDurability("trowel");
-      expect(useGameStore.getState().toolDurabilities["trowel"]).toBe(99);
+      expect(useGameStore.getState().toolDurabilities.trowel).toBe(99);
     });
 
     it("drains a custom amount when specified", () => {
       // Wrong target = 3 durability per Spec §11.3
       drainToolDurability("axe", 3);
-      expect(useGameStore.getState().toolDurabilities["axe"]).toBe(97);
+      expect(useGameStore.getState().toolDurabilities.axe).toBe(97);
     });
 
     it("returns false when tool is already broken (durability === 0)", () => {
@@ -384,7 +384,7 @@ describe("GameActions", () => {
     it("clamps durability at 0, does not go negative", () => {
       useGameStore.getState().setToolDurability("shovel", 1);
       drainToolDurability("shovel", 5);
-      expect(useGameStore.getState().toolDurabilities["shovel"]).toBe(0);
+      expect(useGameStore.getState().toolDurabilities.shovel).toBe(0);
     });
 
     it("each consecutive drain reduces durability by 1", () => {

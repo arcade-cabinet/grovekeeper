@@ -9,7 +9,7 @@
  */
 
 // Barrel shim: confirm all public exports are still accessible via gameStore
-import { useGameStore, xpToNext, levelFromXp } from "./index";
+import { levelFromXp, useGameStore, xpToNext } from "./index.ts";
 
 it("gameStore barrel re-exports useGameStore and XP helpers", () => {
   expect(typeof useGameStore).toBe("function");

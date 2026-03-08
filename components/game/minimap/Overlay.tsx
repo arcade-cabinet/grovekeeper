@@ -9,7 +9,7 @@
  */
 
 import { XIcon } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Modal, Pressable, useWindowDimensions, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";

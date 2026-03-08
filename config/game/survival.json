@@ -2,5 +2,10 @@
   "baseHungerDrainPerMin": 1.0,
   "starvationHeartDrainPerMin": 0.25,
   "wellFedThreshold": 80,
-  "wellFedRegenBonus": 1.1
+  "wellFedRegenBonus": 1.1,
+  "deathResourceLossFraction": 0.25,
+  "deathHungerResetFraction": 0.5,
+  "deathRespawnHearts": 1,
+  "deathRespawnBodyTemp": 37.0,
+  "defaultRespawnPosition": { "x": 6, "y": 0, "z": 6 }
 }

@@ -1,12 +1,18 @@
 import { createRNG, hashString } from "@/game/utils/seedRNG";
 import { ZONE_ARCHETYPES } from "../archetypes.ts";
 import type { WorldDefinition, ZoneDefinition } from "../types.ts";
-import { computeBirmotherSpawn } from "./birchmother";
-import { getAvailableArchetypes, getZoneCount, oppositeDirection, pickWeighted, rollInt } from "./helpers";
-import { createConnectionPair, createZoneFromArchetype, getOpenEdges } from "./zoneLayout";
+import { computeBirmotherSpawn } from "./birchmother.ts";
+import {
+  getAvailableArchetypes,
+  getZoneCount,
+  oppositeDirection,
+  pickWeighted,
+  rollInt,
+} from "./helpers.ts";
+import { createConnectionPair, createZoneFromArchetype, getOpenEdges } from "./zoneLayout.ts";
 
-export { BIRCHMOTHER_DISTANCE, computeBirmotherSpawn } from "./birchmother";
-export { pickWeighted } from "./helpers";
+export { BIRCHMOTHER_DISTANCE, computeBirmotherSpawn } from "./birchmother.ts";
+export { pickWeighted } from "./helpers.ts";
 
 export function generateWorld(
   seed: string,

@@ -13,7 +13,7 @@
  * See GAME_SPEC.md §31.2.
  */
 
-import { AdditiveBlending, Color, DoubleSide, IUniform, ShaderMaterial, Vector2 } from "three";
+import { AdditiveBlending, Color, DoubleSide, type IUniform, ShaderMaterial, Vector2 } from "three";
 
 import type { GerstnerWaveLayer, WaterBodyComponent } from "@/game/ecs/components/procedural/water";
 
@@ -122,10 +122,7 @@ export function buildGerstnerUniforms(waterBody: WaterBodyComponent): GerstnerUn
   const wavelength = new Array<number>(MAX_WAVE_LAYERS).fill(1);
   const speed = new Array<number>(MAX_WAVE_LAYERS).fill(0);
   const steepness = new Array<number>(MAX_WAVE_LAYERS).fill(0);
-  const direction: Vector2[] = Array.from(
-    { length: MAX_WAVE_LAYERS },
-    () => new Vector2(1, 0),
-  );
+  const direction: Vector2[] = Array.from({ length: MAX_WAVE_LAYERS }, () => new Vector2(1, 0));
 
   for (let i = 0; i < count; i++) {
     const layer: GerstnerWaveLayer = waterBody.waveLayers[i];

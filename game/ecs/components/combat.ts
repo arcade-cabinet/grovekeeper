@@ -7,7 +7,6 @@ export interface EnemyComponent {
   deaggroRange: number;
   attackPower: number;
   attackCooldown: number;
-  modelPath: string;
   lootTableId: string;
 }
 

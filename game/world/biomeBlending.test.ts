@@ -90,7 +90,7 @@ describe("generateChunkData biomeBlend (Spec §31.1)", () => {
         );
         const centerBiome = data.baseColor; // indirect: same biome → same color
 
-        const neighborColors = data.neighborColors;
+        const _neighborColors = data.neighborColors;
         // Neighbors with same baseColor as center → biomeBlend = 0
         // Neighbors with different color → biomeBlend = 1
         const [bN, bE, bS, bW] = data.biomeBlend;

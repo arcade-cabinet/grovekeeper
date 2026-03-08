@@ -21,8 +21,8 @@ import { useRef } from "react";
 import type { DialogueComponent } from "@/game/ecs/components/dialogue";
 import { grovekeeperSpiritsQuery, playerQuery, world } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores";
-import { showToast } from "@/game/ui/Toast";
 import { openDialogueSession } from "@/game/ui/dialogueBridge";
+import { showToast } from "@/game/ui/Toast";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -232,7 +232,7 @@ export function useSpiritProximity(): ReturnType<typeof useRef<string | null>> {
       world.addComponent(
         targetEntity,
         "dialogue",
-        makeDialogueComponent(targetEntity.grovekeeperSpirit!.dialogueTreeId),
+        makeDialogueComponent(targetEntity.grovekeeperSpirit?.dialogueTreeId),
       );
 
       // 4. Open the NpcDialogue panel via the bridge (wires ECS state to React Native UI)

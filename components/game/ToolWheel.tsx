@@ -24,9 +24,10 @@ import {
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { ACCENT, DARK, HUD_PANEL, TYPE } from "@/components/ui/tokens";
 import type { ToolData } from "@/game/config/tools";
 import { TOOLS } from "@/game/config/tools";
-import { useToolWheelTabKey } from "./toolWheelLogic";
+import { useToolWheelTabKey } from "./toolWheelLogic.ts";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -64,19 +65,6 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
 };
 
 // ---------------------------------------------------------------------------
-// Colors (from original COLORS constant)
-// ---------------------------------------------------------------------------
-
-const COLORS = {
-  forestGreen: "#2D5A27",
-  barkBrown: "#5D4037",
-  soilDark: "#3E2723",
-  leafLight: "#81C784",
-  autumnGold: "#FFB74D",
-  skyMist: "#E8F5E9",
-} as const;
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -109,7 +97,7 @@ export function ToolWheel({
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 items-center justify-center bg-black/40">
+      <View className="flex-1 items-center justify-center bg-black/60">
         {/* Backdrop dismiss */}
         <Pressable
           className="absolute inset-0"
@@ -121,15 +109,18 @@ export function ToolWheel({
         <View
           className="mx-4 w-full max-w-xs rounded-2xl p-4 shadow-lg"
           style={{
-            backgroundColor: COLORS.skyMist,
-            borderWidth: 3,
-            borderColor: `${COLORS.forestGreen}40`,
+            ...HUD_PANEL,
+            backgroundColor: "rgba(10,12,8,0.92)",
           }}
         >
           {/* Header */}
           <Text
-            className="mb-3 text-center font-heading text-lg font-bold"
-            style={{ color: COLORS.soilDark }}
+            style={{
+              ...TYPE.heading,
+              textAlign: "center",
+              marginBottom: 12,
+              color: DARK.textPrimary,
+            }}
           >
             Tools
           </Text>
@@ -146,14 +137,15 @@ export function ToolWheel({
                 return (
                   <Pressable
                     key={tool.id}
-                    className="h-20 w-[30%] items-center justify-center rounded-xl border-2 p-2"
+                    className="h-20 w-[30%] items-center justify-center rounded-xl p-2"
                     style={{
+                      borderWidth: 2,
                       backgroundColor: isSelected
-                        ? `${COLORS.leafLight}40`
+                        ? "rgba(74,222,128,0.15)"
                         : isUnlocked
-                          ? "#FFFFFF"
-                          : `${COLORS.soilDark}20`,
-                      borderColor: isSelected ? COLORS.forestGreen : "transparent",
+                          ? DARK.bgCanopy
+                          : DARK.surfaceStone,
+                      borderColor: isSelected ? ACCENT.sap : "transparent",
                       opacity: isUnlocked || canUnlock ? 1 : 0.5,
                     }}
                     disabled={!isUnlocked && !canUnlock}
@@ -164,13 +156,19 @@ export function ToolWheel({
                       as={IconComponent}
                       size={24}
                       className="mb-1"
-                      color={isUnlocked ? COLORS.forestGreen : COLORS.barkBrown}
+                      color={isUnlocked ? ACCENT.sap : DARK.textMuted}
                     />
-                    <Text className="text-center text-xs" style={{ color: COLORS.soilDark }}>
+                    <Text
+                      style={{
+                        ...TYPE.caption,
+                        textAlign: "center",
+                        color: DARK.textPrimary,
+                      }}
+                    >
                       {tool.name}
                     </Text>
                     {!isUnlocked && (
-                      <Text className="text-xs" style={{ color: COLORS.autumnGold }}>
+                      <Text style={{ ...TYPE.caption, color: ACCENT.amber }}>
                         Lv.{tool.unlockLevel}
                       </Text>
                     )}

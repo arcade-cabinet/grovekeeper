@@ -6,7 +6,7 @@
 - 3-layer quest system: Main Quest (14 Grovekeepers), World Quests (seed-variant narrative), Procedural Quests (65+ templates)
 - 10 named NPCs are Tutorial Village residents; procedural NPCs populate the infinite world
 - Relationship system with 4 tiers (Stranger/Acquaintance/Friend/Best Friend)
-- NPCs use 3DPSX ChibiCharacter GLBs with seeded appearance + anime.js rigid-body animation
+- NPCs use ChibiCharacter GLBs with seeded appearance + anime.js rigid-body animation
 - World quests use A/B/C dialogue variations seeded from world seed
 
 ## Table of Contents

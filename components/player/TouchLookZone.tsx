@@ -17,8 +17,8 @@
 
 import { useMemo, useRef } from "react";
 import { type GestureResponderEvent, PanResponder, StyleSheet, View } from "react-native";
-import { TouchProvider } from "@/game/input/TouchProvider";
 import { sharedTouchProvider } from "@/game/input/sharedTouchProvider";
+import type { TouchProvider } from "@/game/input/TouchProvider";
 
 // ── Tuning constants (move to config/game/controls.json when config loader exists) ──
 
@@ -177,7 +177,7 @@ export function TouchLookZone({ providerOverride }: TouchLookZoneProps = {}) {
       ),
     // provider reference is stable (module singleton or test override passed once)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [provider],
   );
 
   return <View style={styles.zone} pointerEvents="box-only" {...panResponder.panHandlers} />;

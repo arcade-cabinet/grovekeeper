@@ -79,10 +79,10 @@ function pickWallPiece(rng: () => number, rotation: number): Omit<HedgePiece, "x
     const sizes: string[] = hedgeMazeConfig.pieceWeights.round;
     const sz = sizes[Math.floor(rng() * sizes.length)];
     return {
-      modelPath: `hedges/round/round_${sz}.glb`,
+      modelPath: `assets/models/hedges/round/round_${sz}.glb`,
       rotation,
       pieceType: "round",
-      sizeClass: sz,
+      sizeClass: sz.replace(/_\d+$/, ""),
       junction: "",
     };
   }
@@ -90,7 +90,7 @@ function pickWallPiece(rng: () => number, rotation: number): Omit<HedgePiece, "x
     const sizes: string[] = hedgeMazeConfig.pieceWeights.diagonal;
     const sz = sizes[Math.floor(rng() * sizes.length)];
     return {
-      modelPath: `hedges/diagonal/diagonal_${sz}.glb`,
+      modelPath: `assets/models/hedges/diagonal/diagonal_${sz}.glb`,
       rotation,
       pieceType: "diagonal",
       sizeClass: sz,
@@ -100,7 +100,7 @@ function pickWallPiece(rng: () => number, rotation: number): Omit<HedgePiece, "x
   const sizes: string[] = hedgeMazeConfig.pieceWeights.basic;
   const sz = sizes[Math.floor(rng() * sizes.length)];
   return {
-    modelPath: `hedges/basic/basic_${sz}.glb`,
+    modelPath: `assets/models/hedges/basic/basic_${sz}.glb`,
     rotation,
     pieceType: "basic",
     sizeClass: sz,
@@ -159,19 +159,19 @@ export function mazeToHedgePieces(maze: MazeResult, seed: number): HedgePiece[] 
         if (rotation === null) continue; // Collinear — no fill needed.
         const sz = roundSizes[Math.floor(rng() * roundSizes.length)];
         pieces.push({
-          modelPath: `hedges/round/round_${sz}.glb`,
+          modelPath: `assets/models/hedges/round/round_${sz}.glb`,
           rotation,
           x: vx * cellScale,
           z: vz * cellScale,
           pieceType: "round",
-          sizeClass: sz,
+          sizeClass: sz.replace(/_\d+$/, ""),
           junction: "",
         });
       } else if (count >= 3) {
         const rotation = count === 3 ? tJunctionRotation(w) : 0;
         const sz = triSizes[Math.floor(rng() * triSizes.length)];
         pieces.push({
-          modelPath: `hedges/triangle/triangle_${sz}.glb`,
+          modelPath: `assets/models/hedges/triangle/triangle_${sz}.glb`,
           rotation,
           x: vx * cellScale,
           z: vz * cellScale,

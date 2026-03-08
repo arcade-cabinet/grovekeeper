@@ -647,7 +647,7 @@ function makeCommitWorld(): { add: jest.Mock } & KitbashPlacementWorld {
 
 function makeCommitStore(
   resources: Record<string, number> = { wood: 10, stone: 10, metal_scrap: 10, fiber: 10 },
-  difficulty = "normal",
+  difficulty = "sapling",
 ): KitbashCommitStore {
   const res = { ...resources };
   return {
@@ -701,7 +701,7 @@ describe("placeModularPiece (Spec §35.4)", () => {
     placeModularPiece(piece, [], rapierWorld, rapier, ecsWorld, () => "id-1", store);
 
     expect(store.spendResource).toHaveBeenCalledWith("wood", 4);
-    expect(store.resources["wood"]).toBe(6);
+    expect(store.resources.wood).toBe(6);
   });
 
   it("returns false and adds no entity when Rapier clearance fails", () => {

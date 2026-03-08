@@ -12,11 +12,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { Text } from "@/components/ui/text";
 
 // ---------------------------------------------------------------------------
@@ -194,6 +190,7 @@ export function ActionButton({ selectedTool, tileState, onAction }: ActionButton
       accessibilityLabel={`${label} action`}
       accessibilityRole="button"
       accessibilityState={{ disabled: !enabled }}
+      testID="btn-action"
     >
       <View
         className="items-center justify-center overflow-hidden rounded-full"

@@ -1,5 +1,5 @@
 /**
- * NPC ECS components for 3DPSX ChibiCharacter GLB models.
+ * NPC ECS components for chibi character models.
  *
  * NPCs are assembled from a base character model + optional item attachments.
  * Appearance is seeded deterministically via scopedRNG.

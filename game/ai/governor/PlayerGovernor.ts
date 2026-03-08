@@ -12,9 +12,9 @@ import {
   spendToolStamina,
   waterTree,
 } from "@/game/actions";
+import { useGameStore } from "@/game/stores";
 import type { PathFollowState } from "@/game/systems/pathFollowing";
 import { BASE_TRADE_RATES, executeTrade } from "@/game/systems/trading";
-import { useGameStore } from "@/game/stores";
 import { GovernorEntity } from "./entity.ts";
 import {
   ExploreEvaluator,
@@ -28,9 +28,9 @@ import { advanceNav, buildNavPath } from "./navigation.ts";
 import { resolveTarget } from "./targeting.ts";
 import {
   ACTION_PAUSE,
-  DEFAULT_PROFILE,
   type ActionTarget,
   type ActionType,
+  DEFAULT_PROFILE,
   type GovernorProfile,
   type GovernorState,
   type PlayerGovernorConfig,
@@ -129,7 +129,10 @@ export class PlayerGovernor {
     let bestScore = 0;
     for (const [action, evaluator] of this.evaluators) {
       const score = evaluator.calculateDesirability(this.entity);
-      if (score > bestScore) { bestScore = score; bestAction = action; }
+      if (score > bestScore) {
+        bestScore = score;
+        bestAction = action;
+      }
     }
 
     if (!this.config) return;
@@ -161,7 +164,10 @@ export class PlayerGovernor {
   }
 
   private tickNavigate(): void {
-    if (!this.config || !this.pathState) { this.state = "idle"; return; }
+    if (!this.config || !this.pathState) {
+      this.state = "idle";
+      return;
+    }
     const done = advanceNav(this.pathState, this.config);
     if (done) {
       this.pathState = null;

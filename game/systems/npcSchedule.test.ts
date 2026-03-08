@@ -15,7 +15,6 @@ jest.mock("./npcMovement", () => ({
   cancelNpcMovement: jest.fn(),
 }));
 
-// biome-ignore lint/style/useImportType: jest.Mock cast requires value import
 import { startNpcPath } from "./npcMovement.ts";
 
 const mockStartNpcPath = startNpcPath as jest.Mock;

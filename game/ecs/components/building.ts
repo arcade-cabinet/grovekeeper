@@ -2,7 +2,7 @@
  * Building ECS components for Fallout-style kitbashing base building.
  *
  * Modular pieces snap together on a coarse grid (1-unit cells).
- * Player assembles shelters, workshops, storage from 3DPSX Mega Pack II GLBs.
+ * Player assembles shelters, workshops, storage from modular GLB pieces.
  * Progressive unlock: wood L5, stone L10, metal L15, decorative L20.
  */
 

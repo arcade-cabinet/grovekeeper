@@ -16,7 +16,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { Group, Material, Mesh, PlaneGeometry, ShaderMaterial } from "three";
+import { type Group, type Material, Mesh, PlaneGeometry, type ShaderMaterial } from "three";
 
 import type { WaterBodyComponent } from "@/game/ecs/components/procedural/water";
 import { waterBodiesQuery } from "@/game/ecs/world";
@@ -48,12 +48,7 @@ export const CAUSTICS_DEPTH_OFFSET = 0.05;
  * Exported as a pure testable seam.
  */
 export function buildWaterPlaneGeometry(size: WaterBodyComponent["size"]): PlaneGeometry {
-  return new PlaneGeometry(
-    size.width,
-    size.depth,
-    WATER_PLANE_SEGMENTS,
-    WATER_PLANE_SEGMENTS,
-  );
+  return new PlaneGeometry(size.width, size.depth, WATER_PLANE_SEGMENTS, WATER_PLANE_SEGMENTS);
 }
 
 /**
@@ -101,10 +96,12 @@ export const WaterBodies = () => {
       }
 
       // Sync world position each frame (entity may be repositioned)
+      // biome-ignore lint/style/noNonNullAssertion: guaranteed by meshMap.has(id) guard above
       const mesh = meshMap.get(id)!;
       mesh.position.set(position.x, position.y, position.z);
 
       // Advance Gerstner wave time uniform
+      // biome-ignore lint/style/noNonNullAssertion: guaranteed by meshMap.has(id) guard above
       const material = materialMap.get(id)!;
       updateGerstnerTime(material, time);
 
@@ -123,9 +120,11 @@ export const WaterBodies = () => {
         }
 
         // Position caustic plane just below the water surface
+        // biome-ignore lint/style/noNonNullAssertion: guaranteed by causticMeshMap.has(id) guard above
         const causticMesh = causticMeshMap.get(id)!;
         causticMesh.position.set(position.x, position.y - CAUSTICS_DEPTH_OFFSET, position.z);
 
+        // biome-ignore lint/style/noNonNullAssertion: guaranteed by causticMeshMap.has(id) guard above
         const causticMaterial = causticMaterialMap.get(id)!;
         updateCausticsTime(causticMaterial, time);
       }

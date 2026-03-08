@@ -10,8 +10,8 @@
  */
 
 import { Filter, FMSynth, Noise, Oscillator, Volume } from "tone";
-import { createToneLayerNode } from "./toneLayerFactory";
-import type { LayerName } from "./ambientAudio";
+import type { LayerName } from "./ambientAudio.ts";
+import { createToneLayerNode } from "./toneLayerFactory.ts";
 
 const mockRampTo = jest.fn();
 

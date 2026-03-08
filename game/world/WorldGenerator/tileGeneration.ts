@@ -1,5 +1,5 @@
 import type { PropPlacement, TileOverrideDef } from "../types.ts";
-import { pickWeighted } from "./helpers";
+import { pickWeighted } from "./helpers.ts";
 
 export function generateTileOverrides(
   rng: () => number,

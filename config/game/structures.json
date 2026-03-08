@@ -257,6 +257,130 @@
       "buildCost": [{ "resource": "timber", "amount": 8 }]
     }
   ],
+  "proceduralBuilding": {
+    "wallH": 3.0,
+    "wallThickness": 0.2,
+    "floorThickness": 0.15,
+    "tileSize": 4.0,
+    "doorWidth": 1.4,
+    "doorHeight": 2.2,
+    "windowWidth": 1.2,
+    "windowHeight": 0.9,
+    "windowSillHeight": 0.6,
+    "stairWidth": 1.2,
+    "stairDepth": 2.4,
+    "stairSteps": 12,
+    "minFootprintTiles": 1,
+    "maxFootprintTiles": 2,
+    "minStories": 1,
+    "maxStories": 3,
+    "colors": {
+      "brick": [0.42, 0.25, 0.2],
+      "plaster": [0.88, 0.85, 0.8],
+      "timber": [0.55, 0.38, 0.22],
+      "floor": [0.29, 0.2, 0.13],
+      "stair": [0.35, 0.26, 0.16],
+      "roof": [0.17, 0.19, 0.21],
+      "furniture": [0.5, 0.35, 0.22],
+      "chimney": [0.3, 0.28, 0.26],
+      "hay": [0.78, 0.72, 0.4],
+      "door": [0.05, 0.05, 0.05],
+      "window": [0.08, 0.1, 0.15]
+    }
+  },
+  "blueprints": [
+    {
+      "id": "cottage",
+      "name": "Cottage",
+      "footprintW": 3,
+      "footprintD": 3,
+      "stories": 1,
+      "materialType": "plaster"
+    },
+    {
+      "id": "townhouse",
+      "name": "Townhouse",
+      "footprintW": 3,
+      "footprintD": 4,
+      "stories": 2,
+      "materialType": "brick"
+    },
+    {
+      "id": "barn",
+      "name": "Barn",
+      "footprintW": 4,
+      "footprintD": 5,
+      "stories": 1,
+      "materialType": "timber"
+    },
+    {
+      "id": "inn",
+      "name": "Inn",
+      "footprintW": 4,
+      "footprintD": 4,
+      "stories": 2,
+      "materialType": "plaster"
+    },
+    {
+      "id": "forge",
+      "name": "Forge",
+      "footprintW": 4,
+      "footprintD": 3,
+      "stories": 1,
+      "materialType": "brick"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "footprintW": 3,
+      "footprintD": 3,
+      "stories": 1,
+      "materialType": "plaster"
+    },
+    {
+      "id": "apothecary",
+      "name": "Apothecary",
+      "footprintW": 3,
+      "footprintD": 3,
+      "stories": 1,
+      "materialType": "plaster"
+    },
+    {
+      "id": "watchtower",
+      "name": "Watchtower",
+      "footprintW": 2,
+      "footprintD": 2,
+      "stories": 3,
+      "materialType": "brick"
+    },
+    {
+      "id": "storehouse",
+      "name": "Storehouse",
+      "footprintW": 3,
+      "footprintD": 3,
+      "stories": 1,
+      "materialType": "brick"
+    },
+    {
+      "id": "chapel",
+      "name": "Chapel",
+      "footprintW": 3,
+      "footprintD": 4,
+      "stories": 1,
+      "materialType": "plaster"
+    }
+  ],
+  "villageLayout": {
+    "minGridW": 3,
+    "maxGridW": 6,
+    "minGridD": 3,
+    "maxGridD": 6,
+    "streetWidth": 1,
+    "lotMargin": 0.5,
+    "crossStreetChance": 0.5,
+    "lampPostSpacing": 3,
+    "streetFurniturePerBuilding": { "min": 1, "max": 2 }
+  },
   "villageGeneration": {
     "minBuildings": 3,
     "maxBuildings": 8,

@@ -201,6 +201,7 @@ export function spawnChunkVegetation(
   chunkZ: number,
   biome: string,
   heightmap: Float32Array,
+  season: VegetationSeason = "spring",
 ): ChunkVegetationResult {
   const templates = vegetationConfig.biomeVegetationTemplates;
   const template = templates[biome as keyof typeof templates] ?? templates["starting-grove"];
@@ -258,12 +259,12 @@ export function spawnChunkVegetation(
     const shapeSeed = Math.floor(rng() * 0xffffff);
     const { bushShape, hasRoots } = selectRandomBushShape(shapeSeed);
     const rotationY = rng() * Math.PI * 2;
-    const modelKey = resolveBushModelKey(bushShape, "summer", hasRoots);
+    const modelKey = resolveBushModelKey(bushShape, season, hasRoots);
 
     bushes.push({
       position: { x: chunkX * CHUNK_SIZE + localX, y, z: chunkZ * CHUNK_SIZE + localZ },
       rotationY,
-      bush: { bushShape, season: "summer", hasRoots, modelKey },
+      bush: { bushShape, season, hasRoots, modelKey },
     });
   }
 

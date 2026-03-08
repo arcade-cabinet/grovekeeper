@@ -7,7 +7,7 @@ import { batch } from "@legendapp/state";
 import difficultyConfig from "@/config/game/difficulty.json" with { type: "json" };
 import { startChain } from "@/game/quests/questChainEngine";
 import { showToast } from "@/game/ui/Toast";
-import { gameState$, getState, initialState } from "./core";
+import { gameState$, getState, type initialState } from "./core.ts";
 
 /** Start a new game. Sets hearts/maxHearts from difficulty config. Spec §12. */
 export function startNewGame(difficultyId: string): void {
@@ -69,29 +69,17 @@ export function setLastCampfire(
 }
 
 /**
- * Handle player death. Restores minimum hearts, resets hunger and temp.
- * In permadeath (ironwood) mode, resets the world. Spec §12.5, §2.1
+ * Handle player death. Delegates to deathRespawn system for full penalty.
+ * Spec §12.5, §2.1. Kept as store action for backwards compatibility.
  */
 export function handleDeath(): void {
-  const difficulty = gameState$.difficulty.get();
-  const isPermadeath = gameState$.permadeath.get();
-  batch(() => {
-    gameState$.hearts.set(1);
-    gameState$.hunger.set(50);
-    gameState$.bodyTemp.set(37.0);
-  });
-  if (isPermadeath || difficulty === "ironwood") {
-    gameState$.level.set(1);
-    gameState$.xp.set(0);
-    gameState$.lastCampfireId.set(null);
-    gameState$.lastCampfirePosition.set(null);
-  }
+  // Lazy import to avoid circular dependency at module init time
+  const { applyDeathPenalty } = require("@/game/systems/deathRespawn");
+  applyDeathPenalty();
 }
 
 /** Open/close a crafting station. Spec §22.1, §22.2, §35 */
-export function setActiveCraftingStation(
-  station: { type: string; entityId: string } | null,
-): void {
+export function setActiveCraftingStation(station: { type: string; entityId: string } | null): void {
   gameState$.activeCraftingStation.set(station);
 }
 

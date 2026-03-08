@@ -1,5 +1,5 @@
 /** Goal pools: growth and seasonal goals. */
-import type { GoalTemplate } from "./types";
+import type { GoalTemplate } from "./types.ts";
 
 export const GROWTH_GOALS: GoalTemplate[] = [
   {

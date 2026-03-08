@@ -6,10 +6,10 @@
  * Mobile-first: 44px touch targets, 375px min viewport.
  */
 
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { AccessibilityInfo, Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { ACCENT, DARK, TYPE } from "@/components/ui/tokens";
 import { useGameStore } from "@/game/stores";
 import {
   applySettingsUpdate,
@@ -25,20 +25,7 @@ import {
   type SettingsValues,
   TOUCH_SENSITIVITY_MAX,
   TOUCH_SENSITIVITY_MIN,
-} from "./settingsLogic";
-
-// ---------------------------------------------------------------------------
-// Colors
-// ---------------------------------------------------------------------------
-
-const C = {
-  forestGreen: "#2D5A27",
-  barkBrown: "#5D4037",
-  skyMist: "#E8F5E9",
-  leafLight: "#81C784",
-  soilDark: "#3E2723",
-  trackBg: "#E0E0E0",
-} as const;
+} from "./settingsLogic.ts";
 
 // ---------------------------------------------------------------------------
 // Reduced motion hook (same pattern as MainMenu.tsx)
@@ -75,7 +62,7 @@ function StepSlider({
   progress,
   onDecrement,
   onIncrement,
-  decrementLabel = "−",
+  decrementLabel = "\u2212",
   incrementLabel = "+",
   accessibilityLabel,
 }: StepSliderProps) {
@@ -83,9 +70,15 @@ function StepSlider({
     <View style={{ gap: 6 }}>
       {/* Label row */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ fontSize: 13, color: C.barkBrown, fontWeight: "600" }}>{label}</Text>
+        <Text style={{ ...TYPE.body, fontWeight: "600", color: DARK.textPrimary }}>{label}</Text>
         <Text
-          style={{ fontSize: 13, color: C.forestGreen, fontWeight: "700", minWidth: 44, textAlign: "right" }}
+          style={{
+            ...TYPE.data,
+            fontWeight: "700",
+            minWidth: 44,
+            textAlign: "right",
+            color: ACCENT.sap,
+          }}
         >
           {valueLabel}
         </Text>
@@ -103,13 +96,15 @@ function StepSlider({
             height: 44,
             borderRadius: 8,
             borderWidth: 1,
-            borderColor: `${C.barkBrown}40`,
-            backgroundColor: pressed ? `${C.forestGreen}10` : "white",
+            borderColor: DARK.borderBranch,
+            backgroundColor: pressed ? DARK.surfaceMoss : DARK.bgCanopy,
             alignItems: "center",
             justifyContent: "center",
           })}
         >
-          <Text style={{ fontSize: 20, color: C.barkBrown, lineHeight: 24 }}>{decrementLabel}</Text>
+          <Text style={{ fontSize: 20, color: DARK.textSecondary, lineHeight: 24 }}>
+            {decrementLabel}
+          </Text>
         </Pressable>
 
         {/* Track */}
@@ -118,7 +113,7 @@ function StepSlider({
             flex: 1,
             height: 8,
             borderRadius: 4,
-            backgroundColor: C.trackBg,
+            backgroundColor: DARK.surfaceStone,
             overflow: "hidden",
           }}
           accessibilityRole="adjustable"
@@ -128,7 +123,7 @@ function StepSlider({
             style={{
               height: "100%",
               width: `${Math.round(progress * 100)}%`,
-              backgroundColor: C.forestGreen,
+              backgroundColor: ACCENT.sap,
               borderRadius: 4,
             }}
           />
@@ -144,13 +139,13 @@ function StepSlider({
             height: 44,
             borderRadius: 8,
             borderWidth: 1,
-            borderColor: `${C.barkBrown}40`,
-            backgroundColor: pressed ? `${C.forestGreen}10` : "white",
+            borderColor: DARK.borderBranch,
+            backgroundColor: pressed ? DARK.surfaceMoss : DARK.bgCanopy,
             alignItems: "center",
             justifyContent: "center",
           })}
         >
-          <Text style={{ fontSize: 20, color: C.forestGreen, lineHeight: 24 }}>{incrementLabel}</Text>
+          <Text style={{ fontSize: 20, color: ACCENT.sap, lineHeight: 24 }}>{incrementLabel}</Text>
         </Pressable>
       </View>
     </View>
@@ -178,12 +173,20 @@ function ToggleRow({
       accessibilityRole="switch"
       accessibilityState={{ checked: enabled }}
       accessibilityLabel={label}
-      style={{ minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}
+      style={{
+        minHeight: 44,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+      }}
     >
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 13, color: C.barkBrown, fontWeight: "600" }}>{label}</Text>
+        <Text style={{ ...TYPE.body, fontWeight: "600", color: DARK.textPrimary }}>{label}</Text>
         {description ? (
-          <Text style={{ fontSize: 11, color: `${C.barkBrown}80`, marginTop: 2 }}>{description}</Text>
+          <Text style={{ ...TYPE.caption, color: DARK.textMuted, marginTop: 2 }}>
+            {description}
+          </Text>
         ) : null}
       </View>
       {/* Toggle pill */}
@@ -192,7 +195,7 @@ function ToggleRow({
           width: 48,
           height: 28,
           borderRadius: 14,
-          backgroundColor: enabled ? C.forestGreen : C.trackBg,
+          backgroundColor: enabled ? ACCENT.sap : DARK.surfaceStone,
           flexDirection: "row",
           alignItems: "center",
           paddingHorizontal: 3,
@@ -204,10 +207,10 @@ function ToggleRow({
             width: 22,
             height: 22,
             borderRadius: 11,
-            backgroundColor: "white",
+            backgroundColor: DARK.textPrimary,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.2,
+            shadowOpacity: 0.3,
             shadowRadius: 2,
             elevation: 2,
           }}
@@ -225,14 +228,14 @@ function SectionHeader({ title }: { title: string }) {
   return (
     <Text
       style={{
-        fontSize: 11,
-        fontWeight: "700",
-        color: `${C.barkBrown}99`,
+        ...TYPE.label,
+        color: DARK.textMuted,
         letterSpacing: 0.8,
         marginBottom: 4,
+        textTransform: "uppercase",
       }}
     >
-      {title.toUpperCase()}
+      {title}
     </Text>
   );
 }
@@ -245,15 +248,12 @@ function SettingsCard({ children }: { children: React.ReactNode }) {
   return (
     <View
       style={{
-        backgroundColor: "white",
+        backgroundColor: DARK.bgCanopy,
         borderRadius: 12,
+        borderWidth: 1,
+        borderColor: DARK.borderBranch,
         padding: 16,
         gap: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06,
-        shadowRadius: 4,
-        elevation: 1,
       }}
     >
       {children}
@@ -298,20 +298,23 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}>
-        <LinearGradient
-          colors={[C.skyMist, "white"]}
-          locations={[0, 1]}
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}>
+        <View
           style={{
             maxHeight: "90%",
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             overflow: "hidden",
+            backgroundColor: DARK.bgDeep,
+            borderTopWidth: 1,
+            borderColor: DARK.borderBranch,
           }}
         >
           {/* Handle bar */}
           <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 4 }}>
-            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: `${C.barkBrown}30` }} />
+            <View
+              style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: DARK.borderBranch }}
+            />
           </View>
 
           {/* Header */}
@@ -323,14 +326,10 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
               paddingHorizontal: 20,
               paddingVertical: 12,
               borderBottomWidth: 1,
-              borderBottomColor: `${C.barkBrown}20`,
+              borderBottomColor: DARK.borderBranch,
             }}
           >
-            <Text
-              style={{ fontSize: 20, fontWeight: "700", color: C.soilDark }}
-            >
-              Settings
-            </Text>
+            <Text style={{ ...TYPE.display, color: DARK.textPrimary }}>Settings</Text>
             <Pressable
               onPress={onClose}
               accessibilityLabel="Close settings"
@@ -343,7 +342,7 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={{ fontSize: 16, color: C.forestGreen, fontWeight: "600" }}>Done</Text>
+              <Text style={{ fontSize: 16, color: ACCENT.sap, fontWeight: "600" }}>Done</Text>
             </Pressable>
           </View>
 
@@ -360,20 +359,28 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
                   label="Master Volume"
                   valueLabel={formatVolumePct(effective.masterVolume)}
                   progress={effective.masterVolume}
-                  onDecrement={() => update({ masterVolume: clampVolume(effective.masterVolume - VOLUME_STEP) })}
-                  onIncrement={() => update({ masterVolume: clampVolume(effective.masterVolume + VOLUME_STEP) })}
+                  onDecrement={() =>
+                    update({ masterVolume: clampVolume(effective.masterVolume - VOLUME_STEP) })
+                  }
+                  onIncrement={() =>
+                    update({ masterVolume: clampVolume(effective.masterVolume + VOLUME_STEP) })
+                  }
                   accessibilityLabel={`Master volume, currently ${formatVolumePct(effective.masterVolume)}`}
                 />
-                <View style={{ height: 1, backgroundColor: `${C.barkBrown}12` }} />
+                <View style={{ height: 1, backgroundColor: DARK.borderBranch }} />
                 <StepSlider
                   label="Sound Effects"
                   valueLabel={formatVolumePct(effective.sfxVolume)}
                   progress={effective.sfxVolume}
-                  onDecrement={() => update({ sfxVolume: clampVolume(effective.sfxVolume - VOLUME_STEP) })}
-                  onIncrement={() => update({ sfxVolume: clampVolume(effective.sfxVolume + VOLUME_STEP) })}
+                  onDecrement={() =>
+                    update({ sfxVolume: clampVolume(effective.sfxVolume - VOLUME_STEP) })
+                  }
+                  onIncrement={() =>
+                    update({ sfxVolume: clampVolume(effective.sfxVolume + VOLUME_STEP) })
+                  }
                   accessibilityLabel={`SFX volume, currently ${formatVolumePct(effective.sfxVolume)}`}
                 />
-                <View style={{ height: 1, backgroundColor: `${C.barkBrown}12` }} />
+                <View style={{ height: 1, backgroundColor: DARK.borderBranch }} />
                 <StepSlider
                   label="Ambient & Music"
                   valueLabel={formatVolumePct(effective.ambientVolume)}
@@ -393,13 +400,6 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
             <View style={{ gap: 8 }}>
               <SectionHeader title="Graphics" />
               <SettingsCard>
-                <ToggleRow
-                  label="PSX Pixel Ratio"
-                  description="Forces pixel ratio 1 for PSX-style pixelated look"
-                  enabled={effective.psxPixelRatio}
-                  onToggle={() => update({ psxPixelRatio: !effective.psxPixelRatio })}
-                />
-                <View style={{ height: 1, backgroundColor: `${C.barkBrown}12` }} />
                 <StepSlider
                   label="Draw Distance"
                   valueLabel={formatDrawDistance(effective.drawDistance)}
@@ -460,7 +460,7 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
               </SettingsCard>
             </View>
           </ScrollView>
-        </LinearGradient>
+        </View>
       </View>
     </Modal>
   );

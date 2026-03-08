@@ -14,21 +14,21 @@ export function placeMazeDecorations(maze: MazeResult, seed: number): MazeDecora
   const cx = (maze.centerX + 0.5) * cellScale;
   const cz = (maze.centerZ + 0.5) * cellScale;
   decorations.push({
-    modelPath: "hedges/misc/stone/fountain01_round_water.glb",
+    modelPath: "assets/models/hedges/misc/stone/fountain01_round_water.glb",
     x: cx,
     z: cz,
     rotation: 0,
     category: "stone",
   });
   decorations.push({
-    modelPath: "hedges/misc/stone/bench01.glb",
+    modelPath: "assets/models/hedges/misc/stone/bench01.glb",
     x: cx - 1.5,
     z: cz,
     rotation: 90,
     category: "stone",
   });
   decorations.push({
-    modelPath: "hedges/misc/stone/bench02.glb",
+    modelPath: "assets/models/hedges/misc/stone/bench02.glb",
     x: cx + 1.5,
     z: cz,
     rotation: 270,
@@ -66,7 +66,7 @@ export function placeMazeDecorations(maze: MazeResult, seed: number): MazeDecora
           if (isFlower) {
             const flowerIdx = Math.floor(rng() * 7) + 1;
             decorations.push({
-              modelPath: `hedges/misc/flowers/flowerbed${flowerIdx}_1x2.glb`,
+              modelPath: `assets/models/hedges/misc/flowers/flowerbed${flowerIdx}_1x2.glb`,
               x: x * cellScale + cellScale / 2,
               z: z * cellScale + cellScale / 2,
               rotation: Math.floor(rng() * 4) * 90,
@@ -75,7 +75,7 @@ export function placeMazeDecorations(maze: MazeResult, seed: number): MazeDecora
           } else {
             const vaseIdx = Math.floor(rng() * 5) + 1;
             decorations.push({
-              modelPath: `hedges/misc/flowers/vase${vaseIdx}.glb`,
+              modelPath: `assets/models/hedges/misc/flowers/vase${vaseIdx}.glb`,
               x: x * cellScale + cellScale / 2,
               z: z * cellScale + cellScale / 2,
               rotation: Math.floor(rng() * 4) * 90,
@@ -89,7 +89,7 @@ export function placeMazeDecorations(maze: MazeResult, seed: number): MazeDecora
       if (wallCount <= 1 && rng() < hedgeMazeConfig.dressing.intersectionProbability) {
         const columnIdx = Math.floor(rng() * 3) + 1;
         decorations.push({
-          modelPath: `hedges/misc/stone/column${columnIdx}.glb`,
+          modelPath: `assets/models/hedges/misc/stone/column${columnIdx}.glb`,
           x: x * cellScale,
           z: z * cellScale,
           rotation: 0,

@@ -177,7 +177,7 @@ export async function hydrateGameStore(): Promise<HydratedGameState | null> {
       : null;
 
   return {
-    difficulty: config?.difficulty ?? "normal",
+    difficulty: config?.difficulty ?? "sapling",
     permadeath: Boolean(config?.permadeath ?? false),
     level: p?.level ?? 1,
     xp: p?.xp ?? 0,

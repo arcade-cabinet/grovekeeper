@@ -5,7 +5,12 @@ import {
   type OfflineSpeciesData,
   type OfflineTreeState,
 } from "@/game/systems/offlineGrowth";
-import { chunkDiffs$, clearAllChunkDiffs, saveChunkDiff, type PlantedTree } from "@/game/world/chunkPersistence";
+import {
+  chunkDiffs$,
+  clearAllChunkDiffs,
+  type PlantedTree,
+  saveChunkDiff,
+} from "@/game/world/chunkPersistence";
 
 const whiteOakSpecies: OfflineSpeciesData = {
   difficulty: 1,

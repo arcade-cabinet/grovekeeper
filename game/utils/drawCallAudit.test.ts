@@ -10,7 +10,7 @@ import {
   formatDrawCallReport,
   isOverBudget,
   readDrawCalls,
-} from "./drawCallAudit";
+} from "./drawCallAudit.ts";
 
 // ---------------------------------------------------------------------------
 // readDrawCalls

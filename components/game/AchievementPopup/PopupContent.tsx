@@ -8,9 +8,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { Sparkle } from "./Sparkle";
-import type { AchievementDef, AchievementPopupItem } from "./types";
-import { ACHIEVEMENT_CATEGORY, SPARKLE_COUNT } from "./types";
+import { ACCENT, DARK, FONTS, HUD_PANEL, TYPE } from "@/components/ui/tokens";
+import { Sparkle } from "./Sparkle.tsx";
+import type { AchievementDef, AchievementPopupItem } from "./types.ts";
+import { ACHIEVEMENT_CATEGORY, SPARKLE_COUNT } from "./types.ts";
 
 export function useReducedMotion(): boolean {
   const [reduced, setReduced] = React.useState(false);
@@ -63,8 +64,16 @@ export function PopupContent({ item, achievementDefs, onDismiss }: PopupContentP
       />
 
       <Animated.View
-        className="relative w-full max-w-[320px] items-center rounded-2xl border-[3px] border-prestige-gold bg-sky-mist p-6 shadow-2xl"
-        style={cardStyle}
+        className="relative w-full max-w-[320px] items-center rounded-2xl p-6 shadow-2xl"
+        style={[
+          cardStyle,
+          {
+            ...HUD_PANEL,
+            backgroundColor: "rgba(10,12,8,0.95)",
+            borderWidth: 3,
+            borderColor: ACCENT.gold,
+          },
+        ]}
       >
         {/* Sparkles */}
         {Array.from({ length: SPARKLE_COUNT }, (_, i) => (
@@ -77,25 +86,53 @@ export function PopupContent({ item, achievementDefs, onDismiss }: PopupContentP
         ))}
 
         {/* Category label */}
-        <Text className="mb-2 text-xs font-medium uppercase tracking-wider text-forest-green">
+        <Text
+          style={{
+            ...TYPE.label,
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            marginBottom: 8,
+            color: DARK.textMuted,
+          }}
+        >
           {category}
         </Text>
 
         {/* Title */}
-        <Text className="mb-2 text-center font-heading text-2xl font-bold text-soil-dark">
+        <Text
+          style={{
+            ...TYPE.display,
+            fontFamily: FONTS.heading,
+            textAlign: "center",
+            marginBottom: 8,
+            color: ACCENT.gold,
+          }}
+        >
           {achievementDef ? achievementDef.name : item.achievementId}
         </Text>
 
         {/* Description */}
         {achievementDef && (
-          <Text className="mb-4 text-center text-sm leading-5 text-forest-green">
+          <Text
+            style={{
+              ...TYPE.body,
+              textAlign: "center",
+              lineHeight: 20,
+              marginBottom: 16,
+              color: DARK.textSecondary,
+            }}
+          >
             {achievementDef.description}
           </Text>
         )}
 
         {/* Claim button */}
-        <Button className="min-h-[44px] w-full rounded-xl bg-autumn-gold" onPress={onDismiss}>
-          <Text className="text-base font-semibold text-white">Claim</Text>
+        <Button
+          className="min-h-[44px] w-full rounded-xl"
+          style={{ backgroundColor: ACCENT.amber }}
+          onPress={onDismiss}
+        >
+          <Text style={{ ...TYPE.body, fontWeight: "600", color: DARK.bgDeep }}>Claim</Text>
         </Button>
       </Animated.View>
     </View>

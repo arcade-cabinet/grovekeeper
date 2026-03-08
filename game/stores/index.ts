@@ -6,13 +6,13 @@
 
 import { observe } from "@legendapp/state";
 import { useSelector } from "@legendapp/state/react";
-import { gameState$, getState, initialState, type GameStateData } from "./core";
-import * as playerStateActions from "./playerState";
-import * as progressionActions from "./progression";
-import * as survivalActions from "./survivalState";
-import * as inventoryActions from "./inventory";
-import * as questStateActions from "./questState";
-import * as settingsActions from "./settings";
+import { type GameStateData, gameState$, getState, initialState } from "./core.ts";
+import * as inventoryActions from "./inventory.ts";
+import * as playerStateActions from "./playerState.ts";
+import * as progressionActions from "./progression.ts";
+import * as questStateActions from "./questState.ts";
+import * as settingsActions from "./settings.ts";
+import * as survivalActions from "./survivalState.ts";
 
 // ---------------------------------------------------------------------------
 // Assembled actions object (all domain functions combined)
@@ -88,5 +88,5 @@ export const useGameStore = Object.assign(useGameStoreHook, {
 // Re-export everything from domain files for direct import convenience
 // ---------------------------------------------------------------------------
 
-export * from "./core";
-export * from "./chunkDeltas";
+export * from "./chunkDeltas.ts";
+export * from "./core.ts";

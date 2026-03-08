@@ -167,7 +167,7 @@ export const useSharedGeometries = () => {
 };
 ```
 
-Note: Cylinder uses 6 segments (not 32) for PSX aesthetic. Sphere uses icosahedron subdivision 1 (42 verts) for low-poly look.
+Note: Cylinder uses 6 segments (not 32) for stylized low-poly aesthetic. Sphere uses icosahedron subdivision 1 (42 verts) for whimsical look.
 
 ## Material Batching Strategy
 
@@ -189,7 +189,7 @@ Group objects by material, NOT by object type. A wooden floor plank and a wooden
 Interactive trees (ECS entities) use a SEPARATE instancing strategy from static world geometry:
 
 - Instance key: `${speciesId}_${stage}_${season}[_night]` -- one InstancedMesh per template key
-- GLB models loaded via `useGLTF` (3DPSX tree models, 100-400 verts each)
+- GLB models loaded via `useGLTF` (stylized tree models, 100-400 verts each)
 - Start capacity 20, double on overflow
 - Instance matrices updated every frame in `useFrame` for growth animation (scale lerp)
 - Stage 4 static trees: `matrixAutoUpdate = false` for zero per-frame cost
@@ -227,4 +227,4 @@ components/scene/
 | Recreate geometry every render | `useMemo` + dispose on unmount |
 | Mix interactive + decorative in same batch | ECS entities get their own meshes |
 | `castShadow` on ground tiles | `castShadow={false}` -- ground doesn't cast |
-| 32-segment cylinders | 6 segments -- PSX aesthetic + performance |
+| 32-segment cylinders | 6 segments -- stylized low-poly + performance |

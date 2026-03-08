@@ -67,17 +67,17 @@ describe("vegetationPlacement", () => {
   describe("resolveTreeModelPath", () => {
     it("returns base path for retro summer tree", () => {
       const path = resolveTreeModelPath("tree01", "retro", false);
-      expect(path).toBe("trees/base/tree01.glb");
+      expect(path).toBe("assets/models/trees/base/tree01.glb");
     });
 
     it("returns winter path for retro winter tree", () => {
       const path = resolveTreeModelPath("tree01_winter", "retro", true);
-      expect(path).toBe("trees/winter/tree01_winter.glb");
+      expect(path).toBe("assets/models/trees/winter/tree01_winter.glb");
     });
 
     it("returns extra path for tree_pack_1.1 trees", () => {
       const path = resolveTreeModelPath("tree15", "extra", false);
-      expect(path).toBe("trees/extra/tree15.glb");
+      expect(path).toBe("assets/models/trees/extra/tree15.glb");
     });
   });
 

@@ -72,8 +72,15 @@ export function tickHeartsFromStarvation(
   health.current = Math.max(0, health.current - drainPerSec * dt);
 }
 
+/** Body temperature thresholds for exposure damage (Spec §12.3). */
+const COLD_THRESHOLD = 35;
+const HEAT_THRESHOLD = 39;
+const NORMAL_BODY_TEMP = 37;
+
 /**
- * Drain hearts from environmental exposure.
+ * Drain hearts from environmental exposure when body temperature
+ * deviates from safe range (35°C–39°C).
+ * Damage scales with how far bodyTemp is from normal.
  * Spec §2.2: exposure damage based on difficulty exposureDriftRate.
  * Mutates health in place.
  */
@@ -83,9 +90,18 @@ export function tickHeartsFromExposure(
   exposureDriftRate: number,
   exposureEnabled: boolean,
   affectsGameplay: boolean = true,
+  bodyTemp: number = NORMAL_BODY_TEMP,
 ): void {
   if (!affectsGameplay || !exposureEnabled) return;
-  const drainPerSec = exposureDriftRate / 60;
+  // Only take exposure damage when body temp is outside safe range
+  if (bodyTemp >= COLD_THRESHOLD && bodyTemp <= HEAT_THRESHOLD) return;
+  // Scale damage by how far from normal (steeper the further out)
+  const deviation =
+    bodyTemp < COLD_THRESHOLD
+      ? (COLD_THRESHOLD - bodyTemp) / (COLD_THRESHOLD - 25)
+      : (bodyTemp - HEAT_THRESHOLD) / (45 - HEAT_THRESHOLD);
+  const scaledRate = exposureDriftRate * Math.min(1, deviation);
+  const drainPerSec = scaledRate / 60;
   health.current = Math.max(0, health.current - drainPerSec * dt);
 }
 

@@ -23,22 +23,21 @@ import {
   handleTrapPlacementAction,
   handleTrowelAction,
   handleWateringCanAction,
-} from "./actionHandlers";
+} from "./actionHandlers.ts";
 import {
   buildTileState,
   findCampfireAtGrid,
   findForgeAtGrid,
   findNpcNear,
-  findTreeAtGrid,
   findTrapAtGrid,
+  findTreeAtGrid,
   findWaterAtGrid,
   worldToGrid,
-} from "./entityFinders";
-import { getSelection, setSelection, subscribe } from "./selectionStore";
-import type { InteractionSelection } from "./types";
+} from "./entityFinders.ts";
+import { getSelection, setSelection, subscribe } from "./selectionStore.ts";
 
-export type { InteractionSelection, InteractionState, SelectionType } from "./types";
-export { worldToGrid } from "./entityFinders";
+export { worldToGrid } from "./entityFinders.ts";
+export type { InteractionSelection, InteractionState, SelectionType } from "./types.ts";
 
 export function useInteraction() {
   const selection = useSyncExternalStore(subscribe, getSelection, getSelection);

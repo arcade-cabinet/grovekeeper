@@ -58,10 +58,7 @@ export function buildNavPath(
  * Advance an in-progress path follow state by one frame.
  * Writes movement vector to movementRef. Returns whether navigation is done.
  */
-export function advanceNav(
-  pathState: PathFollowState,
-  config: PlayerGovernorConfig,
-): boolean {
+export function advanceNav(pathState: PathFollowState, config: PlayerGovernorConfig): boolean {
   const player = playerQuery.first;
   if (!player?.position) return true; // treat as done
 

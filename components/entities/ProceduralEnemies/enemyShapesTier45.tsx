@@ -27,10 +27,10 @@ const GEO_SPHERE_EYE = new SphereGeometry(0.12, 5, 3);
 export const CyclopsBody = ({ colors }: BodyProps) => (
   <group>
     <mesh geometry={GEO_SPHERE_LG} scale={[1, 1.1, 0.9]} castShadow receiveShadow>
-      <meshStandardMaterial color={colors.body} roughness={0.8} flatShading />
+      <meshStandardMaterial color={colors.body} roughness={0.8} />
     </mesh>
     <mesh geometry={GEO_SPHERE_MD} position={[0, 0.8, 0]} castShadow receiveShadow>
-      <meshStandardMaterial color={colors.body} roughness={0.8} flatShading />
+      <meshStandardMaterial color={colors.body} roughness={0.8} />
     </mesh>
     <mesh geometry={GEO_SPHERE_EYE} position={[0, 0.88, 0.3]}>
       <meshStandardMaterial
@@ -79,7 +79,7 @@ export const CorruptedHedgeBody = ({ colors }: BodyProps) => (
     </mesh>
     <mesh castShadow>
       <icosahedronGeometry args={[0.45, 0]} />
-      <meshStandardMaterial color={colors.accent ?? colors.body} roughness={0.9} flatShading />
+      <meshStandardMaterial color={colors.accent ?? colors.body} roughness={0.9} />
     </mesh>
   </group>
 );

@@ -6,7 +6,7 @@ import { useGameStore } from "@/game/stores";
 import { ACHIEVEMENTS } from "@/game/systems/achievements";
 import { getCosmeticById, getUnlockedCosmetics, PRESTIGE_COSMETICS } from "@/game/systems/prestige";
 import { BASE_TRADE_RATES, getEffectiveTradeRates } from "@/game/systems/trading";
-import { buildGridExpansionInfo, buildPrestigeInfo } from "./gameUILogic";
+import { buildGridExpansionInfo, buildPrestigeInfo } from "./gameUILogic.ts";
 
 export function useGameUIData() {
   const activeBorderCosmetic = useGameStore((s) => s.activeBorderCosmetic);

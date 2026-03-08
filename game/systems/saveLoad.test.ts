@@ -117,8 +117,12 @@ let mockStoreState = {
   lastSavedAt: 0,
   worldSeed: "test-seed",
   prestigeCount: 0,
-  difficulty: "normal",
-  questChainState: { activeChains: {}, completedChainIds: [] as string[], availableChainIds: [] as string[] },
+  difficulty: "sapling",
+  questChainState: {
+    activeChains: {},
+    completedChainIds: [] as string[],
+    availableChainIds: [] as string[],
+  },
   npcRelationships: {} as Record<string, number>,
   discoveredSpiritIds: [] as string[],
   speciesProgress: {} as Record<string, unknown>,
@@ -146,7 +150,7 @@ jest.mock("@/game/stores/core", () => ({
     lastSavedAt: 0,
     worldSeed: "",
     prestigeCount: 0,
-    difficulty: "normal",
+    difficulty: "sapling",
     questChainState: { activeChains: {}, completedChainIds: [], availableChainIds: [] },
     npcRelationships: {},
     discoveredSpiritIds: [],
@@ -183,17 +187,17 @@ jest.mock("@/game/world/chunkPersistence", () => ({
 
 import { world } from "@/game/ecs/world";
 import {
-  SAVE_VERSION,
   applySaveSnapshot,
   clearSave,
   createSaveSnapshot,
   deserializeGrove,
+  type GroveSaveData,
   hasSaveGame,
   loadGroveFromStorage,
   migrateIfNeeded,
-  saveGame,
-  type GroveSaveData,
+  SAVE_VERSION,
   type SaveSnapshot,
+  saveGame,
 } from "@/game/systems/saveLoad";
 
 // ---------------------------------------------------------------------------
@@ -210,7 +214,15 @@ function makeSnapshot(overrides: Partial<SaveSnapshot> = {}): SaveSnapshot {
     questChainState: { activeChains: {}, completedChainIds: ["c1"], availableChainIds: [] },
     npcRelationships: { "npc-elder": 5 },
     discoveredSpiritIds: ["spirit-1", "spirit-2"],
-    speciesProgress: { "white-oak": { timesPlanted: 3, maxStageReached: 4, timesHarvested: 1, totalYield: 2, discoveryTier: 1 } },
+    speciesProgress: {
+      "white-oak": {
+        timesPlanted: 3,
+        maxStageReached: 4,
+        timesHarvested: 1,
+        totalYield: 2,
+        discoveryTier: 1,
+      },
+    },
     discoveredCampfires: [{ id: "cf-1", label: "Camp A", worldX: 16, worldZ: 32 }],
     chunkDiffs: { "0,0": { plantedTrees: [] } },
     ...overrides,
@@ -231,7 +243,7 @@ describe("saveLoad system (Spec §26)", () => {
       lastSavedAt: 0,
       worldSeed: "test-seed",
       prestigeCount: 0,
-      difficulty: "normal",
+      difficulty: "sapling",
       questChainState: { activeChains: {}, completedChainIds: [], availableChainIds: [] },
       npcRelationships: {},
       discoveredSpiritIds: [],
@@ -365,7 +377,10 @@ describe("saveLoad system (Spec §26)", () => {
     });
 
     it("migrates v1 snapshot: upgrades version and fills chunkDiffs", () => {
-      const snap = makeSnapshot({ version: 1, chunkDiffs: undefined as unknown as Record<string, never> });
+      const snap = makeSnapshot({
+        version: 1,
+        chunkDiffs: undefined as unknown as Record<string, never>,
+      });
       const result = migrateIfNeeded(snap);
       expect(result.version).toBe(SAVE_VERSION);
       expect(result.chunkDiffs).toEqual({});
@@ -423,7 +438,14 @@ describe("saveLoad system (Spec §26)", () => {
   describe("deserializeGrove", () => {
     it("clears existing entities before loading", () => {
       mockEntities.push({ id: "existing" });
-      deserializeGrove({ version: 1, timestamp: Date.now(), gridSize: 16, seed: "s", tiles: [], trees: [] });
+      deserializeGrove({
+        version: 1,
+        timestamp: Date.now(),
+        gridSize: 16,
+        seed: "s",
+        tiles: [],
+        trees: [],
+      });
       expect(world.remove).toHaveBeenCalled();
     });
 
@@ -450,14 +472,33 @@ describe("saveLoad system (Spec §26)", () => {
         gridSize: 16,
         seed: "seed",
         tiles: [{ col: 5, row: 5, type: "soil" }],
-        trees: [{ col: 5, row: 5, speciesId: "white-oak", meshSeed: 42, stage: 3, progress: 0.7, watered: true, totalGrowthTime: 200, plantedAt: 1000 }],
+        trees: [
+          {
+            col: 5,
+            row: 5,
+            speciesId: "white-oak",
+            meshSeed: 42,
+            stage: 3,
+            progress: 0.7,
+            watered: true,
+            totalGrowthTime: 200,
+            plantedAt: 1000,
+          },
+        ],
       };
       deserializeGrove(data);
       expect(world.add).toHaveBeenCalledTimes(2); // 1 tile + 1 tree
     });
 
     it("does not add entities when grove has no tiles or trees", () => {
-      deserializeGrove({ version: 1, timestamp: Date.now(), gridSize: 16, seed: "s", tiles: [], trees: [] });
+      deserializeGrove({
+        version: 1,
+        timestamp: Date.now(),
+        gridSize: 16,
+        seed: "s",
+        tiles: [],
+        trees: [],
+      });
       expect(world.add).not.toHaveBeenCalled();
     });
   });
@@ -470,7 +511,17 @@ describe("saveLoad system (Spec §26)", () => {
     });
 
     it("returns GroveSaveData when trees exist in db", async () => {
-      mockTreeRows.push({ speciesId: "white-oak", gridX: 3, gridZ: 5, stage: 2, progress: 0.5, watered: false, totalGrowthTime: 100, plantedAt: 1000, meshSeed: 42 });
+      mockTreeRows.push({
+        speciesId: "white-oak",
+        gridX: 3,
+        gridZ: 5,
+        stage: 2,
+        progress: 0.5,
+        watered: false,
+        totalGrowthTime: 100,
+        plantedAt: 1000,
+        meshSeed: 42,
+      });
       const loaded = await loadGroveFromStorage();
       expect(loaded).not.toBeNull();
       expect(loaded!.trees).toHaveLength(1);

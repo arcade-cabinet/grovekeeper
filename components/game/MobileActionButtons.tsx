@@ -10,15 +10,18 @@
  */
 
 import type { LucideIcon } from "lucide-react-native";
-import { AxeIcon, DropletsIcon, RefreshCwIcon, ScissorsIcon, SproutIcon } from "lucide-react-native";
+import {
+  AxeIcon,
+  DropletsIcon,
+  RefreshCwIcon,
+  ScissorsIcon,
+  SproutIcon,
+} from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { sharedTouchProvider } from "@/game/input/sharedTouchProvider";
-import {
-  handleActionButtonPress,
-  type MobileActionProvider,
-} from "./mobileActionHelpers";
+import { handleActionButtonPress, type MobileActionProvider } from "./mobileActionHelpers.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -115,7 +118,9 @@ export function MobileActionButtons({
                   : "border-gray-400 bg-gray-300/60 opacity-50"
             }`}
             disabled={!action.enabled}
-            onPress={() => handleActionButtonPress(isActive, provider, onAction, onSelectTool, action.toolId)}
+            onPress={() =>
+              handleActionButtonPress(isActive, provider, onAction, onSelectTool, action.toolId)
+            }
             accessibilityLabel={`${action.label}${isActive ? " (active, tap to execute)" : ""}`}
           >
             <Icon

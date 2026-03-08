@@ -229,7 +229,9 @@ describe("Base Raids System (Spec §18.5, §34)", () => {
       const dirs = new Set<string>();
       for (let cx = 0; cx < 5; cx++) {
         for (let cz = 0; cz < 5; cz++) {
-          getApproachDirections(cx, cz, "test-seed", 1).forEach((d) => { dirs.add(d); });
+          getApproachDirections(cx, cz, "test-seed", 1).forEach((d) => {
+            dirs.add(d);
+          });
         }
       }
       expect(dirs.size).toBeGreaterThan(1);
@@ -238,7 +240,9 @@ describe("Base Raids System (Spec §18.5, §34)", () => {
     it("should vary across different day numbers", () => {
       const dirs = new Set<string>();
       for (let day = 1; day <= 10; day++) {
-        getApproachDirections(0, 0, "test-seed", day).forEach((d) => { dirs.add(d); });
+        getApproachDirections(0, 0, "test-seed", day).forEach((d) => {
+          dirs.add(d);
+        });
       }
       expect(dirs.size).toBeGreaterThan(1);
     });

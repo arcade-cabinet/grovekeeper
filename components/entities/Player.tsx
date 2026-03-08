@@ -7,7 +7,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { Color, Mesh, Vector3 } from "three";
+import { Color, type Mesh, Vector3 } from "three";
 
 import { playerQuery } from "@/game/ecs/world";
 

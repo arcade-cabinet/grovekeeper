@@ -11,10 +11,18 @@
  *     (or setTimeout fallback) to avoid frame drops during chunk loading
  */
 
+import enemiesConfig from "@/config/game/enemies.json" with { type: "json" };
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
+import type {
+  BlueprintId,
+  BuildingMaterialType,
+  ProceduralBuildingComponent,
+} from "@/game/ecs/components/structures";
+import type { VegetationSeason } from "@/game/ecs/components/vegetation";
 import type { Entity } from "@/game/ecs/world";
 import { generateEntityId, world } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores";
+import { spawnEnemiesForChunk } from "@/game/systems/enemySpawning";
 import { spawnChunkStructures } from "@/game/systems/structurePlacement";
 import { spawnChunkVegetation } from "@/game/systems/vegetationPlacement";
 import { SeededNoise } from "@/game/utils/seededNoise";
@@ -37,6 +45,66 @@ export const ACTIVE_RADIUS: number = gridConfig.activeRadius;
 export const BUFFER_RADIUS: number = gridConfig.bufferRadius;
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
+
+/** Derive procedural building component from a structure templateId. §43.7 */
+const BUILDING_PARAMS: Record<
+  string,
+  { w: number; d: number; stories: number; mat: BuildingMaterialType; bp: BlueprintId }
+> = {
+  barn: { w: 4, d: 5, stories: 1, mat: "timber", bp: "barn" },
+  "house-1": { w: 3, d: 3, stories: 1, mat: "plaster", bp: "cottage" },
+  "house-2": { w: 3, d: 4, stories: 2, mat: "brick", bp: "townhouse" },
+  "house-3": { w: 3, d: 4, stories: 2, mat: "plaster", bp: "inn" },
+  "house-4": { w: 3, d: 3, stories: 1, mat: "plaster", bp: "apothecary" },
+  "house-5": { w: 2, d: 2, stories: 3, mat: "brick", bp: "watchtower" },
+  workshop: { w: 4, d: 3, stories: 1, mat: "brick", bp: "forge" },
+  "storage-1": { w: 3, d: 3, stories: 1, mat: "brick", bp: "storehouse" },
+  "storage-2": { w: 3, d: 3, stories: 1, mat: "brick", bp: "storehouse" },
+  forge: { w: 4, d: 3, stories: 1, mat: "brick", bp: "forge" },
+  kitchen: { w: 3, d: 3, stories: 1, mat: "plaster", bp: "kitchen" },
+};
+
+const DEFAULT_PARAMS = { w: 3, d: 3, stories: 1, mat: "brick" as const, bp: "cottage" as const };
+
+/** Map BiomeType to the enemy biome strings used in enemies.json. */
+function biomeToEnemyBiome(biome: BiomeType): string {
+  switch (biome) {
+    case "starting-grove":
+      return "forest";
+    case "ancient-forest":
+      return "forest";
+    case "twilight-glade":
+      return "forest";
+    case "meadow":
+      return "meadow";
+    case "wetlands":
+      return "wetlands";
+    case "rocky-highlands":
+      return "rocky-highlands";
+    case "frozen-peaks":
+      return "frozen-peaks";
+    case "orchard-valley":
+      return "meadow";
+  }
+}
+
+function deriveProceduralBuilding(
+  templateId: string,
+  blueprintId?: BlueprintId,
+  facing?: 0 | 90 | 180 | 270,
+  variation?: number,
+): ProceduralBuildingComponent {
+  const params = BUILDING_PARAMS[templateId] ?? DEFAULT_PARAMS;
+  return {
+    footprintW: params.w,
+    footprintD: params.d,
+    stories: params.stories,
+    materialType: params.mat,
+    blueprintId: blueprintId ?? params.bp,
+    facing: facing ?? 0,
+    variation: variation ?? 0,
+  };
+}
 
 /** Convert a world-space position to chunk grid coordinates. */
 export function worldToChunkCoords(pos: { x: number; z: number }): {
@@ -184,10 +252,16 @@ interface QueueItem {
   visible: boolean;
 }
 
-/** Schedule a callback on idle time (requestIdleCallback) or next tick (setTimeout). */
+/** Schedule a callback on idle time (requestIdleCallback) or next tick (setTimeout).
+ *
+ * The `timeout: 50` option forces the callback to fire within 50 ms even when
+ * the browser is continuously busy (e.g. automated Playwright test with frequent
+ * waitForFunction polling). Without a timeout, requestIdleCallback can be
+ * deferred indefinitely in automation environments, preventing chunk generation.
+ */
 function scheduleIdle(cb: () => void): void {
   if (typeof requestIdleCallback !== "undefined") {
-    requestIdleCallback(cb);
+    requestIdleCallback(cb, { timeout: 50 });
   } else {
     setTimeout(cb, 0);
   }
@@ -258,6 +332,7 @@ export class ChunkManager {
       if (!desiredKeys.has(key)) toUnload.push(key);
     }
     for (const key of toUnload) {
+      // biome-ignore lint/style/noNonNullAssertion: key came from loadedChunks.keys()
       world.remove(this.loadedChunks.get(key)!);
       this.loadedChunks.delete(key);
       for (const child of this.chunkChildEntities.get(key) ?? []) {
@@ -283,9 +358,19 @@ export class ChunkManager {
         this.pendingChunks.add(key);
         this.generationQueue.push({ chunkX: cx, chunkZ: cz, visible: isActive });
       } else if (this.loadedChunks.has(key)) {
-        // Update visibility when chunk moves between active / buffer
+        // Update visibility when chunk moves between active / buffer.
+        // Must update BOTH the chunk entity AND all child entities (trees, bushes,
+        // NPCs, grass, rocks, fences, enemies) — otherwise children spawned as
+        // buffer (visible=false) stay invisible when the chunk becomes active.
+        // biome-ignore lint/style/noNonNullAssertion: guarded by loadedChunks.has(key)
         const entity = this.loadedChunks.get(key)!;
         if (entity.renderable) entity.renderable.visible = isActive;
+        const children = this.chunkChildEntities.get(key);
+        if (children) {
+          for (const child of children) {
+            if (child.renderable) child.renderable.visible = isActive;
+          }
+        }
       }
     }
 
@@ -308,6 +393,7 @@ export class ChunkManager {
    */
   flushQueue(): void {
     while (this.generationQueue.length > 0) {
+      // biome-ignore lint/style/noNonNullAssertion: length > 0 guarantees shift() returns a value
       const item = this.generationQueue.shift()!;
       const key = getChunkKey(item.chunkX, item.chunkZ);
 
@@ -342,18 +428,26 @@ export class ChunkManager {
   private processNextBatch(): void {
     if (this.generationQueue.length === 0) return;
 
+    // biome-ignore lint/style/noNonNullAssertion: length > 0 guarantees shift() returns a value
     const item = this.generationQueue.shift()!;
     const key = getChunkKey(item.chunkX, item.chunkZ);
 
     // Skip if cancelled
     if (this.pendingChunks.has(key)) {
       if (!this.loadedChunks.has(key)) {
-        this.loadChunk(item.chunkX, item.chunkZ, item.visible);
+        try {
+          this.loadChunk(item.chunkX, item.chunkZ, item.visible);
+        } catch (err) {
+          // Never let a single chunk error kill all subsequent generation.
+          // Log the error and continue — the chunk will simply be absent until
+          // the player moves away and triggers a fresh generation attempt.
+          console.error(`[ChunkManager] loadChunk(${item.chunkX},${item.chunkZ}) failed:`, err);
+        }
       }
       this.pendingChunks.delete(key);
     }
 
-    // If more chunks remain, schedule another idle callback
+    // Always reschedule even after an error so the remaining queue drains.
     if (this.generationQueue.length > 0) {
       this.scheduleGeneration();
     }
@@ -363,6 +457,9 @@ export class ChunkManager {
     const key = getChunkKey(chunkX, chunkZ);
     const terrainData = generateChunkData(this.worldSeed, chunkX, chunkZ);
     const biome = getChunkBiome(this.worldSeed, chunkX, chunkZ);
+    const storeState = useGameStore.getState();
+    const season = (storeState.currentSeason ?? "spring") as VegetationSeason;
+    const difficulty = storeState.difficulty ?? "sapling";
 
     const entity = world.add({
       id: generateEntityId(),
@@ -462,6 +559,12 @@ export class ChunkManager {
             position: bp.position,
             rotationY: bp.rotationY,
             structure: bp.structure,
+            proceduralBuilding: deriveProceduralBuilding(
+              bp.structure.templateId,
+              bp.blueprintId,
+              bp.facing,
+              bp.variation,
+            ),
             renderable: { visible, scale: 1 },
           }),
         );
@@ -472,6 +575,18 @@ export class ChunkManager {
             id: generateEntityId(),
             position: np.position,
             npc: np.npc,
+            renderable: { visible, scale: 1 },
+          }),
+        );
+      }
+
+      // Spawn street furniture (lamp posts, crates, barrels, wells). §43.1
+      for (const fp of villagePlacements.furniture) {
+        children.push(
+          world.add({
+            id: generateEntityId(),
+            position: fp.position,
+            prop: { propId: `street-${fp.type}`, modelPath: fp.type },
             renderable: { visible, scale: 1 },
           }),
         );
@@ -558,6 +673,7 @@ export class ChunkManager {
       chunkZ,
       biome as BiomeType,
       terrainData.heightmap,
+      season,
     );
 
     // Trigger species discovery for unique wild species in visible chunks (Spec §8, §25)
@@ -626,6 +742,7 @@ export class ChunkManager {
       chunkZ,
       biome,
       terrainData.heightmap,
+      season,
     );
 
     for (const tp of vegPlacements.trees) {
@@ -668,6 +785,69 @@ export class ChunkManager {
           position: sp.position,
           rotationY: sp.rotationY,
           structure: sp.structure,
+          proceduralBuilding: deriveProceduralBuilding(sp.structure.templateId),
+          renderable: { visible, scale: 1 },
+        }),
+      );
+    }
+
+    // Spawn enemies based on biome, difficulty, and time of day (Spec §34)
+    const enemyBiome = biomeToEnemyBiome(biome as BiomeType);
+    const gameTime = storeState.gameTimeMicroseconds ?? 0;
+    const dayProgress = (gameTime % 600_000_000) / 600_000_000;
+    const isNight = dayProgress >= 0.8 || dayProgress < 0.05; // night phase
+    const enemySpawns = spawnEnemiesForChunk(
+      chunkX,
+      chunkZ,
+      enemyBiome,
+      difficulty,
+      this.worldSeed,
+      isNight,
+    );
+
+    const enemyTypes = enemiesConfig.types as Record<
+      string,
+      {
+        aggroRange: number;
+        deaggroRange: number;
+        attackPower: number;
+        attackCooldown: number;
+        health: number;
+        lootTableId: string;
+      }
+    >;
+
+    for (const es of enemySpawns) {
+      const def = enemyTypes[es.enemyType];
+      if (!def) continue;
+
+      // Sample Y from heightmap for enemy position
+      const localX = es.x - chunkX * CHUNK_SIZE;
+      const localZ = es.z - chunkZ * CHUNK_SIZE;
+      const xi = Math.max(0, Math.min(CHUNK_SIZE - 1, Math.floor(localX)));
+      const zi = Math.max(0, Math.min(CHUNK_SIZE - 1, Math.floor(localZ)));
+      const y = terrainData.heightmap[zi * CHUNK_SIZE + xi];
+
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: { x: es.x, y, z: es.z },
+          enemy: {
+            enemyType: es.enemyType,
+            tier: es.tier,
+            behavior: es.behavior,
+            aggroRange: def.aggroRange,
+            deaggroRange: def.deaggroRange,
+            attackPower: def.attackPower,
+            attackCooldown: def.attackCooldown,
+            lootTableId: def.lootTableId,
+          },
+          health: {
+            current: def.health,
+            max: def.health,
+            invulnFrames: 0,
+            lastDamageSource: null,
+          },
           renderable: { visible, scale: 1 },
         }),
       );

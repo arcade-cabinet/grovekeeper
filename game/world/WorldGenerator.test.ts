@@ -1,4 +1,4 @@
-import { generateWorld, pickWeighted } from "./WorldGenerator";
+import { generateWorld, pickWeighted } from "./WorldGenerator/index.ts";
 
 describe("pickWeighted", () => {
   it("picks items according to weights", () => {

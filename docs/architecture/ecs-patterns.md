@@ -4,7 +4,7 @@
 > - **Persistent state** uses Legend State 3.x (not Zustand). References to "Zustand" below should read "Legend State."
 > - **No fixed grid** -- the world is infinite chunks. `GridCellComponent` is per-chunk, not a fixed size.
 > - **New entity types** include structures, chunk features, labyrinth elements (not just trees/player/gridCells).
-> - **Tree meshSeed** is less relevant -- trees use 3DPSX GLB models (not procedural SPS geometry).
+> - **Tree meshSeed** is less relevant -- trees use stylized GLB models (not procedural SPS geometry).
 > - **Serialization** is chunk-delta based, not whole-grove serialization.
 
 Grovekeeper uses [Miniplex 2.x](https://github.com/hmans/miniplex) as its Entity-Component-System framework. The ECS manages all runtime game state that changes every frame: entity positions, tree growth progress, grid cell occupancy, and player location.

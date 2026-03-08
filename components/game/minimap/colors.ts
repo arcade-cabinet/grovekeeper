@@ -26,7 +26,7 @@ export const PLAYER_FILL = "#FFC107";
 /** Player indicator stroke. */
 export const PLAYER_STROKE = "#FF8F00";
 
-/** Map border / frame color (PSX bark brown). */
+/** Map border / frame color (bark brown). */
 export const BARK_BROWN = "#5D4037";
 
 /** Map background (deep soil dark). */

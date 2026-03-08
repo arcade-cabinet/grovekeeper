@@ -87,9 +87,7 @@ export function buildRecipeDisplay(
  * Returns display data for ALL cooking recipes, sorted: cookable first, then
  * alphabetical within each group.
  */
-export function buildAllRecipeDisplays(
-  inventory: Record<string, number>,
-): RecipeDisplay[] {
+export function buildAllRecipeDisplays(inventory: Record<string, number>): RecipeDisplay[] {
   const recipes = getCookingRecipes();
   const displays = recipes.map((r) => buildRecipeDisplay(r, inventory));
 

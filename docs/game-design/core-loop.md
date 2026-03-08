@@ -3,7 +3,7 @@
 > **Partially superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Sections 1 (Design Pillars), 3 (Survival), 4 (Open World), 12 (Tutorial & User Flow)
 >
 > **Key changes from this document:**
-> - **Not "cozy 2.5D isometric"** -- now a first-person survival game with PSX aesthetic
+> - **Not "cozy 2.5D isometric"** -- now a first-person survival game with Wind Waker-inspired visual style
 > - **Not "idle tending"** -- survival pressure: hearts, hunger, stamina, weather damage, hostile creatures
 > - **Not BabylonJS** -- now React Three Fiber + drei (declarative R3F)
 > - **Not Zustand with localStorage** -- now Legend State v3 with expo-sqlite

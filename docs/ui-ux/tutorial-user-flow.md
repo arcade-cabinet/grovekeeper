@@ -508,7 +508,7 @@ override in a 2-chunk radius. NOT procedurally generated.
 - Campfire at village center (pre-built, serves as first fast travel point)
 - Garden area with 2-3 pre-planted White Oak trees (one harvestable for tutorial)
 - Village gate leading out to procedural wilderness
-- Fences around perimeter (3DPSX fence GLBs)
+- Fences around perimeter (fence GLBs)
 - 3-4 NPCs with day/night schedules (Elder Rowan, Blossom, Bramble, Oakley)
 - Notice board near village center
 

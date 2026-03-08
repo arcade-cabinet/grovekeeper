@@ -4,8 +4,8 @@ import type {
   AchievementPopupItem,
   AchievementPopupState,
   AchievementPopupStore,
-} from "./types";
-import { AUTO_DISMISS_MS } from "./types";
+} from "./types.ts";
+import { AUTO_DISMISS_MS } from "./types.ts";
 
 let popupCounter = 0;
 

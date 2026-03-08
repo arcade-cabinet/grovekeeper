@@ -7,8 +7,8 @@ describe("tools config", () => {
       expect(TOOLS.length).toBeGreaterThan(0);
     });
 
-    it("contains 13 tools", () => {
-      expect(TOOLS.length).toBe(13);
+    it("contains 15 tools", () => {
+      expect(TOOLS.length).toBe(15);
     });
 
     it("all tools have required fields", () => {

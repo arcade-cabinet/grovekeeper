@@ -32,7 +32,7 @@ const HARDNESS_TABLE = miningConfig.rockHardness as unknown as Record<string, nu
  * Falls back to the "default" hardness (1) for unknown rock types.
  */
 export function getRockHardness(rockType: string): number {
-  return HARDNESS_TABLE[rockType] ?? HARDNESS_TABLE["default"] ?? 1;
+  return HARDNESS_TABLE[rockType] ?? HARDNESS_TABLE.default ?? 1;
 }
 
 /**

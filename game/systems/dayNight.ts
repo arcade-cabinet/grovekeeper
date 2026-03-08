@@ -234,10 +234,29 @@ export function computeSeason(dayNumber: number): DayNightComponent["season"] {
 // ---------------------------------------------------------------------------
 
 /**
- * Create a fresh DayNightComponent at game start (hour 6, dawn).
+ * Create a fresh DayNightComponent, optionally seeded from saved game time.
+ *
+ * When `gameTimeMicroseconds` is provided the component is initialised to the
+ * correct hour, day, and season so a resumed game starts at the right time of
+ * day instead of always at dawn (hour 6).
  */
-export function initDayNight(): DayNightComponent {
-  const startHour = 6;
+export function initDayNight(gameTimeMicroseconds?: number): DayNightComponent {
+  let startHour: number;
+  let dayNumber: number;
+  let season: DayNightComponent["season"];
+
+  if (gameTimeMicroseconds != null && gameTimeMicroseconds > 0) {
+    const microPerDay = DAY_LENGTH * 1_000_000;
+    dayNumber = Math.floor(gameTimeMicroseconds / microPerDay);
+    const dayProgress = (gameTimeMicroseconds % microPerDay) / microPerDay;
+    startHour = dayProgress * 24;
+    season = computeSeason(dayNumber);
+  } else {
+    startHour = 6;
+    dayNumber = 0;
+    season = "spring";
+  }
+
   const timeOfDay = classifyTimeOfDay(startHour);
   const lighting = lerpLightingForHour(startHour);
   const skyColors = lerpSkyColorsForHour(startHour);
@@ -245,8 +264,8 @@ export function initDayNight(): DayNightComponent {
   return {
     gameHour: startHour,
     timeOfDay,
-    dayNumber: 0,
-    season: "spring",
+    dayNumber,
+    season,
     ambientColor: lighting.ambientColor,
     ambientIntensity: lighting.ambientIntensity,
     directionalColor: lighting.directionalColor,
@@ -279,6 +298,38 @@ export function tickDayNight(dayNight: DayNightComponent, sky: SkyComponent, dt:
     dayNight.season = computeSeason(dayNight.dayNumber);
   }
 
+  applyDayNightVisuals(dayNight, sky);
+}
+
+/**
+ * Sync the DayNight entity to the authoritative TimeState from time.ts.
+ *
+ * Instead of independently advancing time (which drifts from the canonical
+ * clock over many frames), this sets gameHour / dayNumber / season from the
+ * already-computed TimeState and then refreshes all derived lighting/sky
+ * values.  Call this each frame AFTER advanceTime() returns.
+ */
+export function syncDayNight(
+  dayNight: DayNightComponent,
+  sky: SkyComponent,
+  gameTimeMicroseconds: number,
+): void {
+  const microPerDay = DAY_LENGTH * 1_000_000;
+  const dayNumber = Math.floor(gameTimeMicroseconds / microPerDay);
+  const dayProgress = (gameTimeMicroseconds % microPerDay) / microPerDay;
+
+  dayNight.gameHour = dayProgress * 24;
+  dayNight.dayNumber = dayNumber;
+  dayNight.season = computeSeason(dayNumber);
+
+  applyDayNightVisuals(dayNight, sky);
+}
+
+/**
+ * Shared helper: refresh lighting, sky colors, star intensity, and sun angle
+ * from the current gameHour on the DayNightComponent.
+ */
+function applyDayNightVisuals(dayNight: DayNightComponent, sky: SkyComponent): void {
   // Classify time slot (for label / NPC schedules)
   dayNight.timeOfDay = classifyTimeOfDay(dayNight.gameHour);
 

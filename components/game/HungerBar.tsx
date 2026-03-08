@@ -6,8 +6,8 @@
  * 10 visible segments. 12px height.
  */
 import { View } from "react-native";
-import { ACCENT, DARK, HUD_PANEL, TYPE } from "@/components/ui/tokens";
 import { Text } from "@/components/ui/text";
+import { ACCENT, DARK, HUD_PANEL, TYPE } from "@/components/ui/tokens";
 
 export interface HungerBarProps {
   /** Hunger value 0-100 */
@@ -28,9 +28,7 @@ export function HungerBar({ hunger }: HungerBarProps) {
 
   return (
     <View className="flex-row items-center gap-1">
-      <Text style={{ ...TYPE.caption, color: DARK.textMuted, width: 12 }}>
-        {"\u{1F356}"}
-      </Text>
+      <Text style={{ ...TYPE.caption, color: DARK.textMuted, width: 12 }}>{"\u{1F356}"}</Text>
       <View
         className="flex-1 flex-row gap-0.5 overflow-hidden rounded"
         style={{ height: 12, ...HUD_PANEL, padding: 1 }}

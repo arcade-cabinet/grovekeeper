@@ -1,5 +1,5 @@
 /** Goal pools: planting, harvesting, watering goals. */
-import type { GoalTemplate } from "./types";
+import type { GoalTemplate } from "./types.ts";
 
 export const PLANTING_GOALS: GoalTemplate[] = [
   {

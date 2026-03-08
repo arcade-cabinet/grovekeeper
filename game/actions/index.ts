@@ -1,3 +1,4 @@
+export type { TileCell } from "./queries.ts";
 export {
   findCell,
   findHarvestableTrees,
@@ -8,8 +9,7 @@ export {
   getPlayerTile,
   gridCellsQuery,
   movePlayerTo,
-} from "./queries";
-export type { TileCell } from "./queries";
-export { clearRock, placeStructure, removeSeedling } from "./tileActions";
-export { drainToolDurability, selectSpecies, selectTool, spendToolStamina } from "./toolActions";
-export { fertilizeTree, harvestTree, plantTree, pruneTree, waterTree } from "./treeActions";
+} from "./queries.ts";
+export { clearRock, placeStructure, removeSeedling } from "./tileActions.ts";
+export { drainToolDurability, selectSpecies, selectTool, spendToolStamina } from "./toolActions.ts";
+export { fertilizeTree, harvestTree, plantTree, pruneTree, waterTree } from "./treeActions.ts";

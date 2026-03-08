@@ -1,8 +1,8 @@
+import type { WeatherType } from "@/game/systems/weather";
 import type { TileState } from "../ActionButton.tsx";
 import type { RadialAction } from "../radialActions.ts";
 import type { GameTime } from "../TimeDisplay.tsx";
 import type { TutorialTargetRect } from "../TutorialOverlay.tsx";
-import type { WeatherType } from "@/game/systems/weather";
 
 export type { TileState, RadialAction, GameTime, TutorialTargetRect, WeatherType };
 

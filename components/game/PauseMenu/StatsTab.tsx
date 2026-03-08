@@ -1,12 +1,12 @@
 import { View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT } from "@/components/ui/tokens";
 import { StatItem } from "./StatItem.tsx";
 import type { PauseMenuStats } from "./types.ts";
 
-const cardBg = "rgba(26,58,30,0.7)";
-const cardBorder = "rgba(61,92,65,0.4)";
+const cardBg = LIGHT.bgCanopy;
+const cardBorder = LIGHT.borderBranch;
 
 interface StatsTabProps {
   stats: PauseMenuStats;
@@ -28,23 +28,21 @@ export function StatsTab({ stats, onOpenStats }: StatsTabProps) {
           <StatItem label="Level" value={stats.level} />
           <StatItem label="XP" value={stats.xp} />
           <StatItem label="Coins" value={stats.coins} color={ACCENT.amber} />
-          <StatItem label="Trees Planted" value={stats.treesPlanted} color={ACCENT.sap} />
-          <StatItem label="Trees Matured" value={stats.treesMatured} color={ACCENT.sap} />
+          <StatItem label="Trees Planted" value={stats.treesPlanted} color={ACCENT.greenBright} />
+          <StatItem label="Trees Matured" value={stats.treesMatured} color={ACCENT.greenBright} />
           <StatItem label="Grid Size" value={`${stats.gridSize}x${stats.gridSize}`} />
         </View>
       </View>
 
       <View className="gap-1">
-        <Text style={{ fontSize: 12, color: DARK.textSecondary }}>
+        <Text style={{ fontSize: 12, color: LIGHT.textSecondary }}>
           Species: {stats.unlockedSpeciesCount}/{stats.totalSpeciesCount}
         </Text>
-        <Text style={{ fontSize: 12, color: DARK.textSecondary }}>
+        <Text style={{ fontSize: 12, color: LIGHT.textSecondary }}>
           Tools: {stats.unlockedToolsCount}/{stats.totalToolsCount}
         </Text>
         {stats.prestigeCount > 0 && (
-          <Text style={{ fontSize: 12, color: ACCENT.amber }}>
-            Prestige: {stats.prestigeCount}
-          </Text>
+          <Text style={{ fontSize: 12, color: ACCENT.amber }}>Prestige: {stats.prestigeCount}</Text>
         )}
         {stats.difficultyName ? (
           <View className="mt-1 flex-row items-center gap-1.5">
@@ -59,13 +57,13 @@ export function StatsTab({ stats, onOpenStats }: StatsTabProps) {
                   fontSize: 10,
                   fontWeight: "700",
                   fontFamily: FONTS.data,
-                  color: DARK.textPrimary,
+                  color: "#FFF",
                 }}
               >
                 {stats.difficultyName}
               </Text>
             </View>
-            <Text style={{ fontSize: 10, color: DARK.textMuted }}>difficulty (locked)</Text>
+            <Text style={{ fontSize: 10, color: LIGHT.textMuted }}>difficulty (locked)</Text>
           </View>
         ) : null}
       </View>
@@ -73,11 +71,11 @@ export function StatsTab({ stats, onOpenStats }: StatsTabProps) {
       {onOpenStats ? (
         <Button
           className="min-h-[44px] w-full rounded-xl bg-transparent"
-          style={{ borderWidth: 2, borderColor: DARK.borderBranch }}
+          style={{ borderWidth: 2, borderColor: LIGHT.borderBranch }}
           variant="outline"
           onPress={onOpenStats}
         >
-          <Text style={{ fontSize: 12, fontWeight: "700", color: DARK.textPrimary }}>
+          <Text style={{ fontSize: 12, fontWeight: "700", color: LIGHT.textPrimary }}>
             Full Stats Dashboard
           </Text>
         </Button>

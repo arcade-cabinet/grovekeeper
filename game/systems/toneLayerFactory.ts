@@ -18,9 +18,9 @@
  * to stop Tone.js from generating wasted CPU.
  */
 
-import { Filter, FMSynth, Noise, Oscillator, Volume } from "tone";
 import type { ToneOscillatorType } from "tone";
-import type { LayerName } from "./ambientAudio";
+import { Filter, FMSynth, Noise, Oscillator, Volume } from "tone";
+import type { LayerName } from "./ambientAudio.ts";
 
 /** Minimal controllable interface for a single ambient synthesis layer node. */
 export interface AmbientNode {
@@ -47,7 +47,7 @@ export function createToneLayerNode(layer: LayerName): AmbientNode {
       return makeNoiseFilterNode("white", "bandpass", 5200);
     case "crickets":
       // Tone.js Oscillator does not support "pulse" type; "square" is acoustically equivalent
-    return makeOscillatorNode("square", 2400);
+      return makeOscillatorNode("square", 2400);
     case "water":
       return makeNoiseFilterNode("brown", "lowpass", 240);
     case "vegetation":

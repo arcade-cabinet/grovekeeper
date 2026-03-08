@@ -48,10 +48,10 @@ export interface SkyProps {
 
 /** Seasonal tint applied to the sky gradient. */
 const SEASONAL_TINTS: Record<string, Color> = {
-  spring: new Color(theme.colors.springGreen),
-  summer: new Color(theme.colors.summerYellow),
-  autumn: new Color(theme.colors.autumnOrange),
-  winter: new Color(theme.colors.winterBlue),
+  spring: new Color(theme.colors.seasonal.spring),
+  summer: new Color(theme.colors.seasonal.summer),
+  autumn: new Color(theme.colors.seasonal.autumn),
+  winter: new Color(theme.colors.seasonal.winter),
 };
 
 /** Intensity range for day/night cycle. */
@@ -125,7 +125,6 @@ export const Sky = ({ skyColors, season, sunIntensity, starIntensity = 0 }: SkyP
   );
 
   // Set star instance transforms on mount — positions never change.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: run once on mount
   useEffect(() => {
     const mesh = starMeshRef.current;
     if (!mesh) return;

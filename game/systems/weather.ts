@@ -148,7 +148,7 @@ export function rollWindstormDamage(rngValue: number): boolean {
 // ============================================
 
 function rollWeatherType(roll: number, season: string): WeatherType {
-  const probs = SEASON_PROBABILITIES[season] ?? SEASON_PROBABILITIES["spring"];
+  const probs = SEASON_PROBABILITIES[season] ?? SEASON_PROBABILITIES.spring;
 
   if (roll < probs.rain) return "rain";
   if (roll < probs.rain + probs.drought) return "drought";

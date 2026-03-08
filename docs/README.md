@@ -2,7 +2,7 @@
 
 > "Every forest begins with a single seed."
 
-Grovekeeper is a PSX-aesthetic first-person grove-tending survival game. Mobile-first (portrait), desktop secondary. Target session: 3-15 minutes. Infinite procedural world, chunk-based generation, seeded determinism. All visuals are procedural geometry (zero GLB models).
+Grovekeeper is a bright, whimsical Wind Waker-inspired first-person grove-tending survival game. Mobile-first (portrait), desktop secondary. Target session: 3-15 minutes. Infinite procedural world, chunk-based generation, seeded determinism.
 
 Built with Expo SDK 55, React Three Fiber + Rapier physics, Miniplex ECS, Legend State, Tone.js, and anime.js. 4,105 tests across 178 suites.
 

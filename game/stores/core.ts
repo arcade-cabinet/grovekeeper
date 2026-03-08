@@ -24,7 +24,14 @@ import { chunkDiffs$ } from "@/game/world/chunkPersistence";
 // Types
 // ---------------------------------------------------------------------------
 
-export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";
+export type GameScreen =
+  | "menu"
+  | "playing"
+  | "paused"
+  | "seedSelect"
+  | "rules"
+  | "death"
+  | "permadeath";
 
 export interface SerializedTree {
   speciesId: string;
@@ -97,7 +104,7 @@ const INITIAL_GAME_TIME = (() => {
 
 export const initialState = {
   screen: "menu" as GameScreen,
-  difficulty: "normal",
+  difficulty: "sapling",
   permadeath: false,
   selectedTool: "trowel",
   selectedSpecies: "white-oak",
@@ -160,7 +167,6 @@ export const initialState = {
     masterVolume: 1.0,
     sfxVolume: 1.0,
     ambientVolume: 0.7,
-    psxPixelRatio: true,
     drawDistance: 3,
     touchSensitivity: 1.0,
     reducedMotion: false,
@@ -181,8 +187,8 @@ export const initialState = {
   hunger: 100,
   maxHunger: 100,
   /** Current heart count. Spec §12.3 */
-  hearts: 3,
-  maxHearts: 3,
+  hearts: 5,
+  maxHearts: 5,
   /** Player body temperature in °C. Spec §2.2 */
   bodyTemp: 37.0,
   lastCampfireId: null as string | null,
@@ -227,6 +233,25 @@ let persistenceInitialized = false;
 export async function initPersistence(): Promise<void> {
   if (persistenceInitialized) return;
   persistenceInitialized = true;
+
+  // On web, expo-sqlite/kv-store uses a SharedArrayBuffer + Atomics.wait()
+  // bridge to make async OPFS operations appear synchronous. This bridge
+  // requires full cross-origin isolation (COOP + COEP headers), which is only
+  // provided by coi-serviceworker.js and only AFTER the first page load.
+  //
+  // Chrome makes a localhost exception for SharedArrayBuffer (typeof !== "undefined")
+  // but the Atomics.wait() in the WASM worker still times out without COOP/COEP,
+  // producing "Sync operation timeout" unhandled errors in the Expo overlay.
+  //
+  // Web persistence is handled by the drizzle/expo-sqlite relational path
+  // (game/db/client.ts → openDatabaseSync → OPFS async, no sync bridge needed).
+  // The usePersistence hook (app/_layout.tsx) calls hydrateGameStore() which
+  // uses getDb() and handles the case where the DB is unavailable gracefully.
+  // We therefore skip syncObservable entirely on web.
+  const { Platform } = await import("react-native");
+  if (Platform.OS === "web") {
+    return;
+  }
 
   const { syncObservable } = await import("@legendapp/state/sync");
   const { observablePersistSqlite } = await import("@legendapp/state/persist-plugins/expo-sqlite");

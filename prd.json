@@ -1,6 +1,6 @@
 {
   "name": "Grovekeeper",
-  "description": "Complete Grovekeeper game implementation — PSX-aesthetic first-person grove-tending simulation",
+  "description": "Complete Grovekeeper game implementation — Wind Waker-style FPS grove-tending simulation with Daggerfall-scale procedural worlds",
   "branchName": "ralph/full-game-implementation",
   "userStories": [
     {

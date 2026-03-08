@@ -4,7 +4,7 @@
   "pieceWeights": {
     "basic": ["1x1", "1x2", "1x3", "2x1", "2x2", "3x1"],
     "diagonal": ["1x1", "1x2", "2x1", "2x2", "3x1"],
-    "round": ["1x1", "1x2", "2x1", "2x2"],
+    "round": ["1x1", "1x2", "2x1_01", "2x1_02", "2x1_03", "2x2_01", "2x2_02", "2x2_03"],
     "triangle": ["2x1", "2x2", "3x1", "3x2"]
   },
   "junctionPieces": {
@@ -21,19 +21,31 @@
     "vaseTypes": 5,
     "columnTypes": 3,
     "dungeonProps": [
-      "props/dungeon/crates-and-barrels.glb",
-      "props/dungeon/treasure.glb",
-      "props/dungeon/mine-props.glb"
+      "assets/models/props/dungeon/crates-and-barrels.glb",
+      "assets/models/props/dungeon/treasure.glb",
+      "assets/models/props/dungeon/mine-props.glb"
     ]
   },
   "centerReward": {
     "fountain": "hedges/misc/stone/fountain01_round_water.glb",
     "benches": ["hedges/misc/stone/bench01.glb", "hedges/misc/stone/bench02.glb"],
     "possibleRewards": [
-      { "type": "rare_seed", "weight": 0.4 },
-      { "type": "rare_resource", "weight": 0.3 },
-      { "type": "cosmetic_unlock", "weight": 0.2 },
-      { "type": "xp_bonus", "weight": 0.1 }
+      {
+        "type": "rare_seed",
+        "weight": 0.4
+      },
+      {
+        "type": "rare_resource",
+        "weight": 0.3
+      },
+      {
+        "type": "cosmetic_unlock",
+        "weight": 0.2
+      },
+      {
+        "type": "xp_bonus",
+        "weight": 0.1
+      }
     ]
   },
   "complexity": {

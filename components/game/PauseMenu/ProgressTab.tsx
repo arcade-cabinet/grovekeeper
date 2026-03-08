@@ -1,11 +1,11 @@
 import { Pressable, ScrollView, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
 import type { AchievementDef, BorderCosmetic, GridExpansionInfo, PrestigeInfo } from "./types.ts";
 
-const cardBg = "rgba(26,58,30,0.7)";
-const cardBorder = "rgba(61,92,65,0.4)";
+const cardBg = LIGHT.bgCanopy;
+const cardBorder = LIGHT.borderBranch;
 
 interface ProgressTabProps {
   gridSize: number;
@@ -50,17 +50,14 @@ export function ProgressTab({
         <View className="mb-2 flex-row items-center justify-between">
           <Text
             style={{
-              fontSize: 12,
-              fontWeight: "700",
+              ...TYPE.label,
               fontFamily: FONTS.heading,
-              color: DARK.textPrimary,
+              color: LIGHT.textPrimary,
             }}
           >
             Achievements
           </Text>
-          <Text
-            style={{ fontSize: 10, fontFamily: FONTS.data, color: ACCENT.amber }}
-          >
+          <Text style={{ fontSize: 10, fontFamily: FONTS.data, color: ACCENT.amber }}>
             {achievements.length}/{achievementDefs.length}
           </Text>
         </View>
@@ -74,23 +71,17 @@ export function ProgressTab({
                   className="flex-row items-start gap-2 rounded-lg p-2"
                   style={{
                     borderWidth: 1,
-                    borderColor: isUnlocked
-                      ? "rgba(255,215,0,0.4)"
-                      : "rgba(61,92,65,0.3)",
-                    backgroundColor: isUnlocked
-                      ? "rgba(255,215,0,0.08)"
-                      : "rgba(13,31,15,0.5)",
+                    borderColor: isUnlocked ? "rgba(255,215,0,0.5)" : "rgba(134,239,172,0.3)",
+                    backgroundColor: isUnlocked ? "rgba(255,215,0,0.1)" : "rgba(255,255,255,0.4)",
                   }}
                 >
                   <View
                     className="h-6 w-6 items-center justify-center rounded-full"
                     style={{
-                      backgroundColor: isUnlocked ? ACCENT.gold : DARK.textMuted,
+                      backgroundColor: isUnlocked ? ACCENT.gold : LIGHT.textMuted,
                     }}
                   >
-                    <Text
-                      style={{ fontSize: 10, color: isUnlocked ? DARK.bgDeep : DARK.textPrimary }}
-                    >
+                    <Text style={{ fontSize: 10, color: isUnlocked ? "#FFF" : "#FFF" }}>
                       {isUnlocked ? "\u2713" : "?"}
                     </Text>
                   </View>
@@ -99,12 +90,12 @@ export function ProgressTab({
                       style={{
                         fontSize: 10,
                         fontWeight: "600",
-                        color: isUnlocked ? DARK.textPrimary : DARK.textMuted,
+                        color: isUnlocked ? LIGHT.textPrimary : LIGHT.textMuted,
                       }}
                     >
                       {achievement.name}
                     </Text>
-                    <Text style={{ fontSize: 10, marginTop: 2, color: DARK.textSecondary }}>
+                    <Text style={{ fontSize: 10, marginTop: 2, color: LIGHT.textSecondary }}>
                       {isUnlocked ? achievement.description : "???"}
                     </Text>
                   </View>
@@ -122,31 +113,30 @@ export function ProgressTab({
       >
         <Text
           style={{
-            fontSize: 12,
-            fontWeight: "700",
+            ...TYPE.label,
             fontFamily: FONTS.heading,
-            color: DARK.textPrimary,
+            color: LIGHT.textPrimary,
             marginBottom: 8,
           }}
         >
           Grid Expansion
         </Text>
-        <Text style={{ fontSize: 10, color: DARK.textSecondary, marginBottom: 4 }}>
+        <Text style={{ fontSize: 10, color: LIGHT.textSecondary, marginBottom: 4 }}>
           Current: {gridSize}x{gridSize}
         </Text>
         {gridExpansion ? (
           <>
-            <Text style={{ fontSize: 10, color: DARK.textSecondary, marginBottom: 2 }}>
+            <Text style={{ fontSize: 10, color: LIGHT.textSecondary, marginBottom: 2 }}>
               Next: {gridExpansion.nextSize}x{gridExpansion.nextSize} (Lv.
               {gridExpansion.nextRequiredLevel})
             </Text>
-            <Text style={{ fontSize: 10, color: DARK.textMuted, marginBottom: 8 }}>
+            <Text style={{ fontSize: 10, color: LIGHT.textMuted, marginBottom: 8 }}>
               Cost: {gridExpansion.costLabel}
             </Text>
             <Button
               className="min-h-[44px] w-full rounded-xl"
               style={{
-                backgroundColor: gridExpansion.canAfford ? ACCENT.sap : DARK.textMuted,
+                backgroundColor: gridExpansion.canAfford ? ACCENT.greenBright : LIGHT.textMuted,
               }}
               disabled={!gridExpansion.canAfford}
               onPress={onExpandGrid}
@@ -156,7 +146,7 @@ export function ProgressTab({
                   fontSize: 10,
                   fontWeight: "700",
                   fontFamily: FONTS.data,
-                  color: gridExpansion.canAfford ? DARK.bgDeep : DARK.textSecondary,
+                  color: gridExpansion.canAfford ? "#FFF" : LIGHT.bgDeep,
                 }}
               >
                 Expand to {gridExpansion.nextSize}x{gridExpansion.nextSize}
@@ -176,7 +166,7 @@ export function ProgressTab({
             )}
           </>
         ) : (
-          <Text style={{ fontSize: 10, fontStyle: "italic", color: DARK.textMuted }}>
+          <Text style={{ fontSize: 10, fontStyle: "italic", color: LIGHT.textMuted }}>
             Maximum grid size reached.
           </Text>
         )}
@@ -190,16 +180,15 @@ export function ProgressTab({
         >
           <Text
             style={{
-              fontSize: 12,
-              fontWeight: "700",
+              ...TYPE.label,
               fontFamily: FONTS.heading,
-              color: DARK.textPrimary,
+              color: LIGHT.textPrimary,
               marginBottom: 4,
             }}
           >
             Border Cosmetics
           </Text>
-          <Text style={{ fontSize: 10, color: DARK.textSecondary, marginBottom: 8 }}>
+          <Text style={{ fontSize: 10, color: LIGHT.textSecondary, marginBottom: 8 }}>
             Customize your grove border (unlocked by prestige)
           </Text>
           <View className="gap-2">
@@ -209,19 +198,17 @@ export function ProgressTab({
               style={{
                 borderWidth: 1,
                 borderColor:
-                  activeBorderCosmetic === null ? ACCENT.sap : "rgba(61,92,65,0.3)",
+                  activeBorderCosmetic === null ? ACCENT.greenBright : "rgba(134,239,172,0.3)",
                 backgroundColor:
-                  activeBorderCosmetic === null
-                    ? "rgba(74,222,128,0.1)"
-                    : "rgba(13,31,15,0.5)",
+                  activeBorderCosmetic === null ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.5)",
               }}
               onPress={() => onSetBorderCosmetic(null)}
               accessibilityLabel="Select Default Wood Frame border"
             >
-              <Text style={{ fontSize: 10, fontWeight: "600", color: DARK.textPrimary }}>
+              <Text style={{ fontSize: 10, fontWeight: "600", color: LIGHT.textPrimary }}>
                 Default Wood Frame
               </Text>
-              <Text style={{ fontSize: 10, marginTop: 2, color: DARK.textSecondary }}>
+              <Text style={{ fontSize: 10, marginTop: 2, color: LIGHT.textSecondary }}>
                 Classic wooden border
               </Text>
             </Pressable>
@@ -235,25 +222,25 @@ export function ProgressTab({
                   borderWidth: 1,
                   borderColor:
                     activeBorderCosmetic === cosmetic.id
-                      ? ACCENT.sap
-                      : "rgba(61,92,65,0.3)",
+                      ? ACCENT.greenBright
+                      : "rgba(134,239,172,0.3)",
                   backgroundColor:
                     activeBorderCosmetic === cosmetic.id
-                      ? "rgba(74,222,128,0.1)"
-                      : "rgba(13,31,15,0.5)",
+                      ? "rgba(34,197,94,0.1)"
+                      : "rgba(255,255,255,0.5)",
                 }}
                 onPress={() => onSetBorderCosmetic(cosmetic.id)}
                 accessibilityLabel={`Select ${cosmetic.name} border`}
               >
                 <View className="flex-row items-center justify-between">
-                  <Text style={{ fontSize: 10, fontWeight: "600", color: DARK.textPrimary }}>
+                  <Text style={{ fontSize: 10, fontWeight: "600", color: LIGHT.textPrimary }}>
                     {cosmetic.name}
                   </Text>
                   {activeBorderCosmetic === cosmetic.id && (
-                    <Text style={{ fontSize: 10, color: ACCENT.sap }}>{"\u2713"}</Text>
+                    <Text style={{ fontSize: 10, color: ACCENT.greenBright }}>{"\u2713"}</Text>
                   )}
                 </View>
-                <Text style={{ fontSize: 10, marginTop: 2, color: DARK.textSecondary }}>
+                <Text style={{ fontSize: 10, marginTop: 2, color: LIGHT.textSecondary }}>
                   {cosmetic.description}
                 </Text>
                 {/* Color preview swatch */}
@@ -284,18 +271,18 @@ export function ProgressTab({
                 style={{
                   borderWidth: 1,
                   borderStyle: "dashed",
-                  borderColor: DARK.textMuted,
+                  borderColor: LIGHT.textMuted,
                 }}
               >
                 <View className="flex-row items-center justify-between">
-                  <Text style={{ fontSize: 10, fontWeight: "600", color: DARK.textMuted }}>
+                  <Text style={{ fontSize: 10, fontWeight: "600", color: LIGHT.textMuted }}>
                     {cosmetic.name}
                   </Text>
                   <Text style={{ fontSize: 10, color: ACCENT.amber }}>
                     Prestige {cosmetic.prestigeRequired}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 10, marginTop: 2, color: DARK.textMuted }}>
+                <Text style={{ fontSize: 10, marginTop: 2, color: LIGHT.textMuted }}>
                   {cosmetic.description}
                 </Text>
               </View>
@@ -311,10 +298,9 @@ export function ProgressTab({
       >
         <Text
           style={{
-            fontSize: 12,
-            fontWeight: "700",
+            ...TYPE.label,
             fontFamily: FONTS.heading,
-            color: DARK.textPrimary,
+            color: LIGHT.textPrimary,
             marginBottom: 8,
           }}
         >
@@ -322,10 +308,10 @@ export function ProgressTab({
         </Text>
         {prestige.count > 0 && (
           <View className="mb-2 gap-0.5">
-            <Text style={{ fontSize: 10, color: DARK.textSecondary }}>
+            <Text style={{ fontSize: 10, color: LIGHT.textSecondary }}>
               Current prestige: {prestige.count}
             </Text>
-            <Text style={{ fontSize: 10, color: DARK.textSecondary }}>
+            <Text style={{ fontSize: 10, color: LIGHT.textSecondary }}>
               Growth speed: {prestige.growthBonusPct}% bonus
             </Text>
           </View>
@@ -333,7 +319,7 @@ export function ProgressTab({
         {prestige.isEligible ? (
           confirmingPrestige ? (
             <View className="gap-2">
-              <Text style={{ fontSize: 10, color: DARK.textSecondary }}>
+              <Text style={{ fontSize: 10, color: LIGHT.textSecondary }}>
                 Prestige will reset your level, resources, seeds, and grove to start fresh. You keep
                 achievements, lifetime stats, and gain permanent bonuses. Are you sure?
               </Text>
@@ -343,17 +329,17 @@ export function ProgressTab({
                   style={{ backgroundColor: ACCENT.amber }}
                   onPress={onPrestige}
                 >
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: DARK.bgDeep }}>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: "#FFF" }}>
                     Confirm Prestige
                   </Text>
                 </Button>
                 <Button
                   className="min-h-[44px] flex-1 rounded-xl bg-transparent"
-                  style={{ borderWidth: 2, borderColor: DARK.borderBranch }}
+                  style={{ borderWidth: 2, borderColor: LIGHT.borderBranch }}
                   variant="outline"
                   onPress={onCancelPrestige}
                 >
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: DARK.textSecondary }}>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: LIGHT.textSecondary }}>
                     Cancel
                   </Text>
                 </Button>
@@ -365,14 +351,14 @@ export function ProgressTab({
               style={{ backgroundColor: ACCENT.amber }}
               onPress={onPrestige}
             >
-              <Text style={{ fontSize: 10, fontWeight: "700", color: DARK.bgDeep }}>
+              <Text style={{ fontSize: 10, fontWeight: "700", color: "#FFF" }}>
                 Prestige (Reset for Bonuses)
               </Text>
             </Button>
           )
         ) : (
           <View>
-            <Text style={{ fontSize: 10, color: DARK.textMuted }}>
+            <Text style={{ fontSize: 10, color: LIGHT.textMuted }}>
               Reach Level {prestige.minLevel} to unlock Prestige.
             </Text>
             {level > 0 && (

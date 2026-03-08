@@ -9,7 +9,7 @@
  */
 
 import type { ToolComponent } from "@/game/ecs/components/items";
-import type { ForgeEntity, SmeltRecipe, ToolTierUpgrade } from "./forging.ts";
+import type { ForgeEntity, SmeltRecipe } from "./forging.ts";
 import {
   advanceSmelting,
   applyTierUpgrade,

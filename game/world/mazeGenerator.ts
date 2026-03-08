@@ -103,11 +103,15 @@ function extractItemId(modelPath: string): string {
  * independent from the landmark system (shrines, villages, campfires).
  *
  * Chunk (0, 0) never hosts a labyrinth -- it is always the tutorial village.
+ * Chunk (1, 1) always hosts the first labyrinth so the player can discover
+ * one within a short walk from the starting village (~22 world units away).
  *
  * Pure function -- deterministic from worldSeed + chunk coords.
  */
 export function isLabyrinthChunk(worldSeed: string, chunkX: number, chunkZ: number): boolean {
   if (chunkX === 0 && chunkZ === 0) return false;
+  // Guarantee the first discoverable maze just north-east of the starting village.
+  if (chunkX === 1 && chunkZ === 1) return true;
   const rng = scopedRNG("labyrinth-roll", worldSeed, chunkX, chunkZ);
   return rng() < LABYRINTH_PROBABILITY;
 }

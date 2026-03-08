@@ -53,10 +53,12 @@ jest.mock("@/game/systems/time", () => ({
   }),
 }));
 
+jest.mock("./HeartsDisplay", () => ({ HeartsDisplay: () => null }));
 jest.mock("./ResourceBar", () => ({ ResourceBar: () => null }));
 jest.mock("./XPBar", () => ({ XPBar: () => null }));
 jest.mock("./StaminaGauge", () => ({ StaminaGauge: () => null }));
 jest.mock("./ToolBelt", () => ({ ToolBelt: () => null }));
+jest.mock("./HungerBar", () => ({ HungerBar: () => null }));
 jest.mock("./TimeDisplay", () => ({ TimeDisplayCompact: () => null }));
 
 // ── Imports ───────────────────────────────────────────────────────────────────

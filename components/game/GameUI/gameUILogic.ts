@@ -5,10 +5,7 @@
  * No React or React Native imports — safe to import in plain .test.ts files.
  */
 
-import {
-  canAffordExpansion,
-  getNextExpansionTier,
-} from "@/game/systems/gridExpansion";
+import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
 import {
   calculatePrestigeBonus,
   canPrestige as checkCanPrestige,
@@ -47,8 +44,7 @@ export function buildGridExpansionInfo(
   const costLabel = Object.entries(nextTier.cost)
     .filter(([, amount]) => amount > 0)
     .map(
-      ([resource, amount]) =>
-        `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`,
+      ([resource, amount]) => `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`,
     )
     .join(", ");
 
@@ -64,10 +60,7 @@ export function buildGridExpansionInfo(
 /**
  * Compute prestige display info for the PauseMenu prestige UI.
  */
-export function buildPrestigeInfo(
-  prestigeCount: number,
-  level: number,
-): PrestigeInfo {
+export function buildPrestigeInfo(prestigeCount: number, level: number): PrestigeInfo {
   const bonus = calculatePrestigeBonus(prestigeCount);
   return {
     count: prestigeCount,

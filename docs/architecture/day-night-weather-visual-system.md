@@ -170,11 +170,11 @@ function getMoonPosition(hours: number): { x: number; y: number; z: number } {
 }
 ```
 
-Moon: NOT rendered as a mesh (PSX aesthetic). Moonlight is implicit via the blue-tinted ambient and hemisphere ground color at night.
+Moon: NOT rendered as a mesh. Moonlight is implicit via the blue-tinted ambient and hemisphere ground color at night.
 
 ### 2.3 Stars
 
-No star particle system. The dark night sky gradient (`#0a1628` zenith) provides the atmosphere. Stars would add draw calls and complexity for minimal PSX-aesthetic benefit. The night sky is "dark and moody" -- not a planetarium.
+No star particle system. The dark night sky gradient (`#0a1628` zenith) provides the atmosphere. Stars would add draw calls and complexity for minimal visual benefit. The night sky is "dark and moody" -- not a planetarium.
 
 If stars are later desired: use a single `<Points>` buffer with 200 vertices, alpha-fading based on `sunIntensity` (visible only when intensity < 0.2). Cost: 1 draw call, ~0.1ms GPU.
 
@@ -280,7 +280,7 @@ hemisphereLight.groundColor.lerpColors(nightGroundColor, dayGroundColor, sunInte
 hemisphereLight.intensity = 0.08 + sunIntensity * 0.22;
 ```
 
-**Decision: defer hemisphere light.** The current 2-light setup (ambient + directional) meets the performance budget and visual target. Add hemisphere light only if the scene looks flat after PSX shader integration. Adding it would bring the light count to 3 (within the max 4 budget).
+**Decision: defer hemisphere light.** The current 2-light setup (ambient + directional) meets the performance budget and visual target. Add hemisphere light only if the scene looks flat after shader integration. Adding it would bring the light count to 3 (within the max 4 budget).
 
 ### 3.4 Night Lighting
 
@@ -412,7 +412,7 @@ The current implementation uses React Native Animated overlays. This is the corr
 |-----------|----------------|-------------|
 | Draw calls | 0 | 1-3 per system |
 | GPU cost | ~0.5ms | ~2-4ms |
-| PSX aesthetic match | Good (flat, stylized) | Over-detailed |
+| Visual style match | Good (flat, stylized) | Over-detailed |
 | Bundle impact | None (React Native) | +three/examples particle imports |
 | Platform consistency | Identical on all devices | GPU-dependent |
 | **Verdict** | **Use this** | Defer |
@@ -489,7 +489,7 @@ Handled by AudioManager (future) with `crossfade(ambientTrack, rainTrack, 3.0)`.
 
 #### Heat Haze (Screen-Space Distortion)
 
-True screen-space distortion is expensive and not PSX-appropriate. Instead, use a subtle shimmer band:
+True screen-space distortion is expensive on mobile. Instead, use a subtle shimmer band:
 
 | Parameter | Value | Notes |
 |-----------|-------|-------|
@@ -631,7 +631,7 @@ Snow has the same growth multiplier as rain (+30% -- moisture for evergreens).
 | Ground snow tint | Lerp ground color toward `#dde8dd` (grey-white) by 20% | 0 draw calls |
 | Snow accumulation | NOT implemented | Would need vertex displacement -- defer |
 | Frozen water tiles | Tint water tile material toward `#a8dadc` (winter-frost) | 0 draw calls |
-| Frost on trees | NOT implemented | Emissive edge glow too expensive for PSX look -- defer |
+| Frost on trees | NOT implemented | Emissive edge glow too expensive on mobile -- defer |
 
 Ground snow in `Ground.tsx`:
 

@@ -136,13 +136,13 @@ describe("awardTradingXp (Spec §15)", () => {
 
   it("does not affect other NPCs in the map", () => {
     const result = awardTradingXp(withMultiple, "elder-rowan");
-    expect(result["hazel"]).toBe(60);
+    expect(result.hazel).toBe(60);
   });
 
   it("clamps at maxRelationship", () => {
     const nearMax = { npc: 99 };
     const result = awardTradingXp(nearMax, "npc");
-    expect(result["npc"]).toBe(RELATIONSHIP_CONFIG.maxRelationship);
+    expect(result.npc).toBe(RELATIONSHIP_CONFIG.maxRelationship);
   });
 });
 
@@ -153,7 +153,7 @@ describe("awardTradingXp (Spec §15)", () => {
 describe("awardQuestCompletionXp (Spec §15)", () => {
   it("increases relationship by questCompletionXp amount", () => {
     const result = awardQuestCompletionXp(empty, "hazel");
-    expect(result["hazel"]).toBe(RELATIONSHIP_CONFIG.questCompletionXp);
+    expect(result.hazel).toBe(RELATIONSHIP_CONFIG.questCompletionXp);
   });
 
   it("gives more XP than a single trade (quest > trade)", () => {
@@ -163,13 +163,13 @@ describe("awardQuestCompletionXp (Spec §15)", () => {
   it("clamps at maxRelationship", () => {
     const nearMax = { npc: 95 };
     const result = awardQuestCompletionXp(nearMax, "npc");
-    expect(result["npc"]).toBe(RELATIONSHIP_CONFIG.maxRelationship);
+    expect(result.npc).toBe(RELATIONSHIP_CONFIG.maxRelationship);
   });
 
   it("does not mutate the original map", () => {
     const map = { hazel: 15 };
     awardQuestCompletionXp(map, "hazel");
-    expect(map["hazel"]).toBe(15);
+    expect(map.hazel).toBe(15);
   });
 });
 
@@ -180,29 +180,29 @@ describe("awardQuestCompletionXp (Spec §15)", () => {
 describe("awardGiftXp (Spec §15)", () => {
   it("increases relationship by giftXp with default multiplier 1.0", () => {
     const result = awardGiftXp(empty, "hazel");
-    expect(result["hazel"]).toBe(RELATIONSHIP_CONFIG.giftXp);
+    expect(result.hazel).toBe(RELATIONSHIP_CONFIG.giftXp);
   });
 
   it("scales XP by the giftMultiplier", () => {
     const result = awardGiftXp(empty, "hazel", 2.0);
-    expect(result["hazel"]).toBe(RELATIONSHIP_CONFIG.giftXp * 2);
+    expect(result.hazel).toBe(RELATIONSHIP_CONFIG.giftXp * 2);
   });
 
   it("rounds the scaled XP to a whole number", () => {
     const result = awardGiftXp(empty, "hazel", 1.5);
-    expect(Number.isInteger(result["hazel"])).toBe(true);
+    expect(Number.isInteger(result.hazel)).toBe(true);
   });
 
   it("clamps at maxRelationship", () => {
     const nearMax = { npc: 98 };
     const result = awardGiftXp(nearMax, "npc", 3.0);
-    expect(result["npc"]).toBe(RELATIONSHIP_CONFIG.maxRelationship);
+    expect(result.npc).toBe(RELATIONSHIP_CONFIG.maxRelationship);
   });
 
   it("does not mutate the original map", () => {
     const map = { hazel: 10 };
     awardGiftXp(map, "hazel", 1.0);
-    expect(map["hazel"]).toBe(10);
+    expect(map.hazel).toBe(10);
   });
 });
 
@@ -223,12 +223,12 @@ describe("setRelationship (Spec §15)", () => {
 
   it("clamps above maxRelationship", () => {
     const result = setRelationship(empty, "npc", 999);
-    expect(result["npc"]).toBe(RELATIONSHIP_CONFIG.maxRelationship);
+    expect(result.npc).toBe(RELATIONSHIP_CONFIG.maxRelationship);
   });
 
   it("clamps below 0", () => {
     const result = setRelationship(empty, "npc", -10);
-    expect(result["npc"]).toBe(0);
+    expect(result.npc).toBe(0);
   });
 
   it("does not mutate the original map", () => {

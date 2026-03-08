@@ -17,9 +17,11 @@ import {
   pruneTree,
   waterTree,
 } from "@/game/actions";
+import { getDifficultyById } from "@/game/config/difficulty";
 import type { ResourceType } from "@/game/config/resources";
 import type { RockComponent } from "@/game/ecs/components/terrain";
 import type { Entity } from "@/game/ecs/world";
+import { enemiesQuery } from "@/game/ecs/world";
 import type { RaycastEntityType } from "@/game/hooks/useRaycast";
 import { useGameStore } from "@/game/stores";
 import { audioManager } from "@/game/systems/AudioManager";
@@ -28,6 +30,7 @@ import { isWaterFishable } from "@/game/systems/fishing";
 import { resolveForgeInteraction } from "@/game/systems/forging";
 import { type ToolAction, triggerActionHaptic } from "@/game/systems/haptics";
 import { mineRock, resolveMiningInteraction } from "@/game/systems/mining";
+import { executePlayerAttack, resolvePlayerAttack } from "@/game/systems/playerAttack";
 import { createTrapComponent } from "@/game/systems/traps";
 import { scopedRNG } from "@/game/utils/seedWords";
 import type { BiomeType } from "@/game/world/biomeMapper";
@@ -38,7 +41,47 @@ export { resolveCampfireInteraction } from "@/game/systems/cooking";
 export { resolveForgeInteraction } from "@/game/systems/forging";
 export { resolveMiningInteraction } from "@/game/systems/mining";
 
-/** The full set of game verbs mapped by the dispatcher (Spec §11, §22, §35). */
+// ---------------------------------------------------------------------------
+// Module-scope player attack cooldown tracker (Spec §34.4.4)
+//
+// The player entity may not have a CombatComponent in all scene configurations.
+// This module-level CombatComponent is used as a session-local fallback for
+// tracking player attack cooldown across dispatchAction calls.
+// The game loop's tickAttackCooldown ticks enemy combat components via combatQuery;
+// the player's cooldown is ticked separately via tickPlayerAttackCooldown() which
+// callers invoke from the game loop.
+// ---------------------------------------------------------------------------
+
+import combatConfigForCooldown from "@/config/game/combat.json" with { type: "json" };
+import type { CombatComponent } from "@/game/ecs/components/combat";
+
+/** Module-scope player combat component used for attack rate limiting. */
+export const _playerCombatRef: CombatComponent = {
+  attackPower: 5,
+  defense: 0,
+  attackRange: combatConfigForCooldown.playerAttackRange,
+  attackCooldown: combatConfigForCooldown.playerAttackCooldown,
+  cooldownRemaining: 0,
+  blocking: false,
+};
+
+/**
+ * Tick the player's module-level attack cooldown.
+ * Call from useGameLoop each frame alongside tickAttackCooldown for enemies.
+ * Spec §34.4.4.
+ */
+export function tickPlayerAttackCooldown(dt: number): void {
+  _playerCombatRef.cooldownRemaining = Math.max(0, _playerCombatRef.cooldownRemaining - dt);
+}
+
+/**
+ * Reset the module-scope player combat ref (used for tests and new game).
+ */
+export function resetPlayerAttackCooldown(): void {
+  _playerCombatRef.cooldownRemaining = 0;
+}
+
+/** The full set of game verbs mapped by the dispatcher (Spec §11, §22, §34.4, §35). */
 export type GameAction =
   | "DIG"
   | "CHOP"
@@ -52,7 +95,8 @@ export type GameAction =
   | "FERTILIZE"
   | "PLACE_TRAP"
   | "CHECK_TRAP"
-  | "BUILD";
+  | "BUILD"
+  | "ATTACK";
 
 /**
  * Superset of RaycastEntityType — includes terrain surface types for ground
@@ -66,7 +110,8 @@ export type TargetEntityType =
   | "campfire"
   | "forge"
   | "water"
-  | "trap";
+  | "trap"
+  | "enemy";
 
 /** Full context for a dispatched action. */
 export interface DispatchContext {
@@ -129,6 +174,12 @@ export function resolveAction(
   toolId: string,
   targetType: TargetEntityType | null,
 ): GameAction | null {
+  // Melee attack — any melee-capable tool against an enemy entity (Spec §34.4.6)
+  if (targetType === "enemy") {
+    const attackAction = resolvePlayerAttack(toolId, "enemy");
+    if (attackAction) return "ATTACK";
+  }
+
   // Core grove verbs
   if (toolId === "axe" && targetType === "tree") return "CHOP";
   if (toolId === "watering-can" && targetType === "tree") return "WATER";
@@ -334,6 +385,50 @@ export function dispatchAction(ctx: DispatchContext): boolean {
       success = true;
       break;
     }
+
+    // ── Player melee attack (Spec §34.4) ───────────────────────────────────
+
+    case "ATTACK": {
+      if (!ctx.entity?.id) return false;
+
+      // Find the target enemy entity in ECS
+      let targetEnemy: (typeof enemiesQuery extends Iterable<infer E> ? E : never) | null = null;
+      for (const e of enemiesQuery) {
+        if (e.id === ctx.entity.id) {
+          targetEnemy = e;
+          break;
+        }
+      }
+      if (!targetEnemy?.health) return false;
+
+      // Resolve difficulty multiplier for damage scaling (Spec §34.4.3)
+      const diffConfig = getDifficultyById(store.difficulty);
+      const damageMultiplier = diffConfig?.damageMultiplier ?? 1.0;
+
+      // Build a minimal player CombatComponent from ECS playerQuery, or use a
+      // session-local fallback ref if the player entity has no combat component yet.
+      // This ref is managed by the dispatchAction module scope.
+      const activeCombat = _playerCombatRef;
+
+      const result = executePlayerAttack({
+        toolId: ctx.toolId,
+        damageMultiplier,
+        stamina: store.stamina,
+        maxStamina: store.maxStamina,
+        targetHealth: targetEnemy.health,
+        playerCombat: activeCombat,
+      });
+
+      if (!result.hit) return false;
+
+      // Deduct stamina from store (executePlayerAttack validated it; deduct here)
+      if (result.staminaCost > 0) {
+        store.setStamina(Math.max(0, store.stamina - result.staminaCost));
+      }
+
+      success = true;
+      break;
+    }
   }
 
   if (success) {
@@ -364,6 +459,9 @@ export function dispatchAction(ctx: DispatchContext): boolean {
         break;
       case "BUILD":
         audioManager.playSound("build");
+        break;
+      case "ATTACK":
+        audioManager.playSound("chop");
         break;
     }
   } else if (action !== null) {

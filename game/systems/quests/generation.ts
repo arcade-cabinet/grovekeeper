@@ -4,7 +4,7 @@
 import type { ResourceType } from "@/game/config/resources";
 import type { Season } from "@/game/systems/time";
 import { scopedRNG } from "@/game/utils/seedWords";
-import { GOAL_POOLS } from "./registry";
+import { GOAL_POOLS } from "./registry.ts";
 import type {
   ActiveQuest,
   GoalCategory,
@@ -13,7 +13,7 @@ import type {
   GoalRewardSeed,
   GoalTemplate,
   QuestGoal,
-} from "./types";
+} from "./types.ts";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

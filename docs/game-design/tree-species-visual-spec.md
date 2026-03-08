@@ -3,11 +3,11 @@
 > **Partially superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Section 5 (Tree Species & Growth) and Section 2 (The Procedural/Model Balance)
 >
 > **Key changes from this document:**
-> - **GLB-based, not SPS procedural.** Trees now use 3DPSX GLB models (8 retro nature trees + 72 tree_pack_1.1 models). The SPS Tree Generator (`spsTreeGenerator.ts`) and procedural mesh generation (`treeMeshBuilder.ts`) are replaced by ~50 lines of GLB loading + InstancedMesh. This eliminates the 951-line SPS generator and all per-species `meshParams`.
+> - **GLB-based, not SPS procedural.** Trees now use stylized GLB models (8 nature trees + 72 tree_pack_1.1 models). The SPS Tree Generator (`spsTreeGenerator.ts`) and procedural mesh generation (`treeMeshBuilder.ts`) are replaced by ~50 lines of GLB loading + InstancedMesh. This eliminates the 951-line SPS generator and all per-species `meshParams`.
 > - **Growth = scale on GLB model:** Seed (0.1x), Sprout (0.25x), Sapling (0.5x), Mature (1.0x), Old Growth (1.3x). Stages 0-1 still use tiny hardcoded geometry (cone+sphere for seed, cylinder+triangles for sprout).
 > - **Seasons = color tint OR winter GLB swap.** 6 winter variant GLBs available. No per-season mesh rebuilds.
 > - **Camera is first-person, not diorama.** "Recognizable at a glance from the fixed diorama camera" no longer applies.
-> - **PSX aesthetic** is the visual pillar, not "cozy low-poly" -- flat shading, NearestFilter, no antialiasing.
+> - **Bright Zelda-style aesthetic** is the visual pillar -- MSAA, smooth shading, PBR materials, device-native pixel ratio.
 > - **Instanced rendering via InstancedMesh** -- template key `${speciesId}_${stage}_${season}[_night]`, start capacity 20, double on overflow. This section's R3F architecture is largely valid.
 >
 > This document retains **extensive unique detail** about per-species visual parameters (trunk colors, canopy colors, seasonal palettes), growth animation curves, prestige species special effects, vertex budget analysis, and config JSON schemas. These details supplement the unified doc and remain valuable for implementation reference, but mesh generation specifics (SPS params, canopySegments, trunk dimensions) should be reinterpreted as GLB model selection criteria rather than procedural generation inputs.
@@ -41,7 +41,7 @@ This document specifies the complete visual identity of every tree species acros
 - **Cozy low-poly.** Trees are recognizable at a glance from the fixed diorama camera. Silhouette matters more than detail. Trunk shape, canopy outline, and color are the three axes of species differentiation.
 - **Growth is the reward.** The visual jump between stages must feel earned. Stage transitions are the game's primary dopamine loop. Each stage should look meaningfully different, not just bigger.
 - **Seasonal magic.** Canopy colors shift with the season wheel. Deciduous trees lose their leaves in winter (canopy alpha drops, bare branches show). Evergreens darken and persist.
-- **PSX aesthetic.** Low segment counts on cylinders (6--12 sides). Icosahedron-based canopy spheres at detail level 1. Vertex colors, not UV-mapped textures. Flat or gouraud shading only.
+- **Stylized Zelda aesthetic.** Low segment counts on cylinders (6--12 sides) for whimsy. Icosahedron-based canopy spheres at detail level 1. PBR materials with smooth shading.
 
 ### Coordinate Conventions
 
@@ -1358,8 +1358,8 @@ function TreeInstanceManager() {
 const treeMaterial = new THREE.MeshLambertMaterial({
   vertexColors: true,
   side: THREE.DoubleSide,
-  // Flat shading for PSX aesthetic
-  flatShading: true,
+  // Smooth shading for modern Zelda-style rendering
+  flatShading: false,
 });
 
 // Emissive tree material (Ghost Birch night, Moonwood Ash night)
@@ -1546,14 +1546,12 @@ At 3 templates per frame and ~30 active templates, the full rebuild takes 10 fra
 | Per-frame lerp updates | <= 200 trees | CPU budget for matrix writes |
 | InstancedMesh count | <= 40 | WebGL uniform buffer limits |
 
-### 11.6 Flat Shading Note
+### 11.6 Smooth Shading Note
 
-All tree materials use `flatShading: true` for the PSX aesthetic. This means:
-- `computeVertexNormals()` on the merged geometry uses face normals, not smooth normals
-- Each triangle face is visibly flat, creating the low-poly look
-- `THREE.MeshLambertMaterial` with flat shading is the cheapest lit material option
-
-If smooth shading is desired for specific species (e.g., Mystic Fern for organic fronds), it can be overridden per-material.
+All tree materials use `MeshStandardMaterial` with smooth shading for the modern Zelda-style aesthetic. This means:
+- `computeVertexNormals()` on the merged geometry uses smooth normals for organic shapes
+- PBR lighting responds naturally to scene lights
+- The stylized low-poly silhouette provides whimsy while smooth shading keeps it modern and polished
 
 ### 11.7 Source File Mapping
 

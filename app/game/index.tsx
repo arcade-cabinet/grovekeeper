@@ -1,8 +1,9 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Stack, useRouter } from "expo-router";
+import { AxeIcon, DropletsIcon, ScissorsIcon, SproutIcon } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { ChibiNpcScene } from "@/components/entities/ChibiNpcScene";
 import { GrovekeeperSpirit } from "@/components/entities/GrovekeeperSpirit";
 import { ProceduralBushes } from "@/components/entities/ProceduralBushes";
@@ -15,6 +16,7 @@ import { ProceduralTrees } from "@/components/entities/ProceduralTrees";
 import { BuildPanel } from "@/components/game/BuildPanel";
 import { CookingPanel } from "@/components/game/CookingPanel";
 import { DeathScreen } from "@/components/game/DeathScreen";
+import { FishingPanel } from "@/components/game/FishingPanel";
 import {
   FloatingParticlesContainer,
   WeatherParticlesLayer,
@@ -23,12 +25,18 @@ import { ForgingPanel } from "@/components/game/ForgingPanel";
 import { HUD } from "@/components/game/HUD";
 import { LoadingScreen } from "@/components/game/LoadingScreen";
 import type { LoadingPhase } from "@/components/game/loadingScreenLogic";
+import { type MobileAction, MobileActionButtons } from "@/components/game/MobileActionButtons";
+import { MiniMap } from "@/components/game/minimap/index.ts";
 import { NpcDialogue } from "@/components/game/NpcDialogue";
 import { PauseMenu } from "@/components/game/PauseMenu";
 import { PermadeathScreen } from "@/components/game/PermadeathScreen";
+import { ConnectedQuestPanel } from "@/components/game/QuestPanel";
 import { SeedSelect } from "@/components/game/SeedSelect";
+import { ToastContainer } from "@/components/game/Toast";
+import { ToolWheel } from "@/components/game/ToolWheel";
 import { TradeDialog } from "@/components/game/TradeDialog";
 import { TutorialOverlay } from "@/components/game/TutorialOverlay";
+import { VirtualJoystick } from "@/components/game/VirtualJoystick";
 import { WeatherOverlay } from "@/components/game/WeatherOverlay";
 import { FPSCamera } from "@/components/player/FPSCamera";
 import { PlayerCapsule } from "@/components/player/PlayerCapsule";
@@ -129,7 +137,8 @@ export default function GameScreen() {
   const level = useGameStore((s) => s.level);
   const xp = useGameStore((s) => s.xp);
   const coins = useGameStore((s) => s.coins);
-  const _selectedTool = useGameStore((s) => s.selectedTool);
+  const selectedTool = useGameStore((s) => s.selectedTool);
+  const unlockedTools = useGameStore((s) => s.unlockedTools);
   const gridSize = useGameStore((s) => s.gridSize);
   const currentSeason = useGameStore((s) => s.currentSeason);
   const gameTimeMicroseconds = useGameStore((s) => s.gameTimeMicroseconds);
@@ -221,6 +230,29 @@ export default function GameScreen() {
 
   // Seed select modal state
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
+
+  // Tool wheel modal state (Tab key or long-press to open)
+  const [toolWheelOpen, setToolWheelOpen] = useState(false);
+
+  // Movement ref for VirtualJoystick (mobile only) — written by joystick, read by PlayerCapsule
+  const movementRef = useRef({ x: 0, z: 0 });
+
+  // Mobile action buttons — context-sensitive tool actions (Spec §23)
+  const mobileActions: MobileAction[] = useMemo(
+    () => [
+      { id: "plant", label: "Plant", icon: SproutIcon, toolId: "trowel", enabled: true },
+      { id: "water", label: "Water", icon: DropletsIcon, toolId: "watering-can", enabled: true },
+      { id: "harvest", label: "Harvest", icon: AxeIcon, toolId: "axe", enabled: true },
+      {
+        id: "prune",
+        label: "Prune",
+        icon: ScissorsIcon,
+        toolId: "pruning-shears",
+        enabled: unlockedTools.includes("pruning-shears"),
+      },
+    ],
+    [unlockedTools],
+  );
 
   // Ambient audio state — initialized on first user gesture (satisfies browser autoplay policy).
   const ambientAudioRef = useRef<AmbientAudioState | null>(null);
@@ -447,9 +479,8 @@ export default function GameScreen() {
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
       <View style={styles.container} onTouchStart={handleFirstGesture} testID="game-screen">
-        {/* 3D Canvas — antialias:false + dpr=1 per PSX aesthetic (Spec §28.1).
-            No MSAA framebuffer allocation → lower mobile GPU memory. */}
-        <Canvas shadows="percentage" style={styles.canvas} gl={{ antialias: false }} dpr={1}>
+        {/* 3D Canvas — modern rendering with MSAA. Device pixel ratio for sharp output (Spec §28.1). */}
+        <Canvas shadows="percentage" style={styles.canvas} gl={{ antialias: true }}>
           <Physics>
             <GameSystems />
             <LoadingProgressSentinel onReady={handleLoadingReady} />
@@ -494,6 +525,10 @@ export default function GameScreen() {
           </View>
         )}
 
+        {/* Toast notification container — shows toasts from showToast() calls.
+            Mounted at the top of the overlay stack so toasts appear above the game. */}
+        <ToastContainer />
+
         {/* Full FPS HUD overlay — self-contained, reads from ECS + Legend State */}
         <HUD
           onOpenMenu={() => setScreen("paused")}
@@ -509,9 +544,34 @@ export default function GameScreen() {
         <WeatherParticlesLayer />
         <FloatingParticlesContainer />
 
+        {/* Mini-map overlay — desktop: always-visible corner map; mobile: toggle button (Spec §17.6). */}
+        <MiniMap />
+
+        {/* Active quest tracker — self-wired from ECS questBranchQuery + Legend State (Spec §14.4). */}
+        <View style={styles.questPanel} pointerEvents="box-none">
+          <ConnectedQuestPanel compact />
+        </View>
+
         {/* Touch look zone — right-half swipe area driving FPS camera look on mobile (Spec §23).
             Mounted below HUD so HUD touch targets (left-side, top bar) are not captured by this zone. */}
         <TouchLookZone />
+
+        {/* Mobile controls — joystick (left) + action buttons (bottom center). Spec §23. */}
+        {Platform.OS !== "web" && (
+          <>
+            <View style={styles.joystickContainer} pointerEvents="box-none">
+              <VirtualJoystick movementRef={movementRef} />
+            </View>
+            <View style={styles.mobileActions} pointerEvents="box-none">
+              <MobileActionButtons
+                selectedTool={selectedTool}
+                actions={mobileActions}
+                onSelectTool={(toolId: string) => useGameStore.getState().setSelectedTool(toolId)}
+                onAction={rawExecuteAction}
+              />
+            </View>
+          </>
+        )}
 
         {/* NPC Dialogue overlay — self-driven from ECS via dialogueBridge (Spec §15, §33).
             Renders when openDialogueSession() is called (triggered by NPC tap, spirit proximity,
@@ -564,6 +624,9 @@ export default function GameScreen() {
           onClose={closeCraftingPanel}
         />
 
+        {/* Fishing panel — water body interaction timing minigame (Spec §44). */}
+        <FishingPanel open={craftingPanels.fishingOpen} onClose={closeCraftingPanel} />
+
         {/* Pause Menu overlay */}
         <PauseMenu
           open={screen === "paused"}
@@ -576,7 +639,7 @@ export default function GameScreen() {
             gridSize,
             unlockedSpeciesCount: unlockedSpecies.length,
             totalSpeciesCount: TREE_SPECIES.length,
-            unlockedToolsCount: useGameStore.getState().unlockedTools.length,
+            unlockedToolsCount: unlockedTools.length,
             totalToolsCount: TOOLS.length,
             prestigeCount,
           }}
@@ -613,6 +676,18 @@ export default function GameScreen() {
           onClose={() => setSeedSelectOpen(false)}
         />
 
+        {/* Tool wheel modal — Tab key (web) or long-press (mobile) to open (Spec §6). */}
+        <ToolWheel
+          open={toolWheelOpen}
+          onOpen={() => setToolWheelOpen(true)}
+          onClose={() => setToolWheelOpen(false)}
+          unlockedTools={unlockedTools}
+          selectedTool={selectedTool}
+          level={level}
+          onSelectTool={(id: string) => useGameStore.getState().setSelectedTool(id)}
+          onUnlockTool={(id: string) => useGameStore.getState().unlockTool(id)}
+        />
+
         {/* Death screen overlay — non-permadeath: respawn at campfire (Spec §12.3, §12.5) */}
         <DeathScreen open={screen === "death"} onRespawn={handleRespawn} />
 
@@ -634,5 +709,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 32,
     right: 16,
+  },
+  joystickContainer: {
+    position: "absolute",
+    bottom: 32,
+    left: 16,
+  },
+  mobileActions: {
+    position: "absolute",
+    bottom: 32,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  questPanel: {
+    position: "absolute",
+    top: 56,
+    left: 12,
   },
 });

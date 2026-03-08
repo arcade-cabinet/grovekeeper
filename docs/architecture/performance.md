@@ -120,13 +120,13 @@ All animations use `Math.min(1, delta * speed)` as the lerp factor, ensuring con
 
 ## Texture Budget
 
-3DPSX GLB models have embedded textures (packed via Blender export). PSX-style pixel-art texture atlases at 128x128 or 512x512:
+GLB models have embedded textures (packed via Blender export). Texture atlases at 128x128 or 512x512:
 
 - Tools share `Tools_Texture.png` (128x128)
-- PSX Mega Pack uses 512x512 atlases
+- Mega Pack uses 512x512 atlases
 - Individual tree/bush/prop GLBs: 2-65 KB each with embedded textures
 
-Total asset budget is minimal -- PSX aesthetic means intentionally small textures. Models loaded on demand per chunk.
+Total asset budget is minimal -- stylized low-poly models use intentionally small textures. Models loaded on demand per chunk.
 
 ## Mobile-Specific Considerations
 

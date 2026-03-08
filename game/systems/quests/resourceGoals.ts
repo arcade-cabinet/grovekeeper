@@ -1,5 +1,5 @@
 /** Goal pools: economic, mastery, collection, and exploration goals. */
-import type { GoalTemplate } from "./types";
+import type { GoalTemplate } from "./types.ts";
 
 export const ECONOMIC_GOALS: GoalTemplate[] = [
   {

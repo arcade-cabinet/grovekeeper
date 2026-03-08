@@ -1,13 +1,14 @@
 {
   "id": "f697770a-7afa-4584-990c-5e36bb5612c0",
-  "status": "running",
+  "status": "completed",
   "startedAt": "2026-03-07T07:58:36.091Z",
-  "updatedAt": "2026-03-08T01:30:48.598Z",
+  "updatedAt": "2026-03-08T01:41:43.789Z",
   "agentPlugin": "claude",
   "trackerPlugin": "json",
-  "currentIteration": 170,
+  "currentIteration": 171,
   "maxIterations": 0,
   "totalTasks": 0,
-  "tasksCompleted": 170,
-  "cwd": "/Users/jbogaty/src/arcade-cabinet/grovekeeper"
+  "tasksCompleted": 171,
+  "cwd": "/Users/jbogaty/src/arcade-cabinet/grovekeeper",
+  "endedAt": "2026-03-08T01:41:43.789Z"
 }

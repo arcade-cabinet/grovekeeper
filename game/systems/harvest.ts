@@ -48,8 +48,13 @@ export function harvestCooldownTick(entity: Entity, deltaTime: number): void {
 
 /**
  * Compute the yield multiplier for a tree at harvest time.
+ * Includes difficulty-scaled resourceYieldMult (Spec §37).
  */
-export function computeYieldMultiplier(entity: Entity, currentSeason?: string): number {
+export function computeYieldMultiplier(
+  entity: Entity,
+  currentSeason?: string,
+  resourceYieldMult: number = 1.0,
+): number {
   if (!entity.tree) return 1.0;
 
   const stageMultiplier = entity.tree.stage >= 4 ? 1.5 : 1.0;
@@ -62,22 +67,25 @@ export function computeYieldMultiplier(entity: Entity, currentSeason?: string): 
   const goldenAppleMult =
     entity.tree.speciesId === "golden-apple" && currentSeason === "autumn" ? 3.0 : 1.0;
 
-  return stageMultiplier * prunedMultiplier * ironbarkMult * goldenAppleMult;
+  return stageMultiplier * prunedMultiplier * ironbarkMult * goldenAppleMult * resourceYieldMult;
 }
 
 /**
  * Collect harvest from a tree.
- * Computes yields at collect time using current season bonuses.
+ * Computes yields at collect time using current season bonuses and difficulty scaling.
  * Returns the resources if ready, resets cooldown.
  * Returns null if not ready.
+ *
+ * @param resourceYieldMult  Difficulty-scaled resource yield multiplier (Spec §37).
  */
 export function collectHarvest(
   entity: Entity,
   currentSeason?: string,
+  resourceYieldMult: number = 1.0,
 ): { type: string; amount: number }[] | null {
   if (!entity.harvestable || !entity.harvestable.ready) return null;
 
-  const multiplier = computeYieldMultiplier(entity, currentSeason);
+  const multiplier = computeYieldMultiplier(entity, currentSeason, resourceYieldMult);
   const resources = entity.harvestable.resources.map((r) => ({
     type: r.type,
     amount: Math.ceil(r.amount * multiplier),

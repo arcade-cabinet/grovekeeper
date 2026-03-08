@@ -15,6 +15,7 @@ import type {
   BushComponent,
   GrassComponent,
   TreeComponent,
+  VegetationSeason,
 } from "@/game/ecs/components/vegetation";
 import { resolveTreeModelPath } from "@/game/systems/vegetationPlacement";
 import { scopedRNG } from "@/game/utils/seedWords";
@@ -227,6 +228,7 @@ function spawnBushes(
   chunkZ: number,
   count: number,
   heightmap: Float32Array,
+  season: VegetationSeason,
 ): BushPlacement[] {
   const rng = scopedRNG("entity-bushes", worldSeed, chunkX, chunkZ);
   const result: BushPlacement[] = [];
@@ -247,7 +249,7 @@ function spawnBushes(
       rotationY,
       bush: {
         bushShape,
-        season: "summer",
+        season,
         hasRoots,
         modelKey: bushShape,
       },
@@ -360,6 +362,7 @@ export function spawnChunkEntities(
   chunkZ: number,
   biome: BiomeType,
   heightmap: Float32Array,
+  season: VegetationSeason = "spring",
 ): EntitySpawnerResult {
   const densityKey = biomeToVegetationKey(biome);
   const density = biomeDensity[densityKey];
@@ -367,7 +370,7 @@ export function spawnChunkEntities(
 
   return {
     trees: spawnTrees(worldSeed, chunkX, chunkZ, density.treesPerChunk, speciesPool, heightmap),
-    bushes: spawnBushes(worldSeed, chunkX, chunkZ, density.bushesPerChunk, heightmap),
+    bushes: spawnBushes(worldSeed, chunkX, chunkZ, density.bushesPerChunk, heightmap, season),
     grass: spawnGrass(
       worldSeed,
       chunkX,

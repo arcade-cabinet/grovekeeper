@@ -14,22 +14,25 @@ export type { BatchHarvestButtonProps } from "./BatchHarvestButton.tsx";
 export { BatchHarvestButton } from "./BatchHarvestButton.tsx";
 export type { BuildPanelProps } from "./BuildPanel.tsx";
 export { BuildPanel } from "./BuildPanel.tsx";
+export { GameErrorBoundary } from "./ErrorBoundary.tsx";
 export type { ForgingPanelProps } from "./ForgingPanel.tsx";
 export { ForgingPanel } from "./ForgingPanel.tsx";
-export { GameErrorBoundary } from "./ErrorBoundary.tsx";
-export { FarmerMascot } from "./FarmerMascot.tsx";
+// FarmerMascot removed — dark forest RPG, no cute POC mascot
+export type { HeartsDisplayProps } from "./HeartsDisplay.tsx";
+export { HeartsDisplay } from "./HeartsDisplay.tsx";
 export type { HUDProps } from "./HUD.tsx";
 export { HUD } from "./HUD.tsx";
+export type { HungerBarProps } from "./HungerBar.tsx";
+export { HungerBar } from "./HungerBar.tsx";
 export { Logo } from "./Logo.tsx";
 export type { MainMenuProps } from "./MainMenu.tsx";
 export { MainMenu } from "./MainMenu.tsx";
 export type { MiniMapOverlayProps, MinimapSnapshot } from "./minimap/index.ts";
 export { MiniMap, MiniMapOverlay, MinimapSVG, readMinimapSnapshot } from "./minimap/index.ts";
 export type {
-  GameMode,
+  Difficulty,
   NewGameConfig,
   NewGameModalProps,
-  SurvivalDifficulty,
 } from "./NewGameModal.tsx";
 export { NewGameModal } from "./NewGameModal.tsx";
 export { NpcDialogue } from "./NpcDialogue.tsx";

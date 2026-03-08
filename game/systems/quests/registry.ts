@@ -1,8 +1,14 @@
 /** GOAL_POOLS registry -- assembles all category pools into one record. */
-import type { GoalCategory, GoalTemplate } from "./types";
-import { GROWTH_GOALS, SEASONAL_GOALS } from "./growthGoals";
-import { ECONOMIC_GOALS, COLLECTION_GOALS, EXPLORATION_GOALS, MASTERY_GOALS } from "./resourceGoals";
-import { HARVESTING_GOALS, PLANTING_GOALS, WATERING_GOALS } from "./treeGoals";
+
+import { GROWTH_GOALS, SEASONAL_GOALS } from "./growthGoals.ts";
+import {
+  COLLECTION_GOALS,
+  ECONOMIC_GOALS,
+  EXPLORATION_GOALS,
+  MASTERY_GOALS,
+} from "./resourceGoals.ts";
+import { HARVESTING_GOALS, PLANTING_GOALS, WATERING_GOALS } from "./treeGoals.ts";
+import type { GoalCategory, GoalTemplate } from "./types.ts";
 
 export const GOAL_POOLS: Record<GoalCategory, GoalTemplate[]> = {
   planting: PLANTING_GOALS,

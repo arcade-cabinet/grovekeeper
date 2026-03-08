@@ -11,8 +11,8 @@
 - All `useState`/`useRef` game state -> Miniplex ECS entities
 - All persistent state -> Zustand gameStore (expo-sqlite backed)
 - All `export default` -> named exports
-- drei `Sphere`/`Cylinder`/`RoundedBox` -> raw `<mesh>` with `<sphereGeometry>`, `<cylinderGeometry>`, `<boxGeometry>` (fewer deps, PSX segments)
-- PSX aesthetic enforced: low segment counts (6-8 for cylinders, icosahedron detail 1 for spheres)
+- drei `Sphere`/`Cylinder`/`RoundedBox` -> raw `<mesh>` with `<sphereGeometry>`, `<cylinderGeometry>`, `<boxGeometry>` (fewer deps, stylized segments)
+- Stylized low-poly aesthetic: low segment counts (6-8 for cylinders, icosahedron detail 1 for spheres) for whimsical look
 
 ---
 
@@ -209,7 +209,7 @@ This evolved across 4 Grok prompts. Final state combines all techniques:
 - All wave parameters in `config/game/water.json`
 - Seeded from `scopedRNG('water', worldSeed)` for phase offsets
 - Time-of-day from game time system
-- PSX note: reduce wave count to 4-6 for mobile perf, keep full 8 on desktop
+- Mobile perf: reduce wave count to 4-6 for mobile, keep full 8 on desktop
 
 **Files:**
 - `game/shaders/WaterShader.ts` (NEW -- GLSL strings + uniform types)
@@ -341,11 +341,11 @@ This evolved across 4 Grok prompts. Final state combines all techniques:
 
 **Grovekeeper mapping:**
 - This is THE chibi system for our NPCs. Much richer than the current 4-box version.
-- **However:** must PSX-ify it. Reduce segments dramatically:
-  - Head sphere: 32 segments -> `icosahedronGeometry` detail 1 (~42 verts, chunky look)
+- **However:** keep stylized low-poly. Reduce segments for performance + whimsical look:
+  - Head sphere: 32 segments -> `icosahedronGeometry` detail 1 (~42 verts, chibi look)
   - Ear/nose spheres: 16 segments -> `icosahedronGeometry` detail 0 (~12 verts)
   - Cylinders: all 16/32 segments -> 6 segments
-  - Capsules: 16x32 -> 4x8 (very chunky, very PSX)
+  - Capsules: 16x32 -> 4x8 (stylized chibi proportions)
 - HSL color system -> use our existing `scopedRNG` to pick from config palettes instead of continuous HSL
 - Variant selection via `scopedRNG('npc-hair', worldSeed, npcId)` etc.
 - Idle animation values -> `config/game/npcAnimation.json`
@@ -413,7 +413,7 @@ This evolved across 4 Grok prompts. Final state combines all techniques:
 8. `config/game/seedWords.json` -- brand-aligned adjective/noun lists for seed phrases
 
 ### Phase 2: Chibi NPC System (replaces current 4-box NPCs)
-1. `components/entities/chibi/ChibiHead.tsx` -- PSX icosahedron head + ears + nose
+1. `components/entities/chibi/ChibiHead.tsx` -- Stylized icosahedron head + ears + nose
 2. `components/entities/chibi/ChibiHair.tsx` -- 3+ variants (messy/bandana/straw hat)
 3. `components/entities/chibi/ChibiFace.tsx` -- 3+ expressions (cheerful/content/jolly)
 4. `components/entities/chibi/ChibiTorso.tsx` -- 3+ outfits
@@ -481,8 +481,8 @@ This evolved across 4 Grok prompts. Final state combines all techniques:
 | Studio mode (character creator) | FPS game, player never sees own body |
 | OrbitControls | We use FPS camera controller |
 | lucide-react icons | We use custom SVG icons |
-| RoundedBox from drei | Plain boxGeometry is more PSX |
-| 32-segment spheres | PSX aesthetic needs low-poly (icosahedron detail 1) |
+| RoundedBox from drei | Plain boxGeometry is more stylized |
+| 32-segment spheres | Stylized aesthetic needs low-poly (icosahedron detail 1) |
 | Clouds as spheres | We use CSS sky / Sky component |
 | `Environment` preset | PSX doesn't use HDR environment maps |
 | `ContactShadows` | We use directional shadow maps |

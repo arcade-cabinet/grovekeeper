@@ -1,6 +1,6 @@
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK } from "@/components/ui/tokens";
+import { ACCENT, LIGHT } from "@/components/ui/tokens";
 
 export function ToggleSwitch({
   enabled,
@@ -19,19 +19,16 @@ export function ToggleSwitch({
       accessibilityState={{ checked: enabled }}
       accessibilityLabel={label}
     >
-      <Text style={{ fontSize: 12, color: DARK.textPrimary }}>{label}</Text>
+      <Text style={{ fontSize: 12, color: LIGHT.textPrimary }}>{label}</Text>
       <View
         className={`h-8 w-14 items-center rounded-full px-1 ${
           enabled ? "justify-end" : "justify-start"
         } flex-row`}
         style={{
-          backgroundColor: enabled ? ACCENT.sap : DARK.textMuted,
+          backgroundColor: enabled ? ACCENT.greenBright : LIGHT.textMuted,
         }}
       >
-        <View
-          className="h-6 w-6 rounded-full shadow"
-          style={{ backgroundColor: DARK.textPrimary }}
-        />
+        <View className="h-6 w-6 rounded-full shadow" style={{ backgroundColor: "#FFF" }} />
       </View>
     </Pressable>
   );

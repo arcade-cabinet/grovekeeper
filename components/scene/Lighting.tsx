@@ -11,7 +11,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { AmbientLight, Color, DirectionalLight, Fog } from "three";
+import { type AmbientLight, Color, type DirectionalLight, Fog } from "three";
 
 export interface LightingProps {
   /** Normalized time of day, 0 = midnight, 0.5 = noon, 1 = midnight. */
@@ -92,7 +92,7 @@ export const Lighting = ({
     if (scene.fog instanceof Fog) {
       scene.fog.color.setRGB(fogR, fogG, fogB);
     } else {
-      scene.fog = new Fog(new Color(fogR, fogG, fogB), 20, 40);
+      scene.fog = new Fog(new Color(fogR, fogG, fogB), 60, 150);
     }
 
     // Match scene background to fog for seamless horizon blend

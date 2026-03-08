@@ -1,8 +1,10 @@
 /**
  * tickSurvival -- hunger, body temperature, hearts, and death detection.
+ * Spec §12.2 (hunger), §12.3 (hearts/death), §12.5 (respawn).
  */
 import type { DifficultyConfig } from "@/game/config/difficulty";
 import { useGameStore } from "@/game/stores";
+import { applyDeathPenalty } from "@/game/systems/deathRespawn";
 import {
   isPlayerDead,
   tickHeartsFromExposure,
@@ -18,13 +20,7 @@ export function tickSurvival(diffConfig: DifficultyConfig | undefined, dt: numbe
   const exposureEnabled = diffConfig?.exposureEnabled ?? false;
   const affectsGameplay = diffConfig?.affectsGameplay ?? false;
 
-  const newHunger = tickHunger(
-    store.hunger,
-    store.maxHunger,
-    dt,
-    hungerDrainMult,
-    affectsGameplay,
-  );
+  const newHunger = tickHunger(store.hunger, store.maxHunger, dt, hungerDrainMult, affectsGameplay);
   if (newHunger !== store.hunger) {
     store.setHunger(newHunger);
   }
@@ -36,17 +32,24 @@ export function tickSurvival(diffConfig: DifficultyConfig | undefined, dt: numbe
     lastDamageSource: null,
   };
   tickHeartsFromStarvation(healthBridge, newHunger, dt, affectsGameplay);
-  tickHeartsFromExposure(healthBridge, dt, exposureDriftRate, exposureEnabled, affectsGameplay);
+  tickHeartsFromExposure(
+    healthBridge,
+    dt,
+    exposureDriftRate,
+    exposureEnabled,
+    affectsGameplay,
+    store.bodyTemp ?? 37,
+  );
   if (healthBridge.current !== store.hearts) {
     store.setHearts(healthBridge.current);
   }
 
-  if (isPlayerDead(healthBridge)) {
-    const storeAny = store as Record<string, unknown>;
-    if (typeof storeAny.handleDeath === "function") {
-      (storeAny.handleDeath as () => void)();
-    } else {
-      console.warn("[useGameLoop] Player died but store.handleDeath is not implemented");
-    }
+  // Death detection: when hearts reach 0, apply death penalty and transition
+  // to the appropriate screen (death or permadeath). Spec §12.3.
+  // Exploration mode (affectsGameplay=false) skips death entirely.
+  // Guard: only trigger death if still on "playing" screen to prevent
+  // re-applying the penalty if this function is called after screen transition.
+  if (affectsGameplay && isPlayerDead(healthBridge) && store.screen === "playing") {
+    applyDeathPenalty();
   }
 }

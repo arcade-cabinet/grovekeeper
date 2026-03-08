@@ -4,6 +4,10 @@
  */
 
 import { batch } from "@legendapp/state";
+import { initializeEventState } from "@/game/events/eventScheduler";
+import { initializeChainState } from "@/game/quests/questChainEngine";
+import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
+import { initializeMarketEventState } from "@/game/systems/marketEvents";
 import {
   calculatePrestigeBonus,
   canPrestige,
@@ -11,16 +15,12 @@ import {
   getPrestigeResetState,
   getUnlockedPrestigeSpecies,
 } from "@/game/systems/prestige";
-import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
-import { canAffordToolUpgrade, getToolUpgradeTier } from "@/game/systems/toolUpgrades";
-import { initializeChainState } from "@/game/quests/questChainEngine";
-import { initializeEventState } from "@/game/events/eventScheduler";
-import { initializeMarketEventState } from "@/game/systems/marketEvents";
 import { initializeMarketState } from "@/game/systems/supplyDemand";
+import { canAffordToolUpgrade, getToolUpgradeTier } from "@/game/systems/toolUpgrades";
 import { initializeMerchantState } from "@/game/systems/travelingMerchant";
-import { clearAllChunkDiffs } from "@/game/world/chunkPersistence";
 import { showToast } from "@/game/ui/Toast";
-import { gameState$, getState, initialState } from "./core";
+import { clearAllChunkDiffs } from "@/game/world/chunkPersistence";
+import { gameState$, getState, type initialState } from "./core.ts";
 
 export function expandGrid(): boolean {
   const state = getState();

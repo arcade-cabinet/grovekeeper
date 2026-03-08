@@ -7,7 +7,7 @@
  * and is smoke-tested by the integration in ToolWheel.tsx.
  */
 
-import { shouldToggleToolWheel } from "./toolWheelLogic";
+import { shouldToggleToolWheel } from "./toolWheelLogic.ts";
 
 // ---------------------------------------------------------------------------
 // shouldToggleToolWheel (Spec §11)

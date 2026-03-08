@@ -109,16 +109,16 @@ When no valid action is available, the action button is greyed out and disabled.
 
 ## Canvas Configuration
 
-The R3F Canvas is configured for PSX aesthetic and mobile-first touch handling:
+The R3F Canvas is configured for modern Zelda-style rendering and mobile-first touch handling:
 
 ```tsx
 <Canvas
   gl={{
-    antialias: false,
-    pixelRatio: 1,
-    toneMapping: NoToneMapping,
-    outputColorSpace: LinearSRGBColorSpace,
+    antialias: true,
+    toneMapping: ACESFilmicToneMapping,
+    outputColorSpace: SRGBColorSpace,
   }}
+  dpr={[1, 2]}
 />
 ```
 

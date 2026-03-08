@@ -3,38 +3,118 @@
     "bat-loot": {
       "drops": [
         { "resource": "sap", "min": 1, "max": 3, "chance": 0.8 },
-        { "resource": "fruit", "min": 1, "max": 2, "chance": 0.3 }
+        { "resource": "fiber", "min": 1, "max": 2, "chance": 0.5 }
       ],
       "rareDrop": { "resource": "acorns", "min": 2, "max": 5, "chance": 0.05 }
+    },
+    "sprite-loot": {
+      "drops": [
+        { "resource": "sap", "min": 1, "max": 2, "chance": 0.7 },
+        { "resource": "seeds", "min": 1, "max": 2, "chance": 0.4 }
+      ],
+      "rareDrop": { "resource": "acorns", "min": 1, "max": 3, "chance": 0.06 }
+    },
+    "killer-pig-loot": {
+      "drops": [
+        { "resource": "meat", "min": 2, "max": 5, "chance": 1.0 },
+        { "resource": "hide", "min": 1, "max": 3, "chance": 0.8 }
+      ],
+      "rareDrop": { "resource": "fiber", "min": 3, "max": 6, "chance": 0.1 }
+    },
+    "abomination-loot": {
+      "drops": [
+        { "resource": "ore", "min": 1, "max": 3, "chance": 0.7 },
+        { "resource": "sap", "min": 2, "max": 4, "chance": 0.5 }
+      ],
+      "rareDrop": { "resource": "metal_scrap", "min": 2, "max": 4, "chance": 0.08 }
+    },
+    "elk-demon-loot": {
+      "drops": [
+        { "resource": "hide", "min": 3, "max": 6, "chance": 1.0 },
+        { "resource": "acorns", "min": 2, "max": 5, "chance": 0.7 },
+        { "resource": "meat", "min": 2, "max": 4, "chance": 0.6 }
+      ],
+      "rareDrop": { "resource": "seeds", "min": 3, "max": 7, "chance": 0.12 }
+    },
+    "goliath-loot": {
+      "drops": [
+        { "resource": "timber", "min": 4, "max": 8, "chance": 1.0 },
+        { "resource": "stone", "min": 3, "max": 6, "chance": 0.8 },
+        { "resource": "fiber", "min": 2, "max": 5, "chance": 0.5 }
+      ],
+      "rareDrop": { "resource": "ore", "min": 3, "max": 6, "chance": 0.1 }
+    },
+    "bigfoot-loot": {
+      "drops": [
+        { "resource": "hide", "min": 4, "max": 7, "chance": 1.0 },
+        { "resource": "meat", "min": 3, "max": 6, "chance": 0.9 },
+        { "resource": "timber", "min": 2, "max": 4, "chance": 0.4 }
+      ],
+      "rareDrop": { "resource": "seeds", "min": 4, "max": 8, "chance": 0.1 }
+    },
+    "plague-doctor-loot": {
+      "drops": [
+        { "resource": "herbs", "min": 3, "max": 6, "chance": 1.0 },
+        { "resource": "fiber", "min": 2, "max": 4, "chance": 0.7 },
+        { "resource": "berries", "min": 1, "max": 3, "chance": 0.4 }
+      ],
+      "rareDrop": { "resource": "seeds", "min": 3, "max": 5, "chance": 0.15 }
     },
     "skeleton-loot": {
       "drops": [
         { "resource": "timber", "min": 2, "max": 5, "chance": 0.9 },
-        { "resource": "acorns", "min": 1, "max": 3, "chance": 0.5 }
+        { "resource": "metal_scrap", "min": 1, "max": 3, "chance": 0.6 },
+        { "resource": "acorns", "min": 1, "max": 3, "chance": 0.4 }
       ],
-      "rareDrop": { "resource": "sap", "min": 5, "max": 10, "chance": 0.1 }
+      "rareDrop": { "resource": "ore", "min": 2, "max": 5, "chance": 0.1 }
     },
     "knight-loot": {
       "drops": [
-        { "resource": "timber", "min": 3, "max": 8, "chance": 1.0 },
-        { "resource": "sap", "min": 2, "max": 5, "chance": 0.7 },
-        { "resource": "acorns", "min": 2, "max": 4, "chance": 0.5 }
+        { "resource": "metal_scrap", "min": 3, "max": 7, "chance": 1.0 },
+        { "resource": "timber", "min": 3, "max": 6, "chance": 0.8 },
+        { "resource": "ore", "min": 2, "max": 4, "chance": 0.6 }
       ],
-      "rareDrop": { "resource": "fruit", "min": 5, "max": 12, "chance": 0.15 }
+      "rareDrop": { "resource": "hide", "min": 5, "max": 10, "chance": 0.15 }
+    },
+    "werewolf-loot": {
+      "drops": [
+        { "resource": "hide", "min": 5, "max": 9, "chance": 1.0 },
+        { "resource": "meat", "min": 4, "max": 7, "chance": 0.9 },
+        { "resource": "herbs", "min": 2, "max": 4, "chance": 0.4 }
+      ],
+      "rareDrop": { "resource": "seeds", "min": 5, "max": 10, "chance": 0.12 }
+    },
+    "cyclops-loot": {
+      "drops": [
+        { "resource": "stone", "min": 5, "max": 10, "chance": 1.0 },
+        { "resource": "ore", "min": 3, "max": 6, "chance": 0.8 },
+        { "resource": "metal_scrap", "min": 2, "max": 5, "chance": 0.5 }
+      ],
+      "rareDrop": { "resource": "timber", "min": 6, "max": 12, "chance": 0.12 }
+    },
+    "wraith-loot": {
+      "drops": [
+        { "resource": "sap", "min": 4, "max": 8, "chance": 1.0 },
+        { "resource": "acorns", "min": 3, "max": 6, "chance": 0.7 }
+      ],
+      "rareDrop": { "resource": "seeds", "min": 5, "max": 10, "chance": 0.15 }
     },
     "hedge-loot": {
       "drops": [
         { "resource": "timber", "min": 1, "max": 3, "chance": 0.9 },
-        { "resource": "sap", "min": 1, "max": 2, "chance": 0.4 }
+        { "resource": "fiber", "min": 1, "max": 3, "chance": 0.6 }
       ],
-      "rareDrop": { "resource": "fruit", "min": 2, "max": 4, "chance": 0.08 }
+      "rareDrop": { "resource": "seeds", "min": 2, "max": 4, "chance": 0.08 }
     },
-    "sprite-loot": {
+    "devil-loot": {
       "drops": [
-        { "resource": "sap", "min": 1, "max": 1, "chance": 0.6 },
-        { "resource": "fruit", "min": 1, "max": 1, "chance": 0.2 }
+        { "resource": "ore", "min": 8, "max": 15, "chance": 1.0 },
+        { "resource": "metal_scrap", "min": 6, "max": 12, "chance": 1.0 },
+        { "resource": "sap", "min": 10, "max": 20, "chance": 1.0 },
+        { "resource": "seeds", "min": 8, "max": 15, "chance": 1.0 },
+        { "resource": "acorns", "min": 10, "max": 20, "chance": 1.0 }
       ],
-      "rareDrop": { "resource": "acorns", "min": 1, "max": 2, "chance": 0.04 }
+      "rareDrop": { "resource": "hide", "min": 15, "max": 25, "chance": 1.0 }
     }
   },
   "despawnTimerSeconds": 60,

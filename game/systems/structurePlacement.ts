@@ -8,7 +8,6 @@
 
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import structuresConfig from "@/config/game/structures.json" with { type: "json" };
-import type { ResourceType } from "@/game/config/resources";
 import type {
   FarmStructureCategory,
   StructureComponent,

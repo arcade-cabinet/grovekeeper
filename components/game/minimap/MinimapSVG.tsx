@@ -11,7 +11,6 @@
  * Spec §17.6 (Map & Navigation).
  */
 
-import React from "react";
 import Svg, {
   Circle as SvgCircle,
   Polygon as SvgPolygon,
@@ -177,7 +176,7 @@ export function MinimapSVG({ snapshot, size, onCampfirePress }: MinimapSVGProps)
       })}
 
       {/* Player — always at center, pulsing gold */}
-      {player && <PulsingPlayerDot cx={size / 2 + halfCell} cy={size / 2 + halfCell} />}
+      {player ? <PulsingPlayerDot cx={size / 2 + halfCell} cy={size / 2 + halfCell} /> : null}
     </Svg>
   );
 }

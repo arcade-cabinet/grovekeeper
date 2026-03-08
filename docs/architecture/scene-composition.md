@@ -101,11 +101,11 @@ Target: under 50 draw calls on mobile.
 <Canvas
   shadows
   gl={{
-    antialias: false,        // PSX aesthetic -- no smoothing
-    pixelRatio: 1,           // 1:1 pixels, no HiDPI scaling
+    antialias: true,         // MSAA for smooth edges
     powerPreference: 'high-performance',
     alpha: false,            // No transparency needed
   }}
+  dpr={[1, 2]}               // Device-native pixel ratio
   camera={{
     fov: 65,
     near: 0.1,
@@ -113,18 +113,18 @@ Target: under 50 draw calls on mobile.
     position: [0, 1.6, 0],  // Eye height
   }}
   onCreated={({ gl }) => {
-    gl.toneMapping = THREE.NoToneMapping;  // PSX: no tone mapping
-    gl.outputColorSpace = THREE.LinearSRGBColorSpace;
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    gl.outputColorSpace = THREE.SRGBColorSpace;
   }}
 >
 ```
 
-### PSX Rendering Settings
+### Modern Zelda-Style Rendering Settings
 
 | Setting | Value | Why |
 |---------|-------|-----|
-| antialias | false | Crispy pixel edges |
-| pixelRatio | 1 | No HiDPI -- deliberate chunky pixels |
+| antialias | true | MSAA for smooth, polished edges |
+| dpr | [1, 2] | Device-native pixel ratio for sharp output |
 | toneMapping | None | Raw colors, no HDR processing |
 | colorSpace | LinearSRGB | Flat shading, no gamma curve |
 | Shadow map size | 512 (mobile) / 1024 (desktop) | Low-res shadows match aesthetic |

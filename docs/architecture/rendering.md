@@ -2,13 +2,13 @@
 
 > **PARTIALLY SUPERSEDED (2026-03-07):** Several rendering details have changed. See `docs/plans/2026-03-07-unified-game-design.md` Sections 2 and 5. Key corrections:
 >
-> - **Trees use 3DPSX GLB models** (8 base + 6 winter variants), not procedural SPS geometry. Growth = scale per stage. ~50 lines replaces 951-line SPS generator.
-> - **NPCs use 3DPSX ChibiCharacter GLBs** with anime.js Lego-style animation, not procedural box primitives.
+> - **Trees use stylized GLB models** (8 base + 6 winter variants), not procedural SPS geometry. Growth = scale per stage. ~50 lines replaces 951-line SPS generator.
+> - **NPCs use ChibiCharacter GLBs** with anime.js Lego-style animation, not procedural box primitives.
 > - **First-person perspective** -- no visible player mesh. Player IS the camera with Rapier capsule collider.
 > - **No BorderTrees component** -- border/decorative trees are GLB instances, same as planted trees.
 > - **Instanced rendering keys:** `${speciesId}_${stage}_${season}[_night]` for trees.
 > - **Vertex budget:** ~30,000 per visible chunk (see unified doc Section 2).
-> - **Seasonal bushes:** 262 3DPSX GLBs (52 shapes x 5 seasons), swap GLB on season change.
+> - **Seasonal bushes:** 262 GLBs (52 shapes x 5 seasons), swap GLB on season change.
 >
 > The R3F declarative architecture, useFrame pattern, instanced mesh approach, and day/night cycle remain accurate.
 
@@ -122,9 +122,9 @@ First-person perspective -- the player IS the camera. No visible player mesh. A 
 
 Trees use Three.js `InstancedMesh` for efficient batch rendering. All trees of the same species share a single instanced draw call.
 
-### Tree Models (3DPSX GLBs)
+### Tree Models (Stylized GLBs)
 
-Trees use pre-made 3DPSX GLB models, not procedural geometry. 8 retro nature tree silhouettes + 72 tree_pack_1.1 models mapped to 15 species. Growth stages are scale-based:
+Trees use pre-made stylized GLB models, not procedural geometry. 8 nature tree silhouettes + 72 tree_pack_1.1 models mapped to 15 species. Growth stages are scale-based:
 
 | Stage | Name | Approach |
 |-------|------|----------|

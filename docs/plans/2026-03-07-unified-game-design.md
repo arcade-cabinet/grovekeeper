@@ -32,13 +32,13 @@
 
 **Become a Grovekeeper.** The name IS the game. You're a nobody who sets out into an infinite procedural world and discovers the dormant Grovekeepers — ancient guardians of tree species hidden deep within hedge labyrinths. Find them all, unlock every species, master the land. Survival-style resource accumulation and consumption: hunt, fish, plant, farm, gather minerals, forge tools. Every comfort is earned.
 
-**PSX Aesthetic.** No antialiasing. Pixel ratio 1. Flat shading. Chunky geometry. Low segment counts. Pixelated textures (NearestFilter). This is an intentional art direction, not a limitation.
+**Bright Whimsical Zelda-Style.** Modern rendering with MSAA, smooth shading, device-native pixel ratio. Saturated greens, warm golds, soft blues. Stylized low-poly geometry for whimsy (not as a technical constraint). Think Wind Waker / Breath of the Wild crossed with grove-tending survival.
 
 **Seeded Determinism.** Same seed = same world, always. Zero Math.random(). All randomness via `scopedRNG(scope, worldSeed, ...extra)`. Seed phrases: "Adjective Adjective Noun" using brand-aligned word lists.
 
 **Mobile-First.** 375px portrait minimum. 44px touch targets. <50 draw calls. <30K visible vertices. 55+ FPS on mid-range mobile.
 
-**Models Where Craft Matters, Procedural Where Variation Matters.** 3DPSX GLB models for trees, NPCs, structures, props, fences, seasonal bushes, hedge maze, crops, tools. Procedural for terrain, water, sky, weather, audio.
+**Models Where Craft Matters, Procedural Where Variation Matters.** Chibi-style GLB models for trees, NPCs, structures, props, fences, seasonal bushes, hedge maze, crops, tools. Procedural for terrain, water, sky, weather, audio.
 
 ---
 
@@ -60,21 +60,21 @@ This is the critical design decision. The Grok conversation demonstrated sophist
 
 ### GLB Models (the visual foundation)
 
-The 3DPSX library IS the game's visual identity. PSX-native models with pixel-art texture atlases, intentionally low-poly, stylistically coherent.
+The 3DPSX library provides the game's model foundation. Chibi-style low-poly models with texture atlases, stylistically coherent with the Wind Waker-inspired aesthetic.
 
 | Element | Why Models | Source | Count |
 |---------|-----------|--------|-------|
-| **Trees** | 8 hand-crafted PSX tree silhouettes (32-45 KB each). Growth stages via scale. Seasons via winter variant GLB swap or color tint. Replaces 951-line SPS generator with ~50 lines. | 3DPSX Retro Nature trees | 8 + 6 winter |
-| **NPCs** | Mix-and-match chibi characters with professional PSX modeling. Night glow via "pr" emission variants. | 3DPSX ChibiCharacters + individual items | 7 base + 33 items |
+| **Trees** | 8 hand-crafted stylized tree silhouettes (32-45 KB each). Growth stages via scale. Seasons via winter variant GLB swap or color tint. Replaces 951-line SPS generator with ~50 lines. | 3DPSX Retro Nature trees | 8 + 6 winter |
+| **NPCs** | Mix-and-match chibi characters with professional low-poly modeling. Night glow via "pr" emission variants. | 3DPSX ChibiCharacters + individual items | 7 base + 33 items |
 | **Farm structures** | Barn, 5 houses, windmill, water well, 2 campfires, chicken coops, storage, notice board, lamp. 2-65 KB each. | 3DPSX Farm Assets | 85 |
 | **Seasonal bushes** | 52 bush shapes x 5 seasons (spring/summer/autumn/winter/dead) with baked seasonal textures. Swap GLB, no material changes. | 3DPSX All Bushes | 262 |
 | **Fences/walls** | Brick, drystone, wooden, metal, plackard, plaster, white picket. Corners, gates, broken variants. | 3DPSX Fences | 79 |
 | **Trees (decorative)** | Border/background trees. 8 types + 6 winter variants. Player-planted trees also use GLB models with scale-per-stage growth. | 3DPSX Retro Nature | 14 |
 | **Grass blades** | 9 blade types + grass bush + patches. 1-2 KB each. Instance thousands. | 3DPSX Retro Nature | 11 |
-| **Tools** | Player holds at point-blank range. 56-127 verts, shared 128x128 texture atlas. | 3DPSX PSX Tools | 5 |
+| **Tools** | Player holds at point-blank range. 56-127 verts, shared 128x128 texture atlas. | 3DPSX Tools | 5 |
 | **Crops** | Apple, carrot, cucumber, pumpkin, tomato. Farming expansion ready. | 3DPSX Farm Assets | 5 |
-| **Modular structures** | Walls, floors, roofs for player custom building. | PSX Mega Pack II | ~210 |
-| **Survival props** | Crates, barrels, shelves, buckets, jerry cans, toolboxes, lamps (on/off). | PSX Mega Pack II | ~137 |
+| **Modular structures** | Walls, floors, roofs for player custom building. | Mega Pack II | ~210 |
+| **Survival props** | Crates, barrels, shelves, buckets, jerry cans, toolboxes, lamps (on/off). | Mega Pack II | ~137 |
 | **Kitchen/food** | Market/trading visuals: pizza, toast, bowls, utensils, bottles. | 3DPSX Kitchen Props | 48 |
 | **Fantasy props** | Books/scrolls, bottles, treasure, crates, barrels. Merchant/NPC interiors. | 3DPSX Fantasy Mega Pack | ~10 |
 | **Villager NPCs (composite)** | Additional NPC variety. Needs Blender split into individual meshes. | 3DPSX Fantasy Villager NPCs | 1 (multi-mesh) |
@@ -179,14 +179,14 @@ No fishing rod (craft it). No pickaxe (forge it). No warm clothing (make it). Pr
 
 | Structure | Effect | Source | Unlock |
 |-----------|--------|--------|--------|
-| Campfire | Heart regen, warmth, cooking, fast travel point | 3DPSX Farm campfire GLB | Start (taught in tutorial) |
-| Lean-to Shelter | Sleep to advance time, weather protection | 3DPSX Farm storage GLB | Craft: 10 Timber |
-| Windbreak Wall | Block wind damage in radius | 3DPSX Farm fence GLBs | Craft: 8 Timber + 4 Stone |
-| Storage Chest | Safe resource storage (death-proof) | PSX Mega Pack crate GLB | Craft: 12 Timber + 2 Stone |
-| Rain Collector | Water supply during drought | 3DPSX Farm barrel GLB | Craft: 6 Timber + 4 Stone |
-| Herb Garden | Grow healing herbs renewable | 3DPSX Farm terrain GLB | Craft: 8 Timber + Herb seeds |
-| Forge | Upgrade tools, smelt ore | PSX Mega Pack structure GLB | Craft: 20 Stone + 10 Ore + 15 Timber |
-| Fishing Dock | Better fishing yield at water | 3DPSX Farm wooden frame GLB | Craft: 15 Timber + 5 Stone |
+| Campfire | Heart regen, warmth, cooking, fast travel point | Farm campfire GLB | Start (taught in tutorial) |
+| Lean-to Shelter | Sleep to advance time, weather protection | Farm storage GLB | Craft: 10 Timber |
+| Windbreak Wall | Block wind damage in radius | Farm fence GLBs | Craft: 8 Timber + 4 Stone |
+| Storage Chest | Safe resource storage (death-proof) | Mega Pack crate GLB | Craft: 12 Timber + 2 Stone |
+| Rain Collector | Water supply during drought | Farm barrel GLB | Craft: 6 Timber + 4 Stone |
+| Herb Garden | Grow healing herbs renewable | Farm terrain GLB | Craft: 8 Timber + Herb seeds |
+| Forge | Upgrade tools, smelt ore | Mega Pack structure GLB | Craft: 20 Stone + 10 Ore + 15 Timber |
+| Fishing Dock | Better fishing yield at water | Farm wooden frame GLB | Craft: 15 Timber + 5 Stone |
 
 ### Architecture: Config-Driven
 
@@ -468,7 +468,7 @@ Each labyrinth is biome-appropriate: the Weeping Willow Grovekeeper is in Wetlan
 
 ### 15 Species (12 base + 3 rare Grovekeeper-unlocked)
 
-GLB-based from 3DPSX tree packs. 8 retro nature trees + 72 tree_pack_1.1 models = 80 unique silhouettes mapped to 15 species. Each species has:
+GLB-based from stylized tree packs. 8 nature trees + 72 tree_pack_1.1 models = 80 unique silhouettes mapped to 15 species. Each species has:
 - Assigned GLB model(s) from the tree packs (seeded selection for variation)
 - Scale per growth stage (seed=0.1x, sprout=0.25x, sapling=0.5x, mature=1.0x, old growth=1.3x)
 - Season color tint via material uniform OR winter variant GLB swap (6 winter models available)
@@ -539,7 +539,7 @@ GLB-based from 3DPSX tree packs. 8 retro nature trees + 72 tree_pack_1.1 models 
 
 1. Screen shake (camera rotation perturbation, NOT position)
 2. Camera FOV punch (subtle +2 degree bump)
-3. Particle burst at hit point (max 32, PSX unlit quads)
+3. Particle burst at hit point (max 32, stylized unlit quads)
 4. Sound trigger via AudioManager
 5. Haptic feedback (Capacitor)
 6. Target entity reaction (tree shake, rock pulse)
@@ -575,7 +575,7 @@ Not every tool is given at the start. Survival means earning your toolkit (see S
 | Tool | GLB | Game Action | Craft Recipe | Unlock Condition |
 |------|-----|-------------|--------------|-----------------|
 | Fishing Rod | Procedural (rod + line) | Fish at ponds/rivers | 5 Timber + 3 String | Reach first pond |
-| Hammer | PSX Mega Pack tool GLB | Build/repair structures | 8 Timber + 4 Stone | Craft at workbench |
+| Hammer | Mega Pack tool GLB | Build/repair structures | 8 Timber + 4 Stone | Craft at workbench |
 | Needle | Procedural (small spike) | Sew clothing from Hide | 2 Ore + 1 Timber | Forge required |
 | Pickaxe | Pickaxe.glb (94v) | Mine rock formations | 6 Timber + 4 Stone | Forge required |
 
@@ -726,7 +726,7 @@ Raw food restores hunger but provides minimal healing. Cooking at a Campfire tra
 - Hunger bar: 100 max, drains at 1/min (difficulty-scaled: Seedling 0.5/min, Ironwood 2/min)
 - 0 hunger = no stamina regen + slow heart drain (0.25 hearts/min)
 - Eating past 80 hunger = "Well Fed" buff (+10% stamina regen for 120s)
-- Food spoilage: none (PSX simplicity — food stacks indefinitely)
+- Food spoilage: none (simplicity — food stacks indefinitely)
 
 ### 7.4 Complete Recipe Table (28 Recipes, 4 Tiers)
 
@@ -879,21 +879,21 @@ effectiveRate = baseRate × seasonalModifier × supplyDemandMultiplier × market
 
 ### 7.6 Complete Structure List
 
-Structures split into two categories: **Essential** (survival/utility, from Section 3) and **Upgrade Chains** (base building, Fallout-style kitbashing from PSX assets). All structures rendered as GLB models from 3DPSX Farm pack + PSX Mega Pack II.
+Structures split into two categories: **Essential** (survival/utility, from Section 3) and **Upgrade Chains** (base building, modular kitbashing). All structures rendered as GLB models from the Farm pack + Mega Pack II.
 
 #### Essential Structures (survival foundations, taught in Section 3)
 
 | Structure | Cost | Level | Effect | GLB Source |
 |-----------|------|-------|--------|-----------|
-| Campfire | 5 Stone + 5 Timber | Start | Heart regen (+0.5/min), warmth, cooking, fast travel | 3DPSX Farm campfire |
-| Lean-to Shelter | 10 Timber | 2 | Sleep (advance time), weather protection | 3DPSX Farm storage |
-| Windbreak Wall | 8 Timber + 4 Stone | 3 | Block wind damage in 3-tile radius | 3DPSX Farm fence |
-| Storage Chest | 12 Timber + 2 Stone | 4 | Safe resource storage (death-proof) | PSX Mega Pack crate |
-| Rain Collector | 6 Timber + 4 Stone | 5 | Water supply during drought, auto-water 1 tile | 3DPSX Farm barrel |
-| Herb Garden | 8 Timber + Herb seeds | 6 | Grow healing herbs (renewable) | 3DPSX Farm terrain |
-| Fishing Dock | 15 Timber + 5 Stone | 7 | Better fishing yield at water (+30%) | 3DPSX Farm wooden frame |
-| Forge | 20 Stone + 10 Ore + 15 Timber | 8 | Smelt ore, upgrade tools, advanced crafting | PSX Mega Pack structure |
-| Cooking Pot | 10 Stone + 5 Iron Ingots + 8 Timber | 12 | Advanced cooking recipes (see 7.3) | PSX Mega Pack cauldron |
+| Campfire | 5 Stone + 5 Timber | Start | Heart regen (+0.5/min), warmth, cooking, fast travel | Farm campfire |
+| Lean-to Shelter | 10 Timber | 2 | Sleep (advance time), weather protection | Farm storage |
+| Windbreak Wall | 8 Timber + 4 Stone | 3 | Block wind damage in 3-tile radius | Farm fence |
+| Storage Chest | 12 Timber + 2 Stone | 4 | Safe resource storage (death-proof) | Mega Pack crate |
+| Rain Collector | 6 Timber + 4 Stone | 5 | Water supply during drought, auto-water 1 tile | Farm barrel |
+| Herb Garden | 8 Timber + Herb seeds | 6 | Grow healing herbs (renewable) | Farm terrain |
+| Fishing Dock | 15 Timber + 5 Stone | 7 | Better fishing yield at water (+30%) | Farm wooden frame |
+| Forge | 20 Stone + 10 Ore + 15 Timber | 8 | Smelt ore, upgrade tools, advanced crafting | Mega Pack structure |
+| Cooking Pot | 10 Stone + 5 Iron Ingots + 8 Timber | 12 | Advanced cooking recipes (see 7.3) | Mega Pack cauldron |
 
 #### Growth Boost Chain: Well → Irrigation → Sprinkler
 
@@ -1004,7 +1004,7 @@ Seeds are the core progression currency — unlocking new species drives explora
 
 These 10 named NPCs are the **Tutorial Village residents** — the player's home base population. In the open world, **procedural NPCs** populate generated villages using the same ChibiCharacter GLB system with seeded personalities drawn from the 10 personality profiles above. Named NPCs can also appear at procedural locations (e.g., Hazel shows up at merchant camps as a wandering trader, Thorn appears at ranger outposts near labyrinths).
 
-### Chibi NPC Visuals (3DPSX ChibiCharacters)
+### Chibi NPC Visuals (ChibiCharacter GLBs)
 
 - **GLB-based:** 7 base characters (basemesh, archer, knight, merchant, ninja, student) + 33 mix-and-match items (6 hair, hat, 3 outfits, 5 armor, shoes, bags, skirts, pants)
 - **"pr" emission variants** for night glow (matches Ghost Birch pattern)
@@ -1014,7 +1014,7 @@ These 10 named NPCs are the **Tutorial Village residents** — the player's home
   - Walk: arm swing (shoulder rotation ±30°) + leg swing (hip rotation ±25°) + vertical bounce, synced to movement speed
   - Look-around: head yaw rotation ±45° on random interval (seeded)
   - Talk: head nod + slight arm gesture
-  - All easing via anime.js timeline — PSX-authentic rigid part animation (exactly how PS1 characters moved)
+  - All easing via anime.js timeline — rigid part animation (chibi-style Lego movement)
 
 ### Quest System
 
@@ -1174,7 +1174,7 @@ Finding all 14 Grovekeepers and unlocking the Worldroot doesn't end the game —
 
 **What changes:**
 - **All 15 species permanently unlocked** — they spawn naturally in all biomes
-- **Base building mode activates** — Fallout-style kitbashing from PSX assets (not Minecraft block placement)
+- **Base building mode activates** — modular kitbashing (not Minecraft block placement)
 - **Base raids begin** — defend your settlements from corrupted forest creatures
 - **Prestige cosmetics unlock** — 5 visual border themes (Stone Wall → Ancient Runes) earned via NG+ milestones
 - **Difficulty escalation** — world enemies scale up, weather more extreme, labyrinth re-sealing (re-runnable with harder variants)
@@ -1194,23 +1194,23 @@ Finding all 14 Grovekeepers and unlocking the Worldroot doesn't end the game —
 
 ### Base Building (Available During AND After Main Quest)
 
-Not Minecraft-style block placement. **Fallout-style kitbashing** — snap together PSX asset pieces to create settlements.
+Not Minecraft-style block placement. **Modular kitbashing** — snap together stylized asset pieces to create settlements.
 
 **How it works:**
 - Place structures from a radial build menu (unlocked via crafting progression)
 - Assets snap to a coarse grid (2x2 tile footprint minimum)
-- Buildings composed of PSX Mega Pack structural pieces: walls, roofs, floors, doors, windows, fences
-- Light sources (PSX Mega Pack on/off variants) placed inside/outside buildings
+- Buildings composed of Mega Pack structural pieces: walls, roofs, floors, doors, windows, fences
+- Light sources (Mega Pack on/off variants) placed inside/outside buildings
 - Props (barrels, crates, furniture, kitchen items) placed freely inside structures
 - Functional stations: forge, herb garden, fishing dock, storage chest placed as gameplay elements within your base
 
-**Available PSX assets for base building:**
-- 14 PSX Mega Pack II buildings (pre-made structures)
-- 7 PSX Mega Pack II structural pieces (modular walls/roofs/floors)
-- 137 PSX Mega Pack II props (barrels, crates, furniture, tools, food, decoration)
-- 10 PSX Mega Pack II light sources (torches, lanterns, candles — on/off toggle)
-- 79 3DPSX fences (7 types for perimeter)
-- 85 3DPSX Farm assets (functional structures: barn, windmill, well, campfires)
+**Available assets for base building:**
+- 14 Mega Pack II buildings (pre-made structures)
+- 7 Mega Pack II structural pieces (modular walls/roofs/floors)
+- 137 Mega Pack II props (barrels, crates, furniture, tools, food, decoration)
+- 10 Mega Pack II light sources (torches, lanterns, candles — on/off toggle)
+- 79 fence GLBs (7 types for perimeter)
+- 85 Farm assets (functional structures: barn, windmill, well, campfires)
 
 **Base building unlocks progressively:**
 - Level 5: Basic structures (campfire, lean-to, storage)
@@ -1257,7 +1257,7 @@ Settlements attract attention. The bigger and more valuable your base, the more 
 - 8-stop color interpolation (smooth, not 4-phase snap)
 - Clouds rendered IN the sky shader (procedural noise in horizon band, zero draw calls)
 - Cloud density driven by weather state (0.0 clear -> 0.55 rain)
-- No star particles, no moon mesh -- PSX atmospheric darkness is sufficient
+- No star particles, no moon mesh -- atmospheric darkness is sufficient
 
 ### Lighting
 
@@ -1332,7 +1332,7 @@ Settlements attract attention. The bigger and more valuable your base, the more 
 
 ### Audio Assets from Library
 
-- `/Volumes/home/assets/Audio/Retro Sounds 1 & 2/` -- PSX-matched SFX (99 files)
+- `/Volumes/home/assets/Audio/Retro Sounds 1 & 2/` -- stylized SFX (99 files)
 - `/Volumes/home/assets/Audio/Foley Sounds/` -- Ambient nature (85 files)
 - `/Volumes/home/assets/Audio/Music Loops/` -- Background music (29 loops)
 - These SUPPLEMENT procedural synthesis, not replace it
@@ -1432,7 +1432,7 @@ Fire when player encounters features for first time. 30-second global cooldown. 
 <a id="assets"></a>
 ## 13. Asset Integration Strategy
 
-### Priority 1: 3DPSX Core (PSX-native, perfect aesthetic match)
+### Priority 1: 3DPSX Core (chibi-style low-poly, perfect aesthetic match)
 
 | Asset Pack | Count | Use For |
 |-----------|-------|---------|
@@ -1441,7 +1441,7 @@ Fire when player encounters features for first time. 30-second global cooldown. 
 | **3DPSX All Bushes** | 262 GLBs | Seasonal decoration: 52 shapes x 5 seasons (spring/summer/autumn/winter/dead). Swap GLB on season change. ~95-115 KB each. |
 | **3DPSX Fences** | 79 GLBs | Chunk borders, player placement: brick, drystone, wooden, metal, plackard, plaster, white picket. 9-190 KB each. |
 | **3DPSX Retro Nature** | 40 GLBs | Trees (8 + 6 winter), bushes (8 + 6 winter), grass (9 + 2 patches). 1-45 KB each. |
-| **3DPSX PSX Tools** | 5 GLBs | Already proven. Tool view models: Axe (56v), Hatchet (56v), Hoe (70v), Pickaxe (94v), Shovel (127v). |
+| **3DPSX Tools** | 5 GLBs | Already proven. Tool view models: Axe (56v), Hatchet (56v), Hoe (70v), Pickaxe (94v), Shovel (127v). |
 
 ### Priority 2: 3DPSX Extended
 
@@ -1452,22 +1452,22 @@ Fire when player encounters features for first time. 30-second global cooldown. 
 | **3DPSX Fantasy Villager NPCs** | 1 composite | Additional NPC variety. Needs Blender split into individual meshes. |
 | **3DPSX Fantasy Village Buildings** | 1 composite | Pre-placed village structures. Needs Blender split. |
 | **3DPSX Mega Nature** | 1 composite (230 KB) | Additional nature variety. |
-| **PSX Mega Pack II** | 549 GLBs | Modular structures (210), survival props (137), buildings (14), lights with on/off (10), tools (31). Survival mode emphasis. |
+| **Mega Pack II** | 549 GLBs | Modular structures (210), survival props (137), buildings (14), lights with on/off (10), tools (31). Survival mode emphasis. |
 
-### Priority 3: Supplementary (non-PSX, may need style adjustment)
+### Priority 3: Supplementary (may need style adjustment)
 
 | Asset Pack | Count | Use For |
 |-----------|-------|---------|
-| Nature Kit (Kenney) | 329 GLBs | Flowers, additional rocks, bridges (lower-poly Kenney style, may clash with PSX) |
+| Nature Kit (Kenney) | 329 GLBs | Flowers, additional rocks, bridges (Kenney style, may need adjustment) |
 | Audio (Retro Sounds) | 99 files | Supplement Tone.js procedural SFX |
 | Audio (Foley) | 85 files | Ambient nature sounds |
 | Audio (Music Loops) | 29 files | Background music |
-| Food Kit / Holiday Kit (Kenney) | 300+ GLBs | Only if 3DPSX Kitchen doesn't cover enough |
+| Food Kit / Holiday Kit (Kenney) | 300+ GLBs | Only if Kitchen pack doesn't cover enough |
 
 ### Asset Pipeline
 
 1. Copy selected GLBs to `assets/models/` organized by category
-2. Shared texture atlases where possible (PSX Mega Pack already uses 512x512 atlases)
+2. Shared texture atlases where possible (Mega Pack already uses 512x512 atlases)
 3. `useGLTF.preload()` for critical models (tools, common structures)
 4. Lazy load biome-specific models on chunk entry
 5. Conversion scripts at `/Volumes/home/assets/scripts/` for any FBX->GLB needs
@@ -1485,9 +1485,9 @@ Fire when player encounters features for first time. 30-second global cooldown. 
 | Config JSON files (terrain, water, audio, npcAnimation, seasons, seedWords, combat, cooking, fishing) | NEW | Grok integration plan |
 | Wire difficulty multipliers to systems (growth, stamina, harvest, weather, combat, raids) | MODIFY | Game Modes design |
 | Difficulty config resolver `getDifficultyConfig(tier)` — single param, survival-only tiers | NEW | Game Modes design |
-| Copy 3DPSX GLBs to assets/: ChibiCharacters, Farm Assets, All Bushes, Fences, Retro Nature, Kitchen, Fantasy, PSX Mega Pack II | SETUP | 3DPSX asset library |
+| Copy GLBs to assets/: ChibiCharacters, Farm Assets, All Bushes, Fences, Retro Nature, Kitchen, Fantasy, Mega Pack II | SETUP | 3DPSX asset library |
 | Tone.js integration (add dependency, refactor AudioManager) | NEW | Audio design |
-| Split composite GLBs in Blender: Villager_NPCs_glb.glb, Buildings.glb, Mega_Nature.glb | SETUP | 3DPSX asset library |
+| Split composite GLBs in Blender: Villager_NPCs_glb.glb, Buildings.glb, Mega_Nature.glb | SETUP | Asset library |
 | Save system foundation (delta-only persistence, auto-save on visibilitychange, manual save) | NEW | Cross-cutting design |
 
 ### Phase 1: Core Visual Identity
@@ -1559,7 +1559,7 @@ Fire when player encounters features for first time. 30-second global cooldown. 
 
 | Task | New/Modify | Source |
 |------|-----------|--------|
-| Base building system (radial build menu, coarse grid snap, PSX asset placement) | NEW | Base building design |
+| Base building system (radial build menu, coarse grid snap, modular asset placement) | NEW | Base building design |
 | Structure placement (85 farm GLBs: barn, houses, windmill, well, campfires, crops) | NEW | 3DPSX Farm Assets |
 | Fence/wall system (79 GLBs: 7 types with corners, gates, broken variants) | NEW | 3DPSX Fences |
 | Structure upgrade paths (Lean-to → Cabin, Well → Irrigation, Market Stall → Trading Post) | NEW | Progression design |
@@ -1661,17 +1661,17 @@ All tuning constants in `config/game/*.json`. Systems read config, never hardcod
 - Balance tuning without code changes
 - Future modding support
 
-### PSX Aesthetic Enforcement
+### Modern Zelda-Style Rendering
 
 | Rule | Implementation |
 |------|---------------|
-| No antialiasing | `gl={{ antialias: false }}` on R3F Canvas |
-| Pixel ratio 1 | `gl={{ pixelRatio: 1 }}` on R3F Canvas |
-| No tone mapping | `gl={{ toneMapping: NoToneMapping }}` |
-| Linear color space | `gl={{ outputColorSpace: LinearSRGBColorSpace }}` |
-| Flat shading | `flatShading: true` on all MeshStandardMaterial |
-| Nearest filter | `NearestFilter` on all texture `.minFilter` / `.magFilter` |
-| Low segments | Cylinders: 6 radialSegments, Spheres: icosahedron detail 1 |
+| MSAA antialiasing | `gl={{ antialias: true }}` on R3F Canvas |
+| Device pixel ratio | Device-native `dpr` on R3F Canvas |
+| ACESFilmic tone mapping | `gl={{ toneMapping: ACESFilmicToneMapping }}` |
+| sRGB color space | `gl={{ outputColorSpace: SRGBColorSpace }}` |
+| Smooth shading | PBR `MeshStandardMaterial` with smooth normals |
+| Linear filtering | Default texture filtering for clean visuals |
+| Stylized geometry | Low-poly shapes for whimsy, not as constraint |
 
 ### Accessibility
 
@@ -1805,7 +1805,7 @@ Phase 3: DIALOGUE TREE
   → Selected topic expands to a conversation tree
   → World quest dialogue: 3-8 lines with 1-2 player response choices
   → Player choices affect tone (curious / cautious / bold) but NOT quest outcome
-     (PSX-era design: choices color the experience, not branch the plot)
+     (choices color the experience, not branch the plot)
   → Lore fragments embedded naturally: "The old ones... they didn't just guard
      the trees. They BECAME the trees. Rowan told me that, once, when I was young."
   → Seed variant determines WHICH lore fragment, WHICH phrasing, WHICH emotional beat

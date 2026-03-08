@@ -15,13 +15,13 @@
 import { loadGroveFromDb } from "@/game/db/queries";
 import { createGridCellEntity, createTreeEntity } from "@/game/ecs/archetypes";
 import { world } from "@/game/ecs/world";
+import type { QuestChainState } from "@/game/quests/types";
+import { gameState$, getState, initialState } from "@/game/stores/core";
 import type { FastTravelPoint } from "@/game/systems/fastTravel";
 import { getStageScale } from "@/game/systems/growth";
 import type { SpeciesProgress } from "@/game/systems/speciesDiscovery";
-import { gameState$, getState, initialState } from "@/game/stores/core";
-import type { QuestChainState } from "@/game/quests/types";
-import { chunkDiffs$, clearAllChunkDiffs } from "@/game/world/chunkPersistence";
 import type { ChunkDiff } from "@/game/world/chunkPersistence";
+import { chunkDiffs$, clearAllChunkDiffs } from "@/game/world/chunkPersistence";
 
 const gridCellsQuery = world.with("gridCell", "position");
 

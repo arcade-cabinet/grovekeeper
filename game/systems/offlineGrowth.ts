@@ -14,10 +14,15 @@
 
 import growthConfig from "@/config/game/growth.json" with { type: "json" };
 import weatherConfig from "@/config/game/weather.json" with { type: "json" };
-import { chunkDiffs$, saveChunkDiff, type ChunkDiff, type PlantedTree } from "@/game/world/chunkPersistence";
 import { getSpeciesById } from "@/game/config/species";
 import type { Season } from "@/game/systems/time";
 import type { WeatherType } from "@/game/systems/weather";
+import {
+  type ChunkDiff,
+  chunkDiffs$,
+  type PlantedTree,
+  saveChunkDiff,
+} from "@/game/world/chunkPersistence";
 
 const MAX_STAGE: number = growthConfig.maxStage;
 const MAX_OFFLINE_SECONDS = 86400; // 24 hours
@@ -160,7 +165,13 @@ export function calculateAllOfflineGrowth(
         watered: false,
       };
     }
-    return calculateOfflineGrowth(tree, elapsedSeconds, species, seasonMultiplier, weatherMultiplier);
+    return calculateOfflineGrowth(
+      tree,
+      elapsedSeconds,
+      species,
+      seasonMultiplier,
+      weatherMultiplier,
+    );
   });
 }
 
@@ -217,7 +228,12 @@ export function applyOfflineGrowthToChunkDeltas(
       if (!species) return planted;
 
       const result = calculateOfflineGrowth(
-        { speciesId: planted.speciesId, stage: planted.stage, progress: planted.progress, watered: false },
+        {
+          speciesId: planted.speciesId,
+          stage: planted.stage,
+          progress: planted.progress,
+          watered: false,
+        },
         elapsedSeconds,
         species,
         seasonMultiplier,
@@ -230,7 +246,11 @@ export function applyOfflineGrowthToChunkDeltas(
         if (result.stage > planted.stage) {
           stageAdvances += result.stage - planted.stage;
         }
-        return { ...planted, stage: result.stage as PlantedTree["stage"], progress: result.progress };
+        return {
+          ...planted,
+          stage: result.stage as PlantedTree["stage"],
+          progress: result.progress,
+        };
       }
 
       return planted;

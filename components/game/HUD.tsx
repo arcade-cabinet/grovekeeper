@@ -1,5 +1,5 @@
 /**
- * HUD -- Zelda-inspired minimal FPS overlay (Spec §24).
+ * HUD -- Zelda-inspired minimal FPS overlay (Spec S24).
  *
  * Design philosophy: The world IS the UI. The HUD should be nearly invisible.
  * - Hearts: top-left, always visible (like every Zelda game since 1986)
@@ -23,16 +23,16 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TargetInfo } from "@/components/player/TargetInfo";
 import { Icon } from "@/components/ui/icon";
-import { ACCENT, DARK } from "@/components/ui/tokens";
+import { ACCENT, HUD_PANEL, LIGHT } from "@/components/ui/tokens";
 import { grovekeeperSpiritsQuery, playerQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores";
 import { computeTimeState } from "@/game/systems/time";
 import { HeartsDisplay } from "./HeartsDisplay.tsx";
 
-// ── Pure exports (testable seams) ────────────────────────────────────────────
+// -- Pure exports (testable seams) --------------------------------------------
 /**
  * Compass bearing in degrees from player to target.
- * 0 = North (−Z axis), 90 = East (+X), 180 = South (+Z), 270 = West (−X).
+ * 0 = North (-Z axis), 90 = East (+X), 180 = South (+Z), 270 = West (-X).
  */
 export function resolveCompassBearing(
   playerX: number,
@@ -73,7 +73,7 @@ export function findNearestUndiscoveredSpirit(
   return nearest;
 }
 
-// ── Crosshair — Zelda-style subtle dot ───────────────────────────────────────
+// -- Crosshair -- Zelda-style subtle dot --------------------------------------
 
 function Crosshair() {
   return (
@@ -83,7 +83,7 @@ function Crosshair() {
   );
 }
 
-// ── Compass — golden arrow toward nearest spirit ─────────────────────────────
+// -- Compass -- golden arrow toward nearest spirit ----------------------------
 
 function Compass({ playerX, playerZ }: { playerX: number; playerZ: number }) {
   const poi = findNearestUndiscoveredSpirit([...grovekeeperSpiritsQuery], playerX, playerZ);
@@ -97,32 +97,31 @@ function Compass({ playerX, playerZ }: { playerX: number; playerZ: number }) {
         style={[styles.compassArrow, { transform: [{ rotate: `${bearing}deg` }] }]}
         accessibilityLabel={`Spirit at bearing ${Math.round(bearing)} degrees`}
       >
-        ◆
+        {"\u25C6"}
       </Text>
     </View>
   );
 }
 
-// ── Hunger indicator — tiny, only when < 100% ───────────────────────────────
+// -- Hunger indicator -- tiny, only when < 100% ------------------------------
 
 function HungerIndicator({ hunger }: { hunger: number }) {
   if (hunger >= 99.5) return null;
   const pct = Math.round(hunger);
-  const color = hunger < 25 ? ACCENT.ember : hunger < 50 ? ACCENT.amber : DARK.textSecondary;
+  const color = hunger < 25 ? ACCENT.ember : hunger < 50 ? ACCENT.amber : LIGHT.textSecondary;
   return (
     <Text style={[styles.hungerText, { color }]} pointerEvents="none">
-      {hunger < 25 ? "🍖" : ""} {pct}%
+      {hunger < 25 ? "\uD83C\uDF56" : ""} {pct}%
     </Text>
   );
 }
 
-// ── Stamina ring — appears around crosshair only when < max ──────────────────
+// -- Stamina ring -- appears around crosshair only when < max ----------------
 
 function StaminaRing({ stamina, maxStamina }: { stamina: number; maxStamina: number }) {
   if (stamina >= maxStamina - 0.5) return null;
   const pct = stamina / maxStamina;
   const color = pct < 0.25 ? ACCENT.ember : pct < 0.5 ? ACCENT.amber : ACCENT.sap;
-  // Simple text-based stamina near crosshair
   return (
     <View style={styles.staminaWrap} pointerEvents="none">
       <Text style={[styles.staminaText, { color }]}>{Math.round(stamina)}</Text>
@@ -130,7 +129,7 @@ function StaminaRing({ stamina, maxStamina }: { stamina: number; maxStamina: num
   );
 }
 
-// ── Time — tiny corner display ───────────────────────────────────────────────
+// -- Time -- tiny corner display ---------------------------------------------
 
 function TimeChip({
   gameTimeMicroseconds,
@@ -144,13 +143,15 @@ function TimeChip({
   const period = hour < 6 ? "Night" : hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
   const seasonCap = currentSeason.charAt(0).toUpperCase() + currentSeason.slice(1);
   return (
-    <Text style={styles.timeChip} pointerEvents="none">
-      {period} {seasonCap}
-    </Text>
+    <View style={styles.timeChipContainer} pointerEvents="none">
+      <Text style={styles.timeChip}>
+        {period} {seasonCap}
+      </Text>
+    </View>
   );
 }
 
-// ── HUD ───────────────────────────────────────────────────────────────────────
+// -- HUD ---------------------------------------------------------------------
 
 export interface HUDProps {
   /** Opens the pause menu. */
@@ -175,7 +176,7 @@ export function HUD({ onOpenMenu }: HUDProps) {
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none" testID="hud-overlay">
-      {/* ── Top-left: Hearts + hunger (Zelda-style) ──────────────── */}
+      {/* -- Top-left: Hearts + hunger (Zelda-style) -- */}
       <SafeAreaView edges={["top"]} pointerEvents="box-none" style={styles.safeTop}>
         <View style={styles.topRow}>
           <View style={styles.heartsColumn}>
@@ -191,13 +192,13 @@ export function HUD({ onOpenMenu }: HUDProps) {
               accessibilityLabel="Open menu"
               testID="btn-open-menu"
             >
-              <Icon as={MenuIcon} size={20} className="text-white/60" />
+              <Icon as={MenuIcon} size={20} className="text-emerald-800/70" />
             </Pressable>
           </View>
         </View>
       </SafeAreaView>
 
-      {/* ── Center: crosshair + stamina ring + target info ────────── */}
+      {/* -- Center: crosshair + stamina ring + target info -- */}
       <Crosshair />
       <StaminaRing stamina={stamina} maxStamina={maxStamina} />
       <TargetInfo />
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 22,
-    opacity: 0.5,
+    backgroundColor: "rgba(240,253,244,0.5)",
   },
   // Crosshair: subtle white dot (not thick cross)
   crosshairWrap: {
@@ -263,8 +264,8 @@ const styles = StyleSheet.create({
   },
   compassArrow: {
     fontSize: 16,
-    color: ACCENT.biolum,
-    textShadowColor: "rgba(57,255,20,0.6)",
+    color: ACCENT.gold,
+    textShadowColor: "rgba(255,215,0,0.6)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
   },
@@ -272,8 +273,8 @@ const styles = StyleSheet.create({
   hungerText: {
     fontSize: 11,
     fontWeight: "600",
-    textShadowColor: "rgba(0,0,0,0.8)",
-    textShadowOffset: { width: 1, height: 1 },
+    textShadowColor: "rgba(255,255,255,0.4)",
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   // Stamina: appears below crosshair when draining
@@ -290,17 +291,19 @@ const styles = StyleSheet.create({
   staminaText: {
     fontSize: 12,
     fontWeight: "700",
-    textShadowColor: "rgba(0,0,0,0.8)",
-    textShadowOffset: { width: 1, height: 1 },
+    textShadowColor: "rgba(255,255,255,0.3)",
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  // Time: tiny chip in top-right
+  // Time: chip in top-right with bright panel
+  timeChipContainer: {
+    ...HUD_PANEL,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
   timeChip: {
     fontSize: 11,
-    color: DARK.textMuted,
-    fontWeight: "500",
-    textShadowColor: "rgba(0,0,0,0.6)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    color: LIGHT.textSecondary,
+    fontWeight: "600",
   },
 });

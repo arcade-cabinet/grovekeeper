@@ -13,12 +13,12 @@
  */
 
 import {
+  generateHeightmap,
   VILLAGE_BLEND_TILES,
   VILLAGE_CENTER_X,
   VILLAGE_CENTER_Z,
   VILLAGE_FLAT_HEIGHT,
   VILLAGE_FLAT_RADIUS,
-  generateHeightmap,
 } from "./terrainGenerator.ts";
 
 const CHUNK_SIZE = 16;
@@ -148,9 +148,7 @@ describe("generateHeightmap (Spec §31.1)", () => {
 
     it("all corners of chunk (0,0) are within FLAT_RADIUS of center — all flat", () => {
       // Max corner distance from center (8,8) = sqrt(8^2+8^2) = ~11.31 < FLAT_RADIUS(14)
-      const cornerDist = Math.sqrt(
-        (0 - VILLAGE_CENTER_X) ** 2 + (0 - VILLAGE_CENTER_Z) ** 2
-      );
+      const cornerDist = Math.sqrt((0 - VILLAGE_CENTER_X) ** 2 + (0 - VILLAGE_CENTER_Z) ** 2);
       expect(cornerDist).toBeLessThan(VILLAGE_FLAT_RADIUS);
       // All four corners should be flat
       expect(hm00[0 * CHUNK_SIZE + 0]).toBeCloseTo(VILLAGE_FLAT_HEIGHT, 5);
@@ -185,25 +183,19 @@ describe("generateHeightmap (Spec §31.1)", () => {
   describe("Rootmere flatten pass — other chunks NOT affected (Spec §17.3a)", () => {
     it("chunk (1,0) heightmap values are NOT all VILLAGE_FLAT_HEIGHT", () => {
       const hm = generateHeightmap("any-seed", 1, 0);
-      const allFlat = Array.from(hm).every(
-        (v) => Math.abs(v - VILLAGE_FLAT_HEIGHT) < 0.001
-      );
+      const allFlat = Array.from(hm).every((v) => Math.abs(v - VILLAGE_FLAT_HEIGHT) < 0.001);
       expect(allFlat).toBe(false);
     });
 
     it("chunk (0,1) heightmap values are NOT all VILLAGE_FLAT_HEIGHT", () => {
       const hm = generateHeightmap("any-seed", 0, 1);
-      const allFlat = Array.from(hm).every(
-        (v) => Math.abs(v - VILLAGE_FLAT_HEIGHT) < 0.001
-      );
+      const allFlat = Array.from(hm).every((v) => Math.abs(v - VILLAGE_FLAT_HEIGHT) < 0.001);
       expect(allFlat).toBe(false);
     });
 
     it("chunk (-1,0) heightmap values are NOT all VILLAGE_FLAT_HEIGHT", () => {
       const hm = generateHeightmap("any-seed", -1, 0);
-      const allFlat = Array.from(hm).every(
-        (v) => Math.abs(v - VILLAGE_FLAT_HEIGHT) < 0.001
-      );
+      const allFlat = Array.from(hm).every((v) => Math.abs(v - VILLAGE_FLAT_HEIGHT) < 0.001);
       expect(allFlat).toBe(false);
     });
 

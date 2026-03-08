@@ -26,10 +26,35 @@ jest.mock("@/game/hooks/useJump", () => ({
   useJump: jest.fn(),
 }));
 
+jest.mock("@/game/debug/bridgeActions", () => ({
+  registerPlayerRigidBody: jest.fn(),
+  unregisterPlayerRigidBody: jest.fn(),
+}));
+
+jest.mock("@/game/player/teleport", () => ({
+  registerPlayerBody: jest.fn(),
+  unregisterPlayerBody: jest.fn(),
+}));
+
 const mockPlayerEntity = { position: { x: 0, y: 0, z: 0 } };
 
 jest.mock("@/game/ecs/world", () => ({
-  playerQuery: { entities: [mockPlayerEntity] },
+  playerQuery: { entities: [mockPlayerEntity], first: mockPlayerEntity },
+  treesQuery: { entities: [], [Symbol.iterator]: () => [][Symbol.iterator]() },
+  bushesQuery: { entities: [] },
+  npcsQuery: { entities: [] },
+  enemiesQuery: { entities: [] },
+  structuresQuery: { entities: [] },
+  campfiresQuery: { entities: [] },
+  waterBodiesQuery: { entities: [] },
+  terrainChunksQuery: { entities: [] },
+  dayNightQuery: { entities: [] },
+  world: {
+    with: jest.fn(() => ({ entities: [], [Symbol.iterator]: () => [][Symbol.iterator]() })),
+    add: jest.fn(),
+    remove: jest.fn(),
+  },
+  generateEntityId: jest.fn(() => "test-entity-id"),
 }));
 
 import {

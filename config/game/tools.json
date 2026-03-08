@@ -124,6 +124,26 @@
     "action": "SCARECROW"
   },
   {
+    "id": "fishing-rod",
+    "name": "Fishing Rod",
+    "description": "Cast at water bodies to catch fish",
+    "icon": "fishing",
+    "unlockLevel": 6,
+    "staminaCost": 4,
+    "maxDurability": 100,
+    "action": "FISH"
+  },
+  {
+    "id": "hammer",
+    "name": "Hammer",
+    "description": "Enter build mode to place structures",
+    "icon": "hammer",
+    "unlockLevel": 5,
+    "staminaCost": 8,
+    "maxDurability": 100,
+    "action": "BUILD"
+  },
+  {
     "id": "grafting-tool",
     "name": "Grafting Tool",
     "description": "Graft a Mature+ tree to combine yields from 2 nearest species",

@@ -11,6 +11,11 @@
     "bobHeight": 0.02,
     "bobFrequency": 8.0
   },
+  "swing": {
+    "downAngle": -45,
+    "downDuration": 120,
+    "upDuration": 200
+  },
   "trowel": {
     "glbPath": "assets/models/tools/Hoe.glb",
     "offset": [0.35, -0.3, -0.5],

@@ -18,6 +18,7 @@ import { Modal, Pressable, ScrollView, View } from "react-native";
 import Svg, { Ellipse, Rect } from "react-native-svg";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { ACCENT, DARK, FONTS, TYPE } from "@/components/ui/tokens";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -52,11 +53,11 @@ export interface SeedSelectProps {
 // ---------------------------------------------------------------------------
 
 const DIFFICULTY_COLORS: Record<number, string> = {
-  1: "#81C784", // leafLight
-  2: "#81C784",
-  3: "#FFB74D", // autumnGold
-  4: "#FFAB91", // sunsetWarm
-  5: "#8D6E63", // earthRed
+  1: ACCENT.sap,
+  2: ACCENT.sap,
+  3: ACCENT.amber,
+  4: ACCENT.ember,
+  5: DARK.textMuted,
 };
 
 // ---------------------------------------------------------------------------
@@ -109,7 +110,7 @@ export function SeedSelect({
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <View className="flex-1 justify-end bg-black/50">
+      <View className="flex-1 justify-end bg-black/60">
         {/* Backdrop tap to close */}
         <Pressable
           className="absolute inset-0"
@@ -117,24 +118,45 @@ export function SeedSelect({
           accessibilityLabel="Close seed selector"
         />
 
-        <View className="max-h-[80%] rounded-t-2xl border-t-2 border-forest-green/40 bg-sky-mist pb-8">
+        <View
+          className="max-h-[80%] rounded-t-2xl pb-8"
+          style={{
+            backgroundColor: "rgba(10,12,8,0.95)",
+            borderTopWidth: 2,
+            borderTopColor: DARK.borderBranch,
+          }}
+        >
           {/* Header */}
-          <View className="flex-row items-center justify-between border-b border-bark-brown/20 px-4 py-3">
-            <Text className="font-heading text-lg font-bold text-soil-dark">Select a Seed</Text>
+          <View
+            className="flex-row items-center justify-between px-4 py-3"
+            style={{ borderBottomWidth: 1, borderBottomColor: DARK.borderBranch }}
+          >
+            <Text
+              style={{
+                ...TYPE.heading,
+                fontFamily: FONTS.heading,
+                color: DARK.textPrimary,
+              }}
+            >
+              Select a Seed
+            </Text>
             <Pressable
               className="min-h-[44px] min-w-[44px] items-center justify-center"
               onPress={onClose}
               accessibilityLabel="Close"
             >
-              <Icon as={XIcon} size={20} className="text-soil-dark" />
+              <Icon as={XIcon} size={20} color={DARK.textSecondary} />
             </Pressable>
           </View>
 
           {/* World seed badge -- Adj Adj Noun phrase (Spec §3.1) */}
           {worldSeed ? (
-            <View className="mx-4 mb-2 mt-1 rounded-lg bg-forest-green/10 px-3 py-1.5">
-              <Text className="text-center text-[11px] text-forest-green">
-                {"\u{1F331}"} World: {worldSeed}
+            <View
+              className="mx-4 mb-2 mt-1 rounded-lg px-3 py-1.5"
+              style={{ backgroundColor: DARK.surfaceMoss }}
+            >
+              <Text style={{ ...TYPE.caption, textAlign: "center", color: ACCENT.sap }}>
+                World: {worldSeed}
               </Text>
             </View>
           ) : null}
@@ -153,12 +175,14 @@ export function SeedSelect({
                 return (
                   <Pressable
                     key={sp.id}
-                    className={`rounded-xl border-2 p-3 ${
-                      isSelected
-                        ? "border-forest-green bg-leaf-light/20"
-                        : "border-transparent bg-white"
-                    } ${isDisabled ? "opacity-50" : ""}`}
-                    style={{ width: "47%" }}
+                    className="rounded-xl p-3"
+                    style={{
+                      width: "47%",
+                      borderWidth: 2,
+                      borderColor: isSelected ? ACCENT.sap : DARK.borderBranch,
+                      backgroundColor: isSelected ? "rgba(74,222,128,0.1)" : DARK.bgCanopy,
+                      opacity: isDisabled ? 0.5 : 1,
+                    }}
                     disabled={isDisabled}
                     onPress={() => {
                       onSelect(sp.id);
@@ -169,7 +193,7 @@ export function SeedSelect({
                     {/* Tree preview area */}
                     <View
                       className="relative mb-2 h-16 w-full items-end justify-center rounded"
-                      style={{ backgroundColor: "rgba(62,39,35,0.12)" }}
+                      style={{ backgroundColor: DARK.surfaceStone }}
                     >
                       {isUnlocked ? (
                         <View className="mb-1 items-center">
@@ -177,7 +201,7 @@ export function SeedSelect({
                         </View>
                       ) : (
                         <View className="mb-2 items-center self-center">
-                          <Icon as={LockIcon} size={32} className="text-gray-400" />
+                          <Icon as={LockIcon} size={32} color={DARK.textMuted} />
                         </View>
                       )}
 
@@ -186,11 +210,18 @@ export function SeedSelect({
                         <View
                           className="absolute right-1 top-1 rounded-full px-1.5 py-0.5"
                           style={{
-                            backgroundColor: hasSeeds ? "#2D5A27" : "#8D6E63",
+                            backgroundColor: hasSeeds ? ACCENT.sap : ACCENT.ember,
                             minWidth: 20,
                           }}
                         >
-                          <Text className="text-center text-[10px] font-bold text-white">
+                          <Text
+                            style={{
+                              ...TYPE.caption,
+                              textAlign: "center",
+                              fontWeight: "700",
+                              color: DARK.bgDeep,
+                            }}
+                          >
                             x{seedCount}
                           </Text>
                         </View>
@@ -198,39 +229,48 @@ export function SeedSelect({
                     </View>
 
                     {/* Species name */}
-                    <Text className="text-sm font-bold text-soil-dark">{sp.name}</Text>
+                    <Text style={{ ...TYPE.body, fontWeight: "700", color: DARK.textPrimary }}>
+                      {sp.name}
+                    </Text>
 
                     {/* Difficulty + unlock level */}
                     <View className="mt-1 flex-row items-center gap-2">
                       <View
                         className="rounded px-1.5 py-0.5"
                         style={{
-                          backgroundColor: DIFFICULTY_COLORS[sp.difficulty] ?? "#9E9E9E",
+                          backgroundColor: DIFFICULTY_COLORS[sp.difficulty] ?? DARK.textMuted,
                         }}
                       >
                         <Text
-                          className="text-xs"
                           style={{
-                            color: sp.difficulty <= 2 ? "#3E2723" : "white",
+                            ...TYPE.caption,
+                            color: sp.difficulty <= 2 ? DARK.bgDeep : DARK.textPrimary,
                           }}
                         >
                           {"*".repeat(sp.difficulty)}
                         </Text>
                       </View>
-                      <Text className="text-xs text-gray-500">Lv.{sp.unlockLevel}</Text>
+                      <Text style={{ ...TYPE.caption, color: DARK.textMuted }}>
+                        Lv.{sp.unlockLevel}
+                      </Text>
                     </View>
 
                     {/* Seed cost */}
-                    {isUnlocked && costStr && (
-                      <Text className="mt-1 text-[10px] text-red-400">Cost: {costStr}</Text>
-                    )}
+                    {isUnlocked && costStr ? (
+                      <Text style={{ ...TYPE.caption, marginTop: 4, color: ACCENT.ember }}>
+                        Cost: {costStr}
+                      </Text>
+                    ) : null}
                     {isUnlocked && !costStr && (
-                      <Text className="mt-1 text-[10px] text-leaf-light">Free</Text>
+                      <Text style={{ ...TYPE.caption, marginTop: 4, color: ACCENT.sap }}>Free</Text>
                     )}
 
                     {/* Special trait */}
                     {isUnlocked && (
-                      <Text className="mt-1 text-xs text-gray-500" numberOfLines={2}>
+                      <Text
+                        style={{ ...TYPE.caption, marginTop: 4, color: DARK.textSecondary }}
+                        numberOfLines={2}
+                      >
                         {sp.special}
                       </Text>
                     )}
@@ -243,11 +283,12 @@ export function SeedSelect({
           {/* Cancel button */}
           <View className="px-4 pt-2">
             <Pressable
-              className="min-h-[44px] items-center justify-center rounded-xl border-2 border-forest-green"
+              className="min-h-[44px] items-center justify-center rounded-xl"
+              style={{ borderWidth: 2, borderColor: DARK.borderBranch }}
               onPress={onClose}
               accessibilityLabel="Cancel seed selection"
             >
-              <Text className="font-bold text-forest-green">Cancel</Text>
+              <Text style={{ fontWeight: "700", color: DARK.textSecondary }}>Cancel</Text>
             </Pressable>
           </View>
         </View>

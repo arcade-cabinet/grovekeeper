@@ -8,7 +8,7 @@
  */
 
 import { MapIcon } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Platform, Pressable, useWindowDimensions, View } from "react-native";
 
 import { Icon } from "@/components/ui/icon";

@@ -2,11 +2,14 @@
  * DeathScreen -- shown when the player dies in non-permadeath mode.
  * "Return to Fire" respawns at last campfire with partial resource loss already applied.
  *
- * Spec §12.3 (death), §12.5 (respawn at campfire).
+ * Spec S12.3 (death), S12.5 (respawn at campfire).
+ *
+ * Zelda fairy-revival feel: semi-transparent overlay on the game world,
+ * warm ember glow panel, dramatic but hopeful.
  */
 
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ACCENT, DARK, FONTS, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
 
 export interface DeathScreenProps {
   /** Whether the overlay is visible. */
@@ -41,13 +44,13 @@ export function DeathScreen({ open, onRespawn }: DeathScreenProps) {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 5, 5, 0.88)",
+    backgroundColor: "rgba(239,68,68,0.18)",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 200,
   },
   panel: {
-    backgroundColor: "rgba(10, 12, 8, 0.95)",
+    backgroundColor: "rgba(255,251,235,0.92)",
     borderWidth: 2,
     borderColor: ACCENT.ember,
     borderRadius: RADIUS.organic,
@@ -58,7 +61,7 @@ const styles = StyleSheet.create({
     width: "85%",
     shadowColor: ACCENT.ember,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 20,
     elevation: 12,
   },
@@ -68,13 +71,13 @@ const styles = StyleSheet.create({
     color: ACCENT.ember,
     textAlign: "center",
     marginBottom: SPACE[2],
-    textShadowColor: "rgba(239, 68, 68, 0.5)",
+    textShadowColor: "rgba(239, 68, 68, 0.3)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
   subtitle: {
     ...TYPE.body,
-    color: DARK.textSecondary,
+    color: LIGHT.textSecondary,
     textAlign: "center",
     marginBottom: SPACE[6],
     lineHeight: 20,
@@ -94,6 +97,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...TYPE.heading,
-    color: DARK.bgDeep,
+    color: "#FFF",
   },
 });

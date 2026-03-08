@@ -21,6 +21,13 @@ function makeMultipliers(
     stone: 1.0,
     metal_scrap: 1.0,
     fiber: 1.0,
+    ore: 1.0,
+    berries: 1.0,
+    herbs: 1.0,
+    meat: 1.0,
+    hide: 1.0,
+    fish: 1.0,
+    seeds: 1.0,
     ...overrides,
   };
 }

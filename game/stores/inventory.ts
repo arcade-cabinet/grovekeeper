@@ -5,10 +5,9 @@
 
 import { batch } from "@legendapp/state";
 import type { ResourceType } from "@/game/config/resources";
-import { gameState$, getState } from "./core";
-// Note: advanceQuestObjective imported from questState -- safe circular ES module binding
-// (called inside queueMicrotask, never at module init time)
-import { advanceQuestObjective } from "./questState";
+import { gameState$, getState } from "./core.ts";
+// biome-ignore lint/suspicious/noImportCycles: safe circular ES module binding (called inside queueMicrotask, never at module init time)
+import { advanceQuestObjective } from "./questState.ts";
 
 export function addResource(type: ResourceType, amount: number): void {
   const state = getState();

@@ -1,5 +1,5 @@
 import { emptyResources } from "@/game/config/resources";
-import { useGameStore } from "./index";
+import { useGameStore } from "./index.ts";
 
 describe("Inventory Store (Spec §5, §7)", () => {
   beforeEach(() => {

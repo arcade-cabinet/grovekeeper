@@ -66,7 +66,7 @@ describe("db queries", () => {
       expect(result!.level).toBe(1);
       expect(result!.xp).toBe(0);
       expect(result!.coins).toBe(100);
-      expect(result!.difficulty).toBe("normal");
+      expect(result!.difficulty).toBe("sapling");
       expect(result!.currentSeason).toBe("spring");
       expect(result!.currentDay).toBe(1);
     });

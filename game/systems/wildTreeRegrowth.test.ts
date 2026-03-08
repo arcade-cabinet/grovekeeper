@@ -1,13 +1,13 @@
 import {
+  buildWildTreeSpawn,
+  type ChunkEcologyInput,
   cancelRegrowth,
   checkRegrowth,
+  getSeasonSpawnMultiplier,
   initializeRegrowthState,
   scheduleRegrowth,
-  getSeasonSpawnMultiplier,
   shouldSpawnWildTree,
-  buildWildTreeSpawn,
   tickWildEcology,
-  type ChunkEcologyInput,
 } from "./wildTreeRegrowth.ts";
 
 describe("initializeRegrowthState", () => {
@@ -21,7 +21,12 @@ describe("scheduleRegrowth", () => {
     const state = initializeRegrowthState();
     const updated = scheduleRegrowth(state, 3, 5, "white-oak", 10);
     expect(updated.timers).toHaveLength(1);
-    expect(updated.timers[0]).toEqual({ gridX: 3, gridZ: 5, speciesId: "white-oak", expiresAtDay: 17 });
+    expect(updated.timers[0]).toEqual({
+      gridX: 3,
+      gridZ: 5,
+      speciesId: "white-oak",
+      expiresAtDay: 17,
+    });
   });
 
   it("adds a timer with custom delay", () => {
@@ -47,14 +52,14 @@ describe("scheduleRegrowth", () => {
 
 describe("checkRegrowth", () => {
   it("returns no expired timers when all are in the future", () => {
-    let state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1, 5);
+    const state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1, 5);
     const result = checkRegrowth(state, 3);
     expect(result.expired).toHaveLength(0);
     expect(result.state.timers).toHaveLength(1);
   });
 
   it("returns expired timer when current day meets expiry", () => {
-    let state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1, 5);
+    const state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1, 5);
     const result = checkRegrowth(state, 6);
     expect(result.expired).toHaveLength(1);
     expect(result.expired[0].speciesId).toBe("white-oak");
@@ -62,7 +67,7 @@ describe("checkRegrowth", () => {
   });
 
   it("returns expired timer when current day exceeds expiry", () => {
-    let state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1, 5);
+    const state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1, 5);
     expect(checkRegrowth(state, 100).expired).toHaveLength(1);
   });
 
@@ -76,14 +81,14 @@ describe("checkRegrowth", () => {
   });
 
   it("returns same state reference when nothing expired", () => {
-    let state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 100, 50);
+    const state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 100, 50);
     expect(checkRegrowth(state, 1).state).toBe(state);
   });
 });
 
 describe("cancelRegrowth", () => {
   it("removes timer at specified position", () => {
-    let state = scheduleRegrowth(initializeRegrowthState(), 3, 5, "white-oak", 1);
+    const state = scheduleRegrowth(initializeRegrowthState(), 3, 5, "white-oak", 1);
     expect(cancelRegrowth(state, 3, 5).timers).toHaveLength(0);
   });
 
@@ -96,12 +101,12 @@ describe("cancelRegrowth", () => {
   });
 
   it("returns same state reference when no timer found at position", () => {
-    let state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1);
+    const state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1);
     expect(cancelRegrowth(state, 99, 99)).toBe(state);
   });
 
   it("does not mutate original state", () => {
-    let state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1);
+    const state = scheduleRegrowth(initializeRegrowthState(), 0, 0, "white-oak", 1);
     cancelRegrowth(state, 0, 0);
     expect(state.timers).toHaveLength(1);
   });

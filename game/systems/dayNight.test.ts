@@ -13,6 +13,7 @@ import {
   computeStarIntensity,
   computeSunAngle,
   initDayNight,
+  syncDayNight,
   tickDayNight,
 } from "@/game/systems/dayNight";
 
@@ -333,19 +334,19 @@ describe("computeSeason (Spec §31.3)", () => {
 // ---------------------------------------------------------------------------
 
 describe("initDayNight (Spec §31.3)", () => {
-  it("starts at hour 6 (dawn)", () => {
+  it("starts at hour 6 (dawn) when called without args", () => {
     expect(initDayNight().gameHour).toBe(6);
   });
 
-  it("starts at dawn timeOfDay", () => {
+  it("starts at dawn timeOfDay when called without args", () => {
     expect(initDayNight().timeOfDay).toBe("dawn");
   });
 
-  it("starts at day 0", () => {
+  it("starts at day 0 when called without args", () => {
     expect(initDayNight().dayNumber).toBe(0);
   });
 
-  it("starts in spring", () => {
+  it("starts in spring when called without args", () => {
     expect(initDayNight().season).toBe("spring");
   });
 
@@ -355,6 +356,96 @@ describe("initDayNight (Spec §31.3)", () => {
     expect(dn.ambientIntensity).toBeGreaterThan(0);
     expect(typeof dn.directionalColor).toBe("string");
     expect(dn.directionalIntensity).toBeGreaterThan(0);
+  });
+
+  it("initialises at correct hour from gameTimeMicroseconds (noon)", () => {
+    // 600s per day, 1_000_000 µs per second. Half a day = 300s = 300_000_000 µs → hour 12.
+    const microPerDay = 600 * 1_000_000;
+    const noonMicros = microPerDay / 2; // 300_000_000
+    const dn = initDayNight(noonMicros);
+    expect(dn.gameHour).toBeCloseTo(12, 4);
+    expect(dn.timeOfDay).toBe("noon");
+  });
+
+  it("initialises dayNumber from gameTimeMicroseconds", () => {
+    const microPerDay = 600 * 1_000_000;
+    const day3 = 3 * microPerDay + microPerDay / 4; // day 3, hour 6
+    const dn = initDayNight(day3);
+    expect(dn.dayNumber).toBe(3);
+    expect(dn.gameHour).toBeCloseTo(6, 4);
+  });
+
+  it("derives season from dayNumber (day 7 → summer)", () => {
+    const microPerDay = 600 * 1_000_000;
+    const day7 = 7 * microPerDay;
+    const dn = initDayNight(day7);
+    expect(dn.season).toBe("summer");
+  });
+
+  it("falls back to hour 6 / spring when gameTimeMicroseconds is 0", () => {
+    const dn = initDayNight(0);
+    expect(dn.gameHour).toBe(6);
+    expect(dn.season).toBe("spring");
+    expect(dn.dayNumber).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// syncDayNight
+// ---------------------------------------------------------------------------
+
+describe("syncDayNight (Spec §31.3)", () => {
+  const microPerDay = 600 * 1_000_000;
+
+  it("sets gameHour from gameTimeMicroseconds", () => {
+    const dn = makeDayNight({ gameHour: 6 });
+    const sky = makeSky();
+    syncDayNight(dn, sky, microPerDay / 2); // noon
+    expect(dn.gameHour).toBeCloseTo(12, 4);
+  });
+
+  it("sets dayNumber from gameTimeMicroseconds", () => {
+    const dn = makeDayNight({ dayNumber: 0 });
+    const sky = makeSky();
+    syncDayNight(dn, sky, 5 * microPerDay);
+    expect(dn.dayNumber).toBe(5);
+  });
+
+  it("derives season correctly", () => {
+    const dn = makeDayNight({ season: "spring" });
+    const sky = makeSky();
+    syncDayNight(dn, sky, 14 * microPerDay); // day 14 → autumn
+    expect(dn.season).toBe("autumn");
+  });
+
+  it("updates timeOfDay label", () => {
+    const dn = makeDayNight({ timeOfDay: "dawn" });
+    const sky = makeSky();
+    // Set to nighttime: hour 22 = 22/24 of a day
+    syncDayNight(dn, sky, Math.floor((22 / 24) * microPerDay));
+    expect(dn.timeOfDay).toBe("night");
+  });
+
+  it("updates lighting values to match time", () => {
+    const dn = makeDayNight();
+    const sky = makeSky();
+    syncDayNight(dn, sky, microPerDay / 2); // noon
+    expect(dn.ambientIntensity).toBeCloseTo(1.0, 2);
+    expect(dn.shadowOpacity).toBeCloseTo(1.0, 2);
+  });
+
+  it("updates sky.sunAngle near PI/2 at noon", () => {
+    const dn = makeDayNight();
+    const sky = makeSky();
+    syncDayNight(dn, sky, microPerDay / 2); // noon
+    expect(sky.sunAngle).toBeCloseTo(Math.PI / 2, 2);
+  });
+
+  it("updates sky.starIntensity to 1 at night", () => {
+    const dn = makeDayNight();
+    const sky = makeSky();
+    syncDayNight(dn, sky, Math.floor((22 / 24) * microPerDay));
+    expect(sky.starIntensity).toBe(1);
   });
 });
 

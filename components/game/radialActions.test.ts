@@ -8,9 +8,9 @@
  * context-sensitive to the targeted entity type and equipped tool.
  */
 
-import { getActionsForEntity, getActionsForTile } from "./radialActions";
-import type { RaycastHit } from "@/game/hooks/useRaycast";
 import { Vector3 } from "three";
+import type { RaycastHit } from "@/game/hooks/useRaycast";
+import { getActionsForEntity, getActionsForTile } from "./radialActions.ts";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -134,7 +134,13 @@ describe("getActionsForTile (regression)", () => {
 
   it("returns empty for path tile", () => {
     expect(
-      getActionsForTile({ cellType: "path", occupied: false, treeStage: 0, treeWatered: false, hasNpc: false }),
+      getActionsForTile({
+        cellType: "path",
+        occupied: false,
+        treeStage: 0,
+        treeWatered: false,
+        hasNpc: false,
+      }),
     ).toHaveLength(0);
   });
 

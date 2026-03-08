@@ -11,7 +11,7 @@ import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 // Immutable after creation. Locked to chosen difficulty.
 export const saveConfig = sqliteTable("save_config", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  difficulty: text("difficulty").notNull().default("normal"),
+  difficulty: text("difficulty").notNull().default("sapling"),
   permadeath: integer("permadeath", { mode: "boolean" }).notNull().default(false),
   version: integer("version").notNull().default(1),
   createdAt: integer("created_at")
@@ -36,8 +36,8 @@ export const player = sqliteTable("player", {
   // Survival state — Spec §12
   bodyTemp: real("body_temp").notNull().default(37),
   hunger: real("hunger").notNull().default(100),
-  hearts: integer("hearts").notNull().default(3),
-  maxHearts: integer("max_hearts").notNull().default(3),
+  hearts: integer("hearts").notNull().default(5),
+  maxHearts: integer("max_hearts").notNull().default(5),
   lastCampfireId: text("last_campfire_id"),
   lastCampfireX: real("last_campfire_x"),
   lastCampfireY: real("last_campfire_y"),
@@ -126,7 +126,7 @@ export const structures = sqliteTable("structures", {
 export const quests = sqliteTable("quests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   questId: text("quest_id").notNull(),
-  difficulty: text("difficulty").notNull().default("normal"),
+  difficulty: text("difficulty").notNull().default("sapling"),
   completed: integer("completed", { mode: "boolean" }).notNull().default(false),
   rewardsJson: text("rewards_json").notNull().default("{}"),
 });

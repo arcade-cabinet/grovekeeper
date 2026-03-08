@@ -13,7 +13,8 @@ import React, { useEffect, useMemo } from "react";
 import { AccessibilityInfo, Dimensions, Pressable, View } from "react-native";
 
 // Re-export FPS entity action builder for convenience at callsites.
-export { getActionsForEntity } from "./radialActions";
+export { getActionsForEntity } from "./radialActions.ts";
+
 import Animated, {
   Easing,
   useAnimatedStyle,

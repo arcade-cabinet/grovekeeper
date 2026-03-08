@@ -6,8 +6,8 @@
 > - **Not "idle tending"** -- it is a survival game. Hearts, hunger, stamina, weather damage, tool durability.
 > - **Legend State 3.x** replaces Zustand for persistent state (via expo-sqlite, not localStorage).
 > - **No `src/` directory** -- game code lives at `game/`, components at `components/`, config at `config/`.
-> - **Trees use 3DPSX GLB models** with scale-per-stage, not procedural SPS geometry.
-> - **NPCs use 3DPSX ChibiCharacter GLBs** with anime.js Lego-style animation, not procedural box meshes.
+> - **Trees use stylized GLB models** with scale-per-stage, not procedural SPS geometry.
+> - **NPCs use ChibiCharacter GLBs** with anime.js Lego-style animation, not procedural box meshes.
 > - **Infinite chunk-based world**, not fixed zones or hex grid.
 > - **TypeScript 5.9**, **Biome 2.4**, **Tone.js** for audio.
 >
@@ -44,7 +44,7 @@ The project was originally built with BabylonJS (imperative) + Vite + Capacitor.
 - **expo-sqlite** replaces sql.js -- native SQLite on mobile, built-in WASM on web
 - **Jest + Maestro** replaces Vitest + Playwright -- Expo-native testing
 - **JSON config files** replace scattered TypeScript constants -- data-driven game balance
-- **3DPSX GLB models** replace procedural SPS geometry -- trees, NPCs, structures, props
+- **Stylized GLB models** replace procedural SPS geometry -- trees, NPCs, structures, props
 - **Tone.js** replaces raw Web Audio -- FM synthesis, spatial audio, ambient soundscapes
 
 Engine-agnostic code (Miniplex ECS, Legend State store, pure game systems, Yuka AI) ports verbatim.

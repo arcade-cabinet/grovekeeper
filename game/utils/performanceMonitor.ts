@@ -71,9 +71,10 @@ export function tickFps(state: FpsState, nowMs: number): FpsState {
   const dt = (nowMs - state.lastFrameMs) / 1000; // seconds
   if (dt <= 0) return state; // guard against clock resets
   const instantFps = 1 / dt;
-  const smoothFps = state.smoothFps === 0
-    ? instantFps // first real sample
-    : state.alpha * instantFps + (1 - state.alpha) * state.smoothFps;
+  const smoothFps =
+    state.smoothFps === 0
+      ? instantFps // first real sample
+      : state.alpha * instantFps + (1 - state.alpha) * state.smoothFps;
   return { ...state, smoothFps, lastFrameMs: nowMs };
 }
 
@@ -103,7 +104,7 @@ export function isFpsUnderBudgetDesktop(state: FpsState): boolean {
  * Call infrequently (e.g. every 5 seconds) — reading memory is not free.
  */
 export function sampleMemory(): MemorySample {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: performance.memory is a non-standard Chrome API
   const mem = (performance as any).memory as
     | { usedJSHeapSize: number; totalJSHeapSize: number }
     | undefined;

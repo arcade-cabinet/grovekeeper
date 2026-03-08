@@ -6,16 +6,13 @@
  */
 
 import { world } from "@/game/ecs/world";
-import {
-  getStructureDetails,
-  queryEntities,
-} from "./bridgeQueries";
+import { getStructureDetails, queryEntities } from "./bridgeQueries.ts";
 import type {
   EnemyEntitySnapshot,
   NpcEntitySnapshot,
   StructureEntitySnapshot,
   TreeEntitySnapshot,
-} from "./bridgeTypes";
+} from "./bridgeTypes.ts";
 
 function pos(x: number, y: number, z: number) {
   return { x, y, z };

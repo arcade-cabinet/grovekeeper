@@ -198,8 +198,8 @@ describe("hedgePlacement", () => {
       const pieces = mazeToHedgePieces(maze, 42);
       const validTypes = new Set(["basic", "diagonal", "round", "slope", "triangle"]);
       for (const piece of pieces) {
-        // Model path follows hedges/<type>/<type>_<size>.glb or hedges/junction/<type>/<id>.glb
-        expect(piece.modelPath).toMatch(/^hedges\/[a-z]+\/.+\.glb$/);
+        // Model path follows assets/models/hedges/<type>/<type>_<size>.glb or similar
+        expect(piece.modelPath).toMatch(/^assets\/models\/hedges\/.+\.glb$/);
         expect([0, 90, 180, 270]).toContain(piece.rotation);
         expect(validTypes.has(piece.pieceType)).toBe(true);
       }

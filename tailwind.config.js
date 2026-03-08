@@ -41,46 +41,38 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Game-specific design tokens
-        forest: {
-          green: '#2D5A27',
-          dark: '#1B5E20',
+        // Grovekeeper brand design tokens
+        grove: {
+          deep: '#0D1F0F',
+          canopy: '#1A3A1E',
+          bark: '#2C1810',
+          moss: '#243B27',
+          stone: '#2A2A25',
+          branch: '#3D5C41',
         },
-        bark: {
-          brown: '#5D4037',
-          dark: '#3E2723',
-        },
-        soil: {
-          dark: '#3E2723',
-        },
-        leaf: {
-          light: '#81C784',
-        },
-        autumn: {
-          gold: '#FFB74D',
-          orange: '#FF8A65',
-        },
-        sky: {
-          mist: '#E8F5E9',
-        },
-        parchment: {
-          DEFAULT: '#F5F0E3',
-          dark: '#E8E0CC',
+        sap: '#4ADE80',
+        amber: '#F59E0B',
+        ember: '#EF4444',
+        frost: '#93C5FD',
+        blossom: '#F9A8D4',
+        biolum: '#39FF14',
+        season: {
+          spring: '#86EFAC',
+          summer: '#22C55E',
+          autumn: '#F59E0B',
+          winter: '#93C5FD',
         },
         prestige: {
           gold: '#FFD700',
           purple: '#9C27B0',
         },
-        season: {
-          spring: '#90EE90',
-          summer: '#FFD54F',
-          autumn: '#FF8A65',
-          winter: '#90CAF9',
-        },
       },
       fontFamily: {
-        heading: ['Fredoka'],
-        body: ['Nunito'],
+        display: ['CinzelDecorative'],
+        heading: ['Cinzel'],
+        body: ['Cabin'],
+        data: ['JetBrainsMono'],
+        critical: ['Orbitron'],
       },
       borderRadius: {
         lg: 'var(--radius)',

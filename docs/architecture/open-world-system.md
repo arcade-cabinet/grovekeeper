@@ -1022,7 +1022,7 @@ When a zone is not the active zone:
 | Metric | Budget | Strategy |
 |--------|--------|----------|
 | Draw calls | < 50 | Instanced rendering for ground, props; individual meshes for trees/NPCs |
-| Vertices | < 30,000 | PSX low-poly meshes, flat shading, chunky geometry |
+| Vertices | < 30,000 | Stylized low-poly meshes, smooth shading, whimsical geometry |
 | Textures | < 8 unique | Shared PBR atlas, biome-tinted via vertex colors |
 | Entities | < 200 | Grid cells + trees + props + NPCs + structures |
 | FPS (mobile) | >= 55 | One zone rendered at a time |

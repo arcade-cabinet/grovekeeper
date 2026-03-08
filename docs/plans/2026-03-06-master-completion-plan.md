@@ -41,7 +41,7 @@
 
 **Core Loop:** Explore -> Plant -> Tend -> Harvest -> Expand. The player physically holds tools in first-person view. Every action (DIG, CHOP, WATER, PLANT, PRUNE) is embodied.
 
-**Aesthetic:** PSX low-poly. No antialiasing. 1:1 pixel ratio. Flat shading. Chunky geometry. Tool models are real GLB assets (5 available), NPCs are procedural chibi box-characters, trees are SPS-generated geometry.
+**Aesthetic:** Bright whimsical Zelda-style. MSAA antialiasing. Device-native pixel ratio. Smooth shading. Stylized low-poly geometry. Tool models are real GLB assets (5 available), NPCs are chibi characters, trees are GLB-based with scale-per-stage growth.
 
 ### Tech Stack
 
@@ -153,7 +153,7 @@ src/
     world/                    -- Zone/structure/encounter data
     theme.json                -- Design tokens
   assets/
-    models/tools/             -- 5 PSX tool GLBs + shared texture
+    models/tools/             -- 5 tool GLBs + shared texture
     textures/                 -- PBR texture sets
 ```
 
@@ -204,15 +204,15 @@ Full spec: `docs/architecture/scene-composition.md`
 </Canvas>
 ```
 
-### PSX Canvas Config
+### Canvas Config (Modern Zelda-Style)
 
 | Setting | Value | Why |
 |---------|-------|-----|
-| antialias | false | Crispy pixel edges |
-| pixelRatio | 1 | No HiDPI scaling |
-| toneMapping | None | Raw colors |
-| colorSpace | LinearSRGB | No gamma curve |
-| Shadow map | 512 mobile / 1024 desktop | Low-res matches aesthetic |
+| antialias | true | MSAA for polished edges |
+| dpr | [1, 2] | Device-native pixel ratio |
+| toneMapping | ACESFilmic | Cinematic color response |
+| colorSpace | sRGB | Standard color space |
+| Shadow map | 512 mobile / 1024 desktop | Balanced shadow quality |
 
 ### Draw Call Budget: <= 50
 
@@ -307,7 +307,7 @@ Renders any array of `InstanceData[]` as a single `<instancedMesh>` per geometry
 
 Created once via `useMemo`, disposed on unmount:
 - Box: `BoxGeometry(1, 1, 1)`
-- Cylinder: `CylinderGeometry(0.5, 0.5, 1, 6)` -- 6 segments for PSX look
+- Cylinder: `CylinderGeometry(0.5, 0.5, 1, 6)` -- 6 segments for stylized look
 - Sphere: `IcosahedronGeometry(0.5, 1)` -- 42 verts, low-poly
 
 ### Dynamic Trees (Separate Strategy)
@@ -462,7 +462,7 @@ Full spec: `docs/architecture/npc-system.md`
 
 ### Procedural Chibi Meshes
 
-NPCs are 4 box primitives: head (0.55^3), body (0.45x0.5x0.3), 2 legs (0.18x0.3x0.18). Total: ~72 vertices per NPC. **No GLB models needed** -- PSX box-characters ARE the art style.
+NPCs are 4 box primitives: head (0.55^3), body (0.45x0.5x0.3), 2 legs (0.18x0.3x0.18). Total: ~72 vertices per NPC. **No GLB models needed** -- stylized chibi box-characters ARE the art style.
 
 ### Seeded Appearance
 

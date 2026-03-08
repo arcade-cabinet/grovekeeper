@@ -13,7 +13,6 @@ export interface SettingsValues {
   masterVolume: number;
   sfxVolume: number;
   ambientVolume: number;
-  psxPixelRatio: boolean;
   drawDistance: number;
   touchSensitivity: number;
   reducedMotion: boolean;
@@ -27,7 +26,6 @@ export const SETTINGS_DEFAULTS: SettingsValues = {
   masterVolume: 1.0,
   sfxVolume: 1.0,
   ambientVolume: 0.7,
-  psxPixelRatio: true,
   drawDistance: 3,
   touchSensitivity: 1.0,
   reducedMotion: false,
@@ -54,7 +52,9 @@ export function clampDrawDistance(v: number): number {
 
 /** Clamp touch sensitivity to [0.5, 2.0] with 2 decimal precision. */
 export function clampTouchSensitivity(v: number): number {
-  return Math.round(Math.min(TOUCH_SENSITIVITY_MAX, Math.max(TOUCH_SENSITIVITY_MIN, v)) * 100) / 100;
+  return (
+    Math.round(Math.min(TOUCH_SENSITIVITY_MAX, Math.max(TOUCH_SENSITIVITY_MIN, v)) * 100) / 100
+  );
 }
 
 /**

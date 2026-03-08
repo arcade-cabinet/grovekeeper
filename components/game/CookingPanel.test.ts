@@ -4,6 +4,7 @@
  * Tests the pure cookingPanelLogic helpers -- no React/RN import chain needed.
  */
 
+import type { CookingRecipe } from "@/game/systems/cooking";
 import {
   buildAllRecipeDisplays,
   buildRecipeDisplay,
@@ -11,7 +12,6 @@ import {
   formatRecipeEffect,
   getCropDisplayName,
 } from "./cookingPanelLogic.ts";
-import type { CookingRecipe } from "@/game/systems/cooking";
 
 // ---------------------------------------------------------------------------
 // Test recipe fixture

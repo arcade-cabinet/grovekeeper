@@ -1,6 +1,6 @@
 /**
  * Tests for NewGameModal types and config structure.
- * Spec §26 (Save/Persistence) and §37 (Game Modes).
+ * Spec §26 (Save/Persistence) and §37 (Game Modes — survival-only).
  *
  * NOTE: Component rendering tests are omitted -- importing .tsx components
  * crashes the Jest env due to the react-native-css-interop JSX runtime.
@@ -8,62 +8,56 @@
  */
 
 import { generateSeedPhrase } from "@/game/utils/seedWords";
-import type { GameMode, NewGameConfig, SurvivalDifficulty } from "./NewGameModal.tsx";
+import type { Difficulty, NewGameConfig } from "./NewGameModal.tsx";
 
-describe("NewGameConfig (Spec §37)", () => {
-  it("accepts an Exploration config with no survival fields", () => {
+describe("NewGameConfig (Spec §37 — survival-only)", () => {
+  it("accepts a Seedling config", () => {
     const config: NewGameConfig = {
       worldSeed: "Gentle Mossy Hollow",
-      gameMode: "exploration",
-      survivalDifficulty: "standard", // required field but ignored in exploration
+      difficulty: "seedling",
       permadeath: false,
     };
-    expect(config.gameMode).toBe("exploration");
+    expect(config.difficulty).toBe("seedling");
     expect(config.permadeath).toBe(false);
   });
 
-  it("accepts all four Survival sub-difficulties (Spec §37.2)", () => {
-    const difficulties: SurvivalDifficulty[] = ["gentle", "standard", "harsh", "ironwood"];
-    for (const sd of difficulties) {
+  it("accepts all four difficulty tiers (Spec §37.2)", () => {
+    const difficulties: Difficulty[] = ["seedling", "sapling", "hardwood", "ironwood"];
+    for (const d of difficulties) {
       const config: NewGameConfig = {
         worldSeed: "Ancient Whispering Canopy",
-        gameMode: "survival",
-        survivalDifficulty: sd,
-        permadeath: sd === "ironwood",
+        difficulty: d,
+        permadeath: d === "ironwood",
       };
-      expect(config.survivalDifficulty).toBe(sd);
+      expect(config.difficulty).toBe(d);
     }
   });
 
   it("Ironwood forces permadeath=true", () => {
-    // This is enforced by the component's handleTierSelect logic.
-    // Verify the type allows it.
     const config: NewGameConfig = {
       worldSeed: "Frosty Towering Pine",
-      gameMode: "survival",
-      survivalDifficulty: "ironwood",
+      difficulty: "ironwood",
       permadeath: true,
     };
     expect(config.permadeath).toBe(true);
   });
 
-  it("Exploration mode forces permadeath=false", () => {
+  it("Seedling disallows permadeath", () => {
     const config: NewGameConfig = {
       worldSeed: "Sunlit Dappled Meadow",
-      gameMode: "exploration",
-      survivalDifficulty: "gentle",
+      difficulty: "seedling",
       permadeath: false,
     };
     expect(config.permadeath).toBe(false);
   });
 });
 
-describe("GameMode type", () => {
-  it("only allows exploration or survival", () => {
-    const modes: GameMode[] = ["exploration", "survival"];
-    expect(modes).toHaveLength(2);
-    expect(modes).toContain("exploration");
-    expect(modes).toContain("survival");
+describe("Difficulty type", () => {
+  it("only allows seedling, sapling, hardwood, or ironwood", () => {
+    const tiers: Difficulty[] = ["seedling", "sapling", "hardwood", "ironwood"];
+    expect(tiers).toHaveLength(4);
+    expect(tiers).toContain("seedling");
+    expect(tiers).toContain("ironwood");
   });
 });
 
@@ -72,8 +66,7 @@ describe("NewGameConfig worldSeed integration with seedWords (Spec §3.1)", () =
     const phrase = generateSeedPhrase(42);
     const config: NewGameConfig = {
       worldSeed: phrase,
-      gameMode: "exploration",
-      survivalDifficulty: "standard",
+      difficulty: "sapling",
       permadeath: false,
     };
     expect(config.worldSeed.split(" ")).toHaveLength(3);

@@ -242,6 +242,32 @@ describe("harvest system", () => {
       const entity: Entity = { id: "no-tree" };
       expect(computeYieldMultiplier(entity)).toBe(1.0);
     });
+
+    // ── resourceYieldMult (difficulty scaling) — Spec §37 ──────
+
+    it("applies resourceYieldMult from difficulty config", () => {
+      const entity = makeTreeEntity("white-oak", 3);
+      // Hardwood: resourceYieldMult = 0.75
+      expect(computeYieldMultiplier(entity, undefined, 0.75)).toBeCloseTo(0.75);
+    });
+
+    it("stacks resourceYieldMult with old growth bonus", () => {
+      const entity = makeTreeEntity("white-oak", 4);
+      // Old growth (1.5) * Ironwood resourceYieldMult (0.3) = 0.45
+      expect(computeYieldMultiplier(entity, undefined, 0.3)).toBeCloseTo(0.45);
+    });
+
+    it("stacks resourceYieldMult with pruned and old growth", () => {
+      const entity = makeTreeEntity("white-oak", 4);
+      entity.tree!.pruned = true;
+      // Old growth (1.5) * pruned (1.5) * Seedling resourceYieldMult (1.3) = 2.925
+      expect(computeYieldMultiplier(entity, undefined, 1.3)).toBeCloseTo(2.925);
+    });
+
+    it("defaults to 1.0 when resourceYieldMult is omitted", () => {
+      const entity = makeTreeEntity("white-oak", 3);
+      expect(computeYieldMultiplier(entity)).toBe(1.0);
+    });
   });
 
   // ── collectHarvest ─────────────────────────────────────────────
@@ -333,6 +359,61 @@ describe("harvest system", () => {
         { type: "sap", amount: 3 },
         { type: "fruit", amount: 3 },
       ]);
+    });
+
+    // ── resourceYieldMult (difficulty scaling) — Spec §37 ──────
+
+    it("applies resourceYieldMult to harvest yields", () => {
+      const entity = makeTreeEntity("white-oak", 3);
+      entity.harvestable = {
+        resources: [{ type: "timber", amount: 2 }],
+        cooldownElapsed: 45,
+        cooldownTotal: 45,
+        ready: true,
+      };
+      // Ironwood: resourceYieldMult = 0.3 => ceil(2 * 1.0 * 0.3) = ceil(0.6) = 1
+      const result = collectHarvest(entity, undefined, 0.3);
+      expect(result).toEqual([{ type: "timber", amount: 1 }]);
+    });
+
+    it("applies Seedling resourceYieldMult bonus to harvest", () => {
+      const entity = makeTreeEntity("white-oak", 3);
+      entity.harvestable = {
+        resources: [{ type: "timber", amount: 2 }],
+        cooldownElapsed: 45,
+        cooldownTotal: 45,
+        ready: true,
+      };
+      // Seedling: resourceYieldMult = 1.3 => ceil(2 * 1.0 * 1.3) = ceil(2.6) = 3
+      const result = collectHarvest(entity, undefined, 1.3);
+      expect(result).toEqual([{ type: "timber", amount: 3 }]);
+    });
+
+    it("stacks resourceYieldMult with old growth and pruned bonuses", () => {
+      const entity = makeTreeEntity("white-oak", 4);
+      entity.tree!.pruned = true;
+      entity.harvestable = {
+        resources: [{ type: "timber", amount: 2 }],
+        cooldownElapsed: 45,
+        cooldownTotal: 45,
+        ready: true,
+      };
+      // Old growth (1.5) * pruned (1.5) * Hardwood (0.75) = 1.6875
+      // ceil(2 * 1.6875) = ceil(3.375) = 4
+      const result = collectHarvest(entity, undefined, 0.75);
+      expect(result).toEqual([{ type: "timber", amount: 4 }]);
+    });
+
+    it("defaults to 1.0 resourceYieldMult when omitted", () => {
+      const entity = makeTreeEntity("white-oak", 3);
+      entity.harvestable = {
+        resources: [{ type: "timber", amount: 2 }],
+        cooldownElapsed: 45,
+        cooldownTotal: 45,
+        ready: true,
+      };
+      const result = collectHarvest(entity);
+      expect(result).toEqual([{ type: "timber", amount: 2 }]);
     });
   });
 });

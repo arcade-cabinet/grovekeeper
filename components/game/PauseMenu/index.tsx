@@ -4,7 +4,7 @@ import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
 import { SettingsScreen } from "../SettingsScreen.tsx";
 import { ProgressTab } from "./ProgressTab.tsx";
 import { SettingsTab } from "./SettingsTab.tsx";
@@ -20,8 +20,8 @@ export type {
   PrestigeInfo,
 } from "./types.ts";
 
-const panelBg = "rgba(10,12,8,0.92)";
-const borderColor = DARK.borderBranch;
+const panelBg = "rgba(240,253,244,0.92)";
+const borderColor = LIGHT.borderBranch;
 
 export function PauseMenu({
   open,
@@ -70,12 +70,12 @@ export function PauseMenu({
   return (
     <>
       <Modal visible={open} transparent animationType="fade" onRequestClose={handleClose}>
-        <View className="flex-1 items-center justify-center bg-black/60 px-4">
+        <View className="flex-1 items-center justify-center bg-black/30 px-4">
           <View
             className="w-full max-w-sm rounded-2xl"
             style={{
               backgroundColor: panelBg,
-              borderWidth: 1,
+              borderWidth: 2,
               borderColor,
             }}
           >
@@ -89,7 +89,7 @@ export function PauseMenu({
                   fontFamily: FONTS.heading,
                   fontSize: 18,
                   fontWeight: "700",
-                  color: DARK.textPrimary,
+                  color: LIGHT.textPrimary,
                 }}
                 testID="pause-menu-title"
               >
@@ -100,7 +100,7 @@ export function PauseMenu({
                 onPress={handleClose}
                 accessibilityLabel="Close menu"
               >
-                <Icon as={XIcon} size={20} color={DARK.textSecondary} />
+                <Icon as={XIcon} size={20} color={LIGHT.textMuted} />
               </Pressable>
             </View>
 
@@ -116,7 +116,9 @@ export function PauseMenu({
                     key={tab}
                     className="min-h-[44px] flex-1 items-center justify-center"
                     style={
-                      isActive ? { borderBottomWidth: 2, borderBottomColor: ACCENT.sap } : undefined
+                      isActive
+                        ? { borderBottomWidth: 2, borderBottomColor: ACCENT.greenBright }
+                        : undefined
                     }
                     onPress={() => setActiveTab(tab)}
                   >
@@ -124,7 +126,8 @@ export function PauseMenu({
                       style={{
                         ...TYPE.label,
                         textTransform: "capitalize",
-                        color: isActive ? ACCENT.sap : DARK.textMuted,
+                        color: isActive ? ACCENT.greenBright : LIGHT.textMuted,
+                        fontWeight: isActive ? "700" : "500",
                       }}
                     >
                       {tab}
@@ -178,10 +181,10 @@ export function PauseMenu({
             >
               <Button
                 className="min-h-[44px] w-full rounded-xl"
-                style={{ backgroundColor: ACCENT.sap }}
+                style={{ backgroundColor: ACCENT.greenBright }}
                 onPress={handleClose}
               >
-                <Text style={{ fontWeight: "700", color: DARK.bgDeep }}>Continue Playing</Text>
+                <Text style={{ fontWeight: "700", color: "#FFF" }}>Continue Playing</Text>
               </Button>
               <Button
                 className="min-h-[44px] w-full rounded-xl bg-transparent"

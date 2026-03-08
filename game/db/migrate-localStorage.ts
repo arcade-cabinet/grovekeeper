@@ -66,7 +66,7 @@ export async function migrateFromLocalStorage(): Promise<boolean> {
 // biome-ignore lint/suspicious/noExplicitAny: drizzle transaction type
 async function migrateSaveConfig(tx: any): Promise<void> {
   await tx.insert(schema.saveConfig).values({
-    difficulty: "normal",
+    difficulty: "sapling",
     permadeath: false,
     version: 1,
     createdAt: Date.now(),

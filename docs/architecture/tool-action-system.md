@@ -68,7 +68,7 @@ Each tool model has unique proportions. These offsets are additive to the base p
 
 ### Material Override
 
-All tool meshes use a shared `MeshBasicMaterial` (unlit) sampling `Tools_Texture.png` at `magFilter: NearestFilter`, `minFilter: NearestFilter` for PSX pixel crunch. No scene lighting affects the tool -- it has its own flat shading baked into the texture.
+All tool meshes use a shared `MeshStandardMaterial` sampling `Tools_Texture.png`. Scene lighting affects the tool for visual consistency with the rest of the scene.
 
 ---
 
@@ -258,7 +258,7 @@ camera.updateProjectionMatrix();
 
 ### 3.3 Particle Burst
 
-Particles spawn at the raycast hit point in world space. Rendered as small unlit quads (PSX style -- no smooth particles).
+Particles spawn at the raycast hit point in world space. Rendered as small unlit quads (stylized -- no smooth particles).
 
 | Tool | Count | Spread (units) | Speed (units/s) | Lifetime (ms) | Color | Shape |
 |------|-------|----------------|-----------------|---------------|-------|-------|

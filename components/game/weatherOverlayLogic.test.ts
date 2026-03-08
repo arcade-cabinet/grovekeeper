@@ -9,7 +9,7 @@ import {
   computeRainDropCount,
   computeWindAngleDeg,
   computeWindStreakCount,
-} from "./weatherOverlayLogic";
+} from "./weatherOverlayLogic.ts";
 
 describe("WeatherOverlay logic (Spec §12)", () => {
   describe("computeRainDropCount", () => {

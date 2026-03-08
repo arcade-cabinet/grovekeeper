@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT } from "@/components/ui/tokens";
 
 export function StatItem({
   label,
@@ -13,13 +13,13 @@ export function StatItem({
 }) {
   return (
     <View className="gap-0.5">
-      <Text style={{ fontSize: 10, color: DARK.textMuted }}>{label}</Text>
+      <Text style={{ fontSize: 10, color: LIGHT.textMuted }}>{label}</Text>
       <Text
         style={{
           fontSize: 20,
           fontWeight: "700",
           fontFamily: FONTS.data,
-          color: color ?? ACCENT.sap,
+          color: color ?? ACCENT.greenBright,
         }}
       >
         {value}

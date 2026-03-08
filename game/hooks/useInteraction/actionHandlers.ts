@@ -13,17 +13,12 @@ import {
 import { dispatchAction } from "@/game/actions/actionDispatcher";
 import { getToolById } from "@/game/config/tools";
 import type { Entity } from "@/game/ecs/world";
-import {
-  campfiresQuery,
-  structuresQuery,
-  trapsQuery,
-  waterBodiesQuery,
-} from "@/game/ecs/world";
-import { useGameStore } from "@/game/stores";
+import { campfiresQuery, structuresQuery, trapsQuery, waterBodiesQuery } from "@/game/ecs/world";
+import type { useGameStore } from "@/game/stores";
 import { showToast } from "@/game/ui/Toast";
-import { findRockAtGrid, findTreeAtGrid } from "./entityFinders";
-import { setSelection } from "./selectionStore";
-import type { InteractionSelection } from "./types";
+import { findRockAtGrid, findTreeAtGrid } from "./entityFinders.ts";
+import { setSelection } from "./selectionStore.ts";
+import type { InteractionSelection } from "./types.ts";
 
 type Store = ReturnType<typeof useGameStore.getState>;
 
@@ -71,11 +66,7 @@ export function handleWateringCanAction(
   }
 }
 
-export function handleAxeAction(
-  selection: InteractionSelection,
-  store: Store,
-  tool: string,
-): void {
+export function handleAxeAction(selection: InteractionSelection, store: Store, tool: string): void {
   if (selection.type !== "tree" || !selection.entityId) return;
   const resources = harvestTree(selection.entityId);
   if (resources) {

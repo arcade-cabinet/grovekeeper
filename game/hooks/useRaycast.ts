@@ -11,10 +11,10 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef, useSyncExternalStore } from "react";
-import { Raycaster, Vector2, Vector3 } from "three";
+import { Raycaster, Vector2, type Vector3 } from "three";
 
 import type { Entity } from "@/game/ecs/world";
-import { npcsQuery, structuresQuery, treesQuery } from "@/game/ecs/world";
+import { enemiesQuery, npcsQuery, structuresQuery, treesQuery } from "@/game/ecs/world";
 
 /** Maximum reach of any tool in meters (Spec §11, tool-action-system §8.2). */
 export const MAX_RAYCAST_DISTANCE = 6.0;
@@ -22,7 +22,7 @@ export const MAX_RAYCAST_DISTANCE = 6.0;
 /** Proximity radius for spatial structure lookup (InstancedMesh fallback). */
 export const STRUCTURE_SNAP_RADIUS = 2.0;
 
-export type RaycastEntityType = "tree" | "npc" | "structure";
+export type RaycastEntityType = "tree" | "npc" | "structure" | "enemy";
 
 export interface RaycastHit {
   /** The ECS entity that was hit. */
@@ -67,18 +67,20 @@ export function useTargetHit(): RaycastHit | null {
 }
 
 /**
- * Resolves an ECS entity by ID, searching trees → NPCs → structures in priority order.
+ * Resolves an ECS entity by ID, searching trees → NPCs → enemies → structures in priority order.
  * Exported for unit testing — takes iterables so tests inject mock data directly.
  *
  * @param entityId   The entity ID from mesh.userData.entityId
  * @param trees      Iterable of tree entities
  * @param npcs       Iterable of npc entities
+ * @param enemies    Iterable of enemy entities
  * @param structures Iterable of structure entities
  */
 export function resolveEntityById(
   entityId: string,
   trees: Iterable<Entity>,
   npcs: Iterable<Entity>,
+  enemies: Iterable<Entity>,
   structures: Iterable<Entity>,
 ): { entity: Entity; entityType: RaycastEntityType } | null {
   for (const e of trees) {
@@ -86,6 +88,9 @@ export function resolveEntityById(
   }
   for (const e of npcs) {
     if (e.id === entityId) return { entity: e, entityType: "npc" };
+  }
+  for (const e of enemies) {
+    if (e.id === entityId) return { entity: e, entityType: "enemy" };
   }
   for (const e of structures) {
     if (e.id === entityId) return { entity: e, entityType: "structure" };
@@ -148,7 +153,13 @@ export function useRaycast(): ReturnType<typeof useRef<RaycastHit | null>> {
       // Primary: mesh has entityId tagged in userData (TreeInstances, NpcMeshes)
       const entityId = intersect.object.userData?.entityId as string | undefined;
       if (entityId) {
-        const resolved = resolveEntityById(entityId, treesQuery, npcsQuery, structuresQuery);
+        const resolved = resolveEntityById(
+          entityId,
+          treesQuery,
+          npcsQuery,
+          enemiesQuery,
+          structuresQuery,
+        );
         if (resolved) {
           const hit: RaycastHit = {
             entity: resolved.entity,

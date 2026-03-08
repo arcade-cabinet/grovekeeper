@@ -14,7 +14,7 @@ import {
   MEMORY_BUDGET_MB,
   sampleMemory,
   tickFps,
-} from "./performanceMonitor";
+} from "./performanceMonitor.ts";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

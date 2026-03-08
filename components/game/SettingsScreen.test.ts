@@ -13,7 +13,7 @@ import {
   formatTouchSensitivity,
   formatVolumePct,
   SETTINGS_DEFAULTS,
-} from "./settingsLogic";
+} from "./settingsLogic.ts";
 
 // ---------------------------------------------------------------------------
 // clampVolume
@@ -114,9 +114,10 @@ describe("applySettingsUpdate (Spec §26)", () => {
   });
 
   it("passes boolean fields through unmodified", () => {
-    const result = applySettingsUpdate(SETTINGS_DEFAULTS, { reducedMotion: true, psxPixelRatio: false });
+    const result = applySettingsUpdate(SETTINGS_DEFAULTS, {
+      reducedMotion: true,
+    });
     expect(result.reducedMotion).toBe(true);
-    expect(result.psxPixelRatio).toBe(false);
   });
 
   it("does not mutate the current object", () => {

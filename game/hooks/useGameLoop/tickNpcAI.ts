@@ -3,8 +3,8 @@
  */
 import { NpcBrain, type NpcBrainContext } from "@/game/ai/NpcBrain";
 import { npcsQuery, playerQuery, world } from "@/game/ecs/world";
-import { buildWalkabilityGrid, type WalkabilityGrid } from "@/game/systems/pathfinding";
 import { tickNpcSchedule } from "@/game/systems/npcSchedule";
+import { buildWalkabilityGrid, type WalkabilityGrid } from "@/game/systems/pathfinding";
 import type { TimeState } from "@/game/systems/time";
 import { MICROSECONDS_PER_GAME_SECOND } from "@/game/systems/time";
 
@@ -21,8 +21,7 @@ export function tickNpcSchedules(
   timeState: TimeState,
 ): void {
   if (!walkGridRef.current) return;
-  const currentHour =
-    (timeState.totalMicroseconds / (MICROSECONDS_PER_GAME_SECOND * 3600)) % 24;
+  const currentHour = (timeState.totalMicroseconds / (MICROSECONDS_PER_GAME_SECOND * 3600)) % 24;
   for (const entity of npcsQuery) {
     if (!entity.position || !entity.npc || !entity.npc.schedule?.length) continue;
     const schedResult = tickNpcSchedule(
@@ -91,12 +90,7 @@ export function tickNpcAI(
 
     let brain = npcBrains.get(entity.id);
     if (!brain) {
-      brain = new NpcBrain(
-        entity.id,
-        entity.npc.templateId,
-        entity.position.x,
-        entity.position.z,
-      );
+      brain = new NpcBrain(entity.id, entity.npc.templateId, entity.position.x, entity.position.z);
       npcBrains.set(entity.id, brain);
     }
 

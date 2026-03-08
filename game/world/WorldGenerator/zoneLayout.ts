@@ -1,7 +1,7 @@
 import type { ZoneArchetype } from "../archetypes.ts";
 import type { ConnectionDirection, ZoneConnection, ZoneDefinition } from "../types.ts";
-import { oppositeDirection } from "./helpers";
-import { generateProps, generateTileOverrides } from "./tileGeneration";
+import { oppositeDirection } from "./helpers.ts";
+import { generateProps, generateTileOverrides } from "./tileGeneration.ts";
 
 export interface OpenEdge {
   zoneId: string;

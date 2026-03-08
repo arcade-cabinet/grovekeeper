@@ -2,7 +2,7 @@
 
 *"Every forest begins with a single seed."*
 
-A PSX-aesthetic survival game where you explore an infinite procedural world, tend groves, and discover the 14 ancient Grovekeepers hidden deep within hedge labyrinths. Plant, chop, water, dig, forage, fish, farm, forge -- every comfort is earned. Same seed, same world, always.
+A bright, whimsical Wind Waker-inspired survival game where you explore an infinite procedural world, tend groves, and discover the 14 ancient Grovekeepers hidden deep within hedge labyrinths. Plant, chop, water, dig, forage, fish, farm, forge -- every comfort is earned. Same seed, same world, always.
 
 **Mobile-first** -- designed for 3-15 minute sessions. Runs on iOS, Android, and Web.
 
@@ -12,7 +12,7 @@ You start with a basic axe, a trowel, a watering can, three White Oak seeds, and
 
 - **Survival systems** -- hearts, hunger, stamina, temperature, weather impact
 - **Seeded determinism** -- "Adjective Adjective Noun" seed phrases, zero Math.random()
-- **PSX aesthetic** -- no antialiasing, flat shading, chunky geometry, pixelated textures
+- **Wind Waker-inspired visuals** -- MSAA, smooth shading, PBR materials, bright whimsical palette
 - **Infinite world** -- chunk-based generation with delta-only persistence
 - **4 difficulty tiers** -- Seedling, Sapling, Hardwood, Ironwood (permadeath)
 
@@ -109,7 +109,7 @@ grovekeeper/
 - **ECS (Miniplex)** -- runtime game state: entity positions, growth progress, tile states
 - **Legend State** -- persistent player state: level, XP, resources, unlocks, settings
 - **Pure systems** -- `(world, deltaTime, ...context) => void`, config from JSON, randomness from `scopedRNG`
-- **GLB models** -- 3DPSX PSX-native models for trees, NPCs, structures, props (procedural for terrain, water, sky, weather, audio)
+- **GLB models** -- chibi-style low-poly models for trees, NPCs, structures, props (procedural for terrain, water, sky, weather, audio)
 - **Chunk-based world** -- 16x16 tiles per chunk, 3x3 active, 5x5 buffer, delta-only persistence
 
 ## Documentation

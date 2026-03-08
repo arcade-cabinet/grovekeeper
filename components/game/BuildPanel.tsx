@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { ACCENT, DARK, FONTS, TYPE } from "@/components/ui/tokens";
 import type { MaterialType, PieceType } from "@/game/ecs/components/building";
 import {
   buildCosts,
@@ -113,9 +114,9 @@ function CategoryWheel({ onSelect }: { onSelect: (categoryId: string) => void })
                   width: BUTTON_SIZE,
                   height: BUTTON_SIZE,
                   borderRadius: BUTTON_SIZE / 2,
-                  backgroundColor: "rgba(45,90,39,0.12)",
+                  backgroundColor: DARK.surfaceMoss,
                   borderWidth: 2,
-                  borderColor: "#2D5A27",
+                  borderColor: DARK.borderBranch,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
@@ -123,7 +124,7 @@ function CategoryWheel({ onSelect }: { onSelect: (categoryId: string) => void })
                 accessibilityLabel={cat.label}
               >
                 <Text style={{ fontSize: 20, lineHeight: 24 }}>{cat.icon}</Text>
-                <Text style={{ fontSize: 8, color: "#3E2723", fontWeight: "600" }}>
+                <Text style={{ fontSize: 8, color: DARK.textSecondary, fontWeight: "600" }}>
                   {cat.label}
                 </Text>
               </Pressable>
@@ -131,7 +132,7 @@ function CategoryWheel({ onSelect }: { onSelect: (categoryId: string) => void })
           );
         })}
       </View>
-      <Text style={{ position: "absolute", bottom: 4, fontSize: 10, color: "#5D4037" }}>
+      <Text style={{ position: "absolute", bottom: 4, fontSize: 10, color: DARK.textMuted }}>
         Select category
       </Text>
     </View>
@@ -170,9 +171,13 @@ function PieceRow({
         paddingVertical: 8,
         marginBottom: 6,
         borderRadius: 12,
-        borderWidth: 2,
-        backgroundColor: locked ? "rgba(0,0,0,0.04)" : affordable ? "#fff" : "#f4f0e8",
-        borderColor: affordable ? "#2D5A27" : "#ccc",
+        borderWidth: 1,
+        backgroundColor: locked
+          ? "rgba(13,31,15,0.5)"
+          : affordable
+            ? DARK.bgCanopy
+            : DARK.surfaceStone,
+        borderColor: affordable ? ACCENT.sap : DARK.borderBranch,
         opacity: locked ? 0.55 : 1,
       }}
       onPress={onSelect}
@@ -193,10 +198,10 @@ function PieceRow({
 
       {/* Piece + material name */}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={{ fontSize: 13, fontWeight: "600", color: "#3E2723" }}>
+        <Text style={{ fontSize: 13, fontWeight: "600", color: DARK.textPrimary }}>
           {PIECE_LABELS[pieceType]}
         </Text>
-        <Text style={{ fontSize: 11, color: "#5D4037" }}>{MATERIAL_LABELS[material]}</Text>
+        <Text style={{ fontSize: 11, color: DARK.textSecondary }}>{MATERIAL_LABELS[material]}</Text>
       </View>
 
       {/* Build cost */}
@@ -205,13 +210,13 @@ function PieceRow({
           <View
             key={res}
             style={{
-              backgroundColor: "rgba(45,90,39,0.12)",
+              backgroundColor: DARK.surfaceMoss,
               borderRadius: 99,
               paddingHorizontal: 6,
               paddingVertical: 2,
             }}
           >
-            <Text style={{ fontSize: 10, color: "#2D5A27" }}>
+            <Text style={{ fontSize: 10, color: ACCENT.sap }}>
               {amt} {res}
             </Text>
           </View>
@@ -223,7 +228,7 @@ function PieceRow({
         <View
           style={{
             flexShrink: 0,
-            backgroundColor: "rgba(93,64,55,0.15)",
+            backgroundColor: "rgba(13,31,15,0.5)",
             borderRadius: 99,
             paddingHorizontal: 6,
             paddingVertical: 2,
@@ -231,19 +236,19 @@ function PieceRow({
           }}
         >
           <Text style={{ fontSize: 10 }}>🔒</Text>
-          <Text style={{ fontSize: 9, color: "#5D4037" }}>Lv{unlockLvl}</Text>
+          <Text style={{ fontSize: 9, color: DARK.textMuted }}>Lv{unlockLvl}</Text>
         </View>
       ) : (
         <View
           style={{
             flexShrink: 0,
-            backgroundColor: "rgba(93,64,55,0.1)",
+            backgroundColor: DARK.surfaceMoss,
             borderRadius: 99,
             paddingHorizontal: 6,
             paddingVertical: 2,
           }}
         >
-          <Text style={{ fontSize: 10, color: "#5D4037" }}>Lv{unlockLvl}</Text>
+          <Text style={{ fontSize: 10, color: DARK.textSecondary }}>Lv{unlockLvl}</Text>
         </View>
       )}
     </Pressable>
@@ -295,8 +300,8 @@ export function BuildPanel({
             borderTopLeftRadius: 18,
             borderTopRightRadius: 18,
             borderTopWidth: 2,
-            borderTopColor: "#5D4037",
-            backgroundColor: "#FAF7F2",
+            borderTopColor: DARK.borderBranch,
+            backgroundColor: DARK.bgDeep,
             paddingBottom: 28,
           }}
         >
@@ -307,7 +312,7 @@ export function BuildPanel({
               alignItems: "center",
               justifyContent: "space-between",
               borderBottomWidth: 1,
-              borderBottomColor: "rgba(93,64,55,0.25)",
+              borderBottomColor: DARK.borderBranch,
               paddingHorizontal: 16,
               paddingVertical: 12,
             }}
@@ -323,13 +328,19 @@ export function BuildPanel({
                 onPress={() => setSelectedCategory(null)}
                 accessibilityLabel="Back to categories"
               >
-                <Text style={{ fontSize: 18, color: "#5D4037" }}>←</Text>
+                <Text style={{ fontSize: 18, color: DARK.textSecondary }}>←</Text>
               </Pressable>
             ) : (
               <View style={{ width: 44 }} />
             )}
 
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#2D5A27" }}>
+            <Text
+              style={{
+                ...TYPE.heading,
+                fontFamily: FONTS.heading,
+                color: DARK.textPrimary,
+              }}
+            >
               {activeCat ? `Build: ${activeCat.icon} ${activeCat.label}` : "Build"}
             </Text>
 
@@ -343,7 +354,7 @@ export function BuildPanel({
               onPress={handleClose}
               accessibilityLabel="Close"
             >
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#3E2723" }}>✕</Text>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: DARK.textSecondary }}>✕</Text>
             </Pressable>
           </View>
 

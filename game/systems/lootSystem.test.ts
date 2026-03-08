@@ -1,5 +1,8 @@
+import resourcesConfig from "@/config/game/resources.json" with { type: "json" };
 import { createRNG } from "@/game/utils/seedRNG";
 import { createLootDrop, rollLoot, rollLootForEnemy, updateLootDespawn } from "./lootSystem.ts";
+
+const ALL_RESOURCE_TYPES: string[] = resourcesConfig.types;
 
 describe("Loot System", () => {
   describe("rollLoot", () => {
@@ -21,7 +24,7 @@ describe("Loot System", () => {
     });
 
     it("returns valid resource types", () => {
-      const validTypes = ["timber", "sap", "fruit", "acorns"];
+      const validTypes = ALL_RESOURCE_TYPES;
       const loot = rollLoot("knight-loot", 2, createRNG(555));
       for (const item of loot) {
         expect(validTypes).toContain(item.type);
@@ -103,7 +106,23 @@ describe("rollLootForEnemy (Spec §34)", () => {
   it("handles sprite-loot table", () => {
     const drop = rollLootForEnemy("sprite-1", "sprite-loot", 1, "World");
     expect(drop.despawnTimer).toBe(60);
-    const validTypes = ["sap", "fruit", "acorns"];
+    const validTypes = [
+      "timber",
+      "sap",
+      "fruit",
+      "acorns",
+      "wood",
+      "stone",
+      "metal_scrap",
+      "fiber",
+      "ore",
+      "berries",
+      "herbs",
+      "meat",
+      "hide",
+      "fish",
+      "seeds",
+    ];
     for (const item of drop.resources) {
       expect(validTypes).toContain(item.type);
     }

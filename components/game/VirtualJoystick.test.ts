@@ -9,7 +9,7 @@
  * onTouchStart / onTouchMove / onTouchEnd directly.
  */
 
-import { computeJoystickZoneRect, type JoystickProvider } from "./joystickHandlers";
+import { computeJoystickZoneRect, type JoystickProvider } from "./joystickHandlers.ts";
 
 describe("computeJoystickZoneRect (Spec §23)", () => {
   describe("zone origin computation", () => {

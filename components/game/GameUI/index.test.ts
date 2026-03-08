@@ -5,7 +5,7 @@
  * Imported from the plain .ts file — no React/RN context needed.
  */
 
-import { buildGridExpansionInfo, buildPrestigeInfo } from "./gameUILogic";
+import { buildGridExpansionInfo, buildPrestigeInfo } from "./gameUILogic.ts";
 
 // ---------------------------------------------------------------------------
 // buildGridExpansionInfo (Spec §24)

@@ -5,6 +5,43 @@
  * Crops are plantable food items with 4-stage growth.
  */
 
+export type BuildingMaterialType = "brick" | "plaster" | "timber";
+
+/** Blueprint IDs for procedural town buildings (§43.2). */
+export type BlueprintId =
+  | "cottage"
+  | "townhouse"
+  | "barn"
+  | "inn"
+  | "forge"
+  | "kitchen"
+  | "apothecary"
+  | "watchtower"
+  | "storehouse"
+  | "chapel";
+
+/**
+ * Procedural building — rendered from Box geometry instead of a GLB model.
+ * Added alongside StructureComponent (which still drives game effects).
+ * Spec §42 (Procedural Architecture), §43 (Town Generation).
+ */
+export interface ProceduralBuildingComponent {
+  /** Building width in world units (footprintTiles × tileSize). */
+  footprintW: number;
+  /** Building depth in world units. */
+  footprintD: number;
+  /** Number of floors (stories). */
+  stories: number;
+  /** Wall material — affects colour palette. */
+  materialType: BuildingMaterialType;
+  /** Blueprint type — determines interior furnishings and openings (§43.2). */
+  blueprintId: BlueprintId;
+  /** Door faces this direction in degrees (§43.4). */
+  facing: 0 | 90 | 180 | 270;
+  /** Seeded variation hash — drives chimney/balcony/awning presence (§43.5). */
+  variation: number;
+}
+
 export interface BuildCostEntry {
   resource: string;
   amount: number;

@@ -22,6 +22,8 @@ export type SoundId =
   | "water"
   | "harvest"
   | "chop"
+  | "dig"
+  | "prune"
   | "levelUp"
   | "achievement"
   | "toolSelect"
@@ -89,6 +91,33 @@ class AudioManagerImpl {
         break;
       case "chop":
         this.playNoiseBurst(ctx, 0.06, 200, 0.15);
+        break;
+      case "dig":
+        // Soil scrape: filtered noise burst + low thud
+        this.playNoiseBurst(ctx, 0.08, 350, 0.12);
+        this.playTone(ctx, {
+          freq: 120,
+          duration: 0.1,
+          type: "triangle",
+          gain: 0.15,
+          delay: 0.02,
+        });
+        break;
+      case "prune":
+        // Snip: short, sharp high-frequency click pair
+        this.playTone(ctx, {
+          freq: 1200,
+          duration: 0.02,
+          type: "square",
+          gain: 0.1,
+        });
+        this.playTone(ctx, {
+          freq: 1600,
+          duration: 0.02,
+          type: "square",
+          gain: 0.1,
+          delay: 0.03,
+        });
         break;
       case "levelUp":
         this.playArpeggio(ctx, [523, 659, 784, 1047], 0.1, 0.2);

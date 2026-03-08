@@ -1,5 +1,5 @@
 /**
- * LoadingScreen -- 4-phase progress overlay (Spec §1.3).
+ * LoadingScreen -- 4-phase progress overlay (Spec S1.3).
  *
  * Shown between NewGameModal and the game canvas. Tracks:
  *   Phase 1: fonts loaded
@@ -9,11 +9,14 @@
  *
  * Host component drives `phase` from 0 (idle) to 4 (done).
  * Component calls `onComplete` once phase 4 is reached.
+ *
+ * Bright whimsical Zelda aesthetic -- soft greens, warm cream.
  */
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Animated as RNAnimated, View } from "react-native";
 import { Text } from "@/components/ui/text";
+import { ACCENT, LIGHT, TYPE } from "@/components/ui/tokens";
 import { Logo } from "./Logo.tsx";
 import {
   getPhaseLabel,
@@ -24,24 +27,11 @@ import {
 } from "./loadingScreenLogic.ts";
 
 // ---------------------------------------------------------------------------
-// Color palette (matches the rest of the game UI)
-// ---------------------------------------------------------------------------
-
-const C = {
-  forestGreen: "#2D5A27",
-  barkBrown: "#5D4037",
-  soilDark: "#3E2723",
-  leafLight: "#81C784",
-  skyMist: "#E8F5E9",
-  trackBg: "#C8E6C9",
-} as const;
-
-// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface LoadingScreenProps {
-  /** Current loading phase (0–4). Host drives this as async steps complete. */
+  /** Current loading phase (0-4). Host drives this as async steps complete. */
   phase: LoadingPhase;
   /** Called once when phase transitions to 4 (loading complete). */
   onComplete?: () => void;
@@ -129,8 +119,10 @@ function ProgressBar({ percent, reduceMotion }: { percent: number; reduceMotion:
         width: "100%",
         height: 10,
         borderRadius: 5,
-        backgroundColor: C.trackBg,
+        backgroundColor: "rgba(134,239,172,0.25)",
         overflow: "hidden",
+        borderWidth: 1,
+        borderColor: LIGHT.borderBranch,
       }}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: percent }}
@@ -140,7 +132,7 @@ function ProgressBar({ percent, reduceMotion }: { percent: number; reduceMotion:
           height: "100%",
           width: animatedWidth,
           borderRadius: 5,
-          backgroundColor: C.forestGreen,
+          backgroundColor: ACCENT.greenBright,
         }}
       />
     </View>
@@ -187,9 +179,9 @@ function TipRotator({ reduceMotion }: { reduceMotion: boolean }) {
     <RNAnimated.View style={{ opacity }}>
       <Text
         style={{
-          color: C.barkBrown,
+          ...TYPE.body,
+          color: LIGHT.textSecondary,
           textAlign: "center",
-          fontSize: 13,
           fontStyle: "italic",
           lineHeight: 20,
         }}
@@ -220,7 +212,7 @@ export function LoadingScreen({ phase, onComplete }: LoadingScreenProps) {
 
   return (
     <LinearGradient
-      colors={[C.skyMist, `${C.leafLight}40`, `${C.forestGreen}30`]}
+      colors={[LIGHT.bgDeep, LIGHT.bgCanopy, LIGHT.bgWarm]}
       locations={[0, 0.5, 1]}
       style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}
     >
@@ -235,10 +227,10 @@ export function LoadingScreen({ phase, onComplete }: LoadingScreenProps) {
         {/* Phase label */}
         <Text
           style={{
-            color: C.soilDark,
-            fontSize: 14,
+            ...TYPE.body,
             fontWeight: "600",
             letterSpacing: 0.3,
+            color: LIGHT.textPrimary,
           }}
         >
           {label}
@@ -250,8 +242,8 @@ export function LoadingScreen({ phase, onComplete }: LoadingScreenProps) {
         {/* Percent readout for accessibility */}
         <Text
           style={{
-            color: `${C.barkBrown}99`,
-            fontSize: 11,
+            ...TYPE.caption,
+            color: LIGHT.textMuted,
           }}
         >
           {Math.round(percent)}%

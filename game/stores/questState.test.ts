@@ -1,4 +1,4 @@
-import { useGameStore } from "./index";
+import { useGameStore } from "./index.ts";
 
 describe("Quest State Store (Spec §14, §16)", () => {
   beforeEach(() => {

@@ -23,12 +23,17 @@ import { applyDialogueEffects } from "@/game/systems/dialogueEffects";
 import { updateMarketEvents } from "@/game/systems/marketEvents";
 import type { ActiveQuest } from "@/game/systems/quests";
 import { pruneHistory, recordTrade } from "@/game/systems/supplyDemand";
-import { purchaseOffer, spawnMerchantAtVillage as spawnMerchantAtVillagePure, updateMerchant } from "@/game/systems/travelingMerchant";
+import {
+  purchaseOffer,
+  spawnMerchantAtVillage as spawnMerchantAtVillagePure,
+  updateMerchant,
+} from "@/game/systems/travelingMerchant";
 import { showToast } from "@/game/ui/Toast";
-import { gameState$, getState } from "./core";
+import { gameState$, getState } from "./core.ts";
+// biome-ignore lint/suspicious/noImportCycles: safe circular ES module binding (called at runtime, not init)
+import { addResource, addSeed } from "./inventory.ts";
 // Cross-domain imports -- safe circular ES module bindings (called at runtime, not init)
-import { addXp, unlockSpecies } from "./playerState";
-import { addResource, addSeed } from "./inventory";
+import { addXp, unlockSpecies } from "./playerState.ts";
 
 export function setActiveQuests(quests: ActiveQuest[]): void {
   gameState$.activeQuests.set(quests);

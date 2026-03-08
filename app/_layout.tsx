@@ -1,7 +1,19 @@
 import "@/global.css";
 
-import { Fredoka_400Regular, Fredoka_500Medium, Fredoka_700Bold } from "@expo-google-fonts/fredoka";
-import { Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold } from "@expo-google-fonts/nunito";
+import {
+  Cabin_400Regular,
+  Cabin_500Medium,
+  Cabin_600SemiBold,
+  Cabin_700Bold,
+} from "@expo-google-fonts/cabin";
+import { Cinzel_400Regular, Cinzel_600SemiBold, Cinzel_700Bold } from "@expo-google-fonts/cinzel";
+import {
+  CinzelDecorative_400Regular,
+  CinzelDecorative_700Bold,
+  CinzelDecorative_900Black,
+} from "@expo-google-fonts/cinzel-decorative";
+import { JetBrainsMono_400Regular, JetBrainsMono_700Bold } from "@expo-google-fonts/jetbrains-mono";
+import { Orbitron_400Regular, Orbitron_700Bold } from "@expo-google-fonts/orbitron";
 import { ThemeProvider } from "@react-navigation/native";
 import { PortalHost } from "@rn-primitives/portal";
 import { useFonts } from "expo-font";
@@ -29,12 +41,20 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   const [fontsLoaded] = useFonts({
-    Fredoka: Fredoka_400Regular,
-    Fredoka_500Medium,
-    Fredoka_700Bold,
-    Nunito: Nunito_400Regular,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
+    CinzelDecorative: CinzelDecorative_400Regular,
+    CinzelDecorative_700Bold,
+    CinzelDecorative_900Black,
+    Cinzel: Cinzel_400Regular,
+    Cinzel_600SemiBold,
+    Cinzel_700Bold,
+    Cabin: Cabin_400Regular,
+    Cabin_500Medium,
+    Cabin_600SemiBold,
+    Cabin_700Bold,
+    JetBrainsMono: JetBrainsMono_400Regular,
+    JetBrainsMono_700Bold,
+    Orbitron: Orbitron_400Regular,
+    Orbitron_700Bold,
   });
 
   const speciesLookup = useCallback((id: string): OfflineSpeciesData | undefined => {

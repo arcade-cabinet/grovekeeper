@@ -1,7 +1,7 @@
 import { observable } from "@legendapp/state";
 import { useSelector } from "@legendapp/state/react";
 import { Pressable, View } from "react-native";
-import Animated, { Layout, SlideInUp, SlideOutUp } from "react-native-reanimated";
+import Animated, { LinearTransition, SlideInUp, SlideOutUp } from "react-native-reanimated";
 import { Text } from "@/components/ui/text";
 
 // ---------------------------------------------------------------------------
@@ -104,7 +104,7 @@ function ToastBubble({ item }: { item: ToastItem }) {
     <Animated.View
       entering={SlideInUp.duration(250)}
       exiting={SlideOutUp.duration(250)}
-      layout={Layout.duration(200)}
+      layout={LinearTransition.duration(200)}
     >
       <Pressable
         className={`rounded-full px-4 py-2 shadow-lg ${TOAST_STYLES[item.type]}`}

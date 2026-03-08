@@ -21,7 +21,7 @@ individual component files listed below.
 |  | Compass                              Menu btn|  |
 |  +----------------------------------------------+  |
 |                                                    |
-|         (R3F 3D Canvas -- PSX aesthetic)           |
+|         (R3F 3D Canvas -- Zelda-style)             |
 |                                                    |
 |              WeatherOverlay                        |
 |              FloatingParticles                     |

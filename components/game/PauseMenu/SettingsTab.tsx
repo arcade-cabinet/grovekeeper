@@ -3,11 +3,11 @@ import { Alert, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
 import { ToggleSwitch } from "./ToggleSwitch.tsx";
 
-const cardBg = "rgba(26,58,30,0.7)";
-const cardBorder = "rgba(61,92,65,0.4)";
+const cardBg = LIGHT.bgCanopy;
+const cardBorder = LIGHT.borderBranch;
 
 interface SettingsTabProps {
   soundEnabled: boolean;
@@ -39,7 +39,7 @@ export function SettingsTab({
       {/* Audio / Graphics / Controls */}
       <Button
         className="min-h-[48px] w-full rounded-xl"
-        style={{ backgroundColor: ACCENT.sap }}
+        style={{ backgroundColor: ACCENT.greenBright }}
         onPress={() => {
           if (onSettings) {
             onSettings();
@@ -48,8 +48,8 @@ export function SettingsTab({
           }
         }}
       >
-        <Icon as={SettingsIcon} size={16} color={DARK.bgDeep} />
-        <Text style={{ marginLeft: 4, fontWeight: "700", color: DARK.bgDeep }}>
+        <Icon as={SettingsIcon} size={16} color="#FFF" />
+        <Text style={{ marginLeft: 4, fontWeight: "700", color: "#FFF" }}>
           Audio, Graphics & Controls
         </Text>
       </Button>
@@ -78,10 +78,9 @@ export function SettingsTab({
         >
           <Text
             style={{
-              fontSize: 12,
-              fontWeight: "700",
+              ...TYPE.label,
               fontFamily: FONTS.heading,
-              color: DARK.textPrimary,
+              color: LIGHT.textPrimary,
               marginBottom: 8,
             }}
           >
@@ -91,13 +90,18 @@ export function SettingsTab({
             {onExportSave ? (
               <Button
                 className="min-h-[44px] flex-1 rounded-xl bg-transparent"
-                style={{ borderWidth: 2, borderColor: DARK.borderBranch }}
+                style={{ borderWidth: 2, borderColor: LIGHT.borderBranch }}
                 variant="outline"
                 onPress={onExportSave}
               >
-                <Icon as={DownloadIcon} size={14} color={DARK.textPrimary} />
+                <Icon as={DownloadIcon} size={14} color={LIGHT.textPrimary} />
                 <Text
-                  style={{ marginLeft: 4, fontSize: 10, fontWeight: "700", color: DARK.textPrimary }}
+                  style={{
+                    marginLeft: 4,
+                    fontSize: 10,
+                    fontWeight: "700",
+                    color: LIGHT.textPrimary,
+                  }}
                 >
                   Export
                 </Text>
@@ -106,13 +110,18 @@ export function SettingsTab({
             {onImportSave ? (
               <Button
                 className="min-h-[44px] flex-1 rounded-xl bg-transparent"
-                style={{ borderWidth: 2, borderColor: DARK.borderBranch }}
+                style={{ borderWidth: 2, borderColor: LIGHT.borderBranch }}
                 variant="outline"
                 onPress={onImportSave}
               >
-                <Icon as={UploadIcon} size={14} color={DARK.textPrimary} />
+                <Icon as={UploadIcon} size={14} color={LIGHT.textPrimary} />
                 <Text
-                  style={{ marginLeft: 4, fontSize: 10, fontWeight: "700", color: DARK.textPrimary }}
+                  style={{
+                    marginLeft: 4,
+                    fontSize: 10,
+                    fontWeight: "700",
+                    color: LIGHT.textPrimary,
+                  }}
                 >
                   Import
                 </Text>
@@ -126,12 +135,14 @@ export function SettingsTab({
       {onHowToPlay ? (
         <Button
           className="min-h-[44px] w-full rounded-xl bg-transparent"
-          style={{ borderWidth: 2, borderColor: ACCENT.sap }}
+          style={{ borderWidth: 2, borderColor: ACCENT.greenBright }}
           variant="outline"
           onPress={onHowToPlay}
         >
-          <Icon as={BookOpenIcon} size={16} color={ACCENT.sap} />
-          <Text style={{ marginLeft: 4, fontWeight: "700", color: ACCENT.sap }}>How to Play</Text>
+          <Icon as={BookOpenIcon} size={16} color={ACCENT.greenBright} />
+          <Text style={{ marginLeft: 4, fontWeight: "700", color: ACCENT.greenBright }}>
+            How to Play
+          </Text>
         </Button>
       ) : null}
 

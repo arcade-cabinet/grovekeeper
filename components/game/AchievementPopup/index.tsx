@@ -1,7 +1,7 @@
 import { Modal } from "react-native";
-import { PopupContent } from "./PopupContent";
-import { showAchievementAction, useAchievementPopupStore } from "./store";
-import type { AchievementDef, AchievementPopupItem } from "./types";
+import { PopupContent } from "./PopupContent.tsx";
+import { showAchievementAction, useAchievementPopupStore } from "./store.ts";
+import type { AchievementDef, AchievementPopupItem } from "./types.ts";
 
 export type { AchievementDef };
 export type { AchievementPopupItem };

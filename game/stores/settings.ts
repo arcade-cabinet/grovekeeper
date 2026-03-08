@@ -6,7 +6,11 @@
 import { batch } from "@legendapp/state";
 import growthConfig from "@/config/game/growth.json" with { type: "json" };
 import { getSpeciesById } from "@/game/config/species";
-import { discoverCampfire as discoverCampfirePure, type FastTravelPoint } from "@/game/systems/fastTravel";
+import { startChain } from "@/game/quests/questChainEngine";
+import {
+  discoverCampfire as discoverCampfirePure,
+  type FastTravelPoint,
+} from "@/game/systems/fastTravel";
 import {
   awardGiftXp as awardGiftXpPure,
   awardQuestCompletionXp as awardQuestCompletionXpPure,
@@ -14,22 +18,21 @@ import {
   setRelationship as setRelationshipPure,
 } from "@/game/systems/npcRelationship";
 import {
-  ONBOARDING_SIGNAL_MAP,
-  skipTutorial as skipTutorialPure,
-  tickTutorial,
-} from "@/game/systems/tutorial";
-import {
   computeDiscoveryTier,
   createEmptyProgress,
   encounterWildSpecies,
   type SpeciesProgress,
 } from "@/game/systems/speciesDiscovery";
-import { startChain } from "@/game/quests/questChainEngine";
+import {
+  ONBOARDING_SIGNAL_MAP,
+  skipTutorial as skipTutorialPure,
+  tickTutorial,
+} from "@/game/systems/tutorial";
 import { showToast } from "@/game/ui/Toast";
-import { gameState$, getState, initialState } from "./core";
+import { gameState$, getState, type initialState } from "./core.ts";
+import { addXp } from "./playerState.ts";
 // Cross-domain imports -- safe: questState/playerState don't import from settings
-import { advanceQuestObjective } from "./questState";
-import { addXp } from "./playerState";
+import { advanceQuestObjective } from "./questState.ts";
 
 export function updateSettings(partial: Partial<typeof initialState.settings>): void {
   const current = gameState$.settings.peek();

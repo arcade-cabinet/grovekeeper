@@ -8,7 +8,7 @@ import {
   computeParticleOpacity,
   computeWindDrift,
   MAX_DISPLAY_WEATHER_PARTICLES,
-} from "./floatingParticlesLogic";
+} from "./floatingParticlesLogic.ts";
 
 describe("FloatingParticles weather logic (Spec §36)", () => {
   describe("computeWindDrift", () => {

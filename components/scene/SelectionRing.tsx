@@ -8,7 +8,7 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
-import { Color, DoubleSide, Mesh, MeshBasicMaterial } from "three";
+import { Color, DoubleSide, type Mesh, type MeshBasicMaterial } from "three";
 
 export interface SelectionRingProps {
   /** World position of the ring [x, y, z]. */

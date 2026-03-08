@@ -5,7 +5,7 @@
  * prefers-reduced-motion via ReduceMotion.System.
  */
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import Animated, {
   Easing,
   ReduceMotion,

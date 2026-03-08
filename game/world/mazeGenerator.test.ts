@@ -5,7 +5,6 @@
 
 import {
   generateLabyrinth,
-  type HedgePlacement,
   isLabyrinthChunk,
   LABYRINTH_PROBABILITY,
   type MazeGenerationResult,
@@ -38,6 +37,16 @@ describe("isLabyrinthChunk (Spec §17.5)", () => {
   it("never returns true for chunk (0,0) — origin is always a village", () => {
     const seed = "Gentle Mossy Hollow";
     expect(isLabyrinthChunk(seed, 0, 0)).toBe(false);
+  });
+
+  it("always returns true for chunk (1,1) — guaranteed first maze near spawn", () => {
+    // Chunk (1,1) is the guaranteed first labyrinth so new players can
+    // discover a maze within a short walk from the starting village.
+    const seed = "Gentle Mossy Hollow";
+    expect(isLabyrinthChunk(seed, 1, 1)).toBe(true);
+    // Verify it holds for any seed
+    expect(isLabyrinthChunk("Ancient Whispering Canopy", 1, 1)).toBe(true);
+    expect(isLabyrinthChunk("", 1, 1)).toBe(true);
   });
 
   it("returns a consistent value for the same chunk", () => {
@@ -178,8 +187,8 @@ describe("generateLabyrinth — hedge pieces (Spec §17.5)", () => {
 
   it("all hedge pieces have a valid modelPath", () => {
     for (const h of result.hedges) {
-      // Path: hedges/<type>/<type>_<size>.glb or similar
-      expect(h.hedge.modelPath).toMatch(/^hedges\/[a-z]+\/.+\.glb$/);
+      // Path: assets/models/hedges/<type>/<type>_<size>.glb or similar
+      expect(h.hedge.modelPath).toMatch(/^assets\/models\/hedges\/.+\.glb$/);
     }
   });
 

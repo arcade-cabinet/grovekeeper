@@ -25,6 +25,7 @@ jest.mock("three", () => ({
 jest.mock("@/game/ecs/world", () => ({
   treesQuery: [],
   npcsQuery: [],
+  enemiesQuery: [],
   structuresQuery: [],
 }));
 
@@ -46,17 +47,17 @@ function makeEntity(id: string, position?: { x: number; y: number; z: number }):
 
 describe("resolveEntityById (Spec §11)", () => {
   it("returns null when all iterables are empty", () => {
-    expect(resolveEntityById("e1", [], [], [])).toBeNull();
+    expect(resolveEntityById("e1", [], [], [], [])).toBeNull();
   });
 
   it("returns null for an entityId that matches nothing", () => {
     const tree = makeEntity("tree-1");
-    expect(resolveEntityById("unknown", [tree], [], [])).toBeNull();
+    expect(resolveEntityById("unknown", [tree], [], [], [])).toBeNull();
   });
 
   it("resolves a tree entity and reports entityType 'tree'", () => {
     const tree = makeEntity("tree-1");
-    const result = resolveEntityById("tree-1", [tree], [], []);
+    const result = resolveEntityById("tree-1", [tree], [], [], []);
     expect(result).not.toBeNull();
     expect(result?.entity).toBe(tree);
     expect(result?.entityType).toBe("tree");
@@ -64,32 +65,47 @@ describe("resolveEntityById (Spec §11)", () => {
 
   it("resolves an npc entity and reports entityType 'npc'", () => {
     const npc = makeEntity("npc-1");
-    const result = resolveEntityById("npc-1", [], [npc], []);
+    const result = resolveEntityById("npc-1", [], [npc], [], []);
     expect(result?.entity).toBe(npc);
     expect(result?.entityType).toBe("npc");
   });
 
+  it("resolves an enemy entity and reports entityType 'enemy'", () => {
+    const enemy = makeEntity("enemy-1");
+    const result = resolveEntityById("enemy-1", [], [], [enemy], []);
+    expect(result?.entity).toBe(enemy);
+    expect(result?.entityType).toBe("enemy");
+  });
+
   it("resolves a structure entity and reports entityType 'structure'", () => {
     const structure = makeEntity("str-1");
-    const result = resolveEntityById("str-1", [], [], [structure]);
+    const result = resolveEntityById("str-1", [], [], [], [structure]);
     expect(result?.entity).toBe(structure);
     expect(result?.entityType).toBe("structure");
   });
 
-  it("searches trees before npcs before structures (priority order)", () => {
-    // Same id present in all three — tree wins
+  it("searches trees before npcs before enemies before structures (priority order)", () => {
+    // Same id present in all four — tree wins
     const tree = makeEntity("shared");
     const npc = makeEntity("shared");
+    const enemy = makeEntity("shared");
     const structure = makeEntity("shared");
-    const result = resolveEntityById("shared", [tree], [npc], [structure]);
+    const result = resolveEntityById("shared", [tree], [npc], [enemy], [structure]);
     expect(result?.entityType).toBe("tree");
   });
 
   it("falls through to npc when id is absent from trees", () => {
     const npc = makeEntity("npc-only");
     const structure = makeEntity("npc-only");
-    const result = resolveEntityById("npc-only", [], [npc], [structure]);
+    const result = resolveEntityById("npc-only", [], [npc], [], [structure]);
     expect(result?.entityType).toBe("npc");
+  });
+
+  it("falls through to enemy when id is absent from trees and npcs", () => {
+    const enemy = makeEntity("enemy-only");
+    const structure = makeEntity("enemy-only");
+    const result = resolveEntityById("enemy-only", [], [], [enemy], [structure]);
+    expect(result?.entityType).toBe("enemy");
   });
 });
 

@@ -2,8 +2,9 @@
  * Query helpers -- find entities by position or state.
  * Also provides the shared gridCellsQuery and private helpers used by action files.
  */
-import { generateEntityId, playerQuery, treesQuery, world } from "@/game/ecs/world";
+
 import type { Entity } from "@/game/ecs/world";
+import { generateEntityId, playerQuery, treesQuery, world } from "@/game/ecs/world";
 
 export type TileCell = {
   gridX: number;

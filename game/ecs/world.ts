@@ -53,6 +53,7 @@ import type {
 import type {
   CampfireComponent,
   CropComponent,
+  ProceduralBuildingComponent,
   StructureComponent,
 } from "./components/structures.ts";
 import type {
@@ -97,6 +98,8 @@ export interface Entity {
   // Structures
   structure?: StructureComponent;
   campfire?: CampfireComponent;
+  /** Procedural building rendered from Box geometry (no GLB). Spec §42. */
+  proceduralBuilding?: ProceduralBuildingComponent;
 
   // Base building (Fallout-style kitbashing)
   modularPiece?: ModularPieceComponent;
@@ -174,6 +177,8 @@ export const lootDropsQuery = world.with("lootDrop", "position");
 // Structures
 export const structuresQuery = world.with("structure", "position");
 export const campfiresQuery = world.with("campfire", "position");
+/** Procedural buildings rendered from Box geometry. Spec §42. */
+export const proceduralBuildingsQuery = world.with("proceduralBuilding", "position");
 export const rainCatchersQuery = world.with("rainCatcher", "position");
 export const scarecrowsQuery = world.with("scarecrow", "position");
 

@@ -1,4 +1,4 @@
-import { useGameStore } from "./index";
+import { useGameStore } from "./index.ts";
 
 describe("Settings Store (Spec §15, §25.1, §26, §32.3)", () => {
   beforeEach(() => {

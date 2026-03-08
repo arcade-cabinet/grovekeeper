@@ -173,6 +173,8 @@ describe("AudioManager", () => {
         "water",
         "harvest",
         "chop",
+        "dig",
+        "prune",
         "levelUp",
         "achievement",
         "toolSelect",

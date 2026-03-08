@@ -226,6 +226,7 @@ describe("StructureManager", () => {
         { structure: undefined, position: { x: 0, z: 0 } },
         { structure: { templateId: "test" }, position: undefined },
       ];
+      // biome-ignore lint/suspicious/noExplicitAny: intentionally testing malformed input
       const effects = getEffectsAtPosition(0, 0, structures as any);
       expect(effects).toEqual([]);
     });

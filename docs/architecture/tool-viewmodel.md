@@ -22,7 +22,7 @@ Available in `assets/models/tools/`:
 
 Tools without models (watering-can, seed-pouch, almanac, etc.) need GLBs sourced before they can appear in-game. Until then, they are excluded from the tool belt.
 
-All GLBs share `Tools_Texture.png` (128x128, PSX pixel interpolation).
+All GLBs share `Tools_Texture.png` (128x128 texture atlas).
 
 ## Per-Tool Visual Config
 

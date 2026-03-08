@@ -11,6 +11,7 @@
 import { useFrame } from "@react-three/fiber";
 import type { MutableRefObject } from "react";
 import { useRef } from "react";
+import { tickPlayerAttackCooldown } from "@/game/actions/actionDispatcher";
 import type { NpcBrain } from "@/game/ai/NpcBrain";
 import { getDifficultyById } from "@/game/config/difficulty";
 import { createWildTreeEntity } from "@/game/ecs/archetypes";
@@ -25,7 +26,9 @@ import {
   npcsQuery,
   playerQuery,
   skyQuery,
+  terrainChunksQuery,
   waterBodiesQuery,
+  weatherQuery,
   world,
 } from "@/game/ecs/world";
 import { inputManager } from "@/game/input/InputManager";
@@ -37,6 +40,12 @@ import {
   tickAmbientAudio,
   type ZoneInput,
 } from "@/game/systems/ambientAudio";
+import {
+  type AmbientParticlesState,
+  initAmbientParticlesState,
+  tickAmbientParticles,
+  type WaterRef,
+} from "@/game/systems/ambientParticles";
 import { tickAttackCooldown, tickInvulnFrames } from "@/game/systems/combat";
 import { initDayNight, syncDayNight } from "@/game/systems/dayNight";
 import { EnemyEntityManager } from "@/game/systems/enemyAI";
@@ -59,6 +68,10 @@ import {
   updateWeather,
   type WeatherState,
 } from "@/game/systems/weather";
+import {
+  tickWeatherParticles,
+  type WeatherParticlesState as WxParticlesState,
+} from "@/game/systems/weatherParticles";
 import {
   checkRegrowth,
   initializeRegrowthState,
@@ -131,6 +144,12 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
     splashEntity: null,
     bubblesEntity: null,
   });
+  const wxParticlesRef = useRef<WxParticlesState>({
+    activeCategory: null,
+    particleEntity: null,
+  });
+  const ambientParticlesRef = useRef<AmbientParticlesState>(initAmbientParticlesState());
+  const weatherEntityCreated = useRef(false);
 
   useFrame((_state, delta) => {
     const dt = Math.min(delta, MAX_DELTA);
@@ -230,6 +249,78 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
 
     weatherRef.current = updateWeather(weatherRef.current, gameTimeSec, timeState.season, rngSeed);
     const weatherGrowthMult = getWeatherGrowthMultiplier(weatherRef.current.current.type);
+
+    // ── 2a. Sync Weather → ECS entity (drives WeatherOverlay + WeatherParticlesLayer) ─
+    {
+      const wType = weatherRef.current.current.type;
+      // Map weather.ts types → ECS WeatherType. Winter rain becomes snow.
+      const ecsType =
+        wType === "drought"
+          ? "clear"
+          : wType === "rain" && timeState.season === "winter"
+            ? "snow"
+            : wType;
+      const isActive = ecsType !== "clear";
+      const intensity = isActive ? 0.6 : 0;
+      const windSpeed = ecsType === "windstorm" ? 3.0 : 1.0;
+      const windDir: [number, number] = ecsType === "windstorm" ? [1, -0.5] : [0, -1];
+      const elapsed = gameTimeSec - weatherRef.current.current.startTime;
+      const remaining = Math.max(0, weatherRef.current.current.duration - elapsed);
+
+      if (weatherQuery.entities.length === 0 && !weatherEntityCreated.current) {
+        world.add({
+          id: generateEntityId(),
+          weather: {
+            weatherType: ecsType as
+              | "clear"
+              | "rain"
+              | "snow"
+              | "fog"
+              | "windstorm"
+              | "thunderstorm",
+            intensity,
+            windDirection: windDir,
+            windSpeed,
+            timeRemaining: remaining,
+            affectsGameplay: false,
+          },
+        });
+        weatherEntityCreated.current = true;
+      } else {
+        for (const entity of weatherQuery) {
+          if (entity.weather) {
+            entity.weather.weatherType = ecsType as
+              | "clear"
+              | "rain"
+              | "snow"
+              | "fog"
+              | "windstorm"
+              | "thunderstorm";
+            entity.weather.intensity = intensity;
+            entity.weather.windDirection = windDir;
+            entity.weather.windSpeed = windSpeed;
+            entity.weather.timeRemaining = remaining;
+          }
+          break; // singleton
+        }
+      }
+
+      // Tick weather particles (rain/snow/wind/dust ECS emitters) — Spec §36.1.
+      let wPlayerPos: { x: number; y: number; z: number } | null = null;
+      for (const p of playerQuery) {
+        if (p.position) {
+          wPlayerPos = { x: p.position.x, y: p.position.y, z: p.position.z };
+        }
+        break;
+      }
+      const wEnt = weatherQuery.entities[0]?.weather ?? null;
+      tickWeatherParticles(
+        world as Parameters<typeof tickWeatherParticles>[0],
+        wEnt,
+        wPlayerPos,
+        wxParticlesRef.current,
+      );
+    }
 
     // ── 2b. Ambient Audio Tick ───────────────────────────────────────────
 
@@ -407,6 +498,9 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
       if (entity.combat) tickAttackCooldown(entity.combat, dt);
     }
 
+    // Tick the player's module-level attack cooldown (Spec §34.4.4).
+    tickPlayerAttackCooldown(dt);
+
     // Combat deaths: detect defeated enemies, roll loot, credit resources (Spec §34).
     tickCombatDeaths(dt);
 
@@ -431,6 +525,29 @@ export function useGameLoop(options: UseGameLoopOptions = {}): void {
           waterParticlesStateRef.current,
         );
       }
+    }
+
+    // ── 6e. Ambient Particles (fireflies, pollen, leaves) — Spec §36.1 ──
+    {
+      const activeChunks = terrainChunksQuery.entities.map((e) => ({
+        chunkKey: e.chunk ? `${e.chunk.chunkX},${e.chunk.chunkZ}` : e.id,
+        worldX: e.position.x,
+        worldZ: e.position.z,
+      }));
+      const waterRefs: WaterRef[] = waterBodiesQuery.entities
+        .filter((e) => e.position)
+        .map((e) => ({ position: { x: e.position.x, z: e.position.z } }));
+      const wEcsEntity = weatherQuery.entities[0]?.weather;
+      const currentWindSpeed = wEcsEntity?.windSpeed ?? 1.0;
+      tickAmbientParticles(
+        world as Parameters<typeof tickAmbientParticles>[0],
+        activeChunks,
+        ambientParticlesRef.current,
+        timeState.hour,
+        timeState.season,
+        currentWindSpeed,
+        waterRefs,
+      );
     }
 
     // ── 7. Achievement Checks (throttled ~5s) ────────────────────────────

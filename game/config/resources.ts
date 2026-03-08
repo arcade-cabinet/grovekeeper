@@ -4,7 +4,7 @@
 
 import resourcesConfig from "@/config/game/resources.json" with { type: "json" };
 
-/** Grove harvest resources (organic) + building materials. */
+/** Grove harvest resources (organic) + building materials + survival resources. */
 export type ResourceType =
   | "timber"
   | "sap"
@@ -13,7 +13,14 @@ export type ResourceType =
   | "wood"
   | "stone"
   | "metal_scrap"
-  | "fiber";
+  | "fiber"
+  | "ore"
+  | "berries"
+  | "herbs"
+  | "meat"
+  | "hide"
+  | "fish"
+  | "seeds";
 
 export const RESOURCE_TYPES: ResourceType[] = resourcesConfig.types as ResourceType[];
 
@@ -30,5 +37,12 @@ export function emptyResources(): Record<ResourceType, number> {
     stone: 0,
     metal_scrap: 0,
     fiber: 0,
+    ore: 0,
+    berries: 0,
+    herbs: 0,
+    meat: 0,
+    hide: 0,
+    fish: 0,
+    seeds: 0,
   };
 }

@@ -2,7 +2,7 @@
  * SpeechBubble — world-space billboarded speech bubble above entities.
  *
  * Renders a floating text bubble above NPCs and Grovekeeper spirits during
- * dialogue. The bubble always faces the camera via Billboard, uses Fredoka
+ * dialogue. The bubble always faces the camera via Billboard, uses Cabin
  * font for text, and fades in/out over 0.3 seconds.
  *
  * Pure functions exported for testing:
@@ -19,8 +19,7 @@ import type * as THREE from "three";
 
 // Font file resolved by Metro/webpack bundler to a URL at runtime.
 // In Jest tests, @react-three/drei is mocked so the font value is never used.
-const FREDOKA_FONT =
-  require("@expo-google-fonts/fredoka/400Regular/Fredoka_400Regular.ttf") as string;
+const CABIN_FONT = require("@expo-google-fonts/cabin/400Regular/Cabin_400Regular.ttf") as string;
 
 // ---------------------------------------------------------------------------
 // Visual constants
@@ -101,7 +100,7 @@ export interface SpeechBubbleProps {
  * Renders a world-space billboarded speech bubble above an entity.
  *
  * Uses drei's Billboard to always face the camera. A dark background quad
- * sits behind the Fredoka-font text. Both fade in/out over FADE_DURATION
+ * sits behind the Cabin-font text. Both fade in/out over FADE_DURATION
  * seconds using computeOpacity.
  *
  * Opacity is tracked in a ref and applied imperatively each frame to avoid
@@ -142,10 +141,10 @@ export const SpeechBubble = ({ x, y, z, text, visible }: SpeechBubbleProps) => {
           depthWrite={false}
         />
       </mesh>
-      {/* Fredoka font dialogue text */}
+      {/* Cabin font dialogue text */}
       <Text
         ref={textRef}
-        font={FREDOKA_FONT}
+        font={CABIN_FONT}
         fontSize={0.18}
         color="#f5f0e8"
         fillOpacity={0}

@@ -1,6 +1,6 @@
 # NPC System
 
-> **SUPERSEDED (2026-03-07):** This document described procedural box/sphere chibi NPCs. The design has been replaced by **3DPSX ChibiCharacter GLB models with anime.js Lego-style animation** documented in `docs/plans/2026-03-07-unified-game-design.md` Section 8. Key changes:
+> **SUPERSEDED (2026-03-07):** This document described procedural box/sphere chibi NPCs. The design has been replaced by **ChibiCharacter GLB models with anime.js Lego-style animation** documented in `docs/plans/2026-03-07-unified-game-design.md` Section 8. Key changes:
 >
 > - **GLB-based, not procedural geometry.** 7 base ChibiCharacter models + 33 mix-and-match items (6 hair, hat, 3 outfits, 5 armor, shoes, bags, etc.).
 > - **"pr" emission variants** for night glow (matches Ghost Birch pattern).
@@ -25,7 +25,7 @@
 
 ## Principle
 
-NPCs are ECS entities with path-following AI and **procedural chibi meshes** built from box/sphere primitives. No GLB models needed -- the PSX low-poly aesthetic means simple geometry IS the art style, not a placeholder. Each NPC gets a seeded-random appearance (skin tone, clothing color, scale, speed) that's deterministic per world seed.
+NPCs are ECS entities with path-following AI and **procedural chibi meshes** built from box/sphere primitives. The stylized low-poly aesthetic means simple geometry IS the art style, not a placeholder. Each NPC gets a seeded-random appearance (skin tone, clothing color, scale, speed) that's deterministic per world seed.
 
 Movement uses the same path graph that world generation produces -- NPCs walk between path nodes with randomized target selection.
 

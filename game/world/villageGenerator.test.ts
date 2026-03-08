@@ -6,8 +6,8 @@
 
 import { getLandmarkType, isLandmarkChunk } from "./pathGenerator.ts";
 import {
-  ROOTMERE_NAME,
   generateVillage,
+  ROOTMERE_NAME,
   type VillageGenerationResult,
 } from "./villageGenerator.ts";
 

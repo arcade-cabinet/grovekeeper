@@ -24,22 +24,27 @@ import type {
   NpcPersonalityType,
   NpcScheduleEntry,
 } from "@/game/ecs/components/npc";
-import type { CampfireComponent, StructureComponent } from "@/game/ecs/components/structures";
+import type {
+  BlueprintId,
+  CampfireComponent,
+  StructureComponent,
+} from "@/game/ecs/components/structures";
 import { scopedRNG } from "@/game/utils/seedWords";
 import { getLandmarkLocalPos, getLandmarkType } from "./pathGenerator.ts";
+import { generateVillageLayout } from "./villageLayout.ts";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
 // ── Constants (tuning values from config/game/structures.json villageGeneration) ──
 
 const vg = structuresData.villageGeneration;
-const MIN_BUILDINGS: number = vg.minBuildings;
-const MAX_BUILDINGS: number = vg.maxBuildings;
+const _MIN_BUILDINGS: number = vg.minBuildings;
+const _MAX_BUILDINGS: number = vg.maxBuildings;
 const MIN_NPC_COUNT: number = vg.minNpcCount;
 const MAX_NPC_COUNT: number = vg.maxNpcCount;
-const BUILDING_MIN_DISTANCE: number = vg.buildingMinDistance;
-const BUILDING_MAX_DISTANCE: number = vg.buildingMaxDistance;
-const BUILDING_ANGLE_JITTER: number = vg.buildingAngleJitter;
+const _BUILDING_MIN_DISTANCE: number = vg.buildingMinDistance;
+const _BUILDING_MAX_DISTANCE: number = vg.buildingMaxDistance;
+const _BUILDING_ANGLE_JITTER: number = vg.buildingAngleJitter;
 const NPC_BASE_MODEL_COUNT: number = vg.npcBaseModelCount;
 const NPC_SPAWN_RADIUS: number = vg.npcSpawnRadius;
 const NPC_SPAWN_MIN_DISTANCE: number = vg.npcSpawnMinDistance;
@@ -48,7 +53,7 @@ const SCHEDULE_WORK_OFFSET: number = vg.scheduleWorkOffset;
 const SCHEDULE_HOURS = vg.scheduleHours;
 
 /** Structure template IDs eligible for procedural village placement. */
-const VILLAGE_BUILDING_IDS: readonly string[] = [
+const _VILLAGE_BUILDING_IDS: readonly string[] = [
   "house-1",
   "house-2",
   "house-3",
@@ -62,6 +67,20 @@ const VILLAGE_BUILDING_IDS: readonly string[] = [
   "chicken-coop-1",
   "notice-board",
 ];
+
+/** Map blueprint IDs to existing structure template IDs for resolveStructure(). §43.7 */
+const BLUEPRINT_TO_TEMPLATE: Record<string, string> = {
+  cottage: "house-1",
+  townhouse: "house-2",
+  barn: "barn",
+  inn: "house-3",
+  forge: "house-1",
+  kitchen: "house-1",
+  apothecary: "house-4",
+  watchtower: "house-5",
+  storehouse: "storage-1",
+  chapel: "house-3",
+};
 
 const NPC_FUNCTIONS: NpcFunction[] = ["trading", "quests", "tips", "seeds", "crafting", "lore"];
 
@@ -103,11 +122,17 @@ const NPC_NAMES: readonly string[] = [
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-/** A structure entity ready to be added to ECS. */
+/** A structure entity ready to be added to ECS. §43.7 extended with blueprint data. */
 export interface BuildingPlacement {
   position: { x: number; y: number; z: number };
   rotationY: number;
   structure: StructureComponent;
+  /** Blueprint type for interior/opening generation (§43.2). */
+  blueprintId?: BlueprintId;
+  /** Door facing direction in degrees (§43.4). */
+  facing?: 0 | 90 | 180 | 270;
+  /** Seeded variation hash (§43.5). */
+  variation?: number;
 }
 
 /** Campfire entity ready to be added to ECS (holds both components). */
@@ -123,11 +148,18 @@ export interface NpcPlacement {
   npc: NpcComponent;
 }
 
+/** Street furniture entity (lamp posts, crates, barrels, wells). §43.1 */
+export interface FurniturePlacement {
+  position: { x: number; y: number; z: number };
+  type: "lamp_post" | "well" | "crate" | "barrel";
+}
+
 /** All village entity placements for one chunk. */
 export interface VillageGenerationResult {
   campfire: CampfirePlacement;
   buildings: BuildingPlacement[];
   npcs: NpcPlacement[];
+  furniture: FurniturePlacement[];
 }
 
 // ── Config lookup ─────────────────────────────────────────────────────────────
@@ -206,7 +238,6 @@ function buildNpcSchedule(
     { hour: SCHEDULE_HOURS.sleep, activity: "sleep", position: { x: wX + homeX, z: wZ + homeZ } },
   ];
 }
-
 
 // ── Rootmere fixed layout (Spec §17.3a) ──────────────────────────────────────
 
@@ -309,7 +340,7 @@ function generateRootmere(worldSeed: string, heightmap: Float32Array): VillageGe
       },
     });
   }
-  return { campfire, buildings, npcs };
+  return { campfire, buildings, npcs, furniture: [] };
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -347,17 +378,19 @@ export function generateVillage(
     return generateRootmere(worldSeed, heightmap);
   }
 
-  // ── Other village chunks: procedural layout ───────────────────────────────
-  const { localX, localZ } = getLandmarkLocalPos(worldSeed, chunkX, chunkZ);
+  // ── Other village chunks: street-grid layout (§43.1) ─────────────────────
+  const layout = generateVillageLayout(worldSeed, chunkX, chunkZ, heightmap);
   const rng = scopedRNG("village", worldSeed, chunkX, chunkZ);
 
-  const worldBaseX = chunkX * CHUNK_SIZE;
-  const worldBaseZ = chunkZ * CHUNK_SIZE;
-  const centerY = heightAt(heightmap, localX, localZ);
+  const centerY = heightAt(
+    heightmap,
+    layout.center.x - chunkX * CHUNK_SIZE,
+    layout.center.z - chunkZ * CHUNK_SIZE,
+  );
 
   // ── Campfire at village center ─────────────────────────────────────────────
   const campfire: CampfirePlacement = {
-    position: { x: worldBaseX + localX, y: centerY, z: worldBaseZ + localZ },
+    position: { x: layout.center.x, y: centerY, z: layout.center.z },
     structure: resolveStructure("campfire-1"),
     campfire: {
       lit: true,
@@ -366,29 +399,20 @@ export function generateVillage(
     },
   };
 
-  // ── Buildings radially distributed around center ───────────────────────────
-  const buildingCount = MIN_BUILDINGS + Math.floor(rng() * (MAX_BUILDINGS - MIN_BUILDINGS + 1));
-  const buildings: BuildingPlacement[] = [];
-
-  for (let i = 0; i < buildingCount; i++) {
-    // Evenly spread angles with seeded jitter so buildings don't cluster.
-    const angle = (i / buildingCount) * Math.PI * 2 + (rng() - 0.5) * BUILDING_ANGLE_JITTER;
-    const distance =
-      BUILDING_MIN_DISTANCE + rng() * (BUILDING_MAX_DISTANCE - BUILDING_MIN_DISTANCE);
-    const lx = clampToChunk(localX + Math.cos(angle) * distance);
-    const lz = clampToChunk(localZ + Math.sin(angle) * distance);
-    const templateId = VILLAGE_BUILDING_IDS[Math.floor(rng() * VILLAGE_BUILDING_IDS.length)];
-    const rotationY = rng() * Math.PI * 2;
-    const y = heightAt(heightmap, lx, lz);
-
-    buildings.push({
-      position: { x: worldBaseX + lx, y, z: worldBaseZ + lz },
-      rotationY,
-      structure: resolveStructure(templateId),
-    });
-  }
+  // ── Buildings from street-grid layout (§43.1) ──────────────────────────────
+  const buildings: BuildingPlacement[] = layout.buildings.map((bp) => ({
+    position: bp.position,
+    rotationY: bp.rotationY,
+    structure: resolveStructure(BLUEPRINT_TO_TEMPLATE[bp.blueprintId] ?? "house-1"),
+    blueprintId: bp.blueprintId,
+    facing: bp.facing,
+    variation: bp.variation,
+  }));
 
   // ── NPCs near village center ───────────────────────────────────────────────
+  const { localX, localZ } = getLandmarkLocalPos(worldSeed, chunkX, chunkZ);
+  const worldBaseX = chunkX * CHUNK_SIZE;
+  const worldBaseZ = chunkZ * CHUNK_SIZE;
   const npcCount = MIN_NPC_COUNT + Math.floor(rng() * (MAX_NPC_COUNT - MIN_NPC_COUNT + 1));
   const npcs: NpcPlacement[] = [];
 
@@ -427,5 +451,5 @@ export function generateVillage(
     });
   }
 
-  return { campfire, buildings, npcs };
+  return { campfire, buildings, npcs, furniture: layout.furniture };
 }

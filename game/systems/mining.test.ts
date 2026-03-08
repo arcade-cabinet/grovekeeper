@@ -10,7 +10,7 @@
  * - FPS rock interaction: type guard, label, resolver
  */
 
-import type { MineResult, MiningInteraction, OreYield, RockEntity } from "./mining.ts";
+import type { RockEntity } from "./mining.ts";
 import {
   computeMiningStaminaCost,
   getOreForBiome,

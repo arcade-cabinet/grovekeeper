@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { MainMenu } from "@/components/game/MainMenu";
 import { type NewGameConfig, NewGameModal } from "@/components/game/NewGameModal";
 import { useGameStore } from "@/game/stores";
+import { startNewGame } from "@/game/stores/survivalState";
 
 const SCREEN_OPTIONS = {
   headerShown: false,
@@ -25,6 +26,8 @@ export default function MainMenuScreen() {
   const handleNewGameStart = useCallback(
     (config: NewGameConfig) => {
       useGameStore.getState().resetGame(config.worldSeed);
+      startNewGame(config.difficulty);
+      useGameStore.setState({ permadeath: config.permadeath });
       useGameStore.getState().setScreen("playing");
       setNewGameOpen(false);
       router.push("/game");

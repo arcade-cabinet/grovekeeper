@@ -6,11 +6,48 @@ what this document specifies. If code and spec disagree, the spec wins.
 
 **Canonical design:** [`docs/plans/2026-03-07-unified-game-design.md`](plans/2026-03-07-unified-game-design.md)
 
-Last updated: 2026-03-08 (evening re-audit — 4,105 tests passing, 0 failing; all 178 suites green; crafting panels mounted; 12 orphaned systems confirmed)
+Last updated: 2026-03-08 (vision alignment pass -- Wind Waker + Daggerfall + Grovekeeper pillars; 4,105 tests passing, 0 failing; all 178 suites green)
+
+---
+
+## 0. Core Vision & Pillars
+
+Grovekeeper is a **Wind Waker-style first-person open-world grove-tending RPG** with
+**Daggerfall-scale procedural world generation**, anchored by the **Grovekeeper spirit
+narrative spine**.
+
+### 0.1 The Five Pillars
+
+| # | Pillar | Reference |
+|---|--------|-----------|
+| 1 | **Wind Waker-style FPS** | Bright, whimsical, colorful first-person perspective. Modern rendering (MSAA, PBR materials, smooth shading). Saturated greens, warm golds, soft blues. NOT dark, NOT horror, NOT retro-degraded. |
+| 2 | **Daggerfall-scale procedural worlds** | Infinite seed-based procedural generation. Every playthrough generates a unique world from a seed phrase. Terrain chunks, biomes, villages, labyrinths, NPCs, resources -- ALL seeded. The world feels VAST and explorable. |
+| 3 | **Hedge maze + Grovekeeper spirit narrative spine** | The core quest/narrative is discovering Grovekeeper spirits at the centers of hedge mazes spread across the procedural world. Discovering all spirits unlocks "The Worldroot's Dream". This ANCHORS the game -- without it, exploration is aimless. |
+| 4 | **Chibi-style NPCs and monsters** | Cute, colorful, Wind Waker-villager-style character designs. Assembled from primitive shapes with seeded appearance. Not realistic, not horror -- whimsical and charming. |
+| 5 | **Grove-tending core loop** | DIG, CHOP, WATER, PLANT, PRUNE. Survival mechanics (hunger, hearts, stamina, body temperature). Crafting at campfires/forges. Tool progression. The grove-tending gives the game its heartbeat between labyrinth adventures. |
+
+### 0.2 Zelda-Style Immersion
+
+ALL UI (menus, game over, settings, new game) renders as semi-transparent overlays on the
+live 3D world. The player NEVER navigates away from the Canvas. The 3D world is always
+visible behind every UI surface. This creates the seamless immersion that defines the
+Zelda experience.
+
+### 0.3 Design Heritage
+
+The game draws from three lineages:
+- **Legend of Zelda: Wind Waker** -- bright cel-shaded aesthetic, whimsical tone, sense of wonder in exploration, charming NPCs and enemies
+- **The Elder Scrolls II: Daggerfall** -- vast procedural world scale, seed-based generation, the feeling that the world extends beyond what you can ever fully explore
+- **Stardew Valley / cozy sims** -- grove-tending loop, crafting, NPC relationships, seasonal rhythm
+
+The combination is unique: a first-person Zelda-feeling game where every world is procedurally
+generated at Daggerfall scale, but the tone is warm and cozy rather than dark and dangerous.
 
 ---
 
 ## Table of Contents
+
+0. [Core Vision & Pillars](#0-core-vision--pillars)
 
 1. [User Flow](#1-user-flow)
 2. [Difficulty System](#2-difficulty-system)
@@ -96,9 +133,10 @@ Seed Phrase -> Difficulty Tier -> Start -> Loading -> Tutorial Village -> Depart
 
 ### 1.4 Game Screen (Playing)
 
-- **3D Canvas** (R3F): Terrain, trees, player, NPCs, structures, sky, lighting
+- **3D Canvas** (R3F): Terrain, trees, player, NPCs, structures, sky, lighting -- always visible, never unmounted
 - **HUD Overlay:** Resources, hearts, hunger, XP, time, tool belt, stamina, compass
-- **PSX aesthetic:** No antialiasing, pixel ratio 1, flat shading, nearest filter
+- **Visual style:** Wind Waker-inspired bright whimsical aesthetic. Modern rendering with MSAA, PBR materials, smooth shading, device pixel ratio. See Pillar 1 (Section 0).
+- **Zelda-style immersion:** ALL game UI (pause menu, settings, new game, game over, crafting panels, trade dialogs) renders as semi-transparent overlays ON TOP of the live 3D world. The Canvas is NEVER unmounted or navigated away from during gameplay.
 
 ### 1.5 Pause Menu
 
@@ -157,6 +195,9 @@ values that naturally scale.
 ## 3. World Seed System
 
 ALL randomness uses deterministic seeded RNG derived from the world seed phrase.
+This is the engine that powers Daggerfall-scale procedural generation (Pillar 2) --
+every terrain chunk, biome boundary, village layout, NPC personality, labyrinth
+structure, and resource distribution is derived from a single seed phrase.
 
 ### 3.1 Seed Phrase Format
 
@@ -188,7 +229,9 @@ Same seed = same world, always.
 
 ## 4. Core Game Loop
 
-Systems run every frame inside the R3F `useFrame` hook.
+The grove-tending loop (Pillar 5) gives the game its heartbeat. Between labyrinth
+adventures and world exploration, the player tends their grove: DIG, CHOP, WATER,
+PLANT, PRUNE. Systems run every frame inside the R3F `useFrame` hook.
 
 ### 4.1 System Execution Order
 
@@ -505,10 +548,12 @@ adjacency (+30%), structure radius bonuses, prestige bonus.
 
 Three quest layers working together.
 
-### 14.1 Main Quest: The Grovekeeper Path
+### 14.1 Main Quest: The Grovekeeper Path (Pillar 3)
 
-Find all 14 dormant Grovekeepers in hedge labyrinths. Non-linear (any order
-except Worldroot last). Compass hints guide toward undiscovered labyrinths.
+Find all 14 dormant Grovekeepers in hedge labyrinths scattered across the
+procedural world. This is the narrative spine (Pillar 3) -- the reason the player
+pushes deeper into the Daggerfall-scale world. Non-linear (any order except
+Worldroot last). Compass hints guide toward undiscovered labyrinths.
 
 ### 14.2 World Quests (Seed-Variant Narrative)
 
@@ -602,6 +647,11 @@ Grovekeepers, not levels. See unified design Section 9 for full table.
 ---
 
 ## 17. Open World
+
+Daggerfall-scale procedural generation (Pillar 2). The world is infinite, seed-determined,
+and designed to feel vast enough that the player can never fully explore it. Every seed
+generates a unique world with its own biome layout, village names, NPC populations,
+labyrinth placements, and resource distributions.
 
 ### 17.1 Chunk-Based Infinite World
 
@@ -746,7 +796,7 @@ Grovekeeper who unlocks a tree species when awakened.
 
 ### 18.4 Base Building (Progressive, L5+)
 
-Fallout-style kitbashing with PSX asset pieces. Progressive unlocks:
+Modular kitbashing with stylized low-poly asset pieces. Progressive unlocks:
 - L5: Fences, basic walls
 - L10: Stone walls, gates
 - L15: Full kit (roofs, doors, windows, floors)
@@ -778,10 +828,15 @@ base value and difficulty tier.
 | Sage | Lore keeper | Thoughtful, ancient |
 | Ember | Alchemist | Eccentric, curious |
 
-### 19.2 NPC Visuals (Procedural Chibi)
+### 19.2 NPC Visuals (Wind Waker Chibi -- Pillar 4)
+
+Wind Waker-style chibi characters: big expressive heads, small bodies, bright saturated
+colors. Cute and charming, never realistic or horror-styled. Each NPC feels like a
+character you'd meet in a Zelda village.
 
 - Assembled from primitive shapes (box body, sphere head, cylinder limbs)
 - Seeded appearance via `scopedRNG('npc-appearance', worldSeed, npcId)`
+- Bright, varied color palettes -- each NPC is visually distinct and memorable
 - Lego-style animation via anime.js (rigid body part rotation, no skeletal rigs)
 - Rendered by `ChibiNpcScene.tsx` + `ChibiNpc.tsx`
 
@@ -1008,21 +1063,29 @@ Display "Your trees grew while you were away!"
 
 ### 27.3 Audio Assets
 
-Supplementary retro SFX and ambient files from `/Volumes/home/assets/Audio/`.
+Supplementary SFX and ambient files from `/Volumes/home/assets/Audio/`.
 
 ---
 
 ## 28. Visual Identity
 
-### 28.1 PSX Aesthetic
+### 28.1 Wind Waker-Style Rendering (Pillar 1)
+
+The visual identity draws directly from **The Legend of Zelda: Wind Waker** and
+**Breath of the Wild**: saturated greens, warm golds, soft blues, and a sense of
+wonder in every vista. The world is bright, colorful, and whimsical -- never dark,
+gritty, or horror-themed. Characters and enemies are chibi-styled and charming.
+The overall tone should make the player smile.
 
 | Rule | Implementation |
 |------|---------------|
-| No antialiasing | `gl={{ antialias: false }}` |
-| Pixel ratio 1 | `gl={{ pixelRatio: 1 }}` |
-| Flat shading | `flatShading: true` on all materials |
-| Nearest filter | `NearestFilter` on textures |
-| Low segments | Cylinders: 6, Spheres: icosahedron detail 1 |
+| Antialiasing | `gl={{ antialias: true }}` (MSAA) |
+| Device pixel ratio | Default (device native) for sharp, clean output |
+| Smooth shading | Standard PBR materials (MeshStandardMaterial) |
+| Linear filtering | Default texture filtering for clean visuals |
+| Stylized geometry | Low-poly shapes chosen for whimsy and charm, not as a technical constraint |
+| Color saturation | High -- vibrant greens, warm golds, sky blues. Never washed out or muted. |
+| Lighting | Warm directional sun, soft ambient fill. Night is blue-tinted and mystical, not black. |
 
 ### 28.2 Color Palette
 
@@ -1061,10 +1124,10 @@ primitives + canvas textures. See §42 for full procedural rendering spec.
 | Water | Gerstner wave plane mesh | `WaterBody.tsx` |
 | Spirits | IcosahedronGeometry + emissive | `GrovekeeperSpirit.tsx` |
 
-**Design heritage:** The original design referenced 3DPSX GLB packs (trees, bushes,
-fences, ChibiCharacters, PSX Mega Pack II). These were replaced by the procedural
-rendering system (§42) to eliminate GLB loading, reduce bundle size, and enable
-infinite instanced rendering with minimal draw calls.
+**Design heritage:** Early prototyping used pre-built GLB model packs for trees, bushes,
+fences, and characters. These were replaced by the procedural rendering system (Section 42) to
+eliminate GLB loading, reduce bundle size, and enable infinite instanced rendering with
+minimal draw calls -- essential for Daggerfall-scale world generation (Pillar 2).
 
 ---
 
@@ -1126,6 +1189,10 @@ Dialogue follows 4-phase structure: Greeting -> Topic Selection -> Dialogue Tree
 
 ## 31. Procedural Terrain & Water
 
+The terrain system is the foundation of Daggerfall-scale world generation (Pillar 2).
+Every chunk is deterministically generated from the world seed -- the player can walk
+in any direction forever and the world extends to meet them.
+
 All procedural entities are ECS entities with the same query pattern as GLB model entities.
 Config: `config/game/procedural.json`. Components: `game/ecs/components/procedural/`.
 
@@ -1185,14 +1252,19 @@ ECS: `WaterBodyComponent` (waveLayers[], color, opacity, size, foam, caustics, f
 
 ---
 
-## 32. Grovekeeper Spirits
+## 32. Grovekeeper Spirits (Pillar 3 -- The Narrative Spine)
+
+The Grovekeeper spirits are the **narrative backbone** of the entire game. Without them,
+Grovekeeper is just aimless exploration with grove-tending. The spirits give the
+procedural world PURPOSE -- each one is a destination, a reward, and a lore revelation.
+They are why the player pushes deeper into the unknown.
 
 Navi-style floating emissive orbs found at the center of each hedge maze.
-Each spirit is a procedural ECS entity (no GLB model — shader sphere).
+Each spirit is a procedural ECS entity (no GLB model -- shader sphere).
 
 ### 32.1 Visual Design
 
-- **Shape**: IcosahedronGeometry (low-poly sphere, PSX aesthetic)
+- **Shape**: IcosahedronGeometry (stylized geometric sphere)
 - **Material**: MeshStandardMaterial with emissive color, no texture
 - **Emissive color**: unique per spirit, seeded from `scopedRNG("spirit", worldSeed, mazeIndex)`
 - **Color palette**: warm greens, teals, golds, soft violets — grove-aligned, never harsh
@@ -1211,13 +1283,20 @@ Each spirit is a procedural ECS entity (no GLB model — shader sphere).
   - Each spirit has seeded bobPhase for desync
 - **Pulse**: emissiveIntensity = `base + 0.3 * sin(time * pulseSpeed + pulsePhase)`
 
-### 32.3 Narrative Role
+### 32.3 Narrative Role (The Anchor)
+
+The spirits are the reason the player explores. The Daggerfall-scale world (Pillar 2)
+provides the canvas; the spirits provide the purpose. Each spirit discovery is a major
+narrative beat -- the player learns more about the grove's history, the Worldroot, and
+their own role as Grovekeeper.
 
 - 8 spirits total (one per hedge maze, matching the 8 world quests)
 - Each spirit has a `dialogueTreeId` linking to the dialogue branching system
 - Discovering all 8 spirits unlocks the final world quest ("The Worldroot's Dream")
 - Spirit dialogue reveals grove lore and guides the player toward quest objectives
 - Player must physically reach the maze center and approach within interaction radius
+- The compass system hints toward undiscovered labyrinths, creating a breadcrumb trail
+  that pulls the player ever deeper into the procedural world
 
 ### 32.4 Scope
 
@@ -1327,6 +1406,9 @@ enemies. See §41 for the confirmed design decision.
 
 Spawned from biome templates. Config: `config/game/enemies.json`.
 Rendered by `ProceduralEnemies/` -- composed primitive shapes per tier (no GLB models).
+Visual style: Wind Waker-inspired chibi enemies (Pillar 4). Colorful, stylized, and
+charming even when hostile -- like Bokoblins, not Bloodborne. Bright saturated colors,
+exaggerated proportions, expressive shapes.
 
 | Enemy | Key | Biomes | Behavior | Tier | HP | Damage | Night Only |
 |-------|-----|--------|----------|------|----|--------|------------|
@@ -1372,6 +1454,96 @@ Seeded rolls from `scopedRNG("loot", worldSeed, enemyId)`.
 ECS: `EnemyComponent`, `HealthComponent`, `CombatComponent`, `LootDropComponent`
 Config: `config/game/enemies.json`, `config/game/loot.json`
 
+### 34.4 Player Attack Mechanic
+
+The player can swing their equipped melee tool at enemies within `MAX_RAYCAST_DISTANCE`
+(6 m). Only tools with a non-zero `effectPower` in `config/game/tools.json` deal damage.
+
+#### 34.4.1 Attack Flow
+
+```
+Player taps/clicks primary action button
+  -> useInteraction.executeAction() fires
+  -> resolvePlayerAttack(toolId, targetType) checks if combo is a melee attack
+  -> If yes: executePlayerAttack(entityId, toolId, world, store) called
+  -> Reads tool.effectPower from tools.json config
+  -> Reads difficulty.damageMultiplier from store + difficulty.json
+  -> Checks player CombatComponent.cooldownRemaining == 0 (rate-limit)
+  -> Deducts staminaCost (from tools.json) via store.spendStamina()
+  -> Calls computePlayerDamage(effectPower, damageMultiplier)
+  -> Calls applyDamageToHealth(target.health, damage, "player")
+  -> Sets player CombatComponent.cooldownRemaining = combat.json playerAttackCooldown
+  -> Returns AttackResult { hit: true, damage, killed: isDefeated(target.health) }
+  -> audioManager.playSound("attack") SFX
+  -> triggerActionHaptic("ATTACK") vibration
+  -> tickCombatDeaths() handles loot + removal on the next frame
+```
+
+#### 34.4.2 Tool Eligibility
+
+A tool is a melee weapon if `tools.json[toolId].effectPower > 0`. Tools without
+`effectPower` (e.g. almanac, seed-pouch) cannot attack.
+
+| Tool | effectPower | Notes |
+|------|-------------|-------|
+| axe | 5.0 | Primary combat tool, high damage |
+| pick | 4.0 | Secondary combat tool |
+| shovel | 3.0 | Tertiary; matches effectPower in tools.json |
+| pruning-shears | 2.0 | Weak; still valid melee |
+| compost-bin | — | No effectPower, cannot attack |
+| watering-can | — | No effectPower, cannot attack |
+| trowel | — | No effectPower, cannot attack |
+
+#### 34.4.3 Formulas
+
+- `damage = tool.effectPower × difficulty.damageMultiplier`
+- `staminaCost = tools.json[toolId].staminaCost`
+- `playerAttackCooldown` comes from `config/game/combat.json`
+- Seedling difficulty: `damageMultiplier = 0` → damage = 0 (enemies not hurt, consistent with no-combat design)
+
+#### 34.4.4 Player Attack Cooldown
+
+The player entity has a `CombatComponent` (same interface as enemies). The game loop
+ticks `tickAttackCooldown(playerCombat, dt)` inside the `combatQuery` loop — this
+is already live in `useGameLoop/index.ts`. The player entity must have `combat` +
+`health` + `position` to be included in `combatQuery`.
+
+The player's `CombatComponent.cooldownRemaining` is set to `playerAttackCooldown`
+(from `combat.json`) after each successful attack. Once it reaches 0, the player
+can attack again.
+
+#### 34.4.5 Tool Swing Animation
+
+`ProceduralToolView` accepts an `attackTrigger: number` prop (increments each swing).
+A `useEffect` watching `attackTrigger` fires an anime.js tween:
+- Rotate group -45° on Z over `swingDownMs` (from `config/game/toolVisuals.json`)
+- Rotate back to 0° over `swingUpMs` (from `config/game/toolVisuals.json`)
+- Swing animation interrupts any in-progress swap animation
+
+Config keys added to `config/game/toolVisuals.json`:
+- `swing.downAngle`: degrees to rotate on swing (-45)
+- `swing.downDuration`: ms for the swing phase (120)
+- `swing.upDuration`: ms for the return phase (200)
+
+#### 34.4.6 ATTACK Action Type
+
+`GameAction` union in `actionDispatcher.ts` includes `"ATTACK"`.
+`resolveAction(toolId, "enemy")` returns `"ATTACK"` when `effectPower > 0`.
+`TargetEntityType` includes `"enemy"` — set by `useRaycast` when hit entity has `enemy` component.
+`dispatchAction` calls `executePlayerAttack` for the `ATTACK` case.
+
+#### 34.4.7 Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `game/systems/playerAttack.ts` | Pure function: resolvePlayerAttack + executePlayerAttack |
+| `game/systems/playerAttack.test.ts` | Tests: cooldown, damage, invuln, stamina, death |
+| `game/actions/actionDispatcher.ts` | ATTACK action in GameAction + resolveAction + dispatchAction |
+| `components/player/ProceduralToolView/index.tsx` | attackTrigger prop + swing animation |
+| `game/hooks/useGameLoop/index.ts` | Player CombatComponent ticked via combatQuery (already wired) |
+
+Status: **COMPLETE** — Pure system + tests + dispatcher wiring + swing animation.
+
 ---
 
 ## 35. Base Building (Kitbashing) — SUPERSEDED BY §43
@@ -1380,7 +1552,7 @@ Config: `config/game/enemies.json`, `config/game/loot.json`
 > Player-placed structures use the same blueprint-driven procedural geometry.
 > The snap system (§35.1) is preserved; piece categories become procedural box blueprints.
 
-~~Fallout-style modular building using 549 PSX Mega Pack II GLBs.~~
+~~Fallout-style modular building using 549 asset pack GLBs.~~
 
 ### 35.1 Snap System
 
@@ -1693,8 +1865,10 @@ Previous gap list (2026-03-07) had 10 items. Status of each:
 
 ## 40. World Naming System
 
-**Status: NEW 2026-03-07** — Seeded, deterministic names for all procedural
-areas, POIs, and NPCs. Same world seed = same names everywhere.
+Seeded, deterministic names for all procedural areas, POIs, and NPCs. Same world
+seed = same names everywhere. This is essential for the Daggerfall-scale world (Pillar 2)
+to feel like a real place -- when the player discovers "Fernwick" or "The Emberveil
+Labyrinth", those names are permanent fixtures of THAT seed's world.
 
 ### 40.1 Starting Village Name
 
@@ -1765,7 +1939,7 @@ The game is an open-world RPG grove-tending game with:
 - **Loot tables** for all enemy types in `config/game/loot.json` — drops are grove-relevant resources (timber, sap, hide, meat, herbs, fiber, acorns, seeds, metal_scrap, ore)
 - **Labyrinth zones** have highest enemy density (skeleton warriors, blood wraiths, devil boss)
 - **Devil** is a rare Tier 5 boss found only in labyrinth centers — defeating it advances the Grovekeeper narrative
-- All enemies rendered procedurally via `ProceduralEnemies/` (tier-based primitive shapes, PSX aesthetic)
+- All enemies rendered procedurally via `ProceduralEnemies/` (tier-based primitive shapes, Wind Waker chibi aesthetic -- Pillar 4)
 
 ### 41.1 Confirmed Environmental Conflict (Non-Enemy)
 
@@ -1793,7 +1967,9 @@ Status: Design confirmed. Implementation: `game/systems/enemySpawning.ts`, `game
 
 All GLB-based entity renderers are replaced by procedural geometry. No external
 model files are required for trees, fences, props, or bushes. Every visual is
-generated from code using Three.js geometry + canvas textures.
+generated from code using Three.js geometry + canvas textures. This architecture
+is essential for Daggerfall-scale worlds (Pillar 2) -- procedural rendering enables
+infinite instanced geometry with minimal draw calls and zero asset loading.
 
 ### 42.1 Procedural Trees
 
@@ -1864,7 +2040,7 @@ Component: `components/entities/ProceduralBushes.tsx`
 
 All procedural entities use canvas textures from `game/utils/proceduralTextures.ts`.
 Wrap: `RepeatWrapping` on both axes.
-Filter: `NearestFilter` (PSX aesthetic rule — §28.1).
+Filter: Default linear filtering for modern rendering.
 Created once at component mount, disposed on unmount.
 
 ECS queries: `treesQuery`, `fencesQuery`, `propsQuery`, `bushesQuery` (existing — no changes to world.ts).
@@ -1880,7 +2056,10 @@ Status: **IMPLEMENTED** — `components/entities/ProceduralTrees.tsx`, `Procedur
 
 Procedural villages use a **street-grid layout** with **blueprint-typed buildings**.
 Each building type has a distinct function, interior furnishings, and visual identity
-— all rendered from procedural geometry (zero GLBs). Towns feel designed, not random.
+-- all rendered from procedural geometry (zero GLBs). Towns feel designed, not random.
+Every village the player discovers is unique to their seed (Pillar 2), with its own
+name, building mix, NPC population, and quest offerings -- like stumbling upon a new
+island in Wind Waker.
 
 **Design philosophy:** The POC demonstrated that procedural buildings with street connectivity,
 multi-story traversal (including stairs), and per-type variation can feel hand-crafted.
@@ -2076,7 +2255,7 @@ ProceduralBuilding.tsx (existing, extended)
 
 ### 43.9 §35 Deprecation
 
-**§35 (Base Building / Kitbashing) references 549 PSX Mega Pack II GLBs.** This is incompatible
+**§35 (Base Building / Kitbashing) originally referenced pre-built GLB model packs.** This is incompatible
 with the GLB-free procedural architecture (§42). Player-placed structures now use the same
 procedural building system:
 

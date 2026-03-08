@@ -122,40 +122,66 @@ describe("tickHeartsFromStarvation (Spec §12.2)", () => {
 // ---------------------------------------------------------------------------
 
 describe("tickHeartsFromExposure (Spec §2.2)", () => {
-  it("drains hearts at exposureDriftRate/min when exposure is enabled", () => {
+  /** Freezing body temp (well below cold threshold of 35°C). */
+  const FREEZING = 25;
+  /** Normal body temp — should be safe. */
+  const NORMAL = 37;
+
+  it("drains hearts when bodyTemp is below cold threshold", () => {
     const health = makeHealth(5, 5);
-    tickHeartsFromExposure(health, 60, 0.3, true);
+    // At bodyTemp=25 (10° below threshold of 35), deviation = 1.0 → full rate
+    tickHeartsFromExposure(health, 60, 0.3, true, true, FREEZING);
     expect(health.current).toBeCloseTo(5 - 0.3);
+  });
+
+  it("does NOT drain at normal body temp (37°C)", () => {
+    const health = makeHealth(5, 5);
+    tickHeartsFromExposure(health, 60, 0.3, true, true, NORMAL);
+    expect(health.current).toBe(5);
   });
 
   it("does not drain when exposureEnabled is false", () => {
     const health = makeHealth(5, 5);
-    tickHeartsFromExposure(health, 60, 0.3, false);
+    tickHeartsFromExposure(health, 60, 0.3, false, true, FREEZING);
     expect(health.current).toBe(5);
   });
 
   it("does not drain in Exploration mode (affectsGameplay=false)", () => {
     const health = makeHealth(5, 5);
-    tickHeartsFromExposure(health, 60, 0.3, true, false);
+    tickHeartsFromExposure(health, 60, 0.3, true, false, FREEZING);
     expect(health.current).toBe(5);
   });
 
-  it("scales with higher drift rate (ultra-brutal: 1.5/min)", () => {
+  it("scales with higher drift rate at extreme cold", () => {
     const health = makeHealth(5, 5);
-    tickHeartsFromExposure(health, 60, 1.5, true);
+    tickHeartsFromExposure(health, 60, 1.5, true, true, FREEZING);
     expect(health.current).toBeCloseTo(5 - 1.5);
   });
 
   it("clamps hearts to zero", () => {
     const health = makeHealth(0.001, 5);
-    tickHeartsFromExposure(health, 60, 1.0, true);
+    tickHeartsFromExposure(health, 60, 1.0, true, true, FREEZING);
     expect(health.current).toBe(0);
   });
 
-  it("proportional drain over small dt", () => {
+  it("proportional drain over small dt at extreme cold", () => {
     const health = makeHealth(5, 5);
-    tickHeartsFromExposure(health, 1, 0.3, true);
+    tickHeartsFromExposure(health, 1, 0.3, true, true, FREEZING);
     expect(health.current).toBeCloseTo(5 - 0.3 / 60);
+  });
+
+  it("scales damage proportionally to temperature deviation", () => {
+    const health = makeHealth(5, 5);
+    // bodyTemp=30 → 5° below threshold of 35, deviation = 5/10 = 0.5
+    tickHeartsFromExposure(health, 60, 0.3, true, true, 30);
+    expect(health.current).toBeCloseTo(5 - 0.15);
+  });
+
+  it("drains hearts when bodyTemp exceeds heat threshold", () => {
+    const health = makeHealth(5, 5);
+    // bodyTemp=45 → 6° above threshold of 39, deviation = 6/6 = 1.0
+    tickHeartsFromExposure(health, 60, 0.3, true, true, 45);
+    expect(health.current).toBeCloseTo(5 - 0.3);
   });
 });
 
@@ -222,7 +248,8 @@ describe("combined survival scenario", () => {
     const health = makeHealth(3, 3);
     const dt = 60; // 1 minute
     // Ultra-brutal: exposureDriftRate=1.5, affectsGameplay=true, exposureEnabled=true
-    tickHeartsFromExposure(health, dt, 1.5, true, true);
+    // bodyTemp=25 (freezing) for full exposure damage
+    tickHeartsFromExposure(health, dt, 1.5, true, true, 25);
     tickHeartsFromStarvation(health, 0, dt, true);
     // Expected: 3 - 1.5 (exposure) - 0.25 (starvation) = 1.25
     expect(health.current).toBeCloseTo(1.25);
@@ -232,7 +259,7 @@ describe("combined survival scenario", () => {
     const health = makeHealth(7, 7);
     const hunger = tickHunger(100, 100, 60, 0, false);
     tickHeartsFromStarvation(health, 0, 60, false);
-    tickHeartsFromExposure(health, 60, 0.3, true, false);
+    tickHeartsFromExposure(health, 60, 0.3, true, false, 25);
     expect(hunger).toBe(100);
     expect(health.current).toBe(7);
   });
@@ -266,7 +293,7 @@ describe("isPlayerDead (Spec §12.3)", () => {
 
   it("triggers after exposure drains hearts to zero", () => {
     const health = makeHealth(0.001, 5);
-    tickHeartsFromExposure(health, 60, 1.0, true);
+    tickHeartsFromExposure(health, 60, 1.0, true, true, 25);
     expect(isPlayerDead(health)).toBe(true);
   });
 });

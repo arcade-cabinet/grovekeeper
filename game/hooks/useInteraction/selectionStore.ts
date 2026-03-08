@@ -1,5 +1,5 @@
 /** Module-level selection state shared across all useInteraction hook instances. */
-import type { InteractionSelection } from "./types";
+import type { InteractionSelection } from "./types.ts";
 
 let currentSelection: InteractionSelection | null = null;
 const listeners = new Set<() => void>();

@@ -136,7 +136,9 @@ export function getActionsForTile(ctx: TileContext): RadialAction[] {
  * Map tool ID to the primary action label shown when targeting a tree.
  * Only tools with a meaningful tree interaction are listed.
  */
-const TREE_TOOL_ACTION: Partial<Record<string, { id: string; icon: string; label: string; color: string }>> = {
+const TREE_TOOL_ACTION: Partial<
+  Record<string, { id: string; icon: string; label: string; color: string }>
+> = {
   axe: { id: "harvest", icon: "\u{1FA93}", label: "Harvest", color: "#8D6E63" },
   "watering-can": { id: "water", icon: "\u{1F4A7}", label: "Water", color: "#64B5F6" },
   "pruning-shears": { id: "prune", icon: "\u2702\uFE0F", label: "Prune", color: "#5D4037" },
@@ -144,10 +146,30 @@ const TREE_TOOL_ACTION: Partial<Record<string, { id: string; icon: string; label
   shovel: { id: "dig-up", icon: "\u26CF\uFE0F", label: "Dig Up", color: "#8D6E63" },
 };
 
-const ACTION_INSPECT: RadialAction = { id: "inspect", icon: "\u{1F4D6}", label: "Inspect", color: "#90CAF9" };
-const ACTION_TALK: RadialAction = { id: "talk", icon: "\u{1F4AC}", label: "Talk", color: "#FFB74D" };
-const ACTION_TRADE: RadialAction = { id: "trade", icon: "\u{1F4B0}", label: "Trade", color: "#A5D6A7" };
-const ACTION_USE: RadialAction = { id: "use", icon: "\u{1F6E0}\uFE0F", label: "Use", color: "#CE93D8" };
+const ACTION_INSPECT: RadialAction = {
+  id: "inspect",
+  icon: "\u{1F4D6}",
+  label: "Inspect",
+  color: "#90CAF9",
+};
+const ACTION_TALK: RadialAction = {
+  id: "talk",
+  icon: "\u{1F4AC}",
+  label: "Talk",
+  color: "#FFB74D",
+};
+const ACTION_TRADE: RadialAction = {
+  id: "trade",
+  icon: "\u{1F4B0}",
+  label: "Trade",
+  color: "#A5D6A7",
+};
+const ACTION_USE: RadialAction = {
+  id: "use",
+  icon: "\u{1F6E0}\uFE0F",
+  label: "Use",
+  color: "#CE93D8",
+};
 
 /**
  * Build radial actions for a center-screen raycast hit (FPS perspective).

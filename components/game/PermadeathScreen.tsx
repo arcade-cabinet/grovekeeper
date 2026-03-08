@@ -4,11 +4,14 @@
  *
  * Session is over. "Begin New Grove" returns to the main menu.
  *
- * Spec §2.1 (Ironwood: permadeath), §12.3.
+ * Spec S2.1 (Ironwood: permadeath), S12.3.
+ *
+ * Semi-transparent overlay showing the game world behind it.
+ * Blossom-pink accent -- more "fairy" than "dark souls."
  */
 
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ACCENT, DARK, FONTS, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
 
 export interface PermadeathScreenProps {
   /** Whether the overlay is visible. */
@@ -44,13 +47,13 @@ export function PermadeathScreen({ open, onReturnToMenu }: PermadeathScreenProps
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(5, 0, 5, 0.92)",
+    backgroundColor: "rgba(249,168,212,0.2)",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 200,
   },
   panel: {
-    backgroundColor: "rgba(10, 12, 8, 0.95)",
+    backgroundColor: "rgba(255,251,235,0.92)",
     borderWidth: 2,
     borderColor: ACCENT.blossom,
     borderRadius: RADIUS.organic,
@@ -61,7 +64,7 @@ const styles = StyleSheet.create({
     width: "85%",
     shadowColor: ACCENT.blossom,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 20,
     elevation: 12,
   },
@@ -71,13 +74,13 @@ const styles = StyleSheet.create({
     color: ACCENT.blossom,
     textAlign: "center",
     marginBottom: SPACE[2],
-    textShadowColor: "rgba(249, 168, 212, 0.5)",
+    textShadowColor: "rgba(249, 168, 212, 0.3)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
   subtitle: {
     ...TYPE.body,
-    color: DARK.textSecondary,
+    color: LIGHT.textSecondary,
     textAlign: "center",
     marginBottom: SPACE[6],
     lineHeight: 20,
@@ -97,6 +100,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...TYPE.heading,
-    color: DARK.bgDeep,
+    color: "#FFF",
   },
 });

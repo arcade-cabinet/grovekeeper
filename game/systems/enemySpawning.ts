@@ -30,7 +30,7 @@ export function calculateTier(chunkDistance: number, difficultyId: string): numb
 }
 
 export function encounterChance(
-  chunkDistance: number,
+  _chunkDistance: number,
   isNight: boolean,
   biome: string,
   difficultyId: string,

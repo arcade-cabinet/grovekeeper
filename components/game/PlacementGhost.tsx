@@ -11,7 +11,7 @@ import { useRapier } from "@react-three/rapier";
 import type React from "react";
 import { useCallback, useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
-import { Color, DoubleSide, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import { Color, DoubleSide, type Mesh, type MeshStandardMaterial, Vector3 } from "three";
 
 import { Text } from "@/components/ui/text";
 import type { ModularPieceComponent } from "@/game/ecs/components/building";

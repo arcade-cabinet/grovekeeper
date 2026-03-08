@@ -15,7 +15,15 @@
 import { useFrame } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
 import { useRef } from "react";
-import { BufferAttribute, BufferGeometry, Color, Group, Material, Mesh, MeshStandardMaterial } from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  type Group,
+  type Material,
+  Mesh,
+  MeshStandardMaterial,
+} from "three";
 
 import { terrainChunksQuery } from "@/game/ecs/world";
 import { CHUNK_SIZE } from "@/game/world/ChunkManager";
@@ -301,7 +309,7 @@ export const TerrainChunks = () => {
           vertexColors: true,
           roughness: 0.95,
           metalness: 0,
-          flatShading: true, // PSX aesthetic (Spec §1.4)
+          flatShading: false,
         });
         mesh = new Mesh(geometry, material);
         mesh.receiveShadow = true;

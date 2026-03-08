@@ -8,7 +8,14 @@
 
 import { type ThreeEvent, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
-import { BufferGeometry, Color, LineSegments, Mesh, MeshStandardMaterial, Vector3 } from "three";
+import {
+  BufferGeometry,
+  Color,
+  type LineSegments,
+  type Mesh,
+  type MeshStandardMaterial,
+  Vector3,
+} from "three";
 
 export interface GroundProps {
   /** Grid size in tiles (e.g. 16 for 16x16). */
@@ -116,11 +123,11 @@ export const Ground = ({
       </mesh>
 
       {/* Grid overlay */}
-      {showGrid && gridGeometry && (
+      {showGrid && gridGeometry ? (
         <lineSegments ref={gridRef} geometry={gridGeometry}>
           <lineBasicMaterial color={0x5a4830} transparent opacity={0.15} />
         </lineSegments>
-      )}
+      ) : null}
     </group>
   );
 };
