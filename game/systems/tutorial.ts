@@ -20,10 +20,10 @@
 // Stub types (kept for backward compatibility — no longer drive overlay UI)
 // ---------------------------------------------------------------------------
 
-/** @deprecated No longer used for overlay rendering. Kept for store type compat. */
+/** No longer used for overlay rendering. Kept for store type compat. */
 export type TutorialStep = "done";
 
-/** @deprecated No longer used for overlay rendering. Kept for store type compat. */
+/** No longer used for overlay rendering. Kept for store type compat. */
 export interface TutorialState {
   /** Always "done" — the overlay tutorial is retired. */
   currentStep: TutorialStep;
@@ -31,7 +31,7 @@ export interface TutorialState {
   completed: boolean;
 }
 
-/** @deprecated No longer used. Kept so existing imports compile. */
+/** No longer used. Kept so existing imports compile. */
 export interface TutorialStepDef {
   id: TutorialStep;
   signal: string;
@@ -42,7 +42,7 @@ export interface TutorialStepDef {
 // No-op step list (empty — no overlay steps)
 // ---------------------------------------------------------------------------
 
-/** @deprecated No overlay steps remain. Empty array. */
+/** No overlay steps remain. Empty array kept for backward compat. */
 export const TUTORIAL_STEPS: readonly TutorialStepDef[] = [];
 
 // ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ export function initialTutorialState(): TutorialState {
 
 /**
  * No-op: returns null. The overlay tutorial is retired.
- * @deprecated
+ * Kept as bridge stub for backward compat.
  */
 export function currentStepDef(_state: TutorialState): TutorialStepDef | null {
   return null;
@@ -90,7 +90,7 @@ export function currentStepDef(_state: TutorialState): TutorialStepDef | null {
 
 /**
  * No-op: returns null. The overlay tutorial is retired.
- * @deprecated
+ * Kept as bridge stub for backward compat.
  */
 export function currentStepLabel(_state: TutorialState): string | null {
   return null;
@@ -113,7 +113,7 @@ export function tickTutorial(state: TutorialState, _signal: string): TutorialSta
 
 /**
  * No-op: the tutorial is already always complete.
- * @deprecated
+ * Kept as bridge stub for backward compat.
  */
 export function advanceStep(state: TutorialState): TutorialState {
   return state;
@@ -121,7 +121,7 @@ export function advanceStep(state: TutorialState): TutorialState {
 
 /**
  * No-op: already complete.
- * @deprecated
+ * Kept as bridge stub for backward compat.
  */
 export function skipTutorial(state: TutorialState): TutorialState {
   return state;

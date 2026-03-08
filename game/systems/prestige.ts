@@ -9,6 +9,7 @@
  */
 
 import prestigeConfig from "@/config/game/prestige.json" with { type: "json" };
+import { emptyResources } from "@/game/config/resources";
 
 export interface PrestigeBonus {
   growthSpeedMultiplier: number;
@@ -155,16 +156,7 @@ export function getPrestigeResetState(): {
     treesHarvested: 0,
     treesWatered: 0,
     treesMatured: 0,
-    resources: {
-      timber: 0,
-      sap: 0,
-      fruit: 0,
-      acorns: 0,
-      wood: 0,
-      stone: 0,
-      metal_scrap: 0,
-      fiber: 0,
-    },
+    resources: emptyResources(),
     seeds: { "white-oak": 10 },
     groveData: null,
   };

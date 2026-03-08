@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Platform, View } from "react-native";
 import { useGameStore } from "@/game/stores";
 import { BatchHarvestButton } from "../BatchHarvestButton.tsx";
 import { BuildPanel } from "../BuildPanel.tsx";
+import { CookingPanel } from "../CookingPanel.tsx";
+import { FishingPanel } from "../FishingPanel.tsx";
+import { ForgingPanel } from "../ForgingPanel.tsx";
 import { HUD } from "../HUD.tsx";
-import { MiniMap } from "../minimap/index.ts";
 import { MobileActionButtons } from "../MobileActionButtons.tsx";
+import { MiniMap } from "../minimap/index.ts";
 import { NpcDialogue } from "../NpcDialogue.tsx";
 import { PauseMenu } from "../PauseMenu/index.tsx";
 import { RadialActionMenu } from "../RadialActionMenu.tsx";
@@ -16,9 +19,9 @@ import { TutorialOverlay } from "../TutorialOverlay.tsx";
 import { VirtualJoystick } from "../VirtualJoystick.tsx";
 import { WeatherForecast } from "../WeatherForecast.tsx";
 import { WeatherOverlay } from "../WeatherOverlay.tsx";
-import { styles } from "./styles";
-import type { GameUIProps } from "./types";
-import { useGameUIData } from "./useGameUIData";
+import { styles } from "./styles.ts";
+import type { GameUIProps } from "./types.ts";
+import { useGameUIData } from "./useGameUIData.ts";
 
 export type { GameUIProps };
 
@@ -76,24 +79,40 @@ export function GameUI({
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
   const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
 
+  // Crafting station panel state driven by store (Spec §44, §22)
+  const activeCraftingStation = useGameStore((s) => s.activeCraftingStation);
+
+  const closeCraftingStation = useCallback(() => {
+    useGameStore.getState().setActiveCraftingStation(null);
+  }, []);
+
+  // Open BuildPanel when BUILD action dispatches (Spec §46)
+  useEffect(() => {
+    if (activeCraftingStation?.type === "kitbash") {
+      setBuildPanelOpen(true);
+      // Clear the crafting station so it doesn't re-trigger
+      useGameStore.getState().setActiveCraftingStation(null);
+    }
+  }, [activeCraftingStation]);
+
   return (
     <View style={styles.overlay} pointerEvents="box-none">
       {/* Prestige cosmetic vignette border */}
-      {cosmetic && (
+      {cosmetic ? (
         <View
           style={[styles.vignette, { borderWidth: 3, borderColor: cosmetic.borderColor }]}
           pointerEvents="none"
         />
-      )}
+      ) : null}
 
       {/* Weather visual overlay (rain, drought, windstorm) */}
-      <WeatherOverlay weatherType={currentWeather ?? "clear"} />
+      <WeatherOverlay />
 
       {/* Full FPS HUD overlay — self-contained, reads from ECS + Legend State */}
       <HUD onOpenMenu={onOpenMenu} onOpenSeedSelect={() => setSeedSelectOpen(true)} />
 
       {/* Weather forecast widget - below HUD */}
-      {currentWeather && gameTime && (
+      {currentWeather && gameTime ? (
         <View style={styles.weatherForecast} pointerEvents="box-none">
           <WeatherForecast
             currentWeather={currentWeather}
@@ -101,22 +120,22 @@ export function GameUI({
             currentSeason={gameTime.season}
           />
         </View>
-      )}
+      ) : null}
 
       {/* Batch harvest button */}
-      {onBatchHarvest && (
+      {onBatchHarvest ? (
         <View style={styles.batchHarvest} pointerEvents="box-none">
           <BatchHarvestButton
             readyCount={batchHarvestReadyCount ?? 0}
             onBatchHarvest={onBatchHarvest}
           />
         </View>
-      )}
+      ) : null}
 
       {/* Mobile controls -- joystick (left) + action buttons (right) */}
-      {movementRef && (
+      {movementRef ? (
         <VirtualJoystick movementRef={movementRef} onActiveChange={onJoystickActiveChange} />
-      )}
+      ) : null}
       <MobileActionButtons
         selectedTool={selectedTool}
         actions={mobileActions}
@@ -195,6 +214,32 @@ export function GameUI({
         }}
         onClose={() => setTradeDialogOpen(false)}
       />
+      {/* Crafting station panels — driven by activeCraftingStation (Spec §44, §22) */}
+      <FishingPanel
+        open={activeCraftingStation?.type === "fishing"}
+        onClose={closeCraftingStation}
+      />
+      <CookingPanel
+        open={activeCraftingStation?.type === "cooking"}
+        onClose={closeCraftingStation}
+      />
+      <ForgingPanel
+        open={activeCraftingStation?.type === "forging"}
+        onClose={closeCraftingStation}
+        inventory={resources}
+        toolUpgrades={useGameStore.getState().toolUpgrades ?? {}}
+        onSmelt={(recipe) => {
+          const store = useGameStore.getState();
+          for (const [resId, amount] of Object.entries(recipe.inputs)) {
+            store.spendResource(resId as keyof typeof resources, amount);
+          }
+          store.addResource(recipe.output.itemId as keyof typeof resources, recipe.output.amount);
+        }}
+        onUpgrade={(toolId) => {
+          useGameStore.getState().upgradeToolTier(toolId);
+        }}
+      />
+
       {/* NpcDialogue is now self-driven from ECS via dialogueBridge */}
       <NpcDialogue />
       <PauseMenu

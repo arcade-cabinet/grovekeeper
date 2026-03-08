@@ -5,6 +5,10 @@
  */
 
 import type { ResourceType } from "@/game/config/resources";
+import {
+  getSeasonalModifierForAny,
+  type Season as SeasonalMarketSeason,
+} from "@/game/systems/seasonalMarket";
 
 export interface TradeRate {
   from: ResourceType;
@@ -22,6 +26,21 @@ export const BASE_TRADE_RATES: TradeRate[] = [
 
 export function getTradeRates(): TradeRate[] {
   return [...BASE_TRADE_RATES];
+}
+
+/**
+ * Get trade rates adjusted for the current season.
+ * Seasonal modifiers from seasonalMarket.ts affect the output resource amount.
+ * Spec §20: Seasonal price modifiers extend to all traded resource types.
+ */
+export function getSeasonalTradeRates(season: string): TradeRate[] {
+  return BASE_TRADE_RATES.map((rate) => {
+    const modifier = getSeasonalModifierForAny(season as SeasonalMarketSeason, rate.to);
+    return {
+      ...rate,
+      toAmount: Math.max(1, Math.round(rate.toAmount * modifier)),
+    };
+  });
 }
 
 /**
