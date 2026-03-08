@@ -72,15 +72,17 @@ These are non-negotiable. The `.claude/hooks/` directory enforces several automa
 | Framework | Expo SDK 55 (New Architecture required) |
 | Runtime | React 19, React Native 0.83 |
 | 3D Engine | React Three Fiber 9 + drei 10 |
-| Physics | @react-three/rapier (planned -- FPS pivot) |
+| Physics | @react-three/rapier 2.x (active -- FPS capsule + terrain colliders) |
 | ECS | Miniplex 2.x |
 | State | Legend State 3.x (persistent via expo-sqlite) |
 | AI/Behavior | Yuka 0.7 |
+| Audio | Tone.js 15.x (procedural synthesis + spatial audio) |
+| Animation | animejs 3.x (NPC rigid body part rotation) |
 | Database | expo-sqlite + drizzle-orm |
 | Styling | NativeWind 4 + Tailwind CSS 3 |
 | Language | TypeScript 5.9, strict mode |
 | Lint/Fmt | Biome 2.4 |
-| Testing | Jest + Maestro (E2E) |
+| Testing | Jest + Maestro (E2E) + Playwright (web E2E) |
 | Package Mgr | pnpm |
 
 ---
@@ -115,23 +117,23 @@ npx tsc --noEmit      # TypeScript type check
 
 ### 3D Scene (R3F Declarative)
 
-The scene uses React Three Fiber components inside an R3F `<Canvas>`. NOT imperative Three.js calls.
+The scene uses React Three Fiber components inside an R3F `<Canvas>` wrapped in `<Physics>` (Rapier). NOT imperative Three.js calls.
 
-- `components/scene/` -- Camera, Lighting, Sky, Ground, SelectionRing
-- `components/entities/` -- Player, TreeInstances, NpcMeshes
-- `components/game/` -- HUD, menus, overlays (React Native UI)
-- `components/player/` -- PlayerController, ToolViewModel, Crosshair, TargetInfo (FPS pivot -- planned)
+- `components/scene/` -- Lighting, Sky, TerrainChunk, WaterBody, ProceduralTown, ProceduralBuilding, BirmotherMesh
+- `components/entities/` -- ProceduralTrees, ProceduralBushes, ProceduralFences, ProceduralProps, ProceduralGrass, ProceduralHedgeMaze, ProceduralEnemies, ChibiNpcScene, GrovekeeperSpirit
+- `components/game/` -- HUD, menus, panels, overlays (React Native UI)
+- `components/player/` -- FPSCamera, PlayerCapsule, ProceduralToolView, TouchLookZone, TargetInfo
 
-### Input System (FPS pivot -- planned)
+### Input System (Active)
 
-See `docs/architecture/input-system.md` for full spec. Architecture:
+See `docs/architecture/input-system.md` for full spec. Implementation in `game/input/`.
 
 ```
-InputManager (singleton)
+InputManager (singleton) -- game/input/InputManager.ts
   -> KeyboardMouseProvider (desktop: WASD + mouse look)
   -> TouchProvider (mobile: joystick + look zone + buttons)
   -> GamepadProvider (controller)
-  -> AIProvider (autoplay/testing governor)
+  -> AIProvider (autoplay/testing governor -- planned)
 ```
 
 Game code reads an `InputFrame` per tick. Never reads raw events.
@@ -174,50 +176,75 @@ grovekeeper/
 ├── docs/                             # Game design and architecture
 │   ├── README.md                     # Documentation index
 │   ├── GAME_SPEC.md                  # SINGLE SOURCE OF TRUTH for game design
-│   └── plans/                        # Design documents
-│       └── 2026-03-06-fps-perspective-design.md
+│   ├── architecture/                 # Architecture docs (18 files)
+│   └── plans/                        # Design documents (13 files)
 ├── config/                           # JSON config (all tuning values here)
 │   ├── theme.json                    # Colors, typography, spacing
-│   └── game/                         # Game balance data
+│   ├── world/                        # World data (starting-world, blocks, structures, encounters, festivals)
+│   └── game/                         # Game balance data (46 JSON files)
 │       ├── species.json              # 15 tree species catalog
-│       ├── tools.json                # 12 tools + stamina costs
+│       ├── tools.json                # Tools + stamina costs
 │       ├── resources.json            # Resource type definitions
 │       ├── growth.json               # Stage names, multipliers, timing
 │       ├── weather.json              # Event probabilities, multipliers
-│       ├── achievements.json         # Trigger conditions, display data
-│       ├── prestige.json             # Tiers, bonuses, cosmetic themes
-│       ├── grid.json                 # Expansion tiers, costs, sizes
-│       ├── npcs.json                 # NPC template definitions
-│       ├── dialogues.json            # Dialogue trees
-│       ├── quests.json               # Quest chain definitions
-│       └── difficulty.json           # Difficulty multipliers
+│       ├── difficulty.json           # Difficulty multipliers
+│       ├── dialogue-trees.json       # Dialogue trees
+│       ├── fishing.json              # Fishing species, timing
+│       ├── mining.json               # Rock hardness, ore tables
+│       ├── cooking.json              # Cooking recipes
+│       ├── forging.json              # Smelting + tool upgrade recipes
+│       ├── building.json             # Build costs, unlock levels
+│       ├── enemies.json              # Enemy types, stats, behaviors
+│       ├── combat.json               # Combat parameters
+│       ├── loot.json                 # Loot tables for all sources
+│       ├── vegetation.json           # Bush shapes, placement density
+│       └── ...                       # 30+ more config files
 ├── app/                              # Expo Router screens
 │   ├── _layout.tsx                   # Root layout
-│   ├── index.tsx                     # Main menu
+│   ├── index.tsx                     # Main menu (+ NewGameModal)
+│   ├── settings.tsx                  # Settings screen
 │   └── game/
-│       └── index.tsx                 # Game screen (Canvas + HUD)
+│       └── index.tsx                 # Game screen (Canvas + HUD + all overlays)
 ├── components/                       # React Native + R3F components
-│   ├── ui/                           # Base UI (button, text, icon)
-│   ├── game/                         # Game UI (HUD, menus, dialogs)
-│   ├── scene/                        # R3F scene (Camera, Lighting, Sky, Ground)
-│   └── entities/                     # R3F entities (Player, Trees, NPCs)
+│   ├── ui/                           # Base UI (button, text, icon, tokens)
+│   ├── game/                         # Game UI (HUD, menus, panels, dialogs)
+│   │   ├── GameUI/                   # Orchestrator (designed but not mounted)
+│   │   ├── PauseMenu/               # Tabbed pause overlay
+│   │   ├── minimap/                  # MiniMap + snapshot
+│   │   └── AchievementPopup/        # Achievement popup + sparkle
+│   ├── scene/                        # R3F scene (Lighting, Sky, TerrainChunk, WaterBody, ProceduralTown, ProceduralBuilding)
+│   ├── entities/                     # R3F entities (ProceduralTrees, ProceduralBushes, ProceduralFences, ProceduralProps, ProceduralGrass, ProceduralHedgeMaze, ProceduralEnemies, ChibiNpc, GrovekeeperSpirit)
+│   └── player/                       # FPS player (FPSCamera, PlayerCapsule, ProceduralToolView, TouchLookZone, TargetInfo)
 ├── game/                             # Game logic (engine-agnostic)
 │   ├── ecs/                          # Miniplex world, archetypes, queries
-│   ├── systems/                      # Pure game systems (growth, weather, etc.)
-│   ├── stores/                       # Legend State persistent store
-│   ├── hooks/                        # Custom hooks (useInput, useMovement, etc.)
+│   │   └── components/              # Domain-specific ECS components (core, npc, combat, building, structures, items, vegetation, terrain, dialogue, procedural/)
+│   ├── systems/                      # Pure game systems (90+ files with tests)
+│   │   ├── achievements/            # Achievement checker (core, types, world)
+│   │   ├── buildingGeometry/        # Procedural building boxes + interiors
+│   │   ├── hedgePlacement/          # Maze wall generation
+│   │   ├── kitbashing/              # Modular building placement + Rapier
+│   │   ├── recipes/                 # Crafting recipe catalog
+│   │   ├── quests/                  # Quest goal types + registry
+│   │   └── travelingMerchant/       # Merchant offer pools + scheduling
+│   ├── stores/                       # Legend State persistent store (gameStore, inventory, questState, settings, survivalState)
+│   ├── hooks/                        # Custom hooks (useGameLoop/, useInteraction/, useInput, useMovement, useRaycast, useBuildMode, etc.)
+│   ├── input/                        # Input system (InputManager, KeyboardMouseProvider, TouchProvider, GamepadProvider)
+│   ├── player/                       # Player utilities (teleport)
 │   ├── ai/                           # Yuka NPC AI + PlayerGovernor
-│   ├── npcs/                         # NPC management
-│   ├── quests/                       # Quest chain engine
+│   ├── npcs/                         # NPC management + data
+│   ├── quests/                       # Quest chain engine + data
 │   ├── events/                       # Event scheduler
-│   ├── world/                        # World generation, zone loading
+│   ├── world/                        # World generation (ChunkManager, terrainGenerator, villageLayout/, mazeGenerator, entitySpawner)
 │   ├── structures/                   # Structure placement + effects
 │   ├── actions/                      # Game action dispatcher
-│   ├── config/                       # Runtime config loaders (species, tools, resources)
+│   ├── config/                       # Runtime config loaders (species, tools, resources, difficulty)
 │   ├── constants/                    # Codex + derived constants
 │   ├── db/                           # expo-sqlite + drizzle-orm
-│   └── utils/                        # Pure utilities (treeGeometry, seedRNG)
-├── assets/                           # Textures, models, fonts
+│   ├── shaders/                      # GLSL shaders (Gerstner water)
+│   ├── ui/                           # UI bridge (dialogueBridge, Toast)
+│   ├── debug/                        # Debug bridge for dev tools
+│   └── utils/                        # Pure utilities (seedRNG, proceduralTextures, worldNames)
+├── assets/                           # Textures, fonts (GLB models removed -- all procedural)
 └── .maestro/                         # Maestro E2E test flows
 ```
 
@@ -258,13 +285,14 @@ Hooks run automatically on tool use. They cannot be bypassed. They catch:
 
 When starting any work session:
 
-1. `docs/GAME_SPEC.md` -- Single source of truth for game design
-2. `docs/plans/2026-03-06-fps-perspective-design.md` -- FPS perspective pivot design
-3. `app/game/index.tsx` -- Game screen (R3F Canvas + HUD)
-4. `game/stores/gameStore.ts` -- Persistent state
-5. `game/ecs/world.ts` -- Miniplex world + queries
-6. `config/game/species.json` -- Tree species catalog
-7. `config/game/tools.json` -- Tool definitions
+1. `docs/GAME_SPEC.md` -- Single source of truth for game design (46 sections)
+2. `app/game/index.tsx` -- Game screen (Canvas + Physics + all R3F + HUD + overlays)
+3. `game/stores/index.ts` -- Legend State persistent store barrel
+4. `game/ecs/world.ts` -- Miniplex world + 40+ queries
+5. `game/hooks/useGameLoop/index.ts` -- System execution order per frame
+6. `game/input/InputManager.ts` -- FPS input system
+7. `config/game/species.json` -- Tree species catalog
+8. `config/game/tools.json` -- Tool definitions
 
 ---
 

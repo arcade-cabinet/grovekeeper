@@ -2,9 +2,9 @@
 
 > "Every forest begins with a single seed."
 
-Grovekeeper is a PSX-aesthetic survival game. Mobile-first (portrait), desktop secondary. Target session: 3-15 minutes. Infinite procedural world, chunk-based generation, seeded determinism.
+Grovekeeper is a PSX-aesthetic first-person grove-tending survival game. Mobile-first (portrait), desktop secondary. Target session: 3-15 minutes. Infinite procedural world, chunk-based generation, seeded determinism. All visuals are procedural geometry (zero GLB models).
 
-Built with Expo SDK 55, React Three Fiber, Miniplex ECS, Legend State, Tone.js, and anime.js.
+Built with Expo SDK 55, React Three Fiber + Rapier physics, Miniplex ECS, Legend State, Tone.js, and anime.js. 4,105 tests across 178 suites.
 
 ---
 
@@ -95,7 +95,7 @@ pnpm ios        # iOS (requires Xcode, macOS only)
 
 - [HUD Layout](ui-ux/hud-layout.md) -- Mobile and desktop panel positions, component map
 - [Controls](ui-ux/controls.md) -- Joystick, keyboard, context actions, canvas config
-- [Tutorial & User Flow](ui-ux/tutorial-user-flow.md) -- 11-step tutorial, loading screen, seed phrases
+- [Tutorial & User Flow](ui-ux/tutorial-user-flow.md) -- Elder Awakening quest onboarding, loading screen, seed phrases
 
 ### Guides
 
@@ -106,11 +106,15 @@ pnpm ios        # iOS (requires Xcode, macOS only)
 ### Plans
 
 - **[Unified Game Design](plans/2026-03-07-unified-game-design.md)** -- Master synthesis: design + implementation plan
+- [Completion Plan](plans/2026-03-08-completion-plan.md) -- Current completion status + remaining work
+- [Finish Game Plan](plans/2026-03-08-finish-game.md) -- Task-by-task implementation plan
+- [Game Logic Decomposition](plans/2026-03-07-game-logic-decomposition.md) -- System decomposition
 - [Grok Integration Plan](plans/2026-03-07-grok-integration-plan.md) -- Chibi NPCs, water, audio, seasonal integration
+- [UX/Brand Design](plans/2026-03-07-ux-brand-design.md) -- Brand identity + 21st.dev research
 - [Game Mode System Design](plans/game-mode-system-design.md) -- Survival mode, difficulty tiers
 - [FPS Perspective Design](plans/2026-03-06-fps-perspective-design.md) -- First-person pivot design
 - [Expo/R3F Migration Design](plans/2026-03-06-expo-r3f-migration-design.md) -- Migration from BabylonJS
-- [Gap Analysis](plans/2026-03-06-gap-analysis.md) -- Feature gap analysis
+- [Gap Analysis](plans/2026-03-06-gap-analysis.md) -- Feature gap analysis (historical)
 - [Master Completion Plan](plans/2026-03-06-master-completion-plan.md) -- Historical reference
 - [Phase A Plan](plans/2025-02-06-phase-a-foundation.md) -- Foundation (historical, BabylonJS era)
 - [Phase B Plan](plans/2025-02-06-phase-b-systems-persistence.md) -- Systems and persistence (historical, BabylonJS era)
@@ -122,19 +126,21 @@ pnpm ios        # iOS (requires Xcode, macOS only)
 | Layer      | Technology                | Version   | Notes |
 |------------|---------------------------|-----------|-------|
 | Framework  | Expo SDK                  | 55        | Universal: web + iOS + Android |
-| Runtime    | React + React Native      | 19 / 0.83 | New Architecture required |
-| 3D Engine  | React Three Fiber + drei  | 9.x / 10.x | Declarative scene via React components |
+| Runtime    | React + React Native      | 19.2 / 0.83.2 | New Architecture required |
+| 3D Engine  | React Three Fiber + drei  | 9.5 / 10.7 | Declarative scene via React components |
+| Physics    | @react-three/rapier       | 2.2       | FPS capsule, terrain colliders |
 | ECS        | Miniplex                  | 2.x       | Entity-component-system for runtime state |
-| State      | Legend State              | 3.x       | Persistent player state via expo-sqlite |
+| State      | Legend State              | 3.0-beta  | Persistent player state via expo-sqlite |
 | NPC AI     | Yuka                      | 0.7.x     | Goal-driven NPC behavior |
-| NPC Anim   | anime.js                  | --        | Rigid body part rotation (Lego-style) |
-| Audio      | Tone.js                   | --        | Spatial audio, FM synthesis, ambient soundscapes |
+| NPC Anim   | animejs                   | 3.2       | Rigid body part rotation (Lego-style) |
+| Audio      | Tone.js                   | 15.1      | Spatial audio, FM synthesis, ambient soundscapes |
 | Styling    | NativeWind                | 4.x       | Universal Tailwind (web + native) |
 | Database   | expo-sqlite + drizzle-orm | --        | Native SQLite + web WASM |
-| Language   | TypeScript                | 5.9+      | Strict mode |
-| Lint/Fmt   | Biome                     | 2.4+      | Single tool for lint + format |
+| 3D Runtime | Three.js                  | 0.183     | WebGL renderer |
+| Language   | TypeScript                | 5.9       | Strict mode |
+| Lint/Fmt   | Biome                     | 2.4       | Single tool for lint + format |
 | Package    | pnpm                      | --        | Fast, strict dependency resolution |
-| Testing    | Jest (unit) + Maestro (E2E) | --      | jest-expo preset |
+| Testing    | Jest (unit) + Maestro (E2E) + Playwright | -- | jest-expo preset |
 | CI/CD      | GitHub Actions            | --        | Lint, test, build, deploy |
 
 ---
@@ -145,55 +151,67 @@ pnpm ios        # iOS (requires Xcode, macOS only)
 grovekeeper/
   CLAUDE.md                       Agent instructions and project rules
   docs/                           This documentation
-    GAME_SPEC.md                  Single source of truth for game design
+    GAME_SPEC.md                  Single source of truth for game design (46 sections)
     ECONOMY_DESIGN.md             Economy design document
+    architecture/                 Architecture docs (18 files)
+    plans/                        Design documents (13 files)
   app/                            Expo Router screens
     _layout.tsx                   Root layout
-    index.tsx                     Main menu screen
-    game/index.tsx                Game screen (R3F Canvas + HUD)
+    index.tsx                     Main menu + NewGameModal
+    settings.tsx                  Settings screen
+    game/index.tsx                Game screen (Canvas + Physics + HUD + overlays)
   components/                     React Native + R3F components
-    ui/                           Base UI components (button, text, icon)
-    game/                         Game UI (HUD, menus, popups, overlays)
-    scene/                        R3F scene components (Camera, Lighting, Sky, Ground)
-    entities/                     R3F entity components (Player, Trees, NPCs)
+    ui/                           Base UI components (button, text, icon, tokens)
+    game/                         Game UI (HUD, menus, panels, dialogs, overlays)
+      GameUI/                     Orchestrator (designed, not yet mounted)
+      PauseMenu/                  Tabbed pause overlay
+      minimap/                    MiniMap + snapshot
+      AchievementPopup/           Achievement popup + sparkle
+    scene/                        R3F scene (Lighting, Sky, TerrainChunk, WaterBody, ProceduralTown)
+    entities/                     R3F entities (ProceduralTrees, ProceduralBushes, ChibiNpc, ProceduralEnemies, etc.)
+    player/                       FPS player (FPSCamera, PlayerCapsule, ProceduralToolView, TouchLookZone)
   config/                         JSON config hierarchy
     theme.json                    Colors, typography, spacing
-    game/                         Game balance data
+    game/                         Game balance data (46 JSON files)
       species.json                15 tree species catalog
       tools.json                  Tool definitions + stamina costs
-      resources.json              Resource type definitions
-      growth.json                 Stage names, multipliers, timing
-      weather.json                Event probabilities, multipliers
-      achievements.json           Trigger conditions, display data
-      prestige.json               Tiers, bonuses, cosmetic themes
-      grid.json                   Expansion tiers, costs, sizes
-      npcs.json                   NPC template definitions
-      dialogues.json              Dialogue trees
-      quests.json                 Quest chain definitions
       difficulty.json             Difficulty tier multipliers
+      dialogue-trees.json         Dialogue trees
+      fishing.json                Fishing species, timing
+      mining.json                 Rock hardness, ore tables
+      cooking.json                Cooking recipes
+      enemies.json                Enemy types, stats, behaviors
+      loot.json                   Loot tables for all sources
+      ...                         30+ more config files
     world/                        World data
       starting-world.json         Starting world definitions
       blocks.json                 Block catalog
-      structures.json             Structure recipes
+      structures.json             Structure recipes + village blueprints
       encounters.json             Random encounters
       festivals.json              Seasonal festivals
   game/                           Game logic (engine-agnostic)
     ecs/                          Miniplex ECS (world, archetypes, queries)
-    systems/                      Pure game systems (growth, weather, economy)
+      components/                 Domain-specific ECS components (11 files + procedural/)
+    systems/                      Pure game systems (90+ files with tests)
     stores/                       Legend State persistent store
-    hooks/                        Custom hooks (useInput, useMovement)
+    hooks/                        Custom hooks (useGameLoop/, useInteraction/, useInput, etc.)
+    input/                        Input system (InputManager, KeyboardMouse, Touch, Gamepad providers)
+    player/                       Player utilities (teleport)
     ai/                           Yuka NPC AI (brains, governor)
-    npcs/                         NPC management
-    quests/                       Quest chain engine
+    npcs/                         NPC management + data
+    quests/                       Quest chain engine + data
     events/                       Event scheduler
-    world/                        World generation, zone loading
+    world/                        World generation (ChunkManager, terrainGenerator, villageLayout/, mazeGenerator)
     structures/                   Structure placement + effects
     actions/                      Game action dispatcher
-    config/                       Runtime config loaders (species.ts, tools.ts)
+    config/                       Runtime config loaders (species, tools, resources, difficulty)
     constants/                    Codex + derived constants
     db/                           expo-sqlite + drizzle-orm
-    utils/                        Pure utilities (treeGeometry, seedRNG)
-  assets/                         Textures, models, fonts
+    shaders/                      GLSL shaders (Gerstner water)
+    ui/                           UI bridge (dialogueBridge, Toast)
+    debug/                        Debug bridge for dev tools
+    utils/                        Pure utilities (seedRNG, proceduralTextures, worldNames)
+  assets/                         Textures, fonts (GLB models removed -- all procedural)
   .maestro/                       Maestro E2E test flows
   .claude/                        Agent infrastructure
     hooks/                        Automatic quality gates
