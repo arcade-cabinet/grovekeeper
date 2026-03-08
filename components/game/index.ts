@@ -2,12 +2,12 @@ export type {
   AchievementDef,
   AchievementPopupContainerProps,
   AchievementPopupItem,
-} from "./AchievementPopup.tsx";
+} from "./AchievementPopup";
 export {
   AchievementPopupContainer,
   showAchievement,
   useAchievementPopupStore,
-} from "./AchievementPopup.tsx";
+} from "./AchievementPopup";
 export type { ActionButtonProps, TileState } from "./ActionButton.tsx";
 export { ActionButton, getActionLabel } from "./ActionButton.tsx";
 export type { BatchHarvestButtonProps } from "./BatchHarvestButton.tsx";
@@ -40,8 +40,8 @@ export type {
   PauseMenuProps,
   PauseMenuStats,
   PrestigeInfo,
-} from "./PauseMenu.tsx";
-export { PauseMenu } from "./PauseMenu.tsx";
+} from "./PauseMenu";
+export { PauseMenu } from "./PauseMenu";
 export type { PlacementGhostProps } from "./PlacementGhost.tsx";
 export {
   PlacementGhostMeshLayer,

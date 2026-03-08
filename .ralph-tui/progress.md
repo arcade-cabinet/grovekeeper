@@ -3002,3 +3002,17 @@ after each iteration and it's included in prompts for context.
   - **Shared private helpers go in `queries.ts`, not each action file**: When multiple action files need the same low-level helpers (findCell, findTreeById), extract them into a shared `queries.ts` with explicit exports. Avoids copy-paste and keeps each action file focused on its domain.
   - **Test import extensions must match directory resolution**: Any test file using `from "./foo.ts"` (explicit extension) must be updated to `from "./foo"` after the standalone file becomes a directory. TypeScript extension-less resolution handles both file and directory automatically.
 ---
+
+## 2026-03-07 - US-162
+- Decomposed 3 oversized UI components into subpackages (index.ts barrel pattern):
+  - `AchievementPopup.tsx` (314 lines) → `AchievementPopup/` (types.ts, store.ts, Sparkle.tsx, PopupContent.tsx, index.tsx)
+  - `PauseMenu.tsx` (682 lines) → `PauseMenu/` (types.ts, StatItem.tsx, ToggleSwitch.tsx, StatsTab.tsx, ProgressTab.tsx, SettingsTab.tsx, index.tsx)
+  - `GameUI.tsx` (479 lines) → `GameUI/` (types.ts, useGameUIData.ts, styles.ts, index.tsx)
+- Updated `components/game/index.ts` barrel: `"./AchievementPopup.tsx"` → `"./AchievementPopup"`, `"./PauseMenu.tsx"` → `"./PauseMenu"`
+- Deleted old flat files. All new files are under 300 lines. 3,838 tests pass.
+- **Learnings:**
+  - **Tab content extraction with lifted state**: Extract tab JSX (StatsTab, ProgressTab, SettingsTab) as components with explicit props. Keep `useState` (confirmingPrestige, settingsScreenOpen) in the parent shell component — tabs don't own lifecycle, just render.
+  - **useMemo extraction hook pattern**: All `useMemo` hooks + store subscriptions in GameUI extracted into `useGameUIData.ts` — main component becomes a pure renderer calling one hook. The hook returns a flat object with all computed values.
+  - **Pre-existing TS5097 errors**: The codebase already uses `.tsx` extension in import paths throughout (e.g. `import { X } from "./Foo.tsx"`). These generate TS5097 errors codebase-wide. My new files follow the same pattern — no new error categories introduced.
+  - **Directory import resolution**: After converting `Foo.tsx` to `Foo/index.tsx`, barrel imports `from "./Foo.tsx"` must become `from "./Foo"` (no extension). TypeScript bundler resolution finds `Foo/index.tsx` automatically.
+---
