@@ -21,6 +21,7 @@ import { WaterBodies } from "@/components/scene/WaterBody";
 import { TerrainChunks } from "@/components/scene/TerrainChunk";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
+import { dayNightQuery } from "@/game/ecs/world";
 import { useBirmotherEncounter } from "@/game/hooks/useBirmotherEncounter";
 import { useGameLoop } from "@/game/hooks/useGameLoop";
 import { useInput } from "@/game/hooks/useInput";
@@ -197,22 +198,46 @@ export default function GameScreen() {
   // Interaction hook (tile/tree/NPC selection and game actions)
   const { tileState, onGroundTap, onTreeTap, onNpcTap, executeAction } = useInteraction();
 
-  // Time-of-day visual state for the 3D scene (Lighting + Sky)
+  // Time-of-day visual state for the 3D scene (Lighting + Sky).
+  // Prefer ECS DayNightComponent values (8-slot lerped) when available.
+  // Falls back to time.ts getSkyColors() (4 hard phases) before ECS bootstraps.
   const timeVisuals = useMemo(() => {
+    const ecsEntity = dayNightQuery.entities[0];
+    const dn = ecsEntity?.dayNight;
+
+    if (dn) {
+      // System B active — use 8-slot lerped ECS values (Spec §31.3)
+      return {
+        timeOfDay: dn.gameHour / 24,
+        sunIntensity: dn.sunIntensity,
+        ambientIntensity: dn.ambientIntensity,
+        shadowOpacity: dn.shadowOpacity,
+        starIntensity: dn.starIntensity,
+        skyColors: {
+          zenith: dn.skyZenithColor,
+          horizon: dn.skyHorizonColor,
+          sun: dn.directionalColor,
+          ambient: dn.ambientColor,
+        },
+      };
+    }
+
+    // Fallback: System A (4 hard-bucketed phases from time.ts)
     const timeState = computeTimeState(gameTimeMicroseconds);
     const sunIntensity = getLightIntensity(timeState.dayProgress);
     const rawSky = getSkyColors(timeState.dayProgress);
-    const skyColors = {
-      zenith: rawSky.top,
-      horizon: rawSky.bottom,
-      sun: rawSky.bottom,
-      ambient: rawSky.top,
-    };
     return {
       timeOfDay: timeState.dayProgress,
       sunIntensity,
       ambientIntensity: 0.15 + sunIntensity * 0.65,
-      skyColors,
+      shadowOpacity: sunIntensity,
+      starIntensity: 1 - sunIntensity,
+      skyColors: {
+        zenith: rawSky.top,
+        horizon: rawSky.bottom,
+        sun: rawSky.bottom,
+        ambient: rawSky.top,
+      },
     };
   }, [gameTimeMicroseconds]);
 
@@ -230,12 +255,14 @@ export default function GameScreen() {
               season={currentSeason}
               sunIntensity={timeVisuals.sunIntensity}
               ambientIntensity={timeVisuals.ambientIntensity}
+              shadowOpacity={timeVisuals.shadowOpacity}
               skyColors={timeVisuals.skyColors}
             />
             <Sky
               skyColors={timeVisuals.skyColors}
               season={currentSeason}
               sunIntensity={timeVisuals.sunIntensity}
+              starIntensity={timeVisuals.starIntensity}
             />
             <TerrainChunks />
             <WaterBodies />

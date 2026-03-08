@@ -1,10 +1,15 @@
 /**
  * villageGenerator.test.ts
  * Spec §19.3 — Procedural village buildings, NPCs, and campfire placement.
+ * Spec §17.3a — Rootmere (chunk 0,0) uses fixed authored structure placements.
  */
 
 import { getLandmarkType, isLandmarkChunk } from "./pathGenerator.ts";
-import { generateVillage, type VillageGenerationResult } from "./villageGenerator.ts";
+import {
+  ROOTMERE_NAME,
+  generateVillage,
+  type VillageGenerationResult,
+} from "./villageGenerator.ts";
 
 const SIZE = 16;
 
@@ -65,7 +70,7 @@ describe("generateVillage — origin village chunk (Spec §19.3)", () => {
   // ── Campfire ────────────────────────────────────────────────────────────────
 
   it("campfire is positioned at the village center (8, 8) in world space", () => {
-    // Origin chunk (0,0): landmark local pos = (8, 8), world = (8, 8).
+    // Rootmere (0,0): fixed village center = (8, 8), world = (8, 8).
     expect(result.campfire.position.x).toBeCloseTo(8);
     expect(result.campfire.position.z).toBeCloseTo(8);
   });
@@ -85,9 +90,8 @@ describe("generateVillage — origin village chunk (Spec §19.3)", () => {
 
   // ── Buildings ───────────────────────────────────────────────────────────────
 
-  it("building count is between 3 and 8", () => {
-    expect(result.buildings.length).toBeGreaterThanOrEqual(3);
-    expect(result.buildings.length).toBeLessThanOrEqual(8);
+  it("Rootmere has exactly 7 fixed buildings", () => {
+    expect(result.buildings.length).toBe(7);
   });
 
   it("every building has a valid structure modelPath", () => {
@@ -209,19 +213,6 @@ describe("generateVillage — determinism (Spec §19.3)", () => {
     }
   });
 
-  it("different seeds produce different village layouts", () => {
-    const r1 = generateVillage("Seed Alpha", 0, 0, flatHeightmap());
-    const r2 = generateVillage("Seed Beta", 0, 0, flatHeightmap());
-    if (!r1 || !r2) throw new Error("Expected non-null results");
-
-    // Expect at least some difference (buildings, names, or NPC count).
-    const same =
-      r1.buildings.length === r2.buildings.length &&
-      r1.npcs.length === r2.npcs.length &&
-      r1.buildings.every((b, i) => b.structure.templateId === r2.buildings[i].structure.templateId);
-    expect(same).toBe(false);
-  });
-
   it("fast travel ID encodes the chunk coordinates", () => {
     // Non-default village chunk — would need a seed where a non-origin chunk is
     // village type. Current implementation only makes (0,0) a village, so test
@@ -253,6 +244,76 @@ describe("generateVillage — elevation sampling (Spec §19.3)", () => {
     for (const b of r.buildings) {
       // Y should be positive (gradient terrain — at least 0).
       expect(b.position.y).toBeGreaterThanOrEqual(0);
+    }
+  });
+});
+
+// ── Rootmere fixed layout (Spec §17.3a) ──────────────────────────────────────
+
+describe("generateVillage — Rootmere fixed layout (Spec §17.3a)", () => {
+  it("ROOTMERE_NAME export is 'Rootmere'", () => {
+    expect(ROOTMERE_NAME).toBe("Rootmere");
+  });
+
+  it("campfire is at fixed position (8, 8) for any seed", () => {
+    const r1 = generateVillage("Seed Alpha", 0, 0, flatHeightmap());
+    const r2 = generateVillage("Seed Beta", 0, 0, flatHeightmap());
+    expect(r1?.campfire.position.x).toBeCloseTo(8);
+    expect(r1?.campfire.position.z).toBeCloseTo(8);
+    expect(r2?.campfire.position.x).toBeCloseTo(8);
+    expect(r2?.campfire.position.z).toBeCloseTo(8);
+  });
+
+  it("buildings are identical for different seeds (fixed authored layout)", () => {
+    const r1 = generateVillage("Seed Alpha", 0, 0, flatHeightmap());
+    const r2 = generateVillage("Seed Beta", 0, 0, flatHeightmap());
+    if (!r1 || !r2) throw new Error("Expected non-null results");
+    expect(r1.buildings.length).toBe(r2.buildings.length);
+    for (let i = 0; i < r1.buildings.length; i++) {
+      expect(r1.buildings[i].structure.templateId).toBe(r2.buildings[i].structure.templateId);
+      expect(r1.buildings[i].position.x).toBeCloseTo(r2.buildings[i].position.x);
+      expect(r1.buildings[i].position.z).toBeCloseTo(r2.buildings[i].position.z);
+    }
+  });
+
+  it("includes house-1 (Elder Rowan's Hut) at world position (8, 8)", () => {
+    const r = generateVillage("any-seed", 0, 0, flatHeightmap());
+    const hut = r?.buildings.find((b) => b.structure.templateId === "house-1");
+    expect(hut).toBeDefined();
+    expect(hut?.position.x).toBeCloseTo(8);
+    expect(hut?.position.z).toBeCloseTo(8);
+  });
+
+  it("includes water-well (Village Well) at world position (11, 8)", () => {
+    const r = generateVillage("any-seed", 0, 0, flatHeightmap());
+    const well = r?.buildings.find((b) => b.structure.templateId === "water-well");
+    expect(well).toBeDefined();
+    expect(well?.position.x).toBeCloseTo(11);
+    expect(well?.position.z).toBeCloseTo(8);
+  });
+
+  it("includes storage-1 (Storage Shed) at world position (6, 5)", () => {
+    const r = generateVillage("any-seed", 0, 0, flatHeightmap());
+    const shed = r?.buildings.find((b) => b.structure.templateId === "storage-1");
+    expect(shed).toBeDefined();
+    expect(shed?.position.x).toBeCloseTo(6);
+    expect(shed?.position.z).toBeCloseTo(5);
+  });
+
+  it("includes wooden-frame (Village Gate) at world position (8, 0)", () => {
+    const r = generateVillage("any-seed", 0, 0, flatHeightmap());
+    const gate = r?.buildings.find((b) => b.structure.templateId === "wooden-frame");
+    expect(gate).toBeDefined();
+    expect(gate?.position.x).toBeCloseTo(8);
+    // Village gate offset (0, -8) from center (8, 8) = world (8, 0).
+    // clampToChunk(0) = 1 (clamped to avoid border), so expect 1.
+    expect(gate?.position.z).toBeCloseTo(1);
+  });
+
+  it("NPC templateIds use 'rootmere-npc' prefix", () => {
+    const r = generateVillage("any-seed", 0, 0, flatHeightmap());
+    for (const n of r?.npcs ?? []) {
+      expect(n.npc.templateId).toMatch(/^rootmere-npc-\d+$/);
     }
   });
 });

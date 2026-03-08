@@ -5,6 +5,13 @@
  * (imported from its own module to avoid React Native UI dependencies).
  */
 
+
+// Mock AudioManager to avoid Tone.js ESM import issue in Jest.
+jest.mock("@/game/systems/AudioManager", () => ({
+  audioManager: { playSound: jest.fn() },
+  startAudio: jest.fn().mockResolvedValue(undefined),
+}));
+
 import { worldToGrid } from "./useInteraction";
 
 describe("worldToGrid", () => {

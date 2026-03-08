@@ -144,10 +144,18 @@ describe("generateChunkData (Spec §17.1)", () => {
     expect(aArr).not.toEqual(bArr);
   });
 
-  it("different seeds produce different heightmaps for same coords", () => {
+  it("different seeds produce different heightmaps for same non-origin coords", () => {
+    // Note: chunk (0,0) is intentionally flat for all seeds (Rootmere — Spec §17.3a).
+    // Use chunk (1,0) where natural terrain varies by seed.
+    const a = generateChunkData("seed-A", 1, 0);
+    const b = generateChunkData("seed-B", 1, 0);
+    expect(Array.from(a.heightmap)).not.toEqual(Array.from(b.heightmap));
+  });
+
+  it("chunk (0,0) heightmap is identical for any seed (Rootmere fixed terrain — Spec §17.3a)", () => {
     const a = generateChunkData("seed-A", 0, 0);
     const b = generateChunkData("seed-B", 0, 0);
-    expect(Array.from(a.heightmap)).not.toEqual(Array.from(b.heightmap));
+    expect(Array.from(a.heightmap)).toEqual(Array.from(b.heightmap));
   });
 
   it("returns dirty=false (freshly generated)", () => {

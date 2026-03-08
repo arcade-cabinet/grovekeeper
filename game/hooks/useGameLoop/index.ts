@@ -10,19 +10,24 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
+import type { MutableRefObject } from "react";
 import { NpcBrain } from "@/game/ai/NpcBrain";
 import { getDifficultyById } from "@/game/config/difficulty";
 import { createWildTreeEntity } from "@/game/ecs/archetypes";
 import {
   ambientZonesQuery,
   combatQuery,
+  dayNightQuery,
   enemiesQuery,
   harvestableQuery,
   npcsQuery,
   playerQuery,
+  skyQuery,
   waterBodiesQuery,
   world,
 } from "@/game/ecs/world";
+import { generateEntityId } from "@/game/ecs/world";
+import { initDayNight, tickDayNight } from "@/game/systems/dayNight";
 import type { TimeOfDay } from "@/game/ecs/components/procedural/atmosphere";
 import { advanceTutorial } from "@/game/stores/settings";
 import { useGameStore } from "@/game/stores";
@@ -91,13 +96,23 @@ const EVENT_TICK_INTERVAL = 10;
 /** Microseconds per real second (for time advancement). */
 const MICROSECONDS_PER_REAL_SECOND = 1_000_000;
 
-export function useGameLoop(): void {
+export interface UseGameLoopOptions {
+  /**
+   * External ambient audio ref — when provided, the game loop reads from this
+   * ref each frame instead of an internal null ref. Pass the ref that is
+   * populated by `initAmbientLayers` after the first user gesture.
+   */
+  ambientAudioRef?: MutableRefObject<AmbientAudioState | null>;
+}
+
+export function useGameLoop(options: UseGameLoopOptions = {}): void {
   const weatherRef = useRef<WeatherState | null>(null);
   const lastAchievementCheck = useRef(0);
   const lastEventTick = useRef(0);
   const lastDayRef = useRef(-1);
   const lastSeasonRef = useRef("");
   const timeInitialized = useRef(false);
+  const dayNightEntityInitialized = useRef(false);
 
   const npcBrains = useRef(new Map<string, NpcBrain>());
   const npcAiTimer = useRef(0);
@@ -105,7 +120,10 @@ export function useGameLoop(): void {
   const gridRebuildTimer = useRef(0);
 
   const regrowthRef = useRef<RegrowthState>(initializeRegrowthState());
-  const ambientAudioRef = useRef<AmbientAudioState | null>(null);
+  const internalAmbientAudioRef = useRef<AmbientAudioState | null>(null);
+  // Use external ref when provided (allows GameScreen to populate it after user gesture),
+  // otherwise fall back to the internal null ref.
+  const ambientAudioRef = options.ambientAudioRef ?? internalAmbientAudioRef;
   const waterParticlesStateRef = useRef<WaterParticlesState>({
     prevWaterState: "above",
     splashEntity: null,
@@ -155,6 +173,40 @@ export function useGameLoop(): void {
     }
 
     store.setGameTime(timeState.totalMicroseconds);
+
+    // ── 1b. Day/Night ECS Tick ───────────────────────────────────────────
+
+    // Bootstrap the singleton DayNight + Sky ECS entities on first frame.
+    if (!dayNightEntityInitialized.current) {
+      if (dayNightQuery.entities.length === 0) {
+        const dnComponent = initDayNight();
+        world.add({
+          id: generateEntityId(),
+          dayNight: dnComponent,
+          sky: {
+            sunAngle: 0,
+            sunAzimuth: 0,
+            gradientStops: [],
+            starIntensity: dnComponent.starIntensity,
+            moonPhase: 0,
+            cloudCoverage: 0,
+            cloudSpeed: 0,
+          },
+        });
+      }
+      dayNightEntityInitialized.current = true;
+    }
+
+    // Tick the day/night system each frame — mutates the ECS entity in-place
+    // so Sky + Lighting can read lerped values from dayNightQuery.entities[0].
+    for (const entity of dayNightQuery) {
+      const skyEntities = skyQuery.entities;
+      const skyEntity = skyEntities.length > 0 ? skyEntities[0] : null;
+      if (entity.dayNight && skyEntity?.sky) {
+        tickDayNight(entity.dayNight, skyEntity.sky, dt);
+      }
+      break; // singleton — only one DayNight entity
+    }
 
     // ── 2. Weather Updates ───────────────────────────────────────────────
 

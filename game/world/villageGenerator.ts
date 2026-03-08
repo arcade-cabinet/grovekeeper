@@ -3,10 +3,12 @@
  * village-type landmark chunks.
  *
  * Spec §19.3 (Procedural NPCs) + §31.1 (landmark village chunks).
+ * Spec §17.3a: Rootmere (chunk 0,0) uses FIXED authored structure placements.
  *
  * Village layout:
  *   - Campfire placed at the village center (fast travel point).
- *   - 3-8 buildings radially distributed around the center (seeded).
+ *   - Chunk (0,0) = Rootmere: fixed 7-structure layout (authored, not seeded).
+ *   - Other village chunks: 3-8 buildings radially distributed (seeded).
  *   - 2-4 NPCs with seeded appearance, personality, and daily schedules.
  *
  * Pure function — same worldSeed + chunkX + chunkZ + heightmap always
@@ -205,6 +207,111 @@ function buildNpcSchedule(
   ];
 }
 
+
+// ── Rootmere fixed layout (Spec §17.3a) ──────────────────────────────────────
+
+/**
+ * Village center for Rootmere (chunk 0,0): tile (8,8) = world (8,8).
+ */
+const ROOTMERE_CENTER_X = 8;
+const ROOTMERE_CENTER_Z = 8;
+
+/**
+ * Name of the starting village. Spec §17.3a: "Village is named 'Rootmere'".
+ */
+export const ROOTMERE_NAME = "Rootmere";
+
+/**
+ * Fixed structure placements for Rootmere (chunk 0,0).
+ * Offsets are relative to the village center tile (8,8).
+ *
+ * Spec §17.3a layout:
+ *   Elder Rowan's Hut:     offset (0, 0)   -> world (8, 8)   — house-1
+ *   Village Well:          offset (3, 0)   -> world (11, 8)  — water-well
+ *   Campfire Ring:         offset (-3, 2)  -> world (5, 10)  — campfire-2
+ *   Seed Merchant Stall:   offset (2, 3)   -> world (10, 11) — notice-board
+ *   Storage Shed:          offset (-2, -3) -> world (6, 5)   — storage-1
+ *   Notice Board:          offset (0, 3)   -> world (8, 11)  — notice-board
+ *   Village Gate:          offset (0, -8)  -> world (8, 0)   — wooden-frame
+ */
+interface RootmereFixedBuilding {
+  offsetX: number;
+  offsetZ: number;
+  templateId: string;
+  rotationY: number;
+}
+
+const ROOTMERE_FIXED_BUILDINGS: readonly RootmereFixedBuilding[] = [
+  { offsetX: 0, offsetZ: 0, templateId: "house-1", rotationY: 0 },
+  { offsetX: 3, offsetZ: 0, templateId: "water-well", rotationY: 0 },
+  { offsetX: -3, offsetZ: 2, templateId: "campfire-2", rotationY: 0 },
+  { offsetX: 2, offsetZ: 3, templateId: "notice-board", rotationY: Math.PI / 2 },
+  { offsetX: -2, offsetZ: -3, templateId: "storage-1", rotationY: Math.PI },
+  { offsetX: 0, offsetZ: 3, templateId: "notice-board", rotationY: 0 },
+  { offsetX: 0, offsetZ: -8, templateId: "wooden-frame", rotationY: 0 },
+];
+
+/**
+ * Generate the fixed Rootmere village layout for chunk (0,0).
+ * Buildings are authored (not seeded); NPCs are still seeded.
+ */
+function generateRootmere(worldSeed: string, heightmap: Float32Array): VillageGenerationResult {
+  const rng = scopedRNG("village", worldSeed, 0, 0);
+  const centerY = heightAt(heightmap, ROOTMERE_CENTER_X, ROOTMERE_CENTER_Z);
+
+  const campfire: CampfirePlacement = {
+    position: { x: ROOTMERE_CENTER_X, y: centerY, z: ROOTMERE_CENTER_Z },
+    structure: resolveStructure("campfire-1"),
+    campfire: { lit: true, fastTravelId: "village-0-0", cookingSlots: 2 },
+  };
+
+  const buildings: BuildingPlacement[] = ROOTMERE_FIXED_BUILDINGS.map((fb) => {
+    const lx = clampToChunk(ROOTMERE_CENTER_X + fb.offsetX);
+    const lz = clampToChunk(ROOTMERE_CENTER_Z + fb.offsetZ);
+    return {
+      position: { x: lx, y: heightAt(heightmap, lx, lz), z: lz },
+      rotationY: fb.rotationY,
+      structure: resolveStructure(fb.templateId),
+    };
+  });
+
+  const npcCount = MIN_NPC_COUNT + Math.floor(rng() * (MAX_NPC_COUNT - MIN_NPC_COUNT + 1));
+  const npcs: NpcPlacement[] = [];
+  for (let i = 0; i < npcCount; i++) {
+    const angle = rng() * Math.PI * 2;
+    const distance = NPC_SPAWN_MIN_DISTANCE + rng() * NPC_SPAWN_RADIUS;
+    const lx = clampToChunk(ROOTMERE_CENTER_X + Math.cos(angle) * distance);
+    const lz = clampToChunk(ROOTMERE_CENTER_Z + Math.sin(angle) * distance);
+    const y = heightAt(heightmap, lx, lz);
+    const modelIndex = 1 + Math.floor(rng() * NPC_BASE_MODEL_COUNT);
+    const npcFunction = NPC_FUNCTIONS[Math.floor(rng() * NPC_FUNCTIONS.length)];
+    const personality = NPC_PERSONALITIES[Math.floor(rng() * NPC_PERSONALITIES.length)];
+    const name = NPC_NAMES[Math.floor(rng() * NPC_NAMES.length)];
+    const schedule = buildNpcSchedule(0, 0, ROOTMERE_CENTER_X, ROOTMERE_CENTER_Z, rng);
+    npcs.push({
+      position: { x: lx, y, z: lz },
+      npc: {
+        templateId: `rootmere-npc-${i}`,
+        function: npcFunction,
+        interactable: true,
+        requiredLevel: 1,
+        baseModel: `assets/models/npcs/chibi-${modelIndex}.glb`,
+        useEmission: false,
+        items: {},
+        colorPalette: "#FFCCBC",
+        name,
+        personality,
+        dialogue: `rootmere-npc-${i}`,
+        schedule,
+        currentAnim: "idle" as NpcAnimState,
+        animProgress: 0,
+        animSpeed: 1,
+      },
+    });
+  }
+  return { campfire, buildings, npcs };
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 /**
@@ -235,6 +342,12 @@ export function generateVillage(
 ): VillageGenerationResult | null {
   if (getLandmarkType(worldSeed, chunkX, chunkZ) !== "village") return null;
 
+  // ── Chunk (0,0) = Rootmere: fixed authored layout (Spec §17.3a) ───────────
+  if (chunkX === 0 && chunkZ === 0) {
+    return generateRootmere(worldSeed, heightmap);
+  }
+
+  // ── Other village chunks: procedural layout ───────────────────────────────
   const { localX, localZ } = getLandmarkLocalPos(worldSeed, chunkX, chunkZ);
   const rng = scopedRNG("village", worldSeed, chunkX, chunkZ);
 

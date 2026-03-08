@@ -16,5 +16,16 @@
   },
   "waterBonus": 1.3,
   "droughtPenalty": 0.5,
-  "discoveryXpReward": 25
+  "discoveryXpReward": 25,
+  "wildTreeRegrowth": {
+    "maxTreesPerChunk": 8,
+    "defaultGrowthTime": 1800,
+    "baseSpawnChancePerDay": 0.3,
+    "seasonSpawnMultipliers": {
+      "spring": 1.5,
+      "summer": 1.0,
+      "autumn": 0.5,
+      "winter": 0.0
+    }
+  }
 }

@@ -7,7 +7,7 @@
  *
  * Spec §17.5: Grovekeeper Labyrinths (14 hedge labyrinths, every ~30-50 chunks).
  *
- * Pure function — same worldSeed + chunkX + chunkZ + heightmap always
+ * Pure function -- same worldSeed + chunkX + chunkZ + heightmap always
  * produces identical maze data. All randomness via scopedRNG / seeded derivation.
  */
 
@@ -21,6 +21,7 @@ import {
 } from "@/game/systems/hedgePlacement";
 import { hashString } from "@/game/utils/seedRNG";
 import { scopedRNG } from "@/game/utils/seedWords";
+import { generateAreaName } from "@/game/utils/worldNames";
 
 const CHUNK_SIZE: number = gridConfig.chunkSize;
 
@@ -53,7 +54,7 @@ export interface DecorationPlacement {
 
 /** All maze entity placements for one labyrinth chunk. */
 export interface MazeGenerationResult {
-  /** Wall hedge pieces covering the full 12×12 maze footprint. */
+  /** Wall hedge pieces covering the full 12x12 maze footprint. */
   hedges: HedgePlacement[];
   /** Decorations: fountain, benches, flowers, vases, columns. */
   decorations: DecorationPlacement[];
@@ -67,6 +68,12 @@ export interface MazeGenerationResult {
    * Derived from chunk coords so it's stable across sessions.
    */
   mazeIndex: number;
+  /**
+   * Seeded human-readable name for this labyrinth.
+   * Format: "The [Adjective][Noun] Labyrinth"
+   * Generated via worldNames.generateAreaName. Spec §40.2.
+   */
+  name: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -79,7 +86,7 @@ function heightAt(heightmap: Float32Array, localX: number, localZ: number): numb
 
 /**
  * Extract item identifier from a decoration model path.
- * e.g. "hedges/misc/stone/fountain01_round_water.glb" → "fountain01_round_water"
+ * e.g. "hedges/misc/stone/fountain01_round_water.glb" -> "fountain01_round_water"
  */
 function extractItemId(modelPath: string): string {
   const parts = modelPath.split("/");
@@ -95,9 +102,9 @@ function extractItemId(modelPath: string): string {
  * Uses a dedicated "labyrinth-roll" scope so labyrinth detection is
  * independent from the landmark system (shrines, villages, campfires).
  *
- * Chunk (0, 0) never hosts a labyrinth — it is always the tutorial village.
+ * Chunk (0, 0) never hosts a labyrinth -- it is always the tutorial village.
  *
- * Pure function — deterministic from worldSeed + chunk coords.
+ * Pure function -- deterministic from worldSeed + chunk coords.
  */
 export function isLabyrinthChunk(worldSeed: string, chunkX: number, chunkZ: number): boolean {
   if (chunkX === 0 && chunkZ === 0) return false;
@@ -115,7 +122,7 @@ export function isLabyrinthChunk(worldSeed: string, chunkX: number, chunkZ: numb
  * Algorithm:
  *   1. Guard: return null unless isLabyrinthChunk().
  *   2. Derive an integer seed from worldSeed + chunk coords.
- *   3. Generate 12×12 recursive-backtracker maze (via hedgePlacement).
+ *   3. Generate 12x12 recursive-backtracker maze (via hedgePlacement).
  *   4. Convert wall segments to HedgeComponent placements in world space.
  *   5. Convert decorations to HedgeDecorationComponent placements.
  *   6. Compute centerPosition and entrancePosition in world space.
@@ -125,7 +132,7 @@ export function isLabyrinthChunk(worldSeed: string, chunkX: number, chunkZ: numb
  * @param worldSeed  World seed string.
  * @param chunkX     Chunk X grid coordinate.
  * @param chunkZ     Chunk Z grid coordinate.
- * @param heightmap  CHUNK_SIZE×CHUNK_SIZE Float32Array (row-major: z*size+x).
+ * @param heightmap  CHUNK_SIZE*CHUNK_SIZE Float32Array (row-major: z*size+x).
  * @returns          Maze placements, or null if not a labyrinth chunk.
  */
 export function generateLabyrinth(
@@ -200,6 +207,9 @@ export function generateLabyrinth(
   // Stable mazeIndex in [0, TOTAL_MAZES - 1] for spirit/dialogue lookups.
   const mazeIndex = hashString(`${chunkX}-${chunkZ}`) % TOTAL_MAZES;
 
+  // Seeded labyrinth name. Spec §40.2.
+  const name = generateAreaName("labyrinth", worldSeed, chunkX, chunkZ);
+
   return {
     hedges,
     decorations,
@@ -214,5 +224,6 @@ export function generateLabyrinth(
       z: worldOriginZ + entranceLocalZ,
     },
     mazeIndex,
+    name,
   };
 }

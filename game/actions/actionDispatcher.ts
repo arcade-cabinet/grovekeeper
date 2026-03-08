@@ -24,6 +24,7 @@ import { useGameStore } from "@/game/stores";
 import { resolveCampfireInteraction } from "@/game/systems/cooking";
 import { isWaterFishable } from "@/game/systems/fishing";
 import { resolveForgeInteraction } from "@/game/systems/forging";
+import { audioManager } from "@/game/systems/AudioManager";
 import { type ToolAction, triggerActionHaptic } from "@/game/systems/haptics";
 import { mineRock, resolveMiningInteraction } from "@/game/systems/mining";
 import { createTrapComponent } from "@/game/systems/traps";
@@ -326,6 +327,28 @@ export function dispatchAction(ctx: DispatchContext): boolean {
     }
   }
 
-  if (success) void triggerActionHaptic(action as unknown as ToolAction);
+  if (success) {
+    void triggerActionHaptic(action as unknown as ToolAction);
+    // Play tool SFX for actions with defined SoundIds (Spec §27, §11).
+    // "dig" and "prune" are intentionally omitted -- no SoundId exists yet.
+    switch (action) {
+      case "PLANT":
+        audioManager.playSound("plant");
+        break;
+      case "CHOP":
+        audioManager.playSound("chop");
+        break;
+      case "WATER":
+        audioManager.playSound("water");
+        break;
+      case "MINE":
+        audioManager.playSound("harvest");
+        break;
+    }
+  } else if (action !== null) {
+    // Notify the player that the action was resolved but failed execution.
+    audioManager.playSound("error");
+  }
+
   return success;
 }

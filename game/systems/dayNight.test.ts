@@ -30,7 +30,11 @@ function makeDayNight(overrides: Partial<DayNightComponent> = {}): DayNightCompo
     ambientIntensity: 0.3,
     directionalColor: "#FF7F50",
     directionalIntensity: 0.4,
+    sunIntensity: 0.4,
     shadowOpacity: 0.3,
+    skyZenithColor: "#4a6fa1",
+    skyHorizonColor: "#e8a87c",
+    starIntensity: 0.2,
     ...overrides,
   };
 }
@@ -428,8 +432,10 @@ describe("tickDayNight (Spec §31.3)", () => {
     const dn = makeDayNight({ gameHour: 12 });
     const sky = makeSky();
     tickDayNight(dn, sky, 0.001);
-    expect(dn.ambientIntensity).toBe(1.0); // noon
-    expect(dn.shadowOpacity).toBe(1.0);
+    // At noon (h=12), values are lerped between noon and afternoon anchors.
+    // After a tiny tick, the result is very close to noon values but not exact.
+    expect(dn.ambientIntensity).toBeCloseTo(1.0, 3); // noon
+    expect(dn.shadowOpacity).toBeCloseTo(1.0, 3);
   });
 
   it("shadowOpacity is 0 at night", () => {

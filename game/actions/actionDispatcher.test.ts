@@ -12,6 +12,13 @@ import {
   type TargetEntityType,
 } from "@/game/actions/actionDispatcher";
 
+// Mock AudioManager -- dispatcher tests verify SFX routing, not synthesis hardware.
+// Note: jest.mock is hoisted so factory must not reference outer variables.
+jest.mock("@/game/systems/AudioManager", () => ({
+  audioManager: { playSound: jest.fn() },
+  startAudio: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Mock the GameActions module — dispatcher tests verify routing only.
 jest.mock("@/game/actions", () => ({
   harvestTree: jest.fn(() => [{ type: "timber", amount: 2 }]),

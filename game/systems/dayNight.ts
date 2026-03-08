@@ -11,6 +11,8 @@
  *   computeSunAngle      — game hour → sun elevation in radians [−PI/2, PI/2]
  *   computeStarIntensity — game hour → star visibility [0, 1]
  *   computeLighting      — TimeOfDay → lighting parameter snapshot
+ *   lerpLightingForHour  — game hour → lerped lighting snapshot between 8 slots
+ *   lerpSkyColorsForHour — game hour → lerped zenith + horizon colors between 8 slots
  *   initDayNight         — creates a fresh DayNightComponent
  *   tickDayNight         — mutates DayNightComponent + SkyComponent each frame
  */
@@ -27,9 +29,45 @@ import type {
 // ---------------------------------------------------------------------------
 
 const DAY_LENGTH = dayNightConfig.dayLengthSeconds;
-const SECONDS_PER_HOUR = dayNightConfig.secondsPerHour;
 const DAYS_PER_SEASON = dayNightConfig.daysPerSeason;
 const SEASONS = dayNightConfig.seasons as Array<DayNightComponent["season"]>;
+
+// Ordered list of 8 slots with their representative hour (anchor).
+// Used for lerp: each slot covers a range; we interpolate between slot anchors.
+const SLOT_ANCHORS: Array<{ hour: number; slot: TimeOfDay }> = [
+  { hour: 6, slot: "dawn" },
+  { hour: 9, slot: "morning" },
+  { hour: 12, slot: "noon" },
+  { hour: 15, slot: "afternoon" },
+  { hour: 18, slot: "dusk" },
+  { hour: 20, slot: "evening" },
+  { hour: 22, slot: "night" },
+  { hour: 2, slot: "midnight" }, // anchor at 2 (next day)
+];
+
+// ---------------------------------------------------------------------------
+// Color lerp helpers (hex string in, hex string out)
+// ---------------------------------------------------------------------------
+
+function hexToRgb(hex: string): [number, number, number] {
+  const n = Number.parseInt(hex.replace("#", ""), 16);
+  return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  return `#${clamp(r).toString(16).padStart(2, "0")}${clamp(g).toString(16).padStart(2, "0")}${clamp(b).toString(16).padStart(2, "0")}`;
+}
+
+function lerpColor(hexA: string, hexB: string, t: number): string {
+  const [ar, ag, ab] = hexToRgb(hexA);
+  const [br, bg, bb] = hexToRgb(hexB);
+  return rgbToHex(ar + (br - ar) * t, ag + (bg - ag) * t, ab + (bb - ab) * t);
+}
+
+function lerpNumber(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -41,6 +79,11 @@ export interface LightingSnapshot {
   directionalColor: string;
   directionalIntensity: number;
   shadowOpacity: number;
+}
+
+export interface SkyColorSnapshot {
+  zenith: string;
+  horizon: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -110,6 +153,74 @@ export function computeLighting(timeOfDay: TimeOfDay): LightingSnapshot {
 }
 
 /**
+ * Find the two surrounding SLOT_ANCHORS for a given game hour and return
+ * lerp factor [0,1] between them. Midnight anchor (h=2) wraps correctly.
+ */
+function findLerpPair(hour: number): { a: TimeOfDay; b: TimeOfDay; t: number } {
+  const h = ((hour % 24) + 24) % 24;
+
+  // Place anchors in a comparable space. Midnight (h=2) shifts to h+24=26
+  // so it sorts after night (h=22) without special-casing.
+  const anchors = SLOT_ANCHORS.map((a) => ({
+    h: a.hour < 5 ? a.hour + 24 : a.hour,
+    slot: a.slot,
+  }));
+  const hNorm = h < 5 ? h + 24 : h;
+
+  let nextIdx = anchors.findIndex((a) => a.h > hNorm);
+  if (nextIdx === -1) nextIdx = anchors.length;
+
+  const prevIdx = (nextIdx - 1 + anchors.length) % anchors.length;
+  const prev = anchors[prevIdx];
+  const next = anchors[nextIdx % anchors.length];
+
+  const nextH = nextIdx >= anchors.length ? next.h + 24 : next.h;
+  const span = nextH - prev.h;
+  const t = span > 0 ? (hNorm - prev.h) / span : 0;
+
+  return { a: prev.slot, b: next.slot, t: Math.max(0, Math.min(1, t)) };
+}
+
+/**
+ * Lerped lighting snapshot between the two surrounding 8-slot anchors.
+ * Produces smooth transitions across slot boundaries instead of hard snaps.
+ */
+export function lerpLightingForHour(hour: number): LightingSnapshot {
+  const { a, b, t } = findLerpPair(hour);
+  const la = dayNightConfig.lighting[a];
+  const lb = dayNightConfig.lighting[b];
+  return {
+    ambientColor: lerpColor(la.ambientColor, lb.ambientColor, t),
+    ambientIntensity: lerpNumber(la.ambientIntensity, lb.ambientIntensity, t),
+    directionalColor: lerpColor(la.directionalColor, lb.directionalColor, t),
+    directionalIntensity: lerpNumber(la.directionalIntensity, lb.directionalIntensity, t),
+    shadowOpacity: lerpNumber(la.shadowOpacity, lb.shadowOpacity, t),
+  };
+}
+
+/**
+ * Lerped sky zenith + horizon colors between the two surrounding 8-slot anchors.
+ * Produces the smooth 8-stop gradient described in Spec §5.3.
+ */
+export function lerpSkyColorsForHour(hour: number): SkyColorSnapshot {
+  const { a, b, t } = findLerpPair(hour);
+  const sa = dayNightConfig.skyColors[a];
+  const sb = dayNightConfig.skyColors[b];
+  return {
+    zenith: lerpColor(sa.zenith, sb.zenith, t),
+    horizon: lerpColor(sa.horizon, sb.horizon, t),
+  };
+}
+
+/**
+ * Lerped star intensity between the two surrounding slot anchors.
+ */
+export function lerpStarIntensity(hour: number): number {
+  const { a, b, t } = findLerpPair(hour);
+  return lerpNumber(dayNightConfig.starIntensity[a], dayNightConfig.starIntensity[b], t);
+}
+
+/**
  * Derive the season from the day number using config daysPerSeason.
  */
 export function computeSeason(dayNumber: number): DayNightComponent["season"] {
@@ -128,7 +239,9 @@ export function computeSeason(dayNumber: number): DayNightComponent["season"] {
 export function initDayNight(): DayNightComponent {
   const startHour = 6;
   const timeOfDay = classifyTimeOfDay(startHour);
-  const lighting = computeLighting(timeOfDay);
+  const lighting = lerpLightingForHour(startHour);
+  const skyColors = lerpSkyColorsForHour(startHour);
+  const starIntensity = lerpStarIntensity(startHour);
   return {
     gameHour: startHour,
     timeOfDay,
@@ -138,7 +251,11 @@ export function initDayNight(): DayNightComponent {
     ambientIntensity: lighting.ambientIntensity,
     directionalColor: lighting.directionalColor,
     directionalIntensity: lighting.directionalIntensity,
+    sunIntensity: lighting.directionalIntensity,
     shadowOpacity: lighting.shadowOpacity,
+    skyZenithColor: skyColors.zenith,
+    skyHorizonColor: skyColors.horizon,
+    starIntensity,
   };
 }
 
@@ -149,6 +266,7 @@ export function initDayNight(): DayNightComponent {
 /**
  * Advance the day/night cycle by `dt` real seconds.
  * Mutates DayNightComponent and SkyComponent in-place.
+ * All sky/lighting values are lerped between the 8 config slots (Spec §5.3, §31.3).
  */
 export function tickDayNight(dayNight: DayNightComponent, sky: SkyComponent, dt: number): void {
   const hoursPerSecond = 24 / DAY_LENGTH;
@@ -161,18 +279,27 @@ export function tickDayNight(dayNight: DayNightComponent, sky: SkyComponent, dt:
     dayNight.season = computeSeason(dayNight.dayNumber);
   }
 
-  // Classify time slot
+  // Classify time slot (for label / NPC schedules)
   dayNight.timeOfDay = classifyTimeOfDay(dayNight.gameHour);
 
-  // Update lighting
-  const lighting = computeLighting(dayNight.timeOfDay);
+  // Update lighting — lerped between surrounding slots
+  const lighting = lerpLightingForHour(dayNight.gameHour);
   dayNight.ambientColor = lighting.ambientColor;
   dayNight.ambientIntensity = lighting.ambientIntensity;
   dayNight.directionalColor = lighting.directionalColor;
   dayNight.directionalIntensity = lighting.directionalIntensity;
+  dayNight.sunIntensity = lighting.directionalIntensity;
   dayNight.shadowOpacity = lighting.shadowOpacity;
 
-  // Drive sky
+  // Update sky colors — lerped between 8 config stops (Spec §5.3)
+  const skyColors = lerpSkyColorsForHour(dayNight.gameHour);
+  dayNight.skyZenithColor = skyColors.zenith;
+  dayNight.skyHorizonColor = skyColors.horizon;
+
+  // Update star intensity — lerped
+  dayNight.starIntensity = lerpStarIntensity(dayNight.gameHour);
+
+  // Drive SkyComponent (legacy / parallel path)
   sky.sunAngle = computeSunAngle(dayNight.gameHour);
-  sky.starIntensity = computeStarIntensity(dayNight.timeOfDay);
+  sky.starIntensity = dayNight.starIntensity;
 }
