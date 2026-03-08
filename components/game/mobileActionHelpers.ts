@@ -11,6 +11,35 @@ export interface MobileActionDef {
   enabled: boolean;
 }
 
+/** Minimal TouchProvider interface required by MobileActionButtons handlers. */
+export interface MobileActionProvider {
+  onInteractStart(): void;
+  onToolCycleStart(): void;
+}
+
+/**
+ * Handle an action button press:
+ *   - If the button's tool is already active: fire interact on the provider + onAction()
+ *   - Otherwise: switch to the tool via onSelectTool()
+ *
+ * Exported as a pure function (no React/RN imports) so tests can verify
+ * provider call logic without rendering the component.
+ */
+export function handleActionButtonPress(
+  isActive: boolean,
+  provider: MobileActionProvider,
+  onAction: () => void,
+  onSelectTool: (toolId: string) => void,
+  toolId: string,
+): void {
+  if (isActive) {
+    provider.onInteractStart();
+    onAction();
+  } else {
+    onSelectTool(toolId);
+  }
+}
+
 /**
  * Compute which mobile actions are available based on tile state.
  */

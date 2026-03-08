@@ -18,6 +18,7 @@
 import { useMemo, useRef } from "react";
 import { type GestureResponderEvent, PanResponder, StyleSheet, View } from "react-native";
 import { TouchProvider } from "@/game/input/TouchProvider";
+import { sharedTouchProvider } from "@/game/input/sharedTouchProvider";
 
 // ── Tuning constants (move to config/game/controls.json when config loader exists) ──
 
@@ -141,14 +142,14 @@ export function buildLookZoneHandlers(refs: LookZoneRefs, provider: LookZoneProv
 // ── Module-level singleton ────────────────────────────────────────────────────
 
 /**
- * Singleton TouchProvider instance.
- * TouchProvider uses a call-based API (no window listeners) — components
- * call its methods directly. A module-level singleton is created once.
+ * Re-export the shared singleton for registration in InputManager at app init.
+ * All mobile touch components (VirtualJoystick, MobileActionButtons, TouchLookZone)
+ * use this same instance so InputManager receives one unified contribution per frame.
  */
-const touchProvider = new TouchProvider();
+export { sharedTouchProvider as touchLookZoneProvider };
 
-/** Exposes the shared TouchProvider for registration in InputManager at app init. */
-export { touchProvider as touchLookZoneProvider };
+/** @internal backward-compat alias used by this component's default prop */
+const touchProvider = sharedTouchProvider;
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 

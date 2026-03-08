@@ -1,10 +1,95 @@
 /**
- * Tests for MobileActionButtons helper functions.
+ * Tests for MobileActionButtons helper functions (Spec §23).
  *
  * Uses the pure helper module (no React Native dependencies).
+ * Tests both the tile-state computation helpers and the TouchProvider
+ * wiring logic extracted into handleActionButtonPress.
  */
 
-import { getDefaultMobileActions } from "./mobileActionHelpers.ts";
+import {
+  getDefaultMobileActions,
+  handleActionButtonPress,
+  type MobileActionProvider,
+} from "./mobileActionHelpers.ts";
+
+// ── MobileActionProvider interface ────────────────────────────────────────────
+
+function makeProvider(): MobileActionProvider {
+  return {
+    onInteractStart: jest.fn(),
+    onToolCycleStart: jest.fn(),
+  };
+}
+
+// ── handleActionButtonPress ───────────────────────────────────────────────────
+
+describe("handleActionButtonPress (Spec §23)", () => {
+  it("calls provider.onInteractStart when the pressed button is active", () => {
+    const provider = makeProvider();
+    const onAction = jest.fn();
+    const onSelectTool = jest.fn();
+
+    handleActionButtonPress(true, provider, onAction, onSelectTool, "axe");
+
+    expect(provider.onInteractStart).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onAction when the pressed button is active", () => {
+    const provider = makeProvider();
+    const onAction = jest.fn();
+    const onSelectTool = jest.fn();
+
+    handleActionButtonPress(true, provider, onAction, onSelectTool, "axe");
+
+    expect(onAction).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT call onSelectTool when the pressed button is active", () => {
+    const provider = makeProvider();
+    const onAction = jest.fn();
+    const onSelectTool = jest.fn();
+
+    handleActionButtonPress(true, provider, onAction, onSelectTool, "axe");
+
+    expect(onSelectTool).not.toHaveBeenCalled();
+  });
+
+  it("calls onSelectTool with toolId when the button is NOT active", () => {
+    const provider = makeProvider();
+    const onAction = jest.fn();
+    const onSelectTool = jest.fn();
+
+    handleActionButtonPress(false, provider, onAction, onSelectTool, "watering-can");
+
+    expect(onSelectTool).toHaveBeenCalledWith("watering-can");
+  });
+
+  it("does NOT call provider.onInteractStart when switching tools", () => {
+    const provider = makeProvider();
+    const onAction = jest.fn();
+    const onSelectTool = jest.fn();
+
+    handleActionButtonPress(false, provider, onAction, onSelectTool, "trowel");
+
+    expect(provider.onInteractStart).not.toHaveBeenCalled();
+  });
+
+  it("does NOT call onAction when switching tools", () => {
+    const provider = makeProvider();
+    const onAction = jest.fn();
+    const onSelectTool = jest.fn();
+
+    handleActionButtonPress(false, provider, onAction, onSelectTool, "trowel");
+
+    expect(onAction).not.toHaveBeenCalled();
+  });
+
+  it("provider.onToolCycleStart is independently callable on the provider", () => {
+    const provider = makeProvider();
+    provider.onToolCycleStart();
+    expect(provider.onToolCycleStart).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe("getDefaultMobileActions", () => {
   it("enables plant when empty tile exists", () => {

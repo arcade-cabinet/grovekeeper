@@ -13,7 +13,9 @@
 import type React from "react";
 import { useCallback, useRef } from "react";
 import { Animated, type GestureResponderEvent, PanResponder, View } from "react-native";
+import { sharedTouchProvider } from "@/game/input/sharedTouchProvider";
 import { triggerHaptic } from "@/game/systems/haptics";
+import { computeJoystickZoneRect, type JoystickProvider } from "./joystickHandlers";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,6 +41,11 @@ export interface VirtualJoystickProps {
   onMove?: (data: JoystickMoveData) => void;
   /** Called when joystick is released. */
   onEnd?: () => void;
+  /**
+   * Override the TouchProvider instance for testing.
+   * Production code leaves this undefined and the shared singleton is used.
+   */
+  providerOverride?: JoystickProvider;
 }
 
 // ---------------------------------------------------------------------------
@@ -93,7 +100,9 @@ export function VirtualJoystick({
   onActiveChange,
   onMove,
   onEnd,
+  providerOverride,
 }: VirtualJoystickProps) {
+  const provider = providerOverride ?? sharedTouchProvider;
   // Animated knob position
   const knobX = useRef(new Animated.Value(0)).current;
   const knobY = useRef(new Animated.Value(0)).current;
@@ -144,6 +153,10 @@ export function VirtualJoystick({
         knobX.stopAnimation();
         knobY.stopAnimation();
 
+        // Feed into TouchProvider so InputManager receives moveX/moveZ
+        const zone = computeJoystickZoneRect(pageX, pageY, locationX, locationY, BASE_SIZE);
+        provider.onTouchStart({ identifier: 0, clientX: pageX, clientY: pageY }, zone);
+
         onActiveChange?.(true);
         triggerHaptic("light");
       },
@@ -152,6 +165,10 @@ export function VirtualJoystick({
         if (!isActive.current) return;
 
         const { pageX, pageY } = evt.nativeEvent;
+
+        // Forward raw touch to TouchProvider — it computes moveX/moveZ internally
+        provider.onTouchMove({ identifier: 0, clientX: pageX, clientY: pageY });
+
         const dx = pageX - centerRef.current.x;
         const dy = pageY - centerRef.current.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -195,6 +212,7 @@ export function VirtualJoystick({
 
       onPanResponderRelease: () => {
         isActive.current = false;
+        provider.onTouchEnd();
         resetKnob();
         onActiveChange?.(false);
         onEnd?.();
@@ -202,6 +220,7 @@ export function VirtualJoystick({
 
       onPanResponderTerminate: () => {
         isActive.current = false;
+        provider.onTouchEnd();
         resetKnob();
         onActiveChange?.(false);
         onEnd?.();

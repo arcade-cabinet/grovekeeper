@@ -31,6 +31,7 @@ const mockSetActiveCraftingStation = jest.fn();
 const mockSetStamina = jest.fn();
 const mockAddResource = jest.fn();
 const mockIncrementToolUse = jest.fn();
+const mockAdvanceTutorial = jest.fn();
 
 jest.mock("@/game/stores/gameStore", () => ({
   useGameStore: {
@@ -42,6 +43,7 @@ jest.mock("@/game/stores/gameStore", () => ({
       setStamina: mockSetStamina,
       addResource: mockAddResource,
       incrementToolUse: mockIncrementToolUse,
+      advanceTutorial: mockAdvanceTutorial,
       placeTrap: undefined,
       collectTrap: undefined,
     }),
@@ -702,5 +704,78 @@ describe("dispatchAction BUILD — hammer opens kitbash panel (Spec §35)", () =
   it("fires triggerActionHaptic on successful BUILD", () => {
     dispatchAction({ toolId: "hammer", targetType: null });
     expect(mockTriggerActionHaptic).toHaveBeenCalledWith("BUILD");
+  });
+});
+
+// ── Tutorial advancement wiring (Spec §25.1) ──────────────────────────────────
+
+describe("dispatchAction tutorial advancement (Spec §25.1)", () => {
+  const mockTreeEntity = { id: "tree_001", tree: { speciesId: "white-oak", stage: 3 } };
+  const mockSaplingEntity = { id: "tree_002", tree: { speciesId: "white-oak", stage: 1 } };
+
+  it("calls advanceTutorial('action:harvest') after successful CHOP", () => {
+    dispatchAction({
+      toolId: "axe",
+      targetType: "tree",
+      entity: mockTreeEntity as never,
+    });
+    expect(mockAdvanceTutorial).toHaveBeenCalledWith("action:harvest");
+  });
+
+  it("does not call advanceTutorial when CHOP fails (harvestTree returns null)", () => {
+    mockHarvestTree.mockReturnValueOnce(null);
+    dispatchAction({
+      toolId: "axe",
+      targetType: "tree",
+      entity: mockSaplingEntity as never,
+    });
+    expect(mockAdvanceTutorial).not.toHaveBeenCalledWith("action:harvest");
+  });
+
+  it("calls advanceTutorial('action:water') after successful WATER", () => {
+    dispatchAction({
+      toolId: "watering-can",
+      targetType: "tree",
+      entity: mockSaplingEntity as never,
+    });
+    expect(mockAdvanceTutorial).toHaveBeenCalledWith("action:water");
+  });
+
+  it("does not call advanceTutorial when WATER fails (waterTree returns false)", () => {
+    mockWaterTree.mockReturnValueOnce(false);
+    dispatchAction({
+      toolId: "watering-can",
+      targetType: "tree",
+      entity: mockSaplingEntity as never,
+    });
+    expect(mockAdvanceTutorial).not.toHaveBeenCalledWith("action:water");
+  });
+
+  it("calls advanceTutorial('action:plant') after successful PLANT", () => {
+    dispatchAction({
+      toolId: "trowel",
+      targetType: "soil",
+      gridX: 3,
+      gridZ: 5,
+      speciesId: "white-oak",
+    });
+    expect(mockAdvanceTutorial).toHaveBeenCalledWith("action:plant");
+  });
+
+  it("does not call advanceTutorial when PLANT fails (plantTree returns false)", () => {
+    mockPlantTree.mockReturnValueOnce(false);
+    dispatchAction({
+      toolId: "trowel",
+      targetType: "soil",
+      gridX: 3,
+      gridZ: 5,
+      speciesId: "white-oak",
+    });
+    expect(mockAdvanceTutorial).not.toHaveBeenCalledWith("action:plant");
+  });
+
+  it("does not call advanceTutorial for non-grove actions (BUILD)", () => {
+    dispatchAction({ toolId: "hammer", targetType: null });
+    expect(mockAdvanceTutorial).not.toHaveBeenCalled();
   });
 });

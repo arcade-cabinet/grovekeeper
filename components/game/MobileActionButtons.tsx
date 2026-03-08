@@ -4,13 +4,21 @@
  * Displays context-sensitive Plant/Water/Harvest/Prune action buttons
  * at the bottom of the screen. Only the relevant button is highlighted
  * based on the current tool + selected tile state.
+ *
+ * Also provides a CYCLE button that calls TouchProvider.onToolCycleStart()
+ * so toolSwap is reflected in InputFrame each frame.
  */
 
 import type { LucideIcon } from "lucide-react-native";
-import { AxeIcon, DropletsIcon, ScissorsIcon, SproutIcon } from "lucide-react-native";
+import { AxeIcon, DropletsIcon, RefreshCwIcon, ScissorsIcon, SproutIcon } from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
+import { sharedTouchProvider } from "@/game/input/sharedTouchProvider";
+import {
+  handleActionButtonPress,
+  type MobileActionProvider,
+} from "./mobileActionHelpers";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,6 +37,11 @@ export interface MobileActionButtonsProps {
   actions: MobileAction[];
   onSelectTool: (toolId: string) => void;
   onAction: () => void;
+  /**
+   * Override the TouchProvider instance for testing.
+   * Production code leaves this undefined and the shared singleton is used.
+   */
+  providerOverride?: MobileActionProvider;
 }
 
 // ---------------------------------------------------------------------------
@@ -82,7 +95,10 @@ export function MobileActionButtons({
   actions,
   onSelectTool,
   onAction,
+  providerOverride,
 }: MobileActionButtonsProps) {
+  const provider = providerOverride ?? sharedTouchProvider;
+
   return (
     <View className="flex-row items-center justify-center gap-2">
       {actions.map((action) => {
@@ -99,13 +115,7 @@ export function MobileActionButtons({
                   : "border-gray-400 bg-gray-300/60 opacity-50"
             }`}
             disabled={!action.enabled}
-            onPress={() => {
-              if (isActive) {
-                onAction();
-              } else {
-                onSelectTool(action.toolId);
-              }
-            }}
+            onPress={() => handleActionButtonPress(isActive, provider, onAction, onSelectTool, action.toolId)}
             accessibilityLabel={`${action.label}${isActive ? " (active, tap to execute)" : ""}`}
           >
             <Icon
@@ -121,6 +131,16 @@ export function MobileActionButtons({
           </Pressable>
         );
       })}
+
+      {/* CYCLE button -- advances to next tool slot, feeds toolSwap into InputFrame */}
+      <Pressable
+        className="min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border-2 border-bark-brown/40 bg-parchment/90 px-2 py-1"
+        onPress={() => provider.onToolCycleStart()}
+        accessibilityLabel="Cycle to next tool"
+      >
+        <Icon as={RefreshCwIcon} size={18} className="text-soil-dark" />
+        <Text className="mt-0.5 text-[10px] font-bold text-soil-dark">Cycle</Text>
+      </Pressable>
     </View>
   );
 }

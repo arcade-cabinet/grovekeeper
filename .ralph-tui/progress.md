@@ -3016,3 +3016,20 @@ after each iteration and it's included in prompts for context.
   - **Pre-existing TS5097 errors**: The codebase already uses `.tsx` extension in import paths throughout (e.g. `import { X } from "./Foo.tsx"`). These generate TS5097 errors codebase-wide. My new files follow the same pattern — no new error categories introduced.
   - **Directory import resolution**: After converting `Foo.tsx` to `Foo/index.tsx`, barrel imports `from "./Foo.tsx"` must become `from "./Foo"` (no extension). TypeScript bundler resolution finds `Foo/index.tsx` automatically.
 ---
+
+## 2026-03-07 - US-163
+- Wired VirtualJoystick.tsx and MobileActionButtons.tsx to the shared TouchProvider singleton so InputManager receives moveX/moveZ, interact, and toolSwap from mobile touch input
+- Created `game/input/sharedTouchProvider.ts` — module-level singleton shared by all three mobile touch components (VirtualJoystick, MobileActionButtons, TouchLookZone)
+- Updated `components/player/TouchLookZone.tsx` — re-exports `sharedTouchProvider as touchLookZoneProvider` (backward compat)
+- Created `components/game/joystickHandlers.ts` — pure `computeJoystickZoneRect` helper + `JoystickProvider` interface; testable without React Native
+- Updated `components/game/VirtualJoystick.tsx` — calls `provider.onTouchStart/Move/End` in PanResponder handlers alongside existing movementRef writes; accepts `providerOverride` for testing; 295 lines (under limit)
+- Updated `components/game/mobileActionHelpers.ts` — added `MobileActionProvider` interface + pure `handleActionButtonPress` helper
+- Updated `components/game/MobileActionButtons.tsx` — uses `handleActionButtonPress` for action buttons (calls `onInteractStart` on active press), added CYCLE button (calls `onToolCycleStart`); 44px+ touch targets maintained; 147 lines
+- Created `components/game/VirtualJoystick.test.ts` — tests `computeJoystickZoneRect` pure helper + JoystickProvider interface contract
+- Updated `components/game/MobileActionButtons.test.ts` — tests `handleActionButtonPress` provider wiring (7 new tests)
+- All 3,864 tests pass; no new TS errors (289 pre-existed)
+- **Learnings:**
+  - **sharedTouchProvider singleton pattern**: When multiple UI components need to write to the same InputProvider, put the singleton in the input layer (`game/input/sharedTouchProvider.ts`) rather than in one of the UI components. The UI components import from the input layer; the input layer never imports from UI. Re-export from existing locations (e.g. `touchLookZoneProvider`) for backward compat.
+  - **PanResponder closure captures first-render provider**: `useRef(PanResponder.create({...})).current` is evaluated once. Variables closed over (like `provider`) come from the first render. For a stable singleton this is safe; for mutable `providerOverride` it would be stale after re-render. In tests we don't render the component — we test pure helper functions instead.
+  - **Pure handler extraction for testability vs full buildHandlers factory**: When a handler factory would need to accept Animated.Value objects (which are not plain JS), it's simpler to extract only the pure math (e.g., `computeJoystickZoneRect`) and test that, letting the component call the provider directly in its PanResponder callbacks. Full factory extraction (like buildLookZoneHandlers) only makes sense when the handler logic is pure.
+---

@@ -179,11 +179,13 @@ export function dispatchAction(ctx: DispatchContext): boolean {
     case "CHOP": {
       if (!ctx.entity?.id) return false;
       success = harvestTree(ctx.entity.id) !== null;
+      if (success) store.advanceTutorial("action:harvest");
       break;
     }
     case "WATER": {
       if (!ctx.entity?.id) return false;
       success = waterTree(ctx.entity.id);
+      if (success) store.advanceTutorial("action:water");
       break;
     }
     case "PRUNE": {
@@ -194,6 +196,7 @@ export function dispatchAction(ctx: DispatchContext): boolean {
     case "PLANT": {
       if (ctx.gridX === undefined || ctx.gridZ === undefined || !ctx.speciesId) return false;
       success = plantTree(ctx.speciesId, ctx.gridX, ctx.gridZ);
+      if (success) store.advanceTutorial("action:plant");
       break;
     }
     case "DIG": {
