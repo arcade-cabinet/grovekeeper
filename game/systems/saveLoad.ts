@@ -1,18 +1,33 @@
 /**
- * Save/Load serialization for ECS grove data.
+ * Save/Load system for Grovekeeper's chunk-based world. Spec §26.
  *
- * Persistence uses expo-sqlite via drizzle (game/db).
- * All storage functions are async.
+ * Architecture:
+ *   - Legend State + expo-sqlite auto-syncs gameState$ and chunkDiffs$
+ *   - saveGame() records the save timestamp (signals complete save)
+ *   - clearSave() resets both observables to initial state
+ *   - createSaveSnapshot() / applySaveSnapshot() enable round-trip testing
+ *   - migrateIfNeeded() handles schema version upgrades (v1 ECS → v2 chunk)
+ *
+ * Legacy: deserializeGrove() and loadGroveFromStorage() are kept for
+ * usePersistence.ts (offline growth calculation on startup).
  */
 
-import type { SerializedTreeDb } from "@/game/db/queries";
-import { loadGroveFromDb, saveGroveToDb } from "@/game/db/queries";
+import { loadGroveFromDb } from "@/game/db/queries";
 import { createGridCellEntity, createTreeEntity } from "@/game/ecs/archetypes";
-import { treesQuery, world } from "@/game/ecs/world";
+import { world } from "@/game/ecs/world";
+import type { FastTravelPoint } from "@/game/systems/fastTravel";
+import { getStageScale } from "@/game/systems/growth";
+import type { SpeciesProgress } from "@/game/systems/speciesDiscovery";
+import { gameState$, getState, initialState } from "@/game/stores/core";
+import type { QuestChainState } from "@/game/quests/types";
+import { chunkDiffs$, clearAllChunkDiffs } from "@/game/world/chunkPersistence";
+import type { ChunkDiff } from "@/game/world/chunkPersistence";
 
 const gridCellsQuery = world.with("gridCell", "position");
 
-import { getStageScale } from "@/game/systems/growth";
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 export interface TreeSave {
   col: number;
@@ -43,64 +58,130 @@ export interface GroveSaveData {
   trees: TreeSave[];
 }
 
+/** Current schema version. Increment on breaking save format changes. */
+export const SAVE_VERSION = 2;
+
 /**
- * Serialize all ECS tree and grid entities into a saveable object.
+ * Full saveable snapshot: chunk deltas, quest state, NPC relationships,
+ * discovered species, campfire locations, prestige state. Spec §26.2
  */
-export function serializeGrove(gridSize: number, groveSeed: string): GroveSaveData {
-  const trees: TreeSave[] = [];
-  for (const entity of treesQuery) {
-    if (!entity.tree || !entity.position) continue;
-    trees.push({
-      col: Math.round(entity.position.x),
-      row: Math.round(entity.position.z),
-      speciesId: entity.tree.speciesId,
-      meshSeed: entity.tree.meshSeed,
-      stage: entity.tree.stage,
-      progress: entity.tree.progress,
-      watered: entity.tree.watered,
-      totalGrowthTime: entity.tree.totalGrowthTime,
-      plantedAt: entity.tree.plantedAt,
-      harvestCooldownElapsed: entity.harvestable?.cooldownElapsed,
-      harvestReady: entity.harvestable?.ready,
-    });
-  }
+export interface SaveSnapshot {
+  version: number;
+  savedAt: number;
+  worldSeed: string;
+  prestigeCount: number;
+  difficulty: string;
+  questChainState: QuestChainState;
+  npcRelationships: Record<string, number>;
+  discoveredSpiritIds: string[];
+  speciesProgress: Record<string, SpeciesProgress>;
+  discoveredCampfires: FastTravelPoint[];
+  chunkDiffs: Record<string, ChunkDiff>;
+}
 
-  const tiles: TileSave[] = [];
-  for (const entity of gridCellsQuery) {
-    if (!entity.gridCell) continue;
-    tiles.push({
-      col: entity.gridCell.gridX,
-      row: entity.gridCell.gridZ,
-      type: entity.gridCell.type,
-    });
-  }
+// ---------------------------------------------------------------------------
+// Chunk-based save/load API (Spec §26)
+// ---------------------------------------------------------------------------
 
+/**
+ * Capture all saveable game state into a plain snapshot object.
+ * Covers: chunk deltas, quest state, NPC relationships, discovered species,
+ * campfire locations, prestige state.
+ */
+export function createSaveSnapshot(): SaveSnapshot {
+  const state = getState();
   return {
-    version: 1,
-    timestamp: Date.now(),
-    gridSize,
-    seed: groveSeed,
-    tiles,
-    trees,
+    version: SAVE_VERSION,
+    savedAt: Date.now(),
+    worldSeed: state.worldSeed,
+    prestigeCount: state.prestigeCount,
+    difficulty: state.difficulty,
+    questChainState: state.questChainState,
+    npcRelationships: state.npcRelationships,
+    discoveredSpiritIds: state.discoveredSpiritIds,
+    speciesProgress: state.speciesProgress,
+    discoveredCampfires: state.discoveredCampfires,
+    chunkDiffs: { ...chunkDiffs$.peek() },
   };
 }
 
 /**
+ * Apply a snapshot back to Legend State to reconstruct game state.
+ * Used for: resume after clear, schema migration. Spec §26.
+ */
+export function applySaveSnapshot(snapshot: SaveSnapshot): void {
+  gameState$.set({
+    ...getState(),
+    worldSeed: snapshot.worldSeed,
+    prestigeCount: snapshot.prestigeCount,
+    difficulty: snapshot.difficulty,
+    questChainState: snapshot.questChainState,
+    npcRelationships: snapshot.npcRelationships,
+    discoveredSpiritIds: snapshot.discoveredSpiritIds,
+    speciesProgress: snapshot.speciesProgress,
+    discoveredCampfires: snapshot.discoveredCampfires,
+    lastSavedAt: snapshot.savedAt,
+  });
+  chunkDiffs$.set(snapshot.chunkDiffs);
+}
+
+/**
+ * Record the save timestamp. Legend State propagates this to expo-sqlite.
+ * Auto-save (AppState background) is handled by useAutoSave.ts. Spec §26.1
+ */
+export function saveGame(): void {
+  gameState$.lastSavedAt.set(Date.now());
+}
+
+/**
+ * Clear all save data: reset Legend State to initial + clear chunk diffs.
+ * Call on new game start or prestige reset. Spec §26.
+ */
+export function clearSave(): void {
+  gameState$.set(structuredClone(initialState));
+  clearAllChunkDiffs();
+}
+
+/** Returns true if a real save exists (non-zero lastSavedAt). Spec §26.1 */
+export function hasSaveGame(): boolean {
+  return getState().lastSavedAt > 0;
+}
+
+/**
+ * Apply schema migration if snapshot is older than SAVE_VERSION.
+ * v1→v2: chunk-based world; old ECS saves have no chunkDiffs — default to {}.
+ */
+export function migrateIfNeeded(snapshot: SaveSnapshot): SaveSnapshot {
+  if (snapshot.version >= SAVE_VERSION) return snapshot;
+  return {
+    ...snapshot,
+    version: SAVE_VERSION,
+    chunkDiffs: snapshot.chunkDiffs ?? {},
+    discoveredCampfires: snapshot.discoveredCampfires ?? [],
+    npcRelationships: snapshot.npcRelationships ?? {},
+    discoveredSpiritIds: snapshot.discoveredSpiritIds ?? [],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Legacy ECS functions (kept for usePersistence.ts / offline growth)
+// ---------------------------------------------------------------------------
+
+/**
  * Clear the ECS world and recreate entities from save data.
+ * Called by usePersistence.ts after offline growth is applied.
  */
 export function deserializeGrove(data: GroveSaveData): void {
   for (const entity of [...world]) {
     world.remove(entity);
   }
 
-  // Recreate grid cells
   for (const tile of data.tiles) {
     world.add(
       createGridCellEntity(tile.col, tile.row, tile.type as "soil" | "water" | "rock" | "path"),
     );
   }
 
-  // Build a map for marking cells as occupied
   const cellMap = new Map<string, (typeof gridCellsQuery.entities)[number]>();
   for (const entity of gridCellsQuery) {
     if (entity.gridCell) {
@@ -108,7 +189,6 @@ export function deserializeGrove(data: GroveSaveData): void {
     }
   }
 
-  // Recreate trees
   for (const treeSave of data.trees) {
     const tree = createTreeEntity(treeSave.col, treeSave.row, treeSave.speciesId);
     const treeComp = tree.tree;
@@ -123,33 +203,12 @@ export function deserializeGrove(data: GroveSaveData): void {
     renderComp.scale = getStageScale(treeSave.stage, treeSave.progress);
     world.add(tree);
 
-    // Mark cell as occupied
     const cell = cellMap.get(`${treeSave.col},${treeSave.row}`);
     if (cell?.gridCell) {
       cell.gridCell.occupied = true;
       cell.gridCell.treeEntityId = tree.id;
     }
   }
-}
-
-/**
- * Save grove data to expo-sqlite via the relational trees table.
- */
-export async function saveGroveToStorage(gridSize: number, groveSeed: string): Promise<void> {
-  const data = serializeGrove(gridSize, groveSeed);
-  const treesData: SerializedTreeDb[] = data.trees.map((t) => ({
-    speciesId: t.speciesId,
-    gridX: t.col,
-    gridZ: t.row,
-    stage: t.stage as 0 | 1 | 2 | 3 | 4,
-    progress: t.progress,
-    watered: t.watered,
-    totalGrowthTime: t.totalGrowthTime,
-    plantedAt: t.plantedAt,
-    meshSeed: t.meshSeed,
-  }));
-  // Use default player position; the actual position is updated by persistGameStore
-  await saveGroveToDb(treesData, { x: 6, z: 6 });
 }
 
 /**
@@ -162,10 +221,10 @@ export async function loadGroveFromStorage(): Promise<GroveSaveData | null> {
 
   return {
     version: 1,
-    timestamp: Date.now(), // Relational data has no timestamp; treat as current
-    gridSize: 12, // Will be overridden by store hydration
+    timestamp: Date.now(),
+    gridSize: 12,
     seed: "",
-    tiles: [], // Tiles will be regenerated from grid generation
+    tiles: [],
     trees: result.trees.map((t) => ({
       col: t.gridX,
       row: t.gridZ,
@@ -178,20 +237,4 @@ export async function loadGroveFromStorage(): Promise<GroveSaveData | null> {
       plantedAt: t.plantedAt,
     })),
   };
-}
-
-/**
- * Check if save data exists in the database.
- */
-export async function hasSaveData(): Promise<boolean> {
-  const result = await loadGroveFromDb();
-  return result !== null && result.trees.length > 0;
-}
-
-/**
- * Clear save data. Deletes all trees from the database.
- */
-export async function clearSaveData(): Promise<void> {
-  // Trees are cleared when setupNewGame is called.
-  // This is a no-op for now; the caller should use setupNewGame.
 }

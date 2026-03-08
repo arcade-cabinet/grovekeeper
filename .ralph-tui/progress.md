@@ -3142,3 +3142,17 @@ after each iteration and it's included in prompts for context.
   - **navigation.ts pure-function extraction for 300-line compliance**: `buildNavPath(config, tileX, tileZ)` and `advanceNav(pathState, config)` as free functions accept their dependencies as params rather than closing over `this`. This decouples navigation logic from the class, makes it independently testable, and brings the class file under 300 lines.
   - **TaggedEvaluator generic constraint**: `GoalEvaluator<TEntity>` from Yuka requires `TEntity extends GameEntity`. A bare `<TEntity>` in an interface that imports via `import("yuka").GoalEvaluator<TEntity>` causes TS2344. Fix: `import type { GameEntity, GoalEvaluator } from "yuka"` at top level + `<TEntity extends GameEntity>` on the interface.
 ---
+
+## 2026-03-07 - US-170
+- Updated `game/systems/saveLoad.ts` (195→220 lines) for chunk-based persistence
+  - Added `SAVE_VERSION = 2`, `SaveSnapshot` interface covering chunk deltas, quest state, NPC relationships, discovered species, campfire locations, prestige state
+  - Added `createSaveSnapshot()`, `applySaveSnapshot()`, `saveGame()`, `clearSave()`, `hasSaveGame()`, `migrateIfNeeded()` (v1→v2: ECS saves gain empty chunkDiffs)
+  - Kept legacy `deserializeGrove()` + `loadGroveFromStorage()` for usePersistence.ts offline growth path
+  - Removed unused `serializeGrove`, `saveGroveToStorage`, `clearSaveData`, `hasSaveData`
+- Rewrote `game/systems/saveLoad.test.ts` (388→340 lines): 26 tests all passing
+  - Tests cover all AC items: chunk delta capture, quest/NPC/species/campfire/prestige fields, round-trip, migration
+- **Learnings:**
+  - **Jest mock hoisting + "mock" prefix rule**: Jest hoists ALL `jest.mock()` calls before any code (including `const`/`let` declarations). TypeScript `const` transpiles to `var` in Jest context — vars are hoisted with `undefined`. This means passing a "mock"-prefixed object as a direct property value in the factory (e.g. `gameState$: mockGameState$`) reads `undefined` at factory call time. **Fix**: wrap every outer-variable access in an arrow function body (`set: (v) => mockSetFn(v)`) so the variable is read at TEST call time, not at factory registration time.
+  - **Legend State round-trip pattern**: `createSaveSnapshot()` reads from `getState()` + `chunkDiffs$.peek()`; `applySaveSnapshot()` writes back via `gameState$.set()` + `chunkDiffs$.set()`. The auto-sync to expo-sqlite is handled by `syncObservable` in `initPersistence()` — no manual DB calls needed in save/load.
+  - **Auto-save already live**: AppState background save is in `useAutoSave.ts` (wired in `app/_layout.tsx`). `saveGame()` in saveLoad.ts just records `lastSavedAt` to signal a completed save checkpoint.
+---
