@@ -6,7 +6,7 @@ what this document specifies. If code and spec disagree, the spec wins.
 
 **Canonical design:** [`docs/plans/2026-03-07-unified-game-design.md`](plans/2026-03-07-unified-game-design.md)
 
-Last updated: 2026-03-08 (§39 implementation status audited — 4,026 tests passing, all phases P0–P4 complete)
+Last updated: 2026-03-08 (§39 re-audited — 4,071 tests passing, 12 failing; crafting panels now mounted; 13 orphaned systems confirmed)
 
 ---
 
@@ -1520,8 +1520,8 @@ No inline magic numbers. Enforced by `.claude/hooks/no-magic-numbers.sh`.
 
 ## 39. Implementation Status
 
-**Last audited: 2026-03-08** — 4,026 tests passing across 171 suites. 571 test files.
-All 61 systems in `game/systems/` have corresponding test files.
+**Last audited: 2026-03-08** — 4,071 tests passing (12 failing across 3 suites) in 176 total suites. 178 test files.
+All systems in `game/systems/` (98 non-test .ts files across flat files + subdirectories) have corresponding test files.
 
 ### 39.1 System Wiring Status
 
@@ -1572,14 +1572,15 @@ Systems wired to the game loop (`useGameLoop`) and/or mounted UI:
 | Structure Placement (§18) | `game/systems/structurePlacement.ts` | YES | Via ChunkManager | ProceduralProps |
 | Kitbashing (§43) | `game/systems/kitbashing/` | YES | Via ProceduralTown | ProceduralBuilding |
 | Save/Load (§26) | `game/systems/saveLoad.ts` | YES | Via usePersistence | Via store |
-| Cooking (§22) | `game/systems/cooking.ts` | YES | Via actionDispatcher | CookingPanel (NOT MOUNTED) |
-| Forging (§22) | `game/systems/forging.ts` | YES | Via actionDispatcher | ForgingPanel (NOT MOUNTED) |
+| Cooking (§22) | `game/systems/cooking.ts` | YES | Via actionDispatcher | CookingPanel (MOUNTED) |
+| Forging (§22) | `game/systems/forging.ts` | YES | Via actionDispatcher | ForgingPanel (MOUNTED) |
 | Fishing (§22) | `game/systems/fishing.ts` | YES | Via actionDispatcher | Via store |
 | Mining (§22) | `game/systems/mining.ts` | YES | Via actionDispatcher | Via store |
 | Traps (§22) | `game/systems/traps.ts` | YES | Via actionDispatcher | Via store |
-| Tool Upgrades (§11) | `game/systems/toolUpgrades.ts` | YES | Via store | ForgingPanel (NOT MOUNTED) |
+| Tool Upgrades (§11) | `game/systems/toolUpgrades.ts` | YES | Via store + ForgingPanel | ForgingPanel (MOUNTED) |
 | Fast Travel (§17) | `game/systems/fastTravel.ts` | YES | Via store | FastTravelMenu (NOT MOUNTED) |
 | Species Discovery (§21) | `game/systems/speciesDiscovery.ts` | YES | Via store | NO codex UI |
+| Traveling Merchant (§20) | `game/systems/travelingMerchant/` | YES | Via store (questState, core, progression) | Via store |
 | Tree Scale (§42) | `game/systems/treeScaleSystem.ts` | YES | NOT WIRED | NOT WIRED |
 
 Orphaned systems (tested but not imported by any non-test code):
@@ -1595,7 +1596,7 @@ Orphaned systems (tested but not imported by any non-test code):
 | Zone Bonuses (§17) | `game/systems/zoneBonuses.ts` | YES | NOT IMPORTED by any non-test code |
 | Grid Generation (§17) | `game/systems/gridGeneration.ts` | YES | NOT IMPORTED by any non-test code (legacy) |
 | Loot System (§41.2) | `game/systems/lootSystem.ts` | YES | NOT IMPORTED by any non-test code |
-| Audio Engine (§27) | `game/systems/audioEngine.ts` | YES | NOT IMPORTED (AudioManager.ts is the active system) |
+| Audio Engine (§27) | `game/systems/audioEngine.ts` | YES | IMPORTED by AudioManager.ts (internal dependency, not directly orphaned) |
 | Native Audio Manager (§27) | `game/systems/NativeAudioManager.ts` | YES | NOT IMPORTED by any non-test code |
 | Weather Particles (§36) | `game/systems/weatherParticles.ts` | YES | NOT IMPORTED by any non-test code |
 | Ambient Particles (§36) | `game/systems/ambientParticles.ts` | YES | NOT IMPORTED by any non-test code |
@@ -1628,19 +1629,20 @@ Previous gap list (2026-03-07) had 10 items. Status of each:
 6. ~~Chunk-based world not implemented~~ **RESOLVED.** `ChunkManager` + `ChunkStreamer` (useFrame) + `TerrainChunks` render procedural terrain. 3x3 active chunks, 5x5 buffer.
 7. ~~Labyrinth generation not implemented~~ **RESOLVED.** `mazeGenerator.ts` (Growing Tree algorithm), `hedgePlacement/`, `ProceduralHedgeMaze` mounted in Canvas, `GrovekeeperSpirit` at maze centers.
 8. ~~Base building / raids not implemented~~ **PARTIALLY RESOLVED.** `kitbashing/` system exists with placement + commit + Rapier colliders + unlocks. ProceduralTown renders buildings. `baseRaids.ts` has tests but is NOT IMPORTED by any non-test code.
-9. ~~Forging / cooking not implemented~~ **RESOLVED (systems).** `cooking.ts` and `forging.ts` are implemented + tested + wired to actionDispatcher. **UI NOT MOUNTED:** `CookingPanel` and `ForgingPanel` components exist but are not rendered in `app/game/index.tsx`.
+9. ~~Forging / cooking not implemented~~ **FULLY RESOLVED.** `cooking.ts` and `forging.ts` are implemented + tested + wired to actionDispatcher. `CookingPanel`, `ForgingPanel`, and `BuildPanel` are all mounted in `app/game/index.tsx` via `resolvePanelState(activeCraftingStation)`.
 10. ~~World quest system not implemented~~ **RESOLVED.** `worldQuestSystem.ts`, `proceduralQuests.ts`, `config/game/worldQuests.json`, `config/game/proceduralQuests.json` all exist and are loaded.
 
-**Current gaps (2026-03-08):**
+**Current gaps (re-audited 2026-03-08):**
 
-1. **Orphaned systems (13):** recipes, seasonalMarket, discovery, seasonalEffects, baseRaids, spatialHash, zoneBonuses, gridGeneration, lootSystem, audioEngine, NativeAudioManager, weatherParticles, ambientParticles — tested but not imported by any non-test production code.
-2. **Unmounted UI components:** CookingPanel, ForgingPanel, FastTravelMenu, QuestPanel, MiniMap, AchievementPopup, HungerBar, ResourceBar, StaminaGauge (bar version), ToolBelt, XPBar, StatsDashboard, RulesModal, FloatingParticles, ErrorBoundary, WeatherOverlay, WeatherForecast, VirtualJoystick, BuildPanel — exist in `components/game/` but are not rendered in any mounted parent.
+1. **Orphaned systems (12):** recipes, seasonalMarket, discovery, seasonalEffects, baseRaids, spatialHash, zoneBonuses, gridGeneration, lootSystem, NativeAudioManager, weatherParticles, ambientParticles — tested but not imported by any non-test production code. (`audioEngine.ts` was previously listed but IS imported by `AudioManager.ts` as an internal dependency.) `treeScaleSystem.ts` is also not wired.
+2. **Unmounted UI components:** FastTravelMenu, QuestPanel, MiniMap, AchievementPopup, HungerBar, StaminaGauge (bar version), ToolBelt, XPBar, StatsDashboard, RulesModal, FloatingParticles, ErrorBoundary, WeatherOverlay, WeatherForecast, VirtualJoystick, MobileActionButtons, FishingPanel, ToolWheel, RadialActionMenu, BatchHarvestButton, ActionButton — exist in `components/game/` but are not rendered in any mounted parent. Note: ResourceBar and StaminaGauge ARE imported by HUD.tsx (used internally). CookingPanel, ForgingPanel, and BuildPanel are now MOUNTED (resolved since last audit).
 3. **GameUI orchestrator not mounted:** `components/game/GameUI/` was designed to consolidate HUD sub-components (BuildPanel, MiniMap, ToolWheel, WeatherOverlay, etc.) but is not imported by `app/game/index.tsx`. The game screen mounts HUD and other overlays directly.
-4. **Legacy scene components:** `Camera.tsx`, `Ground.tsx`, `SelectionRing.tsx`, `Player.tsx` exist in `components/` but are superseded by FPSCamera, TerrainChunks, raycast system, and PlayerCapsule respectively. Not deleted.
+4. **Legacy scene components:** `Camera.tsx`, `Ground.tsx`, `SelectionRing.tsx` in `components/scene/` and `Player.tsx` in `components/entities/` are superseded by FPSCamera, TerrainChunks, raycast system, and PlayerCapsule respectively. Not deleted.
 5. **Config/code mismatch:** `config/game/achievements.json` exists but is never loaded — achievements are hardcoded in `game/systems/achievements/core.ts`. `config/game/npcs.json` exists but NpcManager loads from `game/npcs/data/npcs.json` instead.
-6. **SpeechBubble not mounted:** R3F component exists but not rendered by ChibiNpc or ChibiNpcScene.
+6. **SpeechBubble not mounted:** R3F component exists with tests but not rendered by ChibiNpc or ChibiNpcScene.
 7. **No codex/discovery UI:** Species discovery system tracks progress in store but has no player-facing UI.
 8. **Quest chain UI missing:** Quest chains run via store + engine but have no in-game panel. QuestPanel exists but is not mounted.
+9. **3 test suites failing (12 tests):** `audioEngine.test.ts`, `AudioManager.test.ts`, and `fishingWiring.test.ts` fail due to Tone.js ESM import issues in the Jest environment. Not a runtime bug — audio works at runtime via first-gesture bootstrap.
 
 ### 39.4 Priority Phases (audited 2026-03-08)
 
@@ -1656,7 +1658,7 @@ Previous gap list (2026-03-07) had 10 items. Status of each:
 | P2 | Tool view model + raycast + HUD | COMPLETE |
 | P3 | Open world streaming + villages | COMPLETE |
 | P4 | Hedge maze + spirits + combat | COMPLETE |
-| P5 | Survival: hunger/fish/hunt/cook/forge | COMPLETE (systems); UI NOT MOUNTED |
+| P5 | Survival: hunger/fish/hunt/cook/forge | COMPLETE — systems + CookingPanel/ForgingPanel/BuildPanel mounted |
 | P6 | Dialogue branching + NPC relationships | COMPLETE |
 | P7 | Quest system + seed branching | COMPLETE (engine); UI NOT MOUNTED |
 | P8 | Base building (kitbashing) | COMPLETE (system); raids NOT WIRED |
@@ -1666,11 +1668,12 @@ Previous gap list (2026-03-07) had 10 items. Status of each:
 
 ### 39.5 Test Coverage Summary
 
-- **Test suites:** 171 passing
-- **Individual tests:** 4,026 passing
-- **Test files:** 571
-- **Systems with tests:** 61/61 (100%)
-- **Math.random() violations:** 0 in production code (1 in test mock, acceptable)
+- **Test suites:** 173 passing, 3 failing (176 total)
+- **Individual tests:** 4,071 passing, 12 failing (4,083 total)
+- **Test files:** 178 (+ 3 `.pending` files not yet active)
+- **Systems with tests:** all `game/systems/` files have corresponding test files
+- **Failing suites:** `audioEngine.test.ts`, `AudioManager.test.ts`, `fishingWiring.test.ts` — Tone.js ESM import issue in Jest only
+- **Math.random() violations:** 0 in production code (1 in test mock in `saveLoad.test.ts`, acceptable; 3 comment references in documentation, not violations)
 
 ---
 
