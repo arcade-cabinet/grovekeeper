@@ -10,8 +10,6 @@ import { NpcDialogue } from "../NpcDialogue.tsx";
 import { PauseMenu } from "../PauseMenu/index.tsx";
 import { RadialActionMenu } from "../RadialActionMenu.tsx";
 import { SeedSelect } from "../SeedSelect.tsx";
-import { StaminaGauge } from "../StaminaGauge.tsx";
-import { ToolBelt } from "../ToolBelt.tsx";
 import { ToolWheel } from "../ToolWheel.tsx";
 import { TradeDialog } from "../TradeDialog.tsx";
 import { TutorialOverlay } from "../TutorialOverlay.tsx";
@@ -59,12 +57,9 @@ export function GameUI({
     unlockedSpecies,
     seeds,
     selectedSpecies,
-    stamina,
-    maxStamina,
     achievements,
     soundEnabled,
     hapticsEnabled,
-    toolBeltTools,
     seedSelectSpecies,
     tradeRates,
     pauseStats,
@@ -108,20 +103,7 @@ export function GameUI({
         </View>
       )}
 
-      {/* Tool belt - bottom right */}
-      <View style={styles.toolBelt} pointerEvents="box-none">
-        <ToolBelt
-          tools={toolBeltTools}
-          selectedTool={selectedTool}
-          unlockedTools={unlockedTools}
-          level={level}
-          selectedSpecies={selectedSpecies}
-          seedCount={seeds[selectedSpecies] ?? 0}
-          onSelectTool={(id: string) => useGameStore.getState().setSelectedTool(id)}
-        />
-      </View>
-
-      {/* Batch harvest button - above tool belt */}
+      {/* Batch harvest button */}
       {onBatchHarvest && (
         <View style={styles.batchHarvest} pointerEvents="box-none">
           <BatchHarvestButton
@@ -130,11 +112,6 @@ export function GameUI({
           />
         </View>
       )}
-
-      {/* Stamina gauge - right side */}
-      <View style={styles.staminaGauge} pointerEvents="none">
-        <StaminaGauge stamina={stamina} maxStamina={maxStamina} />
-      </View>
 
       {/* Mobile controls -- joystick (left) + action buttons (right) */}
       {movementRef && (

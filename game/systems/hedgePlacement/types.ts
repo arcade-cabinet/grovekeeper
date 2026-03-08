@@ -35,5 +35,5 @@ export interface MazeDecoration {
   x: number;
   z: number;
   rotation: number;
-  category: "flowers" | "stone" | "fences" | "structure";
+  category: "flowers" | "stone" | "fences" | "structure" | "dungeon";
 }

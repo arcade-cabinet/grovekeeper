@@ -217,7 +217,7 @@ describe("generateLabyrinth — decorations (Spec §17.5)", () => {
   });
 
   it("all decoration categories are valid HedgeMiscCategory values", () => {
-    const validCategories = new Set(["fences", "flowers", "stone", "structure"]);
+    const validCategories = new Set(["fences", "flowers", "stone", "structure", "dungeon"]);
     for (const d of result.decorations) {
       expect(validCategories.has(d.decoration.category)).toBe(true);
     }

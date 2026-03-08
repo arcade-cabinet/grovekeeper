@@ -48,27 +48,40 @@ export function placeMazeDecorations(maze: MazeResult, seed: number): MazeDecora
         cell.walls.west,
       ].filter(Boolean).length;
 
-      // Dead end: 3 walls → place flower or vase decoration.
+      // Dead end: 3 walls → place dungeon prop (25%) or flower/vase decoration (75%).
       if (wallCount === 3 && rng() < hedgeMazeConfig.dressing.deadEndProbability) {
-        const isFlower = rng() < hedgeMazeConfig.dressing.flowerVsVaseProbability;
-        if (isFlower) {
-          const flowerIdx = Math.floor(rng() * 7) + 1;
+        const isDungeonProp = rng() < hedgeMazeConfig.dressing.dungeonPropProbability;
+        if (isDungeonProp) {
+          const dungeonProps: string[] = hedgeMazeConfig.dressing.dungeonProps;
+          const propPath = dungeonProps[Math.floor(rng() * dungeonProps.length)];
           decorations.push({
-            modelPath: `hedges/misc/flowers/flowerbed${flowerIdx}_1x2.glb`,
+            modelPath: propPath,
             x: x * cellScale + cellScale / 2,
             z: z * cellScale + cellScale / 2,
             rotation: Math.floor(rng() * 4) * 90,
-            category: "flowers",
+            category: "dungeon",
           });
         } else {
-          const vaseIdx = Math.floor(rng() * 5) + 1;
-          decorations.push({
-            modelPath: `hedges/misc/flowers/vase${vaseIdx}.glb`,
-            x: x * cellScale + cellScale / 2,
-            z: z * cellScale + cellScale / 2,
-            rotation: Math.floor(rng() * 4) * 90,
-            category: "flowers",
-          });
+          const isFlower = rng() < hedgeMazeConfig.dressing.flowerVsVaseProbability;
+          if (isFlower) {
+            const flowerIdx = Math.floor(rng() * 7) + 1;
+            decorations.push({
+              modelPath: `hedges/misc/flowers/flowerbed${flowerIdx}_1x2.glb`,
+              x: x * cellScale + cellScale / 2,
+              z: z * cellScale + cellScale / 2,
+              rotation: Math.floor(rng() * 4) * 90,
+              category: "flowers",
+            });
+          } else {
+            const vaseIdx = Math.floor(rng() * 5) + 1;
+            decorations.push({
+              modelPath: `hedges/misc/flowers/vase${vaseIdx}.glb`,
+              x: x * cellScale + cellScale / 2,
+              z: z * cellScale + cellScale / 2,
+              rotation: Math.floor(rng() * 4) * 90,
+              category: "flowers",
+            });
+          }
         }
       }
 

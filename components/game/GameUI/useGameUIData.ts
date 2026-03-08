@@ -4,16 +4,9 @@ import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
 import { useGameStore } from "@/game/stores";
 import { ACHIEVEMENTS } from "@/game/systems/achievements";
-import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
-import {
-  calculatePrestigeBonus,
-  canPrestige as checkCanPrestige,
-  getCosmeticById,
-  getUnlockedCosmetics,
-  PRESTIGE_COSMETICS,
-  PRESTIGE_MIN_LEVEL,
-} from "@/game/systems/prestige";
+import { getCosmeticById, getUnlockedCosmetics, PRESTIGE_COSMETICS } from "@/game/systems/prestige";
 import { BASE_TRADE_RATES, getEffectiveTradeRates } from "@/game/systems/trading";
+import { buildGridExpansionInfo, buildPrestigeInfo } from "./gameUILogic";
 
 export function useGameUIData() {
   const activeBorderCosmetic = useGameStore((s) => s.activeBorderCosmetic);
@@ -25,8 +18,6 @@ export function useGameUIData() {
   const unlockedSpecies = useGameStore((s) => s.unlockedSpecies);
   const seeds = useGameStore((s) => s.seeds);
   const selectedSpecies = useGameStore((s) => s.selectedSpecies);
-  const stamina = useGameStore((s) => s.stamina);
-  const maxStamina = useGameStore((s) => s.maxStamina);
   const prestigeCount = useGameStore((s) => s.prestigeCount);
   const achievements = useGameStore((s) => s.achievements);
   const soundEnabled = useGameStore((s) => s.soundEnabled);
@@ -36,11 +27,6 @@ export function useGameUIData() {
   const treesMatured = useGameStore((s) => s.treesMatured);
   const coins = useGameStore((s) => s.coins);
   const marketState = useGameStore((s) => s.marketState);
-
-  const toolBeltTools = useMemo(
-    () => TOOLS.map((t) => ({ id: t.id, name: t.name, unlockLevel: t.unlockLevel })),
-    [],
-  );
 
   const seedSelectSpecies = useMemo(
     () =>
@@ -95,35 +81,15 @@ export function useGameUIData() {
     [],
   );
 
-  const gridExpansionInfo = useMemo(() => {
-    const nextTier = getNextExpansionTier(gridSize);
-    if (!nextTier) return null;
-    const canAfford = canAffordExpansion(nextTier, resources, level);
-    const meetsLevel = level >= nextTier.requiredLevel;
-    const costLabel = Object.entries(nextTier.cost)
-      .filter(([, amount]) => amount > 0)
-      .map(
-        ([resource, amount]) => `${amount} ${resource.charAt(0).toUpperCase() + resource.slice(1)}`,
-      )
-      .join(", ");
-    return {
-      nextSize: nextTier.size,
-      nextRequiredLevel: nextTier.requiredLevel,
-      costLabel,
-      canAfford,
-      meetsLevel,
-    };
-  }, [gridSize, resources, level]);
+  const gridExpansionInfo = useMemo(
+    () => buildGridExpansionInfo(gridSize, resources, level),
+    [gridSize, resources, level],
+  );
 
-  const prestigeInfo = useMemo(() => {
-    const bonus = calculatePrestigeBonus(prestigeCount);
-    return {
-      count: prestigeCount,
-      growthBonusPct: Math.round((bonus.growthSpeedMultiplier - 1) * 100),
-      isEligible: checkCanPrestige(level),
-      minLevel: PRESTIGE_MIN_LEVEL,
-    };
-  }, [prestigeCount, level]);
+  const prestigeInfo = useMemo(
+    () => buildPrestigeInfo(prestigeCount, level),
+    [prestigeCount, level],
+  );
 
   const pauseUnlockedCosmetics = useMemo(
     () => getUnlockedCosmetics(prestigeCount),
@@ -162,12 +128,9 @@ export function useGameUIData() {
     unlockedSpecies,
     seeds,
     selectedSpecies,
-    stamina,
-    maxStamina,
     achievements,
     soundEnabled,
     hapticsEnabled,
-    toolBeltTools,
     seedSelectSpecies,
     tradeRates,
     pauseStats,

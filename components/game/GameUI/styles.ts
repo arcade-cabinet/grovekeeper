@@ -21,20 +21,10 @@ export const styles = StyleSheet.create({
     top: 64,
     right: 12,
   },
-  toolBelt: {
-    position: "absolute",
-    bottom: 140,
-    right: 12,
-  },
   batchHarvest: {
     position: "absolute",
-    bottom: 240,
+    bottom: 180,
     right: 16,
     zIndex: 10,
-  },
-  staminaGauge: {
-    position: "absolute",
-    bottom: 240,
-    right: 20,
   },
 });

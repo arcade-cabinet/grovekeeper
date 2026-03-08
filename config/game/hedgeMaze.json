@@ -16,9 +16,15 @@
     "deadEndProbability": 0.7,
     "intersectionProbability": 0.2,
     "flowerVsVaseProbability": 0.6,
+    "dungeonPropProbability": 0.25,
     "flowerbedTypes": 7,
     "vaseTypes": 5,
-    "columnTypes": 3
+    "columnTypes": 3,
+    "dungeonProps": [
+      "props/dungeon/crates-and-barrels.glb",
+      "props/dungeon/treasure.glb",
+      "props/dungeon/mine-props.glb"
+    ]
   },
   "centerReward": {
     "fountain": "hedges/misc/stone/fountain01_round_water.glb",

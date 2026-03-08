@@ -267,7 +267,7 @@ describe("hedgePlacement", () => {
       const decorations = placeMazeDecorations(maze, 42);
       for (const deco of decorations) {
         expect(deco.modelPath).toMatch(/\.glb$/);
-        expect(deco.category).toMatch(/^(flowers|stone|fences|structure)$/);
+        expect(deco.category).toMatch(/^(flowers|stone|fences|structure|dungeon)$/);
       }
     });
 

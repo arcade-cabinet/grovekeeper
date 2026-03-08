@@ -1,0 +1,393 @@
+# Iteration 170 Log
+
+## Metadata
+
+- **Task ID**: US-170
+- **Task Title**: Wire saveLoad system to chunk-based persistence
+- **Description**: As a developer, I want the existing saveLoad.ts (195 lines) updated to save/load chunk deltas, quest branch paths, NPC relationship levels, discovered species, campfire locations, and prestige state v...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-08T01:15:07.523Z
+- **Ended At**: 2026-03-08T01:30:48.466Z
+- **Duration**: 15m 40s
+- **Input Tokens**: 115
+- **Output Tokens**: 59609
+- **Total Tokens**: 59724
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 26\. Save and Persistence|## 7\. Weather System|§26|§7[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+
+[91m[Error: File does not exist. Note: your current working directory is /Users/jbogaty/src/arcade-cabinet/grovekeeper.][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 26\. Save and Persistence[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/stores/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/chunkDeltas.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/questState.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/playerState.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/core.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/progression.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/chunkPersistence.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/survivalState.ts[0m
+Now let me check the existing tests and the db queries to understand the full picture:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/saveLoad*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/index.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mfrom.*saveLoad|saveLoad.*import[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mserializeGrove|deserializeGrove|saveGroveToStorage|loadGroveFromStorage|hasSaveData|clearSaveData[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePersistence.ts[0m
+Let me check how usePersistence is used and understand the full picture:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96musePersistence[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/db/queries.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useAutoSave.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Let me check the db queries to understand the full persistence stack:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/db/queries.ts[0m
+Let me check the FastTravelPoint and QuestChainState types:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mFastTravelPoint|interface QuestChainState|interface SpeciesProgress[0m
+Now I have a complete picture. Let me implement US-170.
+
+`★ Insight ─────────────────────────────────────`
+The persistence architecture is already solid: `gameState$` and `chunkDiffs$` both have `syncObservable` wiring to expo-sqlite in `core.ts`. The key insight is that **Legend State handles the actual I/O**—`saveLoad.ts` just needs to provide a clean coordination API (snapshot, apply, clear, migrate) and remove the old ECS-only serialization approach that predates the chunk-based world.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.ts[0m "/**
+ * Save/Load system for Grovekeeper's chunk-based world. Spec §26.
+ *
+ * Architecture:
+ *   - Legend State + expo-sqlite auto-syncs gameState$ and chunkDiffs$
+ *   - saveGame() records the save ti... (7822 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Jest hoists `jest.mock()` factories **before** variable declarations, with one exception: variables prefixed with `mock` are allowed in factory closures. This is why all mock state variables must be named `mockXxx`. The factory itself doesn't run at hoist time—it runs lazily on first import—so `mockXxx` variables are initialized by then.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.test.ts[0m "/**
+ * saveLoad.test.ts -- Spec §26 (Save and Persistence)
+ *
+ * Tests the chunk-based save/load API (createSaveSnapshot, applySaveSnapshot,
+ * saveGame, clearSave, hasSaveGame, migrateIfNeeded) plus ... (16898 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript check $ npx tsc --noEmit 2>&1 | head -60
+These are pre-existing TS5097 errors. Let me check for errors specific to my changes:
+[94m[Bash][0m Check tsc errors for changed files only $ npx tsc --noEmit 2>&1 | grep -E "saveLoad|stores/core|chunkPersistence|quests/types" | head -20
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.test.ts[0m edit: "  clearAllChunkDiffs: (...args: unknown[]) => mock..." → "  clearAllChunkDiffs: () => mockClearAllChunkDiffs..."
+[94m[Bash][0m Check tsc errors for saveLoad files $ npx tsc --noEmit 2>&1 | grep -E "saveLoad|stores/core" | head -20
+No errors in saveLoad files. Now run the tests:
+[94m[Bash][0m Run saveLoad tests $ npx jest --no-coverage game/systems/saveLoad.test.ts 2>&1
+
+[91m[Error: Exit code 1
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL game/systems/saveLoad.test.ts
+  saveLoad system (Spec §26)
+    hasSaveGame
+      ✓ returns false when lastSavedAt is 0 (1 ms)
+      ✓ returns true when lastSavedAt > 0
+    saveGame
+      ✕ sets lastSavedAt to a positive timestamp
+    clearSave
+      ✕ resets Legend State to initial
+      ✕ clears chunk diffs
+    createSaveSnapshot
+      ✕ returns SAVE_VERSION
+      ✕ captures worldSeed and prestigeCount from store
+      ✕ captures npcRelationships
+      ✕ captures discoveredCampfires
+      ✕ captures chunkDiffs from chunkDiffs$
+      ✕ includes savedAt timestamp
+    applySaveSnapshot
+      ✕ restores worldSeed and prestigeCount to store
+      ✕ restores npcRelationships
+      ✕ restores discoveredSpiritIds
+      ✕ restores chunkDiffs to chunkDiffs$
+      ✕ sets lastSavedAt from savedAt
+    migrateIfNeeded
+      ✓ returns snapshot unchanged if version >= SAVE_VERSION
+      ✓ migrates v1 snapshot to SAVE_VERSION
+      ✓ fills in missing optional fields on migration
+    round-trip (Spec §26)
+      ✕ createSaveSnapshot → clearSave → applySaveSnapshot preserves all fields
+    deserializeGrove
+      ✓ clears existing entities before loading
+      ✓ recreates grid cells from save data
+      ✓ recreates tree entities and restores state
+      ✓ skips tree entities without position or tree component
+    loadGroveFromStorage
+      ✓ returns null when no save exists
+      ✓ returns GroveSaveData when trees exist in db (1 ms)
+
+  ● saveLoad system (Spec §26) › saveGame › sets lastSavedAt to a positive timestamp
+
+    TypeError: Cannot read properties of undefined (reading 'lastSavedAt')
+
+      131 |  */
+      132 | export function saveGame(): void {
+    > 133 |   gameState$.lastSavedAt.set(Date.now());
+          |              ^
+      134 | }
+      135 |
+      136 | /**
+
+      at lastSavedAt (game/systems/saveLoad.ts:133:14)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:256:15)
+
+  ● saveLoad system (Spec §26) › clearSave › resets Legend State to initial
+
+    TypeError: Cannot read properties of undefined (reading 'set')
+
+      139 |  */
+      140 | export function clearSave(): void {
+    > 141 |   gameState$.set(structuredClone(initialState));
+          |              ^
+      142 |   clearAllChunkDiffs();
+      143 | }
+      144 |
+
+      at set (game/systems/saveLoad.ts:141:14)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:268:16)
+
+  ● saveLoad system (Spec §26) › clearSave › clears chunk diffs
+
+    TypeError: Cannot read properties of undefined (reading 'set')
+
+      139 |  */
+      140 | export function clearSave(): void {
+    > 141 |   gameState$.set(structuredClone(initialState));
+          |              ^
+      142 |   clearAllChunkDiffs();
+      143 | }
+      144 |
+
+      at set (game/systems/saveLoad.ts:141:14)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:277:16)
+
+  ● saveLoad system (Spec §26) › createSaveSnapshot › returns SAVE_VERSION
+
+    TypeError: Cannot read properties of undefined (reading 'peek')
+
+      102 |     speciesProgress: state.speciesProgress,
+      103 |     discoveredCampfires: state.discoveredCampfires,
+    > 104 |     chunkDiffs: { ...chunkDiffs$.peek() },
+          |                                  ^
+      105 |   };
+      106 | }
+      107 |
+
+      at peek (game/systems/saveLoad.ts:104:34)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:286:38)
+
+  ● saveLoad system (Spec §26) › createSaveSnapshot › captures worldSeed and prestigeCount from store
+
+    TypeError: Cannot read properties of undefined (reading 'peek')
+
+      102 |     speciesProgress: state.speciesProgress,
+      103 |     discoveredCampfires: state.discoveredCampfires,
+    > 104 |     chunkDiffs: { ...chunkDiffs$.peek() },
+          |                                  ^
+      105 |   };
+      106 | }
+      107 |
+
+      at peek (game/systems/saveLoad.ts:104:34)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:293:38)
+
+  ● saveLoad system (Spec §26) › createSaveSnapshot › captures npcRelationships
+
+    TypeError: Cannot read properties of undefined (reading 'peek')
+
+      102 |     speciesProgress: state.speciesProgress,
+      103 |     discoveredCampfires: state.discoveredCampfires,
+    > 104 |     chunkDiffs: { ...chunkDiffs$.peek() },
+          |                                  ^
+      105 |   };
+      106 | }
+      107 |
+
+      at peek (game/systems/saveLoad.ts:104:34)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:300:38)
+
+  ● saveLoad system (Spec §26) › createSaveSnapshot › captures discoveredCampfires
+
+    TypeError: Cannot read properties of undefined (re
+
+... [31 characters truncated] ...
+
+speciesProgress: state.speciesProgress,
+      103 |     discoveredCampfires: state.discoveredCampfires,
+    > 104 |     chunkDiffs: { ...chunkDiffs$.peek() },
+          |                                  ^
+      105 |   };
+      106 | }
+      107 |
+
+      at peek (game/systems/saveLoad.ts:104:34)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:306:38)
+
+  ● saveLoad system (Spec §26) › createSaveSnapshot › captures chunkDiffs from chunkDiffs$
+
+    TypeError: Cannot read properties of undefined (reading 'peek')
+
+      102 |     speciesProgress: state.speciesProgress,
+      103 |     discoveredCampfires: state.discoveredCampfires,
+    > 104 |     chunkDiffs: { ...chunkDiffs$.peek() },
+          |                                  ^
+      105 |   };
+      106 | }
+      107 |
+
+      at peek (game/systems/saveLoad.ts:104:34)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:312:38)
+
+  ● saveLoad system (Spec §26) › createSaveSnapshot › includes savedAt timestamp
+
+    TypeError: Cannot read properties of undefined (reading 'peek')
+
+      102 |     speciesProgress: state.speciesProgress,
+      103 |     discoveredCampfires: state.discoveredCampfires,
+    > 104 |     chunkDiffs: { ...chunkDiffs$.peek() },
+          |                                  ^
+      105 |   };
+      106 | }
+      107 |
+
+      at peek (game/systems/saveLoad.ts:104:34)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:318:38)
+
+  ● saveLoad system (Spec §26) › applySaveSnapshot › restores worldSeed and prestigeCount to store
+
+    TypeError: Cannot read properties of undefined (reading 'set')
+
+      111 |  */
+      112 | export function applySaveSnapshot(snapshot: SaveSnapshot): void {
+    > 113 |   gameState$.set({
+          |              ^
+      114 |     ...getState(),
+      115 |     worldSeed: snapshot.worldSeed,
+      116 |     prestigeCount: snapshot.prestigeCount,
+
+      at set (game/systems/saveLoad.ts:113:14)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:328:24)
+
+  ● saveLoad system (Spec §26) › applySaveSnapshot › restores npcRelationships
+
+    TypeError: Cannot read properties of undefined (reading 'set')
+
+      111 |  */
+      112 | export function applySaveSnapshot(snapshot: SaveSnapshot): void {
+    > 113 |   gameState$.set({
+          |              ^
+      114 |     ...getState(),
+      115 |     worldSeed: snapshot.worldSeed,
+      116 |     prestigeCount: snapshot.prestigeCount,
+
+      at set (game/systems/saveLoad.ts:113:14)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:337:24)
+
+  ● saveLoad system (Spec §26) › applySaveSnapshot › restores discoveredSpiritIds
+
+    TypeError: Cannot read properties of undefined (reading 'set')
+
+      111 |  */
+      112 | export function applySaveSnapshot(snapshot: SaveSnapshot): void {
+    > 113 |   gameState$.set({
+          |              ^
+      114 |     ...getState(),
+      115 |     worldSeed: snapshot.worldSeed,
+      116 |     prestigeCount: snapshot.prestigeCount,
+
+      at set (game/systems/saveLoad.ts:113:14)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:344:24)
+
+  ● saveLoad system (Spec §26) › applySaveSnapshot › restores chunkDiffs to chunkDiffs$
+
+    TypeError: Cannot read properties of undefined (reading 'set')
+
+      111 |  */
+      112 | export function applySaveSnapshot(snapshot: SaveSnapshot): void {
+    > 113 |   gameState$.set({
+          |              ^
+      114 |     ...getState(),
+      115 |     worldSeed: snapshot.worldSeed,
+      116 |     prestigeCount: snapshot.prestigeCount,
+
+      at set (game/systems/saveLoad.ts:113:14)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:351:24)
+
+  ● saveLoad system (Spec §26) › applySaveSnapshot › sets lastSavedAt from savedAt
+
+    TypeError: Cannot read properties of undefined (reading 'set')
+
+      111 |  */
+      112 | export function applySaveSnapshot(snapshot: SaveSnapshot): void {
+    > 113 |   gameState$.set({
+          |              ^
+      114 |     ...getState(),
+      115 |     worldSeed: snapshot.worldSeed,
+      116 |     prestigeCount: snapshot.prestigeCount,
+
+      at set (game/systems/saveLoad.ts:113:14)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:357:24)
+
+  ● saveLoad system (Spec §26) › round-trip (Spec §26) › createSaveSnapshot → clearSave → applySaveSnapshot preserves all fields
+
+    TypeError: Cannot read properties of undefined (reading 'peek')
+
+      102 |     speciesProgress: state.speciesProgress,
+      103 |     discoveredCampfires: state.discoveredCampfires,
+    > 104 |     chunkDiffs: { ...chunkDiffs$.peek() },
+          |                                  ^
+      105 |   };
+      106 | }
+      107 |
+
+      at peek (game/systems/saveLoad.ts:104:34)
+      at Object.<anonymous> (game/systems/saveLoad.test.ts:405:42)
+
+Test Suites: 1 failed, 1 total
+Tests:       15 failed, 11 passed, 26 total
+Snapshots:   0 total
+Time:        0.408 s, estimated 1 s
+Ran all test suites matching /game\/systems\/saveLoad.test.ts/i.][0m
+The mock variables get hoisted above their initialization. The issue is that `mockGameState$` (an object) is passed as a direct property value in the factory — it's `undefined` when the factory runs because `var`-hoisting puts all `const`/`let` declarations above the assignment. I need wrapper functions so variables are only read at test-call time, not at factory-registration time.
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.test.ts[0m "/**
+ * saveLoad.test.ts -- Spec §26 (Save and Persistence)
+ *
+ * Tests the chunk-based save/load API (createSaveSnapshot, applySaveSnapshot,
+ * saveGame, clearSave, hasSaveGame, migrateIfNeeded) plus ... (16760 chars)"
+[94m[Bash][0m Run saveLoad tests $ npx jest --no-coverage game/systems/saveLoad.test.ts 2>&1 | tail -30
+All 26 tests pass. Now run the full test suite to make sure nothing regressed:
+[94m[Bash][0m Run full jest suite $ npx jest --no-coverage 2>&1 | tail -15
+All 4080 tests pass. Now update the progress log:
+[94m[Bash][0m Append US-170 entry to progress.md $ `applySaveSnapshot()` writes back via `gameState$.set()` + `chunkDiffs$.set()`. The auto-sync to exp...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The "mock prefix exception" in Jest's babel transform prevents TDZ errors for `mockXxx` variables in factory bodies, but it doesn't prevent reading an uninitialized `var`—which TypeScript `const` transpiles to. The fix is consistent across the codebase: **wrap every outer-variable access in a function call** (`set: (v) => mockSetFn(v)`), so variables are dereferenced at test-call time rather than at factory-evaluation time. This is the same pattern used by all working mocks in the project (`mockSaveGroveToDb`, etc.).
+`─────────────────────────────────────────────────`
+
+US-170 is complete. Here's what was done:
+
+**`game/systems/saveLoad.ts`** — updated for chunk-based persistence:
+- `SAVE_VERSION = 2` + `SaveSnapshot` interface covering all AC-required fields (chunk deltas, quest state, NPC relationships, discovered species, campfire locations, prestige)
+- `createSaveSnapshot()` / `applySaveSnapshot()` — round-trip serialization via Legend State
+- `saveGame()` — sets `lastSavedAt` (Legend State auto-syncs to expo-sqlite)
+- `clearSave()` — resets `gameState$` to `initialState` + clears `chunkDiffs$`
+- `hasSaveGame()` — checks `lastSavedAt > 0`
+- `migrateIfNeeded()` — v1→v2 migration (old ECS saves gain empty `chunkDiffs`)
+- Removed 4 unused functions (`serializeGrove`, `saveGroveToStorage`, `clearSaveData`, `hasSaveData`)
+
+**`game/systems/saveLoad.test.ts`** — rewritten: 26 tests covering all AC items + round-trip
+
+**Results:** 4080/4080 tests pass, `tsc --noEmit` clean for changed files.
+
+<promise>COMPLETE</promise>
