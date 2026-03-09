@@ -4,28 +4,42 @@
 
 | Layer | Technology | Version | Notes |
 |-------|-----------|---------|-------|
-| Runtime | React | 19.x | UI layer |
-| 3D Engine | BabylonJS | 8.x | `@babylonjs/core`, `/materials`, `/loaders` |
+| Platform | Expo | SDK 55 | Universal: iOS + Android + Web |
+| Runtime | React | 19 | UI layer |
+| Native | React Native | 0.83 | Mobile runtime |
+| 3D Engine | React Three Fiber | 9 | Declarative Three.js for React Native |
+| 3D Helpers | @react-three/drei | 10 | Instanced meshes, sky, controls |
 | ECS | Miniplex | 2.x | Entity-component-system |
 | ECS + React | miniplex-react | latest | createReactAPI for reactive UI |
-| State | Zustand | 5.x | `persist` middleware for localStorage |
-| Input | nipplejs | 0.10.x | Virtual joystick for mobile |
-| Styling | Tailwind CSS | 4.x | With `@tailwindcss/vite` plugin |
-| UI Components | shadcn/ui | latest | Radix primitives, Tailwind styling |
-| Animation | Framer Motion | 12.x | Used sparingly for UI transitions |
-| Icons | Remix Icon | 4.6.x | `@remixicon/react` |
-| Icons (alt) | Lucide React | 0.503.x | Secondary icon set |
-| Mobile | Capacitor | 8.x | `@capacitor/core`, `/device`, `/haptics` |
-| Bundler | Vite | 6.x | `@vitejs/plugin-react`, manual chunks config |
-| Language | TypeScript | 5.7+ | Strict mode, clean (zero errors) |
-| Lint/Fmt | Biome | 2.3 | Single tool for lint + format |
-| Testing | Vitest | 4.x | `happy-dom` environment, 751 tests, 37 files |
-| Testing Lib | @testing-library/react | 16.x | Component testing |
-| Package Mgr | pnpm | 9.x | Lockfile: `pnpm-lock.yaml` |
+| State | Legend State | 3.x (beta) | Persistent state via expo-sqlite |
+| Database | expo-sqlite | latest | Native SQLite for persistence |
+| ORM | drizzle-orm | latest | Type-safe SQL queries |
+| NPC AI | Yuka | 0.7.x | Lightweight game AI |
+| NPC Animation | anime.js | latest | Lego-style rigid body part tweening |
+| Audio | Tone.js | latest | Procedural synthesis, spatial audio, scheduling |
+| Styling | NativeWind | 4.x | Tailwind CSS for React Native |
+| Language | TypeScript | 5.9 | Strict mode |
+| Lint/Fmt | Biome | 2.4 | Single tool for lint + format |
+| Testing | Jest | latest | Unit + integration tests |
+| E2E Testing | Maestro | latest | Mobile E2E tests |
+| Package Mgr | pnpm | 9.x | Fast, strict |
 
-### Key Non-npm Dependencies
+### Key Technology Choices
 
-- **SPS Tree Generator** -- Ported from the BabylonJS Extensions repo into `src/game/utils/spsTreeGenerator.ts`. Written in TypeScript with seeded RNG. Not available as an npm package; must be maintained in-tree.
+- **Legend State 3.x** (NOT Zustand) for persistent state -- reactive observables with built-in expo-sqlite persistence
+- **Tone.js** for ALL audio -- user mandate: never reduce quality for bundle size. ~150KB gzipped, worth it for FM synthesis, spatial API, iOS context handling, and scheduled ambient layers
+- **anime.js** for NPC animation -- Lego-style rigid body part rotation (no skeletal rigs). Arms/legs rotate at joints, head turns, torso bobs. Stylized chibi animation style
+- **Stylized GLB models** as the visual foundation -- NOT procedural geometry for entities
+
+### Removed/Not Used
+- BabylonJS (replaced by R3F)
+- Zustand (replaced by Legend State)
+- Vite (replaced by Expo/Metro)
+- Vitest (replaced by Jest)
+- nipplejs (replaced by custom joystick)
+- shadcn/ui + Radix (replaced by React Native Reusables)
+- ESLint/Prettier (replaced by Biome)
+- npm/yarn (pnpm only)
 
 ## Development Setup
 
@@ -34,183 +48,115 @@
 node >= 20
 pnpm >= 9
 
-# Install
+# Install + Run
 pnpm install
+pnpm dev              # Expo dev server
+pnpm ios / android    # Platform-specific
+pnpm web              # Web browser
 
-# Dev server (http://localhost:5173)
-pnpm dev
-
-# Build
-pnpm build
-
-# Test
-pnpm test          # watch mode
-pnpm test:run      # single run (CI)
-pnpm test:coverage # with v8 coverage
+# Quality
+pnpm test             # Jest
+pnpm test:coverage    # Coverage report
+pnpm lint             # Biome lint + format check
+pnpm format           # Biome format (write)
+pnpm check            # Full check (lint + format, write fixes)
+npx tsc --noEmit      # TypeScript type check
 ```
 
 ## Build Configuration
 
-### Vite (`vite.config.ts`)
-- React plugin
-- Tailwind CSS plugin
-- Path alias: `@/` maps to `./src/`
-- Manual chunks configuration for BabylonJS (splits engine into separate chunk)
-- Lazy import of GameScene for code splitting
-- Production builds tree-shake effectively
+- **Expo SDK 55** with New Architecture required
+- **Metro Bundler** (not Vite) with NativeWind CSS interop
+- **TypeScript strict mode**, path alias `@/` maps to project root
+- **Biome 2.4+** for lint + format (`ignoreUnknown: true`)
 
-### Code Splitting Results
+## Configuration
+
+All game tuning constants in `config/game/*.json`:
 ```
-Initial load: ~107 KB (gzipped)
-  - React, Zustand, UI framework, main menu
-
-Game load: ~500 KB total (gzipped)
-  - BabylonJS core (manual chunk)
-  - GameScene (lazy imported on game start)
-  - SPS Tree Generator
-  - HDRI skybox loaded at runtime
-```
-
-### TypeScript (`tsconfig.json`)
-- `strict: true`
-- `jsx: "react-jsx"`
-- `target: "ES2020"`, `module: "ESNext"`
-- `moduleResolution: "bundler"`
-- Path alias: `"@/*"` maps to `["./src/*"]`
-
-### Biome (`biome.json`)
-- Version 2.3
-- Organize imports via `assist.actions.source.organizeImports` (Biome 2.3 syntax)
-- Indent: 2 spaces
-- Linter: recommended rules
-- Overrides configured for:
-  - Tests (`**/*.test.{ts,tsx}`): allow console.log
-  - Type declarations (`**/*.d.ts`): less strict rules
-  - shadcn UI components (`src/components/ui/**`): allow default exports
-  - Game UI components (`src/game/ui/**`): allow default exports
-- Files ignored: `dist/**`, `node_modules/**`, `coverage/**`
-
-### Vitest (`vitest.config.ts`)
-- Environment: `happy-dom`
-- Setup file: `src/test/setup.ts`
-- Path alias: `@/` maps to `./src/`
-
-## Test Infrastructure
-
-- **751 tests** across **37 test files**, all passing
-- Test files live adjacent to source: `*.test.ts(x)`
-- Key test locations: `src/game/stores/`, `src/game/systems/`, `src/game/utils/`, `src/game/world/`
-- Systems tested: growth, movement, weather, achievements, prestige, gridExpansion, offlineGrowth, levelUnlocks
-- Store tested: gameStore (comprehensive state transitions)
-- Utils tested: treeMeshBuilder, gridMath, seedRNG, tools, trees, world
-- World tested: WorldManager (zone loading, structure rendering), WorldGenerator (procedural world)
-
-### Testing Gotchas
-- `vi.mock` hoisting: factory functions cannot reference outer `const`; use inline classes
-- BabylonJS 8.x: `isDisposed()` does not exist on PBRMaterial -- check differently
-- `queueMicrotask()` needed to defer side effects from Zustand `set()` calls in tests
-
-## Known Constraints
-
-### BabylonJS Bundle Size
-BabylonJS is large. Tree-shake aggressively -- import specific modules:
-```typescript
-// Good
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-// Bad
-import { Vector3 } from "@babylonjs/core";
+config/game/
+  species.json        # 15 tree species catalog
+  tools.json          # Tool definitions + stamina costs + tiers
+  resources.json      # 12 resource type definitions
+  growth.json         # Growth stage parameters
+  weather.json        # Event probabilities, multipliers
+  achievements.json   # 45 achievements
+  prestige.json       # NG+ tiers, bonuses, cosmetics
+  grid.json           # Expansion tiers, costs
+  npcs.json           # NPC template definitions
+  dialogues.json      # Dialogue trees
+  quests.json         # Quest chain definitions
+  difficulty.json     # Difficulty tier multipliers
 ```
 
-Manual chunks in Vite config separate BabylonJS into its own chunk so it does not block initial load.
+## Database
 
-### Mobile Performance
-- BabylonJS WebGL on mobile is GPU-constrained
-- Template mesh caching with Mesh.clone reduces mesh generation cost
-- Matrix freezing on stage 4 static trees (LOD optimization)
-- CSS weather overlays instead of BabylonJS ParticleSystem (avoids bundle bloat)
-- Max 50 draw calls for smooth frame rate
-- Shadow maps: 512px mobile, 1024px desktop
-- HDRI skybox provides IBL lighting without runtime cost
+- **expo-sqlite + drizzle-orm** for persistence
+- **Delta-only storage:** only store what the player changed (ChunkDelta)
+- Same seed = same world regeneration. Unmodified chunks have zero storage cost.
+- Save file budget: < 1 MB for 100 hours of play
 
-### localStorage Limits
-- ~5MB limit in most browsers
-- Save data is compact -- only essential state serialized
-- No binary data (meshes are procedural, not stored)
+## Asset Pipeline
 
-### Capacitor
-- `capacitor.config.ts` configured for `com.grovekeeper.app`
-- `webDir: 'dist'` -- builds to dist/
-- Android scheme: https
-- Haptics and Device plugins configured
-- **Not yet built** -- no `ios/` or `android/` directories exist
+- **Stylized GLBs** are the primary visual assets (low-poly models, 2-65 KB each)
+- Asset library at `/Volumes/home/assets/3DPSX/` (1,240+ GLBs)
+- Mega Pack II (549 GLBs) for survival structures/props
+- `useGLTF.preload()` for critical models
+- Lazy load biome-specific models on chunk entry
+- Composite GLBs need Blender split (Villager_NPCs_glb.glb, Buildings.glb)
+- Audio assets at `/Volumes/home/assets/Audio/` (retro SFX, foley, music loops)
 
-## Scene Architecture
+## Performance Budget
 
-GameScene.tsx has been decomposed from ~1050 lines to ~400 lines. Scene management is modular:
+| Metric | Target |
+|--------|--------|
+| FPS mobile | >= 55 |
+| FPS desktop | >= 60 |
+| Draw calls | < 50 |
+| Visible vertices | < 30K |
+| Time to interactive | < 3s |
+| Memory mobile | < 100 MB |
+| Chunk generation | < 16ms |
+| Labyrinth generation | < 100ms |
 
-### Scene Modules (`src/game/scene/`)
-- **SceneManager.ts** -- Engine + Scene creation/disposal
-- **CameraManager.ts** -- Orthographic ArcRotateCamera (NOT isometric), viewport-adaptive scaling (14-40 tiles visible based on screen size)
-- **LightingManager.ts** -- Hemisphere + directional light, day/night sync
-- **GroundBuilder.ts** -- DynamicTexture biome blending (distance-field weights, inverse smoothstep)
-- **SkyManager.ts** -- HDRI skybox (HDRCubeTexture) + IBL environment
-- **PlayerMeshManager.ts** -- Player mesh lifecycle
-- **TreeMeshManager.ts** -- Template cache, clone, growth animation lerp, matrix freezing
-- **BorderTreeManager.ts** -- Decorative border tree placement
+## Project Structure
 
-### World System (`src/game/world/`)
-- **types.ts** -- ZoneDefinition, WorldDefinition interfaces
-- **WorldManager.ts** -- Zone loading/unloading, structure mesh rendering, tile management
-- **WorldGenerator.ts** -- Procedural world generation from seed + player level
-- **archetypes.ts** -- Zone archetype definitions (starting, water-zone, meadow-grove, rocky-ridge, dense-forest)
-- **data/starting-world.json** -- 3 zones: Starting Grove (12x12), Forest Trail (4x8), Sunlit Clearing (8x8)
+```
+grovekeeper/
+  app/                    # Expo Router screens
+  components/             # React Native + R3F components
+    ui/                   # Base UI (button, text, icon)
+    game/                 # Game UI (HUD, menus, dialogs)
+    scene/                # R3F scene (Camera, Lighting, Sky, Ground)
+    entities/             # R3F entities (Player, Trees, NPCs)
+  config/                 # JSON game data files
+  game/                   # Game logic (engine-agnostic)
+    ecs/                  # Miniplex world, queries, archetypes
+    systems/              # Pure game systems
+    stores/               # Legend State persistent store
+    hooks/                # Custom hooks
+    ai/                   # Yuka NPC AI
+    npcs/                 # NPC management
+    quests/               # Quest system
+    events/               # Event scheduler
+    world/                # World generation, chunk loading
+    structures/           # Structure placement + effects
+    actions/              # Game action dispatcher
+    config/               # Runtime config loaders
+    constants/            # Codex + derived constants
+    db/                   # expo-sqlite + drizzle-orm
+    utils/                # Pure utilities (seedRNG, treeGeometry)
+  assets/                 # Textures, models, fonts
+  docs/                   # Game design + architecture docs
+  .claude/                # Agent infrastructure (hooks, agents, commands)
+  .maestro/               # Maestro E2E test flows
+```
 
-### Structure System (`src/game/structures/`)
-- **types.ts** -- BlockDefinition, StructureTemplate interfaces
-- **StructureManager.ts** -- Placement validation, effect queries
-- **BlockMeshFactory.ts** -- Procedural mesh generation from block definitions
-- **data/blocks.json** -- Block catalog
-- **data/structures.json** -- 6 structures: Wooden Fence, Tool Shed, Greenhouse, Market Stall, Well, Bench
+## Key Constraints
 
-## Dependencies Worth Noting
-
-### Active and Essential
-- `@babylonjs/*` -- 3D rendering engine (core dependency)
-- `miniplex` + `miniplex-react` -- ECS for game entities + React integration
-- `zustand` -- State management with persistence
-- `nipplejs` -- Virtual joystick
-- `react`, `react-dom` -- UI framework
-
-### Active but Could Be Lighter
-- `@radix-ui/*` (via shadcn) -- Full component library, some components unused
-- `framer-motion` -- Animation library, lightly used
-- `recharts` -- Chart library, not yet used in game
-- `react-hook-form` + `zod` -- Form validation, overkill for current needs
-
-## Texture and Asset Loading
-
-Located in `public/`:
-- `textures/` -- 5 bark texture sets (diffuse, normal, roughness), 2 leaf textures
-- HDRI skybox loaded via HDRCubeTexture at runtime
-- Used by `treeMeshBuilder.ts` for species-specific materials (StandardMaterial, NOT PBR)
-
-## Tool Usage
-
-### pnpm
-- All commands via `pnpm <script>`
-- Lock file: `pnpm-lock.yaml` (committed)
-- Node modules: strict (no phantom deps)
-
-### Biome
-- `pnpm lint` -- lint check
-- `pnpm format` -- auto-format
-- `pnpm check` -- lint + format together
-
-### Vitest
-- `pnpm test` -- watch mode (default)
-- `pnpm test:run` -- CI single-pass
-- `pnpm test:coverage` -- with v8 coverage
-
-### TypeScript
-- `pnpm tsc` -- full type check (currently clean, zero errors)
-- Errors are NOT blocking for `pnpm dev` (Vite ignores TS errors during dev)
+- **No Math.random()** -- all randomness via `scopedRNG(scope, worldSeed, ...extra)`
+- **No inline constants** -- all tuning values in `config/game/*.json`
+- **No files over 300 lines** -- decompose into subpackage with index.ts barrel
+- **Named exports only** -- never `export default`
+- **Systems are pure functions** -- `(world, deltaTime, ...context) => void`
+- **Modern Zelda-style rendering** -- MSAA antialiasing, device-native pixel ratio, smooth PBR shading, linear filtering

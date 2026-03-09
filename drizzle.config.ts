@@ -1,7 +1,8 @@
-import { defineConfig } from "drizzle-kit";
+import type { Config } from "drizzle-kit";
 
-export default defineConfig({
+export default {
+  schema: "./game/db/schema.ts",
+  out: "./game/db/migrations",
   dialect: "sqlite",
-  schema: "./src/db/schema/*",
-  out: "./src/db/migrations",
-});
+  driver: "expo",
+} satisfies Config;

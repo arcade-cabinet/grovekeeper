@@ -1,0 +1,68 @@
+# Iteration 42 Log
+
+## Metadata
+
+- **Task ID**: US-042
+- **Task Title**: Write Jest tests for NPC appearance determinism
+- **Description**: As a developer, I want tests for NPC appearance so that seeded assembly, seed variation, and base model reachability are verified. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:52:42.412Z
+- **Ended At**: 2026-03-07T10:55:04.752Z
+- **Duration**: 2m 22s
+- **Input Tokens**: 81
+- **Output Tokens**: 5240
+- **Total Tokens**: 5321
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/npcs/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/NpcModel.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/npcAppearance*[0m
+Both test files already exist. Let me check their current state and run the tests.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.ts[0m
+Let me check the config file and run the tests to see their current state.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/npcAssets.json[0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run npcAppearance tests $ npx jest --no-coverage --testPathPattern "npcAppearance" 2>&1 | tail -30
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+All 10 tests pass and TypeScript is clean. The acceptance criteria requires coverage of "all base models reachable" — the existing tests verify the base model is always *valid* but don't verify all 6 can actually be reached. Let me add that test.
+
+`★ Insight ─────────────────────────────────────`
+- "All base models reachable" is a coverage property: it verifies the RNG doesn't accidentally make some models unreachable due to skip logic or affinity weighting. This requires running many seeds and collecting the set.
+- With 6 base models and 70% role-affinity, non-affinity picks happen 30% of the time, so 500+ seeds across different roles ensures all 6 appear.
+`─────────────────────────────────────────────────`
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.test.ts[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.test.ts[0m edit: "  it("should favor role-appropriate base models", ..." → "  it("should produce all 6 base models across enou..."
+[94m[Bash][0m Run npcAppearance tests with new test $ npx jest --no-coverage --testPathPattern "npcAppearance" 2>&1 | tail -20
+11 tests, all green. Let me do a final full check:
+[94m[Bash][0m Full typecheck and test suite $ npx tsc --noEmit && npx jest --no-coverage 2>&1 | tail -10
+All 1654 tests pass, TypeScript clean. Let me update progress.md.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-038" → "---
+
+## 2026-03-07 - US-042
+- `game/systems/npcApp..."
+US-042 is complete.
+
+**What was done:**
+- `game/systems/npcAppearance.test.ts` already had 10 tests covering determinism, seed variation, valid base model, incompatibility rules, and role affinity — all passing
+- Added the missing "all base models reachable" test: runs 500 seeds across all 6 roles and asserts every base model (basemesh, archer, knight, merchant, ninja, student) appears at least once
+- Result: **11 tests**, all green; 1654 total tests, 0 failures; `tsc --noEmit` clean
+
+`★ Insight ─────────────────────────────────────`
+- The "all base models reachable" test is a *coverage invariant*, not a correctness test — it guards against accidentally making a model unreachable via RNG weighting. The key is choosing N large enough (500) relative to the affinity skip probability (30%) that every model appears in the expected set.
+- This story was mostly pre-satisfied because the mandatory Docs > Tests > Code workflow on US-041 already shipped tests for `npcAppearance.ts`. US-042 only needed the one reachability gap filled.
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

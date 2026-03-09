@@ -1,0 +1,12 @@
+US-155: Wire market systems to world economy
+
+Status: COMPLETE
+
+Acceptance criteria met:
+- [x] game/systems/travelingMerchant.ts decomposed to <300 lines (split into offerPools.ts + index.ts)
+- [x] Traveling merchants spawn at discovered villages with seeded inventory (spawnMerchantAtVillage)
+- [x] marketEvents.ts updated for chunk-based regional events (affectedBiome field + getRegionalMarketEventModifiers)
+- [x] supplyDemand.ts updated for biome-based supply curves (BIOME_SUPPLY_CURVES + getBiomeSupplyMultiplier + computeBiomePriceAdjustment)
+- [x] seasonalMarket.ts updated for seasonal price modifiers (getSeasonalModifierForAny)
+- [x] npx tsc --noEmit passes (0 errors)
+- [x] npx jest --no-coverage passes (3759 tests, 153 suites)

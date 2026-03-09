@@ -1,0 +1,174 @@
+# Iteration 67 Log
+
+## Metadata
+
+- **Task ID**: US-067
+- **Task Title**: Update HUD overlay for FPS perspective
+- **Description**: As a player, I want the HUD updated for FPS perspective showing stamina bar, tool belt, resource counts, day/time, compass, and crosshair. The existing components/game/HUD.tsx (128 lines) was built fo...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T13:14:02.060Z
+- **Ended At**: 2026-03-07T13:36:08.209Z
+- **Duration**: 22m 6s
+- **Input Tokens**: 3324
+- **Output Tokens**: 73490
+- **Total Tokens**: 76814
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (39015 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m
+Now let me read the GAME_SPEC.md §16 and the existing game store and ECS world to understand what data is available.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§16|section 16|## 16|# 16\.[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+Let me find the HUD-specific spec section and other relevant components:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mHUD|hud|stamina bar|tool belt|compass|crosshair[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/*.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/StaminaGauge.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ToolBelt.tsx[0m
+Now let me look at the game screen and the existing Crosshair/TargetInfo components:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/player/*.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TargetInfo.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ResourceBar.tsx[0m
+Let me check the ECS world and existing quest/POI data:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/TimeDisplay.tsx[0m
+Now let me check existing HUD tests and what the XPBar and VirtualJoystick look like:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/HUD.test.*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/XPBar.tsx[0m
+Let me check the GrovekeeperSpiritComponent:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural[0m pattern: [96mGrovekeeperSpiritComponent[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/spirits.ts[0m
+Let me check the useRaycast hook to understand the pattern for cross-Canvas data:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.ts[0m
+Let me look at an existing test file and check what Grovekeeper's game loop does:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.tsx[0m
+Let me check the time system exports:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/time.ts[0m pattern: [96mexport function computeTimeState[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mfrom.*HUD|import.*HUD[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mfrom.*HUD|import.*HUD[0m
+Let me check GameUI.tsx and the component index:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m
+Let me check if GameUI is used anywhere:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mfrom.*GameUI|import.*GameUI[0m
+Let me check how TargetInfo tests work and jest config:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/player/*.test.*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mresolveEntityName|resolveActionPrompt[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TargetInfo.test.ts[0m
+Let me check an existing component test to understand mock patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mjest*.{js,ts,json}[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.setup.ts[0m
+`★ Insight ─────────────────────────────────────`
+The `TargetInfo.test.ts` pattern is the template: mock only modules with native/complex deps, let jest-expo handle react-native. Pure functions exported from component files are tested the same way as standalone modules.
+`─────────────────────────────────────────────────`
+
+Now I have everything I need. Let me implement:
+[94m[ToolSearch][0m query: [93mselect:Edit,Write,Bash[0m
+Now writing the updated HUD.tsx:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m "/**
+ * HUD -- Full FPS HUD overlay (Spec §24).
+ *
+ * Self-contained: reads live data from ECS queries and Legend State.
+ * Renders: top bar (resources, XP, time, menu), compass arrow toward the
+ * nea... (8525 chars)"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m edit: "/**
+ * HUD -- Top-bar overlay with resources, XP, ..." → "/**
+ * HUD -- Full FPS HUD overlay (Spec §24).
+ *
+..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m "/**
+ * HUD -- Full FPS HUD overlay (Spec §24).
+ *
+ * Self-contained: reads live data from ECS queries and Legend State.
+ * Renders: top bar (resources, XP, time, menu), compass arrow toward the
+ * nea... (8549 chars)"
+Now create the test file:
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m "/**
+ * Tests for HUD — FPS HUD overlay compass pure functions (Spec §24).
+ *
+ * Tests resolveCompassBearing and findNearestUndiscoveredSpirit directly.
+ * The HUD component itself is smoke-tested (req... (4885 chars)"
+[94m[TodoWrite][0m
+Now update `app/game/index.tsx` to remove the duplicate StaminaGauge/ToolBelt renders and simplify the HUD usage:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m edit: "import { ActionButton } from "@/components/game/Ac..." → "import { ActionButton } from "@/components/game/Ac..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+`★ Insight ─────────────────────────────────────`
+Since HUD is now self-contained (reads from Legend State + ECS), the game screen no longer needs to compute xpProgress, gameTime, or manage stamina/toolBelt state — the component tree becomes significantly slimmer.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m "import { Physics } from "@react-three/rapier";
+import { Canvas } from "@react-three/fiber";
+import { Stack } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import { StyleS... (10711 chars)"
+Now fix GameUI.tsx to use the new HUD interface:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m edit: "      {/* Top HUD bar */}
+      <SafeAreaView styl..." → "      {/* Full FPS HUD overlay — self-contained, r..."
+Now remove the unused `hudTop` style entry and SafeAreaView import from GameUI.tsx (since it's no longer used there):
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m pattern: [96mhudTop|SafeAreaView[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m edit: "  hudTop: {
+    position: "absolute",
+    top: 0,
+..." → "  weatherForecast:"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -80
+TypeScript clean. Now run tests:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -30
+The `react-native-worklets` package (a dep of reanimated) isn't in the transform list and fails in tests. I need to mock the sub-components that import reanimated:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m edit: "// ── Mocks (must precede all imports) ───────────..." → "// ── Mocks (must precede all imports) ───────────..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m edit: "jest.mock("@/game/systems/time", () => ({
+  comput..." → "jest.mock("@/game/systems/time", () => ({
+  comput..."
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run HUD tests only $ npx jest --no-coverage --testPathPattern="components/game/HUD" 2>&1 | tail -30
+All 14 tests pass. Now run the full suite to confirm nothing regressed:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+109 suites, 2077 tests — all green. Now append to the progress log and signal completion.
+
+`★ Insight ─────────────────────────────────────`
+The root cause of the `react-native-worklets` ESM failure is a transitive import chain: `HUD.test.ts` → `HUD.tsx` → `ResourceBar.tsx` → `react-native-reanimated` → `react-native-worklets`. Jest's `transformIgnorePatterns` didn't cover that last package, so mocking the intermediate components (`./ResourceBar`, `./XPBar`, etc.) is the correct targeted fix — it breaks the chain without touching `jest.config.js` globally.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Glob[0m
+[94m[Glob][0m pattern: [96m.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Read[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---" → "- **Self-contained HUD pattern**: Move all Legend ..."
+
+[91m[Error: <tool_use_error>Found 67 matches of the string to replace, but replace_all is false. To replace all occurrences, set replace_all to true. To replace only one occurrence, please provide more context to uniquely identify the instance.
+String: ---</tool_use_error>][0m
+[94m[Bash][0m Append US-067 learnings to progress.md $ echo "" >> /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md && cat >> /Users/jbo...
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+<promise>COMPLETE</promise>

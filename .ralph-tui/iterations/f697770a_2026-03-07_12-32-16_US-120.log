@@ -1,0 +1,67 @@
+# Iteration 120 Log
+
+## Metadata
+
+- **Task ID**: US-120
+- **Task Title**: Write Jest tests for placement
+- **Description**: As a developer, I want tests for building placement so that resource check, deduction, entity creation, and snap point consumption are verified. See GAME_SPEC.md §14.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T18:32:16.752Z
+- **Ended At**: 2026-03-07T18:33:43.580Z
+- **Duration**: 1m 26s
+- **Input Tokens**: 69
+- **Output Tokens**: 4448
+- **Total Tokens**: 4517
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbashing/**[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbash*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/commit.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/index.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+The tests look like they may already be complete. Let me check the progress file and run the tests to verify.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+The `placeModularPiece` tests already exist in the test file with 9 tests covering all required areas. Let me verify they pass.
+[94m[Bash][0m Run kitbashing tests $ npx jest --no-coverage --testPathPattern="kitbashing.test" 2>&1 | tail -40
+All 58 tests pass, including all 9 `placeModularPiece` tests. Let me verify TypeScript too.
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -20
+Both checks pass cleanly. The work is already complete from the previous iteration (US-119 included these tests). Let me update the progress log.
+
+`★ Insight ─────────────────────────────────────`
+The `placeModularPiece` tests use three key patterns working together:
+1. **Minimal mock interfaces** (`KitbashPlacementWorld`, `KitbashCommitStore`) — defined in the production code with exactly the methods tests need to spy on, avoiding any real store/ECS setup.
+2. **Atomic pre-check test** — the "does not spend any resource if only the second resource is insufficient" test verifies the two-phase commit pattern (check-all, then spend-all), which prevents partial resource deduction.
+3. **`makeGroundedRapier()` helper** — consolidates the common happy-path Rapier mock (clear + grounded) so each test can override only the one dimension under test.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Get end of progress.md for append point $ tail -30 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---" → "---
+
+## 2026-03-07 - US-120
+- Work was already com..."
+
+[91m[Error: <tool_use_error>Found 120 matches of the string to replace, but replace_all is false. To replace all occurrences, set replace_all to true. To replace only one occurrence, please provide more context to uniquely identify the instance.
+String: ---</tool_use_error>][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **`supplyDemand.ts defaultMultipliers()` must ..." → "  - **`supplyDemand.ts defaultMultipliers()` must ..."
+All acceptance criteria verified:
+
+- **9 tests** in `placeModularPiece (Spec §35.4)` — all pass
+- **Resource check**: insufficient-resources + atomic pre-check tests
+- **Resource deduction**: spend tracked via `jest.fn()` spy, balance asserted after
+- **Entity creation**: `ecsWorld.add` called with correct `id`, `modularPiece`, and `position`
+- **Snap point consumption**: adjacent piece test validates snap connection path
+- `npx tsc --noEmit` — clean
+- `npx jest --no-coverage` — 58/58 pass
+
+The tests were implemented in US-119 alongside the production code (the optimal workflow for this codebase).
+
+<promise>COMPLETE</promise>

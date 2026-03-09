@@ -1,0 +1,50 @@
+# Iteration 94 Log
+
+## Metadata
+
+- **Task ID**: US-094
+- **Task Title**: Write Jest tests for cooking
+- **Description**: As a developer, I want tests for the cooking system so that recipe matching, cook timer, ingredient consumption, and food stat values are verified. See GAME_SPEC.md §22.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:00:12.871Z
+- **Ended At**: 2026-03-07T16:01:19.883Z
+- **Duration**: 1m 7s
+- **Input Tokens**: 62
+- **Output Tokens**: 2921
+- **Total Tokens**: 2983
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/cook*.{ts,tsx,test.ts,test.tsx}[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems[0m pattern: [96m**/*.test.ts[0m
+Good, the test file already exists. Let me check if it's complete.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/cooking.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/cooking.ts[0m
+The test file already exists with 28 tests covering all required areas. Let me verify they pass.
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run cooking tests $ npx jest --no-coverage --testPathPattern="cooking.test" 2>&1
+28 tests passing. Let me also run the typecheck.
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+Both checks pass. Now let me update progress.md as required.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Read end of progress.md $ tail -30 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **Fishing spec scattered across §10/§11/§18/§3..." → "  - **Fishing spec scattered across §10/§11/§18/§3..."
+`★ Insight ─────────────────────────────────────`
+- **Pure system = trivially testable**: `cooking.ts` has zero ECS/R3F/Three.js imports — it's entirely plain TypeScript operating on plain objects. This is why 28 tests run in 151ms with no mocks needed. The pattern of injecting a `CampfireEntity` minimal interface (structural typing) instead of importing the full ECS component type is the key enabler.
+- **Structural typing as a test seam**: `isCampfireEntity(entity: unknown)` uses duck-typing, so tests pass plain `{ campfire: { lit: true, cookingSlots: 2 } }` objects directly — no ECS world or entity construction required.
+`─────────────────────────────────────────────────`
+
+All 28 tests already existed and pass:
+
+- `npx jest --no-coverage --testPathPattern=cooking.test` → **28/28 passed**
+- `npx tsc --noEmit` → **0 errors**
+
+Coverage: recipe matching (`canCook`, `getAvailableRecipes`), cook timer (`advanceCooking`), ingredient consumption (`deductIngredients`), food stat values (`collectCookedFood`), plus FPS campfire interaction helpers. All acceptance criteria met.
+
+<promise>COMPLETE</promise>

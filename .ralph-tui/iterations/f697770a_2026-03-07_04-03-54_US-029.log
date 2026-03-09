@@ -1,0 +1,81 @@
+# Iteration 29 Log
+
+## Metadata
+
+- **Task ID**: US-029
+- **Task Title**: Implement save/load with Legend State + expo-sqlite
+- **Description**: As a player, I want my game state to save automatically so that I can resume where I left off. Save player state, chunk deltas, quest progress, settings. Auto-save on background. See GAME_SPEC.md §7.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:03:54.943Z
+- **Ended At**: 2026-03-07T10:07:41.451Z
+- **Duration**: 3m 46s
+- **Input Tokens**: 110
+- **Output Tokens**: 10782
+- **Total Tokens**: 10892
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/stores/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+Let me check more files to understand the current state of persistence implementation.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*{autoSave,auto-save,background,AppState}*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/chunkPersistence.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/chunkPersistence.test.ts[0m
+Now let me check for auto-save hooks and the GAME_SPEC.md §7:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/**/*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§7|autoSave|auto.save|AppState|background.*save|save.*background[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useAutoSave.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useAutoSave.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePersistence.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/db/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/db/queries.ts[0m
+Now let me run the tests to see if they pass:
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run existing save/load related tests $ pnpm test --no-coverage --testPathPattern="gameStore|useAutoSave|chunkPersistence|queries" 2>&1 | ta...
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run all tests $ pnpm test --no-coverage 2>&1 | tail -20
+Let me check if chunk diffs persistence is wired to `initPersistence`:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mchunkDiffs|initPersistence[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mchunkDiffs|initPersistence[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mchunkDiffs|initPersistence[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mchunkDiffs|initPersistence[0m
+All 1487 tests pass and TypeScript is clean. Let me verify whether the `chunkDiffs$` observable is wired to SQLite persistence — the comment in `chunkPersistence.ts` says it should be:
+
+The `chunkDiffs$` observable has a comment saying "Wire this to expo-sqlite persistence via syncObservable in app startup" but `initPersistence()` in `gameStore.ts` only wires `gameState$`. The acceptance criteria says chunk deltas should be saved. Let me add that wiring:
+
+`★ Insight ─────────────────────────────────────`
+- Legend State's `syncObservable` with `observablePersistSqlite` uses expo-sqlite's key-value store (`kv-store`), not the drizzle/relational tables — it serializes the entire observable as a JSON blob under the given `name` key. This is appropriate for `chunkDiffs$` because chunk diffs are a dynamic key-value map (`{[chunkKey]: ChunkDiff}`) that doesn't fit a fixed relational schema.
+- Wiring a second observable in the same `initPersistence` call is safe because both `gameState$` and `chunkDiffs$` get unique storage keys ("gameStore" vs "chunkDiffs").
+`─────────────────────────────────────────────────`
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "import { observable, observe, batch } from "@legen..." → "import { observable, observe, batch } from "@legen..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  syncObservable(gameState$, {
+    persist: {
+    ..." → "  syncObservable(gameState$, {
+    persist: {
+    ..."
+Now verify TypeScript and tests still pass:
+[94m[Bash][0m TypeScript type check after chunk diffs wiring $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run all tests $ pnpm test --no-coverage 2>&1 | tail -15
+All 1487 tests pass. Now let me update the progress file:
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Read end of progress file $ tail -30 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-029 entry to progress log $ debounced 2s save on store changes   - `game/db/queries.ts` -- relational SQLite tables (player, res...
+`★ Insight ─────────────────────────────────────`
+- The save system uses **two parallel persistence layers**: Legend State `syncObservable` + expo-sqlite kv-store for reactive observables (player state, chunk diffs), and drizzle-orm relational tables for structured data (trees, resources, unlocks). Both are valid — the kv-store is simpler for arbitrary JSON shapes, relational tables enable structured queries.
+- `chunkDiffs$` was already fully implemented with in-memory delta-only storage (only modified chunks stored, zero cost for exploration). The missing piece was wiring it to SQLite so diffs survive app restarts — a single `syncObservable` call with a unique `name` key completes it.
+`─────────────────────────────────────────────────`
+
+**Summary**: US-029 was largely pre-implemented. The full save/load system exists across `gameStore.ts`, `chunkPersistence.ts`, `useAutoSave.ts`, `usePersistence.ts`, and `game/db/queries.ts`. The one gap was that `chunkDiffs$` lacked SQLite wiring — added `syncObservable(chunkDiffs$, { persist: { name: "chunkDiffs", ... } })` in `initPersistence()`. All 1487 tests pass, `tsc --noEmit` clean.
+
+<promise>COMPLETE</promise>

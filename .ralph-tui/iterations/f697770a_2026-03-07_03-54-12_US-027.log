@@ -1,0 +1,152 @@
+# Iteration 27 Log
+
+## Metadata
+
+- **Task ID**: US-027
+- **Task Title**: Implement TouchProvider with virtual joystick
+- **Description**: As a player on mobile, I want a custom virtual joystick (left side), look zone (right side), and action buttons so that I can play on touchscreen. 44px touch targets. See GAME_SPEC.md §10.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:54:12.268Z
+- **Ended At**: 2026-03-07T10:02:51.822Z
+- **Duration**: 8m 39s
+- **Input Tokens**: 6685
+- **Output Tokens**: 22569
+- **Total Tokens**: 917969
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Read,Glob,Grep,Agent[0m
+[94m[TodoWrite][0m
+Let me explore the existing input system in parallel with reading the spec:
+[94m[Agent][0m Explore input system architecture
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input[0m pattern: [96m**/*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks[0m pattern: [96m**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInput.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInput.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMovement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInteraction.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture[0m pattern: [96m**/*.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mTouchProvider[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture/input-system.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture/touch-controls.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§23|Spec §23|section 23|US-026|US-025|US-027|TouchProvider[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/input*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/grid.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mInput|input|§23|touch|joystick[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.test.ts[0m
+Now let me read the key files directly:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Now let me find and read the Input System section (§23) in the spec:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 23\. Input System|Touch|joystick|virtual joystick|TouchProvider[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture/touch-controls.md[0m
+Now let me read the progress.md and check the existing input test:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.test.ts[0m
+Now I have everything needed. Let me update todos and start implementing:
+[94m[TodoWrite][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mtsconfig*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/tsconfig.json[0m
+[94m[Bash][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Bash failed due to the following issues:
+The required parameter `command` is missing
+An unexpected parameter `cmd` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+`★ Insight ─────────────────────────────────────`
+The TouchProvider uses a **call-based API** (not window event listeners like `KeyboardMouseProvider`). React overlay components call `provider.onTouchStart()` directly via refs. This is the key architectural difference — the provider is a pure state machine, not an event listener.
+`─────────────────────────────────────────────────`
+
+Writing the test file first (TDD):
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/TouchProvider.test.ts[0m "/**
+ * @jest-environment jsdom
+ */
+
+/**
+ * TouchProvider tests (Spec §23)
+ *
+ * Tests that virtual joystick drag, viewport swipe, and action buttons
+ * produce correct InputFrame values. The provider ... (9491 chars)"
+Now implement the `TouchProvider`:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Using narrow local interfaces (`TouchPoint`, `ZoneRect`) instead of DOM `Touch`/`DOMRect` types makes the provider portable across environments (jsdom tests, React Native, browser) without importing browser-specific types. The call-based API also means `dispose()` is trivially simple — just zeroing state, no event listener cleanup needed.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/TouchProvider.ts[0m "/**
+ * TouchProvider -- Mobile touch input: virtual joystick + viewport swipe-to-look + action buttons (Spec §23)
+ *
+ * Unlike KeyboardMouseProvider, this provider exposes a call-based API that
+ * Rea... (5925 chars)"
+Now run the tests and typecheck:
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TouchProvider tests $ npx jest --no-coverage --testPathPattern="TouchProvider" 2>&1
+27/27 tests pass. Now typecheck:
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+Clean. Now run the full test suite:
+[94m[Bash][0m Run all tests $ npx jest --no-coverage 2>&1 | tail -20
+1487/1487 tests pass. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m pattern: [96m## 2026-03-07 - US-026[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-026" → "- **TouchProvider uses narrow local interfaces**: ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+" → "---
+
+## 2026-03-07 - US-027
+- Implemented `game/in..."
+
+[91m[Error: <tool_use_error>Found 26 matches of the string to replace, but replace_all is false. To replace all occurrences, set replace_all to true. To replace only one occurrence, please provide more context to uniquely identify the instance.
+String: ---
+
+</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **Math.sign for movement**: `Math.sign(right -..." → "  - **Math.sign for movement**: `Math.sign(right -..."
+
+[91m[Error: <tool_use_error>String to replace not found in file.
+String:   - **Math.sign for movement**: `Math.sign(right - left)` handles simultaneous key presses cleanly — opposing keys cancel to 0, single key gives ±1. Avoids accumulating raw counts.
+---
+
+</tool_use_error>][0m
+[94m[Bash][0m Append US-027 progress entry to progress.md $ cat >> /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md << 'EOF'  ## 2026-03-07 ...
+[94m[TodoWrite][0m
+All done. Here's the summary:
+
+**Files created:**
+- `game/input/TouchProvider.ts` — implements `IInputProvider` with call-based API
+- `game/input/TouchProvider.test.ts` — 27 tests covering all behaviors
+
+**Key design choices:**
+- **Call-based API**: React overlay components call `provider.onTouchStart()` etc. directly — no window event listeners, so `dispose()` just zeroes state
+- **Narrow local interfaces**: `TouchPoint` / `ZoneRect` instead of DOM `Touch`/`DOMRect` — portable across React Native, browser, and jsdom tests
+- **Held vs edge-triggered**: `moveX`/`moveZ` persist until `onTouchEnd()` (like held keys); `interact` and `toolSwap` are edge-triggered (reset in `postFrame()`)
+- **`+=` for look deltas**: Accumulates all touchmove events within a frame, matching the mouse delta pattern
+
+**Results:** `npx tsc --noEmit` clean, `npx jest --no-coverage` 1487/1487 passing.
+
+<promise>COMPLETE</promise>

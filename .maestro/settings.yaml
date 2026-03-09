@@ -1,0 +1,45 @@
+# Flow: Settings screen from main menu
+# Verifies: navigate to settings, see difficulty options, audio/graphics button,
+#           return to main menu
+# Platform: iOS/Android (375px viewport portrait)
+# Spec: §26 (Settings)
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+
+# Main menu renders
+- assertVisible: "GROVEKEEPER"
+
+# Tap Settings button
+- tapOn:
+    text: "Settings"
+
+# Settings screen renders with header
+- assertVisible: "Settings"
+
+# Back button visible
+- assertVisible: "← Back"
+
+# Difficulty section visible
+- assertVisible: "DIFFICULTY"
+
+# Audio, Graphics & Controls section visible
+- assertVisible: "Audio, Graphics & Controls"
+
+# All difficulty options visible
+- assertVisible: "Seedling"
+- assertVisible: "Sapling"
+- assertVisible: "Hardwood"
+- assertVisible: "Ironwood"
+
+# Tap a difficulty to verify selection works
+- tapOn:
+    text: "Hardwood"
+
+# Return to main menu via back button
+- tapOn:
+    text: "← Back"
+
+# Verify we're back on main menu
+- assertVisible: "GROVEKEEPER"

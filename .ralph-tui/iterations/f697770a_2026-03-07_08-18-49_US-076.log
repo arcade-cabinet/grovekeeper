@@ -1,0 +1,132 @@
+# Iteration 76 Log
+
+## Metadata
+
+- **Task ID**: US-076
+- **Task Title**: Create campfire fast travel system
+- **Description**: As a player, I want to discover campfires by visiting them and fast travel between up to 8 saved points so that traversal of the large world is manageable. See GAME_SPEC.md §6.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T14:18:49.246Z
+- **Ended At**: 2026-03-07T14:22:43.096Z
+- **Duration**: 3m 53s
+- **Input Tokens**: 1909
+- **Output Tokens**: 12600
+- **Total Tokens**: 14509
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mcampfire|fast.travel|fast_travel|FastTravel|§6[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 6\.|^### 6\.|Fast Travel|fast travel[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+Let me look at the relevant files more carefully:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/discovery.ts[0m
+`★ Insight ─────────────────────────────────────`
+The fast travel system will need to integrate with:
+1. **Legend State store** - for persisting discovered campfires (max 8)
+2. **Pure functions** - following the `discovery.ts` pattern (no side effects, state passed as args)
+3. **villageGenerator.ts** - campfires already have `fastTravelId` encoded as `"village-{chunkX}-{chunkZ}"`
+`─────────────────────────────────────────────────`
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/villageGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/discovery.test.ts[0m
+Now let me look at the campfire and structures components, plus a few more existing systems for pattern reference:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/structures.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.ts[0m
+[94m[TodoWrite][0m
+Now I'll write the failing tests first (RED phase):
+
+`★ Insight ─────────────────────────────────────`
+The fast travel system follows the same pure-function pattern as `discovery.ts`: state is passed in, new state returned, no side effects. This makes it trivially testable without mocks. The `isFull` flag at max capacity (8) is important to surface to the UI so it can guide players to remove old points before adding new ones.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,Bash[0m
+Now writing the tests first (RED phase):
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/fastTravel.test.ts[0m "/**
+ * Fast Travel System tests -- Spec §17.6 (Map & Navigation)
+ *
+ * Campfire network: discover by visiting, max 8 points, teleport to destination.
+ */
+
+import {
+  discoverCampfire,
+  isCampfireDisc... (5341 chars)"
+Now verify the tests fail (RED):
+[94m[Bash][0m Run fast travel tests to confirm RED phase $ npx jest --no-coverage game/systems/fastTravel.test.ts 2>&1 | tail -20
+Tests fail correctly — module doesn't exist. Now implement (GREEN phase):
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/fastTravel.ts[0m "/**
+ * Fast Travel System -- Campfire network for world traversal.
+ *
+ * Spec §17.6 (Map & Navigation): campfire network, max 8 points.
+ * Campfires are discovered by visiting them; player teleports t... (2223 chars)"
+[94m[Bash][0m Run fast travel tests to verify GREEN phase $ npx jest --no-coverage game/systems/fastTravel.test.ts 2>&1 | tail -20
+18/18 tests pass (GREEN). Now add `discoveredCampfires` to the store:
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "import { canAffordToolUpgrade, getToolUpgradeTier ..." → "import { canAffordToolUpgrade, getToolUpgradeTier ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  hasSeenRules: false,
+  hapticsEnabled: true,
+  s..." → "  hasSeenRules: false,
+  hapticsEnabled: true,
+  s..."
+Now add store actions for campfire discovery and fast travel:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  // Settings actions
+  setHasSeenRules(seen: bool..." → "  // Fast travel actions (Spec §17.6)
+  discoverCa..."
+Now let me look at an existing game UI component for patterns:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/*.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NpcDialogue.tsx[0m
+`★ Insight ─────────────────────────────────────`
+The UI callback pattern here is clean: `FastTravelMenu` is a presentation component that calls `onTeleport({ x, z })` — the actual player position update belongs in the game loop/player system, not in the UI. This keeps the UI testable and decoupled from the ECS world.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FastTravelMenu.tsx[0m "/**
+ * FastTravelMenu -- UI for selecting a campfire fast travel destination.
+ *
+ * Spec §17.6 (Map & Navigation): campfire network, max 8 points.
+ *
+ * Props:
+ *   open           -- controlled visibi... (3780 chars)"
+Now run full quality checks:
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run full jest test suite $ npx jest --no-coverage 2>&1 | tail -20
+114 suites, 2218 tests pass (18 new from fastTravel). TypeScript clean. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-075" → "## 2026-03-07 - US-076
+- Created `game/systems/fas..."
+[94m[TodoWrite][0m
+All done. Summary of what was implemented:
+
+**US-076 — Campfire Fast Travel System**
+
+| File | Status |
+|------|--------|
+| `game/systems/fastTravel.ts` | New — pure functions |
+| `game/systems/fastTravel.test.ts` | New — 18 tests (all pass) |
+| `game/stores/gameStore.ts` | Modified — `discoveredCampfires` state + actions |
+| `components/game/FastTravelMenu.tsx` | New — React Native selection UI |
+
+**Pure functions** (all tested):
+- `discoverCampfire(points, point)` → `{ newPoints, isNew, isFull }` — enforces max 8
+- `isCampfireDiscovered(points, id)` → `boolean`
+- `canDiscoverMore(points)` → `boolean`
+- `getTeleportTarget(points, id)` → `{ x, z } | null`
+
+**Store actions**: `discoverCampfirePoint(point)` (with toast feedback), `removeCampfirePoint(id)`
+
+**UI**: `FastTravelMenu` modal with campfire list, count indicator (N/8), and `onTeleport({x, z})` callback for the game loop to handle player movement.
+
+Checks: `npx tsc --noEmit` → 0 errors, `npx jest --no-coverage` → 2218 tests, 0 failures.
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,282 @@
+# Iteration 168 Log
+
+## Metadata
+
+- **Task ID**: US-168
+- **Task Title**: Wire ToolWheel + RadialActionMenu to FPS controls
+- **Description**: As a developer, I want the existing ToolWheel.tsx (185 lines) and RadialActionMenu.tsx (291 lines) updated for FPS perspective — ToolWheel opens on Tab/long-press for tool selection, RadialActionMenu ...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-08T00:56:18.957Z
+- **Ended At**: 2026-03-08T01:04:53.517Z
+- **Duration**: 8m 34s
+- **Input Tokens**: 172
+- **Output Tokens**: 27008
+- **Total Tokens**: 27180
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ToolWheel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/RadialActionMenu.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/radialActions*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/useInput*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/radialActions.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInput.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Bash][0m Check how ToolWheel and RadialActionMenu are used in game screen $ grep -n "ToolWheel\|RadialAction\|Tab\|longPress\|toolWheel\|radialMenu\|openTool\|closeTool" /Users...
+[94m[Bash][0m Find relevant spec sections for ToolWheel and RadialActionMenu $ grep -n "§11\|§16\|ToolWheel\|RadialAction\|Tool Wheel\|Radial Action\|tool selector\|Tab key\|long....
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInteraction.ts[0m
+
+[91m[Error: File does not exist. Note: your current working directory is /Users/jbogaty/src/arcade-cabinet/grovekeeper. Did you mean useInteraction?][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/useInteraction*[0m
+[94m[Bash][0m Search GAME_SPEC.md for tool wheel and radial action menu sections $ grep -n "§11\|§16\|Tool Wheel\|Radial\|tool selector\|Tab\|long.press" /Users/jbogaty/src/arcade-cab...
+[94m[Bash][0m Find sections 11 and 16 of GAME_SPEC.md $ grep -n "^## 11\|^## 16\|^### 11\|^### 16\|^## §11\|^## §16" /Users/jbogaty/src/arcade-cabinet/grove...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/player/*.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TargetInfo.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m
+[94m[Bash][0m Find all usages of ToolWheel and RadialActionMenu $ grep -rn "ToolWheel\|RadialActionMenu" /Users/jbogaty/src/arcade-cabinet/grovekeeper/app/ /Users/jbo...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ActionButton.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/types.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game[0m pattern: [96m**/*.test.ts*[0m
+Let me check the ECS component structure for tree and NPC:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/vegetation*[0m
+[94m[Bash][0m Check tree ECS component fields $ grep -n "TreeComponent\|treeStage\|stage\|watered\|harvestable" /Users/jbogaty/src/arcade-cabinet/gr...
+[94m[Bash][0m Check NPC ECS component fields $ grep -n "NpcComponent\|function\|role\|templateId" /Users/jbogaty/src/arcade-cabinet/grovekeeper/gam...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/VirtualJoystick.test.ts[0m
+Now I have enough context. Let me implement the changes.
+
+`★ Insight ─────────────────────────────────────`
+**FPS UI architecture**: ToolWheel remains a controlled component (parent owns `open` state). We extract the Tab key logic to a `.ts` file (`toolWheelLogic.ts`) to avoid the JSX runtime chain issue in tests. RadialActionMenu's `centerX/centerY` already supports FPS screen-center positioning — the key addition is `getActionsForEntity()` in `radialActions.ts` that maps raycast entity hits to action buttons.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/radialActions.ts[0m edit: "/**
+ * radialActions -- builds context-sensitive a..." → "/**
+ * radialActions -- builds context-sensitive a..."
+Now add the `getActionsForEntity` function at the end of the file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/radialActions.ts[0m edit: "  return [];
+}" → "  return [];
+}
+
+// -------------------------------..."
+[94m[TodoWrite][0m
+Now create `toolWheelLogic.ts` — a plain `.ts` file so tests can import the hook without triggering the JSX runtime chain:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/toolWheelLogic.ts[0m "/**
+ * toolWheelLogic -- Pure hook logic for ToolWheel keyboard / gesture triggers.
+ *
+ * Extracted to a plain .ts file so unit tests can import without the JSX
+ * runtime chain (ToolWheel.tsx → @/com... (1350 chars)"
+[94m[TodoWrite][0m
+Now update `ToolWheel.tsx` to add the `onOpen` prop and wire `useToolWheelTabKey`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ToolWheel.tsx[0m edit: "import type { LucideIcon } from "lucide-react-nati..." → "import type { LucideIcon } from "lucide-react-nati..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ToolWheel.tsx[0m edit: "export interface ToolWheelProps {
+  open: boolean;..." → "export interface ToolWheelProps {
+  open: boolean;..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ToolWheel.tsx[0m edit: "export function ToolWheel({
+  open,
+  onClose,
+  u..." → "export function ToolWheel({
+  open,
+  onOpen,
+  on..."
+[94m[TodoWrite][0m
+Now update `RadialActionMenu.tsx` — add a `getFpsScreenCenter()` pure helper and export `useTargetHit` re-export for the FPS context:
+
+`★ Insight ─────────────────────────────────────`
+**RadialActionMenu FPS adaptation**: For FPS use the parent passes `Dimensions.get('window').width/2, height/2` as `centerX/centerY`. The component's existing edge-clamping already handles this correctly. We add a `getFpsScreenCenter()` pure helper so callers don't need to know the arithmetic, and export `getActionsForEntity` re-export from this file for convenience.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/RadialActionMenu.tsx[0m edit: "import React, { useEffect, useMemo } from "react";..." → "import React, { useEffect, useMemo } from "react";..."
+Now add the `getFpsScreenCenter` helper before the `RadialActionMenu` component export:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/RadialActionMenu.tsx[0m edit: "// -----------------------------------------------..." → "// -----------------------------------------------..."
+[94m[TodoWrite][0m
+Now write the tests. First, `radialActions.test.ts`:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/radialActions.test.ts[0m "/**
+ * Tests for radialActions -- tile-based and FPS entity-based action builders.
+ *
+ * All functions are pure (no React / RN imports) so this test file needs no
+ * special mocks or jest-environment ... (5441 chars)"
+Now write `toolWheelLogic.test.ts`. This tests the Tab key hook — needs `@jest-environment jsdom` since it uses `document.addEventListener`:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/toolWheelLogic.test.ts[0m "/** @jest-environment jsdom */
+/**
+ * Tests for toolWheelLogic -- useToolWheelTabKey hook (Spec §11).
+ *
+ * Uses jsdom environment because the hook registers document.addEventListener.
+ * The Platform... (3316 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+Pre-existing TS5097 errors across the codebase — let me check only errors from files I modified:
+[94m[Bash][0m Check TypeScript errors only in modified files $ npx tsc --noEmit 2>&1 | grep -E "^(components/game/ToolWheel|components/game/RadialAction|components...
+[94m[Bash][0m Check what testing libraries are available $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json | grep -A5 '"dependencies"\|"devDepen...
+[94m[Bash][0m Check testing library packages in package.json $ grep -E "testing|react-hooks|renderHook" /Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json
+[94m[Bash][0m Check if testing-library packages are installed $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules | grep "react-hooks" 2>/dev/null || ec...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMouseLook.test.ts[0m
+The project doesn't have `@testing-library/react-hooks`. I'll restructure to export the pure handler logic for direct testing:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/toolWheelLogic.ts[0m "/**
+ * toolWheelLogic -- Pure hook logic for ToolWheel keyboard / gesture triggers.
+ *
+ * Extracted to a plain .ts file so unit tests can import without the JSX
+ * runtime chain (ToolWheel.tsx → @/com... (2043 chars)"
+Now rewrite the test to use the pure `shouldToggleToolWheel` function directly — no `renderHook` needed:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/toolWheelLogic.test.ts[0m "/**
+ * Tests for toolWheelLogic -- shouldToggleToolWheel (Spec §11).
+ *
+ * Tests the pure key-predicate function directly (no React / RN / jsdom needed).
+ * The useToolWheelTabKey hook wires this pred... (1965 chars)"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/toolWheelLogic.test.ts[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/toolWheelLogic.test.ts[0m "/**
+ * Tests for toolWheelLogic -- shouldToggleToolWheel (Spec §11).
+ *
+ * Tests the pure key-predicate function directly (no React / RN / jsdom needed).
+ * The useToolWheelTabKey hook wires this pred... (1965 chars)"
+Now re-check TypeScript for just our files:
+[94m[Bash][0m Check tsc errors only in modified files $ npx tsc --noEmit 2>&1 | grep -E "^(components/game/ToolWheel|components/game/RadialAction|components...
+Good — no new TS errors in my files. Now run the tests:
+[94m[Bash][0m Run new tests for radialActions and toolWheelLogic $ pnpm test --no-coverage --testPathPattern="radialActions|toolWheelLogic" 2>&1
+
+[91m[Error: Exit code 1
+
+> grovekeeper@1.0.0 test /Users/jbogaty/src/arcade-cabinet/grovekeeper
+> jest --no-coverage '--testPathPattern=radialActions|toolWheelLogic'
+
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL components/game/toolWheelLogic.test.ts
+  ● shouldToggleToolWheel (Spec §11) › returns true for Tab key with no focused element
+
+    ReferenceError: HTMLInputElement is not defined
+
+      24 | export function shouldToggleToolWheel(e: Pick<KeyboardEvent, "key" | "target">): boolean {
+      25 |   if (e.key !== "Tab") return false;
+    > 26 |   if (e.target instanceof HTMLInputElement) return false;
+         |                           ^
+      27 |   if (e.target instanceof HTMLTextAreaElement) return false;
+      28 |   return true;
+      29 | }
+
+      at HTMLInputElement (components/game/toolWheelLogic.ts:26:27)
+      at Object.<anonymous> (components/game/toolWheelLogic.test.ts:24:33)
+
+  ● shouldToggleToolWheel (Spec §11) › returns false when focus is on an input element
+
+    The error below may be caused by using the wrong test environment, see https://jestjs.io/docs/configuration#testenvironment-string.
+    Consider using the "jsdom" test environment.
+
+    ReferenceError: document is not defined
+
+      33 |
+      34 |   it("returns false when focus is on an input element", () => {
+    > 35 |     const input = document.createElement("input");
+         |                   ^
+      36 |     expect(shouldToggleToolWheel(makeEvent("Tab", input))).toBe(false);
+      37 |   });
+      38 |
+
+      at Object.document (components/game/toolWheelLogic.test.ts:35:19)
+
+  ● shouldToggleToolWheel (Spec §11) › returns false when focus is on a textarea element
+
+    The error below may be caused by using the wrong test environment, see https://jestjs.io/docs/configuration#testenvironment-string.
+    Consider using the "jsdom" test environment.
+
+    ReferenceError: document is not defined
+
+      38 |
+      39 |   it("returns false when focus is on a textarea element", () => {
+    > 40 |     const textarea = document.createElement("textarea");
+         |                      ^
+      41 |     expect(shouldToggleToolWheel(makeEvent("Tab", textarea))).toBe(false);
+      42 |   });
+      43 |
+
+      at Object.document (components/game/toolWheelLogic.test.ts:40:22)
+
+  ● shouldToggleToolWheel (Spec §11) › returns true when focus is on a non-input element (e.g. div)
+
+    The error below may be caused by using the wrong test environment, see https://jestjs.io/docs/configuration#testenvironment-string.
+    Consider using the "jsdom" test environment.
+
+    ReferenceError: document is not defined
+
+      43 |
+      44 |   it("returns true when focus is on a non-input element (e.g. div)", () => {
+    > 45 |     const div = document.createElement("div");
+         |                 ^
+      46 |     expect(shouldToggleToolWheel(makeEvent("Tab", div))).toBe(true);
+      47 |   });
+      48 |
+
+      at Object.document (components/game/toolWheelLogic.test.ts:45:17)
+
+  ● shouldToggleToolWheel (Spec §11) › returns true when target is null (no focused element)
+
+    ReferenceError: HTMLInputElement is not defined
+
+      24 | export function shouldToggleToolWheel(e: Pick<KeyboardEvent, "key" | "target">): boolean {
+      25 |   if (e.key !== "Tab") return false;
+    > 26 |   if (e.target instanceof HTMLInputElement) return false;
+         |                           ^
+      27 |   if (e.target instanceof HTMLTextAreaElement) return false;
+      28 |   return true;
+      29 | }
+
+      at HTMLInputElement (components/game/toolWheelLogic.ts:26:27)
+      at Object.<anonymous> (components/game/toolWheelLogic.test.ts:50:33)
+
+PASS components/game/radialActions.test.ts
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       5 failed, 16 passed, 21 total
+Snapshots:   0 total
+Time:        0.514 s
+Ran all test suites matching /radialActions|toolWheelLogic/i.
+ ELIFECYCLE  Test failed. See above for more details.][0m
+Need `/** @jest-environment jsdom */` at the top — `HTMLInputElement` is a browser global:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/toolWheelLogic.test.ts[0m edit: "/**
+ * Tests for toolWheelLogic -- shouldToggleToo..." → "/** @jest-environment jsdom */
+/**
+ * Tests for to..."
+[94m[Bash][0m Run tests again after jsdom env fix $ pnpm test --no-coverage --testPathPattern="radialActions|toolWheelLogic" 2>&1
+All 21 tests pass. Now run the full test suite to confirm no regressions:
+[94m[Bash][0m Run full test suite $ pnpm test --no-coverage 2>&1 | tail -25
+4088 tests pass. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md for append point $ tail -20 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-168 learnings to progress.md $ 5 tests for `shouldToggleToolWheel` pure predicate - **Verification:** `pnpm test --no-coverage` → 4...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+**`shouldToggleToolWheel` extraction**: By separating the predicate (`shouldToggleToolWheel`) from the hook (`useToolWheelTabKey`), tests can be precise and environment-minimal. The pure predicate only needs `@jest-environment jsdom` for `instanceof HTMLInputElement`; no React lifecycle or `document.addEventListener` wiring is exercised in tests — that's integration territory. This mirrors the codebase's `clampPitch` / `useMouseLook` split seen in FPS camera tests.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria satisfied. Here's a summary:
+
+## US-168 Complete
+
+**Files changed:**
+
+| File | Change |
+|------|--------|
+| `radialActions.ts` | Added `getActionsForEntity(hit, selectedTool)` — maps raycast hits to FPS context actions (npc→talk+trade, structure→use+inspect, tree→tool-specific+inspect) |
+| `toolWheelLogic.ts` | New — exports `shouldToggleToolWheel` pure predicate + `useToolWheelTabKey` hook (Tab key listener, web-only) |
+| `ToolWheel.tsx` | Added `onOpen?` prop; wires `useToolWheelTabKey` internally — Tab toggles open/close |
+| `RadialActionMenu.tsx` | Added `getFpsScreenCenter()` pure helper for crosshair-center positioning; re-exports `getActionsForEntity` |
+| `radialActions.test.ts` | New — 16 tests covering all entity types and tool mappings |
+| `toolWheelLogic.test.ts` | New — 5 tests for the Tab key predicate |
+
+**Verification:** 4088 tests, all pass (21 new).
+
+<promise>COMPLETE</promise>

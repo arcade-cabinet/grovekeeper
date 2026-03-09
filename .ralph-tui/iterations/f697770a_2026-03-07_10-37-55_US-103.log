@@ -1,0 +1,111 @@
+# Iteration 103 Log
+
+## Metadata
+
+- **Task ID**: US-103
+- **Task Title**: Implement dialogue UI with choices
+- **Description**: As a player, I want dialogue choice buttons below text with 44px touch targets and auto-advance after 3s (using seed branch) so that I can interact with NPCs. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:37:55.919Z
+- **Ended At**: 2026-03-07T16:43:43.073Z
+- **Duration**: 5m 47s
+- **Input Tokens**: 142
+- **Output Tokens**: 19182
+- **Total Tokens**: 19324
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,TodoWrite[0m
+[94m[Skill][0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[ToolSearch][0m query: [93mselect:Grep,Glob[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/dialogue*.*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§33|§15|Dialogue Branching|dialogue.*choice|DialogueChoice"[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 33\. Dialogue Branching[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/SpeechBubble.tsx[0m
+Now let me read the existing dialogue system files:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueLoader.ts[0m
+Let me check the SpeechBubble test and any existing UI components for patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/SpeechBubble.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.tsx[0m
+There's already a `NpcDialogue.tsx`! Let me read it:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NpcDialogue.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ActionButton.tsx[0m
+Let me check the NPC types and the config for dialogue to understand the full context:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/npcs[0m pattern: [96mDialogueChoice|DialogueAction|DialogueNode[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/dialogue-trees.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/*.test.ts*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/SeedSelect.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/dialogues.json[0m
+Let me check how `dialogueBranch.test.ts` handles imports:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/ui/text.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+Now I have everything I need. Let me implement.
+
+`★ Insight ─────────────────────────────────────`
+- The `SpeechBubble` is a 3D R3F entity (world-space), but `DialogueChoices` is a React Native 2D overlay — they're different render layers. The dialogue choices buttons live in the HUD, not in the 3D scene.
+- Following the existing pattern of exporting pure helper functions alongside components (`computeOpacity` in SpeechBubble), we export `computeAutoAdvanceProgress` + `AUTO_ADVANCE_DURATION` for testability.
+- The auto-advance timer uses `setTimeout` (not `setInterval` + elapsed tracking) since it's a one-shot 3s fire — and uses `useEffect` cleanup to cancel when branches/visibility change.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Edit[0m
+Writing tests first (TDD), then implementation:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/DialogueChoices.test.ts[0m "/**
+ * Tests for DialogueChoices — dialogue branch choice UI (Spec §33.5).
+ *
+ * Tests exported pure functions without React Native rendering:
+ *   - computeAutoAdvanceProgress — countdown timer progr... (3157 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The `useEffect` dependency array includes `onBranchSelect` — this is a function prop that could trigger unnecessary timer resets if the parent re-renders. In practice, the parent should memoize it with `useCallback`, but this is a defensive/correct dependency per React's exhaustive-deps rule.
+- We cancel the existing timer at the top of the effect (before setting a new one) to avoid a double-fire race where the effect cleans up the *previous* timer and the new one fires before the cleanup runs.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/DialogueChoices.tsx[0m "/**
+ * DialogueChoices — branch choice buttons for active dialogue (Spec §33.5).
+ *
+ * React Native overlay component rendering tappable choice buttons for the
+ * current dialogue node. Displays when ... (4986 chars)"
+Now run the tests and typecheck:
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[TodoWrite][0m
+[94m[Bash][0m Run DialogueChoices tests $ npx jest --no-coverage --testPathPattern="DialogueChoices" 2>&1
+13/13 passing. Now run the full test suite and typecheck:
+[94m[Bash][0m TypeScript typecheck $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run full test suite (tail output) $ npx jest --no-coverage 2>&1 | tail -20
+All 2683 tests pass (127 suites), 0 type errors. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-101" → "---
+
+## 2026-03-07 - US-103
+- Created `components/..."
+[94m[TodoWrite][0m
+All done. Here's what was delivered:
+
+**Files created:**
+- `components/game/DialogueChoices.tsx` — React Native choice buttons component
+- `components/game/DialogueChoices.test.ts` — 13 tests
+
+**Key decisions:**
+- `DialogueChoices` is a **React Native** 2D overlay (not a 3D R3F entity) — separate from `SpeechBubble` which is world-space
+- Auto-advance uses a `setTimeout` ref (`useRef<ReturnType<typeof setTimeout> | null>`) — cancels on player tap or when any key prop changes
+- `selectDefaultBranchNode` from the existing US-100 system handles the seed-keyed branch selection
+- Only `@/components/ui/text` needs mocking in tests — jest-expo handles RN natively, dialogueBranch pure functions need no mocking
+
+**Quality gates:** `npx tsc --noEmit` → 0 errors | `npx jest --no-coverage` → 2683 tests, 0 failures
+
+<promise>COMPLETE</promise>

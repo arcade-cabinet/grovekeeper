@@ -1,0 +1,40 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
+    groups:
+      expo:
+        patterns:
+          - "expo*"
+          - "@expo/*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-native*"
+          - "@react-*"
+      three:
+        patterns:
+          - "three"
+          - "@react-three/*"
+      dev-deps:
+        dependency-type: development
+    open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    groups:
+      actions:
+        patterns:
+          - "*"

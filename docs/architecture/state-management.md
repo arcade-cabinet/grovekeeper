@@ -1,21 +1,30 @@
 # State Management
 
-Grovekeeper splits state across two systems: **Miniplex ECS** for per-frame runtime data and **Zustand** for persistent player data. This document covers the Zustand store in detail.
+> **PARTIALLY SUPERSEDED (2026-03-07):** The persistent state layer has changed from **Legend State** to **Legend State 3.x** (`@legendapp/state@beta`) with expo-sqlite persistence. See `docs/plans/2026-03-07-unified-game-design.md` Sections 3 and 9. Key changes:
+>
+> - **Legend State 3.x** replaces Legend State -- observable state with fine-grained reactivity.
+> - **expo-sqlite** replaces localStorage -- proper mobile persistence.
+> - **New survival state:** hearts, hunger, temperature, tool durability, chunk deltas.
+> - **No coins.** Resources are: Timber, Stone, Ore, Sap, Fruit, Berries, Herbs, Meat, Hide, Fish, Acorns, Seeds.
+> - **Chunk delta persistence** replaces grove serialization -- only store what player changed.
+> - **Difficulty tier** stored (Seedling / Sapling / Hardwood / Ironwood).
+> - **Grovekeeper discovery** tracked (which of 14 labyrinths completed).
+>
+> The ECS vs persistent state split principle remains accurate. The specific state shape and API details below are outdated.
+
+Grovekeeper splits state across two systems: **Miniplex ECS** for per-frame runtime data and **Legend State** for persistent player data. This document covers the Legend State store in detail.
 
 ## Store Architecture
 
-The game store is defined in `src/game/stores/gameStore.ts` using Zustand 5.x with the `persist` middleware:
+The game store is defined in `game/stores/gameStore.ts` using Legend State 3.x with expo-sqlite persistence:
 
 ```typescript
-export const useGameStore = create<GameState>()(
-  persist(
-    (set, get) => ({ ... }),
-    { name: "grove-keeper-save" }
-  )
-);
+import { observable } from '@legendapp/state';
+import { syncObservable } from '@legendapp/state/sync';
+// Persistence configured via expo-sqlite plugin
 ```
 
-All persistent state is automatically synced to `localStorage` under the key `grove-keeper-save`.
+All persistent state is automatically synced to expo-sqlite.
 
 ## State Shape
 
@@ -151,7 +160,7 @@ The store exposes actions for state mutations. All actions are synchronous and r
 
 ## Side Effect Pattern
 
-Zustand's `set()` is synchronous and should not trigger side effects. The codebase uses `queueMicrotask()` to defer notifications:
+Legend State mutations should not trigger side effects inline. The codebase uses `queueMicrotask()` to defer notifications:
 
 ```typescript
 addXp: (amount) =>
@@ -171,22 +180,23 @@ This pattern is used consistently for level-up notifications, prestige announcem
 
 ## Persistence Details
 
-- **Storage key:** `grove-keeper-save`
-- **Middleware:** `zustand/persist` with default JSON serialization
+- **Backend:** expo-sqlite via Legend State sync plugin
 - **Auto-save triggers:** Tab visibility change, 30-second interval, manual plant/harvest (debounced 1 second)
 - **Manual reset:** `resetGame()` restores all fields to `initialState`
 
 ## Accessing the Store
 
-In React components, use the hook:
+In React components, use Legend State's reactive access:
 
 ```typescript
-const { level, xp, resources } = useGameStore();
+import { gameStore$ } from '@/game/stores/gameStore';
+// Read reactively
+const level = gameStore$.level.get();
+// Or use useSelector for fine-grained reactivity
 ```
 
-Outside React (in the game loop), use the static accessor:
+Outside React (in the game loop), access directly:
 
 ```typescript
-const state = useGameStore.getState();
-state.addXp(50);
+gameStore$.xp.set(gameStore$.xp.get() + 50);
 ```

@@ -1,0 +1,213 @@
+# Iteration 157 Log
+
+## Metadata
+
+- **Task ID**: US-157
+- **Task Title**: Wire WeatherOverlay + FloatingParticles to ECS weather system
+- **Description**: As a developer, I want the existing WeatherOverlay.tsx (249 lines) and FloatingParticles.tsx (189 lines) updated to read from WeatherComponent and ParticleEmitterComponent ECS queries so that weather ...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T22:35:12.462Z
+- **Ended At**: 2026-03-07T22:50:58.038Z
+- **Duration**: 15m 45s
+- **Input Tokens**: 233
+- **Output Tokens**: 56050
+- **Total Tokens**: 56283
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FloatingParticles.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/atmosphere.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/particles.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/config/game/procedural.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Now let me check the existing tests and the game screen to understand how WeatherOverlay is currently used:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mWeatherOverlay[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mFloatingParticles[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game[0m pattern: [96m**/*.test.ts*[0m
+Let me look at the weather system and check existing tests:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/weather.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Let me look at how ECS is used in existing components and check the WeatherComponent ECS type:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mweatherQuery|weather\.with[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mparticleEmittersQuery|useEntities|world\.with\("weather[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96museEntities|useEntity|world\.entities|weatherQuery[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components[0m pattern: [96mimport.*world|from.*world[0m
+Let me look at how miniplex provides React integration and check what hooks exist:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mminiplex|useEntities[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mminiplex-react|useEntities|useEntity[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/react.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules[0m pattern: [96m**/miniplex-react/**/*.d.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/miniplex-react/dist/declarations/src/hooks.d.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/miniplex-react/dist/declarations/src/createReactAPI.d.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture/day-night-weather-visual-system.md[0m
+Let me check where FloatingParticlesContainer is mounted and look at the game screen:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mFloatingParticlesContainer|WeatherParticlesLayer[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+Now I have a clear picture. Let me set up my todos and implement:
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+`★ Insight ─────────────────────────────────────`
+The key pattern here: extract pure functions to `.ts` files (not `.tsx`) to avoid the JSX runtime crash in tests. The `useEntities(weatherQuery)` hook from `miniplex-react` provides reactive ECS subscription in React Native components. Fixed particle array size (not varying by intensity) respects React's Rules of Hooks — use opacity to control density instead.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Edit[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/weatherOverlayLogic.ts[0m "/**
+ * Pure functions for WeatherOverlay ECS-driven calculations.
+ *
+ * Extracted to a plain .ts file for testability — no React/RN imports.
+ * See GAME_SPEC.md §12, §36.
+ */
+
+import proceduralConfig ... (2467 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/weatherOverlayLogic.test.ts[0m "/**
+ * Tests for WeatherOverlay pure logic functions.
+ * See GAME_SPEC.md §12 (Weather Visual Effects).
+ */
+
+import {
+  computeDropDuration,
+  computeIntensityOpacity,
+  computeRainDropCount,
+  comput... (4068 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/floatingParticlesLogic.ts[0m "/**
+ * Pure functions for FloatingParticles ECS weather particle overlay.
+ *
+ * Extracted to a plain .ts file for testability — no React/RN imports.
+ * See GAME_SPEC.md §36 (Particle Emitter Effects).... (2217 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/floatingParticlesLogic.test.ts[0m "/**
+ * Tests for FloatingParticles weather particle pure logic functions.
+ * See GAME_SPEC.md §36 (Particle Emitter Effects).
+ */
+
+import {
+  computeDisplayParticleCount,
+  computeParticleOpacity,
+  c... (3410 chars)"
+[94m[TodoWrite][0m
+Now update WeatherOverlay.tsx to read from ECS `weatherQuery`:
+
+`★ Insight ─────────────────────────────────────`
+Using a fixed `MAX_RAIN_DROPS` array (from `computeRainDropCount(1.0)`) and scaling opacity via `intensity` avoids varying the hook count between renders — React's Rules of Hooks require stable hook call counts. The ECS `weatherQuery` array is accessed directly as `weatherQuery[0]` since miniplex Bucket extends Array, and `useEntities(weatherQuery)` triggers re-renders when entities are added/removed.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "import React, { useEffect, useMemo } from "react";..." → "import { useEntities } from "miniplex-react";
+impo..."
+Now update `RainDrop` to accept and use `intensity`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "function RainDrop({ index, total }: { index: numbe..." → "function RainDrop({
+  index,
+  total,
+  intensity,..."
+Now update `RainOverlay` and `WindStreak` to use ECS values:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "function RainOverlay() {
+  return (
+    <>
+      {..." → "function RainOverlay({ intensity }: { intensity: n..."
+Now update `DroughtOverlay` to accept intensity:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "function DroughtOverlay() {
+  const opacity = useS..." → "function DroughtOverlay({ intensity }: { intensity..."
+Now update `WindStreak` to use intensity and windAngleDeg:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "function WindStreak({ index, total }: { index: num..." → "function WindStreak({
+  index,
+  total,
+  intensit..."
+Now update `WindstormOverlay` and the main `WeatherOverlay` component to pass ECS values:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "function WindstormOverlay() {
+  return (
+    <>
+  ..." → "function WindstormOverlay({
+  intensity,
+  windAng..."
+Now update the main `WeatherOverlay` component to use ECS data:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "export function WeatherOverlay({ weatherType }: We..." → "export function WeatherOverlay({ weatherType }: We..."
+Let me verify the final WeatherOverlay.tsx:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m
+WeatherOverlay.tsx is now 349 lines — over the 300-line limit. I need to compact it. Let me rewrite it more concisely:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m "/**
+ * WeatherOverlay -- Visual weather effect overlays.
+ *
+ * Renders CSS-style weather effects (rain drops, drought haze,
+ * windstorm streaks) as React Native animated overlays on top of
+ * the gam... (7665 chars)"
+[94m[TodoWrite][0m
+Now update `FloatingParticles.tsx` to add the `WeatherParticlesLayer` component reading from ECS `particleEmittersQuery`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FloatingParticles.tsx[0m edit: "import { observable } from "@legendapp/state";
+imp..." → "import { observable } from "@legendapp/state";
+imp..."
+Now add the `WeatherParticlesLayer` component before the closing of the file (before `FloatingParticlesContainer`):
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FloatingParticles.tsx[0m edit: "// -----------------------------------------------..." → "// -----------------------------------------------..."
+Let me check the file length:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FloatingParticles.tsx[0m
+The file is too long. Let me rewrite it compactly with the correct `useMemo` deps and fixed particle count:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FloatingParticles.tsx[0m "/**
+ * FloatingParticles -- Floating number overlays + ECS weather particle overlay.
+ *
+ * FloatingParticlesContainer: spawns "+XP", "+Timber" etc. text floating upward.
+ * WeatherParticlesLayer: 2D w... (9162 chars)"
+[94m[Bash][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Bash failed due to the following issues:
+The required parameter `command` is missing
+An unexpected parameter `cmd` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Count lines in both updated files $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FloatingParticles.tsx /Users/jbo...
+Both files are well under 300 lines (201 and 222). Now run typecheck and tests:
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript typecheck $ npx tsc --noEmit 2>&1 | head -60
+There's a new TS error on `weatherQuery[0]` — miniplex `Query` doesn't support array index access. Let me check the miniplex type:
+[94m[Bash][0m Check miniplex Query/Bucket type for iteration pattern $ grep -r "Query\|Bucket" /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/miniplex/dist/dec...
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/miniplex/dist/declarations/src[0m pattern: [96m**/*.d.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/miniplex/dist/declarations/src/core.d.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@miniplex/bucket/dist/declarations/src[0m pattern: [96m**/*.d.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@miniplex/bucket/dist/declarations/src/Bucket.d.ts[0m
+The `weatherQuery[0]` pattern doesn't type-check — miniplex `Bucket` exposes `.first` instead of array index. Fix both files:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "  const entity = weatherQuery[0]?.weather;" → "  const entity = weatherQuery.first?.weather;"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/WeatherOverlay.tsx[0m edit: "  const w = weatherQuery[0]?.weather;" → "  const w = weatherQuery.first?.weather;"
+Now fix FloatingParticles.tsx — the `weatherQuery[0]` usage:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FloatingParticles.tsx[0m edit: "  const wEnt = weatherQuery[0]?.weather;" → "  const wEnt = weatherQuery.first?.weather;"
+Now run typecheck again and check only for NEW errors (not the pre-existing TS5097 ones):
+[94m[Bash][0m TypeScript check — filter pre-existing extension errors $ npx tsc --noEmit 2>&1 | grep -v "TS5097\|TS1261" | grep "error TS"
+Only pre-existing casing errors remain. Let me verify my changed files specifically:
+[94m[Bash][0m Check only changed files for TS errors $ npx tsc --noEmit 2>&1 | grep "FloatingParticles\|WeatherOverlay\|weatherOverlayLogic\|floatingPartic...
+No errors in the changed files. Now run the tests:
+[94m[Bash][0m Run new logic tests $ npx jest --no-coverage --testPathPattern="weatherOverlayLogic|floatingParticlesLogic" 2>&1
+38 tests pass. Now run the full suite:
+[94m[Bash][0m Run all tests $ npx jest --no-coverage 2>&1 | tail -20
+3810 tests, all passing. Now update the progress log:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check progress.md line count $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Append US-157 entry to progress.md $ wind drift from ECS windDirection - **Learnings:**   - **`Bucket.first` not `[0]`**: miniplex `Query...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Three patterns confirmed: (1) `Bucket.first` is the correct typed API for first-entity access — `query[0]` compiles in JS but TypeScript rejects it since `Bucket` doesn't declare numeric index signatures. (2) When bridging ECS to React Native (non-R3F) components, `useEntities(query)` from `miniplex-react` is the only hook needed — it subscribes to add/remove events and triggers re-renders, then you read the data synchronously from the query in the same render. (3) The RAIN_DISPLAY_RATIO pattern (3D budget × small factor = 2D display count) is a clean way to tie 2D overlay counts to config values without hardcoding separate constants.
+`─────────────────────────────────────────────────`
+
+All done. Here's a summary of what was implemented:
+
+**New files (4):**
+- `weatherOverlayLogic.ts` — 5 pure functions: drop count from `procedural.json`, wind angle from ECS, intensity opacity scaling, drop speed from intensity
+- `weatherOverlayLogic.test.ts` — 18 tests
+- `floatingParticlesLogic.ts` — 3 pure functions: wind drift, display particle count, lifecycle opacity; `MAX_DISPLAY_WEATHER_PARTICLES = 30`
+- `floatingParticlesLogic.test.ts` — 20 tests
+
+**Updated files (2):**
+- `WeatherOverlay.tsx` — added `useWeatherECS()` hook reading `weatherQuery.first`; rain/wind counts from `procedural.json`; intensity scales opacity/speed; `windDirection` drives `computeWindAngleDeg()` for streak rotation; 222 lines
+- `FloatingParticles.tsx` — added `WeatherParticlesLayer` export; reads `particleEmittersQuery` + `weatherQuery` for wind drift; renders animated 2D rain/snow/leaves/dust from ECS `ParticleEmitterComponent`; 201 lines
+
+**Result:** 3810 tests, 0 failures; no new TS errors.
+
+<promise>COMPLETE</promise>

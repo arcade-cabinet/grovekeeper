@@ -1,0 +1,481 @@
+# Iteration 26 Log
+
+## Metadata
+
+- **Task ID**: US-026
+- **Task Title**: Implement KeyboardMouseProvider
+- **Description**: As a developer, I want a KeyboardMouseProvider that maps WASD to movement, mouse delta to look, space to jump, and E to interact so that desktop input works. See GAME_SPEC.md §10.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:49:25.267Z
+- **Ended At**: 2026-03-07T09:54:11.144Z
+- **Duration**: 4m 45s
+- **Input Tokens**: 130
+- **Output Tokens**: 16697
+- **Total Tokens**: 16827
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/input/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.test.ts[0m
+Now let me read the input system architecture doc and the GAME_SPEC section:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mdocs/architecture/input-system.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§23|KeyboardMouse|keyboard.*mouse|input.*provider[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture/input-system.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§ *10|Input|KeyboardMouse|keyboard[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+`★ Insight ─────────────────────────────────────`
+The `InputManager.ts` already defines `InputFrame` with `jump`/`interact`/`sprint`/`toolSwap` — slightly different from the architecture doc which has `useTool`/`altAction`/`toolSlot`/`toolCycle`. The provider must match the *actual* implementation interface, not the design doc.
+`─────────────────────────────────────────────────`
+
+Now I have everything I need. Let me implement the provider and tests.
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `IInputProvider` contract has two distinct reset concepts: `postFrame()` clears per-frame accumulators (look deltas, edge-triggered presses), while `dispose()` removes DOM event listeners. Separating these is essential — if you clear listeners in postFrame, mouse look breaks permanently after the first frame.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.ts[0m "/**
+ * KeyboardMouseProvider -- Desktop keyboard + pointer-locked mouse input (Spec §23)
+ *
+ * Maps:
+ *   WASD / Arrow keys  -> moveX / moveZ
+ *   Mouse move (locked) -> lookDeltaX / lookDeltaY
+ *   S... (3537 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Edge-triggered inputs (jump, interact) use a "pressed this frame" flag set on `keydown` and cleared in `postFrame()`. This means: hold Space for 2 seconds → jump only fires once per frame the key was first pressed, then never again until released + re-pressed. This avoids bunny-hopping from a held Space key while keeping the API simple for the consumer.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.test.ts[0m "/**
+ * KeyboardMouseProvider tests (Spec §23)
+ *
+ * Tests that keyboard events map to correct InputFrame values and that
+ * mouse deltas accumulate only when pointer lock is active.
+ */
+
+import { Keyb... (7678 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[TodoWrite][0m
+[94m[Bash][0m Run KeyboardMouseProvider tests $ npx jest --no-coverage game/input/KeyboardMouseProvider.test.ts 2>&1
+
+[91m[Error: Exit code 1
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL game/input/KeyboardMouseProvider.test.ts
+  KeyboardMouseProvider (Spec §23)
+    ✕ W produces moveZ = 1 (forward) (1 ms)
+    ✕ S produces moveZ = -1 (backward)
+    ✕ A produces moveX = -1 (left)
+    ✕ D produces moveX = 1 (right)
+    ✕ ArrowUp produces moveZ = 1
+    ✕ ArrowLeft produces moveX = -1
+    ✕ no keys held produces moveX = 0, moveZ = 0
+    ✕ opposing keys cancel out (W+S = 0) (1 ms)
+    ✕ key release stops movement
+    ✕ Space triggers jump = true
+    ✕ jump is edge-triggered: resets to false after postFrame
+    ✕ jump re-triggers after key release and re-press
+    ✕ E triggers interact = true
+    ✕ interact is edge-triggered: resets after postFrame
+    ✕ ShiftLeft triggers sprint = true
+    ✕ ShiftRight triggers sprint = true
+    ✕ sprint resets when key released
+    ✕ mouse move without pointer lock does NOT accumulate look deltas
+    ✕ mouse move WITH pointer lock accumulates lookDeltaX and lookDeltaY
+    ✕ look deltas accumulate across multiple mousemove events per frame
+    ✕ look deltas reset to 0 after postFrame (1 ms)
+    ✕ scroll down produces toolSwap = 1
+    ✕ scroll up produces toolSwap = -1
+    ✕ toolSwap resets to 0 after postFrame
+    ✕ no scroll produces toolSwap = 0 (1 ms)
+    ✕ isAvailable returns true
+    ✕ dispose removes event listeners so keys no longer affect polling
+
+  ● KeyboardMouseProvider (Spec §23) › W produces moveZ = 1 (forward)
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31 |   constructor() {
+    > 32 |     window.addEventListener("keydown", this.onKeyDown);
+         |            ^
+      33 |     window.addEventListener("keyup", this.onKeyUp);
+      34 |     window.addEventListener("mousemove", this.onMouseMove);
+      35 |     window.addEventListener("wheel", this.onWheel, { passive: true });
+
+      at new addEventListener (game/input/KeyboardMouseProvider.ts:32:12)
+      at Object.<anonymous> (game/input/KeyboardMouseProvider.test.ts:33:16)
+
+  ● KeyboardMouseProvider (Spec §23) › W produces moveZ = 1 (forward)
+
+    TypeError: Cannot read properties of undefined (reading 'dispose')
+
+      35 |
+      36 |   afterEach(() => {
+    > 37 |     provider.dispose();
+         |              ^
+      38 |   });
+      39 |
+      40 |   // ── Movement ─────────────────────────────────────
+
+      at Object.dispose (game/input/KeyboardMouseProvider.test.ts:37:14)
+
+  ● KeyboardMouseProvider (Spec §23) › S produces moveZ = -1 (backward)
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31 |   constructor() {
+    > 32 |     window.addEventListener("keydown", this.onKeyDown);
+         |            ^
+      33 |     window.addEventListener("keyup", this.onKeyUp);
+      34 |     window.addEventListener("mousemove", this.onMouseMove);
+      35 |     window.addEventListener("wheel", this.onWheel, { passive: true });
+
+      at new addEventListener (game/input/KeyboardMouseProvider.ts:32:12)
+      at Object.<anonymous> (game/input/KeyboardMouseProvider.test.ts:33:16)
+
+  ● KeyboardMouseProvider (Spec §23) › S produces moveZ = -1 (backward)
+
+    TypeError: Cannot read properties of undefined (reading 'dispose')
+
+      35 |
+      36 |   afterEach(() => {
+    > 37 |     provider.dispose();
+         |              ^
+      38 |   });
+      39 |
+      40 |   // ── Movement ─────────────────────────────────────
+
+      at Object.dispose (game/input/KeyboardMouseProvider.test.ts:37:14)
+
+  ● KeyboardMouseProvider (Spec §23) › A produces moveX = -1 (left)
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31 |   constructor() {
+    > 32 |     window.addEventListener("keydown", this.onKeyDown);
+         |            ^
+      33 |     window.addEventListener("keyup", this.onKeyUp);
+      34 |     window.addEventListener("mousemove", this.onMouseMove);
+      35 |     window.addEventListener("wheel", this.onWheel, { passive: true });
+
+      at new addEventListener (game/input/KeyboardMouseProvider.ts:32:12)
+      at Object.<anonymous> (game/input/KeyboardMouseProvider.test.ts:33:16)
+
+  ● KeyboardMouseProvider (Spec §23) › A produces moveX = -1 (left)
+
+    TypeError: Cannot read properties of undefined (reading 'dispose')
+
+      35 |
+      36 |   afterEach(() => {
+    > 37 |     provider.dispose();
+         |              ^
+      38 |   });
+      39 |
+      40 |   // ── Movement ─────────────────────────────────────
+
+      at Object.dispose (game/input/KeyboardMouseProvider.test.ts:37:14)
+
+  ● KeyboardMouseProvider (Spec §23) › D produces moveX = 1 (right)
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31
+
+... [17835 characters truncated] ...
+
+─────────────────────────────
+
+      at Object.dispose (game/input/KeyboardMouseProvider.test.ts:37:14)
+
+  ● KeyboardMouseProvider (Spec §23) › look deltas reset to 0 after postFrame
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31 |   constructor() {
+    > 32 |     window.addEventListener("keydown", this.onKeyDown);
+         |            ^
+      33 |     window.addEventListener("keyup", this.onKeyUp);
+      34 |     window.addEventListener("mousemove", this.onMouseMove);
+      35 |     window.addEventListener("wheel", this.onWheel, { passive: true });
+
+      at new addEventListener (game/input/KeyboardMouseProvider.ts:32:12)
+      at Object.<anonymous> (game/input/KeyboardMouseProvider.test.ts:33:16)
+
+  ● KeyboardMouseProvider (Spec §23) › look deltas reset to 0 after postFrame
+
+    TypeError: Cannot read properties of undefined (reading 'dispose')
+
+      35 |
+      36 |   afterEach(() => {
+    > 37 |     provider.dispose();
+         |              ^
+      38 |   });
+      39 |
+      40 |   // ── Movement ─────────────────────────────────────
+
+      at Object.dispose (game/input/KeyboardMouseProvider.test.ts:37:14)
+
+  ● KeyboardMouseProvider (Spec §23) › scroll down produces toolSwap = 1
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31 |   constructor() {
+    > 32 |     window.addEventListener("keydown", this.onKeyDown);
+         |            ^
+      33 |     window.addEventListener("keyup", this.onKeyUp);
+      34 |     window.addEventListener("mousemove", this.onMouseMove);
+      35 |     window.addEventListener("wheel", this.onWheel, { passive: true });
+
+      at new addEventListener (game/input/KeyboardMouseProvider.ts:32:12)
+      at Object.<anonymous> (game/input/KeyboardMouseProvider.test.ts:33:16)
+
+  ● KeyboardMouseProvider (Spec §23) › scroll down produces toolSwap = 1
+
+    TypeError: Cannot read properties of undefined (reading 'dispose')
+
+      35 |
+      36 |   afterEach(() => {
+    > 37 |     provider.dispose();
+         |              ^
+      38 |   });
+      39 |
+      40 |   // ── Movement ─────────────────────────────────────
+
+      at Object.dispose (game/input/KeyboardMouseProvider.test.ts:37:14)
+
+  ● KeyboardMouseProvider (Spec §23) › scroll up produces toolSwap = -1
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31 |   constructor() {
+    > 32 |     window.addEventListener("keydown", this.onKeyDown);
+         |            ^
+      33 |     window.addEventListener("keyup", this.onKeyUp);
+      34 |     window.addEventListener("mousemove", this.onMouseMove);
+      35 |     window.addEventListener("wheel", this.onWheel, { passive: true });
+
+      at new addEventListener (game/input/KeyboardMouseProvider.ts:32:12)
+      at Object.<anonymous> (game/input/KeyboardMouseProvider.test.ts:33:16)
+
+  ● KeyboardMouseProvider (Spec §23) › scroll up produces toolSwap = -1
+
+    TypeError: Cannot read properties of undefined (reading 'dispose')
+
+      35 |
+      36 |   afterEach(() => {
+    > 37 |     provider.dispose();
+         |              ^
+      38 |   });
+      39 |
+      40 |   // ── Movement ─────────────────────────────────────
+
+      at Object.dispose (game/input/KeyboardMouseProvider.test.ts:37:14)
+
+  ● KeyboardMouseProvider (Spec §23) › toolSwap resets to 0 after postFrame
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31 |   constructor() {
+    > 32 |     window.addEventListener("keydown", this.onKeyDown);
+         |            ^
+      33 |     window.addEventListener("keyup", this.onKeyUp);
+      34 |     window.addEventListener("mousemove", this.onMouseMove);
+      35 |     window.addEventListener("wheel", this.onWheel, { passive: true });
+
+      at new addEventListener (game/input/KeyboardMouseProvider.ts:32:12)
+      at Object.<anonymous> (game/input/KeyboardMouseProvider.test.ts:33:16)
+
+  ● KeyboardMouseProvider (Spec §23) › toolSwap resets to 0 after postFrame
+
+    TypeError: Cannot read properties of undefined (reading 'dispose')
+
+      35 |
+      36 |   afterEach(() => {
+    > 37 |     provider.dispose();
+         |              ^
+      38 |   });
+      39 |
+      40 |   // ── Movement ─────────────────────────────────────
+
+      at Object.dispose (game/input/KeyboardMouseProvider.test.ts:37:14)
+
+  ● KeyboardMouseProvider (Spec §23) › no scroll produces toolSwap = 0
+
+    TypeError: window.addEventListener is not a function
+
+      30 |
+      31 |   constructor() {
+    > 32 |     window.addEventListener("keydown", this.onKeyDown);
+         |            ^
+      33 |     window.addEventListener("keyup", this.onKeyUp);
+      34 |     window.addEventListener("mousemove", this.onMouseMove);
+      35 |     window.addEventListener("wheel", this.onWheel, { passive: true });
+
+      at new addEventListener (game/input/KeyboardMouseProvider.ts:32:12)
+      at Object.<anonymous> (game/input/KeyboardMouseProvider.test.ts:33:16)
+
+  ● KeyboardMouseProvider (Spec §23) › no scroll pr][0m
+`window.addEventListener is not a function` — the Jest environment is not jsdom. Let me check the config:
+[94m[Bash][0m Check Jest configuration $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js 2>/dev/null || cat /Users/jbogaty/s...
+[94m[Bash][0m Check Jest setup file $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.setup.ts
+[94m[Bash][0m Check jest-expo preset's testEnvironment $ console.log(JSON.stringify(p.testEnvironment || p.projects || 'not set'))" 2>&1 | head -20
+[94m[Bash][0m Check if jest-environment-jsdom is installed $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules | grep -E "jest-environment|jsdom" 2>&...
+`jest-environment-jsdom` is installed. I'll add the `@jest-environment jsdom` docblock to the test file:
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.test.ts[0m edit: "/**
+ * KeyboardMouseProvider tests (Spec §23)" → "/**
+ * @jest-environment jsdom
+ */
+
+/**
+ * Keyboar..."
+[94m[Bash][0m Run KeyboardMouseProvider tests with jsdom environment $ npx jest --no-coverage game/input/KeyboardMouseProvider.test.ts 2>&1
+
+[91m[Error: Exit code 1
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL game/input/KeyboardMouseProvider.test.ts
+  KeyboardMouseProvider (Spec §23)
+    ✓ W produces moveZ = 1 (forward) (1 ms)
+    ✓ S produces moveZ = -1 (backward)
+    ✓ A produces moveX = -1 (left) (1 ms)
+    ✓ D produces moveX = 1 (right)
+    ✓ ArrowUp produces moveZ = 1
+    ✓ ArrowLeft produces moveX = -1
+    ✓ no keys held produces moveX = 0, moveZ = 0
+    ✓ opposing keys cancel out (W+S = 0) (1 ms)
+    ✓ key release stops movement
+    ✓ Space triggers jump = true
+    ✓ jump is edge-triggered: resets to false after postFrame
+    ✓ jump re-triggers after key release and re-press
+    ✓ E triggers interact = true
+    ✓ interact is edge-triggered: resets after postFrame (1 ms)
+    ✓ ShiftLeft triggers sprint = true
+    ✓ ShiftRight triggers sprint = true
+    ✓ sprint resets when key released
+    ✓ mouse move without pointer lock does NOT accumulate look deltas
+    ✕ mouse move WITH pointer lock accumulates lookDeltaX and lookDeltaY (1 ms)
+    ✕ look deltas accumulate across multiple mousemove events per frame
+    ✓ look deltas reset to 0 after postFrame
+    ✓ scroll down produces toolSwap = 1
+    ✓ scroll up produces toolSwap = -1
+    ✓ toolSwap resets to 0 after postFrame (1 ms)
+    ✓ no scroll produces toolSwap = 0
+    ✓ isAvailable returns true
+    ✓ dispose removes event listeners so keys no longer affect polling
+
+  ● KeyboardMouseProvider (Spec §23) › mouse move WITH pointer lock accumulates lookDeltaX and lookDeltaY
+
+    expect(received).toBeCloseTo(expected)
+
+    Expected: 0.2
+    Received: NaN
+
+    Expected precision:    2
+    Expected difference: < 0.005
+    Received difference:   NaN
+
+      205 |     mousemove(100, 50); // 100px * 0.002 = 0.2 rad, 50px * 0.002 = 0.1 rad
+      206 |     const frame = provider.poll(1 / 60);
+    > 207 |     expect(frame.lookDeltaX).toBeCloseTo(0.2);
+          |                              ^
+      208 |     expect(frame.lookDeltaY).toBeCloseTo(0.1);
+      209 |
+      210 |     // Restore
+
+      at Object.toBeCloseTo (game/input/KeyboardMouseProvider.test.ts:207:30)
+
+  ● KeyboardMouseProvider (Spec §23) › look deltas accumulate across multiple mousemove events per frame
+
+    expect(received).toBeCloseTo(expected)
+
+    Expected: 0.4
+    Received: NaN
+
+    Expected precision:    2
+    Expected difference: < 0.005
+    Received difference:   NaN
+
+      224 |     mousemove(100, 0);
+      225 |     const frame = provider.poll(1 / 60);
+    > 226 |     expect(frame.lookDeltaX).toBeCloseTo(0.4);
+          |                              ^
+      227 |
+      228 |     Object.defineProperty(document, "pointerLockElement", {
+      229 |       configurable: true,
+
+      at Object.toBeCloseTo (game/input/KeyboardMouseProvider.test.ts:226:30)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 25 passed, 27 total
+Snapshots:   0 total
+Time:        0.551 s, estimated 1 s
+Ran all test suites matching /game\/input\/KeyboardMouseProvider.test.ts/i.][0m
+`e.movementX` is `NaN` in jsdom — it doesn't support that init dict property. Let me check the jsdom version and fix the test:
+[94m[Bash][0m Check if Node.js MouseEvent supports movementX init dict $ console.log(m.movementX, m.movementY)" 2>&1
+
+[91m[Error: Exit code 1
+[eval]:1
+const m = new MouseEvent('mousemove', { movementX: 5, movementY: 3 }); console.log(m.movementX, m.movementY)
+          ^
+
+ReferenceError: MouseEvent is not defined
+    at [eval]:1:11
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:451:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:449:60)
+    at evalFunction (node:internal/process/execution:283:30)
+    at evalTypeScript (node:internal/process/execution:295:3)
+    at node:internal/main/eval_string:71:3
+
+Node.js v25.7.0][0m
+[94m[Bash][0m Test jsdom MouseEvent movementX support $ " 2>&1
+jsdom doesn't support `movementX`/`movementY` in the `MouseEvent` constructor. I need to set them via `Object.defineProperty` on the event object — the standard jsdom workaround:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/KeyboardMouseProvider.test.ts[0m edit: "function mousemove(movementX: number, movementY: n..." → "function mousemove(movementX: number, movementY: n..."
+[94m[Bash][0m Run KeyboardMouseProvider tests after fix $ npx jest --no-coverage game/input/KeyboardMouseProvider.test.ts 2>&1
+27/27 pass. Now run the full test suite:
+[94m[Bash][0m Run full Jest suite $ npx jest --no-coverage 2>&1 | tail -20
+All 1460 tests pass. Now append to progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-026 learnings to progress.md $ the docblock overrides per-file. `jest-environment-jsdom` must be installed (it is in this project)....
+Also add the jsdom pattern to the codebase patterns section at the top:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **useMouseLook pointer lock guard**: In `mousemo..." → "- **jsdom `@jest-environment jsdom` docblock**: Te..."
+[94m[TodoWrite][0m
+All acceptance criteria met:
+
+- `game/input/KeyboardMouseProvider.ts` created
+- WASD + arrows → `moveX`/`moveZ`, mouse delta → `lookDeltaX`/`lookDeltaY`, Space → `jump` (edge-triggered), E → `interact` (edge-triggered), Shift → `sprint`, scroll → `toolSwap`
+- Registers on `window` events
+- 27 tests all pass, full suite 1460/1460
+- `tsc --noEmit` clean
+
+Key gotchas documented: `@jest-environment jsdom` docblock required for DOM tests with `jest-expo`, and jsdom's `MouseEvent` requires `Object.defineProperty` to inject `movementX`/`movementY`.
+
+<promise>COMPLETE</promise>

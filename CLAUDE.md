@@ -1,405 +1,341 @@
 # CLAUDE.md -- Grovekeeper
 
-See `docs/` for complete game design, architecture, and brand documentation.
+## Mandatory Workflow: Docs > Tests > Code
+
+**This is the single most important rule in the project.** Every agent session must follow this pipeline:
+
+```
+GAME_SPEC.md  ->  *.test.ts  ->  *.ts  ->  wire to game loop  ->  update spec status
+```
+
+1. **Nothing is implemented without a spec section.** If you want to build something, write it in `docs/GAME_SPEC.md` first.
+2. **Nothing is specced without tests.** Before writing implementation code, write tests that reference the spec section.
+3. **Nothing is tested without implementation.** Make the tests pass.
+4. **Nothing is implemented without being wired up.** Connect to the game loop, UI, or store.
+
+See `.claude/skills/docs-first-pipeline.md` for the full workflow.
+
+### When the user gives you a concept or story:
+1. Translate it to a spec section in `docs/GAME_SPEC.md`
+2. **DO NOT write code.** Stop after the spec.
+
+### When you're implementing a specced section:
+1. Read the spec section
+2. Write tests first (each test references the spec section number)
+3. Write implementation
+4. Wire it up
+5. Update spec status
+
+### When you're fixing a bug:
+1. Find the spec section -- what should happen?
+2. Write a failing test
+3. Fix the code
+4. If the spec was wrong, fix the spec too
+
+---
 
 ## Project Identity
 
-**Grovekeeper** is a cozy 2.5D isometric tree-planting simulation / idle tending game. Mobile-first PWA (portrait), desktop secondary. Target session: 3-15 minutes (commute-friendly).
+**Grovekeeper** is a cozy first-person grove-tending simulation. Mobile-first native app (portrait-primary), built with Expo and React Three Fiber. Target session: 3-15 minutes (commute-friendly).
 
 **Tagline:** *"Every forest begins with a single seed."*
 
-## Critical Context
+**Perspective:** First-person with held tool model. The player DIG, CHOP, WATER, PLANT, PRUNE -- every action must feel physical and embodied. See `docs/plans/2026-03-06-fps-perspective-design.md` for the full design.
 
-### Mobile-First is Non-Negotiable
+**Architecture patterns** are fully documented in `docs/architecture/` — input system, FPS camera, tool view model. No need to reference external codebases.
 
-Every decision -- from UI layout to performance budgets to touch targets -- must prioritize mobile portrait mode. Desktop is a graceful enhancement, never the primary target.
+---
 
-- All touch targets: minimum 44x44px
-- Unified InputManager: drag-anywhere on canvas (mobile), WASD (desktop), tap/click-to-move with A* pathfinding
-- Test at 375px width (iPhone SE) as the minimum viewport
-- Passive event listeners for all pointer handlers
-- `touch-action: none` on the game canvas
-- Haptic feedback via `@capacitor/haptics` on supported devices
+## Hard Rules
 
-### Current Tech Stack
+These are non-negotiable. The `.claude/hooks/` directory enforces several automatically.
 
-| Layer | Technology | Notes |
-|-------|-----------|-------|
-| Runtime | React 19 | UI layer, component model |
-| 3D Engine | BabylonJS 8.x | Scene rendering, procedural meshes |
-| ECS | Miniplex 2.x | Entity-component-system |
-| ECS React | miniplex-react | React hooks for ECS queries |
-| State | Zustand 5.x | Persistent game state via localStorage |
-| Input | InputManager (custom) | Unified pointer/keyboard/tap-to-move with A* pathfinding |
-| Styling | Tailwind CSS 4.x + shadcn/ui | UI component library |
-| Bundler | Vite 6.x | Fast dev server, HMR |
-| Language | TypeScript 5.7+ | Strict mode |
-| Lint/Fmt | Biome 2.3 | Single tool for lint + format |
-| Package Mgr | pnpm | Fast, strict |
-| Testing | Vitest 4.x + @testing-library/react | TDD approach |
-| Mobile Native | Capacitor 8.x | PWA + native bridge |
+| Rule | Enforced by | Details |
+|------|-------------|---------|
+| Spec before code | `spec-coverage-check.sh` | Every game system file needs a GAME_SPEC.md section |
+| No file over 300 lines | `file-size-sentinel.sh` | Decompose into subpackage with index.ts barrel |
+| No Math.random() | `no-math-random.sh` | Use `scopedRNG(scope, worldSeed, ...extra)` from `game/utils/seedRNG.ts` |
+| No inline tuning constants | `no-magic-numbers.sh` | Put numbers in `config/game/*.json`, load at runtime |
+| Quality gate on commit | `pre-commit-quality.sh` | `lint + tsc + test` must pass before any git commit |
+| No placeholders/fallbacks | manual | If an asset or feature is missing, hard-error. Never mask incomplete work with stubs. |
+| Mobile-first | manual | 375px minimum viewport, 44px touch targets, portrait-primary |
+| Named exports only | manual | Never `export default` |
+| pnpm only | manual | Never npm or yarn |
+| Biome only | manual | Never ESLint or Prettier |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Expo SDK 55 (New Architecture required) |
+| Runtime | React 19, React Native 0.83 |
+| 3D Engine | React Three Fiber 9 + drei 10 |
+| Physics | @react-three/rapier 2.x (active -- FPS capsule + terrain colliders) |
+| ECS | Miniplex 2.x |
+| State | Legend State 3.x (persistent via expo-sqlite) |
+| AI/Behavior | Yuka 0.7 |
+| Audio | Tone.js 15.x (procedural synthesis + spatial audio) |
+| Animation | animejs 3.x (NPC rigid body part rotation) |
+| Database | expo-sqlite + drizzle-orm |
+| Styling | NativeWind 4 + Tailwind CSS 3 |
+| Language | TypeScript 5.9, strict mode |
+| Lint/Fmt | Biome 2.4 |
+| Testing | Jest + Maestro (E2E) + Playwright (web E2E) |
+| Package Mgr | pnpm |
+
+---
 
 ## Common Commands
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Development server
-pnpm dev
-
-# Build (development mode)
-pnpm build
-
-# Preview production build
-pnpm preview
-
-# Run tests
-pnpm test
-
-# Run tests once (CI mode)
-pnpm test:run
-
-# Test with coverage
-pnpm test:coverage
-
-# Lint
-pnpm lint
-
-# Format
-pnpm format
-
-# Full check (lint + format)
-pnpm check
-
-# TypeScript type check
-pnpm tsc
+pnpm install          # Install dependencies
+pnpm dev              # Expo dev server
+pnpm android          # Run on Android
+pnpm ios              # Run on iOS
+pnpm web              # Run on web
+pnpm test             # Run tests (Jest)
+pnpm test:watch       # Watch mode
+pnpm test:coverage    # Coverage report
+pnpm test:e2e         # Maestro mobile E2E
+pnpm lint             # Biome lint + format check
+pnpm format           # Biome format (write)
+pnpm check            # Full check (lint + format, write fixes)
+npx tsc --noEmit      # TypeScript type check
 ```
+
+---
+
+## Architecture
+
+### State Split: ECS vs Legend State
+
+- **ECS (Miniplex):** Runtime game state -- entity positions, growth progress, tile states. Lives in memory.
+- **Legend State:** Persistent player state -- level, XP, resources, unlocks, settings, stamina, prestige. Persisted via expo-sqlite.
+- **Rule:** If it changes every frame, it belongs in ECS. If it persists across sessions, it belongs in Legend State.
+
+### 3D Scene (R3F Declarative)
+
+The scene uses React Three Fiber components inside an R3F `<Canvas>` wrapped in `<Physics>` (Rapier). NOT imperative Three.js calls.
+
+- `components/scene/` -- Lighting, Sky, TerrainChunk, WaterBody, ProceduralTown, ProceduralBuilding, BirmotherMesh
+- `components/entities/` -- ProceduralTrees, ProceduralBushes, ProceduralFences, ProceduralProps, ProceduralGrass, ProceduralHedgeMaze, ProceduralEnemies, ChibiNpcScene, GrovekeeperSpirit
+- `components/game/` -- HUD, menus, panels, overlays (React Native UI)
+- `components/player/` -- FPSCamera, PlayerCapsule, ProceduralToolView, TouchLookZone, TargetInfo
+
+### Input System (Active)
+
+See `docs/architecture/input-system.md` for full spec. Implementation in `game/input/`.
+
+```
+InputManager (singleton) -- game/input/InputManager.ts
+  -> KeyboardMouseProvider (desktop: WASD + mouse look)
+  -> TouchProvider (mobile: joystick + look zone + buttons)
+  -> GamepadProvider (controller)
+  -> AIProvider (autoplay/testing governor -- planned)
+```
+
+Game code reads an `InputFrame` per tick. Never reads raw events.
+
+### Systems are Pure Functions
+
+```typescript
+(world: World, deltaTime: number, ...context: unknown[]) => void
+```
+
+Config from `config/game/*.json`. Randomness from `scopedRNG`. No side effects beyond ECS mutations.
+
+---
 
 ## Project Structure
 
 ```
 grovekeeper/
-├── CLAUDE.md                         # This file
-├── AGENTS.md                         # Multi-agent orchestration guide
-├── memory-bank/                      # Persistent project context
-├── docs/                             # Game design, architecture, brand docs
+├── CLAUDE.md                         # This file -- governs all agent behavior
+├── .claude/                          # Agent infrastructure
+│   ├── settings.json                 # Hook configuration
+│   ├── hooks/                        # Automatic quality gates
+│   │   ├── pre-commit-quality.sh     # Blocks commit without lint+tsc+test
+│   │   ├── spec-coverage-check.sh    # Warns: system file without spec section
+│   │   ├── no-magic-numbers.sh       # Warns: inline const UPPER = number
+│   │   ├── file-size-sentinel.sh     # Warns: file over 300 lines
+│   │   └── no-math-random.sh         # Warns: Math.random() in game code
+│   ├── agents/                       # Specialized agent roles
+│   │   ├── system-designer.md        # Designs game systems (docs > tests > code)
+│   │   ├── scene-builder.md          # Builds R3F 3D scene (FPS perspective)
+│   │   ├── spec-writer.md            # ONLY writes GAME_SPEC.md -- no code
+│   │   ├── ui-builder.md             # Builds HUD, mobile-first, brand-aligned
+│   │   └── playtest-governor.md      # Validates game is playable end-to-end
+│   ├── commands/                     # Slash commands
+│   │   ├── add-system.md             # /add-system: docs > tests > code workflow
+│   │   ├── spec-idea.md              # /spec-idea: concept -> spec (no code)
+│   │   └── audit-game.md             # /audit-game: full playability audit
+│   └── skills/                       # Repeatable pipelines
+│       └── docs-first-pipeline.md    # The mandatory workflow
+├── docs/                             # Game design and architecture
 │   ├── README.md                     # Documentation index
-│   ├── GAME_DESIGN_DOCUMENT.md       # Full game design document
-│   ├── TECHNICAL_ARCHITECTURE.md     # Technical architecture overview
-│   ├── SYSTEMS.md                    # Game systems reference
-│   ├── API_REFERENCE.md              # API and store reference
-│   ├── ROADMAP.md                    # Future roadmap
-│   ├── architecture/                 # Architecture deep dives
-│   │   ├── overview.md
-│   │   ├── ecs-patterns.md
-│   │   └── state-management.md
-│   ├── brand/
-│   │   └── identity.md               # Visual identity, design tokens
-│   ├── game-design/
-│   │   ├── core-loop.md
-│   │   └── grid-system.md
-│   ├── guides/                       # Developer guides
-│   ├── plans/                        # Historical build plans
-│   └── ui-ux/                        # UI/UX documentation
-├── src/
-│   ├── main.tsx                      # Entry point
-│   ├── App.tsx                       # Root component -> Game
-│   ├── game/
-│   │   ├── Game.tsx                  # Screen router (menu | playing)
-│   │   ├── scenes/
-│   │   │   └── GameScene.tsx         # BabylonJS canvas + game loop orchestrator
-│   │   ├── scene/                    # Scene manager modules
-│   │   │   ├── SceneManager.ts       # Coordinates all scene managers
-│   │   │   ├── CameraManager.ts      # Orthographic diorama camera
-│   │   │   ├── GroundBuilder.ts      # DynamicTexture biome blending
-│   │   │   ├── LightingManager.ts    # Hemisphere + directional lights
-│   │   │   ├── SkyManager.ts         # HDRI skybox
-│   │   │   ├── PlayerMeshManager.ts  # Player mesh lifecycle
-│   │   │   ├── TreeMeshManager.ts    # Tree mesh lifecycle + template cache
-│   │   │   └── BorderTreeManager.ts  # Decorative border trees
-│   │   ├── ecs/
-│   │   │   ├── world.ts              # Miniplex World + queries
-│   │   │   ├── world.test.ts
-│   │   │   ├── react.ts              # miniplex-react hooks API
-│   │   │   ├── archetypes.ts         # Entity factory functions
-│   │   │   └── archetypes.test.ts
-│   │   ├── world/                    # World data layer
-│   │   │   ├── WorldManager.ts       # Zone loading, world state
-│   │   │   ├── WorldGenerator.ts     # Procedural world generation
-│   │   │   ├── ZoneLoader.ts         # JSON zone hydration
-│   │   │   ├── types.ts              # World/zone type definitions
-│   │   │   ├── archetypes.ts         # Tile entity factories
-│   │   │   └── data/
-│   │   │       └── starting-world.json  # Level 1-5 zone definitions
-│   │   ├── structures/               # Structure system
-│   │   │   ├── StructureManager.ts   # Structure placement + effects
-│   │   │   ├── BlockMeshFactory.ts   # Daggerfall-style block meshes
-│   │   │   ├── types.ts              # Structure type definitions
-│   │   │   └── data/
-│   │   │       ├── blocks.json       # Block catalog
-│   │   │       └── structures.json   # Structure recipes
-│   │   ├── systems/
-│   │   │   ├── growth.ts             # Tree growth (5-stage, spec formula)
-│   │   │   ├── movement.ts           # Player movement
-│   │   │   ├── time.ts               # Day/night + season cycle
-│   │   │   ├── quests.ts             # Quest/goal generation
-│   │   │   ├── platform.ts           # Capacitor haptics bridge
-│   │   │   ├── weather.ts            # Weather events (rain/drought/wind)
-│   │   │   ├── achievements.ts       # 15 achievements
-│   │   │   ├── prestige.ts           # Level 25+ prestige + cosmetics
-│   │   │   ├── gridExpansion.ts      # Grid expansion (16/20/24/32)
-│   │   │   ├── gridGeneration.ts     # Tile generation (soil/water/rock/path)
-│   │   │   ├── levelUnlocks.ts       # Level-based unlock progression
-│   │   │   ├── offlineGrowth.ts      # Offline growth calculation
-│   │   │   ├── saveLoad.ts           # Save/load serialization
-│   │   │   ├── harvest.ts            # Harvest yield + resource drops (late-binding multipliers)
-│   │   │   ├── stamina.ts            # Stamina drain + regen
-│   │   │   ├── InputManager.ts       # Unified input: pointer, keyboard, tap-to-move A*
-│   │   │   ├── pathfinding.ts        # A* on tile grid + walkability grid builder
-│   │   │   ├── pathFollowing.ts      # Waypoint interpolation for tap-to-move
-│   │   │   ├── discovery.ts          # Species discovery system
-│   │   │   ├── recipes.ts            # Crafting recipe system
-│   │   │   ├── trading.ts            # Resource trading system
-│   │   │   ├── seasonalMarket.ts     # Seasonal market prices
-│   │   │   ├── toolUpgrades.ts       # Tool upgrade progression
-│   │   │   ├── wildTreeRegrowth.ts   # Wild tree respawn system
-│   │   │   ├── zoneBonuses.ts        # Per-zone bonus effects
-│   │   │   └── *.test.ts             # Adjacent test files
-│   │   ├── stores/
-│   │   │   ├── gameStore.ts          # Zustand persistent state
-│   │   │   └── gameStore.test.ts
-│   │   ├── constants/
-│   │   │   ├── config.ts             # Grid size, colors, growth stages
-│   │   │   ├── trees.ts              # Tree species definitions (15 species)
-│   │   │   ├── tools.ts              # Tool definitions + stamina costs
-│   │   │   ├── resources.ts          # Resource type definitions
-│   │   │   └── *.test.ts             # Adjacent test files
-│   │   ├── utils/
-│   │   │   ├── spsTreeGenerator.ts   # Ported BabylonJS SPS tree generator
-│   │   │   ├── treeMeshBuilder.ts    # Species-specific PBR meshes
-│   │   │   ├── gridMath.ts           # Grid coordinate math utilities
-│   │   │   ├── seedRNG.ts            # Seeded RNG for deterministic meshes
-│   │   │   └── *.test.ts             # Adjacent test files
-│   │   ├── ui/
-│   │   │   ├── MainMenu.tsx          # Start screen
-│   │   │   ├── HUD.tsx               # In-game overlay container
-│   │   │   ├── GameUI.tsx            # HUD + joystick + dialogs
-│   │   │   ├── Joystick.tsx          # nipplejs wrapper
-│   │   │   ├── Logo.tsx              # SVG logo
-│   │   │   ├── FarmerMascot.tsx      # SVG farmer "Fern"
-│   │   │   ├── ToolWheel.tsx         # Tool selection dialog
-│   │   │   ├── ToolBelt.tsx          # Tool belt HUD (bottom-right)
-│   │   │   ├── SeedSelect.tsx        # Species picker dialog
-│   │   │   ├── PauseMenu.tsx         # Pause overlay + settings
-│   │   │   ├── TimeDisplay.tsx       # Day/night/season indicator
-│   │   │   ├── QuestPanel.tsx        # Active quest tracker
-│   │   │   ├── RulesModal.tsx        # First-time tutorial
-│   │   │   ├── ResourceBar.tsx       # Timber/Sap/Fruit/Acorn display
-│   │   │   ├── StaminaGauge.tsx      # Stamina bar
-│   │   │   ├── XPBar.tsx             # XP + level display
-│   │   │   ├── ActionButton.tsx      # Context-sensitive action button
-│   │   │   ├── WeatherOverlay.tsx    # CSS weather effects + petals
-│   │   │   ├── AchievementPopup.tsx  # Gold border + sparkle modal
-│   │   │   ├── MiniMap.tsx           # SVG-based minimap (desktop overlay, mobile fullscreen)
-│   │   │   ├── Toast.tsx             # Toast notification system
-│   │   │   ├── FloatingParticles.tsx # +XP / +Timber floating numbers
-│   │   │   └── ErrorBoundary.tsx     # React error boundary
-│   │   └── types.ts                  # Core type definitions
-│   ├── components/
-│   │   └── ui/                       # shadcn/ui components
-│   ├── hooks/
-│   │   ├── use-mobile.ts             # Mobile detection hook
-│   │   └── use-media-query.tsx       # Responsive breakpoint hook
-│   └── lib/
-│       └── utils.ts                  # cn() utility for Tailwind
-├── public/
-│   ├── textures/                     # PBR texture assets
-│   ├── manifest.json                 # PWA manifest
-│   └── sw.js                         # Service worker
-├── capacitor.config.ts               # Capacitor native config
-├── biome.json                        # Linter/formatter config
-├── vitest.config.ts                  # Test runner config
-├── vite.config.ts                    # Bundler config
-└── tsconfig.json                     # TypeScript config
+│   ├── GAME_SPEC.md                  # SINGLE SOURCE OF TRUTH for game design
+│   ├── architecture/                 # Architecture docs (18 files)
+│   └── plans/                        # Design documents (13 files)
+├── config/                           # JSON config (all tuning values here)
+│   ├── theme.json                    # Colors, typography, spacing
+│   ├── world/                        # World data (starting-world, blocks, structures, encounters, festivals)
+│   └── game/                         # Game balance data (46 JSON files)
+│       ├── species.json              # 15 tree species catalog
+│       ├── tools.json                # Tools + stamina costs
+│       ├── resources.json            # Resource type definitions
+│       ├── growth.json               # Stage names, multipliers, timing
+│       ├── weather.json              # Event probabilities, multipliers
+│       ├── difficulty.json           # Difficulty multipliers
+│       ├── dialogue-trees.json       # Dialogue trees
+│       ├── fishing.json              # Fishing species, timing
+│       ├── mining.json               # Rock hardness, ore tables
+│       ├── cooking.json              # Cooking recipes
+│       ├── forging.json              # Smelting + tool upgrade recipes
+│       ├── building.json             # Build costs, unlock levels
+│       ├── enemies.json              # Enemy types, stats, behaviors
+│       ├── combat.json               # Combat parameters
+│       ├── loot.json                 # Loot tables for all sources
+│       ├── vegetation.json           # Bush shapes, placement density
+│       └── ...                       # 30+ more config files
+├── app/                              # Expo Router screens
+│   ├── _layout.tsx                   # Root layout
+│   ├── index.tsx                     # Main menu (+ NewGameModal)
+│   ├── settings.tsx                  # Settings screen
+│   └── game/
+│       └── index.tsx                 # Game screen (Canvas + HUD + all overlays)
+├── components/                       # React Native + R3F components
+│   ├── ui/                           # Base UI (button, text, icon, tokens)
+│   ├── game/                         # Game UI (HUD, menus, panels, dialogs)
+│   │   ├── GameUI/                   # Orchestrator (designed but not mounted)
+│   │   ├── PauseMenu/               # Tabbed pause overlay
+│   │   ├── minimap/                  # MiniMap + snapshot
+│   │   └── AchievementPopup/        # Achievement popup + sparkle
+│   ├── scene/                        # R3F scene (Lighting, Sky, TerrainChunk, WaterBody, ProceduralTown, ProceduralBuilding)
+│   ├── entities/                     # R3F entities (ProceduralTrees, ProceduralBushes, ProceduralFences, ProceduralProps, ProceduralGrass, ProceduralHedgeMaze, ProceduralEnemies, ChibiNpc, GrovekeeperSpirit)
+│   └── player/                       # FPS player (FPSCamera, PlayerCapsule, ProceduralToolView, TouchLookZone, TargetInfo)
+├── game/                             # Game logic (engine-agnostic)
+│   ├── ecs/                          # Miniplex world, archetypes, queries
+│   │   └── components/              # Domain-specific ECS components (core, npc, combat, building, structures, items, vegetation, terrain, dialogue, procedural/)
+│   ├── systems/                      # Pure game systems (90+ files with tests)
+│   │   ├── achievements/            # Achievement checker (core, types, world)
+│   │   ├── buildingGeometry/        # Procedural building boxes + interiors
+│   │   ├── hedgePlacement/          # Maze wall generation
+│   │   ├── kitbashing/              # Modular building placement + Rapier
+│   │   ├── recipes/                 # Crafting recipe catalog
+│   │   ├── quests/                  # Quest goal types + registry
+│   │   └── travelingMerchant/       # Merchant offer pools + scheduling
+│   ├── stores/                       # Legend State persistent store (gameStore, inventory, questState, settings, survivalState)
+│   ├── hooks/                        # Custom hooks (useGameLoop/, useInteraction/, useInput, useMovement, useRaycast, useBuildMode, etc.)
+│   ├── input/                        # Input system (InputManager, KeyboardMouseProvider, TouchProvider, GamepadProvider)
+│   ├── player/                       # Player utilities (teleport)
+│   ├── ai/                           # Yuka NPC AI + PlayerGovernor
+│   ├── npcs/                         # NPC management + data
+│   ├── quests/                       # Quest chain engine + data
+│   ├── events/                       # Event scheduler
+│   ├── world/                        # World generation (ChunkManager, terrainGenerator, villageLayout/, mazeGenerator, entitySpawner)
+│   ├── structures/                   # Structure placement + effects
+│   ├── actions/                      # Game action dispatcher
+│   ├── config/                       # Runtime config loaders (species, tools, resources, difficulty)
+│   ├── constants/                    # Codex + derived constants
+│   ├── db/                           # expo-sqlite + drizzle-orm
+│   ├── shaders/                      # GLSL shaders (Gerstner water)
+│   ├── ui/                           # UI bridge (dialogueBridge, Toast)
+│   ├── debug/                        # Debug bridge for dev tools
+│   └── utils/                        # Pure utilities (seedRNG, proceduralTextures, worldNames)
+├── assets/                           # Textures, fonts (GLB models removed -- all procedural)
+└── .maestro/                         # Maestro E2E test flows
 ```
 
-## Architecture Patterns
+---
 
-### ECS (Entity-Component-System)
+## Agent Infrastructure
 
-All game entities live in the Miniplex `world`. Query them, don't search:
+### Agents (`.claude/agents/`)
 
-```typescript
-// Good: use pre-defined queries
-const trees = treesQuery;  // world.with('tree', 'position', 'renderable')
+| Agent | Role | When to use |
+|-------|------|-------------|
+| `spec-writer` | Translates concepts to GAME_SPEC.md sections | User gives a gameplay idea |
+| `system-designer` | Implements systems: spec > tests > code > wire | Building a new game system |
+| `scene-builder` | Builds R3F 3D scene components | 3D rendering, FPS camera, tool models |
+| `ui-builder` | Builds HUD and UI components | UI work, mobile-first |
+| `playtest-governor` | Validates game is playable | After changes, before merge |
 
-// Bad: searching arrays
-const trees = allEntities.filter(e => e.tree);
-```
+### Commands (`.claude/commands/`)
 
-Systems are pure functions: `(world, deltaTime, ...context) => void`. They run every frame in the game loop inside `GameScene.tsx`.
+| Command | Purpose |
+|---------|---------|
+| `/spec-idea <concept>` | Turn a gameplay concept into a spec section (no code) |
+| `/add-system <name>` | Build a system following docs > tests > code |
+| `/audit-game` | Full playability audit |
 
-### State Split: ECS vs Zustand
+### Hooks (`.claude/hooks/`)
 
-- **ECS (Miniplex):** Runtime game state -- entity positions, growth progress, tile states. Lives in memory, serialized for saves.
-- **Zustand (gameStore):** Persistent player state -- level, XP, resources, unlocks, settings, quest progress, stamina, prestige. Auto-persisted to localStorage via `persist` middleware.
-- **Rule:** If it changes every frame, it belongs in ECS. If it persists across sessions, it belongs in Zustand.
+Hooks run automatically on tool use. They cannot be bypassed. They catch:
+- Commits without passing quality checks
+- Game system files without spec coverage
+- Inline tuning constants that should be in JSON config
+- Files over 300 lines
+- Math.random() in game code
 
-### BabylonJS Scene Management
-
-The 3D scene is imperative (not declarative React). `GameScene.tsx` (~400 lines) orchestrates scene setup and game loop, delegating subsystem management to specialized scene managers:
-
-- **SceneManager**: Coordinates all subsystem managers
-- **CameraManager**: Orthographic diorama camera (NOT isometric)
-- **GroundBuilder**: DynamicTexture biome blending, grid overlay
-- **LightingManager**: Hemisphere + directional lights, day/night sync
-- **SkyManager**: HDRI skybox with seasonal rotation
-- **PlayerMeshManager**: Player mesh lifecycle (create, update, dispose)
-- **TreeMeshManager**: Tree mesh lifecycle (template cache, clone, lerp growth, freeze)
-- **BorderTreeManager**: Decorative border trees outside playable grid
-- **StructureManager**: Structure placement and rendering via BlockMeshFactory
-
-All mesh references are stored in React refs, not state. BabylonJS operates outside React's render cycle.
-
-### World System
-
-The world is data-driven, composed of **zones** loaded from JSON:
-
-- **WorldManager**: Zone loading/unloading, world state, zone transitions
-- **WorldGenerator**: Procedural world generation (level-based biomes, prestige resets)
-- **ZoneLoader**: Hydrates JSON zone definitions into ECS entities (tiles, trees, structures)
-- **Data files**: `src/game/world/data/*.json` define zone templates (starting-world.json for levels 1-5)
-
-Each zone is a 16x16 tile grid with trees, water tiles, rock tiles, and structures pre-placed. Players move between zones seamlessly. On prestige, WorldGenerator creates a new procedurally-generated world.
-
-### Component Conventions
-
-- Named exports only (never `export default`)
-- Props typed with `interface Props`
-- shadcn/ui for dialogs, buttons, cards, progress bars
-- Inline styles for game-specific colors (from `COLORS` constants)
-- Tailwind for layout and responsive utilities
-
-## Performance Budgets
-
-| Metric | Target | Actual |
-|--------|--------|--------|
-| FPS (mobile) | >= 55 | Achieved |
-| FPS (desktop) | >= 60 | Achieved |
-| Initial bundle (gz) | < 500 KB | ~107 KB |
-| Total game load (gz) | < 600 KB | ~500 KB |
-| Time to interactive | < 3s | Achieved |
-| Memory (mobile) | < 100 MB | Achieved |
-| Draw calls | < 50 | Achieved |
-
-### Key Optimizations
-
-- Tree-shake BabylonJS: import specific modules, never barrel exports
-- SPS template mesh caching: `Mesh.clone` for same-species same-stage trees
-- Freeze world matrices on stage 4 (Old Growth) static meshes
-- Shadow map: 1024px desktop, 512px mobile
-- Passive event listeners for touch
-- Code splitting via dynamic import: MainMenu vs GameScene (~107 KB initial load)
-- CSS-based weather overlays (avoids BabylonJS ParticleSystem bundle bloat)
-- Lerp-based growth animations: `Math.min(1, dt * speed)` for frame-rate independence
-
-## Testing
-
-755 tests across 37 test files. TypeScript clean (no type errors).
-
-Write tests first for:
-- Pure utility functions (grid math, RNG, growth calculations)
-- ECS systems (mock world, verify state changes)
-- Store actions (verify state transitions)
-- Component rendering (mock data, verify display)
-
-Test files live adjacent to source: `*.test.ts(x)`.
-
-```bash
-# Run specific test
-pnpm test -- growth
-
-# Watch mode (default)
-pnpm test
-
-# Coverage report
-pnpm test:coverage
-```
-
-## Complete Systems
-
-All game systems from the original design are implemented. Phase D (Polish and Ship) is complete.
-
-### Game Systems
-- **Growth:** 5-stage progression (Seed/Sprout/Sapling/Mature/Old Growth) with spec formula accounting for season, water, difficulty, species traits
-- **Weather:** Rain (growth boost), drought (growth penalty), windstorm (damage risk), with CSS overlays
-- **Seasons:** 4-season cycle with visual changes to sky, lighting, and canopy colors
-- **Achievements:** 15 achievements with gold border + sparkle popup
-- **Prestige:** Level 25+ prestige reset with 5 cosmetic border themes (Stone Wall through Ancient Runes)
-- **Grid Expansion:** Progressive grid sizes (12/16/20/24/32) unlocked by level
-- **World:** Multi-zone world with data-driven zones, procedural generation, zone transitions
-- **Structures:** 6 structure types with grid-snap placement, effect radii (growth boost, harvest boost, stamina regen)
-- **World Generator:** Level-based procedural world generation, prestige world resets
-- **Offline Growth:** Background growth calculation on app resume
-- **Save/Load:** Serialization with auto-save on `document.visibilitychange`
-- **Stamina:** Drain on tool actions, time-based regeneration
-- **Harvest:** Species-specific yields (Timber/Sap/Fruit/Acorns) with late-binding multipliers (computed at collect time)
-- **Quests:** Goal pool generation and tracking
-- **Input:** Unified InputManager — drag-to-move (mobile), WASD (desktop), tap/click-to-move with A* pathfinding
-- **Pathfinding:** Grid A* with walkability grid, iterative waypoint following
-- **Discovery:** Species discovery system
-- **Recipes:** Crafting recipe system
-- **Trading:** Resource trading with seasonal market prices
-- **Tool Upgrades:** Progressive tool enhancement
-- **Wild Tree Regrowth:** Wild tree respawn system
-- **Zone Bonuses:** Per-zone bonus effects
-- **Time:** Microsecond-precision day/night cycle with dynamic sky colors
-
-### Visual Features
-- **SPS Trees:** Ported BabylonJS SPS Tree Generator with seeded RNG
-- **PBR Materials:** 5 bark + 2 leaf texture sets
-- **15 Species:** 12 base + 3 prestige (Ghost Birch glow, Crystal Oak prismatic tints, Cherry Blossom petals)
-- **Growth Animations:** Lerp-based smooth scale interpolation between stages
-- **Weather Overlays:** CSS rain, drought haze, windstorm, cherry petal effects
-- **Seasonal Rebuilds:** Tree meshes rebuild on season change for canopy color shifts
-- **Design Tokens:** Full CSS custom property system (spec Section 5)
-- **Typography:** Fredoka headings, Nunito body
-
-### HUD Components
-- Resource bar (Timber/Sap/Fruit/Acorns), stamina gauge, XP bar, tool belt
-- Mini-map (desktop only), achievement popup, toast notifications
-- Weather overlay, floating particles (+XP, +Timber on harvest)
-- Action button (context-sensitive), pause menu with grid expansion and prestige
-- Time display (day/night/season), quest panel
-
-### Infrastructure
-- PWA manifest + service worker for offline play
-- Code splitting: ~107 KB initial, ~500 KB total game load
-- Capacitor bridge for native mobile haptics
-- CI/CD: GitHub Actions (CI + Deploy to GitHub Pages + Release)
-- Live at: https://arcade-cabinet.github.io/grovekeeper/
+---
 
 ## Key Files to Read First
 
-When starting any work session, read these files in order:
+When starting any work session:
 
-1. `docs/README.md` -- Documentation index
-2. `memory-bank/activeContext.md` -- Current work focus
-3. `memory-bank/progress.md` -- What's done, what's next
-4. `src/game/Game.tsx` -- Screen routing
-5. `src/game/scenes/GameScene.tsx` -- The game loop + 3D scene orchestrator
-6. `src/game/scene/SceneManager.ts` -- Scene subsystem coordination
-7. `src/game/world/WorldManager.ts` -- World data layer, zone loading
-8. `src/game/world/data/starting-world.json` -- Zone definitions for levels 1-5
-9. `src/game/structures/StructureManager.ts` -- Structure placement + effects
-10. `src/game/stores/gameStore.ts` -- All persistent state
-11. `src/game/utils/treeMeshBuilder.ts` -- Species-specific mesh generation
-12. `src/game/systems/weather.ts` -- Weather event system
+1. `docs/GAME_SPEC.md` -- Single source of truth for game design (46 sections)
+2. `app/game/index.tsx` -- Game screen (Canvas + Physics + all R3F + HUD + overlays)
+3. `game/stores/index.ts` -- Legend State persistent store barrel
+4. `game/ecs/world.ts` -- Miniplex world + 40+ queries
+5. `game/hooks/useGameLoop/index.ts` -- System execution order per frame
+6. `game/input/InputManager.ts` -- FPS input system
+7. `config/game/species.json` -- Tree species catalog
+8. `config/game/tools.json` -- Tool definitions
 
-## Mobile-First Development Checklist
+---
 
-Before merging any UI change, verify:
+## Performance Budgets
+
+| Metric | Target |
+|--------|--------|
+| FPS (mobile) | >= 55 |
+| FPS (desktop) | >= 60 |
+| Time to interactive | < 3s |
+| Memory (mobile) | < 100 MB |
+| Draw calls | < 50 |
+
+### Key Optimizations
+
+- Instanced meshes for same-species same-stage trees (drei `<Instances>`)
+- Freeze world matrices on static meshes
+- Code splitting via Expo Router
+- No barrel imports from Three.js -- import specific modules
+- Lerp-based growth animations: `Math.min(1, dt * speed)` for frame-rate independence
+
+---
+
+## Testing
+
+Test files live adjacent to source: `*.test.ts(x)`.
+
+Write tests first. Each test references its GAME_SPEC.md section number:
+
+```typescript
+// growth.test.ts
+describe('Growth System (Spec §8)', () => {
+  it('should advance from Seed to Sprout at 100 growth points', () => {
+    // ...
+  });
+});
+```
+
+---
+
+## Mobile-First Checklist
+
+Before merging any UI change:
 
 - [ ] Renders correctly at 375px width (iPhone SE portrait)
 - [ ] Touch targets >= 44px
@@ -407,6 +343,135 @@ Before merging any UI change, verify:
 - [ ] No horizontal scroll on mobile
 - [ ] Text readable without zooming (minimum 14px body)
 - [ ] Dialogs don't extend beyond viewport
-- [ ] Canvas has `touch-action: none`
 - [ ] Animations respect `prefers-reduced-motion`
 - [ ] FPS >= 55 on mid-range mobile
+
+---
+
+## Anti-Patterns (things that cause spot-welding)
+
+- Writing code without checking the spec
+- Creating a system without a test file
+- Hardcoding tuning values instead of using `config/game/*.json`
+- Using `Math.random()` instead of `scopedRNG`
+- Making files over 300 lines instead of decomposing
+- Implementing a feature across multiple sessions without updating the spec
+- Assuming a system works because code exists (it might not be wired up)
+- Rushing to fix ONE thing instead of addressing the structural problem
+- Treating the codebase as the source of truth instead of the spec
+- Using placeholder boxes, stub data, or fallback paths that mask missing work
+- Creating a "fallback" instead of hard-erroring when an asset or feature is incomplete
+
+---
+
+## AI Team Configuration (autogenerated by team-configurator, 2026-03-08)
+
+**Important: YOU MUST USE subagents when available for the task.**
+
+### Detected Stack
+
+- **Framework:** Expo SDK 55, React 19, React Native 0.83
+- **3D Engine:** React Three Fiber 9, drei 10, @react-three/rapier 2.x
+- **ECS:** Miniplex 2.x
+- **Persistent State:** Legend State 3.x (expo-sqlite)
+- **AI/Behavior:** Yuka 0.7
+- **Audio:** Tone.js 15.x (procedural synthesis)
+- **Animation:** animejs 3.x (rigid body rotation)
+- **Styling:** NativeWind 4, Tailwind CSS 3
+- **Language:** TypeScript 5.9 strict
+- **Lint/Fmt:** Biome 2.4
+- **Testing:** Jest (4110 unit), Maestro (E2E), Playwright (web E2E)
+- **Package Mgr:** pnpm
+- **World:** Chunk-based infinite procedural (16x16 tiles, seed-derived)
+
+### Agent Roster
+
+| Agent | Scope | Source | Tags |
+|-------|-------|--------|------|
+| `scene-builder` | R3F 3D scene, camera, lighting, terrain, player controller, tool view, chunk rendering | project | r3f, drei, rapier, three.js, glsl, procedural |
+| `ui-builder` | HUD, menus, overlays, panels, mobile-first React Native UI | project | react-native, nativewind, tailwind, mobile, hud |
+| `system-designer` | Game systems: ECS logic, growth, weather, combat, survival, quests, crafting | project | miniplex, ecs, systems, legend-state, config-json |
+| `spec-writer` | GAME_SPEC.md authoring, game design documentation | project | spec, design, docs-first |
+| `playtest-governor` | End-to-end validation, PlayerGovernor AI, survival path audit | project | testing, maestro, validation, e2e |
+| `code-reviewer` | Security-aware review, pre-merge audit, severity-tagged reports | system | review, security, quality |
+| `performance-optimizer` | FPS profiling, draw call budgets, memory analysis, mobile perf | system | perf, fps, memory, instancing |
+| `react-component-architect` | React patterns, hooks, component decomposition | system | react, hooks, architecture |
+| `tailwind-css-expert` | NativeWind/Tailwind utility styling, responsive layout | system | tailwind, nativewind, responsive |
+| `tech-lead-orchestrator` | Multi-step planning, architectural decisions, cross-domain coordination | system | orchestration, architecture, planning |
+
+### Task Routing
+
+| Task | Primary Agent | Fallback Agent | Notes |
+|------|--------------|----------------|-------|
+| New gameplay concept or story | `spec-writer` | -- | Produces GAME_SPEC.md section only, no code |
+| New game system (growth, weather, AI) | `system-designer` | -- | Follows docs > tests > code pipeline |
+| R3F scene component (terrain, sky, water) | `scene-builder` | -- | Declarative R3F + drei, never imperative Three.js |
+| FPS camera, player capsule, tool view | `scene-builder` | -- | Rapier physics + R3F integration |
+| Procedural mesh generation (trees, buildings) | `scene-builder` | -- | BufferGeometry + instancing |
+| GLSL shader work (water, atmosphere) | `scene-builder` | -- | Vertex/fragment shaders in game/shaders/ |
+| HUD overlay (health, stamina, minimap) | `ui-builder` | -- | NativeWind, 375px min, 44px touch targets |
+| Menu or panel (pause, crafting, inventory) | `ui-builder` | `tailwind-css-expert` | Mobile-first portrait layout |
+| Dialogue UI, toast, achievement popup | `ui-builder` | -- | Animated overlays on game screen |
+| ECS component or query changes | `system-designer` | -- | Miniplex world + 40 queries |
+| Config JSON tuning (species, tools, combat) | `system-designer` | -- | All numbers in config/game/*.json |
+| Quest chain or NPC dialogue | `system-designer` | `spec-writer` | Spec the design first, then implement |
+| Integration testing, playability audit | `playtest-governor` | -- | PlayerGovernor AI + Maestro flows |
+| Pre-merge code review | `code-reviewer` | -- | Always run before merging to main |
+| FPS or memory regression | `performance-optimizer` | -- | Target: 55 FPS mobile, <50 draw calls, <100MB |
+| React hook or component refactor | `react-component-architect` | -- | Decompose files >300 lines |
+| Multi-domain feature (touches 3D + UI + ECS) | `tech-lead-orchestrator` | -- | Splits work across agents in worktrees |
+| NativeWind responsive styling issue | `tailwind-css-expert` | `ui-builder` | Portrait-primary, safe area aware |
+
+### Worktree Isolation Protocol
+
+All parallel agent work MUST use git worktrees to prevent file conflicts. Previous sessions had agents overwriting each other's changes on the same files.
+
+**Rules:**
+1. Before dispatching parallel agents, create a worktree per agent from the current branch.
+2. Each agent works exclusively in its own worktree directory.
+3. When agents finish, merge worktrees back to the primary branch one at a time.
+4. Never run two agents on the same worktree simultaneously.
+
+**Worktree commands:**
+```bash
+# Create a worktree for an agent task
+git worktree add .claude/worktrees/<agent>-<ticket> -b <agent>-<ticket>
+
+# List active worktrees
+git worktree list
+
+# After merge, clean up
+git worktree remove .claude/worktrees/<agent>-<ticket>
+git branch -d <agent>-<ticket>
+```
+
+**Naming convention:** `.claude/worktrees/<agent>-<ticket-or-slug>`
+- Example: `.claude/worktrees/scene-builder-us-172`
+- Example: `.claude/worktrees/ui-builder-crafting-panel`
+- Example: `.claude/worktrees/system-designer-fishing-system`
+
+**Merge order for multi-agent work:**
+1. `system-designer` first (ECS components and systems are foundational)
+2. `scene-builder` second (depends on ECS types)
+3. `ui-builder` third (depends on store/hook APIs)
+4. `playtest-governor` last (validates the integrated result)
+
+### Mandatory Review Gates
+
+Every feature branch must pass these before merge:
+
+1. **`playtest-governor`** -- end-to-end playability audit
+2. **`code-reviewer`** -- security and quality review
+3. **`performance-optimizer`** -- FPS and memory check (if the change touches rendering or systems)
+
+### Sample Commands
+
+```
+@spec-writer    "Design a beekeeping system for honey production and pollination bonuses"
+@system-designer "Implement the fishing system from GAME_SPEC.md 27"
+@scene-builder  "Add procedural campfire with particle embers and point light"
+@ui-builder     "Build the fishing minigame overlay with cast-power meter"
+@playtest-governor "Audit the full survival loop: hunger, cooking, campfire, death"
+@code-reviewer  "Review all changes on feat/fishing-system before merge"
+@performance-optimizer "Profile chunk loading -- draw calls spike when crossing chunk boundaries"
+```

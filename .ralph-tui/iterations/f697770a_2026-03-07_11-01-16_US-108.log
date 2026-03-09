@@ -1,0 +1,127 @@
+# Iteration 108 Log
+
+## Metadata
+
+- **Task ID**: US-108
+- **Task Title**: Implement main quest chain
+- **Description**: As a player, I want an 8-spirit discovery quest where each spirit discovery advances the main quest toward 'The Worldroot's Dream' so that the game has a clear goal. See GAME_SPEC.md §17.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T17:01:16.156Z
+- **Ended At**: 2026-03-07T17:08:05.988Z
+- **Duration**: 6m 49s
+- **Input Tokens**: 159
+- **Output Tokens**: 25389
+- **Total Tokens**: 25548
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Read,Glob[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Let me read the relevant spec sections and explore the quest-related code:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/quests/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/quests/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/questEngine.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/types.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/questChainEngine.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/data/questChains.json[0m
+Now let me find the relevant spec sections and read the spirit-related code:
+[94m[Bash][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Bash failed due to the following issues:
+The required parameter `command` is missing
+An unexpected parameter `cmd` was provided</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*spirit*[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Bash errored</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Bash,Grep[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 14\.|## 17\.|## 30\.|Worldroot|spirit.*quest|main.*quest|quest.*spirit|Spirit Discovery[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*spirit*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/spirits.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/stores/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/questChainEngine.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/spiritColors.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+Now I have full context. Let me update todos and begin implementation.
+
+`★ Insight ─────────────────────────────────────`
+The main quest chain fits perfectly into the existing `questChainEngine` architecture: one `main-quest-spirits` chain with a single step, target `spirit_discovered × 8`. The `worldroots-dream` chain uses `prerequisiteChainIds: ["main-quest-spirits"]` to gate itself behind quest completion — the existing `computeAvailableChains` already handles prerequisite checking. Zero new machinery needed.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/data/questChains.json[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/data/questChains.json[0m edit: "        "completionDialogueId": "rowan-exploration..." → "        "completionDialogueId": "rowan-exploration..."
+[94m[TodoWrite][0m
+Now add `discoveredSpiritIds` to the store and a `discoverSpirit` action:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  /** Trust/friendship levels per NPC. Spec §15. P..." → "  /** Trust/friendship levels per NPC. Spec §15. P..."
+Now add the `discoverSpirit` action. I'll add it near the NPC relationship actions:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  // Database hydration -- bulk-set state from SQL..." → "  // Spirit discovery actions (Spec §32.3)
+
+  /**
+..."
+[94m[TodoWrite][0m
+Now create the pure helper module:
+
+`★ Insight ─────────────────────────────────────`
+The `mainQuestSystem.ts` module is a thin query layer — it doesn't own any state, just provides named accessors over `questChainEngine`. This is the "resolveGLBPath as testable seam" pattern used throughout the codebase: pure functions that wrap config/state lookups so callers don't need to know chain IDs or objective indices.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/mainQuestSystem.ts[0m "/**
+ * Main Quest System -- Grovekeeper Path and Worldroot's Dream.
+ *
+ * The main quest tracks discovery of 8 Grovekeeper Spirits in hedge labyrinths.
+ * Finding all 8 unlocks "The Worldroot's Dream"... (1761 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/mainQuestSystem.test.ts[0m "/**
+ * Main Quest System tests -- Spec §32.3.
+ *
+ * Covers:
+ * - spirit_discovered events advance the main quest step objective
+ * - After 8 discoveries + reward claim, main quest is complete
+ * - Wor... (6334 chars)"
+Now add `discoverSpirit` tests to `gameStore.test.ts`:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Bash][0m Show last 30 lines of gameStore.test.ts $ tail -30 /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "    it("multiple independent subscribers all fire ..." → "    it("multiple independent subscribers all fire ..."
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+TypeScript passes clean. Now run the tests:
+[94m[Bash][0m Run mainQuestSystem and gameStore tests $ npx jest --no-coverage --testPathPattern="mainQuestSystem|gameStore" 2>&1 | tail -40
+All 136 tests pass. Let's run the full test suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+2812 tests, 131 suites — all green (up from 2786/130). Now update `progress.md`:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-106" → "## 2026-03-07 - US-108
+- Implemented 8-spirit main..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Chain prerequisite pattern for quest sequencing**: Gating `worldroots-dream` behind `main-quest-spirits` via `prerequisiteChainIds` means zero extra store logic — `computeAvailableChains` already enforces it. The same pattern can gate any future endgame content.
+- **Auto-start on first event**: Rather than requiring explicit quest activation, `discoverSpirit` checks "not active AND not completed" and calls `startChain` inline. This is a common pattern when a quest should begin organically (first discovery) rather than requiring NPC interaction.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria verified:
+
+| Criterion | Status |
+|-----------|--------|
+| 8-spirit discovery quest implemented | ✅ `main-quest-spirits` chain, 1 step, `spirit_discovered × 8` |
+| Each spirit discovery advances main quest | ✅ `discoverSpirit()` calls `advanceQuestObjective("spirit_discovered", 1)` |
+| Final quest requires all 8 | ✅ `worldroots-dream` has `prerequisiteChainIds: ["main-quest-spirits"]` |
+| `npx tsc --noEmit` passes | ✅ 0 errors |
+| `npx jest --no-coverage` passes | ✅ 2812 tests, 131 suites |
+
+<promise>COMPLETE</promise>

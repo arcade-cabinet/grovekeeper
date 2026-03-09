@@ -1,0 +1,33 @@
+# Flow: Tutorial — RETIRED
+# The 11-step overlay tutorial has been replaced by the elder-awakening quest
+# chain for organic onboarding (Spec §25.1). TutorialOverlay renders null.
+#
+# This flow now verifies the game loads without a tutorial overlay and the
+# quest-driven onboarding is active instead.
+# Platform: iOS simulator (375px viewport portrait)
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible: "GROVEKEEPER"
+
+# Start a new game via NewGameModal
+- tapOn:
+    id: "btn-new-grove"
+- assertVisible: "New Grove"
+- tapOn:
+    accessibilityLabel: "Sapling: The intended experience"
+- tapOn:
+    id: "btn-begin-grove"
+
+# Wait for game screen to settle
+- assertVisible:
+    id: "btn-open-menu"
+    timeout: 15000
+
+# Tutorial overlay is RETIRED — "Skip Tutorial" should NOT be visible
+- assertNotVisible: "Skip tutorial"
+
+# Game should be immediately playable (no blocking overlay)
+- assertVisible:
+    id: "hud-overlay"

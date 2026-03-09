@@ -1,0 +1,88 @@
+# Iteration 43 Log
+
+## Metadata
+
+- **Task ID**: US-043
+- **Task Title**: Implement anime.js walk cycle
+- **Description**: As a developer, I want NPC limbs to swing during walk animation using anime.js sine-wave rotation so that NPCs feel alive. Speed from NpcComponent.animSpeed. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:55:05.875Z
+- **Ended At**: 2026-03-07T10:59:12.767Z
+- **Duration**: 4m 6s
+- **Input Tokens**: 101
+- **Output Tokens**: 14501
+- **Total Tokens**: 14602
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/npc*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/npc*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|section 15|§ 15[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96manime|walk cycle|animSpeed|walk animation|rigid.body|limb[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96manimejs|anime\.js|from.anime|import.*anime[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture/npc-system.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json[0m pattern: [96manimejs|\"anime\"[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/memory-bank/systemPatterns.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcMovement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/npcs.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+`config/game/npcAnimation.json` already exists. Let me read it and check if there's already a `npcAnimation.ts` in systems:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/npcAnimation.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/npcAnimation*[0m
+`★ Insight ─────────────────────────────────────`
+- `config/game/npcAnimation.json` already exists with per-state limb params (frequency, maxAngle, phase offsets) — the system just reads from it rather than hardcoding values
+- The system stays pure TypeScript (no Three.js refs) — it computes rotation **values** that the R3F component consumes; separation lets the logic be unit-tested without WebGL
+- Phase offsets from config (`leftArm=0, rightArm=π`) produce the counter-swing naturally via `sin(t * freq + phaseOffset)`
+`─────────────────────────────────────────────────`
+
+Now I'll implement the system and its tests:
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAnimation.ts[0m "/**
+ * NPC walk-cycle animation system — Lego-style rigid body part rotation.
+ *
+ * Computes sine-wave arm/leg rotation angles from NpcComponent animation state.
+ * No Three.js or anime.js runtime dep... (2954 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- Returning a shared `ZERO_ROTATIONS` constant (not a fresh object) for non-walk states avoids per-frame GC pressure — a small but real mobile optimization
+- The test's "arms are out of phase" assertion uses `leftArm * rightArm <= 0` — this catches the phase-opposition without being brittle about exact float values
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAnimation.test.ts[0m "/**
+ * Tests for NPC walk-cycle animation system.
+ * Spec: GAME_SPEC.md §15 — NPC Animation (Lego-style rigid body part rotation)
+ */
+
+import type { NpcComponent } from "@/game/ecs/components/npc";
+im... (6547 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run npcAnimation tests $ npx jest --no-coverage game/systems/npcAnimation.test.ts 2>&1
+18/18 tests pass, tsc clean. Now append to progress.md:
+[94m[TodoWrite][0m
+[94m[Bash][0m Append US-043 entry to progress.md $ the system just reads them   - Pure system pattern (no Three.js refs, no anime.js dependency): compu...
+[94m[TodoWrite][0m
+All done. Summary:
+
+**Files created:**
+- `game/systems/npcAnimation.ts` — `advanceNpcAnimation(npc, dt)` + `computeNpcLimbRotations(npc)` → `NpcLimbRotations`
+- `game/systems/npcAnimation.test.ts` — 18 tests, all green
+
+**How it works:**
+- `advanceNpcAnimation` only ticks `animProgress` when `currentAnim === 'walk'`, scaled by `npc.animSpeed`
+- `computeNpcLimbRotations` returns `ZERO_ROTATIONS` for non-walk states; for walk it reads frequency/maxAngle/phaseOffset from `config/game/npcAnimation.json` and computes `sin(t * freq + phase) * maxAngle` per limb
+- Left/right pairs are π radians out of phase → natural counter-swing without any special logic
+
+<promise>COMPLETE</promise>

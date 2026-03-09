@@ -1,0 +1,26 @@
+{
+  "castDuration": 0.5,
+  "minWaitDuration": 3.0,
+  "maxWaitDuration": 10.0,
+  "biteDuration": 4.0,
+  "timingBarSpeed": 0.8,
+  "zoneWidth": 0.25,
+  "baseYield": 1,
+  "fishingDockYieldBonus": 0.3,
+  "biomeSpecies": {
+    "starting-grove": ["perch", "carp"],
+    "meadow": ["perch", "carp"],
+    "ancient-forest": ["trout", "pike"],
+    "wetlands": ["catfish", "pike", "trout"],
+    "rocky-highlands": ["trout", "arctic-char"],
+    "orchard-valley": ["perch", "carp", "trout"],
+    "frozen-peaks": ["arctic-char", "pike"],
+    "twilight-glade": ["luminous-carp", "shimmer-perch"]
+  },
+  "seasonWeights": {
+    "spring": { "trout": 1.5 },
+    "summer": { "carp": 1.5, "perch": 1.5 },
+    "autumn": { "pike": 1.5, "catfish": 1.5 },
+    "winter": { "arctic-char": 2.0 }
+  }
+}

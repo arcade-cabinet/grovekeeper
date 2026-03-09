@@ -1,0 +1,5 @@
+# Default environment variables for Maestro flows
+# Override per-platform: maestro test -e APP_ID=com.arcadecabinet.grovekeeper .maestro/
+env:
+  APP_ID: com.arcadecabinet.grovekeeper
+  APP_URL: http://localhost:8081

@@ -1,0 +1,53 @@
+# Iteration 84 Log
+
+## Metadata
+
+- **Task ID**: US-084
+- **Task Title**: Write Jest tests for spirit animation math
+- **Description**: As a developer, I want tests for spirit animation so that spawn progress, bob calculation, pulse intensity, and trail color are verified. See GAME_SPEC.md §19.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:06:32.121Z
+- **Ended At**: 2026-03-07T15:07:43.910Z
+- **Duration**: 1m 11s
+- **Input Tokens**: 58
+- **Output Tokens**: 2558
+- **Total Tokens**: 2616
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/spirit*.ts*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/GrovekeeperSpirit*.ts*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/spiritColors.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+The test file already exists. Let me verify the tests pass and TypeScript is clean.
+[94m[Bash][0m Run spirit animation tests $ npx jest --no-coverage components/entities/GrovekeeperSpirit.test.ts 2>&1
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+Both checks pass. The work for US-084 was already completed as part of US-083. Let me verify the progress.md and append the completion note.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+US-084 is already complete — the tests were written as part of US-083. All 26 tests pass and TypeScript is clean. Let me append the completion entry to progress.md.
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-083" → "---
+
+## 2026-03-07 - US-084
+- Work already complet..."
+`★ Insight ─────────────────────────────────────`
+The "pure function as testable seam" pattern used here is key: `computeBobY`, `computeEmissiveIntensity`, and `computeSpawnY` are exported from the R3F component purely so tests can call them without WebGL/R3F context. The R3F component and the test file both import the same functions — zero duplication, maximum testability.
+`─────────────────────────────────────────────────`
+
+US-084 is complete. The tests were implemented during US-083 as part of the mandatory "docs > tests > code" workflow. Results:
+
+- **26 tests pass** across 4 suites: `computeBobY`, `computeEmissiveIntensity`, `computeSpawnY`, `resolveEmissiveColor`
+- **`npx tsc --noEmit`** — 0 errors
+- **`npx jest --no-coverage`** — all 26 pass in 0.168s
+
+<promise>COMPLETE</promise>

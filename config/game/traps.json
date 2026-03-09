@@ -1,0 +1,22 @@
+{
+  "types": {
+    "spike": {
+      "damage": 8.0,
+      "triggerRadius": 1.5,
+      "cooldownDuration": 5.0,
+      "modelPath": "assets/models/props/trap-spike.glb"
+    },
+    "snare": {
+      "damage": 4.0,
+      "triggerRadius": 1.2,
+      "cooldownDuration": 3.0,
+      "modelPath": "assets/models/props/trap-snare.glb"
+    },
+    "fire": {
+      "damage": 12.0,
+      "triggerRadius": 2.0,
+      "cooldownDuration": 8.0,
+      "modelPath": "assets/models/props/trap-fire.glb"
+    }
+  }
+}

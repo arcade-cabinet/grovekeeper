@@ -1,0 +1,83 @@
+import { DarkTheme, DefaultTheme, type Theme } from "@react-navigation/native";
+
+export const THEME = {
+  light: {
+    // Grovekeeper Light Mode — exploration/day
+    background: "hsl(141 100% 97%)",
+    foreground: "hsl(149 59% 20%)",
+    card: "hsl(141 79% 93%)",
+    cardForeground: "hsl(149 59% 20%)",
+    popover: "hsl(152 100% 96%)",
+    popoverForeground: "hsl(149 59% 20%)",
+    primary: "hsl(142 69% 58%)",
+    primaryForeground: "hsl(149 59% 20%)",
+    secondary: "hsl(141 79% 93%)",
+    secondaryForeground: "hsl(149 59% 20%)",
+    muted: "hsl(152 100% 96%)",
+    mutedForeground: "hsl(148 59% 24%)",
+    accent: "hsl(142 77% 73%)",
+    accentForeground: "hsl(149 59% 20%)",
+    destructive: "hsl(0 84% 60%)",
+    border: "hsl(142 77% 73%)",
+    input: "hsl(142 77% 73%)",
+    ring: "hsl(142 69% 58%)",
+    radius: "0.5rem",
+    chart1: "hsl(142 69% 58%)",
+    chart2: "hsl(38 93% 50%)",
+    chart3: "hsl(0 84% 60%)",
+    chart4: "hsl(213 97% 78%)",
+    chart5: "hsl(327 87% 82%)",
+  },
+  dark: {
+    // Grovekeeper Dark Mode — survival/night
+    background: "hsl(127 41% 9%)",
+    foreground: "hsl(127 12% 92%)",
+    card: "hsl(13 50% 12%)",
+    cardForeground: "hsl(127 12% 92%)",
+    popover: "hsl(128 38% 16%)",
+    popoverForeground: "hsl(127 12% 92%)",
+    primary: "hsl(142 69% 58%)",
+    primaryForeground: "hsl(127 41% 9%)",
+    secondary: "hsl(128 38% 16%)",
+    secondaryForeground: "hsl(127 12% 92%)",
+    muted: "hsl(60 8% 16%)",
+    mutedForeground: "hsl(128 12% 67%)",
+    accent: "hsl(130 22% 19%)",
+    accentForeground: "hsl(127 12% 92%)",
+    destructive: "hsl(0 84% 60%)",
+    border: "hsl(131 20% 30%)",
+    input: "hsl(131 20% 30%)",
+    ring: "hsl(142 69% 58%)",
+    radius: "0.5rem",
+    chart1: "hsl(142 69% 58%)",
+    chart2: "hsl(38 93% 50%)",
+    chart3: "hsl(0 84% 60%)",
+    chart4: "hsl(213 97% 78%)",
+    chart5: "hsl(107 100% 54%)",
+  },
+};
+
+export const NAV_THEME: Record<"light" | "dark", Theme> = {
+  light: {
+    ...DefaultTheme,
+    colors: {
+      background: THEME.light.background,
+      border: THEME.light.border,
+      card: THEME.light.card,
+      notification: THEME.light.destructive,
+      primary: THEME.light.primary,
+      text: THEME.light.foreground,
+    },
+  },
+  dark: {
+    ...DarkTheme,
+    colors: {
+      background: THEME.dark.background,
+      border: THEME.dark.border,
+      card: THEME.dark.card,
+      notification: THEME.dark.destructive,
+      primary: THEME.dark.primary,
+      text: THEME.dark.foreground,
+    },
+  },
+};

@@ -1,0 +1,34 @@
+{
+  "cellSize": 1,
+  "defaultSize": 12,
+  "expansionTiers": [
+    { "size": 12, "requiredLevel": 1, "cost": {} },
+    { "size": 16, "requiredLevel": 5, "cost": { "timber": 100, "sap": 50 } },
+    {
+      "size": 20,
+      "requiredLevel": 10,
+      "cost": { "timber": 250, "sap": 100, "fruit": 50 }
+    },
+    {
+      "size": 24,
+      "requiredLevel": 15,
+      "cost": { "timber": 500, "sap": 250, "fruit": 100, "acorns": 50 }
+    },
+    {
+      "size": 32,
+      "requiredLevel": 20,
+      "cost": { "timber": 1000, "sap": 500, "fruit": 250, "acorns": 100 }
+    }
+  ],
+  "playerSpeed": 3,
+  "npcMoveSpeed": 1.8,
+  "interactionRadius": 1.5,
+  "capsuleHeight": 1.8,
+  "jumpImpulse": 5,
+  "groundCheckDistance": 0.15,
+  "mouseSensitivity": 0.002,
+  "pitchClampDeg": 85,
+  "chunkSize": 16,
+  "activeRadius": 1,
+  "bufferRadius": 2
+}

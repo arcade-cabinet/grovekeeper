@@ -1,0 +1,91 @@
+{
+  "aesthetic": "Bright whimsical Zelda (Wind Waker / BotW). Chibi NPCs, colorful procedural worlds.",
+  "colors": {
+    "light": {
+      "bgDeep": "#E8F5E9",
+      "bgCanopy": "#C8E6C9",
+      "bgBark": "#FFF8E1",
+      "bgWarm": "#FFFDE7",
+      "surfaceMoss": "#E0F2F1",
+      "surfacePanel": "rgba(232,245,233,0.85)",
+      "borderBranch": "#66BB6A",
+      "borderGold": "#FFC107",
+      "textPrimary": "#1B5E20",
+      "textSecondary": "#2E7D32",
+      "textMuted": "#78909C"
+    },
+    "dark": {
+      "bgDeep": "#0D1F0F",
+      "bgCanopy": "#1A3A1E",
+      "bgBark": "#2C1810",
+      "surfaceMoss": "#243B27",
+      "surfaceStone": "#2A2A25",
+      "borderBranch": "#3D5C41",
+      "textPrimary": "#E8F0E9",
+      "textSecondary": "#9CB89F",
+      "textMuted": "#5A7A5D"
+    },
+    "accent": {
+      "sap": "#4CAF50",
+      "amber": "#FFC107",
+      "ember": "#EF5350",
+      "frost": "#42A5F5",
+      "blossom": "#F48FB1",
+      "gold": "#FFD54F",
+      "biolum": "#69F0AE",
+      "greenBright": "#4CAF50",
+      "skyBlue": "#64B5F6"
+    },
+    "seasonal": {
+      "spring": "#66BB6A",
+      "summer": "#43A047",
+      "autumn": "#FFA726",
+      "winter": "#42A5F5"
+    },
+    "legacy": {
+      "forestGreen": "#2D5A27",
+      "barkBrown": "#5D4037",
+      "soilDark": "#3E2723",
+      "leafLight": "#81C784",
+      "autumnGold": "#FFB74D",
+      "skyMist": "#E8F5E9",
+      "sunsetWarm": "#FFAB91",
+      "earthRed": "#8D6E63",
+      "parchment": "#F5F0E3",
+      "parchmentDark": "#E8E0CC",
+      "success": "#4CAF50",
+      "warning": "#FF9800",
+      "danger": "#F44336",
+      "info": "#64B5F6",
+      "silver": "#9E9E9E",
+      "prestigeGold": "#FFD700",
+      "prestigePurple": "#9C27B0"
+    }
+  },
+  "typography": {
+    "display": "CinzelDecorative",
+    "heading": "Cinzel",
+    "body": "Cabin",
+    "data": "JetBrainsMono",
+    "critical": "Orbitron",
+    "_note": "CinzelDecorative + Cinzel give a fantasy storybook feel for titles. Cabin is clean and readable for body text. Consider Fredoka/Nunito for a more playful whimsical tone in future iterations."
+  },
+  "typeScale": {
+    "hero": { "size": 32, "weight": "700", "font": "CinzelDecorative" },
+    "display": { "size": 24, "weight": "600", "font": "Cinzel" },
+    "heading": { "size": 18, "weight": "600", "font": "Cabin" },
+    "body": { "size": 14, "weight": "400", "font": "Cabin" },
+    "label": { "size": 12, "weight": "500", "font": "Cabin" },
+    "caption": { "size": 11, "weight": "400", "font": "Cabin" },
+    "data": { "size": 14, "weight": "400", "font": "JetBrainsMono" },
+    "dataLg": { "size": 20, "weight": "700", "font": "JetBrainsMono" },
+    "critical": { "size": 12, "weight": "700", "font": "Orbitron" }
+  },
+  "spacing": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64],
+  "radius": {
+    "sharp": 2,
+    "organic": 8,
+    "pill": 20,
+    "circle": 9999
+  }
+}

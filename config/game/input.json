@@ -1,0 +1,10 @@
+{
+  "headBob": {
+    "frequencyHz": 8,
+    "amplitudeMeters": 0.02,
+    "minSpeedThreshold": 0.1
+  },
+  "toolSelectKeys": {
+    "maxSlots": 9
+  }
+}

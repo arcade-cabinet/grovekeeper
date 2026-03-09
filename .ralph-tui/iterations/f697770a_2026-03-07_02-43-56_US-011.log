@@ -1,0 +1,93 @@
+# Iteration 11 Log
+
+## Metadata
+
+- **Task ID**: US-011
+- **Task Title**: Implement jump and gravity
+- **Description**: As a player, I want to jump with the space key and fall with gravity so that movement feels physical. Ground detection via raycast down from capsule. See GAME_SPEC.md §9 for physics spec.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T08:43:56.729Z
+- **Ended At**: 2026-03-07T08:50:55.957Z
+- **Duration**: 6m 59s
+- **Input Tokens**: 94
+- **Output Tokens**: 23531
+- **Total Tokens**: 23625
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite,Bash[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/useMovement*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/Player*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§9|jump|gravity|ground detect[0m
+[94m[Bash][0m Find physics section in GAME_SPEC.md $ grep -n "§9\|section 9\|## 9\|### 9\|jump\|Jump\|gravity\|Gravity\|ground detect\|raycast" /Users/jb...
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/useJump*[0m
+[94m[Bash][0m Find jump/physics mentions in GAME_SPEC.md $ grep -n "jump\|Jump\|capsule\|Capsule\|physics\|Physics\|gravity\|Gravity\|ground\|isOnGround\|groun...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/usePhysicsMovement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.claude/hooks/no-magic-numbers.sh[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- Rapier `castRay` with `solid=true` and ray origin just outside the capsule (below the bottom) is the simplest ground detection: no self-hits, no filter needed. The distance from `body.translation().y` to the capsule bottom equals `totalHeight/2`.
+- Separating `isGrounded` as a pure-ish function (takes body/world/rapier as params) lets it be tested without a React context. The hook (`useJump`) just wires up the keydown listener and `useFrame` tick.
+- Circular dependency is avoided by reading capsule dimensions from `grid.json` in both `useJump.ts` and `PlayerCapsule.tsx` — single source of truth without importing across component/hook boundaries.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit,Write[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m edit: "  "playerSpeed": 3,
+  "npcMoveSpeed": 1.8,
+  "inte..." → "  "playerSpeed": 3,
+  "npcMoveSpeed": 1.8,
+  "inte..."
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.ts[0m "/**
+ * useJump — Space key detection, ground raycast, upward impulse (Spec §9).
+ *
+ * Ground detection casts a ray downward from just below the capsule bottom.
+ * An upward impulse is applied when spa... (2839 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.test.ts[0m "/**
+ * Tests for useJump — space key jump with ground detection raycast (Spec §9).
+ *
+ * isGrounded is tested as a pure function with mock body/world/rapier args.
+ * useJump is smoke-tested only (requ... (3253 chars)"
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m edit: "import { useRef } from "react";
+import { CapsuleCo..." → "import { useRef } from "react";
+import { CapsuleCo..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m edit: "/** Player physics capsule with dynamic RigidBody ..." → "/** Player physics capsule with dynamic RigidBody,..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.test.ts[0m edit: "jest.mock("@/game/hooks/usePhysicsMovement", () =>..." → "jest.mock("@/game/hooks/usePhysicsMovement", () =>..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run all Jest tests $ npx jest --no-coverage 2>&1 | tail -20
+75 suites, 1262 tests, 0 failures. tsc clean.
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-010" → "## 2026-03-07 - US-011
+- Created `game/hooks/useJu..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `jumpPendingRef.current = false` clears in both the "not grounded" and "grounded" branches — without clearing on missed jumps, pressing space mid-air queues a jump that fires the instant the player lands, which feels like a bug.
+- `lockRotations` on `<RigidBody>` is required for any FPS capsule controller: Rapier's physics simulation will torque the capsule on contact forces, causing the camera (attached to the body position) to tilt unpredictably.
+- Exposing `isGrounded` as a named export rather than keeping it inside the hook closure makes it independently testable without needing to run `useFrame` — a good pattern for any stateful hook with non-trivial logic.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria satisfied:
+
+| AC | Status |
+|----|--------|
+| Space key applies upward impulse to capsule | ✅ `body.applyImpulse({y: JUMP_IMPULSE}, true)` in `useJump` |
+| Ground detection via raycast down from capsule | ✅ `isGrounded` casts ray from capsule bottom via `world.castRay` |
+| Player falls with gravity when airborne | ✅ Rapier `<Physics>` world provides gravity; Y velocity preserved by `usePhysicsMovement` |
+| `npx tsc --noEmit` passes | ✅ 0 errors |
+| `npx jest --no-coverage` passes | ✅ 75 suites, 1262 tests, 0 failures |
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,112 @@
+# Iteration 140 Log
+
+## Metadata
+
+- **Task ID**: US-140
+- **Task Title**: Create loading screen
+- **Description**: As a player, I want a loading screen with progress bar (font load, store init, world gen, first frame), animated logo, and rotating tips so that the wait feels polished. See GAME_SPEC.md §26.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T20:04:51.049Z
+- **Ended At**: 2026-03-07T20:08:38.655Z
+- **Duration**: 3m 47s
+- **Input Tokens**: 2883
+- **Output Tokens**: 11330
+- **Total Tokens**: 14213
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (79967 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.tsx[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§26|loading screen|LoadingScreen[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mLoading|loading[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/Logo.tsx[0m
+Let me look at the full section 26 in GAME_SPEC.md:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 26|^## 25|^## 27[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mprogress|tip|font load|store init|world gen|first frame[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NewGameModal.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/index.tsx[0m
+Now let me look at the pure logic pattern from mainMenuLogic:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mainMenuLogic.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mainMenuLogic.test.ts[0m
+Now I have everything I need. Let me plan and implement:
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **The JSX runtime crash pattern is well-established**: extract all testable logic to a plain `.ts` file — the component `.tsx` imports from it, and tests import only the `.ts`. This avoids the `react-native-css-interop` crash at Jest init.
+- **LoadingPhase as 0–4 union**: tracking 4 named phases as an integer (0=idle, 1=fonts, 2=store, 3=worldgen, 4=done) lets `getProgressPercent` be a pure `(phase / 4) * 100` mapping — trivially testable and easy to drive from the host.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/loadingScreenLogic.ts[0m "/**
+ * Pure logic for the LoadingScreen component (Spec §1.3).
+ *
+ * Extracted to a plain .ts file so it can be unit-tested without pulling in
+ * the React Native JSX runtime chain (which crashes in J... (2622 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/loadingScreenLogic.test.ts[0m "/**
+ * Tests for LoadingScreen pure logic (Spec §1.3).
+ *
+ * Imports from loadingScreenLogic.ts (plain .ts) to avoid triggering the
+ * react-native-css-interop JSX runtime crash in Jest.
+ */
+
+import {... (2889 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Animated logo strategy**: Use `RNAnimated.loop(RNAnimated.sequence([scale up, scale down]))` for a gentle "breathing" pulse — same RNAnimated API used in `FarmerMascot`. Keeps library footprint zero.
+- **Progress bar in pure RN**: A `View` with fixed width `100%` as track + an inner `View` with `width: \`${percent}%\`` as fill. Wraps in `Animated.View` for smooth width transitions via `useNativeDriver: false` (layout animations require JS driver).
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/LoadingScreen.tsx[0m "/**
+ * LoadingScreen -- 4-phase progress overlay (Spec §1.3).
+ *
+ * Shown between NewGameModal and the game canvas. Tracks:
+ *   Phase 1: fonts loaded
+ *   Phase 2: store initialised
+ *   Phase 3: fir... (7407 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run LoadingScreen logic tests $ npx jest --no-coverage --testPathPattern="loadingScreenLogic" 2>&1
+19 tests pass, TypeScript clean.
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-137" → "## 2026-03-07 - US-140
+- Implemented loading scree..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **`useNativeDriver: false` for layout props**: The progress bar width animation can't use the native Animated driver — only `transform` and `opacity` work natively. This is a common React Native gotcha: mixing native/JS drivers in the same animated value throws at runtime.
+- **One-shot callback via ref guard**: `useRef(false)` prevents `onComplete` from firing more than once under React strict mode's double-render or if the host re-renders with `phase === 4` repeatedly. Always guard single-fire callbacks this way.
+`─────────────────────────────────────────────────`
+
+All done. Here's a summary:
+
+**Files created:**
+- `components/game/loadingScreenLogic.ts` — pure functions (`getPhaseLabel`, `getProgressPercent`, `getTip`, `LOADING_TIPS`, `tipCount`) — no RN imports, fully unit-testable
+- `components/game/loadingScreenLogic.test.ts` — 19 tests, all pass
+- `components/game/LoadingScreen.tsx` — the component
+
+**LoadingScreen features:**
+- `phase: LoadingPhase` prop (0–4) drives a real progress bar: 0% → 25% → 50% → 75% → 100%
+- Phase labels: "Preparing..." / "Loading fonts..." / "Initializing grove..." / "Generating world..." / "Ready!"
+- Animated logo: gentle breathing pulse via `RNAnimated.loop/sequence`
+- Rotating tips: 10 grove-themed tips, auto-rotating every 4s with fade in/out
+- `onComplete` fires once at phase 4
+- `prefers-reduced-motion` respected throughout
+
+**Host usage:** pass `phase={currentPhase}` and drive it from 0→4 as each async step completes (font load → store init → first chunk → first frame).
+
+<promise>COMPLETE</promise>

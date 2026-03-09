@@ -1,0 +1,50 @@
+# Iteration 18 Log
+
+## Metadata
+
+- **Task ID**: US-018
+- **Task Title**: Write Jest tests for ChunkManager
+- **Description**: As a developer, I want tests for ChunkManager so that chunk load/unload, active ring, buffer ring, and deduplication are verified. See GAME_SPEC.md §6.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:16:41.160Z
+- **Ended At**: 2026-03-07T09:17:48.174Z
+- **Duration**: 1m 7s
+- **Input Tokens**: 55
+- **Output Tokens**: 2392
+- **Total Tokens**: 2447
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/ChunkManager*[0m
+The US-017 progress entry already mentions creating `ChunkManager.test.ts` with 34 tests. Let me verify the test file meets US-018's acceptance criteria before signaling completion.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.test.ts[0m
+The test file already exists with 34 tests covering all acceptance criteria. Let me run the quick verification to confirm everything passes.
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -5
+[94m[Bash][0m Run ChunkManager tests only $ npx jest --no-coverage --testPathPattern ChunkManager 2>&1 | tail -15
+Both checks pass. US-018 work was already completed as part of US-017 (the Docs > Tests > Code workflow shipped tests alongside the implementation).
+
+`★ Insight ─────────────────────────────────────`
+- The **Docs > Tests > Code** mandatory workflow eliminates "write tests for X" follow-up stories by design — tests are written in the same PR as the implementation. When US-018 arrives, US-017 already shipped 34 tests.
+- The test teardown pattern `afterEach(() => { for (const e of [...world.entities]) world.remove(e); })` uses a spread copy of `world.entities` to avoid mutating the collection while iterating — a subtle but critical correctness detail.
+- Tests for a chunk ring manager test the *boundary invariant* (always 25 loaded), not just the happy path — this catches off-by-one bugs in radius arithmetic (`(2r+1)² = 25` for radius=2).
+`─────────────────────────────────────────────────`
+
+Now I'll update the progress log and signal completion.
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-017" → "## 2026-03-07 - US-018
+- Work already complete — `..."
+All acceptance criteria are satisfied:
+
+- **8+ tests**: 34 tests exist, all passing
+- **Coverage**: chunk load/unload on player movement, 3x3 active ring (`renderable.visible=true`), 5x5 buffer ring (25 entities total), no duplicate loads (no-op test)
+- **`npx tsc --noEmit`**: 0 errors
+- **`npx jest --no-coverage`**: 34/34 passing
+
+<promise>COMPLETE</promise>

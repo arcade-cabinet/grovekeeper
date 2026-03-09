@@ -1,0 +1,43 @@
+{
+  "smeltRecipes": [
+    {
+      "id": "iron-ingot",
+      "name": "Iron Ingot",
+      "inputs": { "ore": 3, "timber": 1 },
+      "output": { "itemId": "iron-ingot", "amount": 1 },
+      "smeltTimeSec": 20
+    },
+    {
+      "id": "charcoal",
+      "name": "Charcoal",
+      "inputs": { "timber": 5 },
+      "output": { "itemId": "charcoal", "amount": 2 },
+      "smeltTimeSec": 15
+    },
+    {
+      "id": "cut-stone",
+      "name": "Cut Stone",
+      "inputs": { "stone": 4, "charcoal": 1 },
+      "output": { "itemId": "cut-stone", "amount": 2 },
+      "smeltTimeSec": 25
+    }
+  ],
+  "toolTierUpgrades": [
+    {
+      "fromTier": "basic",
+      "toTier": "iron",
+      "effectMultiplier": 1.5,
+      "speedMultiplier": 1.25,
+      "maxDurability": 150,
+      "cost": { "iron-ingot": 3 }
+    },
+    {
+      "fromTier": "iron",
+      "toTier": "grovekeeper",
+      "effectMultiplier": 2.0,
+      "speedMultiplier": 1.5,
+      "maxDurability": 500,
+      "cost": { "grove-essence": 5, "iron-ingot": 2 }
+    }
+  ]
+}

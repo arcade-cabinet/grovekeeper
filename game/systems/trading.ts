@@ -1,0 +1,106 @@
+/**
+ * Trading system -- resource conversion at settlement zones.
+ * Pure functions for trade rate calculations and execution.
+ * Ported from BabylonJS archive -- no engine dependencies.
+ */
+
+import type { ResourceType } from "@/game/config/resources";
+import {
+  getSeasonalModifierForAny,
+  type Season as SeasonalMarketSeason,
+} from "@/game/systems/seasonalMarket";
+
+export interface TradeRate {
+  from: ResourceType;
+  to: ResourceType;
+  fromAmount: number;
+  toAmount: number;
+}
+
+export const BASE_TRADE_RATES: TradeRate[] = [
+  { from: "timber", to: "sap", fromAmount: 10, toAmount: 5 },
+  { from: "sap", to: "fruit", fromAmount: 10, toAmount: 3 },
+  { from: "fruit", to: "acorns", fromAmount: 15, toAmount: 5 },
+  { from: "acorns", to: "timber", fromAmount: 20, toAmount: 10 },
+];
+
+export function getTradeRates(): TradeRate[] {
+  return [...BASE_TRADE_RATES];
+}
+
+/**
+ * Get trade rates adjusted for the current season.
+ * Seasonal modifiers from seasonalMarket.ts affect the output resource amount.
+ * Spec §20: Seasonal price modifiers extend to all traded resource types.
+ */
+export function getSeasonalTradeRates(season: string): TradeRate[] {
+  return BASE_TRADE_RATES.map((rate) => {
+    const modifier = getSeasonalModifierForAny(season as SeasonalMarketSeason, rate.to);
+    return {
+      ...rate,
+      toAmount: Math.max(1, Math.round(rate.toAmount * modifier)),
+    };
+  });
+}
+
+/**
+ * Calculate how much of the output resource you get for a given input amount.
+ * Returns 0 if the trade is invalid or the amount is less than the minimum.
+ */
+export function calculateTradeOutput(rate: TradeRate, inputAmount: number): number {
+  if (inputAmount < rate.fromAmount) return 0;
+  const trades = Math.floor(inputAmount / rate.fromAmount);
+  return trades * rate.toAmount;
+}
+
+/**
+ * Compute an effective trade rate adjusted by supply/demand price multipliers.
+ * The output amount is scaled by the multiplier for the output resource.
+ * Result is rounded and clamped to a minimum of 1 unit.
+ */
+export function getEffectiveTradeRate(
+  rate: TradeRate,
+  priceMultipliers: Record<ResourceType, number>,
+): TradeRate {
+  const multiplier = priceMultipliers[rate.to] ?? 1.0;
+  return {
+    ...rate,
+    toAmount: Math.max(1, Math.round(rate.toAmount * multiplier)),
+  };
+}
+
+/**
+ * Apply supply/demand multipliers to a list of trade rates.
+ * Use this to get NPC-economy-adjusted rates before displaying or executing trades.
+ */
+export function getEffectiveTradeRates(
+  rates: TradeRate[],
+  priceMultipliers: Record<ResourceType, number>,
+): TradeRate[] {
+  return rates.map((r) => getEffectiveTradeRate(r, priceMultipliers));
+}
+
+/**
+ * Execute a trade. Returns the amounts to deduct and add, or null if invalid.
+ */
+export function executeTrade(
+  rate: TradeRate,
+  inputAmount: number,
+  currentResources: Record<ResourceType, number>,
+): {
+  spend: { type: ResourceType; amount: number };
+  gain: { type: ResourceType; amount: number };
+} | null {
+  const trades = Math.floor(inputAmount / rate.fromAmount);
+  if (trades <= 0) return null;
+
+  const spendAmount = trades * rate.fromAmount;
+  const gainAmount = trades * rate.toAmount;
+
+  if ((currentResources[rate.from] ?? 0) < spendAmount) return null;
+
+  return {
+    spend: { type: rate.from, amount: spendAmount },
+    gain: { type: rate.to, amount: gainAmount },
+  };
+}

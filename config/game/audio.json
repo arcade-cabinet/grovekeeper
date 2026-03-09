@@ -1,0 +1,6 @@
+{
+  "masterVolumeDb": -6,
+  "minVolumeDb": -60,
+  "pannerPoolSize": 8,
+  "pannerModel": "HRTF"
+}

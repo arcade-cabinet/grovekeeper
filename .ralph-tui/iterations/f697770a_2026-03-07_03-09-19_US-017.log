@@ -1,0 +1,118 @@
+# Iteration 17 Log
+
+## Metadata
+
+- **Task ID**: US-017
+- **Task Title**: Implement ChunkManager
+- **Description**: As a developer, I want a ChunkManager that tracks the player's chunk coordinates and loads a 3x3 active ring with a 5x5 buffer ring so that the world streams seamlessly. See GAME_SPEC.md §6 for chunk ...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:09:19.554Z
+- **Ended At**: 2026-03-07T09:16:40.039Z
+- **Duration**: 7m 20s
+- **Input Tokens**: 120
+- **Output Tokens**: 25587
+- **Total Tokens**: 25707
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*[0m
+Let me read the relevant existing files to understand the architecture before implementing.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/types.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/WorldGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Now let me read the GAME_SPEC.md section 6 and the ChunkComponent definition.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m pattern: [96mChunkComponent|chunk[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§6|chunk|ChunkManager|CHUNK_SIZE|active ring|buffer ring[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+Let me also check the TerrainChunkComponent and the config file for chunk settings.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/procedural*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/grid.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/procedural/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+Let me also check if there's a scopedRNG function and what the SeededNoise looks like:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils[0m pattern: [96mscopedRNG|scoped_rng[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seededNoise.ts[0m
+Let me check how config is loaded in other files and look at the `Skill` tool for TDD workflow:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mimport.*grid\.json|require.*grid\.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useJump.ts[0m
+Let me check how existing world tests and archetypes work:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/archetypes.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ZoneLoader.ts[0m
+Let me check the ZoneLoader test to understand the world mock pattern:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ZoneLoader.test.ts[0m
+Now I have everything I need. Let me implement following docs > tests > code workflow.
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,TodoWrite,Bash[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Seamless terrain**: All chunks must use the **same** SeededNoise seed with **global** world-space coordinates — not per-chunk seeds. This matches the spec ("terrain noise and biome blending use global coordinates") and prevents visible seams at chunk boundaries.
+- **Tests use real Miniplex world**: Following the ZoneLoader.test.ts pattern — no mocking, cleanup via `afterEach(() => world.remove(...))`. This catches real ECS entity lifecycle bugs.
+- **Pure function extraction**: `worldToChunkCoords`, `getChunksInRadius`, `getChunkKey` are standalone exports so they can be unit-tested without setting up a ChunkManager instance.
+`─────────────────────────────────────────────────`
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m edit: "  "mouseSensitivity": 0.002,
+  "pitchClampDeg": 85..." → "  "mouseSensitivity": 0.002,
+  "pitchClampDeg": 85..."
+[94m[TodoWrite][0m
+Now writing tests first:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.test.ts[0m "/**
+ * ChunkManager tests (Spec §17.1)
+ *
+ * Tests cover:
+ *  - Pure coordinate helpers (worldToChunkCoords, getChunksInRadius, getChunkKey)
+ *  - generateChunkData determinism and output shape
+ *  - ... (9292 chars)"
+[94m[TodoWrite][0m
+Now the implementation:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m "/**
+ * ChunkManager -- Streams 3x3 active + 5x5 buffer chunk ring around the player.
+ *
+ * Architecture (Spec §17.1):
+ *   - Chunk size: 16x16 world-space tiles
+ *   - Active ring (3x3, radius 1): ren... (7913 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run ChunkManager tests $ npx jest --no-coverage --testPathPattern ChunkManager 2>&1
+34/34 tests pass. Now run the full suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+78 suites, 1342 tests, 0 failures. Let me update progress.md:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-016" → "## 2026-03-07 - US-017
+- Created `game/world/Chunk..."
+Also add the reusable pattern to the top of progress.md:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **useThree() vs cameraRef for look**: `useThree(..." → "- **useThree() vs cameraRef for look**: `useThree(..."
+
+[91m[Error: <tool_use_error>String to replace not found in file.
+String: - **useThree() vs cameraRef for look**: `useThree().camera` returns the R3F default camera — same object as the `<PerspectiveCamera makeDefault>` ref. For rotation, use `useThree().camera` directly in the hook; for position (which needs an initial ref-guard), `cameraRef.current` is still useful in `FPSCamera`.
+
+
+---</tool_use_error>][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m pattern: [96mcameraRef is still useful[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **useThree() vs cameraRef for look**: `useThree(..." → "- **useThree() vs cameraRef for look**: `useThree(..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Global coordinates = seamless terrain**: `SeededNoise` is a stateless function of its inputs — sampling `fbm(globalX, globalZ)` at a chunk boundary gives the same value from both sides. Per-chunk reseeding would break this: the permutation table would differ, producing a discontinuity.
+- **`initialized` flag vs. `size > 0` check**: Using `size > 0` for the skip-guard has a subtle bug: if the player legitimately starts at chunk `(0,0)` (the defaults), the first call would see `chunkX === 0 === this.playerChunkX` AND `size === 0`, so it would process correctly — but only because size is checked. The `initialized` boolean makes the intent explicit and avoids the dependency on Map size.
+- **Buffer-only visibility**: Entities outside the 3x3 active ring exist in the ECS world with `renderable.visible = false`. This pre-warms physics/neighbor queries without paying the render cost — matching the spec's "pre-generated, not rendered" requirement.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria met:
+
+| Criterion | Status |
+|-----------|--------|
+| `game/world/ChunkManager.ts` exists | ✓ |
+| Tracks player chunk coords, loads 3x3 active + 5x5 buffer | ✓ |
+| Adds/removes ECS entities on chunk transitions | ✓ |
+| `ChunkManager.update(playerPos)` loads correct chunks | ✓ |
+| `npx tsc --noEmit` passes | ✓ (0 errors) |
+| `npx jest --no-coverage` passes | ✓ (78 suites, 1342 tests) |
+
+<promise>COMPLETE</promise>

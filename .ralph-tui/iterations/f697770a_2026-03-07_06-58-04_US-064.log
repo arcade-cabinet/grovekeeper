@@ -1,0 +1,103 @@
+# Iteration 64 Log
+
+## Metadata
+
+- **Task ID**: US-064
+- **Task Title**: Create target info display
+- **Description**: As a player, I want to see the entity name and action prompt (e.g. 'E to Harvest') when I look at something interactable so that I know what I can do. See GAME_SPEC.md §11.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T12:58:04.539Z
+- **Ended At**: 2026-03-07T13:02:35.512Z
+- **Duration**: 4m 30s
+- **Input Tokens**: 104
+- **Output Tokens**: 14110
+- **Total Tokens**: 14214
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/player/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|TargetInfo|target.*info|interactable|raycast.*hit|hit.*entity[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§\s*11|## 11|section 11|TargetInfo|target info|crosshair|action prompt|entity name[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.test.ts[0m
+Now I understand the raycast hook. Let me look at the Entity type and existing UI patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useInteraction.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Now let me look at the ECS components and the game screen to understand Entity data:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/vegetation.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/structures.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/species.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m
+Now I have enough context. Let me implement the feature.
+
+`★ Insight ─────────────────────────────────────`
+- The module-level external store pattern from `useInteraction.ts` is the right bridge between R3F's Canvas world (where `useRaycast` runs each frame) and React Native HUD components outside the Canvas.
+- Pure functions as testable seams (`resolveEntityName`, `resolveActionPrompt`) can be unit-tested without any R3F or Three.js context.
+- `useSyncExternalStore` from React is already the project's chosen primitive for cross-boundary reactive state — consistent with `useInteraction.ts`.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit,Write,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.ts[0m edit: "import { useFrame, useThree } from "@react-three/f..." → "import { useFrame, useThree } from "@react-three/f..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.ts[0m edit: "// Module-level objects reused each frame to avoid..." → "// Module-level objects reused each frame to avoid..."
+Now update `useRaycast` to call `_setHit` alongside `hitRef.current`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.ts[0m edit: "    hitRef.current = null;
+
+    for (const interse..." → "    hitRef.current = null;
+
+    for (const interse..."
+[94m[TodoWrite][0m
+Now create `TargetInfo.tsx`:
+
+`★ Insight ─────────────────────────────────────`
+- `resolveEntityName` and `resolveActionPrompt` are exported pure functions — they're the testable seam, keeping the component logic trivially thin.
+- NPC name comes from `entity.npc?.name` (the NpcComponent has a `name` field), tree name from the species config lookup, structure from `templateId`.
+- Action prompts are tool-context-aware for trees (different actions per tool), but type-based for NPC/structure (always "Talk"/"Use").
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TargetInfo.tsx[0m "/**
+ * TargetInfo — HUD overlay showing entity name and action prompt (Spec §11).
+ *
+ * Reads the current raycast hit from the shared useTargetHit store (updated
+ * each frame by useRaycast inside the... (4001 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TargetInfo.test.ts[0m "/**
+ * Tests for TargetInfo — entity name and action prompt display (Spec §11).
+ *
+ * Tests pure functions resolveEntityName and resolveActionPrompt directly.
+ * The TargetInfo component itself is smo... (4819 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run TargetInfo and useRaycast tests $ npx jest --no-coverage --testPathPattern "TargetInfo|useRaycast" 2>&1
+All passing. Let me run the full suite to confirm nothing regressed:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+2029 tests, 0 failures (was 1983 + 46 new tests from useRaycast upgrade + TargetInfo). Now update the progress log:
+[94m[TodoWrite][0m
+[94m[Bash][0m Append US-064 entry to progress.md $ no regex needed. --- EOF
+All done. Here's a summary of what was built:
+
+**US-064: Target Info Display**
+
+3 files changed:
+
+1. **`game/hooks/useRaycast.ts`** — added `useTargetHit()` external store. Each frame `useRaycast` now calls `_setHit(hit)` (or `_setHit(null)` on miss), which notifies all `useSyncExternalStore` subscribers outside the Canvas.
+
+2. **`components/player/TargetInfo.tsx`** — React Native overlay with two pure exported functions:
+   - `resolveEntityName(hit)` → species name (via config lookup) for trees, NPC name from component, title-cased templateId for structures
+   - `resolveActionPrompt(hit, tool)` → tool-specific ("E to Harvest/Water/Prune/Fertilize") for trees, "E to Talk" for NPCs, "E to Use" for structures
+
+3. **`components/player/TargetInfo.test.ts`** — 18 tests covering all entity types, all tree tool mappings, and fallback paths.
+
+Verification: `npx tsc --noEmit` 0 errors · `npx jest --no-coverage` 2029 tests, 0 failures.
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,9 @@
+{
+  "npcBrain": {
+    "wanderRange": 3,
+    "wanderInterval": 8,
+    "noticeRange": 6,
+    "approachRange": 3,
+    "adjacentRange": 1.5
+  }
+}

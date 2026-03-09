@@ -1,0 +1,82 @@
+# Iteration 36 Log
+
+## Metadata
+
+- **Task ID**: US-036
+- **Task Title**: Write Jest tests for tree rendering logic
+- **Description**: As a developer, I want tests for tree rendering so that species-to-GLB mapping, stage-to-scale, seasonal tint, and winter model swap are verified. See GAME_SPEC.md §8.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:32:34.181Z
+- **Ended At**: 2026-03-07T10:34:36.689Z
+- **Duration**: 2m 2s
+- **Input Tokens**: 78
+- **Output Tokens**: 6812
+- **Total Tokens**: 6890
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite,Bash[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/Tree*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeInstances.tsx[0m
+Let me run the tests to see current status, and also check the seasonal tint system files.
+[94m[Bash][0m Run TreeModel tests $ npx jest --no-coverage --testPathPattern="TreeModel" 2>&1 | tail -50
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*season*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*tint*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*color*[0m
+[94m[Bash][0m Find files referencing seasonal tint $ grep -r "seasonTint\|seasonal.*tint\|tintColor" /Users/jbogaty/src/arcade-cabinet/grovekeeper/game -...
+[94m[Bash][0m Find test files related to seasonal tint/US-035 $ grep -r "US-035\|US-033\|US-034\|seasonTint\|tint" /Users/jbogaty/src/arcade-cabinet/grovekeeper/gam...
+[94m[Bash][0m Find US-033/034/035 entries in progress $ grep -n "US-035\|US-034\|US-033" /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.m...
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/treeScale*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Find seasonal tint related functions $ grep -r "seasonalTint\|seasonal.*color\|tintForSeason\|getSeasonTint\|SeasonTint" /Users/jbogaty/src...
+[94m[Bash][0m Find system files using seasonTint $ grep -rn "seasonTint\|tint" /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems --include="*....
+[94m[Bash][0m Check vegetationPlacement for tint logic $ grep -n "tint\|season" /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/vegetationPlacemen...
+[94m[Bash][0m Check vegetation ECS component for tint field $ grep -rn "seasonTint\|tint\|season" /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/component...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/vegetationPlacement.ts[0m
+[94m[Bash][0m Check existing vegetationPlacement tests for tint coverage $ grep -n "computeSeasonalTint\|seasonalTint\|tint" /Users/jbogaty/src/arcade-cabinet/grovekeeper/game...
+[94m[Bash][0m Run all tree-related tests $ npx jest --no-coverage --testPathPattern="TreeModel|treeScale|vegetationPlacement" 2>&1 | tail -60
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -20
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+All tests pass. The work for US-036 is already complete — it was implemented incrementally during US-033 through US-035.
+
+Here's the current state of tree rendering tests:
+
+| File | Tests | Covers |
+|------|-------|--------|
+| `components/entities/TreeModel.test.ts` | 32 | species-to-GLB mapping, stage-to-scale, winter model swap, component export |
+| `game/systems/vegetationPlacement.test.ts` | includes seasonal tint tests | `getSeasonalTreeTint` for evergreen/deciduous/species-specific |
+| `game/systems/treeScaleSystem.test.ts` | scale rendering | growth stage scale application |
+
+All 4 acceptance criteria are met:
+- ✅ 8+ tests pass (1556 total, 32+ specific to tree rendering)
+- ✅ Species-to-GLB mapping: `resolveGLBPath` tests
+- ✅ Stage-to-scale: `STAGE_SCALES` tests
+- ✅ Seasonal tint: `getSeasonalTreeTint` tests in `vegetationPlacement.test.ts`
+- ✅ Winter model swap: `resolveModelPath` + `getSpeciesUseWinterModel` tests
+- ✅ `npx tsc --noEmit` passes
+- ✅ `npx jest --no-coverage` passes (1556 tests, 88 suites)
+
+Now let me append to progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **Winter model convention**: `assets/models/tr..." → "  - **Winter model convention**: `assets/models/tr..."
+`★ Insight ─────────────────────────────────────`
+- **Test distribution follows architecture**: US-036's acceptance criteria ("seasonal tint") is satisfied in `vegetationPlacement.test.ts` rather than `TreeModel.test.ts` — because `getSeasonalTreeTint` is a system-level concern (vegetation placement system), while `resolveGLBPath`/`resolveModelPath` are component-level pure functions. Tests live closest to the logic they test.
+- **Pure function seams are the key to unit testing R3F**: The `TreeGLBModel` tinting code (material clone + traverse) is impossible to test in Jest (no WebGL). By extracting `getSeasonalTreeTint`, `resolveModelPath`, etc. as pure exported functions, all business logic is unit-testable while the R3F wiring remains TypeScript-verified only.
+`─────────────────────────────────────────────────`
+
+The work for US-036 was already fully implemented during US-033 through US-035. All acceptance criteria are satisfied:
+
+- **32 tests** in `TreeModel.test.ts` covering species-to-GLB, stage-to-scale, and winter model swap  
+- **Seasonal tint** covered by `getSeasonalTreeTint` tests in `vegetationPlacement.test.ts`
+- `npx tsc --noEmit` ✅ clean
+- `npx jest --no-coverage` ✅ 1556 tests passing, 88 suites
+
+<promise>COMPLETE</promise>

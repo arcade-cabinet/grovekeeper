@@ -1,0 +1,82 @@
+# Iteration 124 Log
+
+## Metadata
+
+- **Task ID**: US-124
+- **Task Title**: Write Jest tests for raid mechanics
+- **Description**: As a developer, I want tests for raid mechanics so that probability scaling, wave composition, night-only check, and seed determinism are verified. See GAME_SPEC.md §23.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T18:49:58.517Z
+- **Ended At**: 2026-03-07T18:51:38.361Z
+- **Duration**: 1m 39s
+- **Input Tokens**: 3963
+- **Output Tokens**: 4348
+- **Total Tokens**: 8311
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+Using the TDD skill to guide my approach. Let me first explore the existing raid system code from US-123, then read the spec.
+[94m[ToolSearch][0m query: [93mselect:Read,Grep,Glob[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/raid*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96m**/*.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/systems/raid*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/raids.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mraid[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§23[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/baseRaids.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/baseRaids.test.ts[0m
+The test file already exists. Let me verify it passes and check the spec sections for alignment.
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§23|§18\.5|§34[0m
+[94m[Bash][0m Run baseRaids tests $ npx jest --no-coverage game/systems/baseRaids.test.ts 2>&1
+34/34 tests pass. Let me also run the TypeScript check:
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+Both checks pass. Let me update the progress file.
+
+`★ Insight ─────────────────────────────────────`
+
+1. **US-123 already wrote the tests as part of the same PR** — the raid system implementation (`baseRaids.ts`) and its test file (`baseRaids.test.ts`) were both created in the same session, which is the correct TDD approach. US-124 just asks to verify those tests exist and pass.
+
+2. **34 tests cover 6 functional areas**: probability scaling, night-only gate, wave generation (composition + determinism), warning messages, loot calculation, and approach directions — all four areas named in the US acceptance criteria plus loot and warnings.
+
+3. **scopedRNG determinism tests follow a standard pattern**: assert `JSON.stringify(a) === JSON.stringify(b)` for same-seed calls, and `!==` for different seeds. This is the cheapest way to validate the entire output tree without field-by-field assertions.
+
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Read[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Get line count of progress.md $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+" → "---
+
+## 2026-03-07 - US-124
+- Work already complet..."
+
+[91m[Error: <tool_use_error>Found 124 matches of the string to replace, but replace_all is false. To replace all occurrences, set replace_all to true. To replace only one occurrence, please provide more context to uniquely identify the instance.
+String: ---
+</tool_use_error>][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **Approach direction seeding includes chunk co..." → "  - **Approach direction seeding includes chunk co..."
+All done. The work was already complete from US-123.
+
+**Summary:**
+
+- `game/systems/baseRaids.test.ts` was written alongside the implementation in US-123 — 34 tests covering all required areas
+- `npx tsc --noEmit` → 0 errors
+- `npx jest baseRaids.test --no-coverage` → **34/34 pass**
+
+**Coverage vs acceptance criteria:**
+| Criterion | Tests |
+|-----------|-------|
+| Probability scaling | 6 (exploration=0, value scaling, day scaling, difficulty multiplier, cap, floor) |
+| Wave composition | 8 (min waves, max waves, enemy types, total count, delay, escalation) |
+| Night-only check | 6 (survival mode gate, noon/dawn/evening/midnight all blocked) |
+| Seed determinism | 2 (same seed → same output; different seeds → different output) |
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,35 @@
+# Flow: Plant tree via FPS controls
+# Verifies: game loads, player can interact with the world.
+# Note: The tutorial overlay is RETIRED (renders null). Tool actions are
+#       triggered via tap on the TouchLookZone (FPS perspective).
+# Platform: iOS simulator (375px viewport portrait, 667px height)
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible: "GROVEKEEPER"
+
+# Navigate to game
+- tapOn:
+    id: "btn-new-grove"
+- assertVisible: "New Grove"
+- tapOn:
+    accessibilityLabel: "Sapling: The intended experience"
+- tapOn:
+    id: "btn-begin-grove"
+
+# Game screen loaded
+- assertVisible:
+    id: "btn-open-menu"
+    timeout: 15000
+
+# Verify the game canvas and HUD are rendered
+- assertVisible:
+    id: "game-screen"
+- assertVisible:
+    id: "hud-overlay"
+
+# Touch the screen center area to trigger a tool action (FPS tap-to-act)
+# In FPS mode, tapping the look zone fires the active tool
+- tapOn:
+    point: "50%, 50%"

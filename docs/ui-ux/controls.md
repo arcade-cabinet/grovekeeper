@@ -1,7 +1,9 @@
 # Controls
 
-Grovekeeper is mobile-first. The virtual joystick is the primary input method;
-keyboard and mouse are secondary desktop enhancements.
+Grovekeeper is mobile-first, portrait-primary. The virtual joystick is the primary
+input method; keyboard and mouse are secondary desktop enhancements.
+
+**Canonical spec:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Sections 6 and 12.
 
 ---
 
@@ -9,53 +11,32 @@ keyboard and mouse are secondary desktop enhancements.
 
 ### Virtual Joystick
 
-**File:** `src/game/ui/Joystick.tsx`
-**Library:** nipplejs 0.10.x
+**File:** `components/game/VirtualJoystick.tsx`
+**Library:** Custom implementation (no nipplejs dependency)
 
-The joystick is created in `static` mode, anchored at the center of a circular
-container in the bottom-left of the screen.
-
-```typescript
-nipplejs.create({
-  zone: containerRef.current,
-  mode: "static",
-  position: { left: "50%", top: "50%" },
-  size: 100,
-  color: COLORS.forestGreen,
-  restOpacity: 0.7,
-  fadeTime: 100,
-});
-```
+The joystick is rendered as a circular touch zone in the bottom-left of the screen.
+Touch start creates the joystick at the touch point; drag sets direction and magnitude.
 
 **Container sizing** scales with the viewport:
-- Mobile: `w-20 h-20` (80 px)
-- Small screens (`sm:`): `w-24 h-24` (96 px)
-- Tablets (`md:`): `w-28 h-28` (112 px)
-- Desktop (`lg:`): `w-32 h-32` (128 px)
+- Mobile: 80px
+- Small screens (`sm:`): 96px
+- Tablets (`md:`): 112px
+- Desktop (`lg:`): 128px
 
-**Isometric rotation:** Raw joystick vectors are rotated 45 degrees to align
-with the isometric camera angle:
+**Data flow:** Joystick writes movement vector to a ref consumed by the movement
+system every frame. On touch end, the ref is zeroed to stop movement.
 
-```typescript
-const angle = Math.PI / 4; // 45 degrees
-const x = rawX * Math.cos(angle) - rawY * Math.sin(angle);
-const z = -(rawX * Math.sin(angle) + rawY * Math.cos(angle));
-```
+### Look Zone (FPS Pivot -- Planned)
 
-**Data flow:** `Joystick.onMove(x, z)` writes to a `movementRef` (React ref)
-in `GameScene.tsx`. The movement system reads this ref every frame to update
-the player entity's position. On `end`, the ref is zeroed to stop movement.
+Swipe-to-look on the right half of the screen for FPS camera rotation.
+See `docs/architecture/touch-controls.md` for full spec.
 
-**Styling:** The joystick container has a radial gradient background, a bark-
-brown border, and an inner decorative dashed ring. The nipplejs handle uses
-`forestGreen` as its color.
+### Action Buttons
 
-### Touch-to-Act
+**File:** `components/game/MobileActionButtons.tsx`
 
-Tapping directly on the 3D canvas triggers a raycast from the camera through
-the tap point to the ground plane. The hit position is snapped to the nearest
-grid cell. If the player is standing on or near that cell, the context action
-fires (plant, water, harvest, etc.).
+Quick tool select + action execution. Bottom-right of viewport. Minimum 44px
+touch targets per CLAUDE.md mobile-first requirements.
 
 ### Sacred Zone
 
@@ -69,100 +50,96 @@ thumb has room to sweep without accidentally hitting other UI.
 
 ### Keyboard Movement
 
-On desktop viewports (`md:` breakpoint and above), the joystick is hidden. A
-keyboard input hook listens for `WASD` and arrow keys.
+On desktop viewports (`md:` breakpoint and above), the joystick is hidden. The
+`useInput` hook listens for `WASD` and arrow keys.
 
-**Isometric conversion** mirrors the joystick math:
-
-```text
-worldX = inputX - inputY
-worldZ = -(inputX + inputY)
-```
-
-Where `inputX` is +1 for D/Right, -1 for A/Left, and `inputY` is +1 for
-W/Up, -1 for S/Down.
-
-The result is written to the same `movementRef` that the joystick uses, so the
+The movement vector is written to the same ref that the joystick uses, so the
 movement system is input-agnostic.
 
 ### Keyboard Shortcuts
 
-| Key     | Action                          |
-|---------|---------------------------------|
-| W / Up  | Move forward (isometric NW)     |
-| A / Left| Move left (isometric SW)        |
-| S / Down| Move backward (isometric SE)    |
-| D / Right| Move right (isometric NE)      |
-| 1-8     | Select tool (matches ToolBelt order) |
-| Space   | Context action (same as action button) |
-| Escape  | Open/close pause menu           |
+| Key      | Action                               |
+|----------|--------------------------------------|
+| W / Up   | Move forward                         |
+| A / Left | Move left                            |
+| S / Down | Move backward                        |
+| D / Right| Move right                           |
+| 1-8      | Select tool (matches ToolBelt order) |
+| Space    | Context action (same as action button)|
+| Escape   | Open/close pause menu                |
 
 Keyboard shortcut badges appear on the ToolBelt buttons at `md:` breakpoint as
-small 14 px circles showing the number key.
+small 14px circles showing the number key.
 
 ### Mouse
 
-Mouse click on the canvas triggers the same raycast-to-grid-cell logic as a
-touch tap. No additional mouse-specific controls are implemented.
+Mouse click on the canvas triggers raycast-to-target logic. Desktop mouse look
+planned for FPS camera pivot (see `docs/plans/2026-03-06-fps-perspective-design.md`).
 
 ---
 
 ## Context Actions
 
 The action system is context-sensitive, determined by the combination of the
-currently selected tool and the state of the tile the player is standing on.
-This logic lives in `ActionButton.tsx` (`getActionLabel` function).
+currently selected tool and the target the player is looking at (raycast from
+camera center, per-tool range). Logic lives in `ActionButton.tsx` and will move
+to a raycast-based interaction system in the FPS pivot.
 
-| Selected Tool    | Tile State                   | Action Label | Effect               |
-|------------------|------------------------------|--------------|----------------------|
-| Trowel           | Empty soil tile              | PLANT        | Opens SeedSelect, then plants selected species |
-| Watering Can     | Tree at stage 0-2            | WATER        | Applies water, accelerates growth |
-| Pruning Shears   | Tree at stage 3-4            | PRUNE        | Yields bonus resources |
+| Selected Tool    | Target                       | Action Label | Effect                     |
+|------------------|------------------------------|--------------|----------------------------|
+| Trowel           | Empty soil tile              | PLANT        | Opens SeedSelect, plants   |
+| Watering Can     | Tree at stage 0-2            | WATER        | Applies water, +1.5x growth|
+| Pruning Shears   | Tree at stage 3-4            | PRUNE        | Yields bonus resources     |
 | Axe              | Tree at stage 3+             | CHOP         | Harvests tree for resources + XP |
-| Shovel           | Rock tile                    | CLEAR        | Removes obstacle, converts to soil |
-| Compost Bin      | Any tile with a tree         | COMPOST      | Applies fertilizer, speeds growth |
-| Almanac          | Any tile with a tree         | INSPECT      | Shows tree info       |
+| Shovel           | Rock tile / blocked tile     | DIG          | Removes obstacle, converts to soil |
+| Pickaxe          | Rock formation               | MINE         | Extract stone, ore         |
+| Fishing Rod      | Water tile (pond/river)      | FISH         | Catch fish + rare drops    |
+| Hammer           | Structure (damaged)          | REPAIR       | Restore structure durability|
+| Almanac          | Any tree / NPC               | INSPECT      | Shows info                 |
 
-When no valid action is available for the current tool + tile combination, the
-action button is greyed out (`opacity: 0.55`) and disabled.
+When no valid action is available, the action button is greyed out and disabled.
 
-**ActionButton** (`src/game/ui/ActionButton.tsx`) has a minimum touch target of
-**72 x 48 px**, with 16 px horizontal padding.
+### Crosshair Feedback (FPS Pivot -- Planned)
+
+- Crosshair color: green (valid target), amber (out-of-range), red (invalid)
+- Context label below crosshair: "Chop" / "Plant" / "Mine" etc.
+- Per-tool range: 3.0 / 4.0 / 6.0 units
 
 ---
 
 ## Canvas Configuration
 
-The BabylonJS canvas is configured for mobile-first touch handling:
+The R3F Canvas is configured for modern Zelda-style rendering and mobile-first touch handling:
 
-```css
-.grove-game-container {
-  width: 100vw;
-  height: 100dvh;  /* Dynamic viewport height for mobile notch safety */
-  overflow: hidden;
-  position: relative;
-}
+```tsx
+<Canvas
+  gl={{
+    antialias: true,
+    toneMapping: ACESFilmicToneMapping,
+    outputColorSpace: SRGBColorSpace,
+  }}
+  dpr={[1, 2]}
+/>
 ```
 
 Additional mobile settings:
 - `touch-action: none` on the joystick container prevents browser gestures
-- `overscroll-behavior: none` on `html` and `body` prevents pull-to-refresh
-- `position: fixed` on `html` and `body` prevents scroll bounce
+- `overscroll-behavior: none` prevents pull-to-refresh
 - All touch event listeners are passive where possible
-- `touch-manipulation` class applied to interactive buttons for 300ms tap delay removal
-- Viewport meta tag includes `viewport-fit=cover` and `user-scalable=no`
+- Viewport uses `100dvh` (dynamic viewport height) for mobile notch safety
 
 ---
 
 ## Haptic Feedback
 
 On devices that support it (via Capacitor), certain actions trigger haptic
-feedback through `@capacitor/haptics`. The platform bridge
-(`src/game/systems/platform.ts`) wraps the native API and silently no-ops on
-unsupported platforms.
+feedback. The haptics system (`game/systems/haptics.ts`) wraps the native API
+and silently no-ops on unsupported platforms.
 
 Haptic triggers include:
 - Planting a tree
 - Harvesting a tree
+- Tool impact on target
 - Level up
 - Achievement unlocked
+- Growth stage transition

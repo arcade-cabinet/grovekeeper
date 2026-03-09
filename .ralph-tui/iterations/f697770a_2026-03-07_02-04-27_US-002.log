@@ -1,0 +1,128 @@
+# Iteration 2 Log
+
+## Metadata
+
+- **Task ID**: US-002
+- **Task Title**: Remove FarmerState references from game systems
+- **Description**: As a developer, I want to remove all FarmerState usage from the codebase so that player state uses the modern PlayerComponent with stamina/state fields. See GAME_SPEC.md §7 for player component requir...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T08:04:27.789Z
+- **Ended At**: 2026-03-07T08:08:53.834Z
+- **Duration**: 4m 26s
+- **Input Tokens**: 142
+- **Output Tokens**: 15177
+- **Total Tokens**: 15319
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Grep,Glob[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mFarmerState[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mFarmerState[0m
+Good. Only 3 occurrences, all in two files. Let me read them.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Let me check for all usages of `farmerState`, `farmerQuery`, and any caller sites:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mfarmerState|farmerQuery|FarmerState[0m
+Now I have a complete picture. Let me read the full files before editing:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/archetypes.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useGameLoop.ts[0m
+Now let me also read the test files:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.test.ts[0m
+Let me also check `PlayerGovernor.ts`:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.ts[0m pattern: [96mfarmerState|FarmerState|farmerQuery[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit[0m
+`★ Insight ─────────────────────────────────────`
+`FarmerState` was a split component holding stamina data that logically belongs on the player. The migration pattern here merges it into `PlayerComponent`, then the `farmerQuery` (which finds entities with `farmerState`) simply becomes `playerQuery` — since stamina now lives on the player entity itself. This is a clean data-locality improvement: one entity, one component, all player state together.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m edit: "export interface PlayerComponent {
+  coins: number..." → "export interface PlayerComponent {
+  coins: number..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m edit: "export interface FarmerState {
+  stamina: number;
+..." → "export interface ZoneComponent {"
+[94m[TodoWrite][0m
+Now update `world.ts` — remove the `FarmerState` import, the `farmerState` entity field, and the `farmerQuery`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "  GridCellComponent,
+  FarmerState,
+  ZoneComponen..." → "  GridCellComponent,
+  ZoneComponent,"
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "  // LEGACY: Remove during Phase 0-1 (grid→chunk, ..." → "  // LEGACY: Remove during Phase 0-1 (grid→chunk, ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "// LEGACY queries — remove during Phase 0-1
+export..." → "// LEGACY queries — remove during Phase 0-1
+export..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/archetypes.ts[0m edit: "  player: {
+    coins: 100,
+    xp: 0,
+    level: ..." → "  player: {
+    coins: 100,
+    xp: 0,
+    level: ..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.ts[0m edit: "export function drainStamina(entity: Entity, cost:..." → "export function drainStamina(entity: Entity, cost:..."
+[94m[TodoWrite][0m
+Now update `stamina.test.ts` — the helper and all assertions switch from `farmerState` to `player`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.test.ts[0m edit: "    function makeFarmerEntity(stamina: number): En..." → "    function makePlayerEntity(stamina: number): En..."
+[94m[TodoWrite][0m
+Now update `useGameLoop.ts` — remove `farmerQuery` import, use `playerQuery` for stamina regen:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useGameLoop.ts[0m edit: "import {
+  farmerQuery,
+  gridCellsQuery,
+  harves..." → "import {
+  gridCellsQuery,
+  harvestableQuery,
+  n..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useGameLoop.ts[0m edit: "    for (const entity of farmerQuery) {
+      if (..." → "    for (const entity of playerQuery) {
+      if (..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.test.ts[0m edit: "      expect(player.farmerState?.stamina).toBe(100..." → "      expect(player.player?.stamina).toBe(100);
+  ..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.test.ts[0m edit: "    player: {
+      coins: 100,
+      xp: 0,
+     ..." → "    player: {
+      coins: 100,
+      xp: 0,
+     ..."
+[94m[TodoWrite][0m
+Now run the acceptance criteria checks:
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Verify FarmerState is gone from game/ $ grep -r 'FarmerState' game/ --include='*.ts' | wc -l
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+One more test fixture needs updating:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.test.ts[0m edit: "    player: {
+      coins: 100,
+      xp: 0,
+     ..." → "    player: {
+      coins: 100,
+      xp: 0,
+     ..."
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -30
+All 1244 tests pass, tsc is clean, and `FarmerState` has 0 matches in `game/`.
+[94m[TodoWrite][0m
+Now append to progress.md:
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-001" → "---
+
+## 2026-03-07 - US-002
+- Removed all `FarmerS..."
+`★ Insight ─────────────────────────────────────`
+The `playerQuery` already requires `player` as a component — so the `if (!entity.player) continue` guard inside the loop is technically redundant (Miniplex guarantees it). It's kept for defensive clarity, but TypeScript's narrowing understands it too.
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

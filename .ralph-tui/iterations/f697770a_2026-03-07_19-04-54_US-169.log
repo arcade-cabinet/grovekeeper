@@ -1,0 +1,259 @@
+# Iteration 169 Log
+
+## Metadata
+
+- **Task ID**: US-169
+- **Task Title**: Decompose treeGeometry.ts and PlayerGovernor.ts
+- **Description**: As a developer, I want the existing treeGeometry.ts (950 lines — legacy SPS generator, may be largely replaced by GLB loading) assessed and either decomposed or removed, and PlayerGovernor.ts (611 lin...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-08T01:04:54.649Z
+- **Ended At**: 2026-03-08T01:15:06.382Z
+- **Duration**: 10m 11s
+- **Input Tokens**: 168
+- **Output Tokens**: 37489
+- **Total Tokens**: 37657
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/treeGeometry.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/NpcBrain.ts[0m
+Let me read the full files to understand their structure before making decisions.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/treeGeometry.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/NpcBrain.ts[0m
+Now let me check what uses `treeGeometry.ts` and examine the existing structure:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mtreeGeometry|createTreeGeometry[0m
+[94m[Bash][0m List AI directory contents $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/
+Let me check what TreeInstances.tsx currently uses from treeGeometry:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeInstances.tsx[0m pattern: [96mcreateTreeGeometry|treeGeometry[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Find all non-test files that import treeGeometry $ grep -r "createTreeGeometry\|treeGeometry" /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/...
+[94m[Bash][0m Find all files that import NpcBrain $ grep -r "from.*NpcBrain\|import.*NpcBrain" /Users/jbogaty/src/arcade-cabinet/grovekeeper --include="...
+[94m[Bash][0m Find all files that import PlayerGovernor $ grep -r "from.*PlayerGovernor\|import.*PlayerGovernor" /Users/jbogaty/src/arcade-cabinet/grovekeeper...
+`treeGeometry.ts` is no longer imported by any non-test file. Now let me check the tests and existing imports:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/treeGeometry.test.ts[0m
+[94m[Bash][0m Check NpcBrain import patterns in gameloop files $ grep -n "from.*NpcBrain\|import.*NpcBrain" /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.test.ts[0m
+[94m[Bash][0m Find ProceduralTreeRenderer usage $ grep -r "ProceduralTree\|procedural.*tree\|treeGeometry" /Users/jbogaty/src/arcade-cabinet/grovekeep...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeInstances.tsx[0m
+Now I have the full picture:
+1. **treeGeometry.ts** — no production code imports it → **remove** both `.ts` and `.test.ts`
+2. **PlayerGovernor.ts (611 lines)** — only referenced by its test → decompose to `governor/` subpackage
+3. **NpcBrain.ts (373 lines)** — used by tickNpcAI + test → decompose to `npc/` subpackage
+
+`★ Insight ─────────────────────────────────────`
+- The 300-line rule exists to prevent "God files" where a single module mixes types, config, entity wrappers, evaluators, and the main class all in one place — decomposing into focused subpackages makes each concern independently testable.
+- When a file is the *only* non-test importer of itself, that's a clear sign it's dead production code — removing it (rather than decomposing it) reduces test maintenance burden and bundle size.
+- The barrel index.ts pattern (re-exporting from subpackage files) means all import paths for callers remain `@/game/ai/NpcBrain` — no external churn when doing internal decomposition.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+[94m[Bash][0m Delete treeGeometry.ts and its test (dead code) $ rm /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/treeGeometry.ts /Users/jbogaty/src/arcad...
+[94m[TodoWrite][0m
+Now create the `governor/` subpackage. I'll create all files in parallel:
+[94m[Bash][0m Create governor directory $ mkdir -p /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/types.ts[0m "/**
+ * Types and constants for the PlayerGovernor visual AI.
+ */
+
+// ──────────────────────────────────────────────
+// State machine + action types
+// ──────────────────────────────────────────────
+
+e... (1655 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/entity.ts[0m "/**
+ * Yuka GameEntity wrapper for the PlayerGovernor AI.
+ */
+
+import { GameEntity, Think } from "yuka";
+
+export class GovernorEntity extends GameEntity {
+  brain: Think<GovernorEntity>;
+  constructor... (274 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/evaluators.ts[0m "/**
+ * Yuka GoalEvaluators for the PlayerGovernor.
+ * Each evaluator scores a potential action (0-1); the governor picks the highest.
+ */
+
+import { GoalEvaluator } from "yuka";
+import {
+  findHarvesta... (2693 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/targeting.ts[0m "/**
+ * Target resolution + selection helpers for the PlayerGovernor.
+ * All functions are pure (no class state) -- they receive what they need.
+ */
+
+import {
+  findHarvestableTrees,
+  findMatureTrees,... (5259 chars)"
+Now write the main `PlayerGovernor.ts` in the governor subpackage:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/PlayerGovernor.ts[0m "/**
+ * PlayerGovernor -- Visual AI that walks the player around and takes actions.
+ *
+ * State machine: IDLE -> DECIDING -> NAVIGATING -> ACTING -> IDLE
+ *
+ * Delegates target selection to targeting.t... (8833 chars)"
+I used `require()` unnecessarily — there's no actual circular dependency. Let me fix that:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/PlayerGovernor.ts[0m "/**
+ * PlayerGovernor -- Visual AI that walks the player around and takes actions.
+ *
+ * State machine: IDLE -> DECIDING -> NAVIGATING -> ACTING -> IDLE
+ *
+ * Delegates target selection to targeting.t... (8644 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/index.ts[0m "/**
+ * governor/ barrel -- re-exports the public API of the governor subpackage.
+ * Callers import from "@/game/ai/governor" or "@/game/ai/PlayerGovernor".
+ */
+
+export { GovernorEntity } from "./entit... (666 chars)"
+Now create a shim at the old path so existing imports still work:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.ts[0m "/**
+ * Re-export shim — PlayerGovernor has been decomposed into game/ai/governor/.
+ * This file exists so any import from "@/game/ai/PlayerGovernor" continues to work.
+ */
+export { PlayerGovernor } fr... (308 chars)"
+[94m[TodoWrite][0m
+Now create the `npc/` subpackage:
+[94m[Bash][0m Create npc directory $ mkdir -p /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/types.ts[0m "/**
+ * Types for the NpcBrain AI.
+ */
+
+import type { WalkabilityGrid } from "@/game/systems/pathfinding";
+
+export type NpcBehavior = "idle" | "wandering" | "approaching" | "returning" | "tutorial_guid... (814 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/config.ts[0m "/**
+ * NpcBrain configuration constants (values from config/game/ai.json).
+ */
+
+import aiConfig from "@/config/game/ai.json" with { type: "json" };
+
+export const WANDER_RANGE: number = aiConfig.npcBra... (498 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/entity.ts[0m "/**
+ * Yuka GameEntity wrapper for NPC AI.
+ */
+
+import { GameEntity, Think } from "yuka";
+import type { NpcBrainContext } from "./types.ts";
+
+export class NpcEntity extends GameEntity {
+  brain: Think... (468 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/evaluators.ts[0m "/**
+ * Yuka GoalEvaluators for NPC AI behaviors.
+ */
+
+import { GoalEvaluator } from "yuka";
+import { ADJACENT_RANGE, APPROACH_RANGE, NOTICE_RANGE } from "./config.ts";
+import type { NpcEntity } from "... (1907 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/NpcBrain.ts[0m "/**
+ * NpcBrain -- Yuka-based NPC AI with idle/wander/approach/return behaviors.
+ */
+
+import { useGameStore } from "@/game/stores";
+import { cancelNpcMovement, isNpcMoving, startNpcPath } from "@/game... (7733 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/index.ts[0m "/**
+ * npc/ barrel -- re-exports the public API of the npc subpackage.
+ * Callers import from "@/game/ai/npc" or "@/game/ai/NpcBrain".
+ */
+
+export { NpcBrain } from "./NpcBrain.ts";
+export { ADJACENT_... (537 chars)"
+Now update the old `NpcBrain.ts` file to be a re-export shim:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/NpcBrain.ts[0m "/**
+ * Re-export shim — NpcBrain has been decomposed into game/ai/npc/.
+ * This file exists so any import from "@/game/ai/NpcBrain" continues to work.
+ */
+export { NpcBrain } from "./npc/index.ts";
+ex... (266 chars)"
+[94m[TodoWrite][0m
+The shim files preserve the existing import paths for callers (`tickNpcAI.ts`, `useGameLoop/index.ts`, and tests). Let me verify the test files import from the right places:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/NpcBrain.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.test.ts[0m
+Both tests use the shim paths already — no changes needed. Let me now verify line counts to confirm compliance, then run quality checks:
+[94m[Bash][0m Check line counts on all new/modified files $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/*.ts /Users/jbogaty/src/arcade-...
+`governor/PlayerGovernor.ts` is 316 lines — 16 over the limit. Let me extract the navigation methods to bring it under 300:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/navigation.ts[0m "/**
+ * Navigation helpers for the PlayerGovernor state machine.
+ * Encapsulates pathfinding state and movement advancement.
+ */
+
+import { getPlayerTile } from "@/game/actions";
+import { playerQuery, w... (2414 chars)"
+Now rewrite `PlayerGovernor.ts` using the extracted navigation helpers:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/PlayerGovernor.ts[0m "/**
+ * PlayerGovernor -- Visual AI that walks the player around and takes actions.
+ * State machine: IDLE -> DECIDING -> NAVIGATING -> ACTING -> IDLE
+ */
+
+import type { GoalEvaluator } from "yuka";
+im... (6814 chars)"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/PlayerGovernor.ts[0m
+[94m[Bash][0m Write condensed PlayerGovernor.ts using navigation helpers $ } } ENDOFFILE
+[94m[Bash][0m Check line counts after refactor $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/PlayerGovernor.ts /Users/jbogat...
+All files now under 300 lines. Update the index to export navigation helpers too:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/governor/index.ts[0m
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+These TS5097 errors are pre-existing project-wide (the project uses `.ts` extensions in imports everywhere — it's the established pattern). Let me verify no new errors from my changes:
+[94m[Bash][0m Check only AI-related type errors $ npx tsc --noEmit 2>&1 | grep -E "game/ai/(governor|npc|NpcBrain|PlayerGovernor)" | head -30
+There's one real error: `types.ts` line 29 — `TEntity` needs a `GameEntity` constraint. Fix it:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/types.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/types.ts[0m edit: "import type { WalkabilityGrid } from "@/game/syste..." → "import type { GameEntity, GoalEvaluator } from "yu..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/npc/types.ts[0m edit: "export interface TaggedEvaluator<TEntity> {
+  tag:..." → "export interface TaggedEvaluator<TEntity extends G..."
+[94m[Bash][0m Check for non-TS5097 errors in AI files only $ npx tsc --noEmit 2>&1 | grep -E "game/ai/(governor|npc|NpcBrain|PlayerGovernor)" | grep -v "TS5097" ...
+No real errors in the AI files. Now run Jest:
+[94m[Bash][0m Run AI-related tests $ npx jest --no-coverage --testPathPattern="game/ai/(PlayerGovernor|NpcBrain)" 2>&1 | tail -30
+All 19 tests pass. Now run the full test suite to confirm no regressions:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+170 test suites, 4070 tests — all passing. The "worker force exited" warning is pre-existing (it was there before this change).
+
+`★ Insight ─────────────────────────────────────`
+- The shim re-export pattern (`export { X } from "./subpackage/index.ts"`) at the old path lets you decompose a monolith file without touching any caller — zero import churn, zero broken tests. It's a safe migration fence.
+- When a file is >300 lines, extracting a `navigation.ts` or `targeting.ts` with pure functions (that accept state as params rather than closing over `this`) makes each concern independently testable: `buildNavPath` can be called without spinning up a full `PlayerGovernor` instance.
+- Removing dead code (treeGeometry.ts — 950 lines, 0 production importers) improves both build time and cognitive load more than any refactor: the best code is the code that doesn't exist.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+Now append to progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-169 entry to progress.md $ `npx jest --no-coverage` → 4070 tests, 170 suites pass - **Learnings:**   - **Shim re-export for zer...
+<promise>COMPLETE</promise>
+
+---
+
+**US-169 complete.** Here's what was done:
+
+### treeGeometry.ts — Removed (950 lines)
+Confirmed zero production importers (TreeInstances.tsx was migrated to GLBs in US-168). Deleted both `treeGeometry.ts` and `treeGeometry.test.ts`.
+
+### PlayerGovernor.ts (611 lines) → `game/ai/governor/` subpackage
+| File | Lines | Contents |
+|------|-------|---------|
+| `types.ts` | 62 | GovernorState, ActionType, config interfaces, DEFAULT_PROFILE, ACTION_PAUSE |
+| `entity.ts` | 13 | GovernorEntity (Yuka wrapper) |
+| `evaluators.ts` | 85 | 6 GoalEvaluators (Plant/Water/Harvest/Prune/Trade/Explore) |
+| `targeting.ts` | 164 | pickSpecies/pickNearestTile/pickNearestEntity + resolveTarget |
+| `navigation.ts` | 76 | buildNavPath + advanceNav (pure path helpers) |
+| `PlayerGovernor.ts` | 243 | State machine class |
+| `index.ts` | 11 | Barrel re-export |
+
+### NpcBrain.ts (373 lines) → `game/ai/npc/` subpackage
+| File | Lines | Contents |
+|------|-------|---------|
+| `types.ts` | 32 | NpcBehavior, NpcBrainContext, EvaluatorTag, TaggedEvaluator |
+| `config.ts` | 11 | Config constants from ai.json |
+| `entity.ts` | 19 | NpcEntity (Yuka wrapper) |
+| `evaluators.ts` | 58 | Idle/Wander/ApproachPlayer/ReturnHome evaluators |
+| `NpcBrain.ts` | 243 | Main class |
+| `index.ts` | 10 | Barrel re-export |
+
+Shim files at the old paths (`game/ai/PlayerGovernor.ts`, `game/ai/NpcBrain.ts`) preserve all existing imports with zero caller changes. **4070 tests, 170 suites — all passing.**

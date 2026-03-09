@@ -1,0 +1,154 @@
+# Iteration 60 Log
+
+## Metadata
+
+- **Task ID**: US-060
+- **Task Title**: Implement hand sway from movement
+- **Description**: As a player, I want my held tool to sway when I move so that movement feels physical. Offset tool position by velocity * swayAmount, smooth with lerp. See GAME_SPEC.md §11.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T12:24:19.490Z
+- **Ended At**: 2026-03-07T12:30:23.076Z
+- **Duration**: 6m 3s
+- **Input Tokens**: 175
+- **Output Tokens**: 20686
+- **Total Tokens**: 20861
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+Let me read the relevant files to understand the current state before writing tests.
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/ToolViewModel*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player[0m pattern: [96m**/*.test.ts*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m
+Now let me check the GAME_SPEC.md §11 and the progress.md for context:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|sway|swayAmount|hand sway[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Let me find the §11 section in GAME_SPEC.md for the exact sway spec:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§ *11|Section 11|## 11|sway|swayAmount|hand sway|velocity.*sway[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mToolViewModel|tool view model|viewmodel|sway|bob|velocity.*tool|tool.*velocity[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/plans[0m pattern: [96msway|hand.*move|FPS.*perspective|tool.*model|ToolViewModel[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/plans/2026-03-06-fps-perspective-design.md[0m pattern: [96msway|hand.*position|viewmodel.*velocity|velocity.*viewmodel|tool.*movement|swayAmount[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/useMovement*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useMovement.ts[0m
+Let me check the game screen wiring and the FPS camera for context:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/FPSCamera.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolVisuals.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The hand sway feature follows the same "pure function + R3F hook" split as other systems in this codebase. `computeSwayOffset` is a pure function exportable for test isolation — the R3F `useFrame` loop owns the mutation. The lerp formula `current + (target - current) * min(1, factor * dt)` is frame-rate independent and naturally clamps at `dt → ∞`.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolVisuals.json[0m
+
+[91m[Error: <tool_use_error>InputValidationError: Edit failed due to the following issues:
+The required parameter `old_string` is missing
+The required parameter `new_string` is missing
+An unexpected parameter `old_str` was provided
+An unexpected parameter `new_str` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolVisuals.json[0m edit: "{
+  "trowel": {" → "{
+  "sway": {
+    "swayAmount": 0.06,
+    "lerpFac..."
+[94m[TodoWrite][0m
+Now let me add the failing tests for `computeSwayOffset` to the existing test file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m edit: "import toolVisuals from "@/config/game/toolVisuals..." → "import toolVisuals from "@/config/game/toolVisuals..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.test.ts[0m edit: "describe("ToolViewModel (Spec §11)", () => {
+  it(..." → "describe("ToolViewModel (Spec §11)", () => {
+  it(..."
+Now let me verify the tests fail before implementing (RED phase):
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+Verifying RED phase — tests should fail since `computeSwayOffset` isn't implemented yet:
+[94m[Bash][0m Run ToolViewModel tests to verify RED phase $ npx jest --no-coverage components/player/ToolViewModel.test.ts 2>&1 | tail -30
+RED confirmed — 6 failures for the right reason (`computeSwayOffset` not a function). Now implementing:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "// -----------------------------------------------..." → "// -----------------------------------------------..."
+Verify GREEN:
+[94m[Bash][0m Run ToolViewModel tests to verify GREEN phase $ npx jest --no-coverage components/player/ToolViewModel.test.ts 2>&1 | tail -10
+GREEN — all 21 pass. Now wire the sway into `ToolGLBModel`:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The sway state lives in a `useRef<{ x: number; y: number }>` — not React state — because it mutates every frame and must not trigger re-renders. `useFrame` reads it, calls `computeSwayOffset`, writes back, then sets `group.position` directly on the Three.js object. This is the standard R3F imperative-mutation pattern for per-frame values.
+`─────────────────────────────────────────────────`
+
+Now update `ToolViewModel.tsx` to:
+1. Import `useFrame` (already mocked in tests)
+2. Add `moveDirection` prop to `ToolGLBModel`
+3. Add `swayRef` and `groupRef`, and use `useFrame` to update sway
+4. Thread `moveDirection` from `ToolViewModel` down
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "import { useMemo } from "react";
+import { useGLTF ..." → "import { useMemo, useRef } from "react";
+import ty..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "interface ToolGLBModelProps {
+  glbPath: string;
+ ..." → "interface ToolGLBModelProps {
+  glbPath: string;
+ ..."
+Now update `ToolViewModel` to accept `moveDirection` and pass sway config down:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "/**
+ * ToolViewModel renders the player's held too..." → "interface ToolViewModelProps {
+  /** Player moveme..."
+Now I need to update the `ToolVisualsConfig` type to include the `sway` key, and also fix the imports. Let me also check how `ToolVisualsConfig` is typed:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m
+The file looks correct. Now let's run the full verification:
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -15
+TypeScript errors: the new `sway` key in `toolVisuals.json` conflicts with the `ToolVisualsConfig` index signature. Fix by widening the index value type and adding a type guard:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "interface ToolVisualEntry {
+  readonly glbPath: st..." → "interface ToolVisualEntry {
+  readonly glbPath: st..."
+Now update the two pure functions to use the type guard:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "/**
+ * Returns the GLB path for a tool, or null if..." → "/**
+ * Returns the GLB path for a tool, or null if..."
+Also update `ToolViewModel` to use the `SwayConfig` type properly rather than the ad-hoc cast:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/ToolViewModel.tsx[0m edit: "  const swayConfig = (toolVisualsData as { sway?: ..." → "  const swayConfig = (toolVisualsData as { sway?: ..."
+Now check tsc:
+[94m[Bash][0m TypeScript type check after fix $ npx tsc --noEmit 2>&1 | head -30
+[94m[Bash][0m Full TypeScript check $ npx tsc --noEmit 2>&1
+Zero errors. Now run the full test suite:
+[94m[Bash][0m Full Jest suite $ npx jest --no-coverage 2>&1 | tail -10
+1977 tests, 0 failures. All passing.
+
+`★ Insight ─────────────────────────────────────`
+The `isToolVisualEntry` type guard (`"glbPath" in v`) is a structural discriminant — it works because `SwayConfig` never has a `glbPath` field. This is the same discriminated-union narrowing pattern used throughout the ECS components (distinguishing component shapes at runtime without nominal type info). The guard lives beside the index signature type, keeping all type knowledge in one place.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+Now append to progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-059" → "---
+
+## 2026-03-07 - US-060
+- Implemented `compute..."
+<promise>COMPLETE</promise>
+
+---
+
+**US-060 — Hand sway from movement**
+
+**What was implemented:**
+
+| File | Change |
+|------|--------|
+| `components/player/ToolViewModel.tsx` | `computeSwayOffset` pure function, `SwayConfig` interface, `isToolVisualEntry` guard, sway wired into `ToolGLBModel` via `useFrame` + `swayRef` + `groupRef`, `ToolViewModel` accepts `moveDirection` prop |
+| `components/player/ToolViewModel.test.ts` | 6 new tests for `computeSwayOffset` (lerp direction, zero-velocity decay, z→y mapping, lerpFactor scaling, clamp at full convergence, swayAmount proportionality) |
+| `config/game/toolVisuals.json` | `"sway": { "swayAmount": 0.06, "lerpFactor": 8.0 }` |
+
+**How it works:** Each frame, `useFrame` calls `computeSwayOffset(moveDirection, swayRef, swayAmount, lerpFactor, delta)` which lerps the accumulated sway toward `velocity * swayAmount`. The group position is set imperatively as `offset + sway` — no React state mutations. Standing still lerps sway back to zero.
+
+**Verification:** `npx tsc --noEmit` → 0 errors · `npx jest --no-coverage` → 1977 tests, 0 failures

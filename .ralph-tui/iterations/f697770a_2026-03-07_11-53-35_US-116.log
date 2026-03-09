@@ -1,0 +1,84 @@
+# Iteration 116 Log
+
+## Metadata
+
+- **Task ID**: US-116
+- **Task Title**: Write Jest tests for snap validation
+- **Description**: As a developer, I want tests for snap validation so that direction matching, clearance blocking, rotation handling, and multi-snap are verified. See GAME_SPEC.md §14.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T17:53:35.527Z
+- **Ended At**: 2026-03-07T17:59:50.285Z
+- **Duration**: 6m 14s
+- **Input Tokens**: 81
+- **Output Tokens**: 23519
+- **Total Tokens**: 23600
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbashing*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbashing/**[0m
+Let me check the implementation files to understand what rotation handling and multi-snap look like:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/placement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/rapier.ts[0m
+Let me check the barrel and what's exported:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/index.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/unlocks.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m
+I have a clear picture now. US-115 already added Rapier tests (17 tests), but the acceptance criteria for US-116 requires coverage of **rotation handling** and **multi-snap**, which are currently missing. I need to add tests for `rotateDirection`, `snapPointToWorld` with rotation, and multi-snap scenarios.
+
+`★ Insight ─────────────────────────────────────`
+- The `rotateDirection` and `snapPointToWorld` helpers aren't in the barrel export — tests for them should import directly from `./kitbashing/placement` to avoid widening the public API surface.
+- For rotation tests, the key math: `cos(90°)=0, sin(90°)=1`, so a snap at `localPosition.x=0.5` rotated 90° shifts to `z=0.5` in world space — an east-facing snap now faces south.
+- Multi-snap validation only requires ONE connection (OR logic in `validatePlacement`), so testing it means verifying `getAvailableSnapPoints` can return 2+ results when multiple neighbors are present.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit,TodoWrite,Bash[0m
+Let me check the `ModularPieceComponent` type to understand the rotation field:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m edit: "import {
+  getAvailableSnapPoints,
+  validatePlace..." → "import {
+  getAvailableSnapPoints,
+  validatePlace..."
+Now add the rotation handling and multi-snap test suites at the bottom of the file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m edit: "    it("rejects piece with no snap connection to e..." → "    it("rejects piece with no snap connection to e..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -20
+[94m[Bash][0m Run kitbashing tests only $ npx jest --no-coverage --testPathPattern="kitbashing" 2>&1 | tail -40
+All 49 tests pass. Now run the full suite to confirm nothing is broken:
+[94m[Bash][0m Run all tests $ npx jest --no-coverage 2>&1 | tail -10
+[94m[TodoWrite][0m
+2944 tests pass across 134 suites. Now update the progress file:
+
+`★ Insight ─────────────────────────────────────`
+- Importing from the subpackage file (`./kitbashing/placement`) rather than the barrel is the right call for testing internal helpers (`rotateDirection`, `snapPointToWorld`) — it avoids widening the public API just to satisfy test coverage needs.
+- The `Math.round(cos/sin)` in `snapPointToWorld` is critical: it ensures 90°/180°/270° rotations give exact integers (0, 1, -1) rather than floating-point noise like 6.12e-17, making position matching reliable without special tolerances.
+`─────────────────────────────────────────────────`
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-115" → "---
+
+## 2026-03-07 - US-116
+- Added 16 new tests t..."
+All done. Here's a summary of what was added:
+
+**16 new tests** appended to `game/systems/kitbashing.test.ts`:
+
+| Suite | Tests | Coverage |
+|---|---|---|
+| `rotateDirection` | 6 | direction mapping for N/E/S/W + vertical axis invariant |
+| `snapPointToWorld with rotation` | 3 | 90° x→z, 180° x negation, y unaffected |
+| `checkSnapDirectionMatch with rotation` | 3 | 180° match, 90° cross-axis match, 90° misalignment reject |
+| `Multi-Snap` | 4 | 2 neighbors → 2+ snaps, validatePlacement, validatePlacementWithRapier, incompatible-type reject |
+
+**Totals:** 49 tests in kitbashing suite, 2944 across all 134 suites. `tsc --noEmit` clean.
+
+<promise>COMPLETE</promise>

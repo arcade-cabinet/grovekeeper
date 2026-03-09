@@ -1,3 +1,8 @@
+**Historical -- superseded by [`docs/plans/2026-03-07-unified-game-design.md`](2026-03-07-unified-game-design.md)**
+*Phase A was completed during the BabylonJS era. The project has since migrated to Expo/R3F. Retained for historical reference.*
+
+---
+
 # Phase A: Foundation Alignment — Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

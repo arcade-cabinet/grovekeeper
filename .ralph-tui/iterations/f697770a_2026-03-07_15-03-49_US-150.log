@@ -1,0 +1,226 @@
+# Iteration 150 Log
+
+## Metadata
+
+- **Task ID**: US-150
+- **Task Title**: Update MiniMap for open world navigation
+- **Description**: As a developer, I want the existing MiniMap.tsx (421 lines — OVER 300 LINE LIMIT) decomposed and updated to show the procedural open world with biome colors, discovered chunks, player position, campfi...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T21:03:49.231Z
+- **Ended At**: 2026-03-07T21:16:27.374Z
+- **Duration**: 12m 38s
+- **Input Tokens**: 225
+- **Output Tokens**: 42847
+- **Total Tokens**: 43072
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMap.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMapOverlay.tsx[0m
+Now let me read the relevant spec section and ECS world to understand what's needed:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/**/*.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§16|minimap|MiniMap|mini.map[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+Let me check imports and the game store for chunk discovery:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mMiniMap|MiniMapOverlay[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mdiscoveredChunks|exploredChunks|visitedChunks|chunkDiscovery[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mMiniMap|MiniMapOverlay[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems[0m pattern: [96mfastTravel|campfire|FastTravel[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/fastTravel.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mdiscoveredChunks|visitedChunks|exploredChunks|fastTravelPoints[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mfastTravel|FastTravel|campfire[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+Let me check the app's game screen and look at how MiniMap is used:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/*.tsx[0m
+Let me check HUD.tsx for MiniMap usage and the FastTravelMenu:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m pattern: [96mMiniMap|minimap[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/FastTravelMenu.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.test.*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/structures.ts[0m
+Let me check the game store's action/mutation pattern:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96mCHUNK_SIZE[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m pattern: [96mterrainChunk|world\.add.*terrain[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+Let me look at an existing test that mocks ECS queries for reference:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+Now I have a complete picture. Let me set up todos and implement:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The ECS world has `terrainChunksQuery = world.with("terrainChunk", "position")` — chunk entities carry `chunk.chunkX/Z` and `terrainChunk.baseColor`, giving us both chunk coordinates and biome-derived color.
+- The pattern for testable snapshot logic: extract a pure `buildMinimapSnapshot(params)` that accepts plain objects (testable without ECS), then wrap it with an ECS adapter `readMinimapSnapshot()` that reads queries and feeds the pure fn.
+- `CampfireComponent.fastTravelId` links ECS campfire entities to the `discoveredCampfires` store — the two systems integrate cleanly via this ID field.
+`─────────────────────────────────────────────────`
+
+First, add `discoveredChunks` to the game store:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  /** Discovered campfire fast travel points. Spec..." → "  /** Discovered campfire fast travel points. Spec..."
+Now add the `discoverChunk` action after `removeCampfirePoint`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m edit: "  removeCampfirePoint(id: string): boolean {
+    c..." → "  removeCampfirePoint(id: string): boolean {
+    c..."
+[94m[TodoWrite][0m
+Now create the subpackage files in parallel:
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/types.ts[0m "/**
+ * Minimap data types (Spec §17.6).
+ *
+ * Plain interfaces — no React/RN/ECS imports so they are safe to use in
+ * pure-function tests without any mocking overhead.
+ */
+
+/** A single chunk cell in... (1719 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/colors.ts[0m "/**
+ * Minimap color constants (Spec §17.6).
+ *
+ * Biome colors mirror the TerrainChunkComponent.baseColor palette used by the
+ * terrain vertex shader, giving visual consistency between the 3D scene ... (1058 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/snapshot.ts[0m "/**
+ * Minimap snapshot — reads ECS + store state into a plain MinimapSnapshot.
+ *
+ * Two exported surfaces:
+ *   buildMinimapSnapshot(params) -- pure function, testable with plain objects
+ *   readMi... (5812 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/snapshot.test.ts[0m "/**
+ * Minimap snapshot builder tests (Spec §17.6).
+ *
+ * Tests the pure `buildMinimapSnapshot` function with plain objects.
+ * No ECS, React-Native, or store mocking required.
+ */
+
+import { buildMini... (5487 chars)"
+[94m[TodoWrite][0m
+Now create the React components — PulsingPlayerDot, MinimapSVG, Overlay, and MiniMap:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/PulsingPlayerDot.tsx[0m "/**
+ * PulsingPlayerDot -- animated SVG circle for the player position indicator.
+ *
+ * Uses react-native-reanimated to pulse opacity, respecting system
+ * prefers-reduced-motion via ReduceMotion.Syst... (1319 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/MinimapSVG.tsx[0m "/**
+ * MinimapSVG -- SVG renderer for the procedural open-world minimap.
+ *
+ * Renders a VIEW_DIAMETER × VIEW_DIAMETER chunk grid centered on the player:
+ *   - Discovered chunks: biome color from Ter... (4631 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/Overlay.tsx[0m "/**
+ * MiniMapOverlay -- fullscreen map modal for mobile.
+ *
+ * Shows a large MinimapSVG centered on screen with a semi-transparent
+ * backdrop, close button, title, and legend. Polls ECS state at 5fp... (4640 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/MiniMap.tsx[0m "/**
+ * MiniMap -- procedural open-world minimap (Spec §17.6).
+ *
+ * Desktop (>= 768px): always-visible small map in the top-right corner.
+ * Mobile: map icon button that opens the fullscreen MiniMapOv... (3523 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/index.ts[0m "/**
+ * Minimap subpackage barrel (Spec §17.6).
+ *
+ * Public surface for all minimap functionality. Consumers import from
+ * "@/components/game/minimap" or "@/components/game/MiniMap" (re-export).
+ */
+... (796 chars)"
+[94m[TodoWrite][0m
+Now replace the old files with re-export barrels:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMap.tsx[0m edit: "/**
+ * MiniMap -- SVG-based minimap rendered with ..." → "/**
+ * MiniMap -- re-export barrel.
+ * Implementat..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMapOverlay.tsx[0m edit: "/**
+ * MiniMapOverlay -- Fullscreen map overlay fo..." → "/**
+ * MiniMapOverlay -- re-export barrel.
+ * Impl..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+I already read it at the start of the conversation. Let me use Write to replace it completely:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMapOverlay.tsx[0m "/**
+ * MiniMapOverlay -- re-export barrel.
+ * Implementation lives in ./minimap/ subpackage (Spec §17.6).
+ */
+export { MiniMapOverlay } from "./minimap";
+export type { MiniMapOverlayProps } from "./mi... (208 chars)"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMapOverlay.tsx[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMapOverlay.tsx[0m "/**
+ * MiniMapOverlay -- re-export barrel.
+ * Implementation lives in ./minimap/ subpackage (Spec §17.6).
+ */
+export { MiniMapOverlay } from "./minimap";
+export type { MiniMapOverlayProps } from "./mi... (208 chars)"
+[94m[TodoWrite][0m
+Now run the type check and tests:
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -80
+The issue is case-insensitive path resolution on macOS — `"./minimap"` in `MiniMap.tsx` collides with `MiniMap.tsx` itself. Fix: use explicit `"./minimap/index"` paths in the barrels:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMap.tsx[0m edit: "export { MiniMap, MinimapSVG, readMinimapSnapshot ..." → "export { MiniMap, MinimapSVG, readMinimapSnapshot ..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMap.tsx[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMap.tsx[0m "/**
+ * MiniMap -- re-export barrel.
+ * Implementation lives in ./minimap/ subpackage (Spec §17.6).
+ */
+export { MiniMap, MinimapSVG, readMinimapSnapshot } from "./minimap/index";
+export type { MiniMap... (266 chars)"
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMapOverlay.tsx[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MiniMapOverlay.tsx[0m "/**
+ * MiniMapOverlay -- re-export barrel.
+ * Implementation lives in ./minimap/ subpackage (Spec §17.6).
+ */
+export { MiniMapOverlay } from "./minimap/index";
+export type { MiniMapOverlayProps } from... (220 chars)"
+[94m[Bash][0m TypeScript type check after barrel fix $ npx tsc --noEmit 2>&1 | head -80
+No output after the system reminder means `tsc` passed clean. Now run the tests:
+[94m[Bash][0m Run minimap tests $ npx jest --no-coverage --testPathPattern="components/game/minimap" 2>&1
+12/12 tests passing. Now run the full test suite to confirm nothing else broke:
+[94m[Bash][0m Full test suite $ npx jest --no-coverage 2>&1 | tail -30
+148 test suites, 3488 tests — all passing. Let me verify file sizes to confirm none exceed the 300-line limit:
+[94m[Bash][0m Check line counts for all minimap subpackage files $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/minimap/*.{ts,tsx}
+All files are well under 300 lines. Now update progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check progress.md line count $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Append US-150 entry to progress.md $ `onCampfirePress(fastTravelId)` lets the parent wire up fast travel without the minimap knowing the ...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Case-insensitive path collision**: `MiniMap.tsx` importing `"./minimap"` caused TypeScript to match the directory to the file itself (case-insensitively on macOS). Using `"./minimap/index"` (explicit path) in the barrel avoids this entirely.
+- **Fog-of-war via fixed grid**: The snapshot always generates a `(2×VIEW_RADIUS+1)²` grid centered on the player chunk. Each position is colored if discovered (active in ECS or persisted in store), or fog otherwise. This is simpler and more predictable than sparse/dynamic bounds.
+- **Auto-discovery as a side effect**: `readMinimapSnapshot()` calls `discoverChunk()` for every active `terrainChunk` entity it iterates — the minimap itself populates the fog-of-war store as a natural consequence of polling.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria met:
+
+| Criterion | Status |
+|-----------|--------|
+| Decompose MiniMap.tsx (421 lines) → `minimap/` subpackage | ✅ 7 files, all < 200 lines |
+| Biome colors from TerrainChunkComponent | ✅ `terrainChunk.baseColor` via `readMinimapSnapshot` |
+| Fog of war for undiscovered chunks | ✅ `discoveredChunks` store + fixed grid |
+| Player position indicator | ✅ Pulsing gold `PulsingPlayerDot` at SVG center |
+| Campfire fast-travel markers (clickable) | ✅ Diamond markers with `onCampfirePress` prop |
+| NPC dots for nearby NPCs | ✅ Green circles filtered to view radius |
+| MiniMapOverlay.tsx integrated | ✅ Moved to `minimap/Overlay.tsx`, old file is a re-export barrel |
+| `npx tsc --noEmit` passes | ✅ 0 errors |
+| `npx jest --no-coverage` passes | ✅ 148 suites, 3488 tests |
+
+<promise>COMPLETE</promise>

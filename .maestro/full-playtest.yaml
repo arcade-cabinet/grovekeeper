@@ -1,0 +1,37 @@
+# Flow: Full playtest — runs all E2E flows in sequence
+# This is the master flow that exercises every major user journey.
+# Each sub-flow launches the app fresh with clearState, so they are independent.
+#
+# Run: maestro test .maestro/full-playtest.yaml
+# Or run individual flows: maestro test .maestro/app-launch.yaml
+#
+# Platform: iOS/Android (375px viewport portrait)
+appId: ${APP_ID}
+---
+
+# 1. App launch smoke test
+- runFlow: app-launch.yaml
+
+# 2. New game creation flow (seed phrase, difficulty selection, game start)
+- runFlow: new-game-flow.yaml
+
+# 3. Basic gameplay verification (HUD elements, pause menu open/close)
+- runFlow: gameplay-basic.yaml
+
+# 4. Tool selection and stats verification
+- runFlow: tool-selection.yaml
+
+# 5. NPC dialogue system verification
+- runFlow: npc-dialogue.yaml
+
+# 6. Pause menu — all tabs navigation
+- runFlow: pause-menu.yaml
+
+# 7. Cooking panel verification (crafting system wiring)
+- runFlow: cooking-panel.yaml
+
+# 8. Death/respawn system verification (survival mode)
+- runFlow: death-respawn.yaml
+
+# 9. Settings screen (main menu route)
+- runFlow: settings.yaml

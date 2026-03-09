@@ -1,0 +1,137 @@
+# Iteration 148 Log
+
+## Metadata
+
+- **Task ID**: US-148
+- **Task Title**: Wire toolUpgrades + levelUnlocks to progression
+- **Description**: As a developer, I want the existing toolUpgrades.ts (61 lines) and levelUnlocks.ts (80 lines) updated to read from config/game/tools.json tier definitions and gate unlocks by player level from Legend ...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T20:50:11.545Z
+- **Ended At**: 2026-03-07T20:57:01.965Z
+- **Duration**: 6m 50s
+- **Input Tokens**: 953
+- **Output Tokens**: 26967
+- **Total Tokens**: 27920
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/toolUpgrades.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/levelUnlocks.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m
+Now let me read the relevant spec sections and the game store to understand how persistence works.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|§25|toolUpgrade|levelUnlock|upgradedTools|unlockedTools|unlockedSpecies|toolTier|forge[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+Now let me read the spec sections §11 and §25:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## §11|^## §25|^### §11|^### §25[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|§25[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mTool Upgrade|Level Unlock|tier|basic.*iron|iron.*grovekeeper|forge|upgradeTier[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mSection 25|## 25|### 25\.|Level Gate|level gate|level.*unlock|unlock.*level|levelUnlock|unlockLevel[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Now let me check the existing test files and the config for tool tiers:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/toolUpgrades.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/levelUnlocks.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/tools*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/toolUpgrades.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/levelUnlocks.test.ts[0m
+Now let me check the progress file and tools config:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.ts[0m
+Let me check the Jest config to understand how JSON imports are handled:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mjest.config*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+Now I have everything I need. Let me implement the changes:
+
+`★ Insight ─────────────────────────────────────`
+- The existing `TOOL_UPGRADE_TIERS[i]` represents the upgrade STEP to reach tier `i+1`. Keeping this indexing means all existing tests (stamina, effect, afford) pass unchanged while we add named tiers from config.
+- `levelUnlocks.ts` uses a `readonly` `as const` array — moving to JSON config means dropping `as const` but TypeScript still infers the right type from the imported data.
+- The `with { type: "json" }` import assertion is already used in `tools.ts` and works with jest-expo's preset.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/toolTiers.json[0m "[
+  {
+    "tier": 1,
+    "name": "iron",
+    "damageMultiplier": 1.5,
+    "speedMultiplier": 1.25,
+    "maxDurabilityUses": 150,
+    "staminaReduction": 0.1,
+    "effectBoost": 0.1,
+    "cost": { "tim... (812 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/levelUnlocks.json[0m "[
+  { "level": 1, "species": ["white-oak"], "tools": ["trowel", "watering-can"] },
+  { "level": 2, "species": ["weeping-willow"], "tools": ["almanac"] },
+  { "level": 3, "species": ["elder-pine"], "to... (956 chars)"
+[94m[TodoWrite][0m
+Now rewrite `toolUpgrades.ts` to source data from config and add the new functions:
+
+`★ Insight ─────────────────────────────────────`
+- `TOOL_UPGRADE_TIERS[i]` = upgrade step to reach tier `i+1` — so index 0 = upgrade to "iron", index 2 = upgrade to "grovekeeper". `getToolTierName(n)` finds the entry where `t.tier === n`.
+- Keeping `staminaReduction/effectBoost/cost` fields on the same interface means zero changes to `gameStore.upgradeToolTier` or any other caller.
+- `requiresForgeForUpgrade(currentTier)` is a pure predicate — the UI/action layer must check forge proximity before calling `upgradeToolTier`.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/toolUpgrades.ts[0m "/**
+ * Tool upgrade system -- 3 upgrade steps per tool.
+ * Tier progression: basic (0) → iron (1) → iron-plus (2) → grovekeeper (3).
+ * Tier data read from config/game/toolTiers.json. Spec §11.2
+ */
+
+... (3842 chars)"
+[94m[TodoWrite][0m
+Now update `levelUnlocks.ts` to read from the config file:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/levelUnlocks.ts[0m "/**
+ * Level Unlock System
+ *
+ * Maps player level to species and tool unlocks.
+ * Data sourced from config/game/levelUnlocks.json. Spec §16.2
+ */
+
+import levelUnlocksData from "@/config/game/levelUnl... (1628 chars)"
+[94m[TodoWrite][0m
+Now add tests for the new functions to `toolUpgrades.test.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/toolUpgrades.test.ts[0m edit: "import {
+  canAffordToolUpgrade,
+  getEffectWithUp..." → "import {
+  canAffordToolUpgrade,
+  getDamageMultip..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/toolUpgrades.test.ts[0m edit: "  describe("TOOL_UPGRADE_TIERS", () => {
+    it("h..." → "  describe("TOOL_UPGRADE_TIERS", () => {
+    it("h..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/toolUpgrades.test.ts[0m edit: "  describe("canAffordToolUpgrade", () => {
+    it(..." → "  describe("canAffordToolUpgrade", () => {
+    it(..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run toolUpgrades and levelUnlocks tests $ npx jest --no-coverage --testPathPattern="toolUpgrades|levelUnlocks" 2>&1
+61 tests pass. Let me verify nothing else broke in the full suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+3468 tests, all pass. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Show end of progress.md $ tail -10 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-148 entry to progress.md $ `npx jest --no-coverage` → 3468 tests, 147 suites pass - **Learnings:**   - **TOOL_UPGRADE_TIERS[i] ...
+[94m[TodoWrite][0m
+All done. Here's a summary of what was implemented:
+
+**Files created:**
+- `config/game/toolTiers.json` — 3 upgrade-step entries (iron/iron-plus/grovekeeper), each with `tier`, `name`, `damageMultiplier`, `speedMultiplier`, `maxDurabilityUses`, `staminaReduction`, `effectBoost`, `cost`, `requiresForge`
+- `config/game/levelUnlocks.json` — 18 level entries moved from inline constants
+
+**Files updated:**
+- `game/systems/toolUpgrades.ts` — reads from `toolTiers.json`; added `getToolTierName()`, `requiresForgeForUpgrade()`, `getDamageMultiplierForTier()`, `getSpeedMultiplierForTier()`; all existing function signatures preserved (zero breakage to callers like `gameStore.upgradeToolTier`)
+- `game/systems/levelUnlocks.ts` — reads from `levelUnlocks.json`; all function signatures unchanged
+- `game/systems/toolUpgrades.test.ts` — 15 new tests covering the new functions
+
+**Verification:** `tsc --noEmit` clean; 3468 tests, 147 suites all pass.
+
+<promise>COMPLETE</promise>

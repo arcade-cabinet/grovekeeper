@@ -3,528 +3,223 @@
 ## Architecture Overview
 
 ```
-+---------------+     +----------------+     +-----------------+
-|   React UI    |---->|    Zustand      |---->|   localStorage  |
-|  (HUD, Menu)  |<----|   (gameStore)   |<----|  (persistence)  |
-+------+--------+     +----------------+     +-----------------+
-       |
-       | refs + callbacks
-       v
-+----------------+     +----------------+     +-----------------+
-|   GameScene    |---->|   Miniplex     |---->| miniplex-react  |
-| (~400 lines)   |<----|   (ECS World)  |<----|   (ECS.Entities)|
-+-------+--------+     +----------------+     +-----------------+
-        |
-        | orchestrates
-        v
++-------------------+     +------------------+     +-------------------+
+|   React Native UI |---->|   Legend State    |---->|   expo-sqlite     |
+| (NativeWind + RNR)|<----|   (gameStore)     |<----|  (drizzle-orm)    |
++--------+----------+     +------------------+     +-------------------+
+         |
+         | props + hooks
+         v
++-------------------+     +----------------+     +-----------------+
+|   R3F <Canvas>    |---->|   Miniplex     |---->| miniplex-react  |
+|   (declarative)   |<----|   (ECS World)  |<----|   (ECS hooks)   |
++--------+----------+     +----------------+     +-----------------+
+         |
+         | useFrame hooks
+         v
 +--------------------------------------------------------------+
-|                    Scene Modules                              |
-| SceneManager, CameraManager, LightingManager, GroundBuilder  |
-| SkyManager, PlayerMeshManager, TreeMeshManager, BorderTrees  |
+|                 R3F Scene Components                          |
+| <WorldScene> -> <ChunkRenderer> -> <EntityLayer>             |
+| <CameraRig>, <Lighting>, <Sky>, <Water>                      |
+| <PlayerController>, <TreeInstances>, <NpcMeshes>             |
 +--------------------------------------------------------------+
-        |
-        | renders
-        v
+         |
+         | per-frame
+         v
 +--------------------------------------------------------------+
-|                    World + Structures                         |
-| WorldManager (zone loading, structure meshes)                |
-| WorldGenerator (procedural world from seed + level)          |
-| StructureManager (placement validation, effect queries)      |
-+--------------------------------------------------------------+
-        |
-        | runRenderLoop
-        v
-+--------------------------------------------------------------+
-|                    Systems (per-frame)                        |
-| growth, movement, time, harvest, stamina, weather            |
-+--------------------------------------------------------------+
-        |
-        | on resume
-        v
-+--------------------------------------------------------------+
-|              Offline Systems (on load)                       |
-| offlineGrowth, achievement checking                          |
+|                    Systems (pure functions)                    |
+| growth, movement, time, harvest, stamina, weather, hunger    |
+| temperature, durability, survival, chunk-loading             |
 +--------------------------------------------------------------+
 ```
 
 ## State Management Split
 
 ### ECS (Miniplex) -- Runtime State
-- Entity positions (farmer, trees, zones, structures)
+- Entity positions (player, trees, NPCs, structures, props)
 - Growth progress per tree
-- Tile states (empty, planted, blocked)
-- Harvest cooldown timers
-- Per-frame velocity
-- Harvestable flag (ready for harvest)
-- Farmer state (idle, moving, acting)
-- Zone boundaries and biomes
-- Structure positions and types
+- Tile states within active chunks
+- Harvest cooldown timers, stamina recovery
+- NPC AI state (Yuka behaviors)
+- Active chunk entities
 
-**Characteristic:** Changes every frame or every few seconds. Lives in memory. Serialized for saves via `saveGrove()` / `loadGrove()`.
+**Characteristic:** Changes every frame or every few seconds. Lives in memory only.
 
-### Zustand (gameStore) -- Persistent State
-- Player level, XP, coins
-- Resources (Timber, Sap, Fruit, Acorns)
-- Stamina (current, max, regen rate)
-- Unlocked species and tools
-- Selected tool and species
-- Quest progress
-- Achievements (unlocked set)
-- Prestige data (count, bonuses, cosmetic tier)
-- Grid expansion tier
-- Settings (haptics, sound)
-- Game time (microseconds)
-- Grove data (serialized ECS trees, per-zone)
-- Current zone ID
+### Legend State (gameStore) -- Persistent State
+- Player level, XP, hearts, hunger, stamina
+- Resources (Timber, Stone, Ore, Sap, Fruit, Berries, Herbs, Meat, Hide, Fish, Acorns, Seeds)
+- Unlocked species, tools, recipes, structures
+- Tool durability and upgrade tier
+- Chunk deltas (planted, harvested, built, removed)
+- Quest progress, NPC relationships
+- Codex discovery tiers
+- Campfire fast-travel points
+- Settings (difficulty tier, audio, haptics)
+- Achievement + NG+ data
 
-**Characteristic:** Changes on player actions. Persisted to localStorage via `persist` middleware. Survives browser refresh.
+**Characteristic:** Changes on player actions. Persisted to expo-sqlite. Survives app restart.
 
 ### Rule of Thumb
-If it changes every frame, it belongs in ECS. If it persists across sessions, it belongs in Zustand.
+If it changes every frame, it belongs in ECS. If it persists across sessions, it belongs in Legend State.
 
-## ECS Entity Model
+## Chunk-Based World System
+
+### Core Concept
+Infinite procedural world. No fixed size, no zone boundaries, no loading screens. Chunks generate on demand from seed + coordinates.
+
+```
+Player position -> active chunk ring (3x3)
+  -> generate missing chunks: generateChunk(worldSeed, chunkX, chunkZ)
+  -> render active chunks (terrain, entities, props)
+  -> unload distant chunks (keep delta in Legend State)
+  -> re-entering old area = regenerate from seed + apply stored delta
+```
+
+### Chunk Specs
+- **Size:** 16x16 tiles per chunk
+- **Active radius:** 3x3 chunks (48x48 visible tiles)
+- **Buffer ring:** 5x5 chunks (pre-generated, not rendered)
+- **Key format:** `"${chunkX},${chunkZ}"` -- deterministic from coordinates
+- **Generation:** pure function, zero side effects, <16ms budget
+- **Seamless stitching:** global coordinates for noise, biome, paths
+
+### Delta-Only Persistence
 
 ```typescript
-interface Entity {
-  id: string;
-  position?: { x: number; y: number; z: number };
-  renderable?: { meshId: string | null; visible: boolean; scale: number };
-  tree?: { speciesId: string; growthProgress: number; health: number;
-           wateredAt: number | null; plantedAt: number; zoneId: string };
-  player?: { coins: number; xp: number; level: number; currentTool: string };
-  gridCell?: { gridX: number; gridZ: number; type: string; occupied: boolean;
-               treeEntityId: string | null; zoneId: string };
-  harvestable?: boolean;
-  farmerState?: string;
-  zone?: { id: string; name: string; sizeX: number; sizeZ: number; biome: string };
-  structure?: { templateId: string; zoneId: string; gridPositions: Array<{x: number, z: number}> };
+interface ChunkDelta {
+  plantedTrees: { tileX: number; tileZ: number; speciesId: string; plantedAt: number; stage: number }[];
+  harvestedTrees: { tileX: number; tileZ: number; harvestedAt: number }[];
+  builtStructures: { tileX: number; tileZ: number; structureId: string; rotation: number }[];
+  removedItems: { tileX: number; tileZ: number; itemType: string }[];
+  npcRelationships: { npcId: string; relationship: number }[];
+  completedQuests: string[];
+  discoveredSpecies: string[];
 }
 ```
 
-### Queries (pre-defined, fast)
-```typescript
-treesQuery       = world.with('tree', 'position', 'renderable')
-playerQuery      = world.with('player', 'position')
-gridCellsQuery   = world.with('gridCell', 'position')
-farmerQuery      = world.with('farmerState', 'position')
-harvestableQuery = world.with('tree', 'harvestable')
-zonesQuery       = world.with('zone')
-structuresQuery  = world.with('structure', 'position')
+- New area: generate from seed, no delta
+- Revisited area: generate from seed + overlay delta
+- Exploring without interacting = zero storage cost
+
+### Biome System (Global Noise)
+```
+biomeNoise = fBm(globalX * 0.005, globalZ * 0.005, worldSeed, 'biome')
+temperatureNoise = fBm(globalX * 0.003, globalZ * 0.003, worldSeed, 'temperature')
+moistureNoise = fBm(globalX * 0.004, globalZ * 0.004, worldSeed, 'moisture')
 ```
 
-### Entity Factories
-- **archetypes.ts** -- `createTreeEntity(gridX, gridZ, speciesId, zoneId)`, `createPlayerEntity()`, `createGridCellEntity(gridX, gridZ, type, zoneId)`
-- **world/archetypes.ts** -- Zone archetype definitions for world generation
+8 biomes: Starting Grove, Meadow, Ancient Forest, Wetlands, Rocky Highlands, Orchard Valley, Frozen Peaks, Twilight Glade. Transitions blend over ~8 tiles.
 
-## BabylonJS Scene Pattern
+### Feature Placement (Discovery Cadence)
+- **Micro:** every ~1 chunk (ambient scatter: trees, grass, rocks)
+- **Minor:** every ~3-4 chunks (NPC encounters, rock formations, campfires, signposts)
+- **Major:** every ~8-12 chunks (villages, ponds, overlooks, towers, merchant camps)
+- **Labyrinths:** every ~30-50 chunks (14 total, the rarest discovery)
+- Minimum distance enforcement via neighbor hash checks
+- Feature type weighted by biome
 
-The 3D scene is **imperative, not declarative**. React does NOT manage BabylonJS objects.
+## Seeded Determinism Pattern
 
-```
-GameScene.tsx (~400 lines, down from ~1050)
-+-- useEffect[mount] -> SceneManager.initialize()
-|   +-- Create Engine, Scene
-|   +-- CameraManager.setupCamera() -- orthographic, viewport-adaptive
-|   +-- LightingManager.setupLighting() -- hemisphere + directional
-|   +-- GroundBuilder.createGround() -- DynamicTexture biome blend
-|   +-- SkyManager.setupSky() -- HDRI skybox + IBL
-|   +-- PlayerMeshManager.createPlayerMesh()
-|   +-- BorderTreeManager.placeDecorativeTrees()
-+-- useEffect[mount] -> WorldManager.initialize()
-|   +-- Load starting world or generate procedural world
-|   +-- Spawn zone entities
-|   +-- Load saved grove per zone
-+-- engine.runRenderLoop -> Game loop
-|   +-- movementSystem(world, dt)
-|   +-- Check zone transitions (WorldManager.checkZoneTransition)
-|   +-- growthSystem(dt, weatherMultiplier)
-|   +-- updateTime(dt) -> LightingManager, SkyManager
-|   +-- weatherSystem check
-|   +-- PlayerMeshManager.syncPosition()
-|   +-- TreeMeshManager.syncTrees()
-|   +-- CameraManager.followPlayer()
-|   +-- Growth animation lerp (smooth scale transitions)
-+-- Refs for all BabylonJS managers and objects
-+-- React overlay (GameUI) positioned absolutely over canvas
-```
-
-## Scene Module Pattern
-
-Each scene module is a class with lifecycle methods:
-
-```typescript
-class SceneManager {
-  initialize(): { engine: Engine; scene: Scene }
-  dispose(): void
-}
-
-class CameraManager {
-  setupCamera(scene: Scene, canvas: HTMLCanvasElement): Camera
-  followPlayer(playerPos: Vector3): void
-  getVisibleTileCount(): number  // 14-40 based on viewport
-}
-
-class TreeMeshManager {
-  syncTrees(trees: Entity[], nightTime: boolean): void
-  animateGrowth(deltaTime: number): void
-  private getOrCreateTemplate(key: string): Mesh
-  private cloneTemplate(template: Mesh): Mesh
-}
-```
-
-Managers are instantiated in GameScene and called from the game loop or lifecycle hooks.
-
-## World System Pattern
-
-### Multi-Zone World
-```
-World contains multiple Zones
-Zone defines:
-  - size (sizeX, sizeZ)
-  - biome (grassland, forest, rocky, water)
-  - connections to other zones (cardinal directions)
-  - tiles (soil, water, rock, path)
-
-Player walks between zones
-Camera follows smoothly
-Save format stores per-zone trees
-```
-
-### WorldManager Pattern
-```typescript
-class WorldManager {
-  initialize(scene: Scene, world: World): void
-  loadZone(zoneId: string): void
-  unloadZone(zoneId: string): void
-  checkZoneTransition(playerPos: Vector3): string | null
-  renderStructures(structures: Entity[]): void
-  private createTileGrid(zone: ZoneDefinition): void
-  private updateGroundTexture(zone: ZoneDefinition): void
-}
-```
-
-### WorldGenerator Pattern
-```typescript
-class WorldGenerator {
-  generate(seed: number, playerLevel: number): WorldDefinition
-  private selectArchetypes(level: number): ZoneArchetype[]
-  private generateZone(archetype: ZoneArchetype, seed: number): ZoneDefinition
-  private connectZones(zones: ZoneDefinition[]): void
-}
-```
-
-Level-based complexity:
-- Level 1-4: Starting grove only
-- Level 5-9: 2-3 zones
-- Level 10-14: 4-6 zones
-- Level 15-19: 6-8 zones
-- Level 20+: 8-12 zones
-
-Prestige resets generate fresh worlds.
-
-## Structure System Pattern
-
-### Structure Placement
-```
-Structure = collection of blocks on grid tiles
-Validation checks:
-  - All tiles must be empty
-  - Tiles must be contiguous
-  - Cost must be affordable
-Effects:
-  - Growth boost (Greenhouse)
-  - Stamina regen (Bench)
-  - Decorative (Fence)
-```
-
-### StructureManager Pattern
-```typescript
-class StructureManager {
-  canPlace(template: StructureTemplate, gridX: number, gridZ: number): boolean
-  place(template: StructureTemplate, gridX: number, gridZ: number): Entity
-  getEffectsAt(gridX: number, gridZ: number): StructureEffect[]
-  private checkTilesAvailable(positions: GridPosition[]): boolean
-}
-```
-
-### BlockMeshFactory Pattern
-```typescript
-class BlockMeshFactory {
-  createBlockMesh(block: BlockDefinition, scene: Scene): Mesh
-  private createBoxMesh(): Mesh
-  private createCylinderMesh(): Mesh
-  private applyMaterial(mesh: Mesh, color: string): void
-}
-```
-
-Structures are composed from block primitives defined in `blocks.json`.
-
-## Template Mesh Caching Pattern
-
-Tree meshes are expensive to generate. The system uses template caching with clone-based instancing:
+Every source of randomness: `scopedRNG(scope, worldSeed, ...extra)`
 
 ```
-Cache key: `{speciesId}-{stage}-{nightSuffix}`
-Example:  "ghost-birch-3-night"
-
-On first request:
-  1. Generate full SPS tree mesh via treeMeshBuilder
-  2. Store as template in cache Map
-  3. Clone template for actual scene placement
-
-On subsequent requests:
-  1. Look up cache key
-  2. Mesh.clone() from template (fast)
-  3. Position and scale the clone
-
-Ghost Birch special case:
-  - Night variant has emissive glow material
-  - Separate cache entry with "-night" suffix
-  - Rebuilds on day/night transition
+terrain:           scopedRNG('terrain', seed, chunkX, chunkZ)
+vegetation:        scopedRNG('vegetation', seed, chunkX, chunkZ)
+npc-appearance:    scopedRNG('npc-appearance', seed, npcId)
+npc spawning:      scopedRNG('npc', seed, chunkX, chunkZ)
+quests:            scopedRNG('quests', seed, day)
+world-quest:       scopedRNG('world-quest', seed, questId)
+weather:           scopedRNG('weather', seed, day)
+labyrinth:         scopedRNG('labyrinth', seed, chunkX, chunkZ)
+grovekeeper-dialogue: scopedRNG('grovekeeper-dialogue', seed, grovekeeperId)
+feature-major:     scopedRNG('feature-major', seed, chunkX, chunkZ)
+feature-minor:     scopedRNG('feature-minor', seed, chunkX, chunkZ)
+base-raid:         scopedRNG('base-raid', seed, day)
+cooking:           scopedRNG('cooking', seed, recipeId, day)
 ```
 
-Matrix freezing is applied to stage 4 (Old Growth) trees since they no longer change scale.
+Same seed = same world, always.
 
-## SPS Tree Generator Pattern
+## Config-Driven Design
 
-Ported from BabylonJS Extensions repository (TypeScript, not an npm package):
+All tuning constants in `config/game/*.json`. Systems read config, never hardcode values.
 
-```
-spsTreeGenerator.ts
-  - Creates trunk + branch geometry via SolidParticleSystem
-  - Seeded RNG (seedRNG.ts) for deterministic tree shapes
-  - Parameters per species: trunk height, branch count, twist, taper
-  - Returns BabylonJS Mesh ready for material assignment
+- Difficulty multipliers via `getDifficultyConfig(tier)` -- never `if (tier === 'ironwood')`
+- Balance tuning without code changes
+- Game mode config resolver: `getModeConfig(mode, tier)`
 
-treeMeshBuilder.ts
-  - Assigns StandardMaterial (NOT PBR)
-  - Species-specific mesh details:
-    - Willow: drooping bow branches
-    - Pine: conical fork shape
-    - Baobab: thick trunk taper
-    - Cherry: petal particle overlay (CSS)
-    - Ghost Birch: emissive night glow
-    - Crystal Oak: prismatic seasonal color tints
-  - nightTime parameter triggers glow variant for Ghost Birch
-```
-
-## Weather System Pattern
-
-Weather is a pure function. The system generates events, and the caller passes the multiplier to growthSystem:
+## Systems Are Pure Functions
 
 ```typescript
-// weather.ts -- pure function, no side effects
-weatherCheck(season, rng) -> WeatherEvent | null
-
-// GameScene.tsx -- caller applies multiplier
-const event = weatherCheck(currentSeason, rng);
-const weatherMult = event?.growthMultiplier ?? 1.0;
-growthSystem(dt, seasonMult * weatherMult);
+(world: World, deltaTime: number, ...context: unknown[]) => void
 ```
 
-Weather events:
-- Rain: 1.5x growth multiplier
-- Drought: 0.5x growth multiplier
-- Windstorm: chance to damage young trees
+Config from `config/game/*.json`. Randomness from `scopedRNG`. No side effects beyond ECS mutations.
 
-CSS overlays (`WeatherOverlay.tsx`) provide visual effects without BabylonJS ParticleSystem bundle bloat.
+## Rendering Patterns
 
-## Growth Animation Pattern
+### Instanced Meshes
+- One `InstancedMesh` per template key: `${speciesId}_${stage}_${season}[_night]`
+- Same-model repetitions (trees, grass, props) use instanced rendering
+- Static entities: `matrixAutoUpdate = false` (zero per-frame cost)
 
-Smooth scale transitions use frame-rate-independent lerp:
+### GLB Model System
+- Stylized GLBs for all entities (trees, NPCs, structures, props, tools)
+- Tree growth = scale on GLB model (seed=0.1x -> old growth=1.3x)
+- Season = winter variant GLB swap OR color tint uniform
+- NPC appearance = mix-and-match ChibiCharacter base + items (seeded)
+- `useGLTF.preload()` for critical models, lazy load biome-specific
 
-```typescript
-const lerpFactor = Math.min(1, deltaTime * animationSpeed);
-currentScale = currentScale + (targetScale - currentScale) * lerpFactor;
-```
+### Modern Zelda-Style Rendering
+| Rule | Implementation |
+|------|---------------|
+| MSAA antialiasing | `gl={{ antialias: true }}` |
+| Device pixel ratio | Device-native `dpr` |
+| ACESFilmic tone mapping | `gl={{ toneMapping: ACESFilmicToneMapping }}` |
+| sRGB color space | `gl={{ outputColorSpace: SRGBColorSpace }}` |
+| Smooth shading | PBR `MeshStandardMaterial` with smooth normals |
+| Linear filtering | Default texture filtering for clean visuals |
+| Stylized geometry | Low-poly shapes for whimsy, not as constraint |
 
-`Math.min(1, dt * speed)` prevents overshoot on lag spikes.
+## NPC Animation Pattern (anime.js)
 
-## Achievement Checking Pattern
-
-Achievements are pure functions that compare game state against trigger conditions:
-
-```typescript
-// achievements.ts
-checkAchievements(state: GameState) -> Achievement[]
-// Returns newly unlocked achievements (not previously in state.unlockedAchievements)
-
-// 15 achievements with triggers like:
-// - Plant first tree
-// - Harvest 100 trees
-// - Reach level 10/25
-// - Unlock all species
-// - Complete prestige
-```
-
-`AchievementPopup.tsx` displays a gold-border modal with sparkle effect, auto-dismisses after 3 seconds.
-
-## Prestige System Pattern
-
-Pure functions for prestige mechanics:
-
-```typescript
-// prestige.ts
-canPrestige(level) -> boolean            // level >= 25
-calculatePrestigeBonus(count) -> Bonuses // cumulative growth/XP multipliers
-getPrestigeTier(count) -> CosmeticTier   // 5 tiers: Stone Wall -> Ancient Runes
-```
-
-On prestige: reset level/XP/grove, keep achievements, apply cumulative bonuses, unlock cosmetic border theme, generate fresh procedural world.
-
-## Grid Expansion Pattern
-
-Tier-based expansion with resource costs (no coins):
-
-```text
-Tier 0: 12x12 (default, free)
-Tier 1: 16x16 (level 5, cost: 100 Timber, 50 Sap)
-Tier 2: 20x20 (level 10, cost: 250 Timber, 100 Sap, 50 Fruit)
-Tier 3: 24x24 (level 15, cost: 500 Timber, 250 Sap, 100 Fruit, 50 Acorns)
-Tier 4: 32x32 (level 20, cost: 1000 Timber, 500 Sap, 250 Fruit, 100 Acorns)
-```
-
-Accessible from Pause Menu. Adds new grid cells, repositions camera.
-
-## Offline Growth Pattern
-
-On game resume, simplified growth calculation runs:
-
-```typescript
-// offlineGrowth.ts
-const elapsed = Date.now() - lastSaveTimestamp;
-for (each saved tree) {
-  tree.growthProgress += elapsed * growthRate * seasonMultiplier;
-  // Cap at next stage boundary
-}
-```
-
-Avoids full simulation. Uses last-known season for multiplier.
+Lego-style rigid body part rotation (no skeletal rigs):
+- **Idle:** Y-axis breathing bob + head rotation sway
+- **Walk:** arm swing (shoulder +-30deg) + leg swing (hip +-25deg) + vertical bounce
+- **Look-around:** head yaw +-45deg on seeded random interval
+- **Talk:** head nod + slight arm gesture
+- All easing via anime.js timeline -- stylized rigid part animation
 
 ## Save/Load Pattern
 
 ```
-Save (auto on visibility change + every 30s):
-  1. Zustand persist -> localStorage (player state)
-  2. saveGrove() -> serialize ECS tree entities per zone to store
-  3. Save current zone ID
+Save (auto on app background + periodic):
+  1. Legend State auto-persists to expo-sqlite
+  2. Chunk deltas stored per modified chunk
+  3. Only player-changed data stored (delta-only)
 
 Load (on mount):
-  1. Zustand rehydrates from localStorage
-  2. loadGrove() -> deserialize tree entities into ECS world per zone
-  3. offlineGrowth() -> advance trees by elapsed time
-  4. WorldManager.loadZone(currentZoneId)
+  1. Legend State rehydrates from expo-sqlite
+  2. Regenerate visible chunks from seed
+  3. Apply stored deltas to regenerated chunks
+  4. offlineGrowth() for planted trees
 ```
 
-## Toast Notification Pattern
+## Growth Animation Pattern
 
-`showToast(message, type)` utility queues toast messages displayed by `Toast.tsx`. Used for:
-- Resource gains on harvest ("+3 Timber")
-- Achievement unlocks
-- Level-up notifications
-- Weather event announcements
-- Zone transition messages
-
-## Minimap Pattern
-
-Rewritten to use miniplex-react for reactive rendering:
-
+Smooth scale transitions using frame-rate-independent lerp:
 ```typescript
-// src/game/ecs/react.ts
-export const ECS = createReactAPI(world);
-
-// MiniMap.tsx
-<svg>
-  <ECS.Entities in={zonesQuery}>
-    {(entity) => <rect {...zoneRect(entity)} />}
-  </ECS.Entities>
-  <ECS.Entities in={structuresQuery}>
-    {(entity) => <rect {...structureRect(entity)} />}
-  </ECS.Entities>
-  <ECS.Entities in={treesQuery}>
-    {(entity) => <circle {...treeCircle(entity)} />}
-  </ECS.Entities>
-</svg>
+const lerpFactor = Math.min(1, deltaTime * animationSpeed);
+currentScale += (targetScale - currentScale) * lerpFactor;
 ```
 
-Desktop: Fixed bottom-right overlay.
-Mobile: Fullscreen MiniMapOverlay.
+`Math.min(1, dt * speed)` prevents overshoot on lag spikes.
 
-## Input Flow
+## Tool Action Pattern
 
-### Mobile (Primary)
-```
-nipplejs joystick
-  -> onMove(x, z) callback
-  -> Convert to orthographic movement vector
-  -> movementRef.current = { x, z }
-  -> movementSystem reads ref each frame
-  -> Updates ECS entity position
-  -> WorldManager.checkZoneTransition()
-  -> CameraManager.followPlayer()
-  -> Render loop syncs mesh position
-```
-
-### Desktop (Secondary)
-```
-Keyboard (WASD/arrows)
-  -> useKeyboard hook
-  -> Same movementRef path
-  -> Desktop adaptations: SVG minimap, keyboard badges on tools, resource labels
-```
-
-### Tile Interaction
-```
-Tap/click on canvas
-  -> Raycast from touch point to ground plane
-  -> Snap to nearest grid cell (Math.floor, not Math.round)
-  -> Context action based on: selectedTool + tileState
-```
-
-## Season System
-
-```
-1 real second = 1 game minute (timeScale: 60)
-Full year = ~96 real minutes
-```
-
-Seasons affect:
-- Growth multipliers (Spring: 1.3x, Summer: 1.0x, Autumn: 0.7x, Winter: 0.0x)
-- Sky colors (LightingManager -> getSkyColors)
-- Ground/canopy colors (time.ts -> getSeasonalColors)
-- Tree mesh rebuild (seasonal canopy tints, Crystal Oak prismatic shifts)
-- Cherry blossom petal overlay (Spring, stage 3+)
-- Weather event probabilities
-
-## Component Conventions
-
-### UI Components
-- Named exports only (no `export default`) unless shadcn/ui or game UI (biome override)
-- Props typed with `interface Props`
-- shadcn/ui for Dialog, Button, Card, Progress, etc.
-- Tailwind for layout (`flex`, `grid`, responsive breakpoints)
-- Inline styles for game-specific colors from `COLORS` constants
-- Mobile-first sizing: `className="w-8 h-8 sm:w-9 sm:h-9"`
-
-### Game Scene Components
-- NOT React components -- imperative BabylonJS code inside `useEffect`
-- React refs for all mesh/material/light references
-- Callbacks (`handleMove`, `handleAction`, `handlePlant`) bridge UI to ECS
-
-## Key Architectural Decisions
-
-| Decision | Choice | Why |
-|----------|--------|-----|
-| Styling | Tailwind + shadcn/ui | Better DX than CSS Modules, consistent component library |
-| 3D | Imperative BabylonJS | Declarative too opaque for game loop control |
-| State | ECS + Zustand split | Each tool for its strength |
-| Tree meshes | SPS + template cache | Procedural variety with clone-based performance |
-| Weather visuals | CSS overlays | Avoids BabylonJS ParticleSystem bundle bloat |
-| Testing | Vitest + happy-dom | Fast, Vite-native, React Testing Library compatible |
-| Mobile | Capacitor bridge | PWA + native haptics/device APIs |
-| Persistence | localStorage only | No backend, offline-first |
-| Code splitting | Lazy GameScene import | 107 KB initial, ~500 KB total game load |
-| Camera | Orthographic diorama | Better for multi-zone world than isometric lock |
-| Scene architecture | Modular managers | GameScene.tsx 1050 lines → 400 lines |
-| World generation | Procedural from seed | Prestige resets create fresh worlds |
-| Minimap | SVG + miniplex-react | Reactive, no canvas overhead, ECS-driven |
+1. Raycast from camera center (per-tool range: 3.0/4.0/6.0 units)
+2. Per-tool layer masks (axe -> trees, pickaxe -> rocks)
+3. Keyframe animation (400-600ms with impact frame at 45-55%)
+4. Impact effects: screen shake + FOV punch + particles + sound + haptics
+5. Stamina deduction + durability cost
+6. Target entity reaction (tree shake, rock pulse)

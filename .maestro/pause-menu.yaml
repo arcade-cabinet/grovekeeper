@@ -1,0 +1,81 @@
+# Flow: Pause menu — all tabs navigation
+# Verifies: open pause menu, navigate through all tabs (stats, progress, settings),
+#           check key content in each tab, close via Continue Playing and Return to Menu
+# Touch targets: all tabs 44px min-h, action buttons 44px min-h
+# Platform: iOS/Android (375px viewport portrait)
+# Spec: §26 (Pause Menu)
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+
+# Start a new game
+- tapOn:
+    id: "btn-new-grove"
+- tapOn:
+    accessibilityLabel: "Sapling: The intended experience"
+- tapOn:
+    id: "btn-begin-grove"
+
+# Wait for game to load
+- assertVisible:
+    id: "btn-open-menu"
+    timeout: 15000
+
+# ── Open pause menu ──
+- tapOn:
+    id: "btn-open-menu"
+
+# Pause menu header visible
+- assertVisible:
+    id: "pause-menu-title"
+
+# ── Stats tab (default) ──
+# Stats tab shows by default with key metrics
+- assertVisible: "Level"
+- assertVisible: "XP"
+- assertVisible: "Trees Planted"
+- assertVisible: "Species:"
+- assertVisible: "Tools:"
+
+# ── Progress tab ──
+- tapOn:
+    text: "progress"
+
+# Achievements section visible
+- assertVisible: "Achievements"
+
+# ── Settings tab ──
+- tapOn:
+    text: "settings"
+
+# Settings tab shows sound and haptics toggles
+- assertVisible: "Sound Effects"
+- assertVisible: "Haptic Feedback"
+
+# Audio/Graphics/Controls button visible
+- assertVisible: "Audio, Graphics & Controls"
+
+# Reset button visible (dangerous action)
+- assertVisible: "Reset All Data"
+
+# ── Close via Continue Playing ──
+- tapOn:
+    text: "Continue Playing"
+
+# Back in game
+- assertVisible:
+    id: "btn-open-menu"
+- assertNotVisible: "Grove Stats"
+
+# ── Reopen and test Return to Menu ──
+- tapOn:
+    id: "btn-open-menu"
+- assertVisible: "Grove Stats"
+
+# Return to Menu button
+- tapOn:
+    text: "Return to Menu"
+
+# Should be back on main menu
+- assertVisible: "GROVEKEEPER"

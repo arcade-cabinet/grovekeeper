@@ -2,84 +2,76 @@
 
 ## Why This Exists
 
-Grovekeeper fills a gap in the mobile gaming landscape: a genuinely cozy, non-predatory tree-planting game that respects the player's time. Most mobile games in this space are either:
-- Aggressive with microtransactions and timers designed to frustrate
-- Too shallow to sustain interest beyond a day
-- Not actually playable in short sessions despite claiming to be
+Grovekeeper fills a gap: a genuinely compelling survival game that respects the player's time while delivering real depth. Most mobile survival games are either:
+- Aggressive with microtransactions and artificial timers
+- Too shallow to sustain interest
+- PC ports crammed onto mobile with poor touch UX
 
-Grovekeeper is the antithesis: patient, warm, and designed for the rhythm of daily life.
+Grovekeeper is mobile-first, genuinely survival, and designed for both short commute sessions and deep exploration.
 
 ## Who It's For
 
-**Primary:** Commuters and casual mobile gamers who want 3-15 minutes of calm, rewarding gameplay.
+**Primary:** Mobile gamers who want a survival experience that works in 5-15 minute sessions but supports longer play.
 
-**Secondary:** Desktop users who enjoy idle/tending games (Stardew Valley fans, terrarium enthusiasts, cozy game community).
+**Secondary:** Desktop players who enjoy exploration/crafting games (Stardew Valley, Valheim, Animal Crossing fans).
 
-**Persona:** Someone waiting for a bus, riding a train, or unwinding before bed. They want to check on their grove, plant a few trees, harvest what's ready, explore a new zone, and feel a small sense of accomplishment.
+**Persona:** Someone who wants to discover a vast world at their own pace, earn every upgrade, and feel the satisfaction of building something from nothing. They enjoy the bright, whimsical Zelda-style aesthetic as intentional art direction.
 
 ## Brand Essence
 
-**Cozy, grounded, and quietly magical.**
+**Survival with soul. Whimsy with purpose.**
 
-Like tending a tiny world in a glass terrarium -- warm light through leaves, rich soil, the slow satisfaction of watching something grow.
+The Wind Waker-inspired visual style isn't nostalgic -- it's the game's identity. Bright colors, smooth shading, stylized low-poly geometry that is coherent, charming, and performant on mobile.
 
 ### Brand Pillars
-- **Warmth** -- Earth tones, rounded shapes, soft shadows, well-lit bark and leaves
-- **Growth** -- Everything evolves; nothing stays static; smooth lerp animations show progress
-- **Wonder** -- Small magical moments hidden in the ordinary (Ghost Birch night glow, Crystal Oak prismatic tints, cherry blossom petals drifting in spring, discovering new zones)
-- **Patience** -- Good things take time (anti-hustle energy)
+- **Survival** -- Every resource is earned. Weather hurts. Nights are dangerous. Comfort is built.
+- **Discovery** -- The world is infinite, seeded, and full of surprises. 14 Grovekeepers to find, 8 biomes to explore, procedural villages and labyrinths to discover.
+- **Growth** -- Both literal (trees grow through 5 stages) and player progression (25 levels, tool upgrades, species codex).
+- **Craftsmanship** -- 28 recipes, 3 tool tiers, 8+ structures, cooking system. Everything you use, you made.
 
 ## User Experience Goals
 
 ### Emotional Journey
-1. **First open:** "Oh, this is charming" -- warm colors, cute farmer mascot, inviting
-2. **First plant:** "That was easy" -- clear flow, satisfying feedback
-3. **First growth:** "I can't wait to see it bigger" -- anticipation hook, smooth growth animations
-4. **First harvest:** "I earned this" -- tangible reward with floating resource particles
-5. **Session end:** "I'll check on my grove later" -- retention pull
-6. **Return visit:** "My trees grew!" -- offline growth calculation creates delight
-7. **First zone transition:** "There's more to explore!" -- discovery moment
-8. **Achievement unlock:** "I did something special" -- gold-border modal with sparkle effect
-9. **Prestige reset:** "Starting fresh with new powers" -- cosmetic border themes and a fresh procedural world as lasting reward
+1. **Tutorial Village:** "I'm safe, I'm learning, I have purpose" -- Elder Rowan teaches basics
+2. **First departure:** "The world is vast and I'm small" -- walk through the gate into wilderness
+3. **First night:** "I need shelter" -- survival stakes become real
+4. **First Grovekeeper:** "There are ancient guardians out there" -- the narrative hook lands
+5. **Mid-game:** "I'm becoming capable" -- Iron tools, structures, expanding knowledge
+6. **Late-game:** "I am a Grovekeeper" -- all 14 found, Worldroot defeated, NG+ unlocks
+7. **NG+:** "The world resets but I'm stronger" -- base building, raids, prestige cosmetics
 
-### Session Design (Mobile-First)
+### Session Design
 
-A typical 5-minute session:
-1. Load save (instant -- auto on mount, offline growth calculated)
-2. See what grew while away (growth animations catch up)
-3. Harvest any ready trees (quick taps, floating resource particles)
-4. Plant new seeds in empty tiles
-5. Water any thirsty saplings
-6. Check quest progress
-7. Walk to adjacent zone to check on trees there
-8. Place a decorative structure or expand grid
-9. Auto-save on exit (visibility change)
+**Short session (5 minutes):**
+- Check on grove, harvest ready trees, tend crops, eat food, craft something, auto-save
 
-Everything works with one hand (thumb on joystick, index finger tapping).
+**Medium session (15 minutes):**
+- Explore 3-4 new chunks, find a minor feature, complete a quest, trade at village
+
+**Long session (30-60 minutes):**
+- Push into new biome, tackle a labyrinth, find a Grovekeeper, build a base expansion
 
 ### Core Game Loop
 
 ```
-EXPLORE -> PLANT -> TEND -> HARVEST -> EXPAND & UNLOCK (repeat)
+SURVIVE -> EXPLORE -> DISCOVER -> CRAFT -> BUILD -> EXPAND (repeat)
 ```
 
-The loop feels like a garden -- not a factory. No urgency. No punishment for not playing. Trees grow while you're away. The game rewards patience, not grinding. Zone exploration adds discovery without overwhelming scope.
+The loop has teeth. You need food to maintain stamina. You need tools to gather resources. You need resources to build shelter. You need shelter to survive weather. You need to explore to find Grovekeepers. You need Grovekeepers to unlock species. The systems interlock meaningfully.
 
 ## How It Feels
 
-- **Visual:** Like looking into a tiny terrarium on a desk -- warm-lit bark, rich earth, small things growing with smooth animations, new areas to discover
-- **Audio (future):** Gentle ambient nature sounds, soft "pop" when trees grow, rustling leaves
-- **Interaction:** Smooth, responsive, forgiving -- tapping near a tile selects it, not pixel-precision required
-- **Pacing:** Calm, but not boring -- there's always something to do, but never pressure to do it NOW
-- **Progression:** Steady and visible -- new species, new tools, bigger grove, new zones, prestige borders, all unlocked by just... playing
-- **Weather:** Rain enhances growth, drought slows it, windstorms add tension -- but nothing punishes the player
-- **Exploration:** New zones appear organically as you level, each with different biomes and layouts
+- **Visual:** Bright whimsical models, smooth PBR shading, saturated warm palette. Like a Wind Waker-inspired grove adventure.
+- **Audio:** Tone.js procedural synthesis -- FM bird calls, spatial campfire crackle, 6-layer ambient soundscape. Retro SFX library supplements.
+- **Interaction:** First-person tool use with keyframe animations, screen shake, haptic feedback. Physical and embodied.
+- **Pacing:** Survival urgency balanced with discovery wonder. Always something to do, always a reason to explore further.
+- **Progression:** Meaningful at every level. No dead levels. Species from Grovekeepers, everything else from crafting/leveling.
 
 ## What It's NOT
 
 - Not a clicker/idle game with exponential numbers
-- Not a competitive game with leaderboards
+- Not a creative sandbox (survival first, base building unlocks in NG+)
 - Not a game that punishes you for not playing
-- Not a game that tries to sell you anything
-- Not a desktop game crammed onto mobile -- it's mobile-first, desktop-enhanced
-- Not an endless open world -- zones are small, purposeful, and curated
+- Not a game that sells you anything
+- Not a PC game crammed onto mobile -- it's mobile-first with desktop support
+- Not a cozy-only experience -- survival means stakes, but difficulty is configurable (Seedling through Ironwood)

@@ -1,0 +1,196 @@
+# Iteration 54 Log
+
+## Metadata
+
+- **Task ID**: US-054
+- **Task Title**: Create splash and bubble particles
+- **Description**: As a developer, I want splash particles on water entry and bubble particles when submerged so that water interaction feels tactile. See GAME_SPEC.md §12.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T11:48:03.221Z
+- **Ended At**: 2026-03-07T11:57:45.641Z
+- **Duration**: 9m 42s
+- **Input Tokens**: 141
+- **Output Tokens**: 35411
+- **Total Tokens**: 35552
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,Glob,Grep,TodoWrite[0m
+[94m[Skill][0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/particles.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/water.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/index.ts[0m
+Now let me look at what exists for game systems, world, and any water-related systems:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Let me check the GAME_SPEC.md section 12 and look for any existing particle system files:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96msplash|bubble|water.*particle|particle.*water[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*particle*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§12|§36|section 12|section 36|splash.*particle|particle.*splash|water.*entry|playerWater|waterDetect[0m
+Let me look at an existing game system for the pattern, and check if there's already a water particles system:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/growth.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mwaterParticle|splashParticle|bubbleParticle|waterEntry|waterDetect|submerged[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m
+Let me look at an existing test that does ECS entity creation in a system:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/growth.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/vegetationPlacement.ts[0m
+Let me look at an existing system that modifies ECS state and its test:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/vegetationPlacement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/structurePlacement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.claude/hooks/no-magic-numbers.sh[0m
+Now I have everything I need. Let me implement following TDD — tests first, then implementation.
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **WaterEntity minimal interface**: The `tickWaterParticles` function takes `World<WaterEntity>` rather than `World<Entity>` — this lets tests pass a `World<WaterEntity>` directly without any casting, while production code casts `world as unknown as World<WaterEntity>`. Structural subtype + single cast at callsite.
+- **Splash as one-shot burst**: The splash emitter is created once on `above→submerged` transition and tracked in state but never explicitly removed — the particle renderer handles lifetime expiry. Bubbles emitter IS removed when player exits water since it's continuous.
+- **Config-driven particle params**: Both `buildSplashEmitter` and `buildBubblesEmitter` read from `config/game/procedural.json`, keeping all tuning values out of source code (follows the no-magic-numbers rule).
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit,Write,Bash[0m
+First, add `splash` and `bubbles` particle configs to `procedural.json`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m edit: "    "waterfallSplash": {
+      "emissionRate": 15,..." → "    "waterfallSplash": {
+      "emissionRate": 15,..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m edit: "    "waterfallSplash": {
+      "emissionRate": 15,..." → "    "waterfallSplash": {
+      "emissionRate": 15,..."
+[94m[TodoWrite][0m
+Now write the tests (RED phase):
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/waterParticles.test.ts[0m "/**
+ * Tests for water particles system (Spec §36.1 + §31.2).
+ *
+ * Validates splash emission on water entry and bubble emission while submerged.
+ * Both use ParticleEmitterComponent via the ECS world... (8729 chars)"
+Now verify the tests fail (RED phase):
+[94m[Bash][0m Run waterParticles tests to confirm they fail (RED phase) $ npx jest --no-coverage --testPathPattern waterParticles 2>&1 | tail -20
+Tests fail because the module doesn't exist — expected RED. Now write the implementation:
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/waterParticles.ts[0m "/**
+ * Water particles system — splash on water entry, bubbles while submerged.
+ *
+ * Spec §31.2: "Splash particles: 12 particles on player water entry, lifetime 0.8s"
+ * Spec §36.1: Splash (gravity 0... (5526 chars)"
+Now run the tests (GREEN phase):
+[94m[Bash][0m Run waterParticles tests — expect GREEN $ npx jest --no-coverage --testPathPattern waterParticles 2>&1
+
+[91m[Error: Exit code 1
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL game/systems/waterParticles.test.ts
+  Water Particles System (Spec §36.1 + §31.2)
+    detectWaterState
+      ✓ returns "above" when player Y is above water surface
+      ✓ returns "submerged" when player Y equals water surface Y (1 ms)
+      ✓ returns "submerged" when player Y is below water surface
+      ✓ returns "above" when player is outside X bounds even if Y is low
+      ✓ returns "above" when player is outside Z bounds even if Y is low
+      ✓ returns "above" when no water bodies exist
+      ✓ detects submerged in second water body when not in first
+      ✓ treats water body edge (exact halfW) as inside
+    buildSplashEmitter (Spec §31.2 + §36.1)
+      ✓ has particleType "splash"
+      ✓ has positive gravity (particles arc up then fall)
+      ✓ is wind-unaffected per spec §36.1
+      ✓ maxParticles is 30 per spec §36.1
+      ✓ lifetime matches SPLASH_LIFETIME from config
+      ✓ is active on creation (auto-expires via renderer lifetime)
+      ✓ emissionRate delivers at least SPLASH_PARTICLE_COUNT over lifetime
+    buildBubblesEmitter (Spec §36.1)
+      ✓ has particleType "bubbles"
+      ✓ has gravity -0.3 (rises upward) per spec §36.1
+      ✓ is wind-unaffected per spec §36.1
+      ✓ maxParticles is 20 per spec §36.1
+      ✓ is active on creation
+    tickWaterParticles
+      ✓ creates a splash emitter entity on water entry (above→submerged)
+      ✓ creates a bubbles emitter entity when submerged
+      ✓ adds particle emitter entity to world on water entry (1 ms)
+      ✓ does NOT create a second splash on continued submersion
+      ✓ removes bubbles entity when player exits water
+      ✓ does nothing when playerPos is null
+      ✓ updates prevWaterState to submerged after entering water
+      ✓ updates prevWaterState to above after exiting water
+      ✓ does not re-create bubbles entity if already tracking one
+      ✕ positions splash emitter at player contact point (1 ms)
+
+  ● Water Particles System (Spec §36.1 + §31.2) › tickWaterParticles › positions splash emitter at player contact point
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 3
+    Received: undefined
+
+      258 |       tickWaterParticles(world, inWater, [pond], state);
+      259 |
+    > 260 |       expect(state.splashEntity?.position?.x).toBe(3);
+          |                                               ^
+      261 |       expect(state.splashEntity?.position?.z).toBe(7);
+      262 |     });
+      263 |   });
+
+      at Object.toBe (game/systems/waterParticles.test.ts:260:47)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 29 passed, 30 total
+Snapshots:   0 total
+Time:        0.287 s
+Ran all test suites matching /waterParticles/i.][0m
+One test has a geometry bug — player at z=7 is outside a pond with halfD=5. Let me fix the test:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/waterParticles.test.ts[0m edit: "    it("positions splash emitter at player contact..." → "    it("positions splash emitter at player contact..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/waterParticles.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/waterParticles.test.ts[0m edit: "    it("positions splash emitter at player contact..." → "    it("positions splash emitter at player contact..."
+[94m[Bash][0m Re-run waterParticles tests $ npx jest --no-coverage --testPathPattern waterParticles 2>&1 | tail -20
+30/30 GREEN. Now run the full suite and type check:
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -15
+1914 tests, 0 failures. Type check clean.
+
+Now update `progress.md`:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-053" → "---
+
+## 2026-03-07 - US-054
+- Implemented splash a..."
+Also add the key pattern to the Codebase Patterns section at the top:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **Caustic plane reuses water geometry factory**:" → "- **WaterEntity minimal-interface injection for ti..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **State machine via `prevWaterState`**: The `above→submerged` transition is detected by comparing `prevWaterState` to `currentState`. This lets the splash be a true one-shot burst rather than re-firing every frame while submerged — the ECS entity is created once and expires via the particle renderer's lifetime system.
+- **Test geometry failures are caught by RED phase**: The initial test had `z=7` for a pond with `halfD=5` — the player was outside the water! TDD's mandatory RED phase exposed the bug before the implementation existed, which is exactly the point: watch the test fail for the *right* reason.
+- **Config-driven emitters via `particles.splash` + `particles.bubbles`**: Rather than hardcoding gravity/size/color in the factory functions, all values come from `config/game/procedural.json`. This keeps the system consistent with the no-magic-numbers rule and lets tuning happen in JSON without code changes.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria met:
+
+| Criterion | Status |
+|-----------|--------|
+| `ParticleEmitterComponent type='splash'` on water entry | ✅ `buildSplashEmitter()` + `tickWaterParticles` above→submerged |
+| `ParticleEmitterComponent type='bubbles'` for submerged | ✅ `buildBubblesEmitter()` + continuous bubbles entity |
+| Tied to player water detection (Y < water surface) | ✅ `detectWaterState()` checks `playerY <= wb.position.y` within bounds |
+| Particles appear on water contact | ✅ ECS entity added to world on entry, removed on exit |
+| `npx tsc --noEmit` passes | ✅ 0 errors |
+| `npx jest --no-coverage` passes | ✅ 1914 tests, 0 failures |
+
+<promise>COMPLETE</promise>

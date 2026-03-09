@@ -1,0 +1,12 @@
+appId: com.grovekeeper.app
+---
+- launchApp
+- assertVisible: "New Grove"
+- tapOn: "New Grove"
+- assertVisible:
+    id: "hud-resource-bar"
+    optional: true
+# Wait for 3D canvas to render
+- extendedWaitUntil:
+    visible: "Level"
+    timeout: 10000

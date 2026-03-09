@@ -1,0 +1,82 @@
+# Iteration 19 Log
+
+## Metadata
+
+- **Task ID**: US-019
+- **Task Title**: Generate terrain heightmap per chunk
+- **Description**: As a developer, I want a terrain generator that uses SeededNoise to fill a 16x16 Float32Array heightmap per chunk so that terrain is procedurally generated. See GAME_SPEC.md §6 for terrain generation.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:17:49.297Z
+- **Ended At**: 2026-03-07T09:21:17.389Z
+- **Duration**: 3m 28s
+- **Input Tokens**: 91
+- **Output Tokens**: 10035
+- **Total Tokens**: 10126
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite,Bash[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/utils/seededNoise*[0m
+Let me check if the terrainGenerator already exists and read the relevant files:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/terrainGenerator*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seededNoise.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+Let me check the GAME_SPEC terrain section and the ECS types:
+[94m[Bash][0m Find terrain/heightmap references in GAME_SPEC $ grep -n "terrain\|Terrain\|heightmap\|§6\|§17\|TerrainChunk" docs/GAME_SPEC.md | head -60
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs[0m pattern: [96mTerrainChunkComponent|terrainChunk[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/terrain.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Let me look at the ChunkManager test to understand patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.test.ts[0m
+`★ Insight ─────────────────────────────────────`
+`generateChunkData` in ChunkManager already has the heightmap logic inline — US-019 requires a separate `terrainGenerator.ts` file, which will extract and formalize this into a reusable module. The key design constraint from the codebase patterns is: **single SeededNoise seeded from `hashString(worldSeed)` sampled at global coordinates** — never per-chunk seeds.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Edit[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/terrainGenerator.ts[0m "/**
+ * terrainGenerator -- Procedural heightmap generation per chunk.
+ *
+ * Pure function: same worldSeed + chunkCoords always produces identical output.
+ * Uses global world-space coordinates so terr... (1775 chars)"
+[94m[TodoWrite][0m
+Now update ChunkManager to use `generateHeightmap` instead of the inline loop:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "import { generateEntityId, world } from "@/game/ec..." → "import { generateEntityId, world } from "@/game/ec..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "  const heightmap = new Float32Array(CHUNK_SIZE * ..." → "  const heightmap = generateHeightmap(worldSeed, c..."
+Now remove the unused `heightNoise` variable from `generateChunkData`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "  // Single noise instance per worldSeed for seaml..." → "  const tempNoise = new SeededNoise(hashString(`${..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The test file follows the established project pattern: each test suite references its spec section in the describe label (e.g., `Spec §31.1`). Tests for pure functions like `generateHeightmap` need only call the function directly — no mocking required since it has no side effects.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/terrainGenerator.test.ts[0m "/**
+ * terrainGenerator tests (Spec §31.1)
+ *
+ * Covers:
+ *  - Output shape: Float32Array of CHUNK_SIZE * CHUNK_SIZE (256 elements)
+ *  - Determinism: same seed + coords always produce the same height... (4286 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run terrainGenerator tests $ npx jest --no-coverage --testPathPattern "terrainGenerator" 2>&1
+12/12 pass. Now run the full suite to confirm nothing broke:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+79 suites, 1354 tests (was 1342 before), all green. Now update the progress log:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-018" → "## 2026-03-07 - US-019
+- Created `game/world/terra..."
+[94m[TodoWrite][0m
+All acceptance criteria satisfied:
+
+- `game/world/terrainGenerator.ts` created with `generateHeightmap`
+- Uses `SeededNoise` to fill a 16x16 `Float32Array` heightmap (`TerrainChunkComponent.heightmap`)
+- Deterministic for same seed + chunk coords (12 tests, all green)
+- `ChunkManager.ts` updated to use it (no duplicate logic)
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 79 suites, 1354 tests, 0 failures
+
+<promise>COMPLETE</promise>

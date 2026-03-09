@@ -1,0 +1,35 @@
+[
+  {
+    "tier": 1,
+    "name": "iron",
+    "damageMultiplier": 1.5,
+    "speedMultiplier": 1.25,
+    "maxDurabilityUses": 150,
+    "staminaReduction": 0.1,
+    "effectBoost": 0.1,
+    "cost": { "timber": 20, "sap": 10 },
+    "requiresForge": true
+  },
+  {
+    "tier": 2,
+    "name": "iron-plus",
+    "damageMultiplier": 1.75,
+    "speedMultiplier": 1.375,
+    "maxDurabilityUses": 300,
+    "staminaReduction": 0.2,
+    "effectBoost": 0.2,
+    "cost": { "timber": 40, "sap": 20, "fruit": 10 },
+    "requiresForge": true
+  },
+  {
+    "tier": 3,
+    "name": "grovekeeper",
+    "damageMultiplier": 2.0,
+    "speedMultiplier": 1.5,
+    "maxDurabilityUses": 500,
+    "staminaReduction": 0.3,
+    "effectBoost": 0.3,
+    "cost": { "timber": 80, "sap": 40, "fruit": 20, "acorns": 10 },
+    "requiresForge": true
+  }
+]

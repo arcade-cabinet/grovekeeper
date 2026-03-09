@@ -1,0 +1,74 @@
+{
+  "probabilityParams": {
+    "baseValueDivisor": 100,
+    "valueWeight": 0.15,
+    "dayWeight": 0.005,
+    "dayFactorCap": 0.25,
+    "maxProbability": 0.7,
+    "defaultDifficultyMultiplier": 1.0,
+    "minDaysBetweenRaids": 3
+  },
+  "difficultyMultipliers": {
+    "exploration": 0,
+    "gentle": 0.5,
+    "standard": 1.0,
+    "harsh": 1.5,
+    "ironwood": 2.0
+  },
+  "wavesPerBaseValue": 150,
+  "maxWavesPerRaid": 3,
+  "waveEscalation": 0.4,
+  "delayBetweenWaves": 30,
+  "waveComposition": [
+    { "enemyType": "grove_pest", "minBaseValue": 0, "baseCount": 3, "countVariance": 2, "tier": 1 },
+    { "enemyType": "wild_boar", "minBaseValue": 50, "baseCount": 2, "countVariance": 1, "tier": 1 },
+    {
+      "enemyType": "shadow_sprite",
+      "minBaseValue": 100,
+      "baseCount": 2,
+      "countVariance": 2,
+      "tier": 2
+    },
+    {
+      "enemyType": "blight_crawler",
+      "minBaseValue": 200,
+      "baseCount": 1,
+      "countVariance": 1,
+      "tier": 2
+    },
+    {
+      "enemyType": "corrupted_ent",
+      "minBaseValue": 350,
+      "baseCount": 1,
+      "countVariance": 1,
+      "tier": 3
+    },
+    {
+      "enemyType": "storm_elemental",
+      "minBaseValue": 500,
+      "baseCount": 1,
+      "countVariance": 0,
+      "tier": 3
+    }
+  ],
+  "warnings": {
+    "ominousSoundsThreshold": 120,
+    "ominousSoundsMessage": "Strange sounds echo from beyond the grove...",
+    "hornBlastThreshold": 30,
+    "hornBlastMessage": "A horn blast shatters the silence -- raiders approach!"
+  },
+  "lootParams": {
+    "baseLootMultiplier": 1.0,
+    "difficultyWeight": 0.1
+  },
+  "difficultyLootBonus": {
+    "exploration": 0,
+    "gentle": 0.1,
+    "standard": 0.25,
+    "harsh": 0.5,
+    "ironwood": 1.0
+  },
+  "approachParams": {
+    "secondDirectionChance": 0.4
+  }
+}

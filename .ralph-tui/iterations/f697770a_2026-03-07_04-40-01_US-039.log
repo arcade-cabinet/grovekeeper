@@ -1,0 +1,109 @@
+# Iteration 39 Log
+
+## Metadata
+
+- **Task ID**: US-039
+- **Task Title**: Implement grass instancing
+- **Description**: As a developer, I want grass rendered via InstancedMesh with per-instance position/rotation from chunk seed so that grass is visible without excessive draw calls. See GAME_SPEC.md §8.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:40:01.738Z
+- **Ended At**: 2026-03-07T10:47:28.676Z
+- **Duration**: 7m 26s
+- **Input Tokens**: 131
+- **Output Tokens**: 26139
+- **Total Tokens**: 26270
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeInstances.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/BushModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/vegetation.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Now let me check the vegetation config and GAME_SPEC §8 for grass details:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/vegetation.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/vegetation.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/BushModel.test.ts[0m
+Now let me look at the TreeModel for the GLB pattern and check the GAME_SPEC §8:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§8|grass|Grass[0m
+Let me check the specific §8 section of GAME_SPEC:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## §8|^### §8|GrassComponent|grassType|Grass Instanc|InstancedMesh.*grass|grass.*InstancedMesh[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§8[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## .8\.|grass instanc|Grass Instanc|GLB.*grass|grass.*GLB|assets/models/grass[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## [0-9]+\. |^### [0-9]+\.[0-9]+|Grass|grass[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Let me check the TreeModel test for test patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+Now I have enough context. Let me implement the tests first, then the component.
+
+`★ Insight ─────────────────────────────────────`
+The codebase's instancing pattern groups by type (one `InstancedMesh` per `grassType`). Three.js `InstancedMesh.count` can be set to render fewer instances without re-creating, but the max capacity (`args[2]`) is fixed at construction. The solution: track capacity as state, grow-never-shrink — only trigger a re-render when entities exceed the current allocation.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+Let me check the game scene to understand wiring before writing tests:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+Now I have a complete picture. Let me write the test file first, then the implementation.
+
+`★ Insight ─────────────────────────────────────`
+The pattern across this codebase is: export pure mapping functions for testing (no WebGL context needed), keep `useGLTF` in a sub-component so it satisfies Rules of Hooks conditionally. Tests only cover the pure functions + component export check — never the R3F rendering itself.
+`─────────────────────────────────────────────────`
+
+First, add `grassScatterRadius` to vegetation.json:
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/vegetation.json[0m edit: "  "bushRootsProbability": 0.3," → "  "grassScatterRadius": 1.5,
+  "bushRootsProbabili..."
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrassInstances.test.ts[0m "/**
+ * Tests for GrassInstances — grass InstancedMesh rendering (Spec §8).
+ *
+ * Tests pure functions and constants without WebGL/R3F context.
+ */
+
+jest.mock("@react-three/drei", () => ({
+  useGLTF: j... (7048 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The grow-only InstancedMesh capacity pattern avoids expensive GPU buffer re-uploads on chunk unloads — only the `mesh.count` needs updating for fewer entities, not a full `InstancedMesh` rebuild. A separate `capacitiesRef` (mutable, no re-render) vs `typeCapacities` state (React-owned, drives JSX) is needed because `useFrame` runs outside React's render cycle.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrassInstances.tsx[0m "/**
+ * GrassInstances — R3F component that renders all ECS grass entities via InstancedMesh.
+ *
+ * Groups grass entities by grassType — one InstancedMesh per type reduces draw calls.
+ * Per-instance p... (8126 chars)"
+Now wire `<GrassInstances />` into the game scene:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m edit: "import { NpcMeshes } from "@/components/entities/N..." → "import { GrassInstances } from "@/components/entit..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m edit: "            <TreeInstances onTreeTap={onTreeTap} /..." → "            <TreeInstances onTreeTap={onTreeTap} /..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run GrassInstances tests $ npx jest --no-coverage --testPathPattern="GrassInstances" 2>&1
+All 28 tests pass. Now run the full typecheck:
+[94m[Bash][0m TypeScript full typecheck $ npx tsc --noEmit 2>&1
+TypeScript clean. Now run the full test suite:
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1
+1620/1620 tests pass, typecheck clean. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Show last 5 lines of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-039 entry to progress.md $ `typeCapacities` state drives JSX for sub-component mounting.   - **Dynamic grassType mounting via s...
+[94m[TodoWrite][0m
+All acceptance criteria met:
+
+- **`components/entities/GrassInstances.tsx`** — new file exists
+- **InstancedMesh from grass GLBs** — `GrassTypeInstances` loads via `useGLTF`, extracts first mesh geometry + material, creates `<instancedMesh>`
+- **Per-instance position/rotation from chunk seed** — `computeGrassInstanceTransforms(entityId, density)` uses `hashString` + `createRNG` seeded on `grass-instances-{entityId}`
+- **Density from `GrassComponent.density`** — each entity contributes `grass.density` instances
+- **Grass visible in scene** — `<GrassInstances />` wired into `app/game/index.tsx`
+- **`npx tsc --noEmit` passes** — clean
+- **`npx jest --no-coverage` passes** — 1620/1620 tests
+
+<promise>COMPLETE</promise>

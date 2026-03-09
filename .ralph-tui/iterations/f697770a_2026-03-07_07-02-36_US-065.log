@@ -1,0 +1,103 @@
+# Iteration 65 Log
+
+## Metadata
+
+- **Task ID**: US-065
+- **Task Title**: Implement action dispatch system
+- **Description**: As a developer, I want an action dispatcher that maps tool type + target entity type to the correct action (DIG/CHOP/WATER/PLANT/PRUNE) so that interactions are consistent. See GAME_SPEC.md §11.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T13:02:36.637Z
+- **Ended At**: 2026-03-07T13:07:35.017Z
+- **Duration**: 4m 58s
+- **Input Tokens**: 130
+- **Output Tokens**: 15066
+- **Total Tokens**: 15196
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/actions/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+`actionDispatcher.ts` doesn't exist yet. Let me read the existing actions files and the spec section in parallel.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§11|DIG|CHOP|WATER|PLANT|PRUNE|actionDispatch[0m
+Let me read the spec section and tool config:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m11\.|Tool|DIG|CHOP|WATER|PLANT|PRUNE|dispatch|action[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/tools.json[0m
+Now let me read the ECS world and component files to understand entity types:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/**[0m
+Let me also check the raycast system (US-063) for what it returns as target entity:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/hooks/useRaycast*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/player/TargetInfo*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/hooks/useRaycast.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/TargetInfo.tsx[0m
+Now I have a full picture. Let me mark the exploration done and implement:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The **pure `resolveAction` seam pattern** appears throughout this codebase (e.g., `resolveToolGLBPath`, `resolveEntityName`) — pure functions exported separately from R3F components so they can be unit-tested without WebGL context.
+- The existing `RaycastEntityType = "tree" | "npc" | "structure"` covers entity targets, but DIG/PLANT need terrain targets (`"soil"`, `"rock"`), so `TargetEntityType` must be a superset.
+- `harvestTree()` returns `T[] | null` (not boolean) — so "CHOP success" must be `result !== null`.
+`─────────────────────────────────────────────────`
+
+Writing tests first (TDD):
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.test.ts[0m "/**
+ * actionDispatcher.test.ts
+ *
+ * Tests for the action dispatch system (Spec §11).
+ * Maps tool type + target entity type -> GameAction -> executes system function.
+ */
+
+import {
+  dispatchAction,... (7970 chars)"
+Now implement the module:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The dispatch table uses `if/else` chains rather than a `Record<string, ...>` lookup map. Priority-order if-chains are idiomatic in this codebase (see biome dispatch pattern in progress.md) and keep TypeScript narrowing intact without casting.
+- `harvestTree` returns `T[] | null` not `boolean`, so the CHOP branch checks `result !== null` to determine success — a subtle difference from the other actions that return `boolean`.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/actionDispatcher.ts[0m "/**
+ * actionDispatcher -- Action dispatch system (Spec §11).
+ *
+ * Maps tool type + target entity type to a game verb (DIG/CHOP/WATER/PLANT/PRUNE)
+ * and executes the corresponding system function fr... (3559 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run actionDispatcher tests only $ npx jest --no-coverage --testPathPattern="actionDispatcher" 2>&1
+27/27 passing. Let me run the full test suite to confirm no regressions:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+2056 tests, 108 suites, 0 failures. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-061" → "---
+
+## 2026-03-07 - US-065
+- Implemented `game/ac..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The `DispatchContext` interface acts as a **discriminated context object** — instead of function overloads or optional positional args, all inputs arrive in one bag. This keeps the call site clean and makes it easy to add new actions without changing the signature.
+- Mocking `GameActions` at the module level in tests keeps the dispatcher tests **pure routing tests** — they never touch the ECS world or game store, making them fast and isolated. This is the cleanest way to test dispatch tables in this codebase.
+`─────────────────────────────────────────────────`
+
+All done:
+
+- `game/actions/actionDispatcher.ts` — 95 lines, pure `resolveAction` + side-effecting `dispatchAction`
+- `game/actions/actionDispatcher.test.ts` — 27 tests covering all valid combos and missing-context guards
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 2056 tests, 0 failures
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,85 @@
+# Iteration 69 Log
+
+## Metadata
+
+- **Task ID**: US-069
+- **Task Title**: Implement async chunk generation
+- **Description**: As a developer, I want terrain/entity generation to run on requestIdleCallback or setTimeout so that chunk loading does not cause frame drops. See GAME_SPEC.md §6.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T13:39:55.365Z
+- **Ended At**: 2026-03-07T13:45:30.564Z
+- **Duration**: 5m 35s
+- **Input Tokens**: 92
+- **Output Tokens**: 20858
+- **Total Tokens**: 20950
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.test.ts[0m
+Now let me check the spec for the async chunk generation requirements and also look at what progress was made:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96masync|requestIdleCallback|setTimeout|async.*chunk|chunk.*async[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§6|§17|async.*gen|chunk.*async|idle|frame drop|generation.*async[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m17\.|§ ?17|section 17|Chunk|open world|streaming|async chunk|idle callback|frame drop|performance.*chunk[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 6\.|^### 6\.|^#### 6\.[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/prd.json[0m pattern: [96mUS-069|async.*chunk|requestIdleCallback|chunk.*generation.*async[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/asyncChunkGen*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mrequestIdleCallback|flushQueue|generationQueue|pendingChunk|scheduleGeneration|asyncChunk[0m
+Now I have a clear picture. Let me implement async chunk generation using the TDD approach per project rules.
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The core challenge: `generateChunkData` runs noise/heightmap computation synchronously. The fix is a **generation queue** with `requestIdleCallback` + `setTimeout` fallback. Tests need a `flushQueue()` escape hatch since neither idle callback mechanism is synchronous in Jest/Node.
+`─────────────────────────────────────────────────`
+
+Now update ChunkManager.test.ts to add async behavior tests and update existing tests to call `flushQueue()`:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.test.ts[0m "/**
+ * ChunkManager tests (Spec §17.1)
+ *
+ * Tests cover:
+ *  - Pure coordinate helpers (worldToChunkCoords, getChunksInRadius, getChunkKey)
+ *  - generateChunkData determinism and output shape
+ *  - ... (11395 chars)"
+[94m[TodoWrite][0m
+Now implement the async generation in ChunkManager.ts:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m "/**
+ * ChunkManager -- Streams 3x3 active + 5x5 buffer chunk ring around the player.
+ *
+ * Architecture (Spec §17.1):
+ *   - Chunk size: 16x16 world-space tiles
+ *   - Active ring (3x3, radius 1): ren... (11869 chars)"
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run ChunkManager tests only $ npx jest --no-coverage --testPathPattern ChunkManager 2>&1 | tail -30
+All 38 tests pass (4 new async tests + all 34 existing). Now run the full suite:
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -15
+2081 tests, 0 failures. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **Legend State stale snapshot in tests**: `const..." → "- **Legend State stale snapshot in tests**: `const..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-068" → "## 2026-03-07 - US-069
+- Added async generation qu..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- **Lazy cancellation** is the key pattern: instead of O(n) filtering the queue array when chunks go out of range, just delete from the `pendingChunks` Set. The queue item is skipped in O(1) when dequeued — the Set acts as a live "still-wanted" registry.
+- **`flushQueue()` as a test seam** follows the same philosophy as `resolveGLBPath` or `computeWalkBob` in this codebase — export a pure/synchronous escape hatch that tests can call without needing fake timer infrastructure. One consistent pattern beats multiple per-test workarounds.
+`─────────────────────────────────────────────────`
+
+**US-069 complete.** Summary:
+
+- `ChunkManager.update()` now **queues** new chunks instead of loading synchronously
+- Generation runs one chunk at a time via `requestIdleCallback` (browser) / `setTimeout(cb, 0)` (Node fallback) — yields control after each expensive chunk to prevent frame drops
+- Unloading remains synchronous (chunks removed immediately when out of range)
+- Out-of-range chunks are lazily cancelled from the pending set — no O(n) array filtering
+- `flushQueue()` and `getPendingChunkCount()` exported for test control
+- 4 new async behavior tests + all 34 existing tests updated with `flushQueue()` — **2081 tests, 0 failures**
+
+<promise>COMPLETE</promise>

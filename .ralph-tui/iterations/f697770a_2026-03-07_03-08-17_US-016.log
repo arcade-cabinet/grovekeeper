@@ -1,0 +1,43 @@
+# Iteration 16 Log
+
+## Metadata
+
+- **Task ID**: US-016
+- **Task Title**: Write Jest tests for SeededNoise
+- **Description**: As a developer, I want comprehensive tests for the SeededNoise utility so that determinism, seed variation, fBm detail, and ridged output are verified. See GAME_SPEC.md §6.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:08:17.922Z
+- **Ended At**: 2026-03-07T09:09:18.430Z
+- **Duration**: 1m 0s
+- **Input Tokens**: 55
+- **Output Tokens**: 2415
+- **Total Tokens**: 2470
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/SeededNoise*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/seededNoise*[0m
+The test file already exists. Let me verify it meets the US-016 acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seededNoise.test.ts[0m
+The tests were already written as part of US-015. The file has 26 tests (constructor: 3, perlin: 6, fbm: 5, ridged: 5, domainWarp: 6, cross-method: 1). Let me verify the quality checks still pass.
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript check $ npx tsc --noEmit 2>&1 | tail -5 && echo "TSC: OK"
+[94m[Bash][0m Run SeededNoise tests only $ npx jest --no-coverage --testPathPattern seededNoise 2>&1 | tail -20
+All 26 tests pass, `tsc --noEmit` is clean. The work was already completed in US-015.
+
+`★ Insight ─────────────────────────────────────`
+- US-016 is a **test-writing story** that was satisfied as part of US-015 implementation — the Docs > Tests > Code workflow means tests always ship with the implementation, eliminating "write tests later" stories.
+- The test suite covers all four behavioral contracts: determinism (same-seed reproducibility), isolation (different seeds diverge), range bounds ([-1,1] or [0,1]), and structural properties (Perlin lattice=0, warpStrength=0 identity).
+`─────────────────────────────────────────────────`
+
+Let me update the progress file.
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-015" → "## 2026-03-07 - US-016
+- Work already complete — `..."
+<promise>COMPLETE</promise>

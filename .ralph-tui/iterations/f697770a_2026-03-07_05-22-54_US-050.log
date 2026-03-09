@@ -1,0 +1,136 @@
+# Iteration 50 Log
+
+## Metadata
+
+- **Task ID**: US-050
+- **Task Title**: Implement InstancedMesh batching for static entities
+- **Description**: As a developer, I want same-model structures, fences, and props batched into InstancedMesh so that draw calls stay under 50. See GAME_SPEC.md §28 for performance budgets.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T11:22:54.117Z
+- **Ended At**: 2026-03-07T11:32:36.356Z
+- **Duration**: 9m 42s
+- **Input Tokens**: 130
+- **Output Tokens**: 38748
+- **Total Tokens**: 38878
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/**/*.{ts,tsx}[0m
+Let me read the relevant files to understand the current architecture.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeInstances.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/PropModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Let me also check GrassInstances and the ECS components for structures/fences/props:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrassInstances.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/structures.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/terrain.ts[0m
+Let me check the GrassInstances tests for patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrassInstances.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+Let me check the relevant spec sections:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§28|InstancedMesh|draw call|instanc[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mperformance|draw call|instanc|budget|§28[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 28|Performance|InstancedMesh|Instanced[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## [0-9]+\. Performance|## [0-9]+\. Rendering|instanced|batch[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 39|## 38|## 37|Performance Budget|draw call[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit,Write[0m
+`★ Insight ─────────────────────────────────────`
+The GrassInstances pattern is the key reference — outer component tracks `Map<modelPath, capacity>` state (grows-only, prevents GPU re-uploads), inner sub-component calls `useGLTF` unconditionally and updates matrices imperatively in `useFrame` with zero re-renders per frame. For structures/fences/props we need multi-mesh GLB support: traverse scene and create one InstancedMesh per sub-mesh, all sharing the same per-entity transform.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m edit: "/** Unified entity definition — all components opt..." → "/** Unified entity definition — all components opt..."
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StaticInstances.tsx[0m "/**
+ * StaticInstances — shared InstancedMesh batching primitive for static GLB entities.
+ *
+ * Exported:
+ *   - StaticEntityInput — minimal shape for an entity to be batched
+ *   - groupByModelPath  ... (5539 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureInstances.tsx[0m "/**
+ * StructureInstances — batches all ECS structure entities by modelPath into InstancedMesh.
+ *
+ * Groups structures by structure.modelPath and mounts one StaticModelInstances
+ * sub-component per ... (3254 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceInstances.tsx[0m "/**
+ * FenceInstances — batches all ECS fence entities by modelPath into InstancedMesh.
+ *
+ * Fence segments placed along a fence line all use the same GLB (e.g., wooden_fence_closed).
+ * Batching the... (3317 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/PropInstances.tsx[0m "/**
+ * PropInstances — batches all ECS prop entities that have a modelPath into InstancedMesh.
+ *
+ * World props (barrels, haybales, traps, weapons, misc) are batched by modelPath.
+ * Props without a ... (3131 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `groupByModelPath` pure function is the primary testable seam here — it has no WebGL dependencies and can be exercised with plain objects. The component tests follow the GrassInstances pattern: mock `@react-three/drei`, `@react-three/fiber`, and `@/game/ecs/world`, then just verify the component is a function. This keeps tests fast and focused on what's actually testable without a full R3F context.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StaticInstances.test.ts[0m "/**
+ * Tests for StaticInstances — shared InstancedMesh batching primitive (Spec §28).
+ *
+ * Tests pure functions without WebGL/R3F context.
+ */
+
+jest.mock("@react-three/drei", () => ({
+  useGLTF: jes... (5964 chars)"
+Now write the component-specific test files:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureInstances.test.ts[0m "/**
+ * Tests for StructureInstances — ECS structure batching via InstancedMesh (Spec §28).
+ */
+
+jest.mock("@react-three/drei", () => ({
+  useGLTF: jest.fn().mockReturnValue({
+    scene: { traverse: je... (914 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/FenceInstances.test.ts[0m "/**
+ * Tests for FenceInstances — ECS fence batching via InstancedMesh (Spec §28).
+ */
+
+jest.mock("@react-three/drei", () => ({
+  useGLTF: jest.fn().mockReturnValue({
+    scene: { traverse: jest.fn() ... (870 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/PropInstances.test.ts[0m "/**
+ * Tests for PropInstances — ECS prop batching via InstancedMesh (Spec §28).
+ */
+
+jest.mock("@react-three/drei", () => ({
+  useGLTF: jest.fn().mockReturnValue({
+    scene: { traverse: jest.fn() },... (859 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+[94m[Bash][0m Run new InstancedMesh batching tests $ npx jest --no-coverage --testPathPattern "StaticInstances|StructureInstances|FenceInstances|PropInst...
+20 tests pass. Let me verify the full test suite is still clean:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -15
+1813 tests, all passing (+20 new). TypeScript clean. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-049" → "---
+
+## 2026-03-07 - US-050
+- Implemented Instance..."
+Also add the key reusable patterns to the top of progress.md:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "- **species.json glbPath field**: Added `glbPath: ..." → "- **species.json glbPath field**: Added `glbPath: ..."
+[94m[TodoWrite][0m
+All acceptance criteria met:
+
+- **Batch same-model structures/fences/props into InstancedMesh** — `StructureInstances`, `FenceInstances`, `PropInstances` each group entities by `modelPath` and create one InstancedMesh cluster per distinct model
+- **Draw call count < 50** — 20 barns + 5 windmills = 2 clusters (not 25); a 40-fence line = 1 cluster; all driven by `setModelCapacities` state
+- **`npx tsc --noEmit` passes** ✓  
+- **`npx jest --no-coverage` passes** — 1813 tests, 0 failures ✓
+
+`★ Insight ─────────────────────────────────────`
+The `entitiesRef` approach is the key architectural choice: the outer component clears and repopulates per-modelPath `MutableRefObject<StaticEntityInput[]>` arrays inside `useFrame`, and the inner component reads from its ref slot also in `useFrame`. This creates a two-phase imperative update per frame — zero React state changes, zero component re-renders at runtime. The `setModelCapacities` state only triggers when a new model type appears or capacity needs to grow (rare events), not every frame.
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

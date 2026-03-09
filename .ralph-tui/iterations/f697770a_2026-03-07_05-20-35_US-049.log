@@ -1,0 +1,65 @@
+# Iteration 49 Log
+
+## Metadata
+
+- **Task ID**: US-049
+- **Task Title**: Write Jest tests for structure rendering logic
+- **Description**: As a developer, I want tests for structure rendering so that templateId-to-modelPath resolution, placement snapping, and spacing validation are verified. See GAME_SPEC.md §14.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T11:20:35.219Z
+- **Ended At**: 2026-03-07T11:22:52.993Z
+- **Duration**: 2m 17s
+- **Input Tokens**: 71
+- **Output Tokens**: 6420
+- **Total Tokens**: 6491
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*structure*"[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*[Ss]tructure*[0m
+Let me read the existing structure-related files to understand what's already implemented and what needs testing.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.tsx[0m
+Now let me look at the placement and spacing systems:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/structurePlacement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/structurePlacement.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/structures/StructureManager.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/structures.json[0m
+The work for US-049 is already complete. Let me verify the counts:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.test.ts[0m pattern: [96m^\s+it\([0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/structurePlacement.test.ts[0m pattern: [96m^\s+it\([0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run structure-related tests $ npx jest --no-coverage --testPathPattern "StructureModel|structurePlacement" 2>&1 | tail -20
+`★ Insight ─────────────────────────────────────`
+The work for US-049 was already done across prior tasks — `StructureModel.test.ts` (18 tests for templateId→modelPath resolution, created in US-046) and `structurePlacement.test.ts` (19 tests for grid snapping + spacing validation) both existed and pass. US-049's acceptance criteria is fully satisfied by these files combined.
+`─────────────────────────────────────────────────`
+
+All 37 tests pass. The acceptance criteria is fully met:
+
+| Criterion | Evidence |
+|---|---|
+| 6+ tests for structure rendering logic | 18 in `StructureModel.test.ts` + 19 in `structurePlacement.test.ts` = 37 |
+| templateId-to-modelPath resolution | `resolveStructureGLBPath` — 18 tests |
+| placement snapping | `snapToGrid` — 2 tests in `structurePlacement.test.ts` |
+| spacing validation | `hasSpacingConflict` — 3 tests in `structurePlacement.test.ts` |
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-048" → "---
+
+## 2026-03-07 - US-049
+- Work already complet..."
+The work for US-049 was already complete from prior iterations. All 37 tests pass:
+
+- **`StructureModel.test.ts`** — 18 tests for `resolveStructureGLBPath` (templateId-to-modelPath resolution, created in US-046)
+- **`structurePlacement.test.ts`** — 19 tests for `snapToGrid` (placement snapping), `hasSpacingConflict` (spacing validation), `canPlace`, and the effect system
+
+<promise>COMPLETE</promise>

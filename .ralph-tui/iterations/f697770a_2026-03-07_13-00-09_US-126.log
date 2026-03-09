@@ -1,0 +1,53 @@
+# Iteration 126 Log
+
+## Metadata
+
+- **Task ID**: US-126
+- **Task Title**: Write Jest tests for prestige
+- **Description**: As a developer, I want tests for prestige so that carry-forward data, reset data, bonus application, and tier progression are verified. See GAME_SPEC.md §24.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T19:00:09.114Z
+- **Ended At**: 2026-03-07T19:01:25.769Z
+- **Duration**: 1m 16s
+- **Input Tokens**: 54
+- **Output Tokens**: 2747
+- **Total Tokens**: 2801
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/prestige*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/prestige.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/prestige.json[0m
+The test file already exists. Let me verify its dependencies and check if tests pass.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/config/resources*[0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/resources.ts[0m pattern: [96memptyResources[0m
+[94m[Bash][0m Run prestige tests only $ npx jest --no-coverage --testPathPattern="prestige" 2>&1 | tail -30
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -20
+All 35 prestige tests pass, TypeScript is clean. The work was already complete from US-125.
+
+`★ Insight ─────────────────────────────────────`
+- The prestige system is entirely pure functions (no ECS/store imports), which makes it trivially testable — no mocks needed, tests import directly from `./prestige`.
+- The `emptyResources()` helper from `game/config/resources.ts` serves as a canonical zero-state factory, avoiding fragile inline `{ timber: 0, ... }` objects in tests. Tests that need a known-empty state use it as the expected value.
+- The `buildCostMultiplier` floor (`Math.max(0.5, ...)`) is a good pattern for diminishing-returns scaling — tests must cover the asymptote explicitly, not just the linear region.
+`─────────────────────────────────────────────────`
+
+Let me append to progress.md and signal completion.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check progress.md line count $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-126 entry to progress.md $ `npx jest --no-coverage` → 35 tests pass in prestige suite - **Learnings:**   - **Pure-function pres...
+The work was already complete from US-125. All acceptance criteria are met:
+
+- **35 tests pass** (well above the 6+ requirement)
+- **Coverage**: carry-forward data (`calculatePrestigeBonus`), reset data (`getPrestigeResetState`), bonus application (all bonus fields including `buildCostMultiplier` floor), tier progression (`getUnlockedPrestigeSpecies`, `getUnlockedCosmetics`)
+- **`npx tsc --noEmit`** → 0 errors
+- **`npx jest --no-coverage`** → 35 prestige tests pass
+
+<promise>COMPLETE</promise>

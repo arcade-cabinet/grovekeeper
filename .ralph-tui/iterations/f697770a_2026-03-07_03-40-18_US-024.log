@@ -1,0 +1,93 @@
+# Iteration 24 Log
+
+## Metadata
+
+- **Task ID**: US-024
+- **Task Title**: Implement delta-only persistence
+- **Description**: As a developer, I want to save only player-modified chunks so that unexplored areas require zero storage. On revisit: regenerate from seed, apply diffs. See GAME_SPEC.md §6 for persistence requirement...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:40:18.537Z
+- **Ended At**: 2026-03-07T09:45:41.785Z
+- **Duration**: 5m 23s
+- **Input Tokens**: 432
+- **Output Tokens**: 19531
+- **Total Tokens**: 19963
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+Let me read the persistence section of the spec and the existing relevant files.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§26|## 26|Save and Persistence|delta|persistence[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/stores/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/vegetation.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+Now I have full context. Let me set up the todos and implement.
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- Delta-only persistence is the key innovation: unexplored chunks cost zero storage because they're regenerated from seed. Only chunks the player actually modifies get diff entries.
+- Legend State observables work in-memory (no SQLite needed) in tests — the same `chunkDiffs$` observable used in production can be directly reset via `clearAllChunkDiffs()` in `beforeEach`.
+- The diff `apply` function must reconstruct the full `TreeComponent` struct with all required fields even though the diff only stores a minimal subset — defaults fill the gaps.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/chunkPersistence.ts[0m "/**
+ * chunkPersistence -- Delta-only chunk state persistence (Spec §26.2).
+ *
+ * Architecture:
+ *   - Only player-modified chunks get delta entries.
+ *   - Unexplored chunks regenerate from seed = ze... (4535 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/chunkPersistence.test.ts[0m "/**
+ * chunkPersistence tests (Spec §26.2)
+ *
+ * Verifies delta-only chunk storage: only modified chunks are saved,
+ * unmodified chunks cost zero storage, and applying a diff restores
+ * player-plant... (9386 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run chunkPersistence tests $ npx jest --no-coverage --testPathPattern chunkPersistence 2>&1
+All 28 tests pass. Now verify the full suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -10
+82 suites, 1423 tests, 0 failures (up from 81/1395 before this story).
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The `chunkDiffs$` observable is module-level singleton state — tests must call `clearAllChunkDiffs()` in `beforeEach` or they'll bleed state across test cases. The same pattern applies to the ECS `world`.
+- Using `chunkDiffs$.peek()` (read without subscribing) is the correct pattern for imperative access in non-React code. Never call `.get()` outside a reactive context — it creates unintended subscriptions.
+- `recordPlantedTree` follows the "accumulate into existing diff" pattern: it reads the current diff, appends the new tree, and writes back atomically. This avoids race conditions from concurrent modifications.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-023" → "---
+
+## 2026-03-07 - US-024
+- Created `game/world/..."
+[94m[TodoWrite][0m
+US-024 is complete. Here's a summary:
+
+**Files created:**
+- `game/world/chunkPersistence.ts` — delta-only persistence layer with `PlantedTree`, `ChunkDiff`, `chunkDiffs$` observable, and all CRUD + `applyChunkDiff` functions
+- `game/world/chunkPersistence.test.ts` — 28 tests covering all acceptance criteria
+
+**Acceptance criteria met:**
+- `game/world/chunkPersistence.ts` exists ✓
+- Only player-modified chunks are saved (unmodified = zero `chunkDiffs$` entries) ✓
+- Diffs stored in Legend State observable ✓
+- Plant tree → leave chunk → return = tree restored via `applyChunkDiff` (round-trip test passes) ✓
+- `npx tsc --noEmit` → 0 errors ✓
+- `npx jest --no-coverage` → 82 suites, 1423 tests, 0 failures ✓
+
+<promise>COMPLETE</promise>

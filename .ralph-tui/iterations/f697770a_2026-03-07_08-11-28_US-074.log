@@ -1,0 +1,111 @@
+# Iteration 74 Log
+
+## Metadata
+
+- **Task ID**: US-074
+- **Task Title**: Implement procedural village generation
+- **Description**: As a developer, I want villages of 3-8 buildings from structure GLBs with seeded layout, NPC entities, and a campfire fast-travel point so that the world has settlements. See GAME_SPEC.md §6.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T14:11:28.961Z
+- **Ended At**: 2026-03-07T14:17:50.884Z
+- **Duration**: 6m 21s
+- **Input Tokens**: 121
+- **Output Tokens**: 23008
+- **Total Tokens**: 23129
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/entitySpawner.ts[0m
+Now let me read the ChunkManager to understand wiring patterns, and check the spec and ECS components:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mvillage|§6|building|campfire|NPC.*schedule|schedule.*NPC[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 6\.|^### 6\.|Village|village.*gen|§6[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+Let me check the structures/building components and the npcs.json config:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/structures.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/npcs.json[0m
+Let me check the spec section on world generation more carefully, and also look at the pathGenerator test for patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 31\.|^### 31\.|village.*layout|building.*glb|structure.*GLB|NPC.*spawn|village.*NPC[0m
+Let me look at the specific GAME_SPEC.md section on villages and features more carefully:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 19\.|^### 19\.|^## 20\.|village.*3-8|building.*count|3.*8.*building[0m
+Let me check structures config and the existing ECS world to understand entity types:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/structures*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/structures.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/procedural.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+Now I have everything I need. Let me check what `scopedRNG` exports to confirm the signature:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils[0m pattern: [96mexport.*scopedRNG|export.*function scopedRNG[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Edit[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The village generator follows the same **pure function + placement result** pattern as `pathGenerator.ts` and `entitySpawner.ts` — each returns typed placement structs, and ChunkManager imperatively adds ECS entities from them. The `generateVillage` function guards internally (returns `null` for non-village chunks), which means ChunkManager can call it unconditionally — same pattern as `generatePathsForChunk`.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/villageGenerator.ts[0m "/**
+ * villageGenerator -- Generates buildings, NPCs, and campfire for
+ * village-type landmark chunks.
+ *
+ * Spec §19.3 (Procedural NPCs) + §31.1 (landmark village chunks).
+ *
+ * Village layout:
+ *  ... (9942 chars)"
+[94m[TodoWrite][0m
+Now writing the tests:
+
+`★ Insight ─────────────────────────────────────`
+The test structure mirrors `pathGenerator.test.ts` exactly: pure function tests grouped by exported function, a flat `SIZE=16` helper, and determinism assertions at the end. Tests reference the spec section in describe labels so failures are immediately traceable.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/villageGenerator.test.ts[0m "/**
+ * villageGenerator.test.ts
+ * Spec §19.3 — Procedural village buildings, NPCs, and campfire placement.
+ */
+
+import {
+  generateVillage,
+  type VillageGenerationResult,
+} from "./villageGenerator"... (9076 chars)"
+[94m[TodoWrite][0m
+Now wire into ChunkManager:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "import { generatePathsForChunk } from "./pathGener..." → "import { generatePathsForChunk } from "./pathGener..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "import { generatePathsForChunk } from "./pathGener..." → "import { generatePathsForChunk } from "./pathGener..."
+Now add the village generation call in `loadChunk`, right after the path generation block:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m edit: "    // Spawn biome-appropriate vegetation and terr..." → "    // Generate village buildings, NPCs, and campf..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run villageGenerator tests only $ npx jest --no-coverage --testPathPattern="villageGenerator" 2>&1 | tail -40
+All 26 tests pass. Now run the full test suite:
+[94m[Bash][0m Run full jest suite $ npx jest --no-coverage 2>&1 | tail -15
+113 suites, 2200 tests — all passing. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-073" → "## 2026-03-07 - US-074
+- Created `game/world/villa..."
+[94m[TodoWrite][0m
+All acceptance criteria met:
+
+- `game/world/villageGenerator.ts` — new pure generator
+- 3-8 buildings from structure GLBs (12-template pool), seeded radial layout
+- 2-4 NPC entities with 4-entry daily schedules (wake/work/wander/sleep)
+- Campfire at village center with `fastTravelId = "village-{chunkX}-{chunkZ}"`
+- Fully deterministic from seed
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 2200 tests, 0 failures (113 suites)
+
+`★ Insight ─────────────────────────────────────`
+The **null-guard pattern** in `generateVillage` means ChunkManager can call it unconditionally on every chunk load — the function self-guards via `getLandmarkType` check. This matches `generatePathsForChunk`'s early-return design and avoids conditional logic scattered across the caller. The village campfire's `fastTravelId: "village-${chunkX}-${chunkZ}"` is a stable, self-describing key that embeds chunk location directly — no global registry needed for fast-travel lookups.
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

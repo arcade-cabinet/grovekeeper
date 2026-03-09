@@ -1,0 +1,94 @@
+{
+  "dayLengthSeconds": 600,
+  "secondsPerHour": 25,
+  "daysPerSeason": 7,
+  "seasons": ["spring", "summer", "autumn", "winter"],
+  "timeSlots": {
+    "dawn": { "hourStart": 5, "hourEnd": 7 },
+    "morning": { "hourStart": 7, "hourEnd": 11 },
+    "noon": { "hourStart": 11, "hourEnd": 13 },
+    "afternoon": { "hourStart": 13, "hourEnd": 17 },
+    "dusk": { "hourStart": 17, "hourEnd": 19 },
+    "evening": { "hourStart": 19, "hourEnd": 21 },
+    "night": { "hourStart": 21, "hourEnd": 23 },
+    "midnight": { "hourStart": 23, "hourEnd": 5 }
+  },
+  "lighting": {
+    "dawn": {
+      "ambientColor": "#FFB347",
+      "ambientIntensity": 0.3,
+      "directionalColor": "#FF7F50",
+      "directionalIntensity": 0.4,
+      "shadowOpacity": 0.3
+    },
+    "morning": {
+      "ambientColor": "#FFF8E7",
+      "ambientIntensity": 0.7,
+      "directionalColor": "#FFFDE7",
+      "directionalIntensity": 0.9,
+      "shadowOpacity": 0.8
+    },
+    "noon": {
+      "ambientColor": "#FFFFFF",
+      "ambientIntensity": 1.0,
+      "directionalColor": "#FFFFFF",
+      "directionalIntensity": 1.0,
+      "shadowOpacity": 1.0
+    },
+    "afternoon": {
+      "ambientColor": "#FFF3CD",
+      "ambientIntensity": 0.85,
+      "directionalColor": "#FFE4B5",
+      "directionalIntensity": 0.9,
+      "shadowOpacity": 0.9
+    },
+    "dusk": {
+      "ambientColor": "#FF6B35",
+      "ambientIntensity": 0.4,
+      "directionalColor": "#FF4500",
+      "directionalIntensity": 0.5,
+      "shadowOpacity": 0.3
+    },
+    "evening": {
+      "ambientColor": "#3D1C8C",
+      "ambientIntensity": 0.2,
+      "directionalColor": "#4169E1",
+      "directionalIntensity": 0.2,
+      "shadowOpacity": 0.0
+    },
+    "night": {
+      "ambientColor": "#0A0A2A",
+      "ambientIntensity": 0.1,
+      "directionalColor": "#7EC8E3",
+      "directionalIntensity": 0.1,
+      "shadowOpacity": 0.0
+    },
+    "midnight": {
+      "ambientColor": "#050520",
+      "ambientIntensity": 0.05,
+      "directionalColor": "#B0C4DE",
+      "directionalIntensity": 0.08,
+      "shadowOpacity": 0.0
+    }
+  },
+  "starIntensity": {
+    "dawn": 0.2,
+    "morning": 0.0,
+    "noon": 0.0,
+    "afternoon": 0.0,
+    "dusk": 0.3,
+    "evening": 0.7,
+    "night": 1.0,
+    "midnight": 1.0
+  },
+  "skyColors": {
+    "dawn": { "zenith": "#4a6fa1", "horizon": "#e8a87c" },
+    "morning": { "zenith": "#5b8fd4", "horizon": "#fce4b0" },
+    "noon": { "zenith": "#87ceeb", "horizon": "#e0f0ff" },
+    "afternoon": { "zenith": "#6ab0d8", "horizon": "#f7d59a" },
+    "dusk": { "zenith": "#6a4c93", "horizon": "#e07050" },
+    "evening": { "zenith": "#1a1a4a", "horizon": "#3a2060" },
+    "night": { "zenith": "#0b1a3e", "horizon": "#1a2f5a" },
+    "midnight": { "zenith": "#050515", "horizon": "#0b1020" }
+  }
+}

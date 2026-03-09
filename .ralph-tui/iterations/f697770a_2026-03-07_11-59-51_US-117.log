@@ -1,0 +1,274 @@
+# Iteration 117 Log
+
+## Metadata
+
+- **Task ID**: US-117
+- **Task Title**: Update BuildPanel for radial category selection
+- **Description**: As a player, I want the existing BuildPanel.tsx (176 lines) updated with radial category selection, piece list with build cost display, and 44px touch targets so that building is intuitive in FPS view...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T17:59:51.420Z
+- **Ended At**: 2026-03-07T18:10:21.811Z
+- **Duration**: 10m 30s
+- **Input Tokens**: 192
+- **Output Tokens**: 37037
+- **Total Tokens**: 37229
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,Glob,TodoWrite[0m
+[94m[Skill][0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/building.json[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.tsx[0m
+Good. Now let me read the RadialActionMenu (it already has radial UI code I can reference), ToolWheel, the structures types, and any existing BuildPanel tests.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/RadialActionMenu.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/ToolWheel.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game[0m pattern: [96m**/*.test.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/structures/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/structures/types.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*BuildPanel*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbashing*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/kitbashing/**/*[0m
+[94m[Bash][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Bash failed due to the following issues:
+The required parameter `command` is missing
+An unexpected parameter `cmd` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Bash,Grep[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§14|## 14\.|# 14\.|Section 14|kitbash|BuildPanel|build.*panel|piece.*category|category.*piece[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing/unlocks.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 35\.|### 35\.|kitbash|BuildPanel|radial.*categor|piece.*list|build.*UI|build.*panel|category.*select[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m
+Now let me read the actual spec section for Build UI (§35.4):
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mBuildPanel|buildPanel[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Let me quickly check the GameUI context around templates and the game store:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96msetBuildMode|structureTemplates|buildMode[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96m**/*.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*.test.tsx[0m
+Let me check one of the existing game tests to understand the pattern:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/kitbashing.test.ts[0m
+Now I have everything needed. Let me implement.
+
+`★ Insight ─────────────────────────────────────`
+- The BuildPanel needs a two-step navigation: category wheel → piece list. The `RadialActionMenu` component already has the radial positioning math — I'll embed the same pattern inside the modal (no Animated, since it's inside a sheet not floating).
+- Pure functions extracted as named exports (`getPiecesForCategory`, `getBuildCost`, `canAffordPiece`, `isPieceLocked`, `getPieceUnlockLevel`) serve as testable seams — same pattern used in `kitbashing/` and `TreeInstances`.
+- Material unlock is independent from piece unlock — the effective lock level is `max(unlockLevels[piece], materialUnlockLevels[material])`, both from `building.json`.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m "/**
+ * BuildPanel -- Kitbashing piece picker with radial category selection.
+ *
+ * Two-step navigation: radial category wheel → scrollable piece list per
+ * category. Categories derived from GAME_SPEC... (13358 chars)"
+Now update GameUI.tsx to use the new props:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+
+[91m[Error: <tool_use_error>InputValidationError: Edit failed due to the following issues:
+The required parameter `old_string` is missing
+The required parameter `new_string` is missing
+An unexpected parameter `old_str` was provided
+An unexpected parameter `new_str` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m edit: "      <BuildPanel
+        open={buildPanelOpen}
+  ..." → "      <BuildPanel
+        open={buildPanelOpen}
+  ..."
+Now check for unused imports in GameUI.tsx:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m pattern: [96mstructureTemplates|getAvailableTemplates|StructureManager[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m edit: "  // Structure templates available at current leve..." → "  // Trade rates"
+Now update the components/game/index.ts to update the re-exported types:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m pattern: [96mBuildPanel[0m
+Good, no changes needed to index.ts since the props interface name is still `BuildPanelProps`. Now write the tests:
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m "/**
+ * BuildPanel pure-function tests. Spec §35.4 -- Build UI.
+ *
+ * Tests the exported seams: category mapping, cost lookup,
+ * affordability check, unlock level calculation, and lock guard.
+ * No Re... (5999 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+[94m[Bash][0m Run BuildPanel tests $ npx jest --no-coverage components/game/BuildPanel.test.ts 2>&1
+
+[91m[Error: Exit code 1
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL components/game/BuildPanel.test.ts
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@rn-primitives/slot/dist/index.js:52
+        return React.cloneElement(isTextChildren(children) ? <></> : children, {
+                                                             ^
+
+    SyntaxError: Unexpected token '<'
+
+    > 1 | import * as Slot from "@rn-primitives/slot";
+        | ^
+      2 | import { cva, type VariantProps } from "class-variance-authority";
+      3 | import * as React from "react";
+      4 | import { Platform, Text as RNText, type Role } from "react-native";
+
+      at Runtime.createScriptFromCode (node_modules/jest-runtime/build/index.js:1505:14)
+      at Object.require (components/ui/text.tsx:1:1)
+      at Object.require (components/game/BuildPanel.tsx:13:1)
+      at Object.<anonymous> (components/game/BuildPanel.test.ts:9:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.344 s
+Ran all test suites matching /components\/game\/BuildPanel.test.ts/i.][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mjest.config*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+The issue is the test imports `BuildPanel.tsx` which chains through `@rn-primitives/slot` (not in the transform list). I need to mock the React Native dependencies in the test:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m edit: "/**
+ * BuildPanel pure-function tests. Spec §35.4 ..." → "/**
+ * BuildPanel pure-function tests. Spec §35.4 ..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m edit: "/**
+ * BuildPanel pure-function tests. Spec §35.4 ..." → "/**
+ * BuildPanel pure-function tests. Spec §35.4 ..."
+[94m[Bash][0m Run BuildPanel tests with mocks $ npx jest --no-coverage components/game/BuildPanel.test.ts 2>&1
+
+[91m[Error: Exit code 1
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL components/game/BuildPanel.test.ts
+  ● Test suite failed to run
+
+    TypeError: Cannot read properties of undefined (reading 'getColorScheme')
+
+      13 | import { Text } from "@/components/ui/text";
+      14 | import type { MaterialType, PieceType } from "@/game/ecs/components/building";
+    > 15 | import buildingConfig from "@/config/game/building.json";
+         |                                                          ^
+      16 |
+      17 | // ---------------------------------------------------------------------------
+      18 | // Category definitions (Spec §35.2)
+
+      at Object.<anonymous> (node_modules/react-native-css-interop/src/runtime/native/appearance-observables.ts:16:14)
+      at Object.<anonymous> (node_modules/react-native-css-interop/src/runtime/native/api.ts:17:1)
+      at Object.<anonymous> (node_modules/react-native-css-interop/src/runtime/api.native.ts:1:1)
+      at Object.<anonymous> (node_modules/react-native-css-interop/src/runtime/wrap-jsx.ts:2:1)
+      at Object.<anonymous> (node_modules/react-native-css-interop/src/runtime/jsx-runtime.ts:5:1)
+      at Object.require (components/game/BuildPanel.tsx:15:58)
+      at Object.require (components/game/BuildPanel.test.ts:21:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.288 s
+Ran all test suites matching /components\/game\/BuildPanel.test.ts/i.][0m
+The JSX runtime from `react-native-css-interop` is the deeper issue. Let me check the jest setup and look at how other tests handle this:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.setup.ts[0m
+The root cause is `react-native-css-interop`'s JSX runtime being loaded when processing the `.tsx` file. The clean solution is to extract the pure functions to a separate `.ts` file (no JSX):
+
+`★ Insight ─────────────────────────────────────`
+- When pure logic is co-located in a `.tsx` file, Jest can't import just the logic without triggering the full JSX runtime chain — `react-native-css-interop` runs `Appearance.getColorScheme()` at module init. Extracting to a plain `.ts` utility file breaks the dependency chain entirely.
+- This is the same "testable seam" pattern as `resolveGLBPath` — pure functions live in a `.ts` file, component imports from it, tests import from it directly, bypassing all UI module initialization.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/buildPanelUtils.ts[0m "/**
+ * BuildPanel pure utility functions. Spec §35.4 -- Build UI.
+ *
+ * Extracted to a plain .ts file (no JSX) so Jest can import them
+ * without triggering the react-native-css-interop JSX runtime ch... (2949 chars)"
+Now update `BuildPanel.tsx` to import from the utils file and re-export the pure functions:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m "/**
+ * BuildPanel -- Kitbashing piece picker with radial category selection.
+ *
+ * Two-step navigation: radial category wheel → scrollable piece list per
+ * category. Categories derived from GAME_SPEC... (11320 chars)"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.tsx[0m
+[94m[Bash][0m Rewrite BuildPanel.tsx to import pure functions from buildPanelUtils.ts $ } ENDOFFILE
+Now update the test to import from the utils file directly:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/BuildPanel.test.ts[0m edit: "/**
+ * BuildPanel pure-function tests. Spec §35.4 ..." → "/**
+ * BuildPanel pure-function tests. Spec §35.4 ..."
+[94m[Bash][0m Run BuildPanel tests $ npx jest --no-coverage components/game/BuildPanel.test.ts 2>&1
+27/27 tests pass. Now run tsc and full jest:
+[94m[Bash][0m TypeScript check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Full jest run $ npx jest --no-coverage 2>&1 | tail -20
+135/135 suites, 2971/2971 tests, tsc clean. Now document learnings:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-117 learnings to progress.md $ buttons use `position: absolute` with left/top offsets from the anchor.   - **Effective unlock level...
+Also add the key pattern to the top `## Codebase Patterns` section:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## Codebase Patterns (Study These First)
+
+- **jsdo..." → "## Codebase Patterns (Study These First)
+
+- **JSX ..."
+[94m[TodoWrite][0m
+All done. Here's a summary of what was built:
+
+---
+
+**US-117 complete.** Files changed:
+
+| File | Change |
+|------|--------|
+| `components/game/BuildPanel.tsx` | Full rewrite — radial category wheel + piece list, new `BuildPanelProps` |
+| `components/game/buildPanelUtils.ts` | **New** — pure functions extracted for testability |
+| `components/game/BuildPanel.test.ts` | **New** — 27 tests covering all 5 pure functions |
+| `components/game/GameUI.tsx` | Updated to new `playerLevel`/`onSelectPiece` props, removed unused `structureTemplates` |
+
+**Key design decisions:**
+- **Two-step navigation**: radial category wheel (6 categories at 60° intervals, RING_RADIUS=68, BUTTON_SIZE=52px) → scrollable piece+material list
+- **Categories** from GAME_SPEC §35.2: Foundation, Walls, Roofs, Doors, Stairs, Utility — mapping to `PieceType` values from building.json
+- **Effective unlock level** = `max(unlockLevels[piece], materialUnlockLevels[material])` — locked pieces show 🔒 + level
+- **Pure functions in `.ts` file** (`buildPanelUtils.ts`) — avoids the `react-native-css-interop` JSX runtime chain that crashes tests when importing `.tsx`
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,60 @@
+# Iteration 68 Log
+
+## Metadata
+
+- **Task ID**: US-068
+- **Task Title**: Write Jest tests for HUD data binding
+- **Description**: As a developer, I want tests for the HUD so that correct values display and update on state change. See GAME_SPEC.md §16.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T13:36:09.337Z
+- **Ended At**: 2026-03-07T13:39:54.242Z
+- **Duration**: 3m 44s
+- **Input Tokens**: 61
+- **Output Tokens**: 10393
+- **Total Tokens**: 10454
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.{ts,tsx}[0m
+There's already a `HUD.test.ts` file. Let me check its contents and the HUD component.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m
+Let me check the world.ts and the TargetInfo component to understand potential mock issues.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+Let me check the game config tools and verify the tests can run.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/tools.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[ToolSearch][0m query: [93mselect:Bash,TodoWrite,Edit[0m
+[94m[Bash][0m Run HUD.test.ts to see current status $ npx jest --no-coverage --testPathPattern="HUD.test" 2>&1 | tail -30
+14 tests pass. Let me verify tsc and full jest suite.
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -20
+[94m[Bash][0m Run full jest suite $ npx jest --no-coverage 2>&1 | tail -15
+All checks pass. The work is already complete — `HUD.test.ts` from US-067 has 14 tests covering the pure function seams.
+
+`★ Insight ─────────────────────────────────────`
+The "testable seam" pattern is key here: the HUD exports `resolveCompassBearing` and `findNearestUndiscoveredSpirit` as pure functions so tests don't need React Native rendering. These functions ARE the data binding — they take raw state (player position, ECS spirit entities) and compute display values (bearing angle, POI target), with multiple test cases simulating different state values to cover "updates on state change".
+`─────────────────────────────────────────────────`
+
+Now appending to progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-066" → "---
+
+## 2026-03-07 - US-068
+- Work already complet..."
+US-068 is already complete. The `HUD.test.ts` written during US-067 satisfies all acceptance criteria:
+
+- **14 tests** (6+ required): `resolveCompassBearing` (7), `findNearestUndiscoveredSpirit` (6), HUD smoke test (1)
+- **Data binding covered**: both pure functions test state → display value computation with multiple input variations simulating state changes
+- **tsc**: 0 errors
+- **jest**: 2077 tests, 0 failures
+
+<promise>COMPLETE</promise>

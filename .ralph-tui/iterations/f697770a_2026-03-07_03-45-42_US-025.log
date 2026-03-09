@@ -1,0 +1,101 @@
+# Iteration 25 Log
+
+## Metadata
+
+- **Task ID**: US-025
+- **Task Title**: Create InputManager with InputFrame interface
+- **Description**: As a developer, I want an InputManager singleton with a well-defined InputFrame interface (moveX, moveZ, lookDeltaX, lookDeltaY, jump, interact, toolSwap, sprint) so that game code reads unified input...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:45:42.905Z
+- **Ended At**: 2026-03-07T09:49:24.149Z
+- **Duration**: 3m 41s
+- **Input Tokens**: 39444
+- **Output Tokens**: 12766
+- **Total Tokens**: 52210
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,TodoWrite[0m
+[94m[Skill][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Glob,Grep,Bash[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/input/**/*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mInputManager|InputFrame[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.ts[0m pattern: [96mInputManager|InputFrame[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§10|## 10|# 10|input system|InputSystem|input-system[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 23\. Input|## 23 Input|Input System|moveX|lookDeltaX|InputFrame[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## 23\. Input System[0m
+Let me also check the architecture doc and existing PlayerGovernor reference:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture[0m
+
+[91m[Error: EISDIR: illegal operation on a directory, read '/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture'][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.ts[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mdocs/architecture/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.ts[0m
+Good - `InputManager` doesn't exist yet. Let me read the architecture doc and check the jest config:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/architecture/input-system.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mjest.config*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+`★ Insight ─────────────────────────────────────`
+- The architecture doc (§23) defines `InputFrame` with `useTool/altAction/pause/toolSlot/toolCycle` but the US-025 acceptance criteria specifies `jump/interact/toolSwap/sprint` — the US is a simplified bootstrap, not the full architecture
+- The arch doc says to split `InputActions.ts` (interface) from `InputManager.ts` (class) — I'll follow that since it's spec'd
+- TDD rule: write the test first, watch it fail, then implement
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+Writing the test file first (RED phase):
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.test.ts[0m "/**
+ * InputManager tests (Spec §23)
+ *
+ * Tests the InputFrame interface and InputManager singleton.
+ * Follows the architecture spec: game code reads an InputFrame per tick,
+ * never raw events.
+ */... (5865 chars)"
+Now verify it fails (RED):
+[94m[Bash][0m Run InputManager tests to confirm RED failure $ npx jest --no-coverage game/input/InputManager.test.ts 2>&1 | tail -20
+Tests fail: module not found. Expected RED. Now implementing (GREEN phase):
+
+`★ Insight ─────────────────────────────────────`
+- Splitting `IInputProvider` and `InputFrame` into the same file as `InputManager` avoids circular imports between `InputActions.ts` and `InputManager.ts` — the architecture's separation makes sense once providers grow, but at bootstrap it's cleaner together
+- `toolSwap` as `number` (not boolean) gives directional semantics: `+1` = next slot, `-1` = prev, `0` = no change — same pattern as `toolCycle` in the full arch doc
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/input/InputManager.ts[0m "/**
+ * InputManager -- Unified input polling system (Spec §23)
+ *
+ * Game code NEVER reads raw events. It reads an InputFrame per tick,
+ * merged from all registered providers.
+ *
+ * Architecture: gam... (4261 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run InputManager tests (GREEN verification) $ npx jest --no-coverage game/input/InputManager.test.ts 2>&1
+10/10 GREEN. Now run full suite + tsc:
+[94m[Bash][0m TypeScript check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run full jest suite $ npx jest --no-coverage 2>&1 | tail -25
+All 83 suites, 1433 tests pass. `tsc --noEmit` clean. Now update progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md for append point $ tail -20 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - `ChunkComponent` (`chunkX`, `chunkZ`, `biome`)..." → "  - `ChunkComponent` (`chunkX`, `chunkZ`, `biome`)..."
+[94m[TodoWrite][0m
+All done. Summary:
+
+**Files created:**
+- `game/input/InputManager.ts` — `InputFrame`, `IInputProvider`, `InputManager` class, `inputManager` singleton
+- `game/input/InputManager.test.ts` — 10 tests (all fields, merge rules, clamping, disabled provider, unregister)
+
+**Results:** `tsc --noEmit` clean, 83 suites / 1433 tests all passing.
+
+`★ Insight ─────────────────────────────────────`
+- The arch doc and the acceptance criteria define slightly different `InputFrame` fields — the AC wins for this story since it's the bootstrap. Future stories will likely expand the interface toward the full arch spec
+- Making `InputManager` an instantiable class (not a static singleton) is a better design choice for testing — tests construct isolated instances, while game code uses the exported `inputManager` singleton
+- `Partial<InputFrame>` as the provider return type is the right abstraction: each provider only declares what it contributes, and the manager defines the merge rules centrally
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,94 @@
+# Iteration 41 Log
+
+## Metadata
+
+- **Task ID**: US-041
+- **Task Title**: Create NPC GLB loader with seeded appearance
+- **Description**: As a developer, I want an NpcModel component that uses scopedRNG to deterministically select a base model, items, and color palette from config/game/npcAssets.json so that each NPC looks unique but co...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:48:42.634Z
+- **Ended At**: 2026-03-07T10:52:41.253Z
+- **Duration**: 3m 58s
+- **Input Tokens**: 104
+- **Output Tokens**: 14887
+- **Total Tokens**: 14991
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/NpcModel*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/npcAssets.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/npcAssets.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/BushModel.tsx[0m
+Now let me read the `scopedRNG` utility and the NPC component definition, plus the GAME_SPEC §15:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/npc.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mscopedRNG[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mdocs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.ts[0m
+Now let me check the existing npcAppearance test and the GAME_SPEC §15 section:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/npcAppearance.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mNPC|npc[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.test.ts[0m
+I have all I need. Now let me implement the component and its tests.
+
+`★ Insight ─────────────────────────────────────`
+- The project follows a "testable seam" pattern: pure functions are exported from R3F components so they can be unit-tested without WebGL/R3F context. `NpcModel.tsx` should mirror this pattern from `TreeModel.tsx`.
+- `generateNpcAppearance` in `npcAppearance.ts` already wraps `scopedRNG("npc-appearance", worldSeed, seed, role)` — `NpcModel` delegates to it rather than calling `scopedRNG` directly.
+- Rules of Hooks: item slot renderers must be separate sub-components (`NpcItemGLBModel`) that are conditionally *mounted*, never conditionally *hooking*.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/NpcModel.tsx[0m "/**
+ * NpcModel — renders a 3DPSX ChibiCharacter NPC assembled from seeded GLBs.
+ *
+ * Uses scopedRNG('npc-appearance', worldSeed, npcId) via generateNpcAppearance
+ * to deterministically select base ... (6762 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `resolveNpcAppearance` is the critical "testable seam" — it's a pure function that computes all GLB paths from npcId + worldSeed without touching React/WebGL. Tests call it directly.
+- Item slot sub-components (`NpcGLBPart`) are conditionally *mounted* via JSX, not conditionally *called* — this satisfies Rules of Hooks while allowing dynamic item sets.
+- Color tint is applied to the base model only; items keep original textures for visual variety (same logic as TreeModel's seasonTint, but scoped by NPC role rather than season).
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/NpcModel.test.ts[0m "/**
+ * Tests for NpcModel — seeded NPC appearance and GLB path resolution (Spec §15).
+ *
+ * Tests the exported pure functions without WebGL/R3F context.
+ * The component itself is verified by checking... (9181 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run NpcModel tests $ npx jest --no-coverage --testPathPattern NpcModel 2>&1
+33 tests passing, 0 type errors. Now let me append the learnings.
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-038" → "---
+
+## 2026-03-07 - US-041
+- Created `components/..."
+[94m[TodoWrite][0m
+All done. Here's what was delivered:
+
+**`components/entities/NpcModel.tsx`** — 183 lines
+- `resolveBaseModelPath` / `resolveBaseModelEmissionPath` / `resolveItemPath` — pure config lookups, throw on unknown (no silent fallbacks)
+- `resolveNpcAppearance(npcId, worldSeed, role)` — delegates to `generateNpcAppearance` which internally calls `scopedRNG('npc-appearance', worldSeed, npcId, role)`, returns fully resolved GLB paths
+- `NpcGLBPart` — shared sub-component (useGLTF + material clone + tint), conditionally mounted per slot
+- `NpcModel` — renders base model + up to 5 item slots; tint applied to base only
+
+**`components/entities/NpcModel.test.ts`** — 33 tests, all green
+- Type check: 0 errors
+- Tests: 33 passed
+
+<promise>COMPLETE</promise>

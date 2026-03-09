@@ -1,0 +1,173 @@
+# Iteration 89 Log
+
+## Metadata
+
+- **Task ID**: US-089
+- **Task Title**: Implement hearts/hunger/stamina systems
+- **Description**: As a player in Survival mode, I want hearts that drain from damage/exposure, hunger that drains per minute, and stamina that drains on actions so that resource management matters. See GAME_SPEC.md §21...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:28:40.671Z
+- **Ended At**: 2026-03-07T15:35:21.098Z
+- **Duration**: 6m 40s
+- **Input Tokens**: 149
+- **Output Tokens**: 23100
+- **Total Tokens**: 23249
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Skill][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Skill failed due to the following issue:
+The required parameter `skill` is missing</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (51988 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/survival*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/difficulty.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§21|section 21|## 21|### 21[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mhearts|hunger|stamina drain|survival.*system|Survival.*System[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m### 12\.|## 12\.|Hearts|Hunger.*drain|exposure.*drain|hearts.*drain[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/combat.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/combat.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components[0m pattern: [96mPlayerComponent|player.*stamina|player.*hunger|player.*hearts|player.*health[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/difficulty.ts[0m
+Now let me read the spec section §12 more fully and the stamina test file for patterns.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+Let me check all places that construct a `PlayerComponent` to understand the impact of adding fields:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mplayer:\s*\{|player:\s*\{[^}]+\}[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mplayer:\s*\{[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/archetypes.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.test.ts[0m pattern: [96mplayer:\s*\{[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.test.ts[0m pattern: [96mplayer:\s*\{[0m
+Now I have everything I need. Let me set up the task list and implement.
+
+`★ Insight ─────────────────────────────────────`
+The survival system follows the **pure functions pattern** already established by `combat.ts` and `stamina.ts`. Pure functions over plain objects make tests trivial — no ECS world, no R3F, no mocks needed. The `PlayerComponent` needs `hunger`/`maxHunger` added as required fields (not optional) to keep type safety; this requires updating all 4 existing construction sites.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit,Bash[0m
+**Step 1: Add `hunger` fields to `PlayerComponent`**
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m edit: "export interface PlayerComponent {
+  coins: number..." → "export interface PlayerComponent {
+  coins: number..."
+[94m[TodoWrite][0m
+**Step 2: Add `hungerDrainRate` and `maxHearts` to difficulty.json and DifficultyConfig**
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "damageMultiplier": 0,
+    "incomingDamageMult..." → "    "damageMultiplier": 0,
+    "incomingDamageMult..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "damageMultiplier": 1.0,
+    "incomingDamageMu..." → "    "damageMultiplier": 1.0,
+    "incomingDamageMu..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "damageMultiplier": 1.3,
+    "incomingDamageMu..." → "    "damageMultiplier": 1.3,
+    "incomingDamageMu..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "damageMultiplier": 1.5,
+    "incomingDamageMu..." → "    "damageMultiplier": 1.5,
+    "incomingDamageMu..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/difficulty.json[0m edit: "    "damageMultiplier": 2.0,
+    "incomingDamageMu..." → "    "damageMultiplier": 2.0,
+    "incomingDamageMu..."
+Now update the `DifficultyConfig` TypeScript interface:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/config/difficulty.ts[0m edit: "  /** Player outgoing damage multiplier (0 = no co..." → "  /** Player outgoing damage multiplier (0 = no co..."
+[94m[TodoWrite][0m
+**Step 3: Update all 4 PlayerComponent construction sites** — do them in parallel:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/archetypes.ts[0m edit: "  player: {
+    coins: 100,
+    xp: 0,
+    level: ..." → "  player: {
+    coins: 100,
+    xp: 0,
+    level: ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/stamina.test.ts[0m edit: "        player: {
+          coins: 0,
+          xp..." → "        player: {
+          coins: 0,
+          xp..."
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/actions/GameActions.test.ts[0m edit: "    player: {
+      coins: 100,
+      xp: 0,
+     ..." → "    player: {
+      coins: 100,
+      xp: 0,
+     ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ai/PlayerGovernor.test.ts[0m edit: "    player: {
+      coins: 100,
+      xp: 0,
+     ..." → "    player: {
+      coins: 100,
+      xp: 0,
+     ..."
+[94m[TodoWrite][0m
+**Step 4: Create `game/systems/survival.ts`**
+
+`★ Insight ─────────────────────────────────────`
+`tickHunger` and `tickHeartsFrom*` are designed as pure value functions — no entity mutation. This mirrors the `regenStamina` (returns new value) pattern from `stamina.ts`, keeping all survival logic testable with plain numbers. The stamina drain adds a difficulty multiplier that `drainStamina` in `stamina.ts` lacks, making it the canonical place for survival-mode action costs.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/survival.ts[0m "/**
+ * Survival system — hearts, hunger, and stamina drain.
+ *
+ * Pure functions operating on plain value types.
+ * No ECS world, no R3F, no Rapier dependencies.
+ * Callers apply returned values to pl... (3991 chars)"
+[94m[TodoWrite][0m
+**Step 5: Create `game/systems/survival.test.ts`**
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/survival.test.ts[0m "/**
+ * Survival system tests — Spec §12 Stamina & Survival, §2.2 Survival Systems.
+ */
+
+import type { HealthComponent } from "@/game/ecs/components/combat";
+import {
+  tickHunger,
+  isWellFed,
+  tickH... (7998 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -40
+[94m[Bash][0m Run survival tests only $ npx jest --no-coverage --testPathPattern="survival" 2>&1 | tail -30
+31/31 passing. Now run the full test suite to confirm nothing broke:
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -15
+119 suites, 2387 tests — all passing (up from 2356 before this task).
+[94m[TodoWrite][0m
+Now update the progress log:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-087" → "## 2026-03-07 - US-089
+- Created `game/systems/sur..."
+All done. Here's a summary of what was implemented:
+
+---
+
+**US-089: Hearts/Hunger/Stamina Survival Systems**
+
+**New file: `game/systems/survival.ts`** — 5 pure functions:
+- `tickHunger` — drains hunger per minute at difficulty-scaled rate (Spec §12.2)
+- `isWellFed` — true when hunger > 80 (triggers +10% stamina regen bonus)
+- `tickHeartsFromStarvation` — 0.25 hearts/min drain at hunger = 0 (Spec §12.2)
+- `tickHeartsFromExposure` — drains hearts via `exposureDriftRate` from difficulty (Spec §2.2)
+- `tickStaminaDrain` — action cost × `staminaDrainMult`, returns `{stamina, success}` (Spec §12.1)
+
+**Config updates:**
+- `difficulty.json` — added `hungerDrainRate` (0/1.0/1.5/2.0/2.0) and `maxHearts` (7/5/4/3/3) per tier
+- `DifficultyConfig` interface — typed for both new fields
+
+**ECS update:**
+- `PlayerComponent` — added required `hunger: number` and `maxHunger: number`
+- Updated 4 construction sites to include the new fields
+
+**Tests:** 31 new passing, 2387 total, `tsc` clean.
+
+<promise>COMPLETE</promise>

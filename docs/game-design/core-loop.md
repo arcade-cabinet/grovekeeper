@@ -1,5 +1,21 @@
 # Core Game Loop
 
+> **Partially superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Sections 1 (Design Pillars), 3 (Survival), 4 (Open World), 12 (Tutorial & User Flow)
+>
+> **Key changes from this document:**
+> - **Not "cozy 2.5D isometric"** -- now a first-person survival game with Wind Waker-inspired visual style
+> - **Not "idle tending"** -- survival pressure: hearts, hunger, stamina, weather damage, hostile creatures
+> - **Not BabylonJS** -- now React Three Fiber + drei (declarative R3F)
+> - **Not Zustand with localStorage** -- now Legend State v3 with expo-sqlite
+> - **Not nipplejs** -- custom virtual joystick (see `docs/architecture/touch-controls.md`)
+> - **Not fixed grid** -- infinite procedural chunk-based world
+> - The 5-phase loop (Explore > Plant > Tend > Harvest > Expand) is preserved but reframed around survival: resources are earned through chopping, mining, foraging, fishing, and hunting; expansion means exploring new chunks and finding Grovekeepers
+> - Session design and offline growth concepts remain valid but offline growth applies to delta-stored planted trees only
+>
+> This document retains **unique detail** about the game loop system ordering, state architecture split (ECS vs persistent store), and save/load flow that supplements the unified doc.
+
+---
+
 Grovekeeper is a cozy 2.5D isometric tree-planting simulation with idle tending mechanics. The core loop follows five repeating phases:
 
 ```text

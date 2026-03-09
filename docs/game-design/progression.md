@@ -1,5 +1,15 @@
 # Progression
 
+> **Superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Section 9 (Progression, New Game+, & Achievements)
+>
+> This document describes the **old progression model** where species were unlocked by leveling and prestige was an XP-reset endgame loop. The unified design replaces this with: **Grovekeeper discovery** as the species unlock mechanism (14 labyrinth-based encounters), 25 XP sources (up from ~5), a completely rewritten unlock table where every level 1-25 has at least one unlock (tools, recipes, structures, abilities -- but NOT species), 45 achievements (up from 15), and New Game+ that transforms gameplay rather than resetting it. Prestige cosmetics are now earned via NG+ milestones. Refer to the unified doc for the canonical state.
+
+---
+
+*The content below is retained for historical reference only.*
+
+---
+
 Progression in Grovekeeper spans three interconnected systems: XP and levels, achievements, and prestige. Each provides short-term, mid-term, and long-term goals respectively.
 
 ## XP and Levels

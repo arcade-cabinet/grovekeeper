@@ -1,5 +1,19 @@
 # Tree Catalog
 
+> **Partially superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Section 5 (Tree Species & Growth)
+>
+> **Key changes from this document:**
+> - **Species are NOT level-gated** -- they are unlocked by finding Grovekeepers in hedge labyrinths (Section 4). Player starts with White Oak only; the other 14 species each have a dormant Grovekeeper guardian
+> - **Not "12 base + 3 prestige"** -- now "15 species, 14 unlocked via Grovekeepers + White Oak at start." Prestige species (Crystal Oak, Moonwood Ash, Worldtree) are the hardest Grovekeepers to reach, not prestige-count gated
+> - **GLB-based visuals** -- trees use stylized GLB models (8 nature + 72 tree_pack_1.1), not SPS procedural mesh generation. Growth = scale on GLB model, seasons = color tint or winter variant GLB swap
+> - **Mesh system section is outdated** -- `spsTreeGenerator.ts` and `treeMeshBuilder.ts` are replaced by InstancedMesh with GLB templates (~50 lines vs 951-line SPS generator)
+> - **Biome-locked species** -- each species only grows naturally in specific biomes (e.g., Weeping Willow in Wetlands, Ghost Birch in Frozen Peaks)
+> - Growth stages (0-4), seed costs, species specials, and harvest yields are largely preserved but tuning values may differ
+>
+> This document retains **unique detail** about per-species growth times, harvest cycles, difficulty ratings, and species-specific mechanics that supplements the unified doc.
+
+---
+
 Grovekeeper has 15 tree species: 12 base species available through normal leveling, and 3 prestige species unlocked via the prestige system.
 
 ## Growth Model

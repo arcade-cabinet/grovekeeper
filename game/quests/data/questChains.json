@@ -1,0 +1,1244 @@
+[
+  {
+    "id": "elder-awakening",
+    "name": "The Elder's Warning",
+    "description": "The village elder has sensed a disturbance in the old hedge mazes. Seek them out.",
+    "icon": "📜",
+    "category": "main_story",
+    "npcId": "elder-rowan",
+    "requiredLevel": 1,
+    "isStartingQuest": true,
+    "steps": [
+      {
+        "id": "ea-talk-to-elder",
+        "name": "Find the Elder",
+        "description": "Speak with Elder Rowan near the well at the heart of the village.",
+        "npcDialogueId": "rowan-greeting",
+        "objectives": [
+          {
+            "id": "ea1-talk",
+            "description": "Speak with Elder Rowan",
+            "targetType": "talk_to_npc",
+            "targetAmount": 1,
+            "npcId": "elder-rowan"
+          }
+        ],
+        "reward": { "xp": 25 }
+      },
+      {
+        "id": "ea-plant-something",
+        "name": "Tend the Grove",
+        "description": "Plant a tree to show the Elder you are ready to be a Grovekeeper.",
+        "npcDialogueId": "rowan-greeting",
+        "objectives": [
+          {
+            "id": "ea2-plant",
+            "description": "Plant a tree",
+            "targetType": "trees_planted",
+            "targetAmount": 1
+          }
+        ],
+        "reward": { "xp": 25 }
+      },
+      {
+        "id": "ea-find-labyrinth",
+        "name": "Into the Wild",
+        "description": "Leave the village and find one of the ancient hedge labyrinths the Elder spoke of.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "ea3-labyrinth",
+            "description": "Find a hedge labyrinth",
+            "targetType": "labyrinth_discovered",
+            "targetAmount": 1
+          }
+        ],
+        "reward": { "xp": 50, "compassActivated": true }
+      }
+    ]
+  },
+  {
+    "id": "rowan-history",
+    "name": "Roots of the Past",
+    "description": "Elder Rowan shares the history of Grovekeeper Valley, step by step.",
+    "icon": "\ud83d\udcdc",
+    "category": "npc",
+    "npcId": "elder-rowan",
+    "requiredLevel": 1,
+    "steps": [
+      {
+        "id": "rowan-history-1",
+        "name": "The First Seed",
+        "description": "Plant your first tree to show Rowan you're serious about the grove.",
+        "npcDialogueId": "rowan-greeting",
+        "objectives": [
+          {
+            "id": "rh1-plant",
+            "description": "Plant a tree",
+            "targetType": "trees_planted",
+            "targetAmount": 1
+          }
+        ],
+        "reward": { "xp": 25, "resources": { "timber": 5 } }
+      },
+      {
+        "id": "rowan-history-2",
+        "name": "Lessons of Growth",
+        "description": "Grow 3 trees to sapling stage to learn patience from Rowan.",
+        "npcDialogueId": "rowan-seasons",
+        "objectives": [
+          {
+            "id": "rh2-grow",
+            "description": "Grow 3 trees to Sapling",
+            "targetType": "saplings_grown",
+            "targetAmount": 3
+          }
+        ],
+        "reward": { "xp": 50, "resources": { "sap": 5 }, "friendshipPoints": 5 }
+      },
+      {
+        "id": "rowan-history-3",
+        "name": "The Worldtree Legend",
+        "description": "Rowan tells you about the Worldtree. Reach level 5 to hear the full story.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "rh3-level",
+            "description": "Reach level 5",
+            "targetType": "player_level",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 75,
+          "seeds": [{ "speciesId": "elder-pine", "amount": 3 }],
+          "friendshipPoints": 10
+        }
+      },
+      {
+        "id": "rowan-history-4",
+        "name": "Keeper of the Grove",
+        "description": "Prove you are a true keeper by growing a tree to Old Growth.",
+        "npcDialogueId": "rowan-old-growth",
+        "objectives": [
+          {
+            "id": "rh4-old-growth",
+            "description": "Grow a tree to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 1
+          }
+        ],
+        "reward": {
+          "xp": 150,
+          "resources": { "timber": 20, "acorns": 10 },
+          "friendshipPoints": 15
+        },
+        "completionDialogueId": "rowan-exploration"
+      }
+    ]
+  },
+  {
+    "id": "hazel-trade",
+    "name": "The Art of the Deal",
+    "description": "Hazel teaches you the secrets of profitable trading.",
+    "icon": "\ud83d\udcb0",
+    "category": "npc",
+    "npcId": "hazel",
+    "requiredLevel": 2,
+    "steps": [
+      {
+        "id": "hazel-trade-1",
+        "name": "First Transaction",
+        "description": "Gather resources for your first trade with Hazel.",
+        "npcDialogueId": "hazel-greeting",
+        "objectives": [
+          {
+            "id": "ht1-timber",
+            "description": "Gather 15 timber",
+            "targetType": "timber_collected",
+            "targetAmount": 15
+          }
+        ],
+        "reward": { "xp": 30, "resources": { "sap": 8 } }
+      },
+      {
+        "id": "hazel-trade-2",
+        "name": "Seasonal Savvy",
+        "description": "Hazel explains seasonal prices. Harvest 5 trees to build stock.",
+        "npcDialogueId": "hazel-seasonal-info",
+        "objectives": [
+          {
+            "id": "ht2-harvest",
+            "description": "Harvest 5 trees",
+            "targetType": "trees_harvested",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 60,
+          "resources": { "fruit": 10, "acorns": 8 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "hazel-trade-3",
+        "name": "Diversified Portfolio",
+        "description": "Collect all 4 resource types to prove your trading prowess.",
+        "npcDialogueId": "hazel-best-deals",
+        "objectives": [
+          {
+            "id": "ht3-timber",
+            "description": "Have 20 timber",
+            "targetType": "timber_collected",
+            "targetAmount": 20
+          },
+          {
+            "id": "ht3-sap",
+            "description": "Have 15 sap",
+            "targetType": "sap_collected",
+            "targetAmount": 15
+          },
+          {
+            "id": "ht3-fruit",
+            "description": "Have 10 fruit",
+            "targetType": "fruit_collected",
+            "targetAmount": 10
+          },
+          {
+            "id": "ht3-acorns",
+            "description": "Have 10 acorns",
+            "targetType": "acorns_collected",
+            "targetAmount": 10
+          }
+        ],
+        "reward": {
+          "xp": 100,
+          "resources": { "timber": 15, "sap": 15, "fruit": 15, "acorns": 15 },
+          "friendshipPoints": 10
+        }
+      }
+    ]
+  },
+  {
+    "id": "fern-collection",
+    "name": "The Botanist's Catalogue",
+    "description": "Help Botanist Fern document every species in the valley.",
+    "icon": "\ud83d\udcda",
+    "category": "npc",
+    "npcId": "botanist-fern",
+    "requiredLevel": 3,
+    "steps": [
+      {
+        "id": "fern-collect-1",
+        "name": "First Specimens",
+        "description": "Plant 3 different species for Fern's catalogue.",
+        "npcDialogueId": "fern-greeting",
+        "objectives": [
+          {
+            "id": "fc1-species",
+            "description": "Plant 3 different species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 3
+          }
+        ],
+        "reward": {
+          "xp": 40,
+          "seeds": [{ "speciesId": "silver-birch", "amount": 3 }]
+        }
+      },
+      {
+        "id": "fern-collect-2",
+        "name": "Growth Documentation",
+        "description": "Grow 5 trees to Mature so Fern can study their full characteristics.",
+        "npcDialogueId": "fern-discoveries",
+        "objectives": [
+          {
+            "id": "fc2-mature",
+            "description": "Grow 5 trees to Mature",
+            "targetType": "mature_trees_grown",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 75,
+          "resources": { "sap": 10 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "fern-collect-3",
+        "name": "Rare Species Hunt",
+        "description": "Plant a Cherry Blossom for Fern's rare species collection.",
+        "npcDialogueId": "fern-rare-species",
+        "objectives": [
+          {
+            "id": "fc3-cherry",
+            "description": "Plant a Cherry Blossom",
+            "targetType": "cherry_planted",
+            "targetAmount": 1,
+            "speciesId": "cherry-blossom"
+          }
+        ],
+        "reward": {
+          "xp": 100,
+          "seeds": [{ "speciesId": "golden-apple", "amount": 2 }],
+          "friendshipPoints": 10
+        }
+      },
+      {
+        "id": "fern-collect-4",
+        "name": "The Ghost Birch",
+        "description": "Fern is fascinated by Ghost Birch trees. Plant one if you've unlocked it.",
+        "npcDialogueId": "fern-ghost-birch",
+        "objectives": [
+          {
+            "id": "fc4-ghost",
+            "description": "Plant a Ghost Birch",
+            "targetType": "ghost_birch_planted",
+            "targetAmount": 1,
+            "speciesId": "ghost-birch"
+          }
+        ],
+        "reward": {
+          "xp": 200,
+          "resources": { "timber": 25, "sap": 15, "fruit": 10, "acorns": 10 },
+          "friendshipPoints": 15
+        }
+      }
+    ]
+  },
+  {
+    "id": "blossom-seeds",
+    "name": "Seeds of Wonder",
+    "description": "Blossom teaches you the art of cultivating rare and beautiful trees.",
+    "icon": "\ud83c\udf38",
+    "category": "npc",
+    "npcId": "blossom",
+    "requiredLevel": 4,
+    "steps": [
+      {
+        "id": "blossom-seeds-1",
+        "name": "A Beautiful Start",
+        "description": "Plant 5 trees to show Blossom your dedication to beauty.",
+        "npcDialogueId": "blossom-greeting",
+        "objectives": [
+          {
+            "id": "bs1-plant",
+            "description": "Plant 5 trees",
+            "targetType": "trees_planted",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 35,
+          "seeds": [{ "speciesId": "cherry-blossom", "amount": 2 }]
+        }
+      },
+      {
+        "id": "blossom-seeds-2",
+        "name": "Cherry Blossom Dreams",
+        "description": "Grow a Cherry Blossom to Mature stage.",
+        "npcDialogueId": "blossom-cherry-info",
+        "objectives": [
+          {
+            "id": "bs2-cherry-mature",
+            "description": "Grow Cherry Blossom to Mature",
+            "targetType": "cherry_mature",
+            "targetAmount": 1,
+            "speciesId": "cherry-blossom"
+          }
+        ],
+        "reward": {
+          "xp": 80,
+          "resources": { "fruit": 15 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "blossom-seeds-3",
+        "name": "The Golden Orchard",
+        "description": "Blossom wants to see a Golden Apple tree in full glory.",
+        "npcDialogueId": "blossom-golden-apple",
+        "objectives": [
+          {
+            "id": "bs3-golden",
+            "description": "Grow Golden Apple to Old Growth",
+            "targetType": "golden_apple_old_growth",
+            "targetAmount": 1,
+            "speciesId": "golden-apple"
+          }
+        ],
+        "reward": {
+          "xp": 150,
+          "seeds": [{ "speciesId": "flame-maple", "amount": 2 }],
+          "friendshipPoints": 10
+        }
+      }
+    ]
+  },
+  {
+    "id": "bramble-weather",
+    "name": "Reading the Sky",
+    "description": "Bramble teaches you to understand and work with the weather.",
+    "icon": "\u26c8\ufe0f",
+    "category": "npc",
+    "npcId": "bramble",
+    "requiredLevel": 2,
+    "steps": [
+      {
+        "id": "bramble-weather-1",
+        "name": "Storm Preparation",
+        "description": "Water 10 trees to prepare them for changing weather.",
+        "npcDialogueId": "bramble-greeting",
+        "objectives": [
+          {
+            "id": "bw1-water",
+            "description": "Water 10 trees",
+            "targetType": "trees_watered",
+            "targetAmount": 10
+          }
+        ],
+        "reward": { "xp": 30, "resources": { "sap": 5 } }
+      },
+      {
+        "id": "bramble-weather-2",
+        "name": "Rain Watcher",
+        "description": "Bramble teaches you to use rain. Grow 3 trees during a rainy day.",
+        "npcDialogueId": "bramble-rain-tips",
+        "objectives": [
+          {
+            "id": "bw2-rain-grow",
+            "description": "Grow 3 trees to Sapling during rain",
+            "targetType": "saplings_grown",
+            "targetAmount": 3
+          }
+        ],
+        "reward": {
+          "xp": 60,
+          "resources": { "sap": 10 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "bramble-weather-3",
+        "name": "Weathering the Storm",
+        "description": "Prove your resilience by keeping 10 trees alive through a full season cycle.",
+        "npcDialogueId": "bramble-seasons",
+        "objectives": [
+          {
+            "id": "bw3-survive",
+            "description": "Have 10 living trees across a season change",
+            "targetType": "trees_survived_season",
+            "targetAmount": 10
+          }
+        ],
+        "reward": {
+          "xp": 100,
+          "resources": { "timber": 15, "sap": 10 },
+          "friendshipPoints": 10
+        }
+      }
+    ]
+  },
+  {
+    "id": "oakley-crafting",
+    "name": "The Carpenter's Apprentice",
+    "description": "Master Carpenter Oakley teaches you the art of building and crafting.",
+    "icon": "\ud83e\uddf0",
+    "category": "npc",
+    "npcId": "oakley",
+    "requiredLevel": 5,
+    "steps": [
+      {
+        "id": "oakley-craft-1",
+        "name": "Gathering Materials",
+        "description": "Oakley needs timber and sap. Gather resources for your first project.",
+        "npcDialogueId": "oakley-greeting",
+        "objectives": [
+          {
+            "id": "oc1-timber",
+            "description": "Gather 25 timber",
+            "targetType": "timber_collected",
+            "targetAmount": 25
+          },
+          {
+            "id": "oc1-sap",
+            "description": "Gather 10 sap",
+            "targetType": "sap_collected",
+            "targetAmount": 10
+          }
+        ],
+        "reward": { "xp": 50, "unlockRecipe": "wooden-plank" }
+      },
+      {
+        "id": "oakley-craft-2",
+        "name": "First Structure",
+        "description": "Build your first structure to impress Oakley.",
+        "npcDialogueId": "oakley-first-structure",
+        "objectives": [
+          {
+            "id": "oc2-build",
+            "description": "Build a structure",
+            "targetType": "structures_built",
+            "targetAmount": 1
+          }
+        ],
+        "reward": {
+          "xp": 80,
+          "resources": { "timber": 15, "sap": 8 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "oakley-craft-3",
+        "name": "Advanced Construction",
+        "description": "Build 3 different structures to prove your carpentry skills.",
+        "npcDialogueId": "oakley-advanced-recipes",
+        "objectives": [
+          {
+            "id": "oc3-structures",
+            "description": "Build 3 structures",
+            "targetType": "structures_built",
+            "targetAmount": 3
+          }
+        ],
+        "reward": {
+          "xp": 150,
+          "resources": { "timber": 30 },
+          "unlockRecipe": "hardwood-beam",
+          "friendshipPoints": 10
+        }
+      }
+    ]
+  },
+  {
+    "id": "sage-lore",
+    "name": "Whispers of the Worldtree",
+    "description": "Sage reveals the deep lore of the forest and the mystery of Prestige.",
+    "icon": "\ud83e\uddde",
+    "category": "npc",
+    "npcId": "sage",
+    "requiredLevel": 8,
+    "steps": [
+      {
+        "id": "sage-lore-1",
+        "name": "The Mushroom Network",
+        "description": "Sage teaches you about the mycelium network. Plant 10 trees to awaken it.",
+        "npcDialogueId": "sage-greeting",
+        "objectives": [
+          {
+            "id": "sl1-plant",
+            "description": "Plant 10 trees in any zone",
+            "targetType": "trees_planted",
+            "targetAmount": 10
+          }
+        ],
+        "reward": { "xp": 75, "resources": { "acorns": 15 } }
+      },
+      {
+        "id": "sage-lore-2",
+        "name": "Ancient Wisdom",
+        "description": "Reach level 15 and grow 3 trees to Old Growth to unlock deeper lore.",
+        "npcDialogueId": "sage-worldtree-lore",
+        "objectives": [
+          {
+            "id": "sl2-level",
+            "description": "Reach level 15",
+            "targetType": "player_level",
+            "targetAmount": 15
+          },
+          {
+            "id": "sl2-old-growth",
+            "description": "Grow 3 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 3
+          }
+        ],
+        "reward": {
+          "xp": 200,
+          "seeds": [{ "speciesId": "mystic-fern", "amount": 2 }],
+          "friendshipPoints": 10
+        }
+      },
+      {
+        "id": "sage-lore-3",
+        "name": "The Prestige Path",
+        "description": "Sage reveals the secret of Prestige. Reach level 20 to hear the full story.",
+        "npcDialogueId": "sage-prestige",
+        "objectives": [
+          {
+            "id": "sl3-level",
+            "description": "Reach level 20",
+            "targetType": "player_level",
+            "targetAmount": 20
+          }
+        ],
+        "reward": {
+          "xp": 300,
+          "resources": { "timber": 50, "sap": 30, "fruit": 20, "acorns": 20 },
+          "friendshipPoints": 15
+        }
+      }
+    ]
+  },
+  {
+    "id": "dying-forest",
+    "name": "The Dying Forest",
+    "description": "The forest is weakening. Uncover the mystery and restore the Worldtree's power.",
+    "icon": "\ud83c\udf32",
+    "category": "main_story",
+    "npcId": "elder-rowan",
+    "requiredLevel": 3,
+    "prerequisiteChainIds": ["rowan-history"],
+    "steps": [
+      {
+        "id": "dying-forest-1",
+        "name": "Signs of Decay",
+        "description": "Rowan notices the forest is struggling. Plant 10 new trees to help.",
+        "npcDialogueId": "rowan-greeting",
+        "objectives": [
+          {
+            "id": "df1-plant",
+            "description": "Plant 10 trees",
+            "targetType": "trees_planted",
+            "targetAmount": 10
+          },
+          {
+            "id": "df1-water",
+            "description": "Water 15 trees",
+            "targetType": "trees_watered",
+            "targetAmount": 15
+          }
+        ],
+        "reward": { "xp": 75, "resources": { "timber": 10, "sap": 10 } }
+      },
+      {
+        "id": "dying-forest-2",
+        "name": "Seeking Knowledge",
+        "description": "Visit Botanist Fern and Sage to learn what's causing the decay.",
+        "npcDialogueId": "rowan-north-woods",
+        "objectives": [
+          {
+            "id": "df2-species",
+            "description": "Plant 5 different species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 5
+          },
+          {
+            "id": "df2-mature",
+            "description": "Grow 5 trees to Mature",
+            "targetType": "mature_trees_grown",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 125,
+          "seeds": [{ "speciesId": "elder-pine", "amount": 5 }],
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "dying-forest-3",
+        "name": "The Ancient Remedy",
+        "description": "Grow diverse old-growth trees to strengthen the forest's root network.",
+        "npcDialogueId": "rowan-old-growth",
+        "objectives": [
+          {
+            "id": "df3-old-growth",
+            "description": "Grow 3 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 3
+          },
+          {
+            "id": "df3-harvest",
+            "description": "Harvest 10 mature trees to spread seeds",
+            "targetType": "trees_harvested",
+            "targetAmount": 10
+          }
+        ],
+        "reward": {
+          "xp": 200,
+          "resources": { "timber": 30, "sap": 20, "fruit": 15, "acorns": 15 }
+        }
+      },
+      {
+        "id": "dying-forest-4",
+        "name": "Rebirth of the Grove",
+        "description": "Reach level 15 and grow an ancient forest to restore the valley.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "df4-level",
+            "description": "Reach level 15",
+            "targetType": "player_level",
+            "targetAmount": 15
+          },
+          {
+            "id": "df4-old-growth",
+            "description": "Grow 5 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 5
+          },
+          {
+            "id": "df4-species",
+            "description": "Plant 8 different species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 8
+          }
+        ],
+        "reward": {
+          "xp": 500,
+          "resources": { "timber": 50, "sap": 50, "fruit": 30, "acorns": 30 },
+          "seeds": [{ "speciesId": "redwood", "amount": 3 }]
+        },
+        "completionDialogueId": "rowan-exploration"
+      }
+    ]
+  },
+  {
+    "id": "main-quest-spirits",
+    "name": "The Grovekeeper Path",
+    "description": "Find all 8 dormant Grovekeeper Spirits in the hedge labyrinths to awaken the ancient forest.",
+    "icon": "\u2b50",
+    "category": "main_story",
+    "npcId": "elder-rowan",
+    "requiredLevel": 1,
+    "steps": [
+      {
+        "id": "mqs-awaken-all",
+        "name": "Awaken the Spirits",
+        "description": "Find all 8 Grovekeeper Spirits hidden in the hedge labyrinths across the world.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "mqs-spirits",
+            "description": "Discover 8 Grovekeeper Spirits",
+            "targetType": "spirit_discovered",
+            "targetAmount": 8
+          }
+        ],
+        "reward": {
+          "xp": 500
+        },
+        "completionDialogueId": "rowan-exploration"
+      }
+    ]
+  },
+  {
+    "id": "worldroots-dream",
+    "name": "The Worldroot's Dream",
+    "description": "All 8 spirits have been awakened. Journey to the Worldroot's sanctum to complete your destiny as Grovekeeper.",
+    "icon": "\ud83c\udf33",
+    "category": "main_story",
+    "npcId": "elder-rowan",
+    "requiredLevel": 1,
+    "prerequisiteChainIds": ["main-quest-spirits"],
+    "steps": [
+      {
+        "id": "wrd-reach-worldroot",
+        "name": "The Worldroot Stirs",
+        "description": "Journey to the Worldroot's sanctum at the heart of the ancient forest.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "wrd-worldroot",
+            "description": "Reach the Worldroot's sanctum",
+            "targetType": "worldroot_reached",
+            "targetAmount": 1
+          }
+        ],
+        "reward": {
+          "xp": 1000
+        }
+      }
+    ]
+  },
+  {
+    "id": "willow-remedies",
+    "name": "The Hollow's Harvest",
+    "description": "Willow, the herbalist, teaches you to read the forest as an apothecary — every plant a remedy, every season a new prescription.",
+    "icon": "\ud83c\udf3f",
+    "category": "npc",
+    "npcId": "willow",
+    "requiredLevel": 3,
+    "steps": [
+      {
+        "id": "willow-remedies-1",
+        "name": "Root and Branch",
+        "description": "Willow needs sap from thriving trees. Water 8 trees so their sap runs sweet.",
+        "npcDialogueId": "willow-greeting",
+        "objectives": [
+          {
+            "id": "wr1-water",
+            "description": "Water 8 trees",
+            "targetType": "trees_watered",
+            "targetAmount": 8
+          },
+          {
+            "id": "wr1-sap",
+            "description": "Gather 10 sap",
+            "targetType": "sap_collected",
+            "targetAmount": 10
+          }
+        ],
+        "reward": { "xp": 35, "resources": { "sap": 5 } }
+      },
+      {
+        "id": "willow-remedies-2",
+        "name": "The Living Catalogue",
+        "description": "Willow wants specimens from at least 4 different species. Plant the variety she needs.",
+        "npcDialogueId": "willow-greeting",
+        "objectives": [
+          {
+            "id": "wr2-species",
+            "description": "Plant 4 different species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 4
+          }
+        ],
+        "reward": {
+          "xp": 60,
+          "resources": { "sap": 8, "fruit": 5 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "willow-remedies-3",
+        "name": "Drought Medicine",
+        "description": "Willow explains how a drought teaches trees to deepen their roots. Survive a full drought event with 5 living trees.",
+        "npcDialogueId": "willow-greeting",
+        "objectives": [
+          {
+            "id": "wr3-drought",
+            "description": "Have 5 living trees survive a drought event",
+            "targetType": "trees_survived_season",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 100,
+          "resources": { "sap": 15, "acorns": 8 },
+          "friendshipPoints": 10
+        }
+      },
+      {
+        "id": "willow-remedies-4",
+        "name": "The Weeping Cure",
+        "description": "Willow's rarest remedy requires Weeping Willow sap. Grow one to Mature stage.",
+        "npcDialogueId": "willow-greeting",
+        "objectives": [
+          {
+            "id": "wr4-willow-mature",
+            "description": "Grow a Weeping Willow to Mature",
+            "targetType": "mature_trees_grown",
+            "targetAmount": 1,
+            "speciesId": "weeping-willow"
+          }
+        ],
+        "reward": {
+          "xp": 175,
+          "resources": { "sap": 20, "fruit": 10, "acorns": 10 },
+          "friendshipPoints": 15
+        },
+        "completionDialogueId": "willow-greeting"
+      }
+    ]
+  },
+  {
+    "id": "thorn-trails",
+    "name": "Into the Wild Margins",
+    "description": "Forest Ranger Thorn has been mapping the outer reaches of the known world. Join the expedition.",
+    "icon": "\ud83e\uddd1\u200d\ud83c\udf3e",
+    "category": "npc",
+    "npcId": "thorn",
+    "requiredLevel": 6,
+    "steps": [
+      {
+        "id": "thorn-trails-1",
+        "name": "First Expedition",
+        "description": "Thorn won't take an untested keeper. Prove yourself by planting trees far from the origin.",
+        "npcDialogueId": "thorn-greeting",
+        "objectives": [
+          {
+            "id": "tt1-plant-distant",
+            "description": "Plant 5 trees far from origin",
+            "targetType": "trees_planted",
+            "targetAmount": 5
+          }
+        ],
+        "reward": { "xp": 50, "resources": { "timber": 10 } }
+      },
+      {
+        "id": "thorn-trails-2",
+        "name": "Rare Sighting",
+        "description": "Thorn has spotted signs of a rare species deep in the wild. Discover 2 new species in unexplored chunks.",
+        "npcDialogueId": "thorn-greeting",
+        "objectives": [
+          {
+            "id": "tt2-discover",
+            "description": "Discover 2 new wild species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 2
+          }
+        ],
+        "reward": {
+          "xp": 90,
+          "resources": { "timber": 15, "acorns": 10 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "thorn-trails-3",
+        "name": "The Ancient Stand",
+        "description": "Thorn leads you to a cluster of trees she has been protecting for decades. Grow 2 trees to Old Growth to earn her full trust.",
+        "npcDialogueId": "thorn-greeting",
+        "objectives": [
+          {
+            "id": "tt3-old-growth",
+            "description": "Grow 2 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 2
+          }
+        ],
+        "reward": {
+          "xp": 150,
+          "resources": { "timber": 25, "sap": 10 },
+          "friendshipPoints": 10
+        }
+      },
+      {
+        "id": "thorn-trails-4",
+        "name": "The Untouched Hollow",
+        "description": "Thorn reveals a secret hollow. Reach level 10 and harvest 5 trees cleanly to prove you understand sustainable forestry.",
+        "npcDialogueId": "thorn-greeting",
+        "objectives": [
+          {
+            "id": "tt4-level",
+            "description": "Reach level 10",
+            "targetType": "player_level",
+            "targetAmount": 10
+          },
+          {
+            "id": "tt4-harvest",
+            "description": "Harvest 5 trees",
+            "targetType": "trees_harvested",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 250,
+          "resources": { "timber": 30, "sap": 20, "acorns": 15 },
+          "seeds": [{ "speciesId": "ironbark", "amount": 2 }],
+          "friendshipPoints": 15
+        },
+        "completionDialogueId": "thorn-greeting"
+      }
+    ]
+  },
+  {
+    "id": "ember-alchemy",
+    "name": "The Wandering Laboratory",
+    "description": "Ember the alchemist is chasing a discovery that could change how the grove works. She needs your trees and your patience.",
+    "icon": "\ud83e\uddea",
+    "category": "npc",
+    "npcId": "ember",
+    "requiredLevel": 10,
+    "steps": [
+      {
+        "id": "ember-alchemy-1",
+        "name": "Raw Materials",
+        "description": "Ember's experiments need unusual amounts of sap and fruit. Gather the base ingredients.",
+        "npcDialogueId": "ember-greeting",
+        "objectives": [
+          {
+            "id": "ea1-sap",
+            "description": "Gather 20 sap",
+            "targetType": "sap_collected",
+            "targetAmount": 20
+          },
+          {
+            "id": "ea1-fruit",
+            "description": "Gather 15 fruit",
+            "targetType": "fruit_collected",
+            "targetAmount": 15
+          }
+        ],
+        "reward": { "xp": 60, "resources": { "acorns": 10 } }
+      },
+      {
+        "id": "ember-alchemy-2",
+        "name": "The Fermentation Experiment",
+        "description": "Ember's tincture requires Old Growth sap — richer, more complex. Grow any tree to Old Growth.",
+        "npcDialogueId": "ember-greeting",
+        "objectives": [
+          {
+            "id": "ea2-old-growth",
+            "description": "Grow 1 tree to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 1
+          }
+        ],
+        "reward": {
+          "xp": 120,
+          "resources": { "sap": 10, "fruit": 8 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "ember-alchemy-3",
+        "name": "Rare Reagents",
+        "description": "The rarest compounds come from the most unusual trees. Plant both a Cherry Blossom and a Flame Maple for Ember's catalogue.",
+        "npcDialogueId": "ember-greeting",
+        "objectives": [
+          {
+            "id": "ea3-cherry",
+            "description": "Plant a Cherry Blossom",
+            "targetType": "cherry_planted",
+            "targetAmount": 1,
+            "speciesId": "cherry-blossom"
+          },
+          {
+            "id": "ea3-maple",
+            "description": "Plant a Flame Maple",
+            "targetType": "trees_planted",
+            "targetAmount": 1,
+            "speciesId": "flame-maple"
+          }
+        ],
+        "reward": {
+          "xp": 175,
+          "resources": { "sap": 20, "fruit": 20 },
+          "friendshipPoints": 10
+        }
+      },
+      {
+        "id": "ember-alchemy-4",
+        "name": "The Grand Synthesis",
+        "description": "Ember's masterwork requires a grove of at least 6 Old Growth trees and level 15.",
+        "npcDialogueId": "ember-greeting",
+        "objectives": [
+          {
+            "id": "ea4-level",
+            "description": "Reach level 15",
+            "targetType": "player_level",
+            "targetAmount": 15
+          },
+          {
+            "id": "ea4-old-growth",
+            "description": "Grow 6 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 6
+          }
+        ],
+        "reward": {
+          "xp": 350,
+          "resources": { "sap": 30, "fruit": 25, "acorns": 20, "timber": 20 },
+          "friendshipPoints": 15
+        },
+        "completionDialogueId": "ember-greeting"
+      }
+    ]
+  },
+  {
+    "id": "seasonal-cycle",
+    "name": "The Wheel of Seasons",
+    "description": "The forest marks time in seasons. Learn to read each one and let the cycle teach you the rhythm of the grove.",
+    "icon": "\ud83c\udf00",
+    "category": "seasonal",
+    "npcId": "elder-rowan",
+    "requiredLevel": 2,
+    "steps": [
+      {
+        "id": "seasonal-cycle-1",
+        "name": "Spring Planting",
+        "description": "Spring is the season of new beginnings. Plant 5 trees while the spring rains fall.",
+        "npcDialogueId": "rowan-seasons",
+        "objectives": [
+          {
+            "id": "sc1-plant",
+            "description": "Plant 5 trees",
+            "targetType": "trees_planted",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 40,
+          "resources": { "sap": 5, "acorns": 5 }
+        }
+      },
+      {
+        "id": "seasonal-cycle-2",
+        "name": "Summer Tending",
+        "description": "Summer is steady growth. Water 15 trees across the warm months.",
+        "npcDialogueId": "rowan-seasons",
+        "objectives": [
+          {
+            "id": "sc2-water",
+            "description": "Water 15 trees",
+            "targetType": "trees_watered",
+            "targetAmount": 15
+          }
+        ],
+        "reward": {
+          "xp": 60,
+          "resources": { "timber": 10, "sap": 10 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "seasonal-cycle-3",
+        "name": "Autumn Harvest",
+        "description": "Autumn's rich yields reward patient keepers. Harvest 8 trees during the autumn season.",
+        "npcDialogueId": "rowan-seasons",
+        "objectives": [
+          {
+            "id": "sc3-harvest",
+            "description": "Harvest 8 trees",
+            "targetType": "trees_harvested",
+            "targetAmount": 8
+          }
+        ],
+        "reward": {
+          "xp": 80,
+          "resources": { "fruit": 15, "acorns": 12 },
+          "friendshipPoints": 5
+        }
+      },
+      {
+        "id": "seasonal-cycle-4",
+        "name": "Winter Patience",
+        "description": "Winter is when the grove sleeps and the keeper plans. Keep 8 trees alive through the winter season.",
+        "npcDialogueId": "rowan-seasons",
+        "objectives": [
+          {
+            "id": "sc4-survive",
+            "description": "Have 8 living trees through winter",
+            "targetType": "trees_survived_season",
+            "targetAmount": 8
+          }
+        ],
+        "reward": {
+          "xp": 100,
+          "resources": { "timber": 15, "sap": 10, "acorns": 10 },
+          "friendshipPoints": 10
+        }
+      },
+      {
+        "id": "seasonal-cycle-5",
+        "name": "The Full Year",
+        "description": "Rowan recognizes a keeper who has tended the grove through all four seasons. Reach level 8 to unlock the secrets of the annual cycle.",
+        "npcDialogueId": "rowan-worldtree",
+        "objectives": [
+          {
+            "id": "sc5-level",
+            "description": "Reach level 8",
+            "targetType": "player_level",
+            "targetAmount": 8
+          }
+        ],
+        "reward": {
+          "xp": 200,
+          "resources": { "timber": 20, "sap": 15, "fruit": 15, "acorns": 15 },
+          "seeds": [{ "speciesId": "flame-maple", "amount": 2 }],
+          "friendshipPoints": 15
+        },
+        "completionDialogueId": "rowan-exploration"
+      }
+    ]
+  },
+  {
+    "id": "ancient-grove",
+    "name": "The Ancient Grove",
+    "description": "An endgame convergence. The valley's oldest lore and rarest species await those who have mastered the grove.",
+    "icon": "\ud83c\udf32",
+    "category": "endgame",
+    "npcId": "sage",
+    "requiredLevel": 18,
+    "prerequisiteChainIds": ["sage-lore", "dying-forest"],
+    "steps": [
+      {
+        "id": "ancient-grove-1",
+        "name": "The Old Ones",
+        "description": "Sage speaks of the trees that predate the valley's settlement. Grow 5 trees to Old Growth to awaken the land's memory.",
+        "npcDialogueId": "sage-worldtree-lore",
+        "objectives": [
+          {
+            "id": "ag1-old-growth",
+            "description": "Grow 5 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 5
+          }
+        ],
+        "reward": {
+          "xp": 200,
+          "resources": { "timber": 20, "sap": 20, "acorns": 20 }
+        }
+      },
+      {
+        "id": "ancient-grove-2",
+        "name": "The Diverse Canopy",
+        "description": "The ancient grove was home to every known species. Plant 10 different species to rebuild that diversity.",
+        "npcDialogueId": "sage-worldtree-lore",
+        "objectives": [
+          {
+            "id": "ag2-species",
+            "description": "Plant 10 different species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 10
+          }
+        ],
+        "reward": {
+          "xp": 300,
+          "resources": { "timber": 25, "sap": 25, "fruit": 20, "acorns": 20 },
+          "friendshipPoints": 10
+        }
+      },
+      {
+        "id": "ancient-grove-3",
+        "name": "The Spirit Chorus",
+        "description": "The ancient grove cannot be restored without the spirits' blessing. Discover all 8 Grovekeeper Spirits.",
+        "npcDialogueId": "sage-prestige",
+        "objectives": [
+          {
+            "id": "ag3-spirits",
+            "description": "Discover all 8 Grovekeeper Spirits",
+            "targetType": "spirit_discovered",
+            "targetAmount": 8
+          }
+        ],
+        "reward": {
+          "xp": 400,
+          "resources": { "timber": 30, "sap": 30 },
+          "friendshipPoints": 15
+        }
+      },
+      {
+        "id": "ancient-grove-4",
+        "name": "Apex of the Grove",
+        "description": "Reach level 20 and grow 8 trees to Old Growth. The ancient grove is reborn.",
+        "npcDialogueId": "sage-prestige",
+        "objectives": [
+          {
+            "id": "ag4-level",
+            "description": "Reach level 20",
+            "targetType": "player_level",
+            "targetAmount": 20
+          },
+          {
+            "id": "ag4-old-growth",
+            "description": "Grow 8 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 8
+          }
+        ],
+        "reward": {
+          "xp": 750,
+          "resources": { "timber": 50, "sap": 50, "fruit": 30, "acorns": 30 },
+          "seeds": [{ "speciesId": "mystic-fern", "amount": 3 }],
+          "friendshipPoints": 20
+        },
+        "completionDialogueId": "rowan-exploration"
+      }
+    ]
+  }
+]

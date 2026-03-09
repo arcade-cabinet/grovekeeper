@@ -1,5 +1,15 @@
 # Economy
 
+> **Superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Section 7 (Economy, Crafting, & Trading)
+>
+> This document describes the **old 4-resource economy** (Timber, Sap, Fruit, Acorns) with coins as secondary currency, Zustand-based store actions, and grid expansion costs. The unified design replaces this with a **12-resource survival economy** (adding Stone, Ore, Berries, Herbs, Meat, Hide, Fish, Seeds), a forging system, cooking system, 28 crafting recipes across 4 tiers, an NPC trading system with supply/demand and market events, structure upgrade chains, and a seed economy tied to Grovekeeper discovery. Refer to the unified doc for the canonical state.
+
+---
+
+*The content below is retained for historical reference only.*
+
+---
+
 Grovekeeper uses a four-resource economy with coins as a secondary currency. Resources are earned by harvesting trees and spent on seeds and grid expansion.
 
 ## Resource Types

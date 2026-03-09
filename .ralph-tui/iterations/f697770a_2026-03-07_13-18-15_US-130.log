@@ -1,0 +1,120 @@
+# Iteration 130 Log
+
+## Metadata
+
+- **Task ID**: US-130
+- **Task Title**: Implement ambient soundscape system
+- **Description**: As a player, I want 6-layer ambient audio per biome driven by AmbientZoneComponent entities with Panner3D spatial audio and distance-based crossfade so that the world sounds alive. See GAME_SPEC.md §1...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T19:18:15.388Z
+- **Ended At**: 2026-03-07T19:24:30.894Z
+- **Duration**: 6m 15s
+- **Input Tokens**: 115
+- **Output Tokens**: 19819
+- **Total Tokens**: 19934
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill,Read,Glob,Grep[0m
+[94m[Skill][0m
+Let me study the current codebase state before implementing.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/audio.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/ambient*[0m
+`★ Insight ─────────────────────────────────────`
+The `AmbientZoneComponent` is already defined in `game/ecs/components/procedural/audio.ts` as `SoundscapeComponent` — this is the ECS component driving the ambient audio zones.
+`─────────────────────────────────────────────────`
+
+Now let me read the spec section and the existing Tone.js audio engine from US-129.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§13|ambient|soundscape|Panner3D"[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/audio*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§13|## 13|ambient audio|AmbientZone|layer|biome.*audio|audio.*biome"[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/audioEngine.ts[0m
+Let me read the spec section 27.2 for ambient soundscape details and the audio config.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/audio.json[0m
+Now let me check the audioEngine test and ECS world structure to understand patterns:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/audioEngine.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/audio.ts[0m
+Let me check the ECS world definition and how AmbientZoneComponent is registered:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/ambient*[0m
+Let me check the Position type and time-of-day types:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/core.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/atmosphere.ts[0m
+Now I have all the context I need. Let me set up todos and start implementing TDD-style.
+
+`★ Insight ─────────────────────────────────────`
+The `TimeOfDay` type has 8 values (dawn→midnight), and the world already has `ambientZonesQuery = world.with("ambientZone", "position")`. The key testable seam is a pure `computeAmbientMix` function — no Tone.js needed for the math layer.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Write,Bash[0m
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/ambientAudio.json[0m "{
+  "layerVolumes": {
+    "forest":  { "wind": 0.4, "birds": 0.6, "insects": 0.2, "crickets": 0.0, "water": 0.0, "vegetation": 0.8 },
+    "meadow":  { "wind": 0.7, "birds": 0.6, "insects": 0.5, "crick... (1089 chars)"
+[94m[TodoWrite][0m
+Now write the failing tests (RED phase):
+
+`★ Insight ─────────────────────────────────────`
+The testable seam here is extracting **pure math** functions that need zero Tone.js mocking. `computeZoneGain` and `computeAmbientMix` are just number crunching — they can be tested with plain objects. The Tone.js-dependent layer management is tested separately with the same mock pattern from `audioEngine.test.ts`.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/ambientAudio.test.ts[0m "/**
+ * ambientAudio tests (Spec §27.2)
+ *
+ * Pure functions tested without Tone.js — no mocking needed for math layer.
+ * Runtime layer management tests use Tone.js mock (same pattern as audioEngine.t... (9026 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run ambient audio tests to confirm RED phase $ npx jest --no-coverage game/systems/ambientAudio.test.ts 2>&1 | tail -20
+RED confirmed — module not found. Now implement:
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/ambientAudio.ts[0m "/**
+ * ambientAudio -- 6-layer ambient soundscape system (Spec §27.2).
+ *
+ * Pure functions (exported for tests):
+ *   - computeZoneGain    — distance-based crossfade gain for a zone
+ *   - layersForB... (6269 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run ambient audio tests for GREEN verification $ npx jest --no-coverage game/systems/ambientAudio.test.ts 2>&1 | tail -25
+31/31 GREEN. Now run the full suite + tsc:
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+[94m[Bash][0m Run full Jest test suite $ npx jest --no-coverage 2>&1 | tail -10
+3110/3110 passing, tsc clean. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-128" → "---
+
+## 2026-03-07 - US-130
+- Implemented 6-layer ..."
+[94m[TodoWrite][0m
+All done. Here's a summary:
+
+## US-130 Complete
+
+**Files created:**
+- `config/game/ambientAudio.json` — biome layer volumes + time gate config
+- `game/systems/ambientAudio.ts` — ambient audio system
+- `game/systems/ambientAudio.test.ts` — 31 tests
+
+**Acceptance criteria verified:**
+- [x] `game/systems/ambientAudio.ts` exists
+- [x] 6-layer ambient per biome (wind/birds/insects/crickets/water/vegetation)
+- [x] `AmbientZoneComponent` entities drive the mix via `ZoneInput` / `computeAmbientMix`
+- [x] Crossfade by distance — linear falloff `volume * (1 - dist/radius)` in XZ plane
+- [x] Biome-specific audio plays — `layersForBiome()` reads per-biome weights from config
+- [x] `npx tsc --noEmit` → 0 errors
+- [x] `npx jest --no-coverage` → 3110/3110 pass
+
+`★ Insight ─────────────────────────────────────`
+The key architecture decision: **6 global layer accumulators** rather than per-zone synthesis nodes. Each zone contributes weighted volumes to the global channels each frame. This is O(zones × layers) per tick — cheap and scalable. The injected `nodeFactory` in `initAmbientLayers` makes the runtime Tone.js layer management fully mockable without pulling in the actual AudioContext.
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

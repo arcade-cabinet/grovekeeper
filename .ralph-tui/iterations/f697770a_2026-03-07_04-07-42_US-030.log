@@ -1,0 +1,87 @@
+# Iteration 30 Log
+
+## Metadata
+
+- **Task ID**: US-030
+- **Task Title**: Write Jest tests for save/load
+- **Description**: As a developer, I want tests for save/load so that round-trip persistence and auto-save triggers are verified. See GAME_SPEC.md §7.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:07:42.575Z
+- **Ended At**: 2026-03-07T10:11:16.653Z
+- **Duration**: 3m 34s
+- **Input Tokens**: 90
+- **Output Tokens**: 10336
+- **Total Tokens**: 10426
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/stores/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+Now let me look at the save/load persistence implementation from US-029:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/chunkPersistence*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*persist*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/chunkPersistence.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/chunkPersistence.test.ts[0m
+Let me check for an auto-save hook or related file:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*autoSave*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*auto*[0m
+[94m[Bash][0m
+
+[91m[Error: <tool_use_error>InputValidationError: Bash failed due to the following issues:
+The required parameter `command` is missing
+An unexpected parameter `cmd` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run existing store and persistence tests $ npx jest --no-coverage --testPathPattern="gameStore|chunkPersistence" 2>&1 | tail -30
+Let me check GAME_SPEC.md §7 and check whether an auto-save test file already exists:
+[94m[Bash][0m Search for save/load section in GAME_SPEC.md $ grep -n "§7\|§ 7\|auto.save\|autoSave\|Auto.Save" /Users/jbogaty/src/arcade-cabinet/grovekeeper/docs...
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*save*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/saveLoad.test.ts[0m
+[94m[Bash][0m Run saveLoad tests $ npx jest --no-coverage --testPathPattern="saveLoad" 2>&1 | tail -20
+[94m[Bash][0m Run all tests $ npx jest --no-coverage 2>&1 | tail -15
+Now let me check TypeScript:
+[94m[Bash][0m TypeScript check $ npx tsc --noEmit 2>&1 | tail -20
+All 1487 tests pass and TypeScript is clean. The only gap is the **auto-save trigger** test — `useGameStore.subscribe()` is never tested. Let me add that to `gameStore.test.ts`.
+
+`★ Insight ─────────────────────────────────────`
+- `observe(gameState$, listener)` in Legend State fires **synchronously** when any child observable changes — this is the "reactive graph" model. No microtask/Promise needed in tests.
+- `subscribe()` in the store wraps `observe` to give a Zustand-compatible API. The returned function is the unsubscriber (calls `dispose` under the hood).
+- Testing auto-save trigger means verifying the subscription fires on state mutation — which is all auto-save needs: "state changed → listener → save".
+`─────────────────────────────────────────────────`
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m
+
+[91m[Error: <tool_use_error>InputValidationError: Edit failed due to the following issues:
+The required parameter `old_string` is missing
+The required parameter `new_string` is missing
+An unexpected parameter `old_str` was provided
+An unexpected parameter `new_str` was provided</tool_use_error>][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.test.ts[0m edit: "  describe("Border cosmetic actions", () => {
+    ..." → "  describe("Border cosmetic actions", () => {
+    ..."
+[94m[Bash][0m Run gameStore tests with new subscribe tests $ npx jest --no-coverage --testPathPattern="gameStore" 2>&1 | tail -25
+All 6 new tests pass. Now run the full suite and TypeScript check:
+[94m[Bash][0m Full typecheck and test run $ npx tsc --noEmit 2>&1 && npx jest --no-coverage 2>&1 | tail -8
+1493 tests pass (up from 1487), TypeScript clean. Let me update progress.md:
+[94m[Bash][0m Append US-030 entry to progress.md $ US-030 only needed to close the "auto-save trigger" gap in the acceptance criteria. --- EOF
+`★ Insight ─────────────────────────────────────`
+- Legend State's `observe()` calls its callback **eagerly once** on subscription, then again on each change — `mockClear()` after subscribing is essential for accurate call-count assertions.
+- The `subscribe → unsubscribe` pattern maps cleanly to `useEffect(() => { const unsub = store.subscribe(...); return unsub; }, [])` in React — the test mirrors exactly how auto-save hooks work in production.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria met:
+- **6+ save/load tests** — 6 new + 16 in saveLoad.test.ts + 28 in chunkPersistence.test.ts
+- **Round-trip** — covered in saveLoad.test.ts `round-trip serialization` block and chunkPersistence.test.ts
+- **Auto-save trigger** — 6 new `subscribe` tests in gameStore.test.ts
+- **`npx tsc --noEmit`** — passes clean
+- **`npx jest --no-coverage`** — 1493/1493 pass
+
+<promise>COMPLETE</promise>

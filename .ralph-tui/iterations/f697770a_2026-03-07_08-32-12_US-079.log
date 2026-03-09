@@ -1,0 +1,116 @@
+# Iteration 79 Log
+
+## Metadata
+
+- **Task ID**: US-079
+- **Task Title**: Implement hedge maze generation
+- **Description**: As a developer, I want a seeded recursive backtracker maze generator on a 12x12 grid that maps to modular hedge GLB pieces so that garden labyrinths appear in the world. See GAME_SPEC.md §18.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T14:32:12.989Z
+- **Ended At**: 2026-03-07T14:40:24.763Z
+- **Duration**: 8m 11s
+- **Input Tokens**: 129
+- **Output Tokens**: 26778
+- **Total Tokens**: 26907
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+
+[91m[Error: File content (45671 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/maze*[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/*.ts[0m
+No `mazeGenerator.ts` exists yet. Let me read the spec and existing hedge components to understand the context.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§18|maze|hedge[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/villageGenerator.ts[0m
+Now let me read GAME_SPEC.md section 18 specifically, and also look at hedge-related components and the pathGenerator for the landmark type pattern.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m## .*18|§18|Labyrinth|maze generator|hedge.*GLB|HedgeComponent|hedge.*piece|modular.*hedge[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/terrain.ts[0m
+Let me read the spec section 17.5 in full and also read the pathGenerator to understand the landmark system.
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m17\.5|Labyrinth|maze[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/pathGenerator.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m pattern: [96mscopedRNG[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/utils/seedRNG.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedRNG.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils[0m pattern: [96mexport function scopedRNG[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/utils/seedWords.ts[0m
+Now let me check the existing test patterns for similar generators and understand the CHunkManager wiring.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/villageGenerator.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/ChunkManager.ts[0m pattern: [96mhedge|maze|labyrinth[0m
+Let me check the config files for hedge pieces and any existing maze-related config.
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config[0m pattern: [96mhedge|maze|labyrinth[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/hedgeMaze.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mHedgeComponent|hedgeComponent|hedge.*model|modelPath.*hedge[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/grid.json[0m
+There's already a `hedgePlacement.ts` system! Let me read it to understand the existing pattern.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.test.ts[0m
+I can see `hedgePlacement.ts` already exists with the maze algorithm. The task is to create `game/world/mazeGenerator.ts` that integrates it into the chunk world system. Let me read the full test file and understand what exists:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/hedgePlacement.test.ts[0m
+`★ Insight ─────────────────────────────────────`
+- `game/systems/hedgePlacement.ts` already has the recursive backtracker (`generateMaze`), wall-to-piece conversion (`mazeToHedgePieces`), and decoration placement. The task is to write the world-layer wrapper that integrates with chunk coords + heightmaps.
+- The maze is 12×3=36 world units across a 16-unit chunk — it spans adjacent chunks by design, just like the village generator radiates outward from center.
+- The `mazeIndex % 8` (for the spirit system) should be derived by hashing the stable chunk coordinates, not from an incremental counter, since chunks can load in any order.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.ts[0m "/**
+ * mazeGenerator -- World-layer wrapper for the hedge maze generator.
+ *
+ * Detects labyrinth landmark chunks and converts the seeded recursive
+ * backtracker output (from game/systems/hedgePlacem... (8390 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The test needs to find a labyrinth chunk without brute-forcing — scanning a 20×20 grid at 3% probability gives ~12 expected hits, so a search loop up to 400 iterations reliably finds one.
+- The `mazeIndex % TOTAL_MAZES` hash means two different chunk positions can map to the same spirit index — that's intentional; it's a bounded ring, not a unique per-chunk index.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/mazeGenerator.test.ts[0m "/**
+ * mazeGenerator.test.ts
+ * Spec §17.5 — Hedge labyrinth detection and world-space placement generation.
+ */
+
+import {
+  isLabyrinthChunk,
+  generateLabyrinth,
+  LABYRINTH_PROBABILITY,
+  type Hedg... (10769 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Run mazeGenerator tests only $ npx jest --no-coverage --testPathPattern="mazeGenerator" 2>&1
+26/26 tests pass. Let me run the full suite to confirm nothing regressed.
+[94m[Bash][0m Full test suite run $ npx jest --no-coverage 2>&1 | tail -20
+115 suites, 2252 tests — all passing (26 new tests added). Now append learnings:
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **Navigation spec §17.6 maps to 2 files**: cam..." → "  - **Navigation spec §17.6 maps to 2 files**: cam..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The key architectural insight here is the **two-layer seed system**: `hedgePlacement.ts` uses integer seeds (via `createRNG`), while the world layer uses string seeds (via `scopedRNG`). Bridging them with `hashString("maze-{worldSeed}-{x}-{z}")` creates a deterministic per-chunk integer seed without coupling the two layers.
+- The existing `hedgePlacement.ts` was already doing the heavy lifting (recursive backtracker, GLB path construction, decoration logic). `mazeGenerator.ts` is a pure adapter that handles coordinate transformation and ECS type wrapping.
+`─────────────────────────────────────────────────`
+
+**Summary of changes:**
+
+| File | Status |
+|------|--------|
+| `game/world/mazeGenerator.ts` | New (~180 lines) |
+| `game/world/mazeGenerator.test.ts` | New (26 tests) |
+
+**Verification:**
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 2252 tests, 115 suites, 0 failures
+
+<promise>COMPLETE</promise>

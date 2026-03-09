@@ -1,0 +1,93 @@
+# Iteration 159 Log
+
+## Metadata
+
+- **Task ID**: US-159
+- **Task Title**: Update MainMenu for brand styling + game mode flow
+- **Description**: As a developer, I want the existing MainMenu.tsx (314 lines — OVER 300 LINE LIMIT) decomposed and updated with brand-aligned vertical gradient, Logo.tsx SVG, tagline, Continue button (only if save exi...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T22:58:16.145Z
+- **Ended At**: 2026-03-07T23:03:45.450Z
+- **Duration**: 5m 29s
+- **Input Tokens**: 98
+- **Output Tokens**: 17898
+- **Total Tokens**: 17996
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/Logo.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/theme.json[0m
+Good. Now let me check related files:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/*.{ts,tsx}[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mainMenuLogic.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/NewGameModal.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/SettingsScreen.tsx[0m
+Let me check how MainMenu is used and what the game store looks like:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/index.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mainMenuLogic.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§26|section 26|26\.[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m
+`★ Insight ─────────────────────────────────────`
+The file exceeds 300 lines because background decoration components (`FloatingLeaf`, silhouettes, `useReducedMotion`) live alongside the main component. The project pattern (from codebase patterns notes) is to extract into a sibling `.ts`/`.tsx` file with a barrel export — same pattern used for `mainMenuLogic.ts`. The background file stays internal (not in `index.ts`) since these are implementation details, not public API.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/mainMenuBackground.tsx[0m "/**
+ * Background decoration components for MainMenu (Spec §26).
+ *
+ * Extracted from MainMenu.tsx to keep that file under 300 lines.
+ * Contains: floating leaf particles, tree silhouettes, useReduced... (4868 chars)"
+[94m[TodoWrite][0m
+Now rewrite MainMenu.tsx to import from the new file and fix the "New Grove" button label:
+
+`★ Insight ─────────────────────────────────────`
+The original component had a label bug: when a save exists, `primaryButtonLabel(treesPlanted)` returns `"Continue Grove"` — same text as the first button — but this second button calls `onNewGrove`. Fixing it to use `"New Grove"` directly when `saveExists` makes the UX correct without changing the pure logic function (keeping the test passing).
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx[0m "/**
+ * MainMenu -- entry screen for Grovekeeper.
+ * Spec §26. Mobile-first, portrait-primary, brand-aligned vertical gradient.
+ */
+import { LinearGradient } from "expo-linear-gradient";
+import { useMe... (5975 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -50
+[94m[Bash][0m Check tsc errors specific to MainMenu files $ npx tsc --noEmit 2>&1 | grep -E "mainMenu|MainMenu" | head -20
+[94m[Bash][0m Check for non-TS5097 TypeScript errors $ npx tsc --noEmit 2>&1 | grep -v "TS5097" | head -20
+Good — all errors are pre-existing (TS5097 extension warnings and MiniMap casing issue). No new errors from my changes. Now run Jest:
+[94m[Bash][0m Run mainMenu Jest tests $ npx jest --no-coverage --testPathPattern="mainMenu" 2>&1
+All 10 tests pass. Let me verify the line count:
+[94m[Bash][0m Count lines in both files $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MainMenu.tsx /Users/jbogaty/src/...
+[94m[TodoWrite][0m
+MainMenu.tsx is now 177 lines (well under 300). Now update progress.md:
+[94m[Bash][0m View tail of progress.md $ tail -20 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-159 entry to progress.md $ fix the usage site.   - **Pre-existing TS5097 errors are project-wide, not task-specific**: The enti...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The decomposition reveals a common React pattern: when a component exceeds line limits, the natural split is usually between **presentation logic** (the main component's data flow and layout) and **decoration/animation** (particles, silhouettes, motion hooks). These rarely need to be in the same file and extracting them into a sibling file preserves the component's public API completely — zero changes to callers.
+`─────────────────────────────────────────────────`
+
+**US-159 complete.** Here's a summary of what was done:
+
+**Files changed:**
+- `components/game/mainMenuBackground.tsx` (new, 137 lines) — extracted `FloatingLeaf`, `LeftTreeSilhouette`, `RightTreeSilhouette`, `LEAF_CONFIGS`, `LeafConfig`, `useReducedMotion`
+- `components/game/MainMenu.tsx` (177 lines, was 319) — imports from new file, fixed a bug where "New Grove" button label showed "Continue Grove" when a save exists
+
+**Acceptance criteria verified:**
+- MainMenu.tsx: 177 lines ✓ (under 300)
+- Logo.tsx used ✓
+- Gradient from theme.json colors (skyMist → leafLight → forestGreen) ✓
+- Tagline present ✓
+- Continue button conditional on `hasSave()` ✓
+- New Grove button opens NewGameModal (via `onNewGrove` prop → `app/index.tsx`) ✓
+- Settings button calls `onSettings` ✓
+- Jest: 10/10 passing ✓
+- tsc: no new errors ✓
+
+<promise>COMPLETE</promise>

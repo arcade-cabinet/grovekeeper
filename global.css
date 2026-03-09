@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Grovekeeper Light Mode — exploration/day */
+    --background: 141 100% 97%;
+    --foreground: 149 59% 20%;
+    --card: 141 79% 93%;
+    --card-foreground: 149 59% 20%;
+    --popover: 152 100% 96%;
+    --popover-foreground: 149 59% 20%;
+    --primary: 142 69% 58%;
+    --primary-foreground: 149 59% 20%;
+    --secondary: 141 79% 93%;
+    --secondary-foreground: 149 59% 20%;
+    --muted: 152 100% 96%;
+    --muted-foreground: 148 59% 24%;
+    --accent: 142 77% 73%;
+    --accent-foreground: 149 59% 20%;
+    --destructive: 0 84% 60%;
+    --border: 142 77% 73%;
+    --input: 142 77% 73%;
+    --ring: 142 69% 58%;
+    --radius: 0.5rem;
+  }
+
+  :root.dark {
+    /* Grovekeeper Dark Mode — survival/night */
+    --background: 127 41% 9%;
+    --foreground: 127 12% 92%;
+    --card: 13 50% 12%;
+    --card-foreground: 127 12% 92%;
+    --popover: 128 38% 16%;
+    --popover-foreground: 127 12% 92%;
+    --primary: 142 69% 58%;
+    --primary-foreground: 127 41% 9%;
+    --secondary: 128 38% 16%;
+    --secondary-foreground: 127 12% 92%;
+    --muted: 60 8% 16%;
+    --muted-foreground: 128 12% 67%;
+    --accent: 130 22% 19%;
+    --accent-foreground: 127 12% 92%;
+    --destructive: 0 84% 60%;
+    --border: 131 20% 30%;
+    --input: 131 20% 30%;
+    --ring: 142 69% 58%;
+    --radius: 0.5rem;
+  }
+}

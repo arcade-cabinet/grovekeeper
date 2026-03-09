@@ -1,0 +1,115 @@
+# Iteration 102 Log
+
+## Metadata
+
+- **Task ID**: US-102
+- **Task Title**: Create floating speech bubble component
+- **Description**: As a player, I want to see speech bubbles floating above NPCs and spirits during dialogue so that conversations feel grounded in the world. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:28:46.757Z
+- **Ended At**: 2026-03-07T16:37:54.793Z
+- **Duration**: 9m 8s
+- **Input Tokens**: 151
+- **Output Tokens**: 28016
+- **Total Tokens**: 28167
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/**/*.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|speech.bubble|SpeechBubble|billboard|Billboard[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.tsx[0m
+Now let me read the dialogue spec section and check existing dialogue components:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## 15\.|^## 33\.[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/NpcMeshes.tsx[0m
+Let me also check the dialogue ECS components and what drei exports are available:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mBillboard|Text|Html|drei[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/package.json[0m pattern: [96m@react-three/drei|drei[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mBillboard|Text.*drei|drei.*Text[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*SpeechBubble*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*.test.tsx[0m
+Let me look at an existing test file and how drei is mocked:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/systems/*.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/*.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96massets/fonts/**/*[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mFredoka|fredoka[0m
+Let me check how the expo-google-fonts/fredoka package is structured:
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m List fredoka font package contents $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@expo-google-fonts/fredoka/ | head -20
+[94m[Bash][0m Check font file structure $ ls /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@expo-google-fonts/fredoka/400Regular/
+Let me check the game screen and the scene setup to understand R3F context:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+Let me check the TreeModel test file to understand the mocking pattern used for components with drei:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.test.ts[0m
+[94m[Bash][0m Check Jest configuration $ print(json.dumps(d.get('jest', {}), indent=2))"
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.setup.ts[0m
+[94m[Bash][0m Check jest-expo preset configuration $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/jest-expo/jest-preset.js 2>/dev/null ...
+[94m[Bash][0m Check rest of jest-expo preset $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/jest-expo/jest-preset.js 2>/dev/null ...
+[94m[Bash][0m Check if ttf is in jest-expo asset transforms $ grep -r 'ttf\|otf\|woff\|font' /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/jest-expo/...
+[94m[Bash][0m Check what jest-expo asset file transformer returns $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/jest-expo/src/preset/assetFileTransfo...
+[94m[Bash][0m Check TypeScript configuration $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/tsconfig.json
+[94m[Bash][0m Check expo base tsconfig $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/expo/tsconfig.base.json 2>/dev/null |...
+[94m[Bash][0m Check if require() is used in existing component files $ grep -r 'require\s*(' /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.ts...
+[94m[Bash][0m Check how require() is used in existing source files $ grep -r 'require(' /Users/jbogaty/src/arcade-cabinet/grovekeeper/game --include="*.ts" | grep -v nod...
+[94m[Bash][0m Check how require is declared in db/client.ts $ head -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/game/db/client.ts
+Now I have everything I need. Let me set up the todo list and implement:
+
+`★ Insight ─────────────────────────────────────`
+The codebase pattern for R3F component testing is:
+1. Export pure math functions (no Three.js imports) that can be unit-tested without WebGL
+2. Mock `@react-three/drei`, `@react-three/fiber`, and `three` at the top of test files
+3. Use imperative refs (`materialRef.current.opacity = value`) in `useFrame` to avoid React state per frame — only use `useState` for structural changes (entity count changes)
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/SpeechBubble.tsx[0m "/**
+ * SpeechBubble — world-space billboarded speech bubble above entities.
+ *
+ * Renders a floating text bubble above NPCs and Grovekeeper spirits during
+ * dialogue. The bubble always faces the came... (5431 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The `computeOpacity` pure function captures the entire fade math as a testable unit — no Three.js, no R3F. Tests run the function through a full animation cycle (accumulated `dt` steps) to verify it actually reaches 0 and 1 within a reasonable frame budget. This is the canonical way to test animation logic in this codebase.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/SpeechBubble.test.ts[0m "/**
+ * Tests for SpeechBubble — floating speech bubble pure functions (Spec §33.5).
+ *
+ * Tests exported pure functions without WebGL/R3F context:
+ *   - computeOpacity   — fade in/out opacity animati... (6027 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run SpeechBubble tests $ npx jest --no-coverage --testPathPattern="SpeechBubble" 2>&1
+All 22 tests pass. Let me run the full suite to verify nothing is broken:
+[94m[Bash][0m Run full jest suite $ npx jest --no-coverage 2>&1 | tail -20
+126 suites, 2670 tests — all pass. Let me update the progress file:
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-101" → "---
+
+## 2026-03-07 - US-102
+- Created `components/..."
+[94m[TodoWrite][0m
+US-102 is complete. Here's a summary:
+
+**Files created:**
+- `components/entities/SpeechBubble.tsx` — billboard speech bubble component
+- `components/entities/SpeechBubble.test.ts` — 22 tests
+
+**Key design:**
+- `Billboard` from drei keeps the quad always facing the camera
+- `computeOpacity` / `computeBubbleY` are exported pure functions, fully testable without WebGL
+- Opacity animates imperatively via `useFrame` — `bgMaterialRef.current.opacity` for the background quad, `textRef.current.fillOpacity` for the troika text mesh — zero React state updates per frame
+- Fredoka font loaded via `require("@expo-google-fonts/fredoka/400Regular/Fredoka_400Regular.ttf")` which jest-expo's asset transformer handles in tests (returns `1`), and Metro resolves to a URL in production
+
+**Verification:** `npx tsc --noEmit` → 0 errors · `npx jest --no-coverage` → 2670 tests, 0 failures
+
+<promise>COMPLETE</promise>

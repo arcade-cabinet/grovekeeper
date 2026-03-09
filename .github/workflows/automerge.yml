@@ -1,0 +1,33 @@
+name: Automerge
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    name: Merge release-please & dependabot PRs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Merge eligible PRs
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          # Merge release-please PRs
+          gh pr list --label "autorelease: pending" --state open --json number,mergeable -q '.[] | select(.mergeable == "MERGEABLE") | .number' | while read -r pr; do
+            echo "Merging release-please PR #$pr"
+            gh pr merge "$pr" --merge --admin || echo "Failed to merge PR #$pr"
+          done
+
+          # Merge dependabot PRs
+          gh pr list --label "dependencies" --state open --json number,mergeable -q '.[] | select(.mergeable == "MERGEABLE") | .number' | while read -r pr; do
+            echo "Merging dependabot PR #$pr"
+            gh pr merge "$pr" --merge --admin || echo "Failed to merge PR #$pr"
+          done

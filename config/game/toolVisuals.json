@@ -1,0 +1,54 @@
+{
+  "swap": {
+    "lowerY": 0.4,
+    "duration": 150
+  },
+  "sway": {
+    "swayAmount": 0.06,
+    "lerpFactor": 8.0
+  },
+  "bob": {
+    "bobHeight": 0.02,
+    "bobFrequency": 8.0
+  },
+  "swing": {
+    "downAngle": -45,
+    "downDuration": 120,
+    "upDuration": 200
+  },
+  "trowel": {
+    "glbPath": "assets/models/tools/Hoe.glb",
+    "offset": [0.35, -0.3, -0.5],
+    "scale": 0.4,
+    "useAnimation": "stab",
+    "useDuration": 0.4
+  },
+  "axe": {
+    "glbPath": "assets/models/tools/Axe.glb",
+    "offset": [0.4, -0.35, -0.55],
+    "scale": 0.5,
+    "useAnimation": "chop",
+    "useDuration": 0.5
+  },
+  "pruning-shears": {
+    "glbPath": "assets/models/tools/Hatchet.glb",
+    "offset": [0.3, -0.25, -0.45],
+    "scale": 0.35,
+    "useAnimation": "snip",
+    "useDuration": 0.3
+  },
+  "shovel": {
+    "glbPath": "assets/models/tools/Shovel.glb",
+    "offset": [0.35, -0.3, -0.6],
+    "scale": 0.55,
+    "useAnimation": "dig",
+    "useDuration": 0.6
+  },
+  "pickaxe": {
+    "glbPath": "assets/models/tools/Pickaxe.glb",
+    "offset": [0.35, -0.3, -0.6],
+    "scale": 0.55,
+    "useAnimation": "dig",
+    "useDuration": 0.7
+  }
+}

@@ -1,0 +1,104 @@
+# Iteration 53 Log
+
+## Metadata
+
+- **Task ID**: US-053
+- **Task Title**: Implement foam and caustic effects
+- **Description**: As a developer, I want foam overlay where wave steepness exceeds threshold and caustics projected below water so that water looks polished. See GAME_SPEC.md §12.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T11:42:30.937Z
+- **Ended At**: 2026-03-07T11:48:02.097Z
+- **Duration**: 5m 31s
+- **Input Tokens**: 98
+- **Output Tokens**: 17414
+- **Total Tokens**: 17512
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*water*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/shaders/gerstnerWater.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/WaterBody.tsx[0m
+Now let me check the GAME_SPEC.md §12 and the water ECS component:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§12|§31|foam|caustic[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/procedural/water.ts[0m
+Let me check the existing test files and the full spec section:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/shaders/gerstnerWater.test.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/shaders[0m pattern: [96m**/*.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/WaterBody.test.ts[0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit,Write,Bash[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+Foam is **already implemented** in the Gerstner shader from US-051 (`vFoam` varying computed from steepness × sinP, blended in fragment shader). US-053's new work is **caustics only** — an additive-blended plane slightly below each water surface that projects an animated interference pattern. The caustic plane reuses the same `buildWaterPlaneGeometry` factory (same footprint as water body) but with a different shader and `THREE.AdditiveBlending`.
+`─────────────────────────────────────────────────`
+
+Now adding the caustic shader to `gerstnerWater.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/shaders/gerstnerWater.ts[0m edit: "/**
+ * Update the time uniform on a Gerstner mater..." → "/**
+ * Update the time uniform on a Gerstner mater..."
+[94m[TodoWrite][0m
+Now update `WaterBody.tsx` to render caustic planes:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/WaterBody.tsx[0m "/**
+ * WaterBodies — R3F component that renders all ECS water body entities
+ * using PlaneGeometry + Gerstner wave ShaderMaterial.
+ *
+ * Each water body is an ECS entity with a WaterBodyComponent that... (5590 chars)"
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The caustic plane reuses `buildWaterPlaneGeometry` (same footprint), positioned at `y - CAUSTICS_DEPTH_OFFSET`. `THREE.AdditiveBlending` adds `src_alpha * src_rgb` to the destination — the bright caustic rings appear to "light up" whatever's below without occlusion, which matches the "light projection" visual semantics. `depthWrite: false` prevents the transparent plane from blocking scene objects.
+`─────────────────────────────────────────────────`
+
+Now add caustic tests to `gerstnerWater.test.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/shaders/gerstnerWater.test.ts[0m edit: "jest.mock("three", () => ({
+  ShaderMaterial: jest..." → "jest.mock("three", () => ({
+  ShaderMaterial: jest..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/shaders/gerstnerWater.test.ts[0m edit: "import * as THREE from "three";
+import type { Wate..." → "import * as THREE from "three";
+import type { Wate..."
+Now append the caustic test suites at the end of the file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/shaders/gerstnerWater.test.ts[0m edit: "// ─── updateGerstnerTime ────────────────────────..." → "// ─── updateGerstnerTime ────────────────────────..."
+[94m[TodoWrite][0m
+Now add the caustic constant tests to `WaterBody.test.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/WaterBody.test.ts[0m edit: "jest.mock("@/game/shaders/gerstnerWater", () => ({..." → "jest.mock("@/game/shaders/gerstnerWater", () => ({..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/WaterBody.test.ts[0m edit: "import * as THREE from "three";
+import {
+  buildWa..." → "import * as THREE from "three";
+import {
+  buildWa..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/scene/WaterBody.test.ts[0m edit: "// ─── WaterBodies component ─────────────────────..." → "// ─── CAUSTICS_DEPTH_OFFSET constant ────────────..."
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run water shader and WaterBody tests $ npx jest --no-coverage --testPathPattern "gerstnerWater|WaterBody" 2>&1
+71 tests pass. Now full suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+1884 tests, 0 failures. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-052" → "- **Caustic plane reuses water geometry factory**:..."
+[94m[TodoWrite][0m
+US-053 is complete.
+
+**Summary of changes:**
+
+- **Foam** — was already fully implemented in US-051's Gerstner shader (`vFoam` varying + `uFoamEnabled`/`uFoamThreshold` uniforms). No new work needed.
+
+- **Caustics** — new additive-blended plane rendered `CAUSTICS_DEPTH_OFFSET` (0.05) below each water body with `causticsEnabled = true`. Two-layer sine interference fragment shader produces animated caustic rings (scale 0.5, speed 0.8 per spec).
+
+**Files changed:**
+| File | Change |
+|------|--------|
+| `game/shaders/gerstnerWater.ts` | Added `CAUSTICS_UV_SCALE`, `CAUSTICS_SPEED`, `CAUSTICS_VERTEX_SHADER`, `CAUSTICS_FRAGMENT_SHADER`, `createCausticsMaterial()`, `updateCausticsTime()` |
+| `components/scene/WaterBody.tsx` | Added `CAUSTICS_DEPTH_OFFSET`, caustic mesh lifecycle in `useFrame` |
+| `game/shaders/gerstnerWater.test.ts` | 18 new caustic tests |
+| `components/scene/WaterBody.test.ts` | `CAUSTICS_DEPTH_OFFSET` tests + updated mock |
+
+**Quality gates:** `npx tsc --noEmit` → 0 errors · `npx jest --no-coverage` → 1884 tests, 0 failures
+
+<promise>COMPLETE</promise>

@@ -4,77 +4,81 @@
 
 **Name:** Grovekeeper
 **Tagline:** *"Every forest begins with a single seed."*
-**Genre:** Cozy 2.5D orthographic tree-planting simulation / idle tending game
-**Platform:** Mobile-first PWA (portrait), desktop secondary
-**Target Session:** 3-15 minutes (commute-friendly)
+**Genre:** First-person survival grove-tending game with Wind Waker-inspired aesthetic
+**Platform:** Universal app (iOS + Android + Web) via Expo SDK 55
+**Target Session:** 3-15 minutes (commute-friendly), with longer exploration sessions supported
+
+## The Game
+
+Grovekeeper is a survival game. You are a nobody who sets out into an infinite procedural world and discovers the dormant Grovekeepers -- ancient guardians of tree species hidden deep within hedge labyrinths. Find all 14, unlock every species, master the land. Survival-style resource accumulation and consumption: hunt, fish, plant, farm, gather minerals, forge tools. Every comfort is earned.
+
+No "exploration mode." No "creative mode." Weather hurts. Nights are dangerous. Comfort is built, not given. This doesn't mean punishing -- it means MEANINGFUL.
+
+## Design Pillars
+
+1. **Become a Grovekeeper** -- The name IS the game. Find 14 dormant Grovekeepers in hedge labyrinths, awaken them, unlock their tree species. The Worldroot (15th species) is the endgame.
+2. **Wind Waker-Inspired Aesthetic** -- MSAA antialiasing. Device-native pixel ratio. Smooth PBR shading. Stylized low-poly geometry. Linear texture filtering. Intentional art direction.
+3. **Seeded Determinism** -- Same seed = same world. Zero Math.random(). All via `scopedRNG(scope, worldSeed, ...extra)`. Seed phrases: "Adjective Adjective Noun."
+4. **Mobile-First** -- 375px portrait minimum. 44px touch targets. <50 draw calls. <30K visible vertices. 55+ FPS on mid-range mobile.
+5. **Models Where Craft Matters, Procedural Where Variation Matters** -- Stylized GLBs for trees, NPCs, structures, props. Procedural for terrain, water, sky, weather, audio.
 
 ## Core Requirements
 
-### Must Have (MVP) -- ALL IMPLEMENTED
+### Survival Systems
+- **Hearts** (3-7 max, difficulty-scaled), **Hunger**, **Stamina**, **Temperature**
+- Weather impacts: rain (growth boost + cold), drought (reduced yields), windstorm (damage), snow (exposure)
+- Death drops resources, respawn at last campfire. Ironwood tier: permadeath.
+- Structures degrade over time. Campfire/shelter/windbreak are essential.
 
-1. **Orthographic 3D scene** -- BabylonJS diorama view of multi-zone world
-2. **Farmer character** -- walks across zones via virtual joystick (mobile) / WASD (desktop)
-3. **Planting flow** -- select seed, select tile, plant tree
-4. **Growth system** -- trees progress through 5 stages over time
-5. **Harvesting** -- collect resources from mature trees
-6. **Resource economy** -- Timber, Sap, Fruit, Acorns
-7. **Tool system** -- 8 tools with stamina costs
-8. **Season cycle** -- Spring/Summer/Autumn/Winter affecting growth
-9. **Progression** -- XP, levels, unlock species and tools
-10. **Persistence** -- auto-save to localStorage with ECS serialization (per-zone trees), resume on return
-11. **Mobile-first HUD** -- joystick, tool belt, resource display, all touch-friendly
-12. **Multi-zone world** -- player walks between zones, camera follows smoothly
-13. **Procedural world generation** -- worlds generated from seed + player level
-14. **Structure system** -- 6 structures with placement validation and effects
+### Open World
+- Infinite chunk-based procedural world (16x16 tiles per chunk, 3x3 active, 5x5 buffer)
+- 8 biomes determined by global temperature + moisture noise
+- Delta-only persistence: store ONLY what the player changed
+- Discovery cadence: major feature every 8-12 chunks, minor every 3-4, micro every 1
+- 14 Grovekeeper labyrinths scattered across the world (the narrative spine)
 
-### Should Have (Polish) -- ALL IMPLEMENTED
+### Economy & Crafting
+- 12 resources from 7 survival activities (chop, mine, harvest, forage, hunt, fish, farm)
+- 28 crafting recipes across 4 tiers (L1-25)
+- Forging system: Ore -> Iron Ingots -> tool upgrades
+- Cooking system: raw food -> cooked meals with better stats
+- Trading with NPC merchants (seasonal modifiers, supply/demand, market events)
 
-- Achievement system (15 achievements)
-- Daily challenges / quest system
-- Prestige system (level 25+ reset with bonuses, 5 cosmetic border themes, fresh world generation)
-- Grid expansion (12 to 16 to 20 to 24 to 32)
-- Weather events (rain, drought, windstorm)
-- Species-specific tree meshes via SPS Tree Generator (willow strands, pine cones, etc.)
-- Toast notifications with floating resource particles
-- Offline growth calculation
-- PWA service worker for offline play
-- CSS weather overlays (rain, drought, windstorm, cherry petals)
-- Growth animations (lerp-based smooth scaling)
-- Desktop adaptations (SVG minimap, keyboard badges, resource labels)
-- Design tokens (all spec CSS custom properties)
-- Typography (Fredoka headings, Nunito body)
-- Code splitting (107 KB initial, ~500 KB total game load)
-- Modular scene architecture (GameScene.tsx 1050 lines → 400 lines)
-- HDRI skybox with IBL environment
-- DynamicTexture ground with biome blending
+### Tool System
+- 5 base tools (stylized GLBs) + 4 craftable survival tools
+- 3 upgrade tiers: Basic -> Iron -> Grovekeeper
+- Durability system with repair at Forge
+- First-person view model with keyframe animations and impact effects
 
-### Nice to Have (Future)
+### Progression
+- 25 levels, each with meaningful unlocks (tools, recipes, structures, features)
+- Species unlocks via Grovekeeper discovery (separate from leveling)
+- New Game+ after finding all 14 Grovekeepers + Worldroot
+- 45 achievements across 10 categories
+- Species Discovery Codex (5 tiers per species)
 
-- Capacitor native builds (iOS/Android) -- configured but not yet built
-- Sound effects and ambient audio
-- Social features (compare groves)
-- Additional prestige species beyond current 3
-- Additional zone types and biomes
-- Structure upgrade tiers (basic → enhanced → advanced)
-- Tutorial improvements
+### NPCs & Quests
+- 10 named Tutorial Village NPCs with full personalities
+- Procedural NPCs at generated villages (ChibiCharacter GLBs, seeded appearance)
+- 3 quest layers: Main (Grovekeeper Path), World Quests (seed-variant narrative), Procedural (65+ templates)
+- Relationship system: 4 tiers with trade rate rewards
 
-## Success Criteria -- ACHIEVED
-
-1. **Playable loop:** Plant, Grow, Harvest, Expand runs smoothly across zones -- DONE
-2. **Mobile performance:** 55+ FPS on mid-range phones -- DONE (code-split, matrix freezing, template caching)
-3. **Session design:** Satisfying 5-minute play session -- DONE (offline growth, quick harvest, auto-save)
-4. **Retention hooks:** Quests + achievements + prestige + zone exploration create "one more session" feeling -- DONE
-5. **Visual charm:** Cozy, warm, organic feel -- DONE (SPS trees, StandardMaterial, weather overlays, seasonal tints, HDRI skybox)
-6. **Test coverage:** 751 tests across 37 files, all passing, TypeScript clean -- DONE
-
-## Canonical Specification
-
-The complete game design specification is archived in the `docs/` directory. It covers all 32 sections of the original design. All 32 sections have been implemented, plus the World Architecture Overhaul.
+### Difficulty Tiers
+| Tier | Hearts | Growth | Weather | Target |
+|------|--------|--------|---------|--------|
+| Seedling | 7 | 1.0x | 0.5x | First playthrough |
+| Sapling | 5 | 0.8x | 1.0x | Standard |
+| Hardwood | 4 | 0.6x | 1.5x | Experienced |
+| Ironwood | 3 | 0.4x | 2.0x | Permadeath |
 
 ## Scope Boundaries
 
-- **No multiplayer** -- this is a single-player experience
+- **No multiplayer** -- single-player experience
 - **No microtransactions** -- no real-money purchases
-- **No server backend** -- all data is local (localStorage)
-- **No complex 3D models** -- everything is procedural via SPS Tree Generator and BabylonJS primitives
-- **No animation rigging** -- farmer moves via position interpolation, not skeletal animation
+- **No server backend** -- all data is local (expo-sqlite, delta-only persistence)
+- **Stylized GLBs** are the visual foundation -- not procedural geometry for entities
+- **Tone.js** for all audio -- never raw Web Audio (user mandate)
+
+## Canonical Design Document
+
+**`docs/plans/2026-03-07-unified-game-design.md`** -- master synthesis of 10 domain-specific design docs + Grok integration plan + asset inventory. This is the single source of truth for game design.

@@ -1,0 +1,87 @@
+# Iteration 46 Log
+
+## Metadata
+
+- **Task ID**: US-046
+- **Task Title**: Create structure GLB rendering
+- **Description**: As a developer, I want a StructureModel component that loads farm structure GLBs by StructureComponent.templateId so that buildings, windmills, wells, and barns are visible. See GAME_SPEC.md §14.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T11:06:00.854Z
+- **Ended At**: 2026-03-07T11:08:51.382Z
+- **Duration**: 2m 50s
+- **Input Tokens**: 95
+- **Output Tokens**: 8636
+- **Total Tokens**: 8731
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/*.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/ecs/components/building.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/building.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/structures*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/structures.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components[0m pattern: [96mStructureComponent[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/structures.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/structures.json[0m
+`★ Insight ─────────────────────────────────────`
+- `StructureComponent.modelPath` is already set at ECS entity creation from `structures.json`, so `StructureModel` can use it directly without a `templateId` → path lookup. The `resolveStructureGLBPath` function should look up from `structures.json` via `templateId` to serve as a testable seam.
+- Following the same pattern as `TreeModel`, a separate `StructureGLBModel` sub-component wraps `useGLTF` so it's only called when mounted — satisfying Rules of Hooks.
+`─────────────────────────────────────────────────`
+
+Let me count total structures and read more of the JSON:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/structures.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/NpcModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/NpcModel.test.ts[0m
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `StructureComponent.modelPath` is already stored on each ECS entity, so `StructureModel` could use it directly — but exporting `resolveStructureGLBPath(templateId)` from the component provides the same testable seam used in `TreeModel`/`NpcModel`, decoupling tests from ECS.
+- structures.json has 20 entries (not 85 as mentioned in the task notes — the "85" likely refers to available 3DPSX assets in the library, not the current catalog). The component handles all entries in the config.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.tsx[0m "/**
+ * StructureModel — renders a farm structure GLB by StructureComponent.templateId.
+ *
+ * Loads the correct GLB from config/game/structures.json keyed by templateId.
+ * Covers barns, windmills, wel... (3267 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/StructureModel.test.ts[0m "/**
+ * Tests for StructureModel — structure GLB path resolution (Spec §14).
+ *
+ * Tests the exported pure functions without WebGL/R3F context.
+ * The component itself is verified by checking the expor... (4574 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | head -30
+[94m[Bash][0m Run StructureModel tests $ npx jest --no-coverage --testPathPattern StructureModel 2>&1
+All 18 tests pass, tsc reports 0 errors. Now update the progress log.
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-041" → "---
+
+## 2026-03-07 - US-046
+- Created `components/..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `StructureModel` omits material tinting (`scene.clone(true)` only) — structures don't need seasonal color overrides unlike trees, keeping the sub-component simpler while still isolating `useGLTF` behind a conditionally-mounted component.
+- The 20-structure catalog in `structures.json` vs the "85" in the task spec: config drives reality. The component handles everything in the config; as more structures are added to `structures.json`, they automatically become renderable with no code change.
+`─────────────────────────────────────────────────`
+
+**US-046 complete.** Summary:
+
+- `components/entities/StructureModel.tsx` — new file with `resolveStructureGLBPath(templateId)` (testable pure function) + `StructureGLBModel` sub-component (Rules of Hooks) + `StructureModel` public component
+- `components/entities/StructureModel.test.ts` — 18 tests covering all 20 known structure IDs, path format, uniqueness, error cases
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 18/18 pass
+
+<promise>COMPLETE</promise>

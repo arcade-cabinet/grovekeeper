@@ -1,0 +1,257 @@
+# Iteration 162 Log
+
+## Metadata
+
+- **Task ID**: US-162
+- **Task Title**: Decompose oversized UI components
+- **Description**: As a developer, I want all UI component files over 300 lines decomposed. Critical files: PauseMenu.tsx (755 lines), GameUI.tsx (484 lines), AchievementPopup.tsx (309 lines). See CLAUDE.md 300-line rul...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T23:48:20.464Z
+- **Ended At**: 2026-03-08T00:01:38.765Z
+- **Duration**: 13m 18s
+- **Input Tokens**: 195
+- **Output Tokens**: 51446
+- **Total Tokens**: 51641
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Skill[0m
+[94m[Skill][0m
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Read,Glob,Grep[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PauseMenu.tsx[0m
+PauseMenu.tsx is 682 lines (possibly updated since task was written). Let me read the other two files:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/AchievementPopup.tsx[0m
+Now let me check what's imported from these files across the codebase:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mfrom [\"'].*PauseMenu[\"'][0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mPauseMenu|GameUI|AchievementPopup[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m
+Good, now I have a clear picture. Let me check the `app/game/index.tsx` to understand how `PauseMenu` is imported there:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mfrom.*GameUI[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mGameUI[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/SettingsScreen.tsx[0m
+I have a clear picture. Let me now start implementing. All three files need subpackage decomposition:
+
+- **PauseMenu.tsx** → `PauseMenu/` (tabs as separate components)
+- **GameUI.tsx** → `GameUI/` (data hook + styles extracted)
+- **AchievementPopup.tsx** → `AchievementPopup/` (store + UI separated)
+
+`★ Insight ─────────────────────────────────────`
+When decomposing large UI components into subpackages, the key is finding natural "seams" — self-contained sections that can become standalone components with explicit props. For PauseMenu, the three tabs (Stats, Progress, Settings) are ideal seams. For AchievementPopup, the store logic vs render logic split is the seam. For GameUI, all `useMemo` computed values form a natural data hook.
+`─────────────────────────────────────────────────`
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,Bash[0m
+Now let me write all the files. Starting with AchievementPopup:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/AchievementPopup/types.ts[0m "export interface AchievementDef {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface AchievementPopupItem {
+  id: string;
+  achievementId: string;
+  createdAt: number;
+}
+
+export ... (1107 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/AchievementPopup/store.ts[0m "import { observable } from "@legendapp/state";
+import { useSelector } from "@legendapp/state/react";
+import type {
+  AchievementPopupItem,
+  AchievementPopupState,
+  AchievementPopupStore,
+} from "./t... (1282 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/AchievementPopup/Sparkle.tsx[0m "import { useEffect } from "react";
+import Animated, {
+  Easing,
+  ReduceMotion,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-rean... (1718 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/AchievementPopup/PopupContent.tsx[0m "import React, { useEffect } from "react";
+import { AccessibilityInfo, Pressable, View } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "re... (3368 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/AchievementPopup/index.tsx[0m "import { Modal } from "react-native";
+import { PopupContent } from "./PopupContent";
+import { showAchievementAction, useAchievementPopupStore } from "./store";
+import type { AchievementDef, Achievemen... (991 chars)"
+AchievementPopup done. Now PauseMenu:
+
+`★ Insight ─────────────────────────────────────`
+The PauseMenu's tab content (StatsTab, ProgressTab, SettingsTab) each have complex prop signatures — threading `confirmingPrestige` state + handlers from the parent into `ProgressTab` keeps state in one place while allowing the JSX to live in a separate file. This "lifting state, lowering UI" pattern is preferable to putting `useState` inside each tab since the tabs don't own the lifecycle.
+`─────────────────────────────────────────────────`
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PauseMenu/types.ts[0m "export interface PauseMenuStats {
+  level: number;
+  xp: number;
+  coins: number;
+  treesPlanted: number;
+  treesMatured: number;
+  gridSize: number;
+  unlockedSpeciesCount: number;
+  totalSpeciesCoun... (1852 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PauseMenu/StatItem.tsx[0m "import { View } from "react-native";
+import { Text } from "@/components/ui/text";
+
+export function StatItem({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string | number;
+  color?: strin... (421 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PauseMenu/ToggleSwitch.tsx[0m "import { Pressable, View } from "react-native";
+import { Text } from "@/components/ui/text";
+
+export function ToggleSwitch({
+  enabled,
+  onToggle,
+  label,
+}: {
+  enabled: boolean;
+  onToggle: () => ... (817 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PauseMenu/StatsTab.tsx[0m "import { View } from "react-native";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { StatItem } from "./StatItem";
+import type { PauseMenuStats }... (2442 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PauseMenu/ProgressTab.tsx[0m "import { Pressable, ScrollView, View } from "react-native";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import type { AchievementDef, BorderCosmetic, ... (10517 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PauseMenu/SettingsTab.tsx[0m "import { BookOpenIcon, DownloadIcon, SettingsIcon, UploadIcon } from "lucide-react-native";
+import { Alert, View } from "react-native";
+import { Button } from "@/components/ui/button";
+import { Icon }... (4111 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/PauseMenu/index.tsx[0m "import { XIcon } from "lucide-react-native";
+import { useState } from "react";
+import { Modal, Pressable, ScrollView, View } from "react-native";
+import { SettingsScreen } from "../SettingsScreen.tsx"... (5757 chars)"
+Now let me do GameUI. I'll extract data computation to a hook, styles to a separate file, and types to types.ts:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/types.ts[0m "import type { TileState } from "../ActionButton.tsx";
+import type { RadialAction } from "../radialActions.ts";
+import type { GameTime } from "../TimeDisplay.tsx";
+import type { TutorialTargetRect } fr... (1627 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/styles.ts[0m "import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  vignette: {
+  ... (638 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/useGameUIData.ts[0m "import { AxeIcon, DropletsIcon, ScissorsIcon, SproutIcon } from "lucide-react-native";
+import { useMemo } from "react";
+import { TREE_SPECIES } from "@/game/config/species";
+import { TOOLS } from "@/g... (5593 chars)"
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/index.tsx[0m "import { Platform, View } from "react-native";
+import { useGameStore } from "@/game/stores/gameStore";
+import { BatchHarvestButton } from "../BatchHarvestButton.tsx";
+import { BuildPanel } from "../Bu... (8387 chars)"
+I need to fix two issues in `GameUI/index.tsx` — the broken `useState` pattern, and missing `xp` from `useGameUIData`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/useGameUIData.ts[0m edit: "  const level = useGameStore((s) => s.level);
+  co..." → "  const level = useGameStore((s) => s.level);
+  co..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/useGameUIData.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/useGameUIData.ts[0m edit: "  const level = useGameStore((s) => s.level);
+  co..." → "  const level = useGameStore((s) => s.level);
+  co..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/useGameUIData.ts[0m edit: "      xp: 0,
+      coins," → "      xp,
+      coins,"
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/useGameUIData.ts[0m edit: "    [
+      level,
+      coins," → "    [
+      level,
+      xp,
+      coins,"
+Now fix the broken useState pattern in `GameUI/index.tsx`:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/index.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/index.tsx[0m edit: "import { Platform, View } from "react-native";
+imp..." → "import { useState } from "react";
+import { Platfor..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/GameUI/index.tsx[0m edit: "  const [buildPanelOpen, setBuildPanelOpen] = [fal..." → "  const [buildPanelOpen, setBuildPanelOpen] = useS..."
+Now let me update the barrel and delete old files. First check for any test files referencing these:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mAchievementPopup|PauseMenu|GameUI[0m
+Good — no test files to update. Now update the barrel and delete the old flat files:
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m edit: "export type {
+  AchievementDef,
+  AchievementPopup..." → "export type {
+  AchievementDef,
+  AchievementPopup..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/index.ts[0m edit: "export type {
+  AchievementDef as PauseAchievement..." → "export type {
+  AchievementDef as PauseAchievement..."
+Now delete the old flat files:
+[94m[Bash][0m Delete old flat component files replaced by subpackages $ rm components/game/AchievementPopup.tsx components/game/PauseMenu.tsx components/game/GameUI.tsx
+Now run TypeScript to check:
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -80
+Many TS5097 errors are pre-existing. Let me verify by checking the tsconfig:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/tsconfig.json[0m
+[94m[Bash][0m Check Expo base tsconfig for allowImportingTsExtensions $ cat node_modules/expo/tsconfig.base.json 2>/dev/null || echo "not found"
+Let me see what errors are specifically from my new files vs pre-existing:
+[94m[Bash][0m Show only errors from new subpackage files $ npx tsc --noEmit 2>&1 | grep -E "^components/game/(AchievementPopup|PauseMenu|GameUI)/" | head -50
+Let me check for real type errors (not TS5097 extension errors) in my new files:
+[94m[Bash][0m Show non-TS5097 errors from new files $ npx tsc --noEmit 2>&1 | grep -E "^components/game/(AchievementPopup|PauseMenu|GameUI)/" | grep -v "T...
+[94m[Bash][0m Show all non-TS5097 type errors $ npx tsc --noEmit 2>&1 | grep -v "TS5097" | head -50
+Good — all non-TS5097 errors (MiniMap casing conflicts) are pre-existing. Let me check if there are any real type errors from my new files specifically:
+[94m[Bash][0m Check for real type errors in new subpackage files only $ npx tsc --noEmit 2>&1 | grep -E "^components/game/(AchievementPopup|PauseMenu|GameUI)/" | grep -v "T...
+[94m[Bash][0m Check for real type errors in new subpackage files $ npx tsc --noEmit 2>&1 | grep -E "^components/game/(AchievementPopup|PauseMenu|GameUI)/" | grep -v "T...
+No real type errors from my new files. Now let me also verify the TS5097 errors in my files match the pre-existing pattern (they use `.tsx` extensions in imports just like the rest of the codebase), and then run Jest:
+[94m[Bash][0m Run tests for files related to the decomposed components $ npx jest --no-coverage --testPathPattern="AchievementPopup|PauseMenu|GameUI" 2>&1 | tail -20
+[94m[Bash][0m Run full jest test suite $ npx jest --no-coverage 2>&1 | tail -15
+All 3,838 tests pass. Let me also verify the new files are all under 300 lines:
+[94m[Bash][0m Line counts for all new subpackage files $ wc -l components/game/AchievementPopup/*.{ts,tsx} components/game/PauseMenu/*.{ts,tsx} components/ga...
+All files are well under 300 lines. Let me now update the progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Check end of progress.md for append location $ tail -5 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-162 progress entry $ cat >> /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md << 'EOF'  ## 2026-03-07 ...
+[94m[TodoWrite][0m
+All done. Here's a summary of what was accomplished:
+
+## US-162 Complete
+
+All three oversized UI components decomposed into subpackages, all files under 300 lines:
+
+| File | Before | After (max file) |
+|------|--------|-----------------|
+| `AchievementPopup.tsx` (314 lines) | single file | `AchievementPopup/` — 5 files, largest: 103 lines |
+| `PauseMenu.tsx` (682 lines) | single file | `PauseMenu/` — 7 files, largest: 279 lines |
+| `GameUI.tsx` (479 lines) | single file | `GameUI/` — 4 files, largest: 249 lines |
+
+**Structure:**
+- `AchievementPopup/`: `types.ts` · `store.ts` · `Sparkle.tsx` · `PopupContent.tsx` · `index.tsx`
+- `PauseMenu/`: `types.ts` · `StatItem.tsx` · `ToggleSwitch.tsx` · `StatsTab.tsx` · `ProgressTab.tsx` · `SettingsTab.tsx` · `index.tsx`
+- `GameUI/`: `types.ts` · `useGameUIData.ts` · `styles.ts` · `index.tsx`
+
+**Quality gate: 3,838 tests pass, no new type errors.**
+
+`★ Insight ─────────────────────────────────────`
+The `useGameUIData` hook pattern is particularly clean for orchestrator components: move ALL `useMemo` + store subscriptions into a single data hook, leaving the JSX component as a pure renderer. This separates "what data is needed" from "how it's displayed" — the hook is independently testable and the component becomes easy to read.
+`─────────────────────────────────────────────────`
+
+<promise>COMPLETE</promise>

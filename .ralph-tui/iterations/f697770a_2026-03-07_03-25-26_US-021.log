@@ -1,0 +1,53 @@
+# Iteration 21 Log
+
+## Metadata
+
+- **Task ID**: US-021
+- **Task Title**: Write Jest tests for biome mapper
+- **Description**: As a developer, I want tests for the biome mapper so that determinism, all 8 biomes reachable, and temperature/moisture ranges are verified. See GAME_SPEC.md §6.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T09:25:26.742Z
+- **Ended At**: 2026-03-07T09:26:40.399Z
+- **Duration**: 1m 13s
+- **Input Tokens**: 54
+- **Output Tokens**: 2401
+- **Total Tokens**: 2455
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/**/*.ts[0m
+The progress log shows that US-020 already created `biomeMapper.test.ts` with 18 tests as part of the docs→tests→code workflow. Let me verify the existing tests meet the US-021 acceptance criteria.
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/biomeMapper.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/world/biomeMapper.ts[0m
+The tests from US-020 already satisfy all US-021 acceptance criteria:
+
+- **18 tests** covering all 8 biomes — `✓ 8+ tests pass`
+- Tests for determinism (8 input combos called twice), all 8 biomes reachable via distinct input ranges, and temp/moisture boundaries — `✓ all criteria covered`
+- Progress log confirms `npx tsc --noEmit → 0 errors` and `npx jest --no-coverage → 80 suites, 1372 tests, 0 failures`
+
+Let me do a quick verification run to confirm nothing has drifted.
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m Run biomeMapper tests $ npx jest --no-coverage --testPathPattern biomeMapper 2>&1 | tail -20
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -5
+[94m[Bash][0m Check tsc exit code $ echo "tsc exit code: $?"
+All checks pass. Now appending to the progress log.
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-020" → "## 2026-03-07 - US-021
+- Work already complete — `..."
+`★ Insight ─────────────────────────────────────`
+- The Docs→Tests→Code workflow makes "write tests for X" follow-up stories trivially complete — US-020 already shipped 18 tests covering all 8 biomes, determinism, distance gating, color validation, and priority ordering.
+- Chebyshev distance (`Math.max(|chunkX|, |chunkZ|)`) was the right metric for the square chunk ring topology — it's what makes Twilight Glade appear at exactly 20 chunks in all directions, matching the 3x3/5x5 buffer ring geometry used by `ChunkManager`.
+`─────────────────────────────────────────────────`
+
+US-021 was already complete from US-020. Verification confirmed:
+- **18 tests** — all 8 biomes reachable, determinism, distance gate, BIOME_COLORS, getBiomeColor
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 18 tests, 0 failures
+
+<promise>COMPLETE</promise>

@@ -1,0 +1,253 @@
+# Iteration 113 Log
+
+## Metadata
+
+- **Task ID**: US-113
+- **Task Title**: Update quest panel UI for FPS HUD integration
+- **Description**: As a player, I want the quest panel updated for FPS HUD overlay showing active quests with objectives, checkmarks, and completion notifications. The existing QuestPanel.tsx (184 lines) needs updating ...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T17:27:46.130Z
+- **Ended At**: 2026-03-07T17:39:02.822Z
+- **Duration**: 11m 16s
+- **Input Tokens**: 219
+- **Output Tokens**: 40747
+- **Total Tokens**: 40966
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.tsx[0m
+Now let me look at the ECS dialogue/quest components, the quest system, and the HUD structure:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/questStateMachine.ts[0m
+
+[91m[Error: File does not exist. Note: your current working directory is /Users/jbogaty/src/arcade-cabinet/grovekeeper.][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.tsx[0m
+
+[91m[Error: <tool_use_error>Cancelled: parallel tool call Read(/Users/jbogaty/src/arcade-cabinet/grovek…) errored</tool_use_error>][0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/**/*.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/quests/**/*.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/Toast.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/types.ts[0m
+Now let me read the ECS world and quest chain engine to understand how to query quests:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/world.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/questChainEngine.ts[0m
+Let me check the game store for quest state and read relevant spec sections:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mquest|Quest[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§16|§17|Quest Panel|quest panel|FPS HUD[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mQuest|quest[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mactiveQuests|ActiveQuest|questChainState[0m
+Let me check for existing tests and the `ActiveQuest` type:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/QuestPanel.test.*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/quests.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/quests.ts[0m
+Let me check the quest engine and procedural quests:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/questEngine.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/proceduralQuests.ts[0m
+Let me check the gameStore structure and how actions are accessed:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96museGameStore|getState|export[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m pattern: [96mexport const useGameStore|export function useGameStore|const useGameStore[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/stores/gameStore.ts[0m
+Now I have enough context. Let me set up the task list and start implementing:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The `mapQuestBranchToDisplay` function is the key testable seam — it's a pure function that takes ECS entities + store state and maps to display types, following the same pattern as `resolveCompassBearing` in HUD.tsx.
+- The two quest data sources need to be joined: ECS `questBranchQuery` gives "which quests are active" (entity-driven), while `questChainState` in gameStore gives detailed per-objective progress.
+- The `useActiveQuestsFromECS` hook uses `useRef` to track previous step completion state — this avoids double-firing toasts since `useEffect` with no deps runs after every render.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Edit,Write,Bash[0m
+Now let me implement. First, I'll update `QuestPanel.tsx`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.tsx[0m edit: "/**
+ * QuestPanel -- Active quest tracker sidebar...." → "/**
+ * QuestPanel -- Active quest tracker sidebar...."
+Now add the pure mapping function and hook after the existing types section:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.tsx[0m edit: "// -----------------------------------------------..." → "// -----------------------------------------------..."
+Now update HUD.tsx to add the quest toggle:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m edit: "import { useMemo } from "react";
+import { MenuIcon..." → "import { useMemo, useState } from "react";
+import ..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m edit: "import { ResourceBar } from "./ResourceBar";" → "import { ConnectedQuestPanel } from "./QuestPanel"..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m edit: "  const xpProgress = useMemo(() => {" → "  const [questPanelVisible, setQuestPanelVisible] ..."
+Now add the quest button to the top bar and render the quest panel:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m edit: "          <Pressable
+            style={styles.men..." → "          <Pressable
+            style={styles.men..."
+Now add the quest panel overlay and left panel style:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m edit: "      {/* ── Right-side panel: stamina gauge + too..." → "      {/* ── Left quest panel (toggled via quest b..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.tsx[0m edit: "  rightPanel: {
+    position: "absolute",
+    righ..." → "  rightPanel: {
+    position: "absolute",
+    righ..."
+[94m[TodoWrite][0m
+Now update the test file with tests for `mapQuestBranchToDisplay`:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m "/**
+ * Tests for QuestPanel data types, display logic, and ECS mapping.
+ * Spec §14.4 — NPC Quest Chains.
+ */
+
+import { initializeChainState } from "@/game/quests/questChainEngine";
+import type { Ques... (6657 chars)"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m
+Let me check the quest chains to ensure my test uses valid chain data:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/quests/data/*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/data/questChains.json[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/data/questChains.json[0m pattern: [96mmain-quest-spirits|id.*spirit[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/quests/data/questChains.json[0m
+Now I can write the complete test file:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m "/**
+ * Tests for QuestPanel data types, display logic, and ECS mapping.
+ * Spec §14.4 — NPC Quest Chains.
+ */
+
+import {
+  advanceObjectives,
+  initializeChainState,
+  startChain,
+} from "@/game/quests... (7670 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m Run TypeScript type check $ npx tsc --noEmit 2>&1 | head -60
+TypeScript passes. Now run the tests:
+[94m[Bash][0m Run QuestPanel tests $ npx jest --no-coverage components/game/QuestPanel.test.ts 2>&1
+
+[91m[Error: Exit code 1
+watchman warning:  Recrawled this watch 1 time, most recently because:
+MustScanSubDirs UserDroppedTo resolve, please review the information on
+https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
+To clear this warning, run:
+`watchman watch-del '/Users/jbogaty/src/arcade-cabinet/grovekeeper' ; watchman watch-project '/Users/jbogaty/src/arcade-cabinet/grovekeeper'`
+
+FAIL components/game/QuestPanel.test.ts
+  ● Test suite failed to run
+
+    Jest encountered an unexpected token
+
+    Jest failed to parse a file. This happens e.g. when your code or its dependencies use non-standard JavaScript syntax, or when Jest is not configured to support such syntax.
+
+    Out of the box Jest supports Babel, which will be used to transform your files into valid JS based on your Babel configuration.
+
+    By default "node_modules" folder is ignored by transformers.
+
+    Here's what you can do:
+     • If you are trying to use ECMAScript Modules, see https://jestjs.io/docs/ecmascript-modules for how to enable it.
+     • If you are trying to use TypeScript, see https://jestjs.io/docs/getting-started#using-typescript
+     • To have some of your "node_modules" files transformed, you can specify a custom "transformIgnorePatterns" in your config.
+     • If you need a custom transformation specify a "transform" option in your config.
+     • If you simply want to mock your non-JS modules (e.g. binary assets) you can stub them out with the "moduleNameMapper" config option.
+
+    You'll find more details and examples of these config options in the docs:
+    https://jestjs.io/docs/configuration
+    For information about custom transformations, see:
+    https://jestjs.io/docs/code-transformation
+
+    Details:
+
+    /Users/jbogaty/src/arcade-cabinet/grovekeeper/node_modules/@rn-primitives/slot/dist/index.js:52
+        return React.cloneElement(isTextChildren(children) ? <></> : children, {
+                                                             ^
+
+    SyntaxError: Unexpected token '<'
+
+    > 1 | import * as Slot from "@rn-primitives/slot";
+        | ^
+      2 | import { cva, type VariantProps } from "class-variance-authority";
+      3 | import * as React from "react";
+      4 | import { Platform, Text as RNText, type Role } from "react-native";
+
+      at Runtime.createScriptFromCode (node_modules/jest-runtime/build/index.js:1505:14)
+      at Object.require (components/ui/text.tsx:1:1)
+      at Object.require (components/game/QuestPanel.tsx:14:1)
+      at Object.require (components/game/QuestPanel.test.ts:13:1)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.354 s, estimated 1 s
+Ran all test suites matching /components\/game\/QuestPanel.test.ts/i.][0m
+The test imports React Native UI transitively. Let me check how other component tests handle this:
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/**/*.test.*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/quests/*.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+Let me check how MobileActionButtons.test.ts handles mocking:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/MobileActionButtons.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/SeedSelect.test.ts[0m
+Let me check how world is mocked in tests that import it:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components[0m pattern: [96mgame/ecs/world[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/GrovekeeperSpirit.test.ts[0m
+Let me check if there's a global Jest mock setup:
+[94m[Bash][0m Show Jest config $ cat /Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.ts 2>/dev/null || cat /Users/jbogaty/s...
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.setup.ts[0m
+I need to add mocks for React Native UI dependencies. Let me update the test file:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m "/**
+ * Tests for QuestPanel data types, display logic, and ECS mapping.
+ * Spec §14.4 — NPC Quest Chains.
+ *
+ * mapQuestBranchToDisplay is a pure function in QuestPanel.tsx but the
+ * module also impo... (8285 chars)"
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m "/**
+ * Tests for QuestPanel data types, display logic, and ECS mapping.
+ * Spec §14.4 — NPC Quest Chains.
+ *
+ * mapQuestBranchToDisplay is a pure function in QuestPanel.tsx but the
+ * module also impo... (8285 chars)"
+[94m[Bash][0m Run QuestPanel tests $ npx jest --no-coverage components/game/QuestPanel.test.ts 2>&1
+13/13 pass. Now also need to update HUD.test.ts to mock `ScrollIcon` and `ConnectedQuestPanel` (since HUD now imports them):
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m edit: "jest.mock("lucide-react-native", () => ({
+  MenuIc..." → "jest.mock("./QuestPanel", () => ({ ConnectedQuestP..."
+
+[91m[Error: <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/HUD.test.ts[0m edit: "jest.mock("lucide-react-native", () => ({
+  MenuIc..." → "jest.mock("./QuestPanel", () => ({ ConnectedQuestP..."
+[94m[Bash][0m Run HUD tests $ npx jest --no-coverage components/game/HUD.test.ts 2>&1
+Now run the full test suite:
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -30
+2898 tests pass (was 2888 before, +10 new tests). TypeScript was already verified clean. Let me do a final line-count check on the modified files:
+[94m[Bash][0m Check file line counts $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.tsx /Users/jbogaty/sr...
+QuestPanel.tsx is 301 lines — 1 over the limit. Let me trim it:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.tsx[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.tsx[0m edit: "/**
+ * QuestPanel -- Active quest tracker sidebar...." → "/**
+ * QuestPanel -- Active quest tracker sidebar ..."
+[94m[Bash][0m Check QuestPanel line count $ wc -l /Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.tsx
+296 lines — well within the limit. Now update progress.md and mark complete:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-112" → "- **QuestPanel pure function needs mocks for React..."
+Now append the US-113 entry at the end of progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "  - **Stop condition applies**: When a task's acce..." → "  - **Stop condition applies**: When a task's acce..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- The two-source join pattern (`mapQuestBranchToDisplay`) is common in ECS+store architectures: ECS entities answer "what is happening" (which quests are active, at which step), while the Legend State store answers "how much progress" (per-objective counts). Neither source alone is sufficient.
+- `useRef` for side-effect tracking in `useActiveQuestsFromECS` follows the React anti-double-fire pattern: compute the display data first, then use a ref to gate the toast so it only fires on the first render where a step becomes completable — not on every subsequent render.
+- The `@rn-primitives/slot` JSX parse issue is a recurring test environment problem — any `.tsx` file that imports from `@/components/ui/*` will trigger it. The canonical fix is 4 jest.mock calls at the top of the test file.
+`─────────────────────────────────────────────────`
+
+All work is complete:
+
+- **`QuestPanel.tsx`** — updated with `mapQuestBranchToDisplay` (pure, testable), `useActiveQuestsFromECS` (ECS+store hook with step-completion toast), and `ConnectedQuestPanel` (self-wired for HUD)
+- **`HUD.tsx`** — quest toggle button (ScrollIcon, 44px, `accessibilityLabel`) + conditional `ConnectedQuestPanel` panel on the left side
+- **`QuestPanel.test.ts`** — 13 tests (3 existing + 10 new for `mapQuestBranchToDisplay`)
+- **`HUD.test.ts`** — updated mocks for `ScrollIcon` and `ConnectedQuestPanel`
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 2898/2898 pass
+
+<promise>COMPLETE</promise>

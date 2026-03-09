@@ -1,0 +1,498 @@
+{
+  "speciesModelMapping": {
+    "white-oak": {
+      "baseModel": "tree01",
+      "winterModel": "tree01_winter",
+      "pack": "retro"
+    },
+    "weeping-willow": {
+      "baseModel": "tree02",
+      "winterModel": "tree02_winter",
+      "pack": "retro"
+    },
+    "elder-pine": {
+      "baseModel": "tree03",
+      "winterModel": "tree03_winter",
+      "pack": "retro"
+    },
+    "cherry-blossom": {
+      "baseModel": "tree04",
+      "winterModel": "tree04_winter",
+      "pack": "retro"
+    },
+    "ghost-birch": {
+      "baseModel": "tree05",
+      "winterModel": "tree05_winter",
+      "pack": "retro"
+    },
+    "redwood": {
+      "baseModel": "tree06",
+      "winterModel": "tree06_winter",
+      "pack": "retro"
+    },
+    "flame-maple": {
+      "baseModel": "tree07",
+      "winterModel": "",
+      "pack": "retro"
+    },
+    "baobab": {
+      "baseModel": "tree08",
+      "winterModel": "",
+      "pack": "retro"
+    },
+    "silver-birch": {
+      "baseModel": "tree01",
+      "winterModel": "tree01_winter",
+      "pack": "extra"
+    },
+    "ironbark": {
+      "baseModel": "tree05",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "golden-apple": {
+      "baseModel": "tree09",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "mystic-fern": {
+      "baseModel": "tree15",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "crystal-oak": {
+      "baseModel": "tree20",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "moonwood-ash": {
+      "baseModel": "tree25",
+      "winterModel": "",
+      "pack": "extra"
+    },
+    "worldtree": {
+      "baseModel": "tree30",
+      "winterModel": "",
+      "pack": "extra"
+    }
+  },
+  "seasonalTints": {
+    "deciduous": {
+      "spring": "#81C784",
+      "summer": "#388E3C",
+      "autumn": "#E65100",
+      "winter": "#795548",
+      "dead": "#5D4037"
+    },
+    "evergreen": {
+      "spring": "#2E7D32",
+      "summer": "#1B5E20",
+      "autumn": "#2E7D32",
+      "winter": "#1B5E20",
+      "dead": "#33691E"
+    },
+    "bySpecies": {
+      "cherry-blossom": {
+        "spring": "#F48FB1",
+        "summer": "#388E3C",
+        "autumn": "#E65100",
+        "winter": "#795548",
+        "dead": "#5D4037"
+      },
+      "ghost-birch": {
+        "spring": "#B0BEC5",
+        "summer": "#B0BEC5",
+        "autumn": "#CFD8DC",
+        "winter": "#ECEFF1",
+        "dead": "#90A4AE"
+      },
+      "flame-maple": {
+        "spring": "#A5D6A7",
+        "summer": "#66BB6A",
+        "autumn": "#FF6D00",
+        "winter": "#795548",
+        "dead": "#5D4037"
+      },
+      "golden-apple": {
+        "spring": "#C8E6C9",
+        "summer": "#66BB6A",
+        "autumn": "#FFD54F",
+        "winter": "#795548",
+        "dead": "#5D4037"
+      },
+      "crystal-oak": {
+        "spring": "#80CBC4",
+        "summer": "#80CBC4",
+        "autumn": "#80DEEA",
+        "winter": "#B2EBF2",
+        "dead": "#80CBC4"
+      },
+      "moonwood-ash": {
+        "spring": "#B39DDB",
+        "summer": "#B39DDB",
+        "autumn": "#CE93D8",
+        "winter": "#E1BEE7",
+        "dead": "#9575CD"
+      }
+    }
+  },
+  "growthScaleByStage": [0.15, 0.35, 0.6, 0.85, 1.0],
+  "bushShapes": [
+    "bush_connector",
+    "bush_connector_high_end",
+    "bush_connector_high_half_end",
+    "bush_connector_ornamental",
+    "bush_connector_ornamental_half",
+    "bush_connector_straight",
+    "bush_connector_straight_half",
+    "bush_end",
+    "bush_end_tall",
+    "bush_full_overgrown",
+    "bush_long",
+    "bush_long_full_overgrown",
+    "bush_long_half",
+    "bush_long_half_open_right",
+    "bush_long_half_single",
+    "bush_long_open_right",
+    "bush_long_overgrown",
+    "bush_long_round_corner",
+    "bush_long_round_corner_filled",
+    "bush_long_single",
+    "bush_long_square_corner",
+    "bush_long_square_corner_filled",
+    "bush_overgrown",
+    "bush_round_corner",
+    "bush_round_corner_filled",
+    "bush_square_corner",
+    "bush_square_corner_filled",
+    "bush_tall",
+    "bush_tall_full_overgrown",
+    "bush_tall_half",
+    "bush_tall_half_full_overgrown",
+    "bush_tall_half_open_right",
+    "bush_tall_half_overgrown",
+    "bush_tall_half_single",
+    "bush_tall_open_right",
+    "bush_tall_overgrown",
+    "bush_tall_single"
+  ],
+  "grassScatterRadius": 1.5,
+  "bushRootsProbability": 0.3,
+  "biomeCropPool": {
+    "temperate": ["carrot", "apple", "tomato"],
+    "wetland": [],
+    "mountain": [],
+    "tundra": [],
+    "savanna": [],
+    "coastal": [],
+    "enchanted": [],
+    "highland": []
+  },
+  "biomeDensity": {
+    "temperate": {
+      "treesPerChunk": 8,
+      "bushesPerChunk": 12,
+      "grassPatchesPerChunk": 20,
+      "rocksPerChunk": 2,
+      "cropsPerChunk": 3
+    },
+    "wetland": {
+      "treesPerChunk": 6,
+      "bushesPerChunk": 15,
+      "grassPatchesPerChunk": 25,
+      "rocksPerChunk": 1,
+      "cropsPerChunk": 0
+    },
+    "mountain": {
+      "treesPerChunk": 4,
+      "bushesPerChunk": 6,
+      "grassPatchesPerChunk": 10,
+      "rocksPerChunk": 8,
+      "cropsPerChunk": 0
+    },
+    "tundra": {
+      "treesPerChunk": 2,
+      "bushesPerChunk": 4,
+      "grassPatchesPerChunk": 8,
+      "rocksPerChunk": 5,
+      "cropsPerChunk": 0
+    },
+    "savanna": {
+      "treesPerChunk": 3,
+      "bushesPerChunk": 8,
+      "grassPatchesPerChunk": 15,
+      "rocksPerChunk": 3,
+      "cropsPerChunk": 0
+    },
+    "coastal": {
+      "treesPerChunk": 5,
+      "bushesPerChunk": 10,
+      "grassPatchesPerChunk": 18,
+      "rocksPerChunk": 4,
+      "cropsPerChunk": 0
+    },
+    "enchanted": {
+      "treesPerChunk": 10,
+      "bushesPerChunk": 14,
+      "grassPatchesPerChunk": 22,
+      "rocksPerChunk": 3,
+      "cropsPerChunk": 0
+    },
+    "highland": {
+      "treesPerChunk": 5,
+      "bushesPerChunk": 8,
+      "grassPatchesPerChunk": 12,
+      "rocksPerChunk": 6,
+      "cropsPerChunk": 0
+    }
+  },
+  "biomeGrass": {
+    "temperate": {
+      "types": [
+        {
+          "grassType": "grass01",
+          "probability": 0.8,
+          "baseDensity": 5,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass02",
+          "probability": 0.7,
+          "baseDensity": 4,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass03",
+          "probability": 0.5,
+          "baseDensity": 3,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass_bush",
+          "probability": 0.3,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass_patch",
+          "probability": 0.4,
+          "baseDensity": 1,
+          "densityVariance": 0.3
+        }
+      ]
+    },
+    "wetland": {
+      "types": [
+        {
+          "grassType": "grass04",
+          "probability": 0.9,
+          "baseDensity": 6,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass05",
+          "probability": 0.8,
+          "baseDensity": 5,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass_bush",
+          "probability": 0.6,
+          "baseDensity": 3,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass_patch",
+          "probability": 0.5,
+          "baseDensity": 2,
+          "densityVariance": 0.3
+        }
+      ]
+    },
+    "mountain": {
+      "types": [
+        {
+          "grassType": "grass06",
+          "probability": 0.5,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass07",
+          "probability": 0.4,
+          "baseDensity": 2,
+          "densityVariance": 0.4
+        }
+      ]
+    },
+    "tundra": {
+      "types": [
+        {
+          "grassType": "grass08",
+          "probability": 0.3,
+          "baseDensity": 1,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass09",
+          "probability": 0.2,
+          "baseDensity": 1,
+          "densityVariance": 0.4
+        }
+      ]
+    },
+    "savanna": {
+      "types": [
+        {
+          "grassType": "grass01",
+          "probability": 0.7,
+          "baseDensity": 4,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass03",
+          "probability": 0.6,
+          "baseDensity": 3,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass_patch_corner",
+          "probability": 0.3,
+          "baseDensity": 1,
+          "densityVariance": 0.3
+        }
+      ]
+    },
+    "coastal": {
+      "types": [
+        {
+          "grassType": "grass02",
+          "probability": 0.6,
+          "baseDensity": 3,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass04",
+          "probability": 0.5,
+          "baseDensity": 3,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass_bush",
+          "probability": 0.4,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        }
+      ]
+    },
+    "enchanted": {
+      "types": [
+        {
+          "grassType": "grass05",
+          "probability": 0.8,
+          "baseDensity": 5,
+          "densityVariance": 0.3
+        },
+        {
+          "grassType": "grass_bush",
+          "probability": 0.7,
+          "baseDensity": 4,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass_patch",
+          "probability": 0.5,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass_patch_corner",
+          "probability": 0.4,
+          "baseDensity": 2,
+          "densityVariance": 0.3
+        }
+      ]
+    },
+    "highland": {
+      "types": [
+        {
+          "grassType": "grass06",
+          "probability": 0.6,
+          "baseDensity": 3,
+          "densityVariance": 0.4
+        },
+        {
+          "grassType": "grass07",
+          "probability": 0.5,
+          "baseDensity": 2,
+          "densityVariance": 0.5
+        },
+        {
+          "grassType": "grass09",
+          "probability": 0.3,
+          "baseDensity": 1,
+          "densityVariance": 0.3
+        }
+      ]
+    }
+  },
+  "featureFrequency": {
+    "major": {
+      "minChunks": 8,
+      "maxChunks": 12,
+      "types": ["hedge_labyrinth", "village", "large_rock_formation"]
+    },
+    "minor": {
+      "minChunks": 3,
+      "maxChunks": 4,
+      "types": ["pond", "overlook", "camp", "grove"]
+    },
+    "micro": {
+      "minChunks": 1,
+      "maxChunks": 1,
+      "types": ["individual_trees", "flower_patches", "rock_clusters"]
+    }
+  },
+  "biomeVegetationTemplates": {
+    "starting-grove": {
+      "treesPerChunk": 2,
+      "bushesPerChunk": 2,
+      "speciesPool": ["white-oak", "cherry-blossom", "silver-birch"]
+    },
+    "meadow": {
+      "treesPerChunk": 1,
+      "bushesPerChunk": 3,
+      "speciesPool": ["white-oak", "baobab", "silver-birch"]
+    },
+    "ancient-forest": {
+      "treesPerChunk": 3,
+      "bushesPerChunk": 2,
+      "speciesPool": ["mystic-fern", "white-oak", "silver-birch"]
+    },
+    "wetlands": {
+      "treesPerChunk": 2,
+      "bushesPerChunk": 3,
+      "speciesPool": ["weeping-willow", "redwood"]
+    },
+    "rocky-highlands": {
+      "treesPerChunk": 1,
+      "bushesPerChunk": 1,
+      "speciesPool": ["elder-pine", "flame-maple", "ironbark"]
+    },
+    "orchard-valley": {
+      "treesPerChunk": 2,
+      "bushesPerChunk": 2,
+      "speciesPool": ["golden-apple", "white-oak", "cherry-blossom"]
+    },
+    "frozen-peaks": {
+      "treesPerChunk": 1,
+      "bushesPerChunk": 1,
+      "speciesPool": ["elder-pine", "ghost-birch"]
+    },
+    "twilight-glade": {
+      "treesPerChunk": 2,
+      "bushesPerChunk": 2,
+      "speciesPool": ["mystic-fern", "crystal-oak", "moonwood-ash"]
+    }
+  }
+}

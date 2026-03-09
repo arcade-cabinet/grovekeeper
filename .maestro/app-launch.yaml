@@ -1,0 +1,25 @@
+# Flow: App launch smoke test
+# Verifies: app boots, fonts load, main menu renders with expected elements.
+# Platform: iOS/Android (375px portrait viewport)
+# Spec: §26 (Main Menu)
+appId: ${APP_ID}
+---
+# Launch the app fresh
+- launchApp:
+    clearState: true
+
+# Main menu title should render after fonts + store init
+- assertVisible: "GROVEKEEPER"
+
+# Tagline visible
+- assertVisible: "Every forest begins with a single seed."
+
+# On fresh install (no save), primary button reads "Start Growing"
+- assertVisible:
+    id: "btn-new-grove"
+
+# Settings button visible
+- assertVisible: "Settings"
+
+# Version label visible
+- assertVisible: "Grovekeeper v0.1.0"

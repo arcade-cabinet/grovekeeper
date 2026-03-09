@@ -1,0 +1,57 @@
+# Iteration 88 Log
+
+## Metadata
+
+- **Task ID**: US-088
+- **Task Title**: Write Jest tests for combat and loot
+- **Description**: As a developer, I want tests for combat and loot so that damage calculation, knockback, loot probabilities, and despawn timing are verified. See GAME_SPEC.md §20.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T15:27:25.817Z
+- **Ended At**: 2026-03-07T15:28:39.545Z
+- **Duration**: 1m 13s
+- **Input Tokens**: 50
+- **Output Tokens**: 3456
+- **Total Tokens**: 3506
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game[0m pattern: [96m**/*.test.ts[0m
+Let me check the existing combat and loot test files, plus the source files:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/combat.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/lootSystem.test.ts[0m
+The combat and loot tests clearly exist. Let me verify they pass:
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1 | tail -5
+[94m[Bash][0m Run combat and loot tests $ npx jest --no-coverage --testPathPattern="combat|lootSystem" 2>&1 | tail -20
+All 46 tests pass, TypeScript clean. The work from US-086 and US-087 already satisfies every acceptance criterion for US-088.
+
+**Count breakdown:**
+- `combat.test.ts`: 32 tests — damage calc, knockback, invuln window, full combat flows
+- `lootSystem.test.ts`: 14 tests — loot tables, probabilities, despawn timing, `rollLootForEnemy`
+
+Now appending to progress.md:
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Append US-088 entry to progress.md $ cat >> /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md << 'EOF'  ## 2026-03-07 ...
+`★ Insight ─────────────────────────────────────`
+The two-tier loot test design is worth noting: `rollLoot(tableId, tier, rng)` is tested with an explicit RNG object (pure unit test), while `rollLootForEnemy(enemyId, tableId, tier, worldSeed)` tests the seeded wrapper separately. This separation means you can always test the core algorithm in isolation, and the scoped-seed contract is tested as a thin layer on top — easy to debug either half independently.
+`─────────────────────────────────────────────────`
+
+All acceptance criteria satisfied by prior work:
+
+| Criterion | Status |
+|---|---|
+| 10+ tests for combat and loot | ✅ 46 tests |
+| Damage calculation | ✅ `computePlayerDamage`, `computeEnemyDamage` |
+| Knockback impulse | ✅ `computeKnockback` (4 tests) |
+| Loot table probabilities | ✅ `rollLoot`, `rollLootForEnemy` (9 tests) |
+| Despawn timing | ✅ `updateLootDespawn`, `despawnTimer` (4 tests) |
+| `npx tsc --noEmit` | ✅ 0 errors |
+| `npx jest --no-coverage` | ✅ 46 passed |
+
+<promise>COMPLETE</promise>

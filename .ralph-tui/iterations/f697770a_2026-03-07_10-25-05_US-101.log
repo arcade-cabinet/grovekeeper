@@ -1,0 +1,90 @@
+# Iteration 101 Log
+
+## Metadata
+
+- **Task ID**: US-101
+- **Task Title**: Write Jest tests for dialogue branching
+- **Description**: As a developer, I want tests for dialogue branching so that determinism, seed variation, weight normalization, and condition gating are verified. See GAME_SPEC.md §15.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T16:25:05.456Z
+- **Ended At**: 2026-03-07T16:28:45.632Z
+- **Duration**: 3m 40s
+- **Input Tokens**: 5533
+- **Output Tokens**: 12677
+- **Total Tokens**: 18210
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/world/dialogue*[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mgame/**/*dialogue*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueLoader.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mevaluateCondition|checkCondition|gateCondition|filterBranches[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueLoader.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mcondition.gating|condition gat|§15|§33|dialogue.condition|filterBranch|availableBranch[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§15|§33|Dialogue|condition|branch[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mCondition|gat|filter|available|§33[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m
+The test file from US-100 has 16 tests covering normalization, determinism, and seed variation. US-101 requires condition gating to also be tested. I need to implement `evaluateCondition` + `filterAvailableBranches` in `dialogueBranch.ts` and add tests.
+
+`★ Insight ─────────────────────────────────────`
+- The spec §33.4 defines conditions as a gating mechanism on `DialogueBranch.conditions[]` — a branch is only available if ALL its conditions are satisfied
+- The workflow (docs→tests→code) means condition gating must live in the same pure-function module (`dialogueBranch.ts`) so it stays testable without ECS/R3F
+- `DialogueContext` acts as a plain value object injected at test time — it decouples the pure evaluation from the game store, enabling deterministic unit tests
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite,Edit,Write[0m
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/dialogue.ts[0m edit: "/** Quest state driven by dialogue branching. */" → "/**
+ * Player context injected into condition eval..."
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m edit: "import { scopedRNG } from "@/game/utils/seedWords"..." → "import { scopedRNG } from "@/game/utils/seedWords"..."
+Now append the two new functions at the end of `dialogueBranch.ts`:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.ts[0m edit: "/**
+ * Select the default branch object using norm..." → "/**
+ * Select the default branch object using norm..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `evaluateCondition` uses a switch dispatch so each condition type is independently testable — adding a new type only adds one case, no ripple changes
+- `filterAvailableBranches` uses `.every()` so ALL conditions must pass — this matches the spec's AND semantics. Branches with no conditions are always available (short-circuit before the `.every()` call)
+`─────────────────────────────────────────────────`
+
+Now append condition gating tests to the existing test file:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m edit: "import {
+  normalizeSeedBias,
+  selectDefaultBranc..." → "import {
+  normalizeSeedBias,
+  selectDefaultBranc..."
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/systems/dialogueBranch.test.ts[0m edit: "  it("returns same branch object on repeated calls..." → "  it("returns same branch object on repeated calls..."
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript typecheck $ npx tsc --noEmit 2>&1 | tail -20
+[94m[Bash][0m Run dialogue branch tests $ npx jest --no-coverage --testPathPattern="dialogueBranch" 2>&1 | tail -30
+All 37 tests pass (16 pre-existing + 21 new condition gating tests). Let me do a quick full jest run to confirm nothing broke:
+[94m[Bash][0m Full Jest run $ npx jest --no-coverage 2>&1 | tail -8
+2648 tests, 0 failures. Now update progress:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "## 2026-03-07 - US-100" → "## 2026-03-07 - US-101
+- Added `DialogueContext` i..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `DialogueContext` as a plain value object (no store imports) is the key pattern — tests construct it directly with `makeContext({...overrides})`, no mocking needed
+- The `switch` on `condition.type` makes TypeScript's exhaustive checking catch any future missing cases at compile time, and each case maps 1:1 to a test block
+- 21 new tests + 16 existing = 37 total in `dialogueBranch.test.ts`, covering all 4 acceptance criteria: determinism, seed variation, weight normalization, condition gating
+`─────────────────────────────────────────────────`
+
+**Summary:**
+- Added `DialogueContext` to `game/ecs/components/dialogue.ts`
+- Added `evaluateCondition` + `filterAvailableBranches` to `game/systems/dialogueBranch.ts`
+- Added 21 condition gating tests to `game/systems/dialogueBranch.test.ts` (37 total)
+- `npx tsc --noEmit` → 0 errors, `npx jest --no-coverage` → 2648 tests, 0 failures
+
+<promise>COMPLETE</promise>

@@ -1,5 +1,15 @@
 # Tools
 
+> **Superseded by:** [`docs/plans/2026-03-07-unified-game-design.md`](../plans/2026-03-07-unified-game-design.md) Section 6 (Tool Actions & First-Person Feel)
+>
+> This document describes the **old 8-tool system** with grid-based interaction, level-gated unlocks, and a simple stamina gauge. The unified design replaces this with: **5 starting tool GLBs** + 4 craftable survival tools, first-person raycast interaction, keyframe use animations with impact effects, 3 tool upgrade tiers (Basic/Iron/Grovekeeper) with durability, view model juice (hand sway, walk bob, sprint FOV), and stamina with 4 visual feedback states. Refer to the unified doc for the canonical state.
+
+---
+
+*The content below is retained for historical reference only.*
+
+---
+
 The player has access to 8 tools, unlocked progressively as they level up. Tools are the primary means of interacting with the grid and its trees.
 
 ## Tool Roster

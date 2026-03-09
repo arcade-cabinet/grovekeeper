@@ -1,0 +1,90 @@
+# Iteration 8 Log
+
+## Metadata
+
+- **Task ID**: US-008
+- **Task Title**: Create player capsule RigidBody component
+- **Description**: As a developer, I want a PlayerCapsule component with a dynamic RigidBody and CapsuleCollider (height 1.8, radius 0.3) so that the player has physics-based collision. See GAME_SPEC.md §9 for player ph...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T08:31:16.700Z
+- **Ended At**: 2026-03-07T08:34:07.583Z
+- **Duration**: 2m 50s
+- **Input Tokens**: 98
+- **Output Tokens**: 8134
+- **Total Tokens**: 8232
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep,TodoWrite[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/player/**[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/**[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§9|player.*physics|CapsuleCollider|PlayerCapsule[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m^## §9|^## 9\.|player.*capsule|capsule.*collider|RigidBody|physics.*player[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/app/game/index.tsx[0m
+Now let me check the rapier API and an existing component for patterns:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mrapier|RigidBody|CapsuleCollider[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/Player.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/*.test.tsx[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mjest.config.*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.config.js[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96m**/__mocks__/**[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/jest.setup.ts[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/game/QuestPanel.test.ts[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/game/QuestPanel.test.ts[0m
+Now I have enough context. Let me set up the tasks and implement:
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- `@react-three/rapier`'s `CapsuleCollider` takes `args={[halfHeight, radius]}` where `halfHeight` is the cylindrical section half-height (excluding caps). For total height 1.8, radius 0.3: `halfHeight = (1.8 - 2*0.3) / 2 = 0.6`.
+- The jest config's `transformIgnorePatterns` doesn't include `@react-three/rapier`, so tests must mock it — otherwise Jest will fail to parse ESM from the package.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:Write[0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.tsx[0m "/**
+ * PlayerCapsule — Physics body for the player character (Spec §9).
+ *
+ * Provides a dynamic RigidBody with a CapsuleCollider matching
+ * standard human proportions: 1.8m tall, 0.3m radius.
+ */
+
+i... (973 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/player/PlayerCapsule.test.ts[0m "/**
+ * Tests for PlayerCapsule physics body (Spec §9).
+ *
+ * Tests exported constants and module structure without rendering
+ * (R3F / Rapier require WebGL context, mocked here).
+ */
+
+jest.mock("@reac... (1114 chars)"
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Bash[0m
+[94m[Bash][0m TypeScript type check $ npx tsc --noEmit 2>&1
+[94m[Bash][0m Run PlayerCapsule tests only $ npx jest --no-coverage --testPathPattern="PlayerCapsule" 2>&1
+[94m[Bash][0m Run full test suite $ npx jest --no-coverage 2>&1 | tail -20
+All checks pass. 72 suites, 1247 tests (4 new). Let me update the progress log:
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Edit[0m
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m edit: "---
+
+## 2026-03-07 - US-007" → "---
+
+## 2026-03-07 - US-008
+- Created `components/..."
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+- Rapier's `CapsuleCollider` arg is the **cylindrical half-height** (excludes the two hemispherical caps). For a 1.8m tall capsule with 0.3m radius: `halfHeight = (1.8 - 0.6) / 2 = 0.6`, making `args={[0.6, 0.3]}`.
+- Testing R3F/Rapier components in Jest requires mocking the package since it's excluded from Babel transformation. Export constants separately so tests can verify physics dimensions without a renderer.
+`─────────────────────────────────────────────────`
+
+All done:
+
+- **`components/player/PlayerCapsule.tsx`** — `RigidBody type="dynamic"` wrapping `CapsuleCollider args={[0.6, 0.3]}` (halfHeight=0.6, radius=0.3 → total height 1.8m)
+- **`components/player/PlayerCapsule.test.ts`** — 4 tests verifying the height, radius, halfHeight math, and component export
+- `npx tsc --noEmit` → 0 errors
+- `npx jest --no-coverage` → 72 suites, 1247 tests, 0 failures
+
+<promise>COMPLETE</promise>

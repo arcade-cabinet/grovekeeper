@@ -1,0 +1,88 @@
+# Iteration 37 Log
+
+## Metadata
+
+- **Task ID**: US-037
+- **Task Title**: Implement seasonal bush GLB swap
+- **Description**: As a developer, I want bushes to swap their GLB model based on season and bushShape so that seasonal variety is visible. 52 shapes x 5 seasons. See GAME_SPEC.md §8.
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-07T10:34:37.809Z
+- **Ended At**: 2026-03-07T10:38:56.285Z
+- **Duration**: 4m 18s
+- **Input Tokens**: 92
+- **Output Tokens**: 15482
+- **Total Tokens**: 15574
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Sandbox Mode**: off
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:Read,Glob,Grep[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mcomponents/entities/**/*[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.tsx[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/TreeModel.test.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs[0m pattern: [96mBushComponent|bushShape|bush[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/game/ecs/components/vegetation.ts[0m
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96mbush|Bush[0m
+Let me look at the GAME_SPEC.md section 8 more closely, and check if there's bush config:
+[94m[Grep][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/docs/GAME_SPEC.md[0m pattern: [96m§8|section 8|bush.*shape|bushShape|52 shape|modelKey|bush.*glb|bush.*model[0m
+[94m[Glob][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper[0m pattern: [96mconfig/game/*.json[0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/vegetation.json[0m
+`★ Insight ─────────────────────────────────────`
+The `BushComponent.modelKey` field is a pre-computed value that gets built from `bushShape + season`. The pattern from `TreeModel.tsx` is to export pure mapping functions (no WebGL context) so they can be unit-tested in isolation, with a sub-component that wraps `useGLTF` to satisfy Rules of Hooks.
+`─────────────────────────────────────────────────`
+[94m[ToolSearch][0m query: [93mselect:TodoWrite[0m
+[94m[TodoWrite][0m
+[94m[ToolSearch][0m query: [93mselect:Write,Edit,Bash[0m
+Now I have everything I need. Let me implement `BushModel.tsx` following the exact same pattern as `TreeModel.tsx`, then write the tests.
+
+`★ Insight ─────────────────────────────────────`
+The bush model key is `{bushShape}_{season}` — a simple string composition. Unlike trees (which have 5 stages requiring procedural geometry for early stages), bushes always render a GLB directly. The `VegetationSeason` type already has 5 variants (`spring | summer | autumn | winter | dead`) — those map cleanly to the 5 seasons in the "52 x 5" requirement.
+`─────────────────────────────────────────────────`
+
+First, I'll extend `vegetation.json` to have 52 bush shapes as the spec requires, then implement the component:
+[94m[Edit][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/config/game/vegetation.json[0m edit: "  "bushShapes": [
+    "bush_connector",
+    "bush_..." → "  "bushShapes": [
+    "bush_connector",
+    "bush_..."
+Now create `BushModel.tsx`:
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/BushModel.tsx[0m "/**
+ * BushModel — renders a seasonal bush GLB, swapping the model when season changes.
+ *
+ * Every bush always renders a GLB (no procedural fallback stages).
+ * The GLB path is derived from bushShape... (4762 chars)"
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/components/entities/BushModel.test.ts[0m "/**
+ * Tests for BushModel — seasonal GLB path mapping (Spec §6.3, §8).
+ *
+ * Tests the exported pure functions and constants without WebGL/R3F context.
+ */
+
+jest.mock("@react-three/drei", () => ({
+  ... (7718 chars)"
+[94m[TodoWrite][0m
+[94m[Bash][0m TypeScript typecheck $ npx tsc --noEmit 2>&1 | head -60
+[94m[Bash][0m Run BushModel tests $ npx jest --no-coverage --testPathPattern="BushModel" 2>&1
+All 36 tests pass, typecheck clean. Now update progress.md:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md[0m
+[94m[Bash][0m Show last 20 lines of progress.md $ tail -20 /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md
+[94m[Bash][0m Append US-037 learnings to progress.md $ cat >> /Users/jbogaty/src/arcade-cabinet/grovekeeper/.ralph-tui/progress.md << 'EOF'  ## 2026-03-07 ...
+[94m[TodoWrite][0m
+`★ Insight ─────────────────────────────────────`
+The "config as allowlist" pattern (validate against `vegetation.json bushShapes`, throw on unknown) means adding a new bush shape is a pure config change — no code change needed. The `uniqueness across 52×5` test catches any accidental collision in the `{shape}_{season}` key scheme.
+`─────────────────────────────────────────────────`
+
+**Summary:**
+
+- **`components/entities/BushModel.tsx`** — new file with `buildModelKey`, `resolveBushGLBPath`, `BushModel` component. Always renders a GLB (no procedural stages unlike trees).
+- **`components/entities/BushModel.test.ts`** — 36 tests covering all constants, key composition, path resolution for all 52×5 combos, unknown-shape error throws.
+- **`config/game/vegetation.json`** — extended `bushShapes` from 37 → 52 entries.
+
+All acceptance criteria met: ✓ `BushModel.tsx` exists, ✓ `bushShape + season → modelKey`, ✓ season change swaps model, ✓ 52 shapes × 5 seasons supported, ✓ `tsc --noEmit` clean, ✓ all 36 tests pass.
+
+<promise>COMPLETE</promise>
