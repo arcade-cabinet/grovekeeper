@@ -18,8 +18,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import type { NpcAnimState, NpcFunction } from "@/game/ecs/components/npc";
-import { npcsQuery } from "@/game/ecs/world";
+import { dialogueQuery, npcsQuery } from "@/game/ecs/world";
 import { ChibiNpc } from "./ChibiNpc.tsx";
+import { SpeechBubble } from "./SpeechBubble.tsx";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,6 +33,8 @@ interface NpcSnapshot {
   position: [number, number, number];
   animState: "idle" | "walk";
   animProgress: number;
+  bubbleVisible: boolean;
+  bubbleText: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,6 +123,14 @@ export const ChibiNpcScene = ({ worldSeed }: ChibiNpcSceneProps) => {
 
     if (countChanged || positionDrifted) {
       lastCountRef.current = visibleEntities.length;
+      // Build a set of entity IDs currently in dialogue for bubble display
+      const dialogueEntityIds = new Set<string>();
+      for (const de of dialogueQuery.entities) {
+        if (de.dialogue?.bubbleVisible && de.dialogue?.inConversation) {
+          dialogueEntityIds.add(de.id);
+        }
+      }
+
       const next: NpcSnapshot[] = visibleEntities.map((entity) => ({
         id: entity.id,
         templateId: entity.npc.templateId,
@@ -131,6 +142,8 @@ export const ChibiNpcScene = ({ worldSeed }: ChibiNpcSceneProps) => {
         ],
         animState: toAnimState(entity.npc.currentAnim),
         animProgress: progMap.get(entity.id) ?? 0,
+        bubbleVisible: dialogueEntityIds.has(entity.id),
+        bubbleText: entity.npc.name ?? entity.npc.templateId,
       }));
       snapshotsRef.current = next;
       setSnapshots(next);
@@ -150,6 +163,17 @@ export const ChibiNpcScene = ({ worldSeed }: ChibiNpcSceneProps) => {
           position={snap.position}
           animState={snap.animState}
           animProgress={animProgressRef.current.get(snap.id) ?? snap.animProgress}
+        />
+      ))}
+      {/* Speech bubbles — always mounted so fade-out animation works (Spec §33.5). */}
+      {snapshots.map((snap) => (
+        <SpeechBubble
+          key={`bubble-${snap.id}`}
+          x={snap.position[0]}
+          y={snap.position[1]}
+          z={snap.position[2]}
+          text={snap.bubbleText}
+          visible={snap.bubbleVisible}
         />
       ))}
     </>

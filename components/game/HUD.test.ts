@@ -64,7 +64,6 @@ jest.mock("./hudWidgets", () => ({
   Crosshair: () => null,
   StaminaRing: () => null,
   Compass: () => null,
-  HungerIndicator: () => null,
   BodyTempIndicator: () => null,
   TimeChip: () => null,
 }));

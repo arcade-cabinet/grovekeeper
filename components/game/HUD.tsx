@@ -25,14 +25,8 @@ import { Icon } from "@/components/ui/icon";
 import { playerQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores";
 import { HeartsDisplay } from "./HeartsDisplay.tsx";
-import {
-  BodyTempIndicator,
-  Compass,
-  Crosshair,
-  HungerIndicator,
-  StaminaRing,
-  TimeChip,
-} from "./hudWidgets.tsx";
+import { HungerBar } from "./HungerBar.tsx";
+import { BodyTempIndicator, Compass, Crosshair, StaminaRing, TimeChip } from "./hudWidgets.tsx";
 
 // Re-export pure functions so existing tests / consumers can import from HUD
 export { findNearestUndiscoveredSpirit, resolveCompassBearing } from "./hudAnimations.ts";
@@ -73,7 +67,7 @@ export function HUD({ onOpenMenu, onOpenCodex }: HUDProps) {
               <HeartsDisplay current={hearts} max={maxHearts} />
               <BodyTempIndicator bodyTemp={bodyTemp} />
             </View>
-            <HungerIndicator hunger={hunger} />
+            <HungerBar hunger={hunger} />
           </View>
           <View style={styles.topRight}>
             <TimeChip gameTimeMicroseconds={gameTimeMicroseconds} currentSeason={currentSeason} />

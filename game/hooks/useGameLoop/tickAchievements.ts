@@ -1,6 +1,8 @@
 /**
  * tickAchievements -- checks and unlocks achievements (throttled ~5s).
  */
+
+import { showAchievementAction as showAchievement } from "@/components/game/AchievementPopup/store";
 import { treesQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores";
 import {
@@ -70,6 +72,7 @@ export function tickAchievements(
     const def = getAchievementById(id);
     if (def) {
       showToast(`Achievement: ${def.name}!`, "achievement");
+      showAchievement(id);
     }
   }
 }

@@ -13,7 +13,9 @@ import { ProceduralGrass } from "@/components/entities/ProceduralGrass";
 import { ProceduralHedgeMaze } from "@/components/entities/ProceduralHedgeMaze";
 import { ProceduralProps } from "@/components/entities/ProceduralProps";
 import { ProceduralTrees } from "@/components/entities/ProceduralTrees";
+import { AchievementPopupContainer } from "@/components/game/AchievementPopup";
 import { ActionButtons } from "@/components/game/ActionButtons";
+import { BatchHarvestButton } from "@/components/game/BatchHarvestButton";
 import { BuildPanel } from "@/components/game/BuildPanel";
 import { CodexPanel } from "@/components/game/CodexPanel";
 import { CookingPanel } from "@/components/game/CookingPanel";
@@ -39,12 +41,21 @@ import {
   usePlacementGhostRefs,
 } from "@/components/game/PlacementGhost";
 import { ConnectedQuestPanel } from "@/components/game/QuestPanel";
+import {
+  getActionsForEntity,
+  getFpsScreenCenter,
+  RadialActionMenu,
+} from "@/components/game/RadialActionMenu";
+import { RulesModal } from "@/components/game/RulesModal";
 import { SeedSelect } from "@/components/game/SeedSelect";
+import { StatsDashboard } from "@/components/game/StatsDashboard";
 import { ToastContainer } from "@/components/game/Toast";
+import { ToolBelt } from "@/components/game/ToolBelt";
 import { ToolWheel } from "@/components/game/ToolWheel";
 import { TradeDialog } from "@/components/game/TradeDialog";
 import { TutorialOverlay } from "@/components/game/TutorialOverlay";
 import { VirtualJoystick } from "@/components/game/VirtualJoystick";
+import { WeatherForecast } from "@/components/game/WeatherForecast";
 import { WeatherOverlay } from "@/components/game/WeatherOverlay";
 import { FPSCamera } from "@/components/player/FPSCamera";
 import { PlayerCapsule } from "@/components/player/PlayerCapsule";
@@ -59,18 +70,26 @@ import { WaterBodies } from "@/components/scene/WaterBody";
 import { WaterShader } from "@/components/scene/WaterShader";
 import { _getAttackTrigger, _subscribeAttackTrigger } from "@/game/actions/actionDispatcher";
 import { dispatchSmelt, dispatchUpgradeTool } from "@/game/actions/craftingActions";
+import { harvestTree } from "@/game/actions/treeActions";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
 import { useDebugBridge } from "@/game/debug/useDebugBridge";
 import { createPlayerEntity } from "@/game/ecs/archetypes";
 import type { DialogueComponent } from "@/game/ecs/components/dialogue";
-import { dayNightQuery, npcsQuery, terrainChunksQuery, world } from "@/game/ecs/world";
+import {
+  dayNightQuery,
+  harvestableQuery,
+  npcsQuery,
+  terrainChunksQuery,
+  weatherQuery,
+  world,
+} from "@/game/ecs/world";
 import { resolvePanelState } from "@/game/hooks/craftingStationLogic";
 import { useBirmotherEncounter } from "@/game/hooks/useBirmotherEncounter";
 import { useGameLoop } from "@/game/hooks/useGameLoop";
 import { useInput } from "@/game/hooks/useInput";
 import { useInteraction } from "@/game/hooks/useInteraction";
-import { useRaycast } from "@/game/hooks/useRaycast";
+import { useRaycast, useTargetHit } from "@/game/hooks/useRaycast";
 import { useSpiritProximity } from "@/game/hooks/useSpiritProximity";
 import { ChunkStreamer, useWorldLoader } from "@/game/hooks/useWorldLoader";
 import { getNpcTemplate } from "@/game/npcs/NpcManager";
@@ -273,6 +292,15 @@ export default function GameScreen() {
   // Fast travel menu state (opened from minimap campfire press) -- Spec §17.6
   const [fastTravelOpen, setFastTravelOpen] = useState(false);
 
+  // StatsDashboard modal state (opened from PauseMenu StatsTab)
+  const [statsDashboardOpen, setStatsDashboardOpen] = useState(false);
+
+  // RulesModal state (opened from PauseMenu SettingsTab "How to Play")
+  const [rulesModalOpen, setRulesModalOpen] = useState(false);
+
+  // RadialActionMenu state (opened via long-press on mobile)
+  const [radialMenuOpen, setRadialMenuOpen] = useState(false);
+
   /** Minimap campfire press opens the fast travel menu. Spec §17.6. */
   const handleCampfirePress = useCallback((_fastTravelId: string | null) => {
     setFastTravelOpen(true);
@@ -285,6 +313,56 @@ export default function GameScreen() {
 
   // Movement ref for VirtualJoystick (mobile only) — written by joystick, read by PlayerCapsule
   const movementRef = useRef({ x: 0, z: 0 });
+
+  // Batch harvest: count trees at stage >= 3 (harvestable)
+  const readyCount = useMemo(() => {
+    let count = 0;
+    for (const entity of harvestableQuery.entities) {
+      if (entity.tree.stage >= 3) count++;
+    }
+    return count;
+  }, [treesPlanted, treesMatured]); // reactivity proxies
+
+  /** Batch harvest all ready trees. */
+  const handleBatchHarvest = useCallback(() => {
+    for (const entity of harvestableQuery.entities) {
+      if (entity.tree.stage >= 3) {
+        harvestTree(entity.id);
+      }
+    }
+  }, []);
+
+  // Raycast target for radial action menu
+  const targetHit = useTargetHit();
+
+  // Radial action menu actions derived from current raycast target
+  const radialActions = useMemo(
+    () => (targetHit ? getActionsForEntity(targetHit, selectedTool) : []),
+    [targetHit, selectedTool],
+  );
+
+  // Radial menu center position (screen center for FPS mode)
+  const radialCenter = useMemo(() => getFpsScreenCenter(), []);
+
+  // Weather state from ECS for WeatherForecast widget
+  const weatherState = useMemo(() => {
+    const entity = weatherQuery.entities[0];
+    if (!entity?.weather) {
+      return { currentWeather: "clear" as const, timeRemaining: 0 };
+    }
+    // Map ECS WeatherType to WeatherForecast's simpler 4-value type
+    const wt = entity.weather.weatherType;
+    const mapped: "clear" | "rain" | "drought" | "windstorm" =
+      wt === "rain" || wt === "snow" || wt === "fog" || wt === "thunderstorm"
+        ? "rain"
+        : wt === "windstorm"
+          ? "windstorm"
+          : "clear";
+    return {
+      currentWeather: mapped,
+      timeRemaining: entity.weather.timeRemaining ?? 0,
+    };
+  }, [gameTimeMicroseconds]); // re-derive when game time ticks
 
   // Mobile action buttons — context-sensitive tool actions (Spec §23)
   const mobileActions: MobileAction[] = useMemo(
@@ -358,6 +436,12 @@ export default function GameScreen() {
   const pauseLockedCosmetics = useMemo(
     () => PRESTIGE_COSMETICS.filter((c) => c.prestigeRequired > prestigeCount),
     [prestigeCount],
+  );
+
+  // Tool belt data for compact toolbar (Spec §6)
+  const toolBeltTools = useMemo(
+    () => TOOLS.map((t) => ({ id: t.id, name: t.name, unlockLevel: t.unlockLevel })),
+    [],
   );
 
   // Seed select species data (all species, not just unlocked)
@@ -481,6 +565,19 @@ export default function GameScreen() {
     rawExecuteAction();
   }, [selection, openNpcDialogue, rawExecuteAction]);
 
+  /** Handle radial menu action selection. */
+  const handleRadialAction = useCallback(
+    (actionId: string) => {
+      setRadialMenuOpen(false);
+      if (actionId === "talk" && selection?.type === "npc" && selection.entityId) {
+        openNpcDialogue(selection.entityId);
+      } else {
+        rawExecuteAction();
+      }
+    },
+    [selection, openNpcDialogue, rawExecuteAction],
+  );
+
   // Time-of-day visual state for the 3D scene (Lighting + Sky).
   // Prefer ECS DayNightComponent values (8-slot lerped) when available.
   // Falls back to time.ts getSkyColors() (4 hard phases) before ECS bootstraps.
@@ -598,6 +695,9 @@ export default function GameScreen() {
             Mounted at the top of the overlay stack so toasts appear above the game. */}
         <ToastContainer />
 
+        {/* Achievement popup overlay — shown when tickAchievements fires showAchievement(). */}
+        <AchievementPopupContainer achievementDefs={ACHIEVEMENT_DEFS} />
+
         {/* Full FPS HUD overlay — self-contained, reads from ECS + Legend State */}
         <HUD
           onOpenMenu={() => setScreen("paused")}
@@ -608,6 +708,15 @@ export default function GameScreen() {
         {/* Weather visual overlay — self-drives from ECS WeatherComponent (Spec §12, §36).
             Renders rain, snow, fog, drought, windstorm, and thunderstorm 2D effects. */}
         <WeatherOverlay />
+
+        {/* Weather forecast pill widget — shows current weather type + seasonal hint. */}
+        <View style={styles.weatherForecast} pointerEvents="none">
+          <WeatherForecast
+            currentWeather={weatherState.currentWeather}
+            weatherTimeRemaining={weatherState.timeRemaining}
+            currentSeason={currentSeason}
+          />
+        </View>
 
         {/* ECS-driven weather particle overlay (rain drops, snow flakes, leaves, dust)
             + floating text particles (+XP, +Timber, etc.) — Spec §36.1. */}
@@ -648,6 +757,36 @@ export default function GameScreen() {
         <View style={styles.contextAction} pointerEvents="box-none">
           <ActionButtons onAction={rawExecuteAction} />
         </View>
+
+        {/* Batch harvest button — visible when 2+ trees are ready to harvest. */}
+        <View style={styles.batchHarvest} pointerEvents="box-none">
+          <BatchHarvestButton readyCount={readyCount} onBatchHarvest={handleBatchHarvest} />
+        </View>
+
+        {/* Compact tool belt — quick tool selection grid (Spec §6). */}
+        {Platform.OS === "web" && (
+          <View style={styles.toolBelt} pointerEvents="box-none">
+            <ToolBelt
+              tools={toolBeltTools}
+              selectedTool={selectedTool}
+              unlockedTools={unlockedTools}
+              level={level}
+              selectedSpecies={selectedSpecies}
+              seedCount={seeds[selectedSpecies] ?? 0}
+              onSelectTool={(id: string) => useGameStore.getState().setSelectedTool(id)}
+            />
+          </View>
+        )}
+
+        {/* Radial action menu — FPS context menu for entity interactions. */}
+        <RadialActionMenu
+          open={radialMenuOpen}
+          actions={radialActions}
+          centerX={radialCenter.cx}
+          centerY={radialCenter.cy}
+          onSelect={handleRadialAction}
+          onDismiss={() => setRadialMenuOpen(false)}
+        />
 
         {/* NPC Dialogue overlay — self-driven from ECS via dialogueBridge (Spec §15, §33).
             Renders when openDialogueSession() is called (triggered by NPC tap, spirit proximity,
@@ -743,6 +882,18 @@ export default function GameScreen() {
           onPrestige={handlePrestige}
           onResetGame={handleResetGame}
           onSetBorderCosmetic={setActiveBorderCosmetic}
+          onHowToPlay={() => setRulesModalOpen(true)}
+          onOpenStats={() => setStatsDashboardOpen(true)}
+        />
+
+        {/* Stats dashboard modal — full stats view opened from PauseMenu StatsTab. */}
+        <StatsDashboard open={statsDashboardOpen} onClose={() => setStatsDashboardOpen(false)} />
+
+        {/* Rules / How to Play modal — tutorial carousel opened from PauseMenu SettingsTab. */}
+        <RulesModal
+          open={rulesModalOpen}
+          onClose={() => setRulesModalOpen(false)}
+          onStart={() => setRulesModalOpen(false)}
         />
 
         {/* Tutorial overlay — reads tutorialState from store; null targetRect = label at top-center */}
@@ -817,5 +968,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 32,
     right: 16,
+  },
+  batchHarvest: {
+    position: "absolute",
+    bottom: 90,
+    right: 16,
+  },
+  weatherForecast: {
+    position: "absolute",
+    top: 52,
+    right: 0,
+    left: 0,
+    alignItems: "center" as const,
+  },
+  toolBelt: {
+    position: "absolute" as const,
+    bottom: 16,
+    left: 16,
   },
 });
