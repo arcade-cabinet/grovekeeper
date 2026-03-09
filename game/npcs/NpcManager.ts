@@ -5,8 +5,8 @@
  * checks. No engine dependencies -- purely data-driven.
  */
 
+import npcData from "@/config/game/npcs.json" with { type: "json" };
 import dialogueData from "./data/dialogues.json" with { type: "json" };
-import npcData from "./data/npcs.json" with { type: "json" };
 import type { DialogueNode, NpcTemplate } from "./types.ts";
 
 const npcTemplates: NpcTemplate[] = npcData as NpcTemplate[];

@@ -17,7 +17,7 @@
  * Tool switching: via Tool Wheel (Tab / long-press). Tool appears in 3D hand.
  */
 
-import { MenuIcon } from "lucide-react-native";
+import { BookOpenIcon, MenuIcon } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TargetInfo } from "@/components/player/TargetInfo";
@@ -44,9 +44,11 @@ export interface HUDProps {
   onOpenMenu: () => void;
   /** Opens the seed selector modal (triggered when trowel slot is tapped). */
   onOpenSeedSelect: () => void;
+  /** Opens the species codex modal (Spec §21). */
+  onOpenCodex?: () => void;
 }
 
-export function HUD({ onOpenMenu }: HUDProps) {
+export function HUD({ onOpenMenu, onOpenCodex }: HUDProps) {
   const stamina = useGameStore((s) => s.stamina);
   const maxStamina = useGameStore((s) => s.maxStamina);
   const gameTimeMicroseconds = useGameStore((s) => s.gameTimeMicroseconds);
@@ -76,6 +78,16 @@ export function HUD({ onOpenMenu }: HUDProps) {
           <View style={styles.topRight}>
             <TimeChip gameTimeMicroseconds={gameTimeMicroseconds} currentSeason={currentSeason} />
             <Compass playerX={playerX} playerZ={playerZ} />
+            {onOpenCodex && (
+              <Pressable
+                style={styles.menuButton}
+                onPress={onOpenCodex}
+                accessibilityLabel="Open species codex"
+                testID="btn-open-codex"
+              >
+                <Icon as={BookOpenIcon} size={18} className="text-emerald-800/70" />
+              </Pressable>
+            )}
             <Pressable
               style={styles.menuButton}
               onPress={onOpenMenu}

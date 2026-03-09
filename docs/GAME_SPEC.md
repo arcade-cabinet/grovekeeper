@@ -1882,7 +1882,7 @@ No inline magic numbers. Enforced by `.claude/hooks/no-magic-numbers.sh`.
 
 ## 39. Implementation Status
 
-**Last audited: 2026-03-08 (evening)** — 4,241 tests passing across 180 suites.
+**Last audited: 2026-03-08 (night)** — 4,324 tests passing across 186 suites.
 All systems in `game/systems/` have corresponding test files. 20 R3F components mounted in Canvas.
 23 UI overlays wired. 43 config JSON files in `config/game/`. 45+ systems running in the game loop.
 Survival-only mode confirmed (no exploration mode).
@@ -1954,7 +1954,7 @@ Systems wired to the game loop (`useGameLoop`) and/or mounted UI:
 | Mining (§45) | `game/systems/mining.ts` | YES | Via actionDispatcher | Via store |
 | Traps (§22) | `game/systems/traps.ts` | YES | Via actionDispatcher | Via store |
 | Tool Upgrades (§11) | `game/systems/toolUpgrades.ts` | YES | Via store + ForgingPanel | ForgingPanel (MOUNTED) |
-| Fast Travel (§17) | `game/systems/fastTravel.ts` | YES | Via store | FastTravelMenu (NOT MOUNTED) |
+| Fast Travel (§17) | `game/systems/fastTravel.ts` | YES | Via store | FastTravelMenu (MOUNTED) |
 | Species Discovery (§21) | `game/systems/speciesDiscovery.ts` | YES | Via store | NO codex UI |
 | Traveling Merchant (§20) | `game/systems/travelingMerchant/` | YES | Via store | Via store |
 | Tree Scale (§42) | `game/systems/treeScaleSystem.ts` | YES | NOT WIRED | NOT WIRED |
@@ -2003,7 +2003,7 @@ Previous gap list had 10 items. All 10 original gaps (2026-03-07) are now RESOLV
 **Current gaps:**
 
 1. **Orphaned systems (6):** recipes, discovery (legacy), spatialHash, gridGeneration (legacy), NativeAudioManager, treeScaleSystem -- tested but not imported by any non-test production code. Down from 12 in previous audit (8 systems were wired since last check).
-2. **Unmounted UI components:** FastTravelMenu, AchievementPopup, HungerBar, ToolBelt, StatsDashboard, RulesModal, WeatherForecast, RadialActionMenu, BatchHarvestButton, ActionButton, PlacementGhost -- exist in `components/game/` but not rendered in any mounted parent. Note: many components previously listed as unmounted are now mounted directly in `app/game/index.tsx` (MiniMap, QuestPanel, WeatherOverlay, VirtualJoystick, MobileActionButtons, FishingPanel, ToolWheel, FloatingParticles).
+2. **Unmounted UI components:** AchievementPopup, HungerBar, ToolBelt, StatsDashboard, RulesModal, WeatherForecast, RadialActionMenu, BatchHarvestButton -- exist in `components/game/` but not rendered in any mounted parent. Note: FastTravelMenu, ActionButtons, PlacementGhost, MiniMap, QuestPanel, WeatherOverlay, VirtualJoystick, MobileActionButtons, FishingPanel, ToolWheel, FloatingParticles are all now mounted in `app/game/index.tsx`.
 3. **GameUI orchestrator not mounted:** `components/game/GameUI/` was designed to consolidate HUD sub-components but is not imported by `app/game/index.tsx`. The game screen mounts HUD and overlays directly -- this is acceptable architecture.
 4. **Legacy scene components:** `Camera.tsx`, `Ground.tsx`, `SelectionRing.tsx` in `components/scene/` and `Player.tsx` in `components/entities/` are superseded by FPSCamera, TerrainChunks, raycast system, and PlayerCapsule respectively. Not deleted.
 5. **Config/code mismatch:** `config/game/achievements.json` exists but is never loaded -- achievements are hardcoded in `game/systems/achievements/core.ts`. `config/game/npcs.json` exists but NpcManager loads from `game/npcs/data/npcs.json` instead.
@@ -2059,13 +2059,13 @@ Target is <50. Main offenders are per-NPC body part meshes (~7-10 each) and per-
 | P8 | Base building (kitbashing) | COMPLETE (system + raids wired to game loop) |
 | P9 | Raids + NG+ + achievements | COMPLETE -- prestige + achievements + raids all wired |
 | P10 | Audio (Tone.js) + weather + particles | COMPLETE -- ambient + weather + ambient particles all wired |
-| P11 | Tutorial + menu + polish | PARTIAL -- tutorial + menus COMPLETE; UI polish needed |
+| P11 | Tutorial + menu + polish | COMPLETE -- Wind Waker animations, shared crafting design, fishing minigame visuals |
 | -- | Survival-only mode (§37 rewrite) | COMPLETE -- no exploration mode, 4 tiers only |
 
 ### 39.6 Test Coverage Summary
 
-- **Test suites:** 180 passing (180 total)
-- **Individual tests:** 4,241 passing (4,241 total)
+- **Test suites:** 186 passing (186 total)
+- **Individual tests:** 4,324 passing (4,324 total)
 - **Systems with tests:** all `game/systems/` files have corresponding test files
 - **R3F components mounted in Canvas:** 20 (GameSystems, LoadingProgressSentinel, FPSCamera, Lighting, Sky, TerrainChunks, WaterBodies, PlayerCapsule, ProceduralTrees, ProceduralGrass, ProceduralTown, ProceduralFences, ProceduralProps, ChibiNpcScene, ProceduralBushes, ProceduralHedgeMaze, GrovekeeperSpirit, ProceduralToolView, BirmotherMesh, ProceduralEnemies)
 - **UI overlays wired:** 23 (LoadingScreen, ToastContainer, HUD, WeatherOverlay, WeatherParticlesLayer, FloatingParticlesContainer, MiniMap, ConnectedQuestPanel, TouchLookZone, VirtualJoystick, MobileActionButtons, NpcDialogue, TradeDialog, CookingPanel, ForgingPanel, BuildPanel, FishingPanel, PauseMenu, TutorialOverlay, SeedSelect, ToolWheel, DeathScreen, PermadeathScreen)

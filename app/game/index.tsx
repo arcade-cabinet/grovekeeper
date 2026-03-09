@@ -15,6 +15,7 @@ import { ProceduralProps } from "@/components/entities/ProceduralProps";
 import { ProceduralTrees } from "@/components/entities/ProceduralTrees";
 import { ActionButtons } from "@/components/game/ActionButtons";
 import { BuildPanel } from "@/components/game/BuildPanel";
+import { CodexPanel } from "@/components/game/CodexPanel";
 import { CookingPanel } from "@/components/game/CookingPanel";
 import { DeathScreen } from "@/components/game/DeathScreen";
 import { FastTravelMenu } from "@/components/game/FastTravelMenu";
@@ -262,6 +263,9 @@ export default function GameScreen() {
 
   // Seed select modal state
   const [seedSelectOpen, setSeedSelectOpen] = useState(false);
+
+  // Species codex modal state (opened from HUD or PauseMenu)
+  const [codexOpen, setCodexOpen] = useState(false);
 
   // Tool wheel modal state (Tab key or long-press to open)
   const [toolWheelOpen, setToolWheelOpen] = useState(false);
@@ -598,6 +602,7 @@ export default function GameScreen() {
         <HUD
           onOpenMenu={() => setScreen("paused")}
           onOpenSeedSelect={() => setSeedSelectOpen(true)}
+          onOpenCodex={() => setCodexOpen(true)}
         />
 
         {/* Weather visual overlay — self-drives from ECS WeatherComponent (Spec §12, §36).
@@ -753,6 +758,9 @@ export default function GameScreen() {
           onSelect={setSelectedSpecies}
           onClose={() => setSeedSelectOpen(false)}
         />
+
+        {/* Species codex modal — discovery progress viewer (Spec §21). */}
+        <CodexPanel open={codexOpen} onClose={() => setCodexOpen(false)} />
 
         {/* Tool wheel modal — Tab key (web) or long-press (mobile) to open (Spec §6). */}
         <ToolWheel

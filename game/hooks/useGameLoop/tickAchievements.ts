@@ -3,8 +3,13 @@
  */
 import { treesQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores";
-import { checkAchievements, type PlayerStats } from "@/game/systems/achievements";
+import {
+  checkAchievements,
+  getAchievementById,
+  type PlayerStats,
+} from "@/game/systems/achievements";
 import type { TimeState } from "@/game/systems/time";
+import { showToast } from "@/game/ui/Toast.ts";
 
 /** Achievement checks run every ~5 seconds. */
 export const ACHIEVEMENT_CHECK_INTERVAL = 5;
@@ -62,5 +67,9 @@ export function tickAchievements(
   const newAchievements = checkAchievements(stats, store.achievements);
   for (const id of newAchievements) {
     store.unlockAchievement(id);
+    const def = getAchievementById(id);
+    if (def) {
+      showToast(`Achievement: ${def.name}!`, "achievement");
+    }
   }
 }
