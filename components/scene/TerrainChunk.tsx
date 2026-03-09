@@ -14,18 +14,19 @@
 
 import { useFrame } from "@react-three/fiber";
 import { useRapier } from "@react-three/rapier";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   BufferAttribute,
   BufferGeometry,
   Color,
   type Group,
-  type Material,
   Mesh,
-  MeshStandardMaterial,
+  type MeshStandardMaterial,
 } from "three";
 
 import { terrainChunksQuery } from "@/game/ecs/world";
+import { getPBRMaterial } from "@/game/materials/PBRMaterialCache";
+import { getBiomeMaterialKey } from "@/game/materials/terrainMaterials";
 import { CHUNK_SIZE } from "@/game/world/ChunkManager";
 
 /** Maximum world-space height displacement from the heightmap [-1, 1] range. */
@@ -136,6 +137,7 @@ export function buildTerrainGeometry(
 
   const positions = new Float32Array(n * n * 3);
   const colors = new Float32Array(n * n * 3);
+  const uvs = new Float32Array(n * n * 2);
 
   // Parse hex colors to linear RGB
   const base = new Color(baseColor);
@@ -160,6 +162,10 @@ export function buildTerrainGeometry(
       positions[vi * 3 + 0] = ix; // X: 0..CHUNK_SIZE-1 (local)
       positions[vi * 3 + 1] = height; // Y: height-displaced
       positions[vi * 3 + 2] = iz; // Z: 0..CHUNK_SIZE-1 (local)
+
+      // Planar XZ UV projection — texture tiles via material repeat (Spec §47.5)
+      uvs[vi * 2 + 0] = ix / (n - 1);
+      uvs[vi * 2 + 1] = iz / (n - 1);
 
       const [r, g, b] = computeBlendedColor(
         ix,
@@ -196,6 +202,7 @@ export function buildTerrainGeometry(
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new BufferAttribute(positions, 3));
   geometry.setAttribute("color", new BufferAttribute(colors, 3));
+  geometry.setAttribute("uv", new BufferAttribute(uvs, 2));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
 
@@ -257,15 +264,38 @@ export function buildTrimeshArgs(heightmap: Float32Array): {
  */
 export const TerrainChunks = () => {
   const groupRef = useRef<Group>(null);
-  // Per-entity geometry cache (chunk heightmap is immutable unless dirty)
   const geometryCacheRef = useRef(new Map<string, BufferGeometry>());
-  // Per-entity mesh map for O(1) lookup
   const meshMapRef = useRef(new Map<string, Mesh>());
-  // Per-entity Rapier static rigid body (trimesh collider attached)
   const rigidBodyMapRef = useRef(new Map<string, RapierBody>());
+  // Pre-loaded PBR terrain materials (texture key → MeshStandardMaterial)
+  const pbrMaterialsRef = useRef(new Map<string, MeshStandardMaterial>());
 
-  // Rapier world and module — stable references, safe to use inside useFrame
   const { rapier, world: rapierWorld } = useRapier();
+
+  // Pre-load all terrain PBR materials on mount (Spec §47.5).
+  // Errors propagate — no silent fallbacks.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const keys = [
+        "terrain/grass_green",
+        "terrain/forest_floor",
+        "terrain/dirt_path",
+        "terrain/cobblestone",
+        "terrain/snow_ground",
+        "terrain/sand_beach",
+      ];
+      const materials = await Promise.all(keys.map((key) => getPBRMaterial(key)));
+      if (cancelled) return;
+      for (let i = 0; i < keys.length; i++) {
+        pbrMaterialsRef.current.set(keys[i], materials[i]);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useFrame(() => {
     const group = groupRef.current;
@@ -292,7 +322,6 @@ export const TerrainChunks = () => {
         );
         geometryCache.set(id, geometry);
 
-        // Destroy existing Rapier body — recreated below with fresh geometry
         const existingBody = rigidBodyMap.get(id);
         if (existingBody) {
           rapierWorld.removeRigidBody(existingBody);
@@ -302,19 +331,18 @@ export const TerrainChunks = () => {
         terrainChunk.dirty = false;
       }
 
-      // Create mesh on first encounter
+      // Create mesh on first encounter — only when PBR material is ready
       let mesh = meshMap.get(id);
-      if (!mesh) {
-        const material = new MeshStandardMaterial({
-          vertexColors: true,
-          roughness: 0.75,
-          metalness: 0,
-          flatShading: false,
-        });
-        mesh = new Mesh(geometry, material);
+      const biome = entity.chunk?.biome;
+      if (!biome) {
+        throw new Error(`TerrainChunks: chunk entity ${id} missing chunk.biome`);
+      }
+      const materialKey = getBiomeMaterialKey(biome);
+      const pbrMat = pbrMaterialsRef.current.get(materialKey);
+
+      if (!mesh && pbrMat) {
+        mesh = new Mesh(geometry, pbrMat);
         mesh.receiveShadow = true;
-        // Terrain chunks are static — position never changes after creation.
-        // Set once and freeze the world matrix to skip per-frame recomputation (Spec §28).
         mesh.position.set(position.x, position.y, position.z);
         mesh.updateMatrix();
         mesh.matrixAutoUpdate = false;
@@ -322,16 +350,16 @@ export const TerrainChunks = () => {
         group.add(mesh);
       }
 
-      // Sync geometry (in case dirty rebuild produced a new instance)
-      if (mesh.geometry !== geometry) {
-        mesh.geometry = geometry;
+      if (mesh) {
+        // Sync geometry (in case dirty rebuild produced a new instance)
+        if (mesh.geometry !== geometry) {
+          mesh.geometry = geometry;
+        }
+        const visible = entity.renderable?.visible ?? true;
+        mesh.visible = visible;
       }
 
-      // Visibility controlled by ChunkManager (active vs buffer ring)
-      const visible = entity.renderable?.visible ?? true;
-      mesh.visible = visible;
-
-      // Create Rapier static trimesh collider if not yet present for this chunk
+      // Create Rapier static trimesh collider (independent of material readiness)
       if (!rigidBodyMap.has(id)) {
         const { vertices, indices } = buildTrimeshArgs(terrainChunk.heightmap);
         const bodyDesc = (rapier as RapierModule).RigidBodyDesc.fixed().setTranslation(
@@ -346,7 +374,7 @@ export const TerrainChunks = () => {
       }
     }
 
-    // Destroy meshes and Rapier bodies for chunks that were unloaded by ChunkManager
+    // Destroy meshes and Rapier bodies for chunks that were unloaded
     for (const [id, mesh] of meshMap) {
       if (!aliveIds.has(id)) {
         group.remove(mesh);
@@ -355,10 +383,9 @@ export const TerrainChunks = () => {
           geo.dispose();
           geometryCache.delete(id);
         }
-        (mesh.material as Material).dispose();
+        // PBR materials are cached/shared — never dispose here
         meshMap.delete(id);
 
-        // Remove Rapier rigid body (also removes its attached collider)
         const body = rigidBodyMap.get(id);
         if (body) {
           rapierWorld.removeRigidBody(body);

@@ -146,7 +146,12 @@ const TEXTURE_REGISTRY: Record<string, TextureEntry> = {
 // ---------------------------------------------------------------------------
 
 const materialCache = new Map<string, MeshStandardMaterial>();
-const loaderInstance = new TextureLoader();
+let loaderInstance: TextureLoader | null = null;
+
+function getLoader(): TextureLoader {
+  if (!loaderInstance) loaderInstance = new TextureLoader();
+  return loaderInstance;
+}
 
 // Default UV repeat loaded from config/game/materials.json (Spec §47.3)
 const DEFAULT_REPEAT_X: number = materialsConfig.pbr.defaultRepeatX;
@@ -181,7 +186,7 @@ async function loadTexture(
 ): Promise<Texture> {
   const uri = await resolveUri(assetId);
   return new Promise<Texture>((resolve, reject) => {
-    loaderInstance.load(
+    getLoader().load(
       uri,
       (texture) => {
         texture.colorSpace = colorSpace;
@@ -271,4 +276,5 @@ export function getRegisteredKeys(): string[] {
 /** Reset for testing — clears the cache without disposing Three.js objects. */
 export function resetPBRMaterialCache(): void {
   materialCache.clear();
+  loaderInstance = null;
 }

@@ -4,7 +4,7 @@
  * Covers:
  * - All 18 species IDs from species.json resolve to a valid bark key
  * - Birch group, pine group, sakura group, and oak-default group
- * - Unknown species default to bark/oak
+ * - Unknown species throw (no fallbacks)
  * - getFoliageMaterialKey: evergreen returns green in winter
  * - getFoliageMaterialKey: deciduous returns null in winter (bare branches)
  * - getFoliageMaterialKey: autumn returns leaves_autumn for all species
@@ -75,9 +75,9 @@ describe("Tree Materials — bark mapping (Spec §47.4)", () => {
     }
   });
 
-  it("unknown species defaults to bark/oak", () => {
-    expect(getBarkMaterialKey("unknown_tree")).toBe("bark/oak");
-    expect(getBarkMaterialKey("")).toBe("bark/oak");
+  it("unknown species throws — no fallback", () => {
+    expect(() => getBarkMaterialKey("unknown_tree")).toThrow("unknown species 'unknown_tree'");
+    expect(() => getBarkMaterialKey("")).toThrow("unknown species ''");
   });
 
   it("all species return a key in BARK_TEXTURE_KEYS", () => {

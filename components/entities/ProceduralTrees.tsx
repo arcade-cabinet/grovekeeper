@@ -30,6 +30,7 @@ import {
 import proceduralMeshCfg from "@/config/game/proceduralMesh.json" with { type: "json" };
 import speciesCfg from "@/config/game/species.json" with { type: "json" };
 import { treesQuery } from "@/game/ecs/world";
+import { getPBRMaterial } from "@/game/materials/PBRMaterialCache";
 import { createRNG } from "@/game/utils/seedRNG";
 
 // ---------------------------------------------------------------------------
@@ -152,6 +153,24 @@ export const ProceduralTrees = ({ onTreeTap }: ProceduralTreesProps = {}) => {
       canopyMat.dispose();
     };
   }, [trunkGeo, canopyGeo, trunkMat, canopyMat]);
+
+  // Load PBR bark + foliage materials and swap onto InstancedMesh when ready (Spec §47.6)
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const [barkMat, foliageMat] = await Promise.all([
+        getPBRMaterial("bark/oak"),
+        getPBRMaterial("foliage/leaves_green"),
+      ]);
+      if (cancelled) return;
+      if (trunkMeshRef.current) trunkMeshRef.current.material = barkMat;
+      if (canopyMeshRef.current) canopyMeshRef.current.material = foliageMat;
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Initial capacity — InstancedMesh must be created with a fixed count.
   // We start with 256 and rely on React re-rendering when the key changes to

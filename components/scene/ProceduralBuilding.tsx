@@ -11,11 +11,17 @@
  */
 
 import { RigidBody, TrimeshCollider } from "@react-three/rapier";
-import { useMemo } from "react";
-import { BufferGeometry, Float32BufferAttribute } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  BufferGeometry,
+  Float32BufferAttribute,
+  type Mesh,
+  type MeshStandardMaterial,
+} from "three";
 
 import structuresConfig from "@/config/game/structures.json" with { type: "json" };
 import type { BlueprintId } from "@/game/ecs/components/structures";
+import { getPBRMaterial } from "@/game/materials/PBRMaterialCache";
 import type { BoxMatType, BoxSpec } from "@/game/systems/buildingGeometry";
 import {
   buildColliderArrays,
@@ -119,11 +125,21 @@ const CUBE_FACE_VERTS: Array<[number, number, number]> = [
 const VERTS_PER_BOX = 36; // 12 triangles × 3 vertices
 
 /**
- * Build a merged BufferGeometry from a list of BoxSpecs with per-vertex colors.
+ * Per-face UV projection axes. Each face of a unit cube maps positions from
+ * two of the three world axes to U,V. The scale factor normalizes UVs to
+ * tile at 1 texture repeat per 2 world units (Spec §47.5).
+ */
+const UV_SCALE = 0.5;
+
+/**
+ * Build a merged BufferGeometry from a list of BoxSpecs with per-vertex colors
+ * and UV coordinates for PBR textures.
  *
  * No index buffer — each triangle is an independent vertex triplet (flat shading
  * normals computed by the GPU from unshared vertices). Vertex colors encode the
  * material type so one MeshStandardMaterial covers the entire building.
+ * UV coords use box projection: each face maps from the two world axes
+ * perpendicular to its normal (Spec §47.5).
  */
 function buildMergedGeometry(
   boxes: BoxSpec[],
@@ -132,6 +148,7 @@ function buildMergedGeometry(
   const totalVerts = boxes.length * VERTS_PER_BOX;
   const positions = new Float32Array(totalVerts * 3);
   const colors = new Float32Array(totalVerts * 3);
+  const uvs = new Float32Array(totalVerts * 2);
 
   let vIdx = 0;
 
@@ -142,22 +159,51 @@ function buildMergedGeometry(
     const hd = d / 2;
     const [r, g, b] = resolveBoxColor(mat, materialType);
 
-    for (const [dx, dy, dz] of CUBE_FACE_VERTS) {
-      positions[vIdx * 3] = cx + dx * hw;
-      positions[vIdx * 3 + 1] = cy + dy * hh;
-      positions[vIdx * 3 + 2] = cz + dz * hd;
+    // 6 faces × 6 verts each. Face order matches CUBE_FACE_VERTS:
+    // front(z+), back(z-), left(x-), right(x+), top(y+), bottom(y-)
+    for (let fi = 0; fi < 6; fi++) {
+      for (let vi = 0; vi < 6; vi++) {
+        const [dx, dy, dz] = CUBE_FACE_VERTS[fi * 6 + vi];
+        const px = cx + dx * hw;
+        const py = cy + dy * hh;
+        const pz = cz + dz * hd;
 
-      colors[vIdx * 3] = r;
-      colors[vIdx * 3 + 1] = g;
-      colors[vIdx * 3 + 2] = b;
+        positions[vIdx * 3] = px;
+        positions[vIdx * 3 + 1] = py;
+        positions[vIdx * 3 + 2] = pz;
 
-      vIdx++;
+        colors[vIdx * 3] = r;
+        colors[vIdx * 3 + 1] = g;
+        colors[vIdx * 3 + 2] = b;
+
+        // Box UV projection: use the two axes perpendicular to face normal
+        let u: number;
+        let v: number;
+        if (fi < 2) {
+          // front/back (z-normal) → project X,Y
+          u = px * UV_SCALE;
+          v = py * UV_SCALE;
+        } else if (fi < 4) {
+          // left/right (x-normal) → project Z,Y
+          u = pz * UV_SCALE;
+          v = py * UV_SCALE;
+        } else {
+          // top/bottom (y-normal) → project X,Z
+          u = px * UV_SCALE;
+          v = pz * UV_SCALE;
+        }
+        uvs[vIdx * 2] = u;
+        uvs[vIdx * 2 + 1] = v;
+
+        vIdx++;
+      }
     }
   }
 
   const geo = new BufferGeometry();
   geo.setAttribute("position", new Float32BufferAttribute(positions, 3));
   geo.setAttribute("color", new Float32BufferAttribute(colors, 3));
+  geo.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
   geo.computeVertexNormals();
   return geo;
 }
@@ -184,6 +230,18 @@ export interface ProceduralBuildingProps {
  * and door/window openings into one draw call per building (§43.8).
  * Physics: fixed TrimeshCollider from buildColliderArrays().
  */
+/** Map building materialType to PBR texture key. */
+function materialTypeToKey(materialType: "brick" | "plaster" | "timber"): string {
+  switch (materialType) {
+    case "brick":
+      return "building/stone_wall";
+    case "plaster":
+      return "building/plaster_white";
+    case "timber":
+      return "building/wood_planks";
+  }
+}
+
 export const ProceduralBuilding = ({
   footprintW,
   footprintD,
@@ -221,10 +279,29 @@ export const ProceduralBuilding = ({
 
   const collider = useMemo(() => buildColliderArrays(allBoxes), [allBoxes]);
 
+  // Load PBR material for this building's material type and swap onto mesh (Spec §47.6).
+  // Errors propagate — no fallbacks.
+  const meshRef = useRef<Mesh>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const key = materialTypeToKey(materialType);
+    const load = async () => {
+      const mat = await getPBRMaterial(key, { repeatX: 1, repeatY: 1 });
+      if (cancelled || !meshRef.current) return;
+      const clone = mat.clone() as MeshStandardMaterial;
+      clone.vertexColors = true;
+      meshRef.current.material = clone;
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [materialType]);
+
   return (
     <RigidBody type="fixed" position={position}>
       <TrimeshCollider args={[collider.vertices, collider.indices]} />
-      <mesh geometry={geometry} castShadow receiveShadow>
+      <mesh ref={meshRef} geometry={geometry} castShadow receiveShadow>
         <meshStandardMaterial vertexColors />
       </mesh>
     </RigidBody>

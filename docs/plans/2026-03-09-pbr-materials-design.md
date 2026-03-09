@@ -153,10 +153,10 @@ Add to `config/game/species.json`:
 - **Draw calls**: Unchanged — instanced meshes still batch by material.
 - **Bundle size**: ~6-8MB (JPEG compressed).
 
-### Fallback
+### Error Handling
 
-If a texture fails to load (corrupted file), fall back to the existing hex color
-material. `getPBRMaterial` catches load errors and returns a flat-color material.
+No fallbacks. If a texture fails to load, the error propagates. Missing textures
+are a hard error that must be fixed, not masked.
 
 ## Implementation Order
 

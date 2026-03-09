@@ -28,6 +28,7 @@ import {
 
 import proceduralMeshCfg from "@/config/game/proceduralMesh.json" with { type: "json" };
 import { propsQuery } from "@/game/ecs/world";
+import { getPBRMaterial } from "@/game/materials/PBRMaterialCache";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -129,6 +130,25 @@ export const ProceduralProps = () => {
       stoneMat.dispose();
     };
   }, [barrelGeo, crateGeo, defaultGeo, woodMat, stoneMat]);
+
+  // Load PBR materials and swap onto InstancedMeshes when ready (Spec §47.6)
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const [woodPbr, stonePbr] = await Promise.all([
+        getPBRMaterial("building/wood_planks"),
+        getPBRMaterial("building/stone_wall"),
+      ]);
+      if (cancelled) return;
+      if (barrelRef.current) barrelRef.current.material = woodPbr;
+      if (crateRef.current) crateRef.current.material = woodPbr;
+      if (defaultRef.current) defaultRef.current.material = stonePbr;
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const capacityRef = useRef(128);
 

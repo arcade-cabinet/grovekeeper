@@ -3,7 +3,7 @@
  *
  * Covers:
  * - Every named surface resolves to a valid building key
- * - Unknown surfaces fall back to building/stone_wall (safe default)
+ * - Unknown surfaces throw (no fallbacks)
  * - All returned keys exist in BUILDING_TEXTURE_KEYS
  */
 
@@ -30,14 +30,33 @@ describe("Building Materials — surface mapping (Spec §47.4)", () => {
     expect(getBuildingMaterialKey("roof")).toBe("building/thatch_roof");
   });
 
-  it("unknown surface defaults to building/stone_wall", () => {
-    expect(getBuildingMaterialKey("brick")).toBe("building/stone_wall");
-    expect(getBuildingMaterialKey("")).toBe("building/stone_wall");
-    expect(getBuildingMaterialKey("metal")).toBe("building/stone_wall");
+  it("maps door surface to building/wood_planks", () => {
+    expect(getBuildingMaterialKey("door")).toBe("building/wood_planks");
+  });
+
+  it("maps fence surface to building/wood_planks", () => {
+    expect(getBuildingMaterialKey("fence")).toBe("building/wood_planks");
+  });
+
+  it("unknown surface throws — no fallback", () => {
+    expect(() => getBuildingMaterialKey("brick")).toThrow("unknown surface 'brick'");
+    expect(() => getBuildingMaterialKey("")).toThrow("unknown surface ''");
+    expect(() => getBuildingMaterialKey("metal")).toThrow("unknown surface 'metal'");
   });
 
   it("all named surfaces return a key in BUILDING_TEXTURE_KEYS", () => {
-    const surfaces = ["wall", "wood", "plaster", "roof", "floor", "unknown"];
+    const surfaces = [
+      "wall",
+      "wood",
+      "plaster",
+      "roof",
+      "floor",
+      "door",
+      "fence",
+      "barrel",
+      "crate",
+      "stone",
+    ];
     for (const surface of surfaces) {
       const key = getBuildingMaterialKey(surface);
       expect(BUILDING_TEXTURE_KEYS).toContain(key);

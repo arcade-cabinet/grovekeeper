@@ -27,6 +27,7 @@ import {
 
 import proceduralMeshCfg from "@/config/game/proceduralMesh.json" with { type: "json" };
 import { fencesQuery } from "@/game/ecs/world";
+import { getPBRMaterial } from "@/game/materials/PBRMaterialCache";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -99,6 +100,19 @@ export const ProceduralFences = () => {
       woodMat.dispose();
     };
   }, [postGeo, railGeo, woodMat]);
+
+  // Load PBR wood_planks material and swap onto InstancedMeshes when ready (Spec §47.6)
+  useEffect(() => {
+    let cancelled = false;
+    getPBRMaterial("building/wood_planks").then((mat) => {
+      if (cancelled) return;
+      if (postMeshRef.current) postMeshRef.current.material = mat;
+      if (railMeshRef.current) railMeshRef.current.material = mat;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const capacityRef = useRef(256);
 
