@@ -5,6 +5,7 @@ import type { TileState } from "@/components/game/ActionButton";
 import type { Entity } from "@/game/ecs/world";
 import {
   campfiresQuery,
+  cropsQuery,
   npcsQuery,
   playerQuery,
   rocksQuery,
@@ -108,6 +109,16 @@ export function findWaterAtGrid(gridX: number, gridZ: number): Entity | null {
 /** Find a trap entity at a given grid position. */
 export function findTrapAtGrid(gridX: number, gridZ: number): Entity | null {
   for (const e of trapsQuery) {
+    if (e.position && Math.round(e.position.x) === gridX && Math.round(e.position.z) === gridZ) {
+      return e;
+    }
+  }
+  return null;
+}
+
+/** Find a crop entity at a given grid position. Spec §8.4.5. */
+export function findCropAtGrid(gridX: number, gridZ: number): Entity | null {
+  for (const e of cropsQuery) {
     if (e.position && Math.round(e.position.x) === gridX && Math.round(e.position.z) === gridZ) {
       return e;
     }

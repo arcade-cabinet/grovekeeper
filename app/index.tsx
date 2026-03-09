@@ -26,8 +26,7 @@ export default function MainMenuScreen() {
   const handleNewGameStart = useCallback(
     (config: NewGameConfig) => {
       useGameStore.getState().resetGame(config.worldSeed);
-      startNewGame(config.difficulty);
-      useGameStore.setState({ permadeath: config.permadeath });
+      startNewGame(config.difficulty, config.permadeath);
       useGameStore.getState().setScreen("playing");
       setNewGameOpen(false);
       router.push("/game");

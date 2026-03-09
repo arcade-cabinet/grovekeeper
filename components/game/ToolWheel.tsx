@@ -24,7 +24,7 @@ import {
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, HUD_PANEL, TYPE } from "@/components/ui/tokens";
+import { ACCENT, HUD_PANEL, LIGHT, TYPE } from "@/components/ui/tokens";
 import type { ToolData } from "@/game/config/tools";
 import { TOOLS } from "@/game/config/tools";
 import { useToolWheelTabKey } from "./toolWheelLogic.ts";
@@ -97,7 +97,7 @@ export function ToolWheel({
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 items-center justify-center bg-black/60">
+      <View className="flex-1 items-center justify-center bg-black/20">
         {/* Backdrop dismiss */}
         <Pressable
           className="absolute inset-0"
@@ -110,7 +110,7 @@ export function ToolWheel({
           className="mx-4 w-full max-w-xs rounded-2xl p-4 shadow-lg"
           style={{
             ...HUD_PANEL,
-            backgroundColor: "rgba(10,12,8,0.92)",
+            backgroundColor: "rgba(255,255,255,0.9)",
           }}
         >
           {/* Header */}
@@ -119,7 +119,7 @@ export function ToolWheel({
               ...TYPE.heading,
               textAlign: "center",
               marginBottom: 12,
-              color: DARK.textPrimary,
+              color: LIGHT.textPrimary,
             }}
           >
             Tools
@@ -141,10 +141,10 @@ export function ToolWheel({
                     style={{
                       borderWidth: 2,
                       backgroundColor: isSelected
-                        ? "rgba(74,222,128,0.15)"
+                        ? "rgba(76,175,80,0.15)"
                         : isUnlocked
-                          ? DARK.bgCanopy
-                          : DARK.surfaceStone,
+                          ? "rgba(232,245,233,0.7)"
+                          : "rgba(207,216,220,0.3)",
                       borderColor: isSelected ? ACCENT.sap : "transparent",
                       opacity: isUnlocked || canUnlock ? 1 : 0.5,
                     }}
@@ -156,13 +156,13 @@ export function ToolWheel({
                       as={IconComponent}
                       size={24}
                       className="mb-1"
-                      color={isUnlocked ? ACCENT.sap : DARK.textMuted}
+                      color={isUnlocked ? ACCENT.sap : LIGHT.textMuted}
                     />
                     <Text
                       style={{
                         ...TYPE.caption,
                         textAlign: "center",
-                        color: DARK.textPrimary,
+                        color: LIGHT.textPrimary,
                       }}
                     >
                       {tool.name}

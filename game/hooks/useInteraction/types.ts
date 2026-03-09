@@ -8,6 +8,7 @@ export type SelectionType =
   | "forge"
   | "water"
   | "trap"
+  | "crop"
   | null;
 
 export interface InteractionSelection {

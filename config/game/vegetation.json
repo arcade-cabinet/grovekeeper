@@ -178,54 +178,72 @@
   ],
   "grassScatterRadius": 1.5,
   "bushRootsProbability": 0.3,
+  "biomeCropPool": {
+    "temperate": ["carrot", "apple", "tomato"],
+    "wetland": [],
+    "mountain": [],
+    "tundra": [],
+    "savanna": [],
+    "coastal": [],
+    "enchanted": [],
+    "highland": []
+  },
   "biomeDensity": {
     "temperate": {
       "treesPerChunk": 8,
       "bushesPerChunk": 12,
       "grassPatchesPerChunk": 20,
-      "rocksPerChunk": 2
+      "rocksPerChunk": 2,
+      "cropsPerChunk": 3
     },
     "wetland": {
       "treesPerChunk": 6,
       "bushesPerChunk": 15,
       "grassPatchesPerChunk": 25,
-      "rocksPerChunk": 1
+      "rocksPerChunk": 1,
+      "cropsPerChunk": 0
     },
     "mountain": {
       "treesPerChunk": 4,
       "bushesPerChunk": 6,
       "grassPatchesPerChunk": 10,
-      "rocksPerChunk": 8
+      "rocksPerChunk": 8,
+      "cropsPerChunk": 0
     },
     "tundra": {
       "treesPerChunk": 2,
       "bushesPerChunk": 4,
       "grassPatchesPerChunk": 8,
-      "rocksPerChunk": 5
+      "rocksPerChunk": 5,
+      "cropsPerChunk": 0
     },
     "savanna": {
       "treesPerChunk": 3,
       "bushesPerChunk": 8,
       "grassPatchesPerChunk": 15,
-      "rocksPerChunk": 3
+      "rocksPerChunk": 3,
+      "cropsPerChunk": 0
     },
     "coastal": {
       "treesPerChunk": 5,
       "bushesPerChunk": 10,
       "grassPatchesPerChunk": 18,
-      "rocksPerChunk": 4
+      "rocksPerChunk": 4,
+      "cropsPerChunk": 0
     },
     "enchanted": {
       "treesPerChunk": 10,
       "bushesPerChunk": 14,
       "grassPatchesPerChunk": 22,
-      "rocksPerChunk": 3
+      "rocksPerChunk": 3,
+      "cropsPerChunk": 0
     },
     "highland": {
       "treesPerChunk": 5,
       "bushesPerChunk": 8,
       "grassPatchesPerChunk": 12,
-      "rocksPerChunk": 6
+      "rocksPerChunk": 6,
+      "cropsPerChunk": 0
     }
   },
   "biomeGrass": {

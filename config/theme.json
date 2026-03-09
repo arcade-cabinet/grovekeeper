@@ -2,17 +2,17 @@
   "aesthetic": "Bright whimsical Zelda (Wind Waker / BotW). Chibi NPCs, colorful procedural worlds.",
   "colors": {
     "light": {
-      "bgDeep": "#F0FDF4",
-      "bgCanopy": "#DCFCE7",
-      "bgBark": "#FEF3C7",
-      "bgWarm": "#FFFBEB",
-      "surfaceMoss": "#ECFDF5",
-      "surfacePanel": "rgba(240,253,244,0.88)",
-      "borderBranch": "#86EFAC",
-      "borderGold": "#FFD700",
-      "textPrimary": "#14532D",
-      "textSecondary": "#166534",
-      "textMuted": "#6B7280"
+      "bgDeep": "#E8F5E9",
+      "bgCanopy": "#C8E6C9",
+      "bgBark": "#FFF8E1",
+      "bgWarm": "#FFFDE7",
+      "surfaceMoss": "#E0F2F1",
+      "surfacePanel": "rgba(232,245,233,0.85)",
+      "borderBranch": "#66BB6A",
+      "borderGold": "#FFC107",
+      "textPrimary": "#1B5E20",
+      "textSecondary": "#2E7D32",
+      "textMuted": "#78909C"
     },
     "dark": {
       "bgDeep": "#0D1F0F",
@@ -26,20 +26,21 @@
       "textMuted": "#5A7A5D"
     },
     "accent": {
-      "sap": "#4ADE80",
-      "amber": "#F59E0B",
-      "ember": "#EF4444",
-      "frost": "#93C5FD",
-      "blossom": "#F9A8D4",
-      "gold": "#FFD700",
-      "biolum": "#39FF14",
-      "greenBright": "#22C55E"
+      "sap": "#4CAF50",
+      "amber": "#FFC107",
+      "ember": "#EF5350",
+      "frost": "#42A5F5",
+      "blossom": "#F48FB1",
+      "gold": "#FFD54F",
+      "biolum": "#69F0AE",
+      "greenBright": "#4CAF50",
+      "skyBlue": "#64B5F6"
     },
     "seasonal": {
-      "spring": "#86EFAC",
-      "summer": "#22C55E",
-      "autumn": "#F59E0B",
-      "winter": "#93C5FD"
+      "spring": "#66BB6A",
+      "summer": "#43A047",
+      "autumn": "#FFA726",
+      "winter": "#42A5F5"
     },
     "legacy": {
       "forestGreen": "#2D5A27",

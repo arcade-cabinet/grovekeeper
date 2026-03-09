@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, HUD_PANEL, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
+import { ACCENT, DARK, FONTS, HUD_PANEL, LIGHT, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
 import type { ResourceType } from "@/game/config/resources";
 import { useGameStore } from "@/game/stores";
 import {
@@ -145,7 +145,7 @@ export function FishingPanel({ open, onClose }: FishingPanelProps) {
       {/* Backdrop */}
       <Pressable
         style={StyleSheet.absoluteFillObject}
-        className="bg-black/50"
+        className="bg-black/20"
         onPress={onClose}
         accessibilityLabel="Close fishing panel"
       />
@@ -235,8 +235,8 @@ export function FishingPanel({ open, onClose }: FishingPanelProps) {
 const styles = StyleSheet.create({
   panel: {
     ...HUD_PANEL,
-    backgroundColor: "rgba(26, 58, 30, 0.92)",
-    borderColor: DARK.borderBranch,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    borderColor: LIGHT.borderBranch,
     borderWidth: 1,
     borderRadius: RADIUS.organic,
     width: "100%",
@@ -250,12 +250,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE[3],
     paddingVertical: SPACE[2],
     borderBottomWidth: 1,
-    borderBottomColor: DARK.borderBranch,
+    borderBottomColor: LIGHT.borderBranch,
   },
   title: {
     ...TYPE.display,
     fontFamily: FONTS.heading,
-    color: DARK.textPrimary,
+    color: LIGHT.textPrimary,
   },
   closeButton: {
     minWidth: 44,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   },
   closeText: {
     ...TYPE.heading,
-    color: DARK.textSecondary,
+    color: LIGHT.textSecondary,
     fontWeight: "700",
   },
   phaseContainer: {
@@ -275,14 +275,14 @@ const styles = StyleSheet.create({
   },
   phaseText: {
     ...TYPE.heading,
-    color: DARK.textPrimary,
+    color: LIGHT.textPrimary,
     textAlign: "center",
   },
   progressBarContainer: {
     height: 8,
     marginHorizontal: SPACE[3],
     marginBottom: SPACE[2],
-    backgroundColor: DARK.surfaceStone,
+    backgroundColor: "rgba(102,187,106,0.2)",
     borderRadius: RADIUS.pill,
     overflow: "hidden",
   },
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     height: 24,
     marginHorizontal: SPACE[3],
     marginBottom: SPACE[2],
-    backgroundColor: DARK.surfaceStone,
+    backgroundColor: "rgba(102,187,106,0.2)",
     borderRadius: RADIUS.pill,
     overflow: "hidden",
     justifyContent: "center",
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   urgencyLabel: {
     ...TYPE.critical,
-    color: DARK.textPrimary,
+    color: LIGHT.textPrimary,
     textAlign: "center",
     zIndex: 1,
   },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     height: 32,
     marginHorizontal: SPACE[3],
     marginBottom: SPACE[3],
-    backgroundColor: DARK.surfaceStone,
+    backgroundColor: "rgba(102,187,106,0.2)",
     borderRadius: RADIUS.pill,
     overflow: "hidden",
     position: "relative",
@@ -352,15 +352,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   actionButtonDisabled: {
-    backgroundColor: DARK.surfaceStone,
+    backgroundColor: "rgba(102,187,106,0.2)",
     opacity: 0.5,
   },
   actionButtonText: {
     ...TYPE.heading,
-    color: DARK.bgDeep,
+    color: "#FAFAFA",
     fontWeight: "700",
   },
   actionButtonTextDisabled: {
-    color: DARK.textMuted,
+    color: LIGHT.textMuted,
   },
 });

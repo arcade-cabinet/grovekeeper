@@ -6,7 +6,7 @@
  * chunk load/unload. Advances animProgress per-entity on each tick so
  * ChibiNpc receives updated values and applies rigid-body animation.
  *
- * Material cleanup: ChibiNpc creates its own MeshLambertMaterial instances
+ * Material cleanup: ChibiNpc creates its own MeshStandardMaterial instances
  * via useMemo — React unmounts each ChibiNpc when its entity leaves the
  * query, which disposes the materials via their ref lifecycle in ChibiNpc.
  *

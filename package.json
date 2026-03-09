@@ -19,8 +19,13 @@
     "test:e2e:web": "maestro test --platform web .maestro/"
   },
   "dependencies": {
+    "@expo-google-fonts/cabin": "^0.4.2",
+    "@expo-google-fonts/cinzel": "^0.4.2",
+    "@expo-google-fonts/cinzel-decorative": "^0.4.1",
     "@expo-google-fonts/fredoka": "^0.4.1",
+    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@expo-google-fonts/nunito": "^0.4.2",
+    "@expo-google-fonts/orbitron": "^0.4.2",
     "@legendapp/state": "3.0.0-beta.45",
     "@react-navigation/native": "^7.1.28",
     "@react-three/drei": "^10.7.7",

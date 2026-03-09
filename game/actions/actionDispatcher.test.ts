@@ -40,12 +40,15 @@ const mockAddResource = jest.fn();
 const mockIncrementToolUse = jest.fn();
 const mockAdvanceTutorial = jest.fn();
 
+let mockDifficulty: string | undefined;
+
 jest.mock("@/game/stores", () => ({
   useGameStore: {
     getState: () => ({
       stamina: 100,
       worldSeed: "test-seed",
       currentZoneId: "starting-grove",
+      difficulty: mockDifficulty,
       setActiveCraftingStation: mockSetActiveCraftingStation,
       setStamina: mockSetStamina,
       addResource: mockAddResource,
@@ -131,6 +134,7 @@ const mockTriggerActionHaptic = triggerActionHaptic as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockDifficulty = undefined;
 });
 
 // ── resolveAction ─────────────────────────────────────────────────────────────
@@ -564,6 +568,46 @@ describe("dispatchAction MINE — pick on rock (Spec §22)", () => {
     dispatchAction({ toolId: "pick", targetType: "rock", entity: rockEntity as never });
     expect(mockTriggerActionHaptic).toHaveBeenCalledWith("MINE");
   });
+
+  it("scales ore yield by difficulty resourceYieldMult (Spec §37)", () => {
+    // Seedling: resourceYieldMult = 1.3 => ceil(3 * 1.3) = ceil(3.9) = 4
+    mockDifficulty = "seedling";
+    const result = dispatchAction({
+      toolId: "pick",
+      targetType: "rock",
+      entity: rockEntity as never,
+      biome: "starting-grove",
+    });
+    expect(result).toBe(true);
+    expect(mockAddResource).toHaveBeenCalledWith("stone", 4);
+    mockDifficulty = undefined;
+  });
+
+  it("scales ore yield down for ironwood difficulty (Spec §37)", () => {
+    // Ironwood: resourceYieldMult = 0.3 => max(1, ceil(3 * 0.3)) = max(1, 1) = 1
+    mockDifficulty = "ironwood";
+    const result = dispatchAction({
+      toolId: "pick",
+      targetType: "rock",
+      entity: rockEntity as never,
+      biome: "rocky-highlands",
+    });
+    expect(result).toBe(true);
+    expect(mockAddResource).toHaveBeenCalledWith("stone", 1);
+    mockDifficulty = undefined;
+  });
+
+  it("defaults to 1.0 yield mult when difficulty is unset (Spec §37)", () => {
+    mockDifficulty = undefined;
+    const result = dispatchAction({
+      toolId: "pick",
+      targetType: "rock",
+      entity: rockEntity as never,
+      biome: "starting-grove",
+    });
+    expect(result).toBe(true);
+    expect(mockAddResource).toHaveBeenCalledWith("stone", 3);
+  });
 });
 
 describe("dispatchAction FISH — fishing-rod on fishable water (Spec §22)", () => {
@@ -781,6 +825,119 @@ describe("dispatchAction tutorial advancement (Spec §25.1)", () => {
   });
 });
 
+// ── resolveAction HARVEST_CROP (Spec §8) ────────────────────────────────────
+
+describe("resolveAction HARVEST_CROP (Spec §8)", () => {
+  it("trowel + crop -> HARVEST_CROP", () => {
+    expect(resolveAction("trowel", "crop")).toBe("HARVEST_CROP");
+  });
+
+  it("axe + crop -> HARVEST_CROP (any tool can harvest crops)", () => {
+    expect(resolveAction("axe", "crop")).toBe("HARVEST_CROP");
+  });
+
+  it("watering-can + crop -> WATER_CROP", () => {
+    expect(resolveAction("watering-can", "crop")).toBe("WATER_CROP");
+  });
+});
+
+// ── dispatchAction HARVEST_CROP (Spec §8) ───────────────────────────────────
+
+jest.mock("@/game/systems/cropGrowth", () => ({
+  harvestCropEntity: jest.fn(() => ({ cropId: "carrot", amount: 4 })),
+}));
+
+import { harvestCropEntity } from "@/game/systems/cropGrowth";
+
+const mockHarvestCropEntity = harvestCropEntity as jest.Mock;
+
+describe("dispatchAction HARVEST_CROP — crop interaction (Spec §8)", () => {
+  const harvestableCropEntity = {
+    id: "crop_001",
+    crop: { cropId: "carrot", stage: 3, progress: 1, watered: false, modelPath: "" },
+    position: { x: 5, y: 0, z: 5 },
+  };
+
+  it("calls harvestCropEntity and credits fruit resource on success", () => {
+    const result = dispatchAction({
+      toolId: "trowel",
+      targetType: "crop",
+      entity: harvestableCropEntity as never,
+    });
+    expect(result).toBe(true);
+    expect(mockHarvestCropEntity).toHaveBeenCalled();
+    expect(mockAddResource).toHaveBeenCalledWith("fruit", 4);
+  });
+
+  it("returns false when harvestCropEntity returns null (not harvestable)", () => {
+    mockHarvestCropEntity.mockReturnValueOnce(null);
+    const immatureCrop = {
+      id: "crop_002",
+      crop: { cropId: "carrot", stage: 1, progress: 0.5, watered: false, modelPath: "" },
+      position: { x: 5, y: 0, z: 5 },
+    };
+    const result = dispatchAction({
+      toolId: "trowel",
+      targetType: "crop",
+      entity: immatureCrop as never,
+    });
+    expect(result).toBe(false);
+  });
+
+  it("returns false when entity is missing", () => {
+    const result = dispatchAction({ toolId: "trowel", targetType: "crop" });
+    expect(result).toBe(false);
+    expect(mockHarvestCropEntity).not.toHaveBeenCalled();
+  });
+
+  it("fires triggerActionHaptic on successful HARVEST_CROP", () => {
+    dispatchAction({
+      toolId: "trowel",
+      targetType: "crop",
+      entity: harvestableCropEntity as never,
+    });
+    expect(mockTriggerActionHaptic).toHaveBeenCalledWith("HARVEST_CROP");
+  });
+});
+
+// ── dispatchAction WATER_CROP — watering-can on crop (Spec §8) ─────────────
+
+describe("dispatchAction WATER_CROP — watering crop (Spec §8)", () => {
+  const dryEntity = {
+    id: "crop_003",
+    crop: { cropId: "carrot", stage: 1, progress: 0.3, watered: false, modelPath: "" },
+    position: { x: 5, y: 0, z: 5 },
+  };
+
+  it("sets crop.watered to true and returns true", () => {
+    const result = dispatchAction({
+      toolId: "watering-can",
+      targetType: "crop",
+      entity: dryEntity as never,
+    });
+    expect(result).toBe(true);
+    expect(dryEntity.crop.watered).toBe(true);
+  });
+
+  it("returns false when crop is already watered", () => {
+    const wetEntity = {
+      id: "crop_004",
+      crop: { cropId: "carrot", stage: 1, progress: 0.3, watered: true, modelPath: "" },
+    };
+    const result = dispatchAction({
+      toolId: "watering-can",
+      targetType: "crop",
+      entity: wetEntity as never,
+    });
+    expect(result).toBe(false);
+  });
+
+  it("returns false when entity is missing", () => {
+    const result = dispatchAction({ toolId: "watering-can", targetType: "crop" });
+    expect(result).toBe(false);
+  });
+});
+
 // ── Audio SFX wiring (Spec §27) ──────────────────────────────────────────────
 
 // Access the mocked audioManager.playSound for SFX assertions.
@@ -854,6 +1011,34 @@ describe("dispatchAction SFX (Spec §27)", () => {
       biome: "starting-grove",
     });
     expect(mockPlaySound).toHaveBeenCalledWith("harvest");
+  });
+
+  it("plays 'harvest' SFX on successful HARVEST_CROP", () => {
+    const cropEntity = {
+      id: "crop_001",
+      position: { x: 5, y: 0, z: 5 },
+      crop: { cropId: "carrot", stage: 3, progress: 1, watered: false, modelPath: "" },
+    };
+    dispatchAction({
+      toolId: "trowel",
+      targetType: "crop",
+      entity: cropEntity as never,
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("harvest");
+  });
+
+  it("plays 'water' SFX on successful WATER_CROP", () => {
+    const cropEntity = {
+      id: "crop_005",
+      position: { x: 5, y: 0, z: 5 },
+      crop: { cropId: "carrot", stage: 1, progress: 0.3, watered: false, modelPath: "" },
+    };
+    dispatchAction({
+      toolId: "watering-can",
+      targetType: "crop",
+      entity: cropEntity as never,
+    });
+    expect(mockPlaySound).toHaveBeenCalledWith("water");
   });
 
   it("plays 'error' SFX when action fails execution", () => {

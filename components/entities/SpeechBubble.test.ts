@@ -9,6 +9,10 @@
  * Component export is verified separately.
  */
 
+jest.mock("@expo-google-fonts/cabin/400Regular/Cabin_400Regular.ttf", () => "mock-font-path", {
+  virtual: true,
+});
+
 jest.mock("@react-three/drei", () => ({
   Billboard: jest.fn(),
   Text: jest.fn(),

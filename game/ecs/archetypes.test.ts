@@ -94,10 +94,12 @@ describe("archetypes", () => {
   });
 
   describe("createPlayerEntity", () => {
-    it("creates player at grid center", () => {
+    it("creates player at Rootmere spawn position (8, 15, 8)", () => {
       const player = createPlayerEntity();
       expect(player.id).toBe("player");
-      expect(player.position).toEqual({ x: 6, y: 0, z: 6 });
+      // Must match PlayerCapsule SPAWN_POSITION so the Rapier body and ECS entity
+      // start at the same location — no first-frame desync (Spec §9).
+      expect(player.position).toEqual({ x: 8, y: 15, z: 8 });
     });
   });
 

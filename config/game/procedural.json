@@ -7,14 +7,14 @@
     "noiseLacunarity": 2.0,
     "noisePersistence": 0.5,
     "biomeColors": {
-      "forest": "#4a7c3f",
-      "meadow": "#7ab648",
-      "desert": "#c4a44a",
-      "swamp": "#3a5a3a",
-      "tundra": "#a0b0b8",
-      "mountains": "#6b6b6b",
-      "beach": "#d4c088",
-      "volcanic": "#3a2a2a"
+      "forest": "#6db856",
+      "meadow": "#95d44e",
+      "desert": "#d4b85a",
+      "swamp": "#4a9b6a",
+      "tundra": "#b8ccd4",
+      "mountains": "#8a8a8a",
+      "beach": "#e4d098",
+      "volcanic": "#4a3a3a"
     },
     "biomeBlendWidth": 4,
     "pathCarveDepth": 0.15,
@@ -73,6 +73,13 @@
     },
     "foamColor": "#e8e8e0",
     "foamThreshold": 0.6,
+    "windWakerColors": {
+      "ocean": { "shallow": "#4fc3f7", "deep": "#0288d1" },
+      "river": { "shallow": "#4dd0e1", "deep": "#00838f" },
+      "pond": { "shallow": "#80deea", "deep": "#00897b" },
+      "stream": { "shallow": "#80cbc4", "deep": "#00695c" },
+      "waterfall": { "shallow": "#b2ebf2", "deep": "#0097a7" }
+    },
     "causticsScale": 0.5,
     "causticsSpeed": 0.8,
     "causticsIntensity": 0.3,

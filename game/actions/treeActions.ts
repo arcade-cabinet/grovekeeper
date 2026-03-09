@@ -8,6 +8,8 @@ import { createTreeEntity } from "@/game/ecs/archetypes";
 import { useGameStore } from "@/game/stores";
 import { collectHarvest, initHarvestable } from "@/game/systems/harvest";
 import { getZoneBonusMagnitude, type ZoneType } from "@/game/systems/zoneBonuses";
+import { getChunkKey, worldToChunkCoords } from "@/game/world/ChunkManager";
+import { recordPlantedTree } from "@/game/world/chunkPersistence";
 import { findCell, findTreeById, world } from "./queries.ts";
 
 /**
@@ -44,6 +46,20 @@ export function plantTree(speciesId: string, gridX: number, gridZ: number): bool
   world.add(tree);
   gc.occupied = true;
   gc.treeEntityId = tree.id;
+
+  // Persist planted tree to chunk delta (Spec §26.2)
+  const { chunkX, chunkZ } = worldToChunkCoords({ x: gridX, z: gridZ });
+  const chunkKey = getChunkKey(chunkX, chunkZ);
+  const CHUNK_SIZE = 16;
+  recordPlantedTree(chunkKey, {
+    localX: gridX - chunkX * CHUNK_SIZE,
+    localZ: gridZ - chunkZ * CHUNK_SIZE,
+    speciesId,
+    stage: 0,
+    progress: 0,
+    plantedAt: tree.tree?.plantedAt ?? Date.now(),
+    meshSeed: tree.tree?.meshSeed ?? 0,
+  });
 
   store.incrementTreesPlanted();
   store.trackSpeciesPlanted(speciesId);

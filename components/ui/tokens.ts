@@ -7,19 +7,19 @@
  * Aesthetic direction: Bright, whimsical Legend of Zelda feel (Wind Waker / BotW).
  */
 
-// -- Colors: Light Mode (primary -- bright whimsical day) ---------------------
+// -- Colors: Light Mode (primary -- bright whimsical Wind Waker day) ----------
 export const LIGHT = {
-  bgDeep: "#F0FDF4", // soft mint
-  bgCanopy: "#DCFCE7", // light green
-  bgBark: "#FEF3C7", // warm cream
-  bgWarm: "#FFFBEB", // warm white
-  surfaceMoss: "#ECFDF5", // light teal
-  surfacePanel: "rgba(240,253,244,0.88)", // semi-transparent mint
-  borderBranch: "#86EFAC", // bright green
-  borderGold: "#FFD700", // gold accent
-  textPrimary: "#14532D", // deep forest green
-  textSecondary: "#166534", // medium forest green
-  textMuted: "#6B7280", // neutral gray for de-emphasis
+  bgDeep: "#E8F5E9", // saturated mint green
+  bgCanopy: "#C8E6C9", // vivid light green
+  bgBark: "#FFF8E1", // warm sunny cream
+  bgWarm: "#FFFDE7", // bright warm white
+  surfaceMoss: "#E0F2F1", // bright teal mist
+  surfacePanel: "rgba(232,245,233,0.85)", // semi-transparent bright mint
+  borderBranch: "#66BB6A", // saturated green border
+  borderGold: "#FFC107", // warm gold accent
+  textPrimary: "#1B5E20", // deep green (readable)
+  textSecondary: "#2E7D32", // medium green
+  textMuted: "#78909C", // blue-grey for de-emphasis
 } as const;
 
 // -- Colors: Dark Mode (secondary -- night-time / contrast) -------------------
@@ -37,22 +37,23 @@ export const DARK = {
 
 // -- Accent colors (shared across modes) --------------------------------------
 export const ACCENT = {
-  sap: "#4ADE80", // health, growth, positive
-  amber: "#F59E0B", // stamina, warnings, harvest
-  ember: "#EF4444", // danger, hunger critical, death
-  frost: "#93C5FD", // water, winter, night sky
-  blossom: "#F9A8D4", // spring, spirits, rare events
-  gold: "#FFD700", // prestige, achievements
-  biolum: "#39FF14", // Grovekeeper spirits glow
-  greenBright: "#22C55E", // vibrant green for buttons
+  sap: "#4CAF50", // health, growth, positive (saturated green)
+  amber: "#FFC107", // stamina, warnings, harvest (warm gold)
+  ember: "#EF5350", // danger, hunger critical, death
+  frost: "#42A5F5", // water, winter, sky (vivid blue)
+  blossom: "#F48FB1", // spring, spirits, rare events
+  gold: "#FFD54F", // prestige, achievements (warm gold)
+  biolum: "#69F0AE", // Grovekeeper spirits glow (bright mint)
+  greenBright: "#4CAF50", // vibrant green for buttons
+  skyBlue: "#64B5F6", // soft blue for info, secondary actions
 } as const;
 
 // -- Seasonal accent overrides ------------------------------------------------
 export const SEASONAL = {
-  spring: "#86EFAC",
-  summer: "#22C55E",
-  autumn: "#F59E0B",
-  winter: "#93C5FD",
+  spring: "#66BB6A",
+  summer: "#43A047",
+  autumn: "#FFA726",
+  winter: "#42A5F5",
 } as const;
 
 // -- Font families (match keys registered in useFonts) ------------------------
@@ -90,8 +91,8 @@ export const RADIUS = {
 
 // -- HUD panel base style (bright semi-transparent with green accent) ---------
 export const HUD_PANEL = {
-  backgroundColor: "rgba(240,253,244,0.85)",
+  backgroundColor: "rgba(232,245,233,0.82)",
   borderWidth: 1,
-  borderColor: "rgba(134,239,172,0.6)",
+  borderColor: "rgba(102,187,106,0.5)",
   borderRadius: RADIUS.organic,
 } as const;

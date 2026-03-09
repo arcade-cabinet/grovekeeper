@@ -24,7 +24,7 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
 import type { DialogueBranch } from "@/game/ecs/components/dialogue";
 import { activeDialogueQuery } from "@/game/ecs/world";
 import { useGameStore } from "@/game/stores";
@@ -181,7 +181,7 @@ export const NpcDialogue = () => {
       onRequestClose={handleClose}
       testID="npc-dialogue-modal"
     >
-      <View className="flex-1 justify-end bg-black/40">
+      <View className="flex-1 justify-end bg-black/20">
         {/* Tap backdrop to close */}
         <Pressable
           className="absolute inset-0"
@@ -193,15 +193,15 @@ export const NpcDialogue = () => {
         <View
           className="mx-3 mb-6 rounded-2xl shadow-lg"
           style={{
-            backgroundColor: "rgba(10, 12, 8, 0.95)",
+            backgroundColor: "rgba(255,255,255,0.92)",
             borderWidth: 2,
-            borderColor: DARK.borderBranch,
+            borderColor: LIGHT.borderBranch,
           }}
         >
           {/* Speaker header */}
           <View
             className="flex-row items-center px-4 py-2.5"
-            style={{ borderBottomWidth: 1, borderBottomColor: DARK.borderBranch }}
+            style={{ borderBottomWidth: 1, borderBottomColor: LIGHT.borderBranch }}
           >
             <Text
               style={{
@@ -218,10 +218,10 @@ export const NpcDialogue = () => {
           {/* Node text with speaker attribution */}
           <View
             className="px-4 py-3"
-            style={{ borderBottomWidth: 1, borderBottomColor: "rgba(61, 92, 65, 0.3)" }}
+            style={{ borderBottomWidth: 1, borderBottomColor: "rgba(102,187,106,0.3)" }}
           >
-            <View className="rounded-lg p-3" style={{ backgroundColor: DARK.surfaceMoss }}>
-              <Text style={{ ...TYPE.body, lineHeight: 20, color: DARK.textPrimary }}>
+            <View className="rounded-lg p-3" style={{ backgroundColor: "rgba(232,245,233,0.7)" }}>
+              <Text style={{ ...TYPE.body, lineHeight: 20, color: LIGHT.textPrimary }}>
                 <Text style={{ fontWeight: "500", color: ACCENT.sap }}>{currentNode.speaker}:</Text>
                 {"  "}
                 {currentNode.text}
@@ -245,8 +245,8 @@ export const NpcDialogue = () => {
                 className="mx-4 mb-2 min-h-[44px] justify-center rounded-xl px-4 py-2.5 active:opacity-80"
                 style={{
                   borderWidth: 2,
-                  borderColor: DARK.borderBranch,
-                  backgroundColor: DARK.bgCanopy,
+                  borderColor: LIGHT.borderBranch,
+                  backgroundColor: "rgba(232,245,233,0.6)",
                 }}
                 onPress={handleClose}
                 accessibilityLabel="Close dialogue"
@@ -257,7 +257,7 @@ export const NpcDialogue = () => {
                     ...TYPE.body,
                     textAlign: "center",
                     fontWeight: "500",
-                    color: DARK.textSecondary,
+                    color: LIGHT.textSecondary,
                   }}
                 >
                   Farewell

@@ -62,6 +62,7 @@ import {
   CAPSULE_HEIGHT,
   CAPSULE_RADIUS,
   PlayerCapsule,
+  SPAWN_POSITION,
 } from "./PlayerCapsule.tsx";
 
 describe("PlayerCapsule (Spec §9)", () => {
@@ -82,6 +83,19 @@ describe("PlayerCapsule (Spec §9)", () => {
 
   it("exports PlayerCapsule as a function component", () => {
     expect(typeof PlayerCapsule).toBe("function");
+  });
+
+  it("spawns at Rootmere center (8, 15, 8) — high enough to clear terrain", () => {
+    // SPAWN_POSITION[1]=15 ensures the capsule falls onto terrain rather than
+    // clipping into it. X=8, Z=8 is the Rootmere village center tile.
+    expect(SPAWN_POSITION).toEqual([8, 15, 8]);
+  });
+
+  it("SPAWN_POSITION X/Z match createPlayerEntity ECS spawn (no first-frame desync)", () => {
+    // The Rapier body and the ECS player entity must start at the same X/Z so that
+    // playerQuery.entities[0].position is correct before the first useFrame runs.
+    expect(SPAWN_POSITION[0]).toBe(8); // X
+    expect(SPAWN_POSITION[2]).toBe(8); // Z
   });
 });
 

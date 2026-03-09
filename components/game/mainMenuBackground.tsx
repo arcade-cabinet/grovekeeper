@@ -13,9 +13,9 @@ import Svg, { Ellipse, Rect } from "react-native-svg";
 // Colors (match MainMenu.tsx C constants)
 // ---------------------------------------------------------------------------
 
-const FOREST_GREEN = "#2D5A27";
-const BARK_BROWN = "#5D4037";
-const LEAF_LIGHT = "#81C784";
+const FOREST_GREEN = "#66BB6A";
+const BARK_BROWN = "#8D6E63";
+const LEAF_LIGHT = "#4CAF50";
 
 // ---------------------------------------------------------------------------
 // Leaf particle types + config

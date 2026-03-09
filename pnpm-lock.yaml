@@ -8,10 +8,25 @@ importers:
 
   .:
     dependencies:
+      '@expo-google-fonts/cabin':
+        specifier: ^0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/cinzel':
+        specifier: ^0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/cinzel-decorative':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@expo-google-fonts/fredoka':
         specifier: ^0.4.1
         version: 0.4.1
+      '@expo-google-fonts/jetbrains-mono':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@expo-google-fonts/nunito':
+        specifier: ^0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/orbitron':
         specifier: ^0.4.2
         version: 0.4.2
       '@legendapp/state':
@@ -1080,14 +1095,29 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@expo-google-fonts/cabin@0.4.2':
+    resolution: {integrity: sha512-0U7aB/62JkdEhr5wqAYhT6GhYzZJJkUqXmcyEO3X51m5ezDZv9HwDvanB6y5XPaabqZhItZ+PmV6/KegbClzbQ==}
+
+  '@expo-google-fonts/cinzel-decorative@0.4.1':
+    resolution: {integrity: sha512-e9kUUDldLbeNbt2VmycLgWZf2vNCsmvE8COs4WgEIUyvC1ndFPVkw/sy6gCceb5nNzmIw45J9CrUZ1TrGqOcWA==}
+
+  '@expo-google-fonts/cinzel@0.4.2':
+    resolution: {integrity: sha512-UAlyuHCGjmKpMt2MoCKYueHz8ZEzjHO1VEol2G7NcPW54UH+85SWIGzpor05YNqUvr/aoqS8Qrfnswxg1RsNMw==}
+
   '@expo-google-fonts/fredoka@0.4.1':
     resolution: {integrity: sha512-px3uHDidG1RI7mMAjfKQktK9yZoVn/Uvqgp1G/Zkd6ZN9flXFxhUoPDRZdcCj2knFvkKmlvOx96SD3j4fxq7ig==}
+
+  '@expo-google-fonts/jetbrains-mono@0.4.1':
+    resolution: {integrity: sha512-CslACrtMOcRwoWXCO7OMEI+9w3fukWSoBtvNz46OqPoogEuuoY0tkDY1O8sFumk8t0pC6Cx0Xr95O0TOQhpkug==}
 
   '@expo-google-fonts/material-symbols@0.4.25':
     resolution: {integrity: sha512-MlwOpcYPLYu2+aDAwqv29l3sknNNxA36Jcu07Tg9+MTEvXk2SPcO8eQmwwDeVBbv5Wb6ToD1LmE+e0lLv/9WvA==}
 
   '@expo-google-fonts/nunito@0.4.2':
     resolution: {integrity: sha512-1KCWphw/I2ugqfs9iRHUCkPTnomNgGPtF4AvqVquoEKxr0EL+mcLNLgeixsslbaSFevRR6/KJAE3sc8g0VaY0Q==}
+
+  '@expo-google-fonts/orbitron@0.4.2':
+    resolution: {integrity: sha512-lp92oZ6FF1tA9dzJxKYPHae8hVxfVJzh5jRvjPCN8P1kkF615n/mq0U4ZQ7EXiEJvO7Cpwg+lZlkSbRw7CiDug==}
 
   '@expo/cli@55.0.15':
     resolution: {integrity: sha512-Qd4aF2+wT9LtdV7G/gULbx/t8FJ/OVtwuNkLcZt1XlosQ5XX/C/3ywZXYl+/bYcHUmuO1TBD3Fg05bNlmL6vrw==}
@@ -6122,11 +6152,21 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
+  '@expo-google-fonts/cabin@0.4.2': {}
+
+  '@expo-google-fonts/cinzel-decorative@0.4.1': {}
+
+  '@expo-google-fonts/cinzel@0.4.2': {}
+
   '@expo-google-fonts/fredoka@0.4.1': {}
+
+  '@expo-google-fonts/jetbrains-mono@0.4.1': {}
 
   '@expo-google-fonts/material-symbols@0.4.25': {}
 
   '@expo-google-fonts/nunito@0.4.2': {}
+
+  '@expo-google-fonts/orbitron@0.4.2': {}
 
   '@expo/cli@55.0.15(@expo/dom-webview@55.0.3)(@expo/metro-runtime@55.0.6)(expo-constants@55.0.7)(expo-font@55.0.4)(expo-router@55.0.4)(expo@55.0.5)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)':
     dependencies:

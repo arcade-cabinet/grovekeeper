@@ -307,7 +307,7 @@ export const TerrainChunks = () => {
       if (!mesh) {
         const material = new MeshStandardMaterial({
           vertexColors: true,
-          roughness: 0.95,
+          roughness: 0.75,
           metalness: 0,
           flatShading: false,
         });

@@ -1,7 +1,7 @@
 /**
  * SettingsScreen -- Full settings modal for audio, graphics, controls, and accessibility.
  *
- * Spec §26. Accessible from MainMenu (via route) and PauseMenu (modal).
+ * Spec §26. Wind Waker bright panels, semi-transparent over the 3D world (§0.2).
  * Reads/writes gameStore.settings via Legend State.
  * Mobile-first: 44px touch targets, 375px min viewport.
  */
@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { AccessibilityInfo, Modal, Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, TYPE } from "@/components/ui/tokens";
+import { ACCENT, LIGHT, TYPE } from "@/components/ui/tokens";
 import { useGameStore } from "@/game/stores";
 import {
   applySettingsUpdate,
@@ -48,7 +48,7 @@ function useReducedMotionSystem(): boolean {
 interface StepSliderProps {
   label: string;
   valueLabel: string;
-  progress: number; // 0–1 fill proportion for the visual bar
+  progress: number; // 0-1 fill proportion for the visual bar
   onDecrement: () => void;
   onIncrement: () => void;
   decrementLabel?: string;
@@ -70,7 +70,7 @@ function StepSlider({
     <View style={{ gap: 6 }}>
       {/* Label row */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ ...TYPE.body, fontWeight: "600", color: DARK.textPrimary }}>{label}</Text>
+        <Text style={{ ...TYPE.body, fontWeight: "600", color: LIGHT.textPrimary }}>{label}</Text>
         <Text
           style={{
             ...TYPE.data,
@@ -96,13 +96,13 @@ function StepSlider({
             height: 44,
             borderRadius: 8,
             borderWidth: 1,
-            borderColor: DARK.borderBranch,
-            backgroundColor: pressed ? DARK.surfaceMoss : DARK.bgCanopy,
+            borderColor: LIGHT.borderBranch,
+            backgroundColor: pressed ? "rgba(232,245,233,0.9)" : "rgba(255,255,255,0.6)",
             alignItems: "center",
             justifyContent: "center",
           })}
         >
-          <Text style={{ fontSize: 20, color: DARK.textSecondary, lineHeight: 24 }}>
+          <Text style={{ fontSize: 20, color: LIGHT.textSecondary, lineHeight: 24 }}>
             {decrementLabel}
           </Text>
         </Pressable>
@@ -113,7 +113,7 @@ function StepSlider({
             flex: 1,
             height: 8,
             borderRadius: 4,
-            backgroundColor: DARK.surfaceStone,
+            backgroundColor: "rgba(102,187,106,0.2)",
             overflow: "hidden",
           }}
           accessibilityRole="adjustable"
@@ -139,8 +139,8 @@ function StepSlider({
             height: 44,
             borderRadius: 8,
             borderWidth: 1,
-            borderColor: DARK.borderBranch,
-            backgroundColor: pressed ? DARK.surfaceMoss : DARK.bgCanopy,
+            borderColor: LIGHT.borderBranch,
+            backgroundColor: pressed ? "rgba(232,245,233,0.9)" : "rgba(255,255,255,0.6)",
             alignItems: "center",
             justifyContent: "center",
           })}
@@ -182,9 +182,9 @@ function ToggleRow({
       }}
     >
       <View style={{ flex: 1 }}>
-        <Text style={{ ...TYPE.body, fontWeight: "600", color: DARK.textPrimary }}>{label}</Text>
+        <Text style={{ ...TYPE.body, fontWeight: "600", color: LIGHT.textPrimary }}>{label}</Text>
         {description ? (
-          <Text style={{ ...TYPE.caption, color: DARK.textMuted, marginTop: 2 }}>
+          <Text style={{ ...TYPE.caption, color: LIGHT.textMuted, marginTop: 2 }}>
             {description}
           </Text>
         ) : null}
@@ -195,7 +195,7 @@ function ToggleRow({
           width: 48,
           height: 28,
           borderRadius: 14,
-          backgroundColor: enabled ? ACCENT.sap : DARK.surfaceStone,
+          backgroundColor: enabled ? ACCENT.sap : "#CFD8DC",
           flexDirection: "row",
           alignItems: "center",
           paddingHorizontal: 3,
@@ -207,10 +207,10 @@ function ToggleRow({
             width: 22,
             height: 22,
             borderRadius: 11,
-            backgroundColor: DARK.textPrimary,
+            backgroundColor: "#FAFAFA",
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.3,
+            shadowOpacity: 0.2,
             shadowRadius: 2,
             elevation: 2,
           }}
@@ -229,7 +229,7 @@ function SectionHeader({ title }: { title: string }) {
     <Text
       style={{
         ...TYPE.label,
-        color: DARK.textMuted,
+        color: LIGHT.textMuted,
         letterSpacing: 0.8,
         marginBottom: 4,
         textTransform: "uppercase",
@@ -248,10 +248,10 @@ function SettingsCard({ children }: { children: React.ReactNode }) {
   return (
     <View
       style={{
-        backgroundColor: DARK.bgCanopy,
+        backgroundColor: "rgba(255,255,255,0.7)",
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: DARK.borderBranch,
+        borderColor: LIGHT.borderBranch,
         padding: 16,
         gap: 16,
       }}
@@ -298,22 +298,22 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.2)", justifyContent: "flex-end" }}>
         <View
           style={{
             maxHeight: "90%",
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             overflow: "hidden",
-            backgroundColor: DARK.bgDeep,
+            backgroundColor: "rgba(232,245,233,0.95)",
             borderTopWidth: 1,
-            borderColor: DARK.borderBranch,
+            borderColor: LIGHT.borderBranch,
           }}
         >
           {/* Handle bar */}
           <View style={{ alignItems: "center", paddingTop: 12, paddingBottom: 4 }}>
             <View
-              style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: DARK.borderBranch }}
+              style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: LIGHT.borderBranch }}
             />
           </View>
 
@@ -326,10 +326,10 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
               paddingHorizontal: 20,
               paddingVertical: 12,
               borderBottomWidth: 1,
-              borderBottomColor: DARK.borderBranch,
+              borderBottomColor: LIGHT.borderBranch,
             }}
           >
-            <Text style={{ ...TYPE.display, color: DARK.textPrimary }}>Settings</Text>
+            <Text style={{ ...TYPE.display, color: LIGHT.textPrimary }}>Settings</Text>
             <Pressable
               onPress={onClose}
               accessibilityLabel="Close settings"
@@ -351,7 +351,7 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
             contentContainerStyle={{ padding: 20, gap: 20, paddingBottom: 40 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* ── Audio ── */}
+            {/* -- Audio -- */}
             <View style={{ gap: 8 }}>
               <SectionHeader title="Audio" />
               <SettingsCard>
@@ -367,7 +367,7 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
                   }
                   accessibilityLabel={`Master volume, currently ${formatVolumePct(effective.masterVolume)}`}
                 />
-                <View style={{ height: 1, backgroundColor: DARK.borderBranch }} />
+                <View style={{ height: 1, backgroundColor: LIGHT.borderBranch, opacity: 0.4 }} />
                 <StepSlider
                   label="Sound Effects"
                   valueLabel={formatVolumePct(effective.sfxVolume)}
@@ -380,7 +380,7 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
                   }
                   accessibilityLabel={`SFX volume, currently ${formatVolumePct(effective.sfxVolume)}`}
                 />
-                <View style={{ height: 1, backgroundColor: DARK.borderBranch }} />
+                <View style={{ height: 1, backgroundColor: LIGHT.borderBranch, opacity: 0.4 }} />
                 <StepSlider
                   label="Ambient & Music"
                   valueLabel={formatVolumePct(effective.ambientVolume)}
@@ -396,7 +396,7 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
               </SettingsCard>
             </View>
 
-            {/* ── Graphics ── */}
+            {/* -- Graphics -- */}
             <View style={{ gap: 8 }}>
               <SectionHeader title="Graphics" />
               <SettingsCard>
@@ -415,7 +415,7 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
               </SettingsCard>
             </View>
 
-            {/* ── Controls ── */}
+            {/* -- Controls -- */}
             <View style={{ gap: 8 }}>
               <SectionHeader title="Controls" />
               <SettingsCard>
@@ -438,7 +438,7 @@ export function SettingsScreen({ open, onClose }: SettingsScreenProps) {
               </SettingsCard>
             </View>
 
-            {/* ── Accessibility ── */}
+            {/* -- Accessibility -- */}
             <View style={{ gap: 8 }}>
               <SectionHeader title="Accessibility" />
               <SettingsCard>

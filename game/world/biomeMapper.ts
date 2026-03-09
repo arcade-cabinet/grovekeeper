@@ -21,16 +21,17 @@ export type BiomeType =
   | "frozen-peaks"
   | "twilight-glade";
 
-/** Terrain base color hex per biome — used for vertex colors on terrain chunks. */
+/** Terrain base color hex per biome — used for vertex colors on terrain chunks.
+ * Wind Waker palette: vivid, saturated greens; warm earth tones for highlands. */
 export const BIOME_COLORS: Record<BiomeType, string> = {
-  "starting-grove": "#4a7c3f",
-  meadow: "#7ab648",
-  "ancient-forest": "#2d5a27",
-  wetlands: "#3a6b4e",
-  "rocky-highlands": "#7a6b5a",
-  "orchard-valley": "#8ab640",
-  "frozen-peaks": "#d4e8f0",
-  "twilight-glade": "#5a3a7c",
+  "starting-grove": "#6db856",
+  meadow: "#95d44e",
+  "ancient-forest": "#3d8a30",
+  wetlands: "#4a9b6a",
+  "rocky-highlands": "#a08b72",
+  "orchard-valley": "#a0d050",
+  "frozen-peaks": "#daf0f8",
+  "twilight-glade": "#7a5aaa",
 };
 
 /**

@@ -129,15 +129,15 @@ describe("BIOME_COLORS (Spec §17.3)", () => {
 
 describe("getBiomeColor", () => {
   it("returns the hex color for starting-grove", () => {
-    expect(getBiomeColor("starting-grove")).toBe("#4a7c3f");
+    expect(getBiomeColor("starting-grove")).toBe("#6db856");
   });
 
   it("returns the hex color for frozen-peaks", () => {
-    expect(getBiomeColor("frozen-peaks")).toBe("#d4e8f0");
+    expect(getBiomeColor("frozen-peaks")).toBe("#daf0f8");
   });
 
   it("returns the hex color for twilight-glade", () => {
-    expect(getBiomeColor("twilight-glade")).toBe("#5a3a7c");
+    expect(getBiomeColor("twilight-glade")).toBe("#7a5aaa");
   });
 
   it("is consistent with BIOME_COLORS record", () => {

@@ -119,7 +119,7 @@ function ProgressBar({ percent, reduceMotion }: { percent: number; reduceMotion:
         width: "100%",
         height: 10,
         borderRadius: 5,
-        backgroundColor: "rgba(134,239,172,0.25)",
+        backgroundColor: "rgba(102,187,106,0.2)",
         overflow: "hidden",
         borderWidth: 1,
         borderColor: LIGHT.borderBranch,

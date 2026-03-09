@@ -1,23 +1,17 @@
 /**
  * MainMenu -- entry screen for Grovekeeper.
- * Spec §26. Dark forest RPG aesthetic. Mobile-first, portrait-primary.
+ * Spec §26. Wind Waker bright aesthetic. Mobile-first, portrait-primary.
  *
+ * Renders as a semi-transparent overlay on the 3D world (§0.2 Zelda-style immersion).
  * Brand: docs/plans/2026-03-07-ux-brand-design.md §8
  * Tokens: components/ui/tokens.ts
  */
-import { LinearGradient } from "expo-linear-gradient";
 import { useMemo } from "react";
 import { View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, HUD_PANEL, TYPE } from "@/components/ui/tokens";
-import {
-  FloatingLeaf,
-  LEAF_CONFIGS,
-  LeftTreeSilhouette,
-  RightTreeSilhouette,
-  useReducedMotion,
-} from "./mainMenuBackground.tsx";
+import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
+import { FloatingLeaf, LEAF_CONFIGS, useReducedMotion } from "./mainMenuBackground.tsx";
 import { hasSave, primaryButtonLabel, treeSummaryText } from "./mainMenuLogic.ts";
 
 // ---------------------------------------------------------------------------
@@ -32,7 +26,7 @@ export interface MainMenuProps {
 }
 
 // ---------------------------------------------------------------------------
-// Main menu component — Dark Forest RPG
+// Main menu component — Wind Waker bright overlay
 // ---------------------------------------------------------------------------
 
 export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: MainMenuProps) {
@@ -41,15 +35,12 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
   const leaves = useMemo(() => LEAF_CONFIGS, []);
 
   return (
-    <LinearGradient
-      colors={[DARK.bgDeep, DARK.bgCanopy, DARK.bgBark]}
-      locations={[0, 0.6, 1]}
+    <View
       className="flex-1 items-center justify-center px-4 py-6"
+      style={{ backgroundColor: "rgba(232,245,233,0.75)" }}
     >
-      {/* Background: dark silhouettes + bioluminescent particles */}
+      {/* Background: floating leaf particles */}
       <View className="absolute inset-0 overflow-hidden" pointerEvents="none">
-        <LeftTreeSilhouette />
-        <RightTreeSilhouette />
         {!reduceMotion && leaves.map((leaf, i) => <FloatingLeaf key={`leaf-${i}`} config={leaf} />)}
       </View>
 
@@ -59,9 +50,9 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
           style={{
             ...TYPE.hero,
             fontFamily: FONTS.display,
-            color: DARK.textPrimary,
+            color: LIGHT.textPrimary,
             letterSpacing: 4,
-            textShadowColor: ACCENT.sap,
+            textShadowColor: ACCENT.gold,
             textShadowOffset: { width: 0, height: 0 },
             textShadowRadius: 12,
           }}
@@ -72,7 +63,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
           style={{
             ...TYPE.body,
             fontFamily: FONTS.body,
-            color: DARK.textSecondary,
+            color: LIGHT.textSecondary,
             fontStyle: "italic",
             marginTop: 4,
           }}
@@ -86,13 +77,18 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
         <View
           className="z-10 mb-4 w-full"
           style={{
-            ...HUD_PANEL,
             maxWidth: 340,
             padding: 12,
+            backgroundColor: "rgba(255,255,255,0.7)",
+            borderWidth: 1,
+            borderColor: LIGHT.borderBranch,
+            borderRadius: 8,
           }}
         >
-          <Text style={{ ...TYPE.label, color: DARK.textMuted, marginBottom: 4 }}>SAVED GROVE</Text>
-          <Text style={{ ...TYPE.body, color: DARK.textPrimary }}>
+          <Text style={{ ...TYPE.label, color: LIGHT.textMuted, marginBottom: 4 }}>
+            SAVED GROVE
+          </Text>
+          <Text style={{ ...TYPE.body, color: LIGHT.textPrimary }}>
             {treeSummaryText(treesPlanted)}
           </Text>
         </View>
@@ -100,7 +96,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
 
       {/* Buttons */}
       <View className="z-10 w-full gap-3" style={{ maxWidth: 340 }}>
-        {/* Continue — primary sap gradient */}
+        {/* Continue — primary green */}
         {saveExists && (
           <Button
             className="min-h-[48px] w-full overflow-hidden rounded-xl"
@@ -115,7 +111,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
               elevation: 4,
             }}
           >
-            <Text style={{ ...TYPE.heading, color: DARK.bgDeep }}>Continue Grove</Text>
+            <Text style={{ ...TYPE.heading, color: "#FAFAFA" }}>Continue Grove</Text>
           </Button>
         )}
 
@@ -125,7 +121,11 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
           variant={saveExists ? "outline" : "default"}
           style={
             saveExists
-              ? { borderColor: DARK.borderBranch, borderWidth: 2, backgroundColor: "transparent" }
+              ? {
+                  borderColor: LIGHT.borderBranch,
+                  borderWidth: 2,
+                  backgroundColor: "rgba(255,255,255,0.5)",
+                }
               : {
                   backgroundColor: ACCENT.sap,
                   shadowColor: ACCENT.sap,
@@ -141,7 +141,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
           <Text
             style={{
               ...TYPE.heading,
-              color: saveExists ? DARK.textPrimary : DARK.bgDeep,
+              color: saveExists ? LIGHT.textPrimary : "#FAFAFA",
             }}
           >
             {saveExists ? "New Grove" : primaryButtonLabel(treesPlanted)}
@@ -155,14 +155,14 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
           onPress={onSettings}
           testID="btn-settings"
         >
-          <Text style={{ ...TYPE.body, color: DARK.textMuted }}>Settings</Text>
+          <Text style={{ ...TYPE.body, color: LIGHT.textMuted }}>Settings</Text>
         </Button>
       </View>
 
       {/* Version */}
-      <Text className="mt-6" style={{ ...TYPE.caption, color: DARK.textMuted }}>
+      <Text className="mt-6" style={{ ...TYPE.caption, color: LIGHT.textMuted }}>
         Grovekeeper v0.1.0
       </Text>
-    </LinearGradient>
+    </View>
   );
 }

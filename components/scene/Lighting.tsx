@@ -38,8 +38,8 @@ export interface LightingProps {
   };
 }
 
-/** Earthy green fog base — blends the horizon into misty forest. */
-const FOG_BASE = { r: 0.3, g: 0.42, b: 0.25 };
+/** Bright green-tinted fog base — Wind Waker haze, never muddy/dark. */
+const FOG_BASE = { r: 0.45, g: 0.58, b: 0.38 };
 
 function hexToColor3(hex: string): Color {
   return new Color(hex);
@@ -78,10 +78,11 @@ export const Lighting = ({
     const sunAngle = (hours / 24) * Math.PI * 2 - Math.PI / 2;
     sun.position.set(-Math.cos(sunAngle) * 10, 10, -Math.sin(sunAngle) * 6);
 
-    // Ambient light — soft fill from all directions
+    // Ambient light — soft fill from all directions.
+    // Minimum 0.3 to prevent terrain from going too dark at any time of day.
     const ambientColor = hexToColor3(skyColors.ambient);
     ambient.color.copy(ambientColor);
-    ambient.intensity = ambientIntensity;
+    ambient.intensity = Math.max(0.3, ambientIntensity);
 
     // Update fog to earthy green with slight sky tint for time-of-day coherence
     const zenithColor = hexToColor3(skyColors.zenith);
@@ -92,7 +93,7 @@ export const Lighting = ({
     if (scene.fog instanceof Fog) {
       scene.fog.color.setRGB(fogR, fogG, fogB);
     } else {
-      scene.fog = new Fog(new Color(fogR, fogG, fogB), 60, 150);
+      scene.fog = new Fog(new Color(fogR, fogG, fogB), 100, 200);
     }
 
     // Match scene background to fog for seamless horizon blend

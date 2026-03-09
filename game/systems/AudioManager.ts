@@ -29,6 +29,11 @@ export type SoundId =
   | "toolSelect"
   | "seasonChange"
   | "build"
+  | "forge"
+  | "mine"
+  | "fish"
+  | "cook"
+  | "trade"
   | "error"
   | "success";
 

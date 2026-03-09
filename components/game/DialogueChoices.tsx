@@ -15,7 +15,7 @@
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, TYPE } from "@/components/ui/tokens";
+import { ACCENT, LIGHT, TYPE } from "@/components/ui/tokens";
 import type { DialogueBranch } from "@/game/ecs/components/dialogue";
 import { selectDefaultBranchNode } from "@/game/systems/dialogueBranch";
 
@@ -129,8 +129,8 @@ export const DialogueChoices = ({
           className="mb-2 min-h-[44px] justify-center rounded-xl px-4 py-2.5 active:opacity-80"
           style={{
             borderWidth: 2,
-            borderColor: DARK.borderBranch,
-            backgroundColor: DARK.bgCanopy,
+            borderColor: LIGHT.borderBranch,
+            backgroundColor: "rgba(232,245,233,0.6)",
           }}
           onPress={() => handlePress(branch)}
           accessibilityLabel={branch.label}

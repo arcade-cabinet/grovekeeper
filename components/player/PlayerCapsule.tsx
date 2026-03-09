@@ -31,8 +31,9 @@ export const CAPSULE_RADIUS = 0.3;
 export const CAPSULE_HALF_HEIGHT = (CAPSULE_HEIGHT - 2 * CAPSULE_RADIUS) / 2; // 0.6
 
 /** World-space spawn position for the player capsule.
- * (3, 3, 3) drops near the Rootmere village edge (avoids landing on buildings). */
-const SPAWN_POSITION: [number, number, number] = [3, 3, 3];
+ * X=8, Z=8 is Rootmere village center. Y=15 clears the tallest terrain so the
+ * capsule falls cleanly onto the heightfield before the first frame renders. */
+export const SPAWN_POSITION: [number, number, number] = [8, 15, 8];
 
 export interface PlayerCapsuleProps {
   /** Normalised XZ movement direction from useInput(). Defaults to no movement. */

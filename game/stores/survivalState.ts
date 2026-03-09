@@ -9,8 +9,8 @@ import { startChain } from "@/game/quests/questChainEngine";
 import { showToast } from "@/game/ui/Toast";
 import { gameState$, getState, type initialState } from "./core.ts";
 
-/** Start a new game. Sets hearts/maxHearts from difficulty config. Spec §12. */
-export function startNewGame(difficultyId: string): void {
+/** Start a new game. Sets hearts/maxHearts from difficulty config, and permadeath flag. Spec §12, §2.1. */
+export function startNewGame(difficultyId: string, permadeath = false): void {
   const tier = (difficultyConfig as Array<{ id: string; maxHearts: number }>).find(
     (d) => d.id === difficultyId,
   );
@@ -22,6 +22,7 @@ export function startNewGame(difficultyId: string): void {
 
   batch(() => {
     gameState$.difficulty.set(difficultyId);
+    gameState$.permadeath.set(permadeath);
     gameState$.hearts.set(maxHearts);
     gameState$.maxHearts.set(maxHearts);
     gameState$.hunger.set(100);

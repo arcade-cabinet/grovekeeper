@@ -70,7 +70,7 @@ export const restoreTreeEntity = (data: SerializedTree): Entity => ({
 
 export const createPlayerEntity = (): Entity => ({
   id: "player",
-  position: { x: 6, y: 0, z: 6 },
+  position: { x: 8, y: 15, z: 8 },
   player: {
     coins: 100,
     xp: 0,

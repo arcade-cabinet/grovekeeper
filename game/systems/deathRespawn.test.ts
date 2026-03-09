@@ -5,6 +5,7 @@
 
 import { emptyResources } from "@/game/config/resources";
 import { useGameStore } from "@/game/stores";
+import { startNewGame } from "@/game/stores/survivalState";
 import {
   applyDeathPenalty,
   computeDeathScreen,
@@ -176,6 +177,44 @@ describe("Death/Respawn System (Spec §12.3, §12.5, §2.1)", () => {
       const state = useGameStore.getState();
       expect(state.lastCampfireId).toBeNull();
       expect(state.lastCampfirePosition).toBeNull();
+    });
+  });
+
+  // ── startNewGame → deathRespawn permadeath wiring ─────────────────────────
+
+  describe("startNewGame sets permadeath flag for deathRespawn (Spec §2.1)", () => {
+    it("sets permadeath=true and routes to permadeath screen on hardwood death", () => {
+      useGameStore.getState().resetGame("test-seed");
+      startNewGame("hardwood", true);
+      const state = useGameStore.getState();
+      expect(state.difficulty).toBe("hardwood");
+      expect(state.permadeath).toBe(true);
+
+      // Simulate death
+      useGameStore.setState({ hearts: 0 });
+      applyDeathPenalty();
+      expect(useGameStore.getState().screen).toBe("permadeath");
+    });
+
+    it("sets permadeath=false by default and routes to normal death screen", () => {
+      useGameStore.getState().resetGame("test-seed");
+      startNewGame("sapling");
+      const state = useGameStore.getState();
+      expect(state.difficulty).toBe("sapling");
+      expect(state.permadeath).toBe(false);
+
+      // Simulate death
+      useGameStore.setState({ hearts: 0 });
+      applyDeathPenalty();
+      expect(useGameStore.getState().screen).toBe("death");
+    });
+
+    it("ironwood always routes to permadeath regardless of flag", () => {
+      useGameStore.getState().resetGame("test-seed");
+      startNewGame("ironwood", false);
+      useGameStore.setState({ hearts: 0 });
+      applyDeathPenalty();
+      expect(useGameStore.getState().screen).toBe("permadeath");
     });
   });
 });

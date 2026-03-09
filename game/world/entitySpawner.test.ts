@@ -13,7 +13,12 @@
 
 import type { BiomeType } from "./biomeMapper.ts";
 import { CHUNK_SIZE } from "./ChunkManager.ts";
-import { biomeToVegetationKey, getBiomeSpeciesPool, spawnChunkEntities } from "./entitySpawner.ts";
+import {
+  biomeToVegetationKey,
+  getBiomeCropPool,
+  getBiomeSpeciesPool,
+  spawnChunkEntities,
+} from "./entitySpawner.ts";
 
 /** Flat zero heightmap for chunk testing. */
 function makeHeightmap(size = CHUNK_SIZE): Float32Array {
@@ -253,5 +258,85 @@ describe("spawnChunkEntities (Spec §6)", () => {
     for (const placement of result.trees) {
       expect(typeof placement.position.y).toBe("number");
     }
+  });
+});
+
+// ─── getBiomeCropPool (Spec §8.4.4) ──────────────────────────────────────────
+
+describe("getBiomeCropPool (Spec §8.4.4)", () => {
+  it("returns carrot/apple/tomato for temperate biome key", () => {
+    const pool = getBiomeCropPool("temperate");
+    expect(pool).toContain("carrot");
+    expect(pool).toContain("apple");
+    expect(pool).toContain("tomato");
+  });
+
+  it("returns empty pool for non-crop biome keys", () => {
+    expect(getBiomeCropPool("tundra")).toHaveLength(0);
+    expect(getBiomeCropPool("highland")).toHaveLength(0);
+    expect(getBiomeCropPool("enchanted")).toHaveLength(0);
+  });
+});
+
+// ─── Crop spawning (Spec §8) ─────────────────────────────────────────────────
+
+describe("spawnChunkEntities crop spawning (Spec §8)", () => {
+  const seed = "test-seed";
+  const heightmap = makeHeightmap();
+
+  it("orchard-valley chunks spawn crops", () => {
+    const result = spawnChunkEntities(seed, 0, 0, "orchard-valley", heightmap);
+    expect(result.crops.length).toBeGreaterThan(0);
+  });
+
+  it("non-temperate biomes spawn zero crops", () => {
+    const result = spawnChunkEntities(seed, 0, 0, "frozen-peaks", heightmap);
+    expect(result.crops.length).toBe(0);
+  });
+
+  it("spawned crops have valid cropId from temperate crop pool", () => {
+    const validCropIds = ["carrot", "apple", "tomato"];
+    const result = spawnChunkEntities(seed, 0, 0, "orchard-valley", heightmap);
+    for (const placement of result.crops) {
+      expect(validCropIds).toContain(placement.crop.cropId);
+    }
+  });
+
+  it("spawned wild crops start at stage 2 (Growing) with progress 0", () => {
+    const result = spawnChunkEntities(seed, 0, 0, "orchard-valley", heightmap);
+    for (const placement of result.crops) {
+      expect(placement.crop.stage).toBe(2);
+      expect(placement.crop.progress).toBe(0);
+    }
+  });
+
+  it("spawned crops have non-empty modelPath", () => {
+    const result = spawnChunkEntities(seed, 0, 0, "orchard-valley", heightmap);
+    for (const placement of result.crops) {
+      expect(placement.crop.modelPath.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("crop positions are within chunk world bounds", () => {
+    const chunkX = 2;
+    const chunkZ = -1;
+    const result = spawnChunkEntities(seed, chunkX, chunkZ, "orchard-valley", heightmap);
+    const minX = chunkX * CHUNK_SIZE;
+    const maxX = (chunkX + 1) * CHUNK_SIZE;
+    const minZ = chunkZ * CHUNK_SIZE;
+    const maxZ = (chunkZ + 1) * CHUNK_SIZE;
+    for (const placement of result.crops) {
+      expect(placement.position.x).toBeGreaterThanOrEqual(minX);
+      expect(placement.position.x).toBeLessThan(maxX);
+      expect(placement.position.z).toBeGreaterThanOrEqual(minZ);
+      expect(placement.position.z).toBeLessThan(maxZ);
+    }
+  });
+
+  it("crop spawning is deterministic", () => {
+    const a = spawnChunkEntities(seed, 0, 0, "orchard-valley", heightmap);
+    const b = spawnChunkEntities(seed, 0, 0, "orchard-valley", heightmap);
+    expect(a.crops.map((c) => c.crop.cropId)).toEqual(b.crops.map((c) => c.crop.cropId));
+    expect(a.crops.map((c) => c.position)).toEqual(b.crops.map((c) => c.position));
   });
 });

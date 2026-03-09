@@ -14,7 +14,7 @@ import { useRef, useSyncExternalStore } from "react";
 import { Raycaster, Vector2, type Vector3 } from "three";
 
 import type { Entity } from "@/game/ecs/world";
-import { enemiesQuery, npcsQuery, structuresQuery, treesQuery } from "@/game/ecs/world";
+import { cropsQuery, enemiesQuery, npcsQuery, structuresQuery, treesQuery } from "@/game/ecs/world";
 
 /** Maximum reach of any tool in meters (Spec §11, tool-action-system §8.2). */
 export const MAX_RAYCAST_DISTANCE = 6.0;
@@ -22,7 +22,7 @@ export const MAX_RAYCAST_DISTANCE = 6.0;
 /** Proximity radius for spatial structure lookup (InstancedMesh fallback). */
 export const STRUCTURE_SNAP_RADIUS = 2.0;
 
-export type RaycastEntityType = "tree" | "npc" | "structure" | "enemy";
+export type RaycastEntityType = "tree" | "npc" | "structure" | "enemy" | "crop";
 
 export interface RaycastHit {
   /** The ECS entity that was hit. */
@@ -87,6 +87,7 @@ export function resolveEntityById(
   npcs: Iterable<Entity>,
   enemies: Iterable<Entity>,
   structures: Iterable<Entity>,
+  crops?: Iterable<Entity>,
 ): { entity: Entity; entityType: RaycastEntityType } | null {
   for (const e of trees) {
     if (e.id === entityId) return { entity: e, entityType: "tree" };
@@ -99,6 +100,11 @@ export function resolveEntityById(
   }
   for (const e of structures) {
     if (e.id === entityId) return { entity: e, entityType: "structure" };
+  }
+  if (crops) {
+    for (const e of crops) {
+      if (e.id === entityId) return { entity: e, entityType: "crop" };
+    }
   }
   return null;
 }
@@ -164,6 +170,7 @@ export function useRaycast(): ReturnType<typeof useRef<RaycastHit | null>> {
           npcsQuery,
           enemiesQuery,
           structuresQuery,
+          cropsQuery,
         );
         if (resolved) {
           const hit: RaycastHit = {

@@ -26,8 +26,11 @@ import type { Entity } from "@/game/ecs/world";
 import { enemiesQuery } from "@/game/ecs/world";
 import type { RaycastEntityType } from "@/game/hooks/useRaycast";
 import { useGameStore } from "@/game/stores";
+import { discoverCampfirePoint } from "@/game/stores/settings";
 import { audioManager } from "@/game/systems/AudioManager";
 import { resolveCampfireInteraction } from "@/game/systems/cooking";
+import { harvestCropEntity } from "@/game/systems/cropGrowth";
+import type { FastTravelPoint } from "@/game/systems/fastTravel";
 import { isWaterFishable } from "@/game/systems/fishing";
 import { resolveForgeInteraction } from "@/game/systems/forging";
 import { type ToolAction, triggerActionHaptic } from "@/game/systems/haptics";
@@ -37,6 +40,17 @@ import { createTrapComponent } from "@/game/systems/traps";
 import { scopedRNG } from "@/game/utils/seedWords";
 import type { BiomeType } from "@/game/world/biomeMapper";
 
+// Re-export crafting action dispatchers (Spec §22.4) so callers can import from one place.
+export {
+  dispatchSmelt,
+  dispatchTradeBuy,
+  dispatchTradeSell,
+  dispatchUpgradeTool,
+  type SmeltContext,
+  type TradeBuyContext,
+  type TradeSellContext,
+  type UpgradeToolContext,
+} from "@/game/actions/craftingActions";
 // Re-export interaction resolvers so callers (useInteraction, TargetInfo) can import
 // from a single dispatcher module rather than each crafting system file.
 export { resolveCampfireInteraction } from "@/game/systems/cooking";
@@ -119,7 +133,7 @@ export function resetAttackTrigger(): void {
   _attackTriggerCount = 0;
 }
 
-/** The full set of game verbs mapped by the dispatcher (Spec §11, §22, §34.4, §35). */
+/** The full set of game verbs mapped by the dispatcher (Spec §11, §22, §34.4, §35, §8.4.5). */
 export type GameAction =
   | "DIG"
   | "CHOP"
@@ -134,7 +148,13 @@ export type GameAction =
   | "PLACE_TRAP"
   | "CHECK_TRAP"
   | "BUILD"
-  | "ATTACK";
+  | "ATTACK"
+  | "HARVEST_CROP"
+  | "WATER_CROP"
+  | "SMELT"
+  | "UPGRADE_TOOL"
+  | "TRADE_BUY"
+  | "TRADE_SELL";
 
 /**
  * Superset of RaycastEntityType — includes terrain surface types for ground
@@ -149,7 +169,8 @@ export type TargetEntityType =
   | "forge"
   | "water"
   | "trap"
-  | "enemy";
+  | "enemy"
+  | "crop";
 
 /** Full context for a dispatched action. */
 export interface DispatchContext {
@@ -225,6 +246,10 @@ export function resolveAction(
   if (toolId === "compost-bin" && targetType === "tree") return "FERTILIZE";
   if (toolId === "trowel" && (targetType === "soil" || targetType === null)) return "PLANT";
   if (toolId === "shovel" && targetType === "rock") return "DIG";
+
+  // Crop interactions (Spec §8)
+  if (toolId === "watering-can" && targetType === "crop") return "WATER_CROP";
+  if (targetType === "crop") return "HARVEST_CROP";
 
   // Crafting station verbs (Spec §22.1, §22.2)
   if (targetType === "campfire") return "COOK";
@@ -304,6 +329,40 @@ export function dispatchAction(ctx: DispatchContext): boolean {
       break;
     }
 
+    // ── Crop interactions (Spec §8.4.5) ────────────────────────────────────
+
+    case "HARVEST_CROP": {
+      if (!ctx.entity) return false;
+      const cropComp = (ctx.entity as Entity & { crop?: Entity["crop"] }).crop;
+      if (!cropComp) return false;
+      // Position is unused in harvest logic; provide a zero fallback so the
+      // CropTickEntity interface is satisfied without requiring position on ctx.entity.
+      const cropPos = (ctx.entity as Entity).position ?? { x: 0, y: 0, z: 0 };
+      const cropResult = harvestCropEntity(
+        { id: ctx.entity.id, crop: cropComp, position: cropPos },
+        0,
+      );
+      if (!cropResult) return false;
+      store.addResource("fruit" as ResourceType, cropResult.amount);
+      (store as { advanceQuestObjective?: (k: string, n: number) => void }).advanceQuestObjective?.(
+        "crops_harvested",
+        1,
+      );
+      success = true;
+      break;
+    }
+
+    case "WATER_CROP": {
+      if (!ctx.entity) return false;
+      const waterCropComp = (ctx.entity as Entity & { crop?: Entity["crop"] }).crop;
+      if (!waterCropComp) return false;
+      if (waterCropComp.watered) return false;
+      waterCropComp.watered = true;
+      store.incrementToolUse("watering-can");
+      success = true;
+      break;
+    }
+
     // ── Crafting station verbs (Spec §22.1, §22.2) ─────────────────────────
 
     case "COOK": {
@@ -320,6 +379,22 @@ export function dispatchAction(ctx: DispatchContext): boolean {
         type: "cooking",
         entityId: ctx.entity?.id ?? "",
       });
+
+      // Auto-discover campfire as a fast travel point (Spec §17.6).
+      // Uses the ECS entity position + campfire.fastTravelId if available.
+      if (ctx.entity?.position) {
+        const campfireComp = (ctx.entity as Entity & { campfire?: { fastTravelId: string | null } })
+          .campfire;
+        const ftId = campfireComp?.fastTravelId ?? ctx.entity.id ?? "";
+        const ftPoint: FastTravelPoint = {
+          id: ftId,
+          label: `Campfire (${Math.round(ctx.entity.position.x)}, ${Math.round(ctx.entity.position.z)})`,
+          worldX: ctx.entity.position.x,
+          worldZ: ctx.entity.position.z,
+        };
+        discoverCampfirePoint(ftPoint);
+      }
+
       success = true;
       break;
     }
@@ -353,13 +428,18 @@ export function dispatchAction(ctx: DispatchContext): boolean {
       if (store.stamina < staminaCost) return false;
       store.setStamina(store.stamina - staminaCost);
 
-      // Determine ore yield using seeded RNG
+      // Determine ore yield using seeded RNG, scaled by difficulty resourceYieldMult (Spec §37)
       const biome = (ctx.biome ?? "starting-grove") as BiomeType;
       const rngFn = scopedRNG("mine", store.worldSeed, ctx.entity.id ?? "");
       const result = mineRock({ rockType: miningCheck.rockType } as RockComponent, biome, rngFn());
 
+      // Scale yield by difficulty multiplier (Spec §37)
+      const mineDiffConfig = getDifficultyById(store.difficulty);
+      const mineYieldMult = mineDiffConfig?.resourceYieldMult ?? 1.0;
+      const scaledAmount = Math.max(1, Math.ceil(result.amount * mineYieldMult));
+
       // Credit ore to inventory
-      store.addResource(result.oreType as ResourceType, result.amount);
+      store.addResource(result.oreType as ResourceType, scaledAmount);
       store.incrementToolUse("pick");
       success = true;
       break;
@@ -503,6 +583,12 @@ export function dispatchAction(ctx: DispatchContext): boolean {
         break;
       case "ATTACK":
         audioManager.playSound("chop");
+        break;
+      case "HARVEST_CROP":
+        audioManager.playSound("harvest");
+        break;
+      case "WATER_CROP":
+        audioManager.playSound("water");
         break;
     }
   } else if (action !== null) {

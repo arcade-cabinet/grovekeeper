@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, RADIUS, SPACE } from "@/components/ui/tokens";
+import { ACCENT, DARK, FONTS, LIGHT, RADIUS, SPACE } from "@/components/ui/tokens";
 import type { SmeltRecipe, ToolTierUpgrade } from "@/game/systems/forging";
 import {
   buildSmeltRows,
@@ -83,7 +83,7 @@ export function ForgingPanel({
           <View style={styles.header}>
             <Text style={styles.title}>The Forge</Text>
             <Pressable style={styles.closeButton} onPress={onClose} accessibilityLabel="Close">
-              <Icon as={XIcon} size={20} className="text-white" />
+              <Icon as={XIcon} size={20} color={LIGHT.textMuted} />
             </Pressable>
           </View>
 
@@ -249,7 +249,7 @@ function UpgradeTab({
 }
 
 // ---------------------------------------------------------------------------
-// Styles -- Dark forest theme (UX brand doc §5)
+// Styles -- Wind Waker bright theme
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
@@ -257,17 +257,17 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.2)",
     paddingHorizontal: SPACE[3],
   },
   panel: {
     width: "100%",
     maxWidth: 380,
     maxHeight: "85%",
-    backgroundColor: DARK.bgBark,
+    backgroundColor: "rgba(255,255,255,0.92)",
     borderRadius: RADIUS.organic * 2,
     borderWidth: 2,
-    borderColor: DARK.borderBranch,
+    borderColor: LIGHT.borderBranch,
     overflow: "hidden",
     zIndex: 1,
     shadowColor: "#000",
@@ -283,13 +283,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE[3],
     paddingVertical: SPACE[2],
     borderBottomWidth: 1,
-    borderBottomColor: DARK.borderBranch,
+    borderBottomColor: LIGHT.borderBranch,
   },
   title: {
     fontFamily: FONTS.heading,
     fontSize: 20,
     fontWeight: "700",
-    color: ACCENT.amber,
+    color: LIGHT.textPrimary,
   },
   closeButton: {
     minWidth: 44,
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: DARK.borderBranch,
+    borderBottomColor: LIGHT.borderBranch,
   },
   tab: {
     flex: 1,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.body,
     fontSize: 13,
     fontWeight: "600",
-    color: DARK.textMuted,
+    color: LIGHT.textMuted,
     textTransform: "uppercase",
     letterSpacing: 1,
   },
@@ -340,10 +340,10 @@ const styles = StyleSheet.create({
 
   // Recipe / upgrade card
   recipeCard: {
-    backgroundColor: DARK.surfaceMoss,
+    backgroundColor: "rgba(232,245,233,0.7)",
     borderRadius: RADIUS.organic,
     borderWidth: 1,
-    borderColor: DARK.borderBranch,
+    borderColor: LIGHT.borderBranch,
     padding: SPACE[2],
     gap: SPACE[1],
   },
@@ -356,12 +356,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.body,
     fontSize: 15,
     fontWeight: "600",
-    color: DARK.textPrimary,
+    color: LIGHT.textPrimary,
   },
   recipeTime: {
     fontFamily: FONTS.data,
     fontSize: 12,
-    color: DARK.textSecondary,
+    color: LIGHT.textSecondary,
   },
 
   // Cost rows
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   costLabel: {
     fontFamily: FONTS.body,
     fontSize: 12,
-    color: DARK.textSecondary,
+    color: LIGHT.textSecondary,
   },
   costAmount: {
     fontFamily: FONTS.data,
@@ -401,8 +401,8 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.data,
     fontSize: 11,
     fontWeight: "700",
-    color: DARK.textSecondary,
-    backgroundColor: DARK.bgDeep,
+    color: LIGHT.textSecondary,
+    backgroundColor: "#FAFAFA",
     paddingHorizontal: SPACE[1],
     paddingVertical: 2,
     borderRadius: RADIUS.sharp,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.body,
     fontSize: 12,
     fontStyle: "italic",
-    color: DARK.textMuted,
+    color: LIGHT.textMuted,
     marginTop: 2,
   },
 
@@ -432,23 +432,23 @@ const styles = StyleSheet.create({
     marginTop: SPACE[1],
   },
   forgeButtonDisabled: {
-    backgroundColor: DARK.surfaceStone,
+    backgroundColor: "#CFD8DC",
     opacity: 0.5,
   },
   forgeButtonText: {
     fontFamily: FONTS.body,
     fontSize: 14,
     fontWeight: "700",
-    color: DARK.bgDeep,
+    color: "#FAFAFA",
   },
   forgeButtonTextDisabled: {
-    color: DARK.textMuted,
+    color: LIGHT.textMuted,
   },
 
   // Footer
   footer: {
     borderTopWidth: 1,
-    borderTopColor: DARK.borderBranch,
+    borderTopColor: LIGHT.borderBranch,
     padding: SPACE[2],
   },
   closeAction: {
@@ -457,12 +457,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: RADIUS.organic,
     borderWidth: 2,
-    borderColor: DARK.borderBranch,
+    borderColor: LIGHT.borderBranch,
   },
   closeActionText: {
     fontFamily: FONTS.body,
     fontSize: 14,
     fontWeight: "700",
-    color: DARK.textSecondary,
+    color: LIGHT.textSecondary,
   },
 });

@@ -1,14 +1,14 @@
 /**
- * NewGameModal -- survival-only, 4 difficulty tiers, dark forest RPG.
+ * NewGameModal -- survival-only, 4 difficulty tiers, Wind Waker bright.
  *
- * Spec §26, §37. Unified design doc §3: "Survival — The Only Mode."
+ * Spec §26, §37. Semi-transparent panel over the 3D world (§0.2).
  * Brand: docs/plans/2026-03-07-ux-brand-design.md §9
  */
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, Switch, TextInput, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, HUD_PANEL, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
 import { generateSeedPhrase } from "@/game/utils/seedWords";
 
 // ---------------------------------------------------------------------------
@@ -113,11 +113,15 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <View
         className="flex-1 items-center justify-center px-4"
-        style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+        style={{ backgroundColor: "rgba(0,0,0,0.25)" }}
       >
         <View
           className="w-full max-w-sm rounded-2xl"
-          style={{ backgroundColor: DARK.bgCanopy, borderWidth: 1, borderColor: DARK.borderBranch }}
+          style={{
+            backgroundColor: "rgba(255,255,255,0.88)",
+            borderWidth: 2,
+            borderColor: LIGHT.borderBranch,
+          }}
         >
           <ScrollView
             className="max-h-[90%]"
@@ -127,28 +131,33 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
             {/* Header */}
             <Text
               className="mb-4 text-center"
-              style={{ ...TYPE.display, fontFamily: FONTS.heading, color: DARK.textPrimary }}
+              style={{ ...TYPE.display, fontFamily: FONTS.heading, color: LIGHT.textPrimary }}
             >
               New Grove
             </Text>
 
             {/* World Seed */}
             <View className="mb-4">
-              <Text style={{ ...TYPE.label, color: DARK.textMuted, marginBottom: 6 }}>
+              <Text style={{ ...TYPE.label, color: LIGHT.textMuted, marginBottom: 6 }}>
                 WORLD SEED
               </Text>
               <View
                 className="flex-row items-center gap-2 rounded-xl px-3 py-2"
-                style={{ ...HUD_PANEL }}
+                style={{
+                  backgroundColor: "rgba(232,245,233,0.7)",
+                  borderWidth: 1,
+                  borderColor: LIGHT.borderBranch,
+                  borderRadius: 8,
+                }}
               >
                 <TextInput
                   className="flex-1 text-base"
-                  style={{ color: DARK.textPrimary, fontFamily: FONTS.body }}
+                  style={{ color: LIGHT.textPrimary, fontFamily: FONTS.body }}
                   value={seedPhrase}
                   onChangeText={setSeedPhrase}
                   accessibilityLabel="World seed phrase"
                   placeholder="Adjective Adjective Noun"
-                  placeholderTextColor={DARK.textMuted}
+                  placeholderTextColor={LIGHT.textMuted}
                 />
                 <Pressable
                   onPress={handleShuffle}
@@ -159,14 +168,17 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
                   <Text className="text-base">{"\u{1F500}"}</Text>
                 </Pressable>
               </View>
-              <Text className="mt-1 text-center" style={{ ...TYPE.caption, color: DARK.textMuted }}>
+              <Text
+                className="mt-1 text-center"
+                style={{ ...TYPE.caption, color: LIGHT.textMuted }}
+              >
                 Your world is generated from this phrase
               </Text>
             </View>
 
             {/* Difficulty: 2x2 Grid */}
             <View className="mb-4">
-              <Text style={{ ...TYPE.label, color: DARK.textMuted, marginBottom: 6 }}>
+              <Text style={{ ...TYPE.label, color: LIGHT.textMuted, marginBottom: 6 }}>
                 DIFFICULTY
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -181,7 +193,7 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
               </View>
               <Text
                 className="mt-2 text-center"
-                style={{ ...TYPE.caption, color: DARK.textSecondary }}
+                style={{ ...TYPE.caption, color: LIGHT.textSecondary }}
               >
                 {activeTier.hearts}
                 {"\u2665"} {"\u00B7"} {activeTier.tagline}
@@ -192,13 +204,18 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
             {showPermadeath ? (
               <View
                 className="mb-4 flex-row items-center justify-between rounded-lg p-3"
-                style={{ ...HUD_PANEL }}
+                style={{
+                  backgroundColor: "rgba(232,245,233,0.7)",
+                  borderWidth: 1,
+                  borderColor: LIGHT.borderBranch,
+                  borderRadius: 8,
+                }}
               >
                 <View className="mr-3 shrink">
-                  <Text style={{ ...TYPE.body, color: DARK.textPrimary, fontWeight: "600" }}>
+                  <Text style={{ ...TYPE.body, color: LIGHT.textPrimary, fontWeight: "600" }}>
                     Permadeath
                   </Text>
-                  <Text style={{ ...TYPE.caption, color: DARK.textMuted }}>
+                  <Text style={{ ...TYPE.caption, color: LIGHT.textMuted }}>
                     {activeTier.permadeathForced === "on"
                       ? "Always on for Ironwood"
                       : "Optional \u2014 death is permanent"}
@@ -208,8 +225,8 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
                   value={permadeath}
                   onValueChange={setPermadeath}
                   disabled={activeTier.permadeathForced === "on"}
-                  trackColor={{ false: DARK.surfaceStone, true: ACCENT.sap }}
-                  thumbColor={DARK.textPrimary}
+                  trackColor={{ false: "#CFD8DC", true: ACCENT.sap }}
+                  thumbColor="#FAFAFA"
                 />
               </View>
             ) : null}
@@ -220,13 +237,13 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
                 className="min-h-[44px] flex-1 rounded-xl"
                 variant="outline"
                 style={{
-                  borderColor: DARK.borderBranch,
+                  borderColor: LIGHT.borderBranch,
                   borderWidth: 2,
-                  backgroundColor: "transparent",
+                  backgroundColor: "rgba(255,255,255,0.5)",
                 }}
                 onPress={onClose}
               >
-                <Text style={{ ...TYPE.body, color: DARK.textPrimary, fontWeight: "700" }}>
+                <Text style={{ ...TYPE.body, color: LIGHT.textPrimary, fontWeight: "700" }}>
                   Cancel
                 </Text>
               </Button>
@@ -245,7 +262,7 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
                 accessibilityLabel="Begin Your Grove"
                 testID="btn-begin-grove"
               >
-                <Text style={{ ...TYPE.heading, color: DARK.bgDeep }}>Begin Your Grove</Text>
+                <Text style={{ ...TYPE.heading, color: "#FAFAFA" }}>Begin Your Grove</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -274,9 +291,9 @@ function TierCard({
       style={{
         width: "47%",
         minHeight: 72,
-        backgroundColor: isSelected ? `${tier.color}15` : DARK.surfaceStone,
+        backgroundColor: isSelected ? `${tier.color}20` : "rgba(255,255,255,0.5)",
         borderWidth: 2,
-        borderColor: isSelected ? tier.color : DARK.borderBranch,
+        borderColor: isSelected ? tier.color : LIGHT.borderBranch,
       }}
       onPress={onSelect}
       accessibilityLabel={`${tier.name}: ${tier.tagline}`}
@@ -285,13 +302,13 @@ function TierCard({
       <Text
         style={{
           ...TYPE.label,
-          color: isSelected ? tier.color : DARK.textSecondary,
+          color: isSelected ? tier.color : LIGHT.textSecondary,
           fontWeight: "700",
         }}
       >
         {tier.name}
       </Text>
-      <Text style={{ ...TYPE.caption, color: DARK.textMuted }}>
+      <Text style={{ ...TYPE.caption, color: LIGHT.textMuted }}>
         {tier.hearts}
         {"\u2665"}
       </Text>

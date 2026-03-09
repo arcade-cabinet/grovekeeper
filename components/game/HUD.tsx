@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 22,
-    backgroundColor: "rgba(240,253,244,0.5)",
+    backgroundColor: "rgba(232,245,233,0.5)",
   },
   // Crosshair: subtle white dot (not thick cross)
   crosshairWrap: {

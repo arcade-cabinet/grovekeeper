@@ -6,7 +6,7 @@ what this document specifies. If code and spec disagree, the spec wins.
 
 **Canonical design:** [`docs/plans/2026-03-07-unified-game-design.md`](plans/2026-03-07-unified-game-design.md)
 
-Last updated: 2026-03-08 (vision alignment pass -- Wind Waker + Daggerfall + Grovekeeper pillars; 4,105 tests passing, 0 failing; all 178 suites green)
+Last updated: 2026-03-08 (evening audit -- §39 rewritten with verified counts: 4,241 tests / 180 suites / 20 R3F components / 23 UI overlays / 45+ game loop systems / 6 orphaned systems (down from 12) / draw call audit added §39.4)
 
 ---
 
@@ -49,52 +49,52 @@ generated at Daggerfall scale, but the tone is warm and cozy rather than dark an
 
 0. [Core Vision & Pillars](#0-core-vision--pillars)
 
-1. [User Flow](#1-user-flow)
-2. [Difficulty System](#2-difficulty-system)
-3. [World Seed System](#3-world-seed-system)
-4. [Core Game Loop](#4-core-game-loop)
-5. [Time System](#5-time-system)
-6. [Season System](#6-season-system)
-7. [Weather System](#7-weather-system)
-8. [Growth System](#8-growth-system)
-9. [Species Catalog](#9-species-catalog)
-10. [Economy](#10-economy)
-11. [Tools](#11-tools)
-12. [Stamina & Survival](#12-stamina--survival)
-13. [Harvest System](#13-harvest-system)
-14. [Quest System](#14-quest-system)
-15. [Achievement System](#15-achievement-system)
-16. [Progression & New Game+](#16-progression--new-game)
-17. [Open World](#17-open-world)
-18. [Structure System](#18-structure-system)
-19. [NPC System](#19-npc-system)
-20. [Trading System](#20-trading-system)
-21. [Discovery System](#21-discovery-system)
-22. [Crafting & Forging](#22-crafting--forging)
-23. [Input System](#23-input-system)
-24. [HUD Layout](#24-hud-layout)
-25. [Onboarding System](#25-onboarding-system)
-26. [Save and Persistence](#26-save-and-persistence)
-27. [Audio](#27-audio)
-28. [Visual Identity](#28-visual-identity)
-29. [Seeded RNG](#29-seeded-rng)
-30. [World Quest Narrative System](#30-world-quest-narrative-system)
-31. [Procedural Terrain & Water](#31-procedural-terrain--water)
-32. [Grovekeeper Spirits](#32-grovekeeper-spirits)
-33. [Dialogue Branching System](#33-dialogue-branching-system)
-34. [Combat System](#34-combat-system)
+1. [User Flow](#1-user-flow) ✅
+2. [Difficulty System](#2-difficulty-system) ✅
+3. [World Seed System](#3-world-seed-system) ✅
+4. [Core Game Loop](#4-core-game-loop) ✅
+5. [Time System](#5-time-system) ✅
+6. [Season System](#6-season-system) ✅
+7. [Weather System](#7-weather-system) ✅
+8. [Growth System](#8-growth-system) ✅
+9. [Species Catalog](#9-species-catalog) ✅
+10. [Economy](#10-economy) ✅
+11. [Tools](#11-tools) ✅
+12. [Stamina & Survival](#12-stamina--survival) ✅
+13. [Harvest System](#13-harvest-system) ✅
+14. [Quest System](#14-quest-system) ✅
+15. [Achievement System](#15-achievement-system) ✅
+16. [Progression & New Game+](#16-progression--new-game) ✅
+17. [Open World](#17-open-world) ✅
+18. [Structure System](#18-structure-system) ✅
+19. [NPC System](#19-npc-system) ✅
+20. [Trading System](#20-trading-system) ✅
+21. [Discovery System](#21-discovery-system) ✅ (no codex UI yet)
+22. [Crafting & Forging](#22-crafting--forging) ✅
+23. [Input System](#23-input-system) ✅
+24. [HUD Layout](#24-hud-layout) ✅
+25. [Onboarding System](#25-onboarding-system) ✅
+26. [Save and Persistence](#26-save-and-persistence) ✅
+27. [Audio](#27-audio) ✅ (ambient; weather/particle audio not wired)
+28. [Visual Identity](#28-visual-identity) ✅
+29. [Seeded RNG](#29-seeded-rng) ✅
+30. [World Quest Narrative System](#30-world-quest-narrative-system) ✅ (engine only; no in-game panel)
+31. [Procedural Terrain & Water](#31-procedural-terrain--water) ✅
+32. [Grovekeeper Spirits](#32-grovekeeper-spirits) ✅
+33. [Dialogue Branching System](#33-dialogue-branching-system) ✅
+34. [Combat System](#34-combat-system) ✅
 35. [Base Building (Kitbashing) — SUPERSEDED BY §43](#35-base-building-kitbashing--superseded-by-43)
-36. [Particle Systems](#36-particle-systems)
-37. [Game Modes](#37-game-modes)
-38. [ECS Component Architecture](#38-ecs-component-architecture)
+36. [Particle Systems](#36-particle-systems) ✅ (water only; weather/ambient not wired)
+37. [Survival — The Only Mode](#37-survival--the-only-mode) ✅ (spec updated 2026-03-08)
+38. [ECS Component Architecture](#38-ecs-component-architecture) ✅
 39. [Implementation Status](#39-implementation-status)
-40. [World Naming System](#40-world-naming-system)
-41. [RPG Combat & Random Encounters](#41-rpg-combat--random-encounters--confirmed-2026-03-07)
-42. [Procedural World Rendering (GLB-Free)](#42-procedural-world-rendering-glb-free)
-43. [Procedural Town Generation (Street-Grid + Blueprints)](#43-procedural-town-generation-street-grid--blueprints)
-44. [Fishing Mechanic](#44-fishing-mechanic)
-45. [Mining Mechanic](#45-mining-mechanic)
-46. [Player Building Flow](#46-player-building-flow)
+40. [World Naming System](#40-world-naming-system) ✅
+41. [RPG Combat & Random Encounters](#41-rpg-combat--random-encounters--confirmed-2026-03-07) ✅ (loot system not wired)
+42. [Procedural World Rendering (GLB-Free)](#42-procedural-world-rendering-glb-free) ✅
+43. [Procedural Town Generation (Street-Grid + Blueprints)](#43-procedural-town-generation-street-grid--blueprints) ✅
+44. [Fishing Mechanic](#44-fishing-mechanic) ✅
+45. [Mining Mechanic](#45-mining-mechanic) ✅
+46. [Player Building Flow](#46-player-building-flow) ✅ (raids not wired)
 
 ---
 
@@ -146,20 +146,23 @@ Overlay with tabs: Stats, Progress, Codex, World Map, Settings, Help.
 
 ## 2. Difficulty System
 
-**Two game modes:** Exploration (cozy, no survival) and Survival (4 sub-difficulties).
-See Section 37 for full game mode details. Data: `config/game/difficulty.json`.
+**Survival is the only mode.** There is no exploration mode, creative mode, or difficulty-free variant.
+The four difficulty tiers (Seedling / Sapling / Hardwood / Ironwood) scale pressure and lethality
+but all four are survival modes. Data: `config/game/difficulty.json`. Full definitions in §37.
 
 ### 2.1 Tier Definitions
+
+**Canonical tier table is in §37.3.** If values here disagree with §37.3, §37.3 wins.
 
 | Field | Seedling | Sapling | Hardwood | Ironwood |
 |-------|----------|---------|----------|----------|
 | **Hearts** | 7 | 5 | 4 | 3 |
-| **Growth** | 1.0x | 0.8x | 0.6x | 0.4x |
-| **Yield** | 1.0x | 0.75x | 0.5x | 0.3x |
-| **Weather** | 0.5x | 1.0x | 1.5x | 2.0x |
-| **Stamina drain** | 1.0x | 1.3x | 1.6x | 2.0x |
-| **Hunger drain** | 0.5/min | 1.0/min | 1.5/min | 2.0/min |
-| **Permadeath** | No | Optional | Optional | Forced |
+| **Growth** | 1.3x | 1.0x | 0.8x | 0.4x |
+| **Yield** | 1.3x | 1.0x | 0.75x | 0.3x |
+| **Weather** | 1.0x | 1.0x | 1.3x | 2.0x |
+| **Stamina drain** | 0x | 1.0x | 1.3x | 2.0x |
+| **Hunger drain** | 0/min | 1.0/min | 1.5/min | 2.0/min |
+| **Permadeath** | Off | Optional | Optional | Forced |
 
 ### 2.2 Survival Systems
 
@@ -374,6 +377,67 @@ if progress >= 1.0: advance stage, reset progress
 - Stage 0->1 and 1->2: geometry swap with scale continuity
 - 6-10 green sparkle particles on stage-up
 - Mobile haptic on stage transition
+
+### 8.4 Crop System
+
+Crops are plantable food items that grow through 4 stages (Seed → Sprout → Growing →
+Harvestable). They are distinct from tree growth: shorter timescales (20–120 s per stage),
+yield food items, and use GLB models from `config/game/crops.json`.
+
+#### 8.4.1 Crop Stages
+
+| Stage | Name |
+|-------|------|
+| 0 | Seed |
+| 1 | Sprout |
+| 2 | Growing |
+| 3 | Harvestable — player can harvest |
+
+#### 8.4.2 Crop Growth Formula
+
+```
+effectiveGrowthRate = weatherMultiplier
+effectiveGrowthRate *= (watered ? waterMultiplier : 1.0)
+effectiveGrowthRate *= (season === seasonAffinity ? seasonBonus : 1.0)
+progress += (dt * effectiveGrowthRate) / growthTimeSec[stage]
+if progress >= 1.0: advance stage, reset progress, clear watered flag
+```
+
+All config values (`growthTimeSec`, `waterMultiplier`, `seasonBonus`, `seasonAffinity`,
+`baseYield`, `replantable`) come from `config/game/crops.json`.
+
+#### 8.4.3 Harvest
+
+- Only harvestable at stage 3.
+- `yield = floor(baseYield * (1 + toolTierBonus + fertilizerBonus))`, minimum 1.
+- Harvest result: `{ cropId, amount }` — caller credits to player inventory.
+- If `replantable: true`, crop resets to stage 0 in-place after harvest.
+
+#### 8.4.4 Crop Spawning (World Generation)
+
+Crops spawn in the world as wild-grown patches. They use the same chunk seeding pattern
+as trees and rocks.
+
+- **Biome affinity:** Crops only spawn in biomes with `cropsPerChunk > 0` in
+  `config/game/vegetation.json` `biomeDensity`. The `temperate` density (used by
+  `starting-grove` and `orchard-valley`) has `cropsPerChunk: 3`. All other biomes
+  have `cropsPerChunk: 0`.
+- **Crop type pool:** Defined in `vegetation.json` `biomeCropPool` per biome key.
+  Only `temperate` has a non-empty pool: `["carrot", "apple", "tomato"]`.
+- **Wild stage:** Wild-spawned crops start at stage 2 (Growing) so players find
+  nearly-ready crops during exploration.
+- **Determinism:** `scopedRNG("entity-crops", worldSeed, chunkX, chunkZ)` — same inputs
+  always produce identical placements.
+- **Position:** Same heightmap sampling as trees (`heightmap[z * CHUNK_SIZE + x]`).
+
+#### 8.4.5 Player Interaction
+
+| Tool | Target | Action |
+|------|--------|--------|
+| `watering-can` | crop | `WATER_CROP` — sets `crop.watered = true`; fails if already watered |
+| `axe` | crop | `HARVEST_CROP` — harvests if stage 3; yields food items |
+
+Both actions respect stamina cost from `config/game/tools.json`.
 
 ---
 
@@ -934,6 +998,36 @@ Raw food restores hunger with minimal healing. Cooking at campfire or Cooking Po
 
 5 campfire recipes + 5 Cooking Pot recipes. See unified design Section 7.3.
 
+### 22.4 Crafting Action Dispatcher Integration
+
+Four crafting actions are dispatched imperatively (from panel callbacks, quest triggers, or
+scripted events) via `game/actions/craftingActions.ts`. These complement the COOK/FORGE panel-
+open actions already in `actionDispatcher.ts`.
+
+**SMELT** - Executes a smelt recipe immediately at a forge. Preconditions: recipe exists in
+`forging.json` and `canSmelt(recipe, inventory)` is true. Effects: deducts inputs via
+`spendResource`, adds output via `addResource`, plays "forge" SFX, shows toast
+"Smelted [name]!". Returns `true` on success.
+
+**UPGRADE_TOOL** - Upgrades a tool tier. Preconditions: valid tier upgrade exists (not at max)
+and `canUpgradeTool` is true. Effects: deducts cost via `spendResource`, calls
+`upgradeToolTier(toolId)`, plays "forge" SFX, shows toast "[toolName] upgraded to [tier]!".
+Returns `true` on success.
+
+**TRADE_BUY** - Buy a resource. Formula: `totalCost = Math.ceil(basePrice * seasonalModifier *
+supplyDemandMultiplier * quantity)`. Preconditions: `quantity >= 1` and `coins >= totalCost`.
+Effects: deducts coins, adds resource via `addResource`, records trade via `recordTrade`,
+updates `store.marketState`, shows toast "Bought [qty]x [name]". Returns `true` on success.
+
+**TRADE_SELL** - Sell a resource. Formula: `totalGain = Math.floor(basePrice * seasonalModifier *
+supplyDemandMultiplier * quantity)`. Preconditions: `quantity >= 1` and resource qty available.
+Effects: deducts resource via `spendResource`, adds coins via `addCoins`, records trade,
+updates `store.marketState`, shows toast "Sold [qty]x [name]". Returns `true` on success.
+
+Data model: `SmeltContext { recipeId }`, `UpgradeToolContext { toolId }`,
+`TradeBuyContext { resourceType, quantity, basePrice, seasonalMultiplier }`,
+`TradeSellContext { resourceType, quantity, basePrice, seasonalMultiplier }`.
+
 ---
 
 ## 23. Input System
@@ -1247,8 +1341,9 @@ ECS: `WaterBodyComponent` (waveLayers[], color, opacity, size, foam, caustics, f
 - Weather types: clear, rain, snow, fog, windstorm, thunderstorm
 - Fog volumes: `FogVolumeComponent` entities placed in swamps, valleys, caves
 - Thunderstorm: lightning flash (directional light pulse) + delayed thunder audio (4-12s interval)
-- In Survival mode: weather affects stamina, growth, heart drain
-- In Exploration mode: weather is visual/audio only
+- Weather always affects stamina, growth, and heart drain. Seedling tier reduces magnitude via
+  `weatherFrequencyMult` and `weatherDurationMult` from `config/game/difficulty.json` — it does
+  NOT disable weather gameplay effects entirely.
 
 ---
 
@@ -1624,31 +1719,110 @@ ECS: `ParticleEmitterComponent` in `game/ecs/components/procedural/particles.ts`
 
 ---
 
-## 37. Game Modes
+## 37. Survival — The Only Mode
 
-Replaces old difficulty-only system. Minecraft-inspired mode selection.
+Grovekeeper is a **survival game**. There is no exploration mode, creative mode, or
+difficulty-free variant. Every playthrough uses the survival ruleset. The four difficulty
+tiers select how harsh that survival is, but ALL tiers enforce hearts, hunger, stamina,
+and weather mechanics. Everything is earned.
 
-### 37.1 Exploration Mode
+### 37.1 Purpose
 
-- No hearts, no hunger, no stamina drain
-- Weather is visual/audio only (no gameplay effects)
-- Free building (no resource cost)
-- Enemies passive (can still interact but won't attack)
-- Perfect for: casual play, building, photography, relaxation
+One sentence: the player must manage hearts, hunger, stamina, body temperature, and
+weather pressure to stay alive while tending their grove and pursuing the 14 Grovekeeper
+spirits through hedge labyrinths.
 
-### 37.2 Survival Mode
+### 37.2 Data Model
 
-Full survival mechanics with sub-difficulties:
+```typescript
+interface DifficultyConfig {
+  id: 'seedling' | 'sapling' | 'hardwood' | 'ironwood';
+  name: string;
+  tagline: string;
+  maxHearts: number;               // 7 / 5 / 4 / 3
+  hungerDrainRate: number;         // hunger points lost per minute
+  growthSpeedMult: number;         // applied to all tickGrowth calculations
+  resourceYieldMult: number;       // applied to all harvest yield rolls
+  weatherFrequencyMult: number;    // multiplied against base weather event probability
+  weatherDurationMult: number;     // multiplied against base weather event duration
+  staminaDrainMult: number;        // multiplied against base stamina cost per action
+  staminaRegenMult: number;        // multiplied against base stamina regen rate
+  damageMultiplier: number;        // outgoing damage (player attacks)
+  incomingDamageMultiplier: number;// incoming damage from enemies / weather
+  exposureEnabled: boolean;        // whether body temperature exposure can drain hearts
+  exposureDriftRate: number;       // bodyTemp drift rate per tick without shelter
+  permadeathForced: 'off' | 'optional' | 'on';
+  affectsGameplay: boolean;        // always true for all tiers (no gameplay-off mode)
+  startingResources: Record<string, number>;
+  startingSeeds: Record<string, number>;
+}
+```
 
-| Sub-difficulty | Hearts | Hunger | Weather Impact | Permadeath |
-|---------------|--------|--------|---------------|------------|
-| Gentle | 7 | 0.5/min | Light | No |
-| Standard | 5 | 1.0/min | Full | No |
-| Harsh | 4 | 1.5/min | Severe | Optional |
-| Ironwood | 3 | 2.0/min | Extreme | Forced |
+Full schema lives in `config/game/difficulty.json`.
 
-All multipliers in `config/game/difficulty.json`. Systems check
-`weather.affectsGameplay` flag (set by game mode at start).
+### 37.3 Tier Definitions
+
+| Tier | Hearts | Hunger drain | Growth mult | Yield mult | Weather mult | Stamina drain | Permadeath |
+|------|--------|-------------|-------------|------------|-------------|---------------|------------|
+| **Seedling** | 7 | 0 /min | 1.3x | 1.3x | 1.0x | 0x | Off |
+| **Sapling** | 5 | 1.0/min | 1.0x | 1.0x | 1.0x | 1.0x | Optional |
+| **Hardwood** | 4 | 1.5/min | 0.8x | 0.75x | 1.3x | 1.3x | Optional |
+| **Ironwood** | 3 | 2.0/min | 0.4x | 0.3x | 2.0x | 2.0x | Forced |
+
+All values above are derived from `config/game/difficulty.json`. If the JSON and this
+table disagree, the JSON is authoritative.
+
+**Seedling note:** Seedling is not exploration mode. Hunger drain is 0 and stamina drain
+is 0, but hearts exist, enemies are active, weather events fire at full frequency, and
+the survival layer (body temperature, exposure) is disabled (`exposureEnabled: false`).
+The player still dies from combat damage. Seedling is "learn the game" difficulty, not
+a sandbox.
+
+### 37.4 Rules / Formulas
+
+All survival system tick calls consume the tier's multipliers via `getDifficultyById(tier)`:
+
+```
+hungerDrained = baseDrainPerMinute * getDifficultyById(tier).hungerDrainRate * (dt / 60)
+staminaCost   = baseActionCost     * getDifficultyById(tier).staminaDrainMult
+harvestYield  = baseYield          * getDifficultyById(tier).resourceYieldMult
+growthTick    = baseGrowthPoints   * getDifficultyById(tier).growthSpeedMult * dt
+```
+
+`getDifficultyById` never uses `if (tier === 'ironwood')` branches — it reads the JSON
+config and returns the numeric multiplier. Systems multiply. They do not branch on tier.
+
+### 37.5 Permadeath
+
+| Tier | Behavior on death |
+|------|------------------|
+| Seedling | Respawn at last campfire, full hearts, no inventory loss |
+| Sapling | Respawn at last campfire, half hearts, no inventory loss (permadeath optional at game start) |
+| Hardwood | Respawn at last campfire, minimum hearts, no inventory loss (permadeath optional at game start) |
+| Ironwood | **Permadeath forced.** Death deletes the save. One bad winter ends everything. |
+
+### 37.6 Config Schema
+
+Source of truth: `config/game/difficulty.json`. The four objects in that array map
+directly to the `DifficultyConfig` interface above. No tuning values may be hardcoded
+in system files.
+
+### 37.7 UI Behavior
+
+Difficulty is selected once at "New Grove" creation (§1.3). It cannot be changed during
+a save. The difficulty badge is displayed in the pause menu stats tab. On mobile (375px
+portrait) the four tier buttons stack vertically with 44px minimum touch height, color-
+coded per `difficulty.json[i].color`.
+
+### 37.8 Integration Points
+
+- §2 (Difficulty System): this section supersedes §2's tier table; §2 references §37
+- §7 (Weather): `weatherFrequencyMult` and `weatherDurationMult` from this config
+- §8 (Growth): `growthSpeedMult` consumed by `tickGrowth()`
+- §12 (Stamina & Survival): `staminaDrainMult`, `hungerDrainRate`, `maxHearts`
+- §13 (Harvest): `resourceYieldMult` consumed by `harvestTree()`
+- §34 / §41 (Combat): `damageMultiplier`, `incomingDamageMultiplier`
+- §26 (Save and Persistence): `permadeathForced` governs save deletion on death
 
 ---
 
@@ -1708,9 +1882,10 @@ No inline magic numbers. Enforced by `.claude/hooks/no-magic-numbers.sh`.
 
 ## 39. Implementation Status
 
-**Last audited: 2026-03-08 (evening re-audit)** — 4,105 tests passing, 0 failing across 178 suites. 178 test files.
-All systems in `game/systems/` (98 non-test .ts files across flat files + subdirectories) have corresponding test files.
-Audio test failures from earlier audit (Tone.js ESM import) have been resolved.
+**Last audited: 2026-03-08 (evening)** — 4,241 tests passing across 180 suites.
+All systems in `game/systems/` have corresponding test files. 20 R3F components mounted in Canvas.
+23 UI overlays wired. 43 config JSON files in `config/game/`. 45+ systems running in the game loop.
+Survival-only mode confirmed (no exploration mode).
 
 ### 39.1 System Wiring Status
 
@@ -1720,7 +1895,9 @@ Systems wired to the game loop (`useGameLoop`) and/or mounted UI:
 |--------|------|-------|---------------|-------------|
 | Growth (§8) | `game/systems/growth.ts` | YES | YES (tickGrowth) | Via ProceduralTrees |
 | Crop Growth (§8) | `game/systems/cropGrowth.ts` | YES | YES (tickGrowth) | Via ProceduralTrees |
-| Weather (§7) | `game/systems/weather.ts` | YES | YES (useGameLoop) | Via HUD time display |
+| Crop Spawning (§8.4.4) | `game/world/entitySpawner.ts` | YES | YES (spawnCrops) | Via cropsQuery |
+| Crop Interaction (§8.4.5) | `game/actions/actionDispatcher.ts` | YES | YES (HARVEST_CROP + WATER_CROP) | Via useInteraction |
+| Weather (§7) | `game/systems/weather.ts` | YES | YES (useGameLoop) | Via HUD + WeatherOverlay |
 | Time (§5) | `game/systems/time.ts` | YES | YES (useGameLoop) | Via HUD time display |
 | Day/Night (§31.3) | `game/systems/dayNight.ts` | YES | YES (syncDayNight) | Via Lighting + Sky |
 | Stamina (§12) | `game/systems/stamina.ts` | YES | YES (useGameLoop) | Via HUD (crosshair ring) |
@@ -1735,12 +1912,13 @@ Systems wired to the game loop (`useGameLoop`) and/or mounted UI:
 | NPC Relationship (§19) | `game/systems/npcRelationship.ts` | YES | Via store | NO dedicated UI |
 | Path Following (§19) | `game/systems/pathFollowing.ts` | YES | Via NPC movement | Via ChibiNpcScene |
 | Combat (§34, §41) | `game/systems/combat.ts` | YES | YES (tickInvulnFrames, tickAttackCooldown) | Via ProceduralEnemies |
-| Player Attack (§34.4) | `game/systems/playerAttack.ts` | YES | YES (tickPlayerAttackCooldown in useGameLoop, ATTACK in actionDispatcher, FPS interact dispatch in useGameLoop §5d, attackTrigger wired in GameScreen) | ProceduralToolView swing via attackTrigger + _subscribeAttackTrigger |
+| Player Attack (§34.4) | `game/systems/playerAttack.ts` | YES | YES (tickPlayerAttackCooldown, ATTACK dispatch, FPS interact) | ProceduralToolView swing |
 | Enemy AI (§34) | `game/systems/enemyAI.ts` | YES | YES (EnemyEntityManager.updateAll) | Via ProceduralEnemies |
 | Enemy Spawning (§34) | `game/systems/enemySpawning.ts` | YES | Via ChunkManager | Via ProceduralEnemies |
 | Trading (§20) | `game/systems/trading.ts` | YES | Via store | TradeDialog |
 | Market Events (§20) | `game/systems/marketEvents.ts` | YES | Via store events | Via store |
 | Supply/Demand (§20) | `game/systems/supplyDemand.ts` | YES | Via store | Via store |
+| Seasonal Market (§20) | `game/systems/seasonalMarket.ts` | YES | Via trading.ts (internal dep) | Via TradeDialog |
 | Grid Expansion (§17) | `game/systems/gridExpansion.ts` | YES | Via store | PauseMenu |
 | Level Unlocks (§16) | `game/systems/levelUnlocks.ts` | YES | Via store | Via store |
 | Offline Growth (§26) | `game/systems/offlineGrowth.ts` | YES | Via store init | Via store |
@@ -1750,7 +1928,14 @@ Systems wired to the game loop (`useGameLoop`) and/or mounted UI:
 | Ambient Audio (§27) | `game/systems/ambientAudio.ts` | YES | YES (tickAmbientAudio) | Audio output |
 | Tone Layer Factory (§27) | `game/systems/toneLayerFactory.ts` | YES | Via ambientAudio | Audio output |
 | Audio Manager (§27) | `game/systems/AudioManager.ts` | YES | Via first gesture | Audio output |
+| Audio Engine (§27) | `game/systems/audioEngine.ts` | YES | Via AudioManager.ts | Audio output |
 | Water Particles (§36) | `game/systems/waterParticles.ts` | YES | YES (tickWaterParticles) | Via ECS particles |
+| Weather Particles (§36) | `game/systems/weatherParticles.ts` | YES | YES (tickWeatherParticles in useGameLoop) | Via WeatherParticlesLayer |
+| Ambient Particles (§36) | `game/systems/ambientParticles.ts` | YES | YES (tickAmbientParticles in useGameLoop) | Via FloatingParticlesContainer |
+| Seasonal Effects (§6) | `game/systems/seasonalEffects.ts` | YES | YES (tickSeasonalEffects in useGameLoop) | Via vegetation tint |
+| Zone Bonuses (§17) | `game/systems/zoneBonuses.ts` | YES | YES (getZoneBonusMagnitude in useGameLoop) | Via growth/stamina multipliers |
+| Base Raids (§18.5) | `game/systems/baseRaids.ts` | YES | YES (tickBaseRaids, tickRaidCountdown in useGameLoop) | Via store |
+| Loot System (§41.2) | `game/systems/lootSystem.ts` | YES | YES (rollLootForEnemy in tickCombatDeaths) | Via store resources |
 | Haptics (§23) | `game/systems/haptics.ts` | YES | Via actions | Device haptics |
 | Dialogue Branch (§33) | `game/systems/dialogueBranch.ts` | YES | Via dialogueBridge | NpcDialogue |
 | Dialogue Effects (§33) | `game/systems/dialogueEffects.ts` | YES | Via dialogueBridge | NpcDialogue |
@@ -1764,13 +1949,14 @@ Systems wired to the game loop (`useGameLoop`) and/or mounted UI:
 | Save/Load (§26) | `game/systems/saveLoad.ts` | YES | Via usePersistence | Via store |
 | Cooking (§22) | `game/systems/cooking.ts` | YES | Via actionDispatcher | CookingPanel (MOUNTED) |
 | Forging (§22) | `game/systems/forging.ts` | YES | Via actionDispatcher | ForgingPanel (MOUNTED) |
-| Fishing (§22) | `game/systems/fishing.ts` | YES | Via actionDispatcher | Via store |
-| Mining (§22) | `game/systems/mining.ts` | YES | Via actionDispatcher | Via store |
+| Crafting Actions (§22.4) | `game/actions/craftingActions.ts` | YES | Via ForgingPanel callbacks | ForgingPanel (MOUNTED) |
+| Fishing (§44) | `game/systems/fishing.ts` | YES | Via actionDispatcher | FishingPanel (MOUNTED) |
+| Mining (§45) | `game/systems/mining.ts` | YES | Via actionDispatcher | Via store |
 | Traps (§22) | `game/systems/traps.ts` | YES | Via actionDispatcher | Via store |
 | Tool Upgrades (§11) | `game/systems/toolUpgrades.ts` | YES | Via store + ForgingPanel | ForgingPanel (MOUNTED) |
 | Fast Travel (§17) | `game/systems/fastTravel.ts` | YES | Via store | FastTravelMenu (NOT MOUNTED) |
 | Species Discovery (§21) | `game/systems/speciesDiscovery.ts` | YES | Via store | NO codex UI |
-| Traveling Merchant (§20) | `game/systems/travelingMerchant/` | YES | Via store (questState, core, progression) | Via store |
+| Traveling Merchant (§20) | `game/systems/travelingMerchant/` | YES | Via store | Via store |
 | Tree Scale (§42) | `game/systems/treeScaleSystem.ts` | YES | NOT WIRED | NOT WIRED |
 
 Orphaned systems (tested but not imported by any non-test code):
@@ -1778,18 +1964,21 @@ Orphaned systems (tested but not imported by any non-test code):
 | System | File | Tests | Status |
 |--------|------|-------|--------|
 | Recipes (§22) | `game/systems/recipes/` | YES | NOT IMPORTED by any non-test code |
-| Seasonal Market (§20) | `game/systems/seasonalMarket.ts` | YES | NOT IMPORTED by any non-test code |
 | Discovery (§21) | `game/systems/discovery.ts` | YES | NOT IMPORTED (speciesDiscovery.ts is the active system) |
-| Seasonal Effects (§6) | `game/systems/seasonalEffects.ts` | YES | NOT IMPORTED by any non-test code |
-| Base Raids (§35) | `game/systems/baseRaids.ts` | YES | NOT IMPORTED by any non-test code |
 | Spatial Hash (§17) | `game/systems/spatialHash.ts` | YES | NOT IMPORTED by any non-test code |
-| Zone Bonuses (§17) | `game/systems/zoneBonuses.ts` | YES | NOT IMPORTED by any non-test code |
 | Grid Generation (§17) | `game/systems/gridGeneration.ts` | YES | NOT IMPORTED by any non-test code (legacy) |
-| Loot System (§41.2) | `game/systems/lootSystem.ts` | YES | NOT IMPORTED by any non-test code |
-| Audio Engine (§27) | `game/systems/audioEngine.ts` | YES | IMPORTED by AudioManager.ts (internal dependency, not directly orphaned) |
 | Native Audio Manager (§27) | `game/systems/NativeAudioManager.ts` | YES | NOT IMPORTED by any non-test code |
-| Weather Particles (§36) | `game/systems/weatherParticles.ts` | YES | NOT IMPORTED by any non-test code |
-| Ambient Particles (§36) | `game/systems/ambientParticles.ts` | YES | NOT IMPORTED by any non-test code |
+| Tree Scale (§42) | `game/systems/treeScaleSystem.ts` | YES | NOT IMPORTED by any non-test code |
+
+Previously orphaned systems now wired (resolved since last audit):
+- `seasonalEffects.ts` -- now called via `tickSeasonalEffects()` in useGameLoop on season change
+- `baseRaids.ts` -- now called via `tickBaseRaids()` and `tickRaidCountdown()` in useGameLoop
+- `weatherParticles.ts` -- now called via `tickWeatherParticles()` in useGameLoop
+- `ambientParticles.ts` -- now called via `tickAmbientParticles()` in useGameLoop
+- `zoneBonuses.ts` -- now called via `getZoneBonusMagnitude()` in useGameLoop growth/stamina
+- `lootSystem.ts` -- now called via `rollLootForEnemy()` in `tickCombatDeaths()`
+- `seasonalMarket.ts` -- imported by `trading.ts` (internal dependency)
+- `audioEngine.ts` -- imported by `AudioManager.ts` (internal dependency)
 
 ### 39.2 ECS Foundation (Complete)
 
@@ -1805,36 +1994,52 @@ Orphaned systems (tested but not imported by any non-test code):
 | Terrain components | `game/ecs/components/terrain.ts` (fences, hedges) | Via hedgePlacement |
 | Structure components | `game/ecs/components/structures.ts` | Via structurePlacement |
 | Item components | `game/ecs/components/items.ts` | Via actionDispatcher |
-| World queries | `game/ecs/world.ts` — 40+ queries, all entity types | Implicit |
+| World queries | `game/ecs/world.ts` -- 40+ queries, all entity types | Implicit |
 
-### 39.3 Remaining Gaps (audited 2026-03-08)
+### 39.3 Remaining Gaps (re-audited 2026-03-08 evening)
 
-Previous gap list (2026-03-07) had 10 items. Status of each:
+Previous gap list had 10 items. All 10 original gaps (2026-03-07) are now RESOLVED or partially resolved. The current gap list reflects accurate 2026-03-08 evening state:
 
-1. ~~MainMenu -> Game skips NewGameModal~~ **RESOLVED.** `app/index.tsx` mounts `NewGameModal`, wires seed phrase + difficulty + permadeath to store via `startNewGame()`.
-2. ~~Difficulty multipliers not consumed~~ **RESOLVED.** `useGameLoop` calls `getDifficultyById()` every frame, passes multipliers to growth, stamina, survival. Integration tests in `difficultyMultipliers.test.ts`.
-3. ~~Math.random() violations in 5 files~~ **RESOLVED.** Only 1 occurrence remains in `saveLoad.test.ts` (test mock, acceptable). Comments referencing Math.random() exist but are documentation, not violations.
-4. ~~Multiple unwired systems~~ **PARTIALLY RESOLVED.** Recipes, seasonalMarket, discovery, lootSystem, weatherParticles, ambientParticles remain orphaned (see table above). Tool upgrades wired to store.
-5. ~~Hearts/hunger not implemented~~ **RESOLVED.** `tickSurvival()` runs every frame: hunger drain, heart damage from starvation, body temperature exposure, death detection. HUD shows hearts via `HeartsDisplay`.
-6. ~~Chunk-based world not implemented~~ **RESOLVED.** `ChunkManager` + `ChunkStreamer` (useFrame) + `TerrainChunks` render procedural terrain. 3x3 active chunks, 5x5 buffer.
-7. ~~Labyrinth generation not implemented~~ **RESOLVED.** `mazeGenerator.ts` (Growing Tree algorithm), `hedgePlacement/`, `ProceduralHedgeMaze` mounted in Canvas, `GrovekeeperSpirit` at maze centers.
-8. ~~Base building / raids not implemented~~ **PARTIALLY RESOLVED.** `kitbashing/` system exists with placement + commit + Rapier colliders + unlocks. ProceduralTown renders buildings. `baseRaids.ts` has tests but is NOT IMPORTED by any non-test code.
-9. ~~Forging / cooking not implemented~~ **FULLY RESOLVED.** `cooking.ts` and `forging.ts` are implemented + tested + wired to actionDispatcher. `CookingPanel`, `ForgingPanel`, and `BuildPanel` are all mounted in `app/game/index.tsx` via `resolvePanelState(activeCraftingStation)`.
-10. ~~World quest system not implemented~~ **RESOLVED.** `worldQuestSystem.ts`, `proceduralQuests.ts`, `config/game/worldQuests.json`, `config/game/proceduralQuests.json` all exist and are loaded.
+**Current gaps:**
 
-**Current gaps (re-audited 2026-03-08):**
-
-1. **Orphaned systems (12):** recipes, seasonalMarket, discovery, seasonalEffects, baseRaids, spatialHash, zoneBonuses, gridGeneration, lootSystem, NativeAudioManager, weatherParticles, ambientParticles — tested but not imported by any non-test production code. (`audioEngine.ts` was previously listed but IS imported by `AudioManager.ts` as an internal dependency.) `treeScaleSystem.ts` is also not wired.
-2. **Unmounted UI components:** FastTravelMenu, QuestPanel, MiniMap, AchievementPopup, HungerBar, StaminaGauge (bar version), ToolBelt, XPBar, StatsDashboard, RulesModal, FloatingParticles, ErrorBoundary, WeatherOverlay, WeatherForecast, VirtualJoystick, MobileActionButtons, FishingPanel, ToolWheel, RadialActionMenu, BatchHarvestButton, ActionButton — exist in `components/game/` but are not rendered in any mounted parent. Note: ResourceBar and StaminaGauge ARE imported by HUD.tsx (used internally). CookingPanel, ForgingPanel, and BuildPanel are now MOUNTED (resolved since last audit).
-3. **GameUI orchestrator not mounted:** `components/game/GameUI/` was designed to consolidate HUD sub-components (BuildPanel, MiniMap, ToolWheel, WeatherOverlay, etc.) but is not imported by `app/game/index.tsx`. The game screen mounts HUD and other overlays directly.
+1. **Orphaned systems (6):** recipes, discovery (legacy), spatialHash, gridGeneration (legacy), NativeAudioManager, treeScaleSystem -- tested but not imported by any non-test production code. Down from 12 in previous audit (8 systems were wired since last check).
+2. **Unmounted UI components:** FastTravelMenu, AchievementPopup, HungerBar, ToolBelt, StatsDashboard, RulesModal, WeatherForecast, RadialActionMenu, BatchHarvestButton, ActionButton, PlacementGhost -- exist in `components/game/` but not rendered in any mounted parent. Note: many components previously listed as unmounted are now mounted directly in `app/game/index.tsx` (MiniMap, QuestPanel, WeatherOverlay, VirtualJoystick, MobileActionButtons, FishingPanel, ToolWheel, FloatingParticles).
+3. **GameUI orchestrator not mounted:** `components/game/GameUI/` was designed to consolidate HUD sub-components but is not imported by `app/game/index.tsx`. The game screen mounts HUD and overlays directly -- this is acceptable architecture.
 4. **Legacy scene components:** `Camera.tsx`, `Ground.tsx`, `SelectionRing.tsx` in `components/scene/` and `Player.tsx` in `components/entities/` are superseded by FPSCamera, TerrainChunks, raycast system, and PlayerCapsule respectively. Not deleted.
-5. **Config/code mismatch:** `config/game/achievements.json` exists but is never loaded — achievements are hardcoded in `game/systems/achievements/core.ts`. `config/game/npcs.json` exists but NpcManager loads from `game/npcs/data/npcs.json` instead.
+5. **Config/code mismatch:** `config/game/achievements.json` exists but is never loaded -- achievements are hardcoded in `game/systems/achievements/core.ts`. `config/game/npcs.json` exists but NpcManager loads from `game/npcs/data/npcs.json` instead.
 6. **SpeechBubble not mounted:** R3F component exists with tests but not rendered by ChibiNpc or ChibiNpcScene.
 7. **No codex/discovery UI:** Species discovery system tracks progress in store but has no player-facing UI.
-8. **Quest chain UI missing:** Quest chains run via store + engine but have no in-game panel. QuestPanel exists but is not mounted.
-9. ~~3 test suites failing (12 tests)~~ **RESOLVED.** All 178 test suites now pass (4,105 tests). Tone.js ESM import issues in Jest have been fixed.
 
-### 39.4 Priority Phases (audited 2026-03-08)
+### 39.4 Draw Call Audit (2026-03-08)
+
+All repeated geometry uses InstancedMesh. Estimated draw call budget per frame:
+
+| Component | Pattern | Draw Calls |
+|-----------|---------|-----------|
+| ProceduralTrees | 2 InstancedMesh (trunk + canopy) | 2 |
+| ProceduralGrass | 1 InstancedMesh (blade quads) | 1 |
+| ProceduralBushes | 1 InstancedMesh (spheres) | 1 |
+| ProceduralFences | 2 InstancedMesh (posts + rails) | 2 |
+| ProceduralProps | 3 InstancedMesh (barrel/crate/default) | 3 |
+| HedgeZoneMesh | 3 InstancedMesh (outer/mid/deep zones) | 3 |
+| Sky stars | 1 InstancedMesh (200 spheres, culled daytime) | 0-1 |
+| TerrainChunks | 1 mesh per active chunk (3x3 grid) | ~9 |
+| WaterBodies | 1 mesh + optional caustic per body | ~2-4 |
+| Sky dome | 1 shader mesh | 1 |
+| PlayerCapsule | 1 capsule | 1 |
+| ProceduralToolView | ~2-3 meshes (tool head + handle) | ~3 |
+| ProceduralBuilding | 1 merged geometry per building | ~5 |
+| CampfireMesh | ~3 per campfire (cylinder + light + embers) | ~6 |
+| ChibiNpc | ~7-10 meshes per NPC (body parts) | ~28-40 |
+| ProceduralEnemies | ~4-8 meshes per enemy (body parts) | ~8-16 |
+| GrovekeeperSpirit | 2 per spirit (mesh + trail points) | ~2-4 |
+| BirmotherMesh | 5 meshes (when visible) | 0-5 |
+| Hedge decorations | individual meshes | ~10 |
+| **Typical total** | | **~85-115** |
+
+Target is <50. Main offenders are per-NPC body part meshes (~7-10 each) and per-enemy body parts (~4-8 each). These are justified by unique seeded appearances and small entity counts (typically 2-4 NPCs and 0-2 enemies visible). Future optimization path: merge body parts into single BufferGeometry per entity (like ProceduralBuilding does). All vegetation, terrain, and world props are already optimally instanced.
+
+### 39.5 Priority Phases (audited 2026-03-08)
 
 | Phase | Task | Status |
 |-------|------|--------|
@@ -1848,22 +2053,28 @@ Previous gap list (2026-03-07) had 10 items. Status of each:
 | P2 | Tool view model + raycast + HUD | COMPLETE |
 | P3 | Open world streaming + villages | COMPLETE |
 | P4 | Hedge maze + spirits + combat | COMPLETE |
-| P5 | Survival: hunger/fish/hunt/cook/forge | COMPLETE — systems + CookingPanel/ForgingPanel/BuildPanel mounted |
+| P5 | Survival: hunger/fish/hunt/cook/forge | COMPLETE -- all crafting panels mounted |
 | P6 | Dialogue branching + NPC relationships | COMPLETE |
-| P7 | Quest system + seed branching | COMPLETE (engine); UI NOT MOUNTED |
-| P8 | Base building (kitbashing) | COMPLETE (system); raids NOT WIRED |
-| P9 | Raids + NG+ + achievements | PARTIAL — prestige + achievements COMPLETE; raids NOT WIRED |
-| P10 | Audio (Tone.js) + weather + particles | COMPLETE (ambient audio); weather/ambient particles NOT WIRED |
-| P11 | Tutorial + menu + polish | PARTIAL — tutorial + menus COMPLETE; UI polish needed |
+| P7 | Quest system + seed branching | COMPLETE (engine + ConnectedQuestPanel mounted) |
+| P8 | Base building (kitbashing) | COMPLETE (system + raids wired to game loop) |
+| P9 | Raids + NG+ + achievements | COMPLETE -- prestige + achievements + raids all wired |
+| P10 | Audio (Tone.js) + weather + particles | COMPLETE -- ambient + weather + ambient particles all wired |
+| P11 | Tutorial + menu + polish | PARTIAL -- tutorial + menus COMPLETE; UI polish needed |
+| -- | Survival-only mode (§37 rewrite) | COMPLETE -- no exploration mode, 4 tiers only |
 
-### 39.5 Test Coverage Summary
+### 39.6 Test Coverage Summary
 
-- **Test suites:** 178 passing, 0 failing (178 total)
-- **Individual tests:** 4,105 passing, 0 failing (4,105 total)
-- **Test files:** 178 (+ 3 `.pending` files not yet active)
+- **Test suites:** 180 passing (180 total)
+- **Individual tests:** 4,241 passing (4,241 total)
 - **Systems with tests:** all `game/systems/` files have corresponding test files
-- **Failing suites:** None (previously `audioEngine.test.ts`, `AudioManager.test.ts`, `fishingWiring.test.ts` failed due to Tone.js ESM import — now resolved)
-- **Math.random() violations:** 0 in production code (1 in test mock in `saveLoad.test.ts`, acceptable; 3 comment references in documentation, not violations)
+- **R3F components mounted in Canvas:** 20 (GameSystems, LoadingProgressSentinel, FPSCamera, Lighting, Sky, TerrainChunks, WaterBodies, PlayerCapsule, ProceduralTrees, ProceduralGrass, ProceduralTown, ProceduralFences, ProceduralProps, ChibiNpcScene, ProceduralBushes, ProceduralHedgeMaze, GrovekeeperSpirit, ProceduralToolView, BirmotherMesh, ProceduralEnemies)
+- **UI overlays wired:** 23 (LoadingScreen, ToastContainer, HUD, WeatherOverlay, WeatherParticlesLayer, FloatingParticlesContainer, MiniMap, ConnectedQuestPanel, TouchLookZone, VirtualJoystick, MobileActionButtons, NpcDialogue, TradeDialog, CookingPanel, ForgingPanel, BuildPanel, FishingPanel, PauseMenu, TutorialOverlay, SeedSelect, ToolWheel, DeathScreen, PermadeathScreen)
+- **Config JSON files:** 43 in `config/game/`
+- **Game loop systems:** 45+ (all tick functions in useGameLoop/index.ts + sub-modules)
+- **Orphaned systems:** 6 (down from 12)
+- **Failing suites:** 0
+- **Math.random() violations:** 0 in production code
+- **Survival-only mode:** Confirmed. §37 is "Survival -- The Only Mode". No exploration/creative mode.
 
 ---
 
@@ -1939,7 +2150,7 @@ The game is an open-world RPG grove-tending game with:
 - **Tool-based melee combat**: axe deals chop damage, pick deals pierce, watering can has no combat use
 - **Random encounters** throughout the open world — enemy density increases with distance from Rootmere
 - **15 enemy types** across tiers 1–5, biome-matched, many with night-only spawning
-- **Survival mode only** for lethal mechanics; Exploration/Seedling = no enemies
+- **All tiers have active enemies.** Seedling enemies deal damage but `incomingDamageMultiplier: 0` means they deal 0 damage — enemies are present and can be fought but cannot kill the player on Seedling.
 - **Loot tables** for all enemy types in `config/game/loot.json` — drops are grove-relevant resources (timber, sap, hide, meat, herbs, fiber, acorns, seeds, metal_scrap, ore)
 - **Labyrinth zones** have highest enemy density (skeleton warriors, blood wraiths, devil boss)
 - **Devil** is a rare Tier 5 boss found only in labyrinth centers — defeating it advances the Grovekeeper narrative

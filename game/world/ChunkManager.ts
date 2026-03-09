@@ -735,6 +735,17 @@ export class ChunkManager {
       );
     }
 
+    for (const cp of spawned.crops) {
+      children.push(
+        world.add({
+          id: generateEntityId(),
+          position: cp.position,
+          crop: cp.crop,
+          renderable: { visible, scale: 1 },
+        }),
+      );
+    }
+
     // Spawn supplemental vegetation via model-resolution pipeline (Spec §6, §17.1)
     const vegPlacements = spawnChunkVegetation(
       this.worldSeed,

@@ -14,7 +14,7 @@
  */
 
 import { useMemo, useRef } from "react";
-import { type Group, MeshLambertMaterial } from "three";
+import { type Group, MeshStandardMaterial } from "three";
 import type { NpcFunction } from "@/game/ecs/components/npc";
 import { scopedRNG } from "@/game/utils/seedWords";
 
@@ -93,14 +93,26 @@ export const ChibiNpc = ({
     };
   }, [npcId, worldSeed, npcFunction]);
 
-  // Per-NPC materials — Lambert (flat/diffuse) for PSX aesthetic.
-  // MeshLambertMaterial has no specular highlights, matches the low-fi look,
-  // and is more visible under low-intensity ambient lighting than PBR Standard.
+  // Per-NPC materials — PBR Standard for bright Wind Waker aesthetic.
+  // MeshStandardMaterial with roughness=0.7, metalness=0.0 gives warm diffuse
+  // lighting that responds well to both ambient and directional light.
   // Disposed when NPC unmounts via ref held by the scene orchestrator.
-  const matSkin = useMemo(() => new MeshLambertMaterial({ color: skinColor }), [skinColor]);
-  const matCloth = useMemo(() => new MeshLambertMaterial({ color: clothColor }), [clothColor]);
-  const matHair = useMemo(() => new MeshLambertMaterial({ color: hairColor }), [hairColor]);
-  const matBoot = useMemo(() => new MeshLambertMaterial({ color: BOOT_COLOR }), []);
+  const matSkin = useMemo(
+    () => new MeshStandardMaterial({ color: skinColor, roughness: 0.7, metalness: 0.0 }),
+    [skinColor],
+  );
+  const matCloth = useMemo(
+    () => new MeshStandardMaterial({ color: clothColor, roughness: 0.7, metalness: 0.0 }),
+    [clothColor],
+  );
+  const matHair = useMemo(
+    () => new MeshStandardMaterial({ color: hairColor, roughness: 0.7, metalness: 0.0 }),
+    [hairColor],
+  );
+  const matBoot = useMemo(
+    () => new MeshStandardMaterial({ color: BOOT_COLOR, roughness: 0.7, metalness: 0.0 }),
+    [],
+  );
 
   // Apply animation each render using current prop values (no useFrame here —
   // the parent ChibiNpcScene calls setInterval/requestAnimationFrame externally,

@@ -13,7 +13,13 @@ import {
 import { dispatchAction } from "@/game/actions/actionDispatcher";
 import { getToolById } from "@/game/config/tools";
 import type { Entity } from "@/game/ecs/world";
-import { campfiresQuery, structuresQuery, trapsQuery, waterBodiesQuery } from "@/game/ecs/world";
+import {
+  campfiresQuery,
+  cropsQuery,
+  structuresQuery,
+  trapsQuery,
+  waterBodiesQuery,
+} from "@/game/ecs/world";
 import type { useGameStore } from "@/game/stores";
 import { showToast } from "@/game/ui/Toast";
 import { findRockAtGrid, findTreeAtGrid } from "./entityFinders.ts";
@@ -221,6 +227,52 @@ export function handleHammerAction(selection: InteractionSelection): void {
   });
   if (success) {
     showToast("Build mode opened", "info");
+  }
+}
+
+/**
+ * Handle crop interaction — axe harvests, watering-can waters.
+ * Spec §8.4.5.
+ */
+export function handleCropAction(
+  selection: InteractionSelection,
+  store: Store,
+  tool: string,
+): void {
+  if (selection.type !== "crop" || !selection.entityId) return;
+
+  // Resolve the full ECS entity so the dispatcher has the crop component.
+  let cropEntity: Entity | null = null;
+  for (const e of cropsQuery) {
+    if (e.id === selection.entityId) {
+      cropEntity = e;
+      break;
+    }
+  }
+  if (!cropEntity) return;
+
+  const success = dispatchAction({
+    toolId: tool,
+    targetType: "crop",
+    entity: cropEntity,
+    gridX: selection.gridX,
+    gridZ: selection.gridZ,
+  });
+
+  if (success) {
+    // dispatchAction handles incrementToolUse for watering-can internally.
+    if (tool === "watering-can") {
+      showToast("Crop watered!", "success");
+    } else {
+      showToast("Crop harvested!", "success");
+    }
+  } else {
+    refundStamina(store, tool);
+    if (tool === "watering-can") {
+      showToast("Already watered", "info");
+    } else {
+      showToast("Not ready to harvest", "info");
+    }
   }
 }
 

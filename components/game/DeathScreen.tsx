@@ -44,13 +44,13 @@ export function DeathScreen({ open, onRespawn }: DeathScreenProps) {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(239,68,68,0.18)",
+    backgroundColor: "rgba(239,83,80,0.15)",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 200,
   },
   panel: {
-    backgroundColor: "rgba(255,251,235,0.92)",
+    backgroundColor: "rgba(255,255,255,0.9)",
     borderWidth: 2,
     borderColor: ACCENT.ember,
     borderRadius: RADIUS.organic,
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     width: "85%",
     shadowColor: ACCENT.ember,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 12,
   },

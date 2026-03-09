@@ -9,7 +9,7 @@
 export interface TerrainChunkComponent {
   /** Heightmap values (flattened CHUNK_SIZE x CHUNK_SIZE). */
   heightmap: Float32Array;
-  /** Biome-derived vertex color hex (e.g., "#4a7c3f" for forest floor). */
+  /** Biome-derived vertex color hex (e.g., "#6db856" for forest floor). */
   baseColor: string;
   /** Blend weights for neighboring biome transitions [N, E, S, W]. 1 = different biome, 0 = same. */
   biomeBlend: [number, number, number, number];

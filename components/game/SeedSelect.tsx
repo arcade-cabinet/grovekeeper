@@ -18,7 +18,7 @@ import { Modal, Pressable, ScrollView, View } from "react-native";
 import Svg, { Ellipse, Rect } from "react-native-svg";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, TYPE } from "@/components/ui/tokens";
+import { ACCENT, DARK, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
 
 // ---------------------------------------------------------------------------
 // Types

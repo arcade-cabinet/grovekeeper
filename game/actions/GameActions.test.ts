@@ -1,3 +1,9 @@
+// Mock AudioManager to avoid Tone.js ESM import issue in Jest.
+jest.mock("@/game/systems/AudioManager", () => ({
+  audioManager: { playSound: jest.fn() },
+  startAudio: jest.fn().mockResolvedValue(undefined),
+}));
+
 import {
   drainToolDurability,
   findHarvestableTrees,

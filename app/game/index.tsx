@@ -13,9 +13,11 @@ import { ProceduralGrass } from "@/components/entities/ProceduralGrass";
 import { ProceduralHedgeMaze } from "@/components/entities/ProceduralHedgeMaze";
 import { ProceduralProps } from "@/components/entities/ProceduralProps";
 import { ProceduralTrees } from "@/components/entities/ProceduralTrees";
+import { ActionButtons } from "@/components/game/ActionButtons";
 import { BuildPanel } from "@/components/game/BuildPanel";
 import { CookingPanel } from "@/components/game/CookingPanel";
 import { DeathScreen } from "@/components/game/DeathScreen";
+import { FastTravelMenu } from "@/components/game/FastTravelMenu";
 import { FishingPanel } from "@/components/game/FishingPanel";
 import {
   FloatingParticlesContainer,
@@ -30,6 +32,11 @@ import { MiniMap } from "@/components/game/minimap/index.ts";
 import { NpcDialogue } from "@/components/game/NpcDialogue";
 import { PauseMenu } from "@/components/game/PauseMenu";
 import { PermadeathScreen } from "@/components/game/PermadeathScreen";
+import {
+  PlacementGhostMeshLayer,
+  PlacementGhostUILayer,
+  usePlacementGhostRefs,
+} from "@/components/game/PlacementGhost";
 import { ConnectedQuestPanel } from "@/components/game/QuestPanel";
 import { SeedSelect } from "@/components/game/SeedSelect";
 import { ToastContainer } from "@/components/game/Toast";
@@ -48,7 +55,9 @@ import { ProceduralTown } from "@/components/scene/ProceduralTown";
 import { Sky } from "@/components/scene/Sky";
 import { TerrainChunks } from "@/components/scene/TerrainChunk";
 import { WaterBodies } from "@/components/scene/WaterBody";
+import { WaterShader } from "@/components/scene/WaterShader";
 import { _getAttackTrigger, _subscribeAttackTrigger } from "@/game/actions/actionDispatcher";
+import { dispatchSmelt, dispatchUpgradeTool } from "@/game/actions/craftingActions";
 import { TREE_SPECIES } from "@/game/config/species";
 import { TOOLS } from "@/game/config/tools";
 import { useDebugBridge } from "@/game/debug/useDebugBridge";
@@ -72,8 +81,8 @@ import type { AmbientAudioState } from "@/game/systems/ambientAudio";
 import { initAmbientLayers } from "@/game/systems/ambientAudio";
 import { computeRespawnPosition } from "@/game/systems/deathRespawn";
 import type { SmeltRecipe, ToolTierUpgrade } from "@/game/systems/forging";
-import { canSmelt } from "@/game/systems/forging";
 import { canAffordExpansion, getNextExpansionTier } from "@/game/systems/gridExpansion";
+import { templateFromBuildId } from "@/game/systems/kitbashing/templateFactory";
 import {
   calculatePrestigeBonus,
   canPrestige as checkCanPrestige,
@@ -164,6 +173,30 @@ export default function GameScreen() {
   const setActiveBorderCosmetic = useGameStore((s) => s.setActiveBorderCosmetic);
   const activeCraftingStation = useGameStore((s) => s.activeCraftingStation);
   const toolUpgrades = useGameStore((s) => s.toolUpgrades);
+  const buildMode = useGameStore((s) => s.buildMode);
+  const buildTemplateId = useGameStore((s) => s.buildTemplateId);
+
+  // Placement ghost shared refs for build mode (Spec §35)
+  const { gridPosRef, rotationRef } = usePlacementGhostRefs();
+
+  // Convert buildTemplateId to a ModularPieceComponent for the ghost preview
+  const buildTemplate = useMemo(
+    () => (buildTemplateId ? templateFromBuildId(buildTemplateId) : null),
+    [buildTemplateId],
+  );
+
+  /** Confirm build placement: exit build mode (piece is placed by ghost's onConfirm). Spec §35. */
+  const handleBuildConfirm = useCallback(
+    (_piece: import("@/game/ecs/components/building").ModularPieceComponent) => {
+      useGameStore.getState().setBuildMode(false);
+    },
+    [],
+  );
+
+  /** Cancel build placement. Spec §35. */
+  const handleBuildCancel = useCallback(() => {
+    useGameStore.getState().setBuildMode(false);
+  }, []);
 
   // Attack trigger counter — increments each time the player executes a melee attack.
   // Drives the tool swing animation in ProceduralToolView (Spec §34.4.5).
@@ -184,24 +217,14 @@ export default function GameScreen() {
     useGameStore.getState().setActiveCraftingStation(null);
   }, []);
 
-  /** Smelt handler: deducts inputs and credits output immediately (MVP). Spec §22.2. */
+  /** Smelt handler: dispatches SMELT action (deducts inputs, credits output, SFX, toast). Spec §22.4. */
   const handleSmelt = useCallback((recipe: SmeltRecipe) => {
-    const store = useGameStore.getState();
-    const inventory = store.resources as unknown as Record<string, number>;
-    if (!canSmelt(recipe, inventory)) return;
-    // Deduct inputs + credit output via store actions
-    for (const [res, amt] of Object.entries(recipe.inputs)) {
-      store.spendResource(res as Parameters<typeof store.spendResource>[0], amt);
-    }
-    store.addResource(
-      recipe.output.itemId as Parameters<typeof store.addResource>[0],
-      recipe.output.amount,
-    );
+    dispatchSmelt({ recipeId: recipe.id });
   }, []);
 
-  /** Tool upgrade handler: delegates to store.upgradeToolTier. Spec §22.2. */
+  /** Tool upgrade handler: dispatches UPGRADE_TOOL action (deducts cost, upgrades tier, SFX, toast). Spec §22.4. */
   const handleToolUpgrade = useCallback((toolId: string, _upgrade: ToolTierUpgrade) => {
-    useGameStore.getState().upgradeToolTier(toolId);
+    dispatchUpgradeTool({ toolId });
   }, []);
 
   /** Build piece selection handler: enters build mode with selected piece. Spec §35. */
@@ -242,6 +265,19 @@ export default function GameScreen() {
 
   // Tool wheel modal state (Tab key or long-press to open)
   const [toolWheelOpen, setToolWheelOpen] = useState(false);
+
+  // Fast travel menu state (opened from minimap campfire press) -- Spec §17.6
+  const [fastTravelOpen, setFastTravelOpen] = useState(false);
+
+  /** Minimap campfire press opens the fast travel menu. Spec §17.6. */
+  const handleCampfirePress = useCallback((_fastTravelId: string | null) => {
+    setFastTravelOpen(true);
+  }, []);
+
+  /** Fast travel teleport: move player to campfire world coords. Spec §17.6. */
+  const handleFastTravelTeleport = useCallback((pos: { x: number; z: number }) => {
+    teleportPlayer(pos.x, 1, pos.z);
+  }, []);
 
   // Movement ref for VirtualJoystick (mobile only) — written by joystick, read by PlayerCapsule
   const movementRef = useRef({ x: 0, z: 0 });
@@ -510,6 +546,7 @@ export default function GameScreen() {
             />
             <TerrainChunks />
             <WaterBodies />
+            <WaterShader />
             <PlayerCapsule moveDirection={moveDirection} />
             <ProceduralTrees onTreeTap={onTreeTap} />
             <ProceduralGrass />
@@ -523,6 +560,14 @@ export default function GameScreen() {
             <ProceduralToolView moveDirection={moveDirection} attackTrigger={attackTrigger} />
             <BirmotherMesh />
             <ProceduralEnemies />
+            {/* Build placement ghost — shows semi-transparent preview during building (Spec §35). */}
+            {buildMode && (
+              <PlacementGhostMeshLayer
+                template={buildTemplate}
+                gridPosRef={gridPosRef}
+                rotationRef={rotationRef}
+              />
+            )}
           </Physics>
         </Canvas>
 
@@ -532,6 +577,17 @@ export default function GameScreen() {
           <View style={StyleSheet.absoluteFillObject} onTouchStart={handleFirstGesture}>
             <LoadingScreen phase={loadingPhase} />
           </View>
+        )}
+
+        {/* Build placement ghost UI overlay — rotate/confirm/cancel buttons (Spec §35). */}
+        {buildMode && (
+          <PlacementGhostUILayer
+            template={buildTemplate}
+            gridPosRef={gridPosRef}
+            rotationRef={rotationRef}
+            onConfirm={handleBuildConfirm}
+            onCancel={handleBuildCancel}
+          />
         )}
 
         {/* Toast notification container — shows toasts from showToast() calls.
@@ -554,7 +610,7 @@ export default function GameScreen() {
         <FloatingParticlesContainer />
 
         {/* Mini-map overlay — desktop: always-visible corner map; mobile: toggle button (Spec §17.6). */}
-        <MiniMap />
+        <MiniMap onCampfirePress={handleCampfirePress} />
 
         {/* Active quest tracker — self-wired from ECS questBranchQuery + Legend State (Spec §14.4). */}
         <View style={styles.questPanel} pointerEvents="box-none">
@@ -581,6 +637,12 @@ export default function GameScreen() {
             </View>
           </>
         )}
+
+        {/* Context-aware action button — shows CHOP/TALK/ATTACK/etc. based on crosshair target.
+            Reads useTargetHit() from raycast system. Positioned bottom-right (Spec §23). */}
+        <View style={styles.contextAction} pointerEvents="box-none">
+          <ActionButtons onAction={rawExecuteAction} />
+        </View>
 
         {/* NPC Dialogue overlay — self-driven from ECS via dialogueBridge (Spec §15, §33).
             Renders when openDialogueSession() is called (triggered by NPC tap, spirit proximity,
@@ -635,6 +697,13 @@ export default function GameScreen() {
 
         {/* Fishing panel — water body interaction timing minigame (Spec §44). */}
         <FishingPanel open={craftingPanels.fishingOpen} onClose={closeCraftingPanel} />
+
+        {/* Fast travel menu — opened from minimap campfire press (Spec §17.6). */}
+        <FastTravelMenu
+          open={fastTravelOpen}
+          onTeleport={handleFastTravelTeleport}
+          onClose={() => setFastTravelOpen(false)}
+        />
 
         {/* Pause Menu overlay */}
         <PauseMenu
@@ -735,5 +804,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 56,
     left: 12,
+  },
+  contextAction: {
+    position: "absolute",
+    bottom: 32,
+    right: 16,
   },
 });

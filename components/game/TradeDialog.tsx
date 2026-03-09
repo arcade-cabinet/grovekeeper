@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
 import type { ResourceType } from "@/game/config/resources";
 import type { TradeRate } from "@/game/systems/trading";
 
@@ -62,7 +62,7 @@ export function TradeDialog({
       {/* Backdrop — tap to close */}
       <Pressable
         style={StyleSheet.absoluteFillObject}
-        className="bg-black/50"
+        className="bg-black/20"
         onPress={handleClose}
         accessibilityLabel="Close trade dialog"
       />
@@ -71,9 +71,9 @@ export function TradeDialog({
       <View
         className="w-full max-w-sm rounded-2xl"
         style={{
-          backgroundColor: "rgba(10,12,8,0.92)",
+          backgroundColor: "rgba(255,255,255,0.92)",
           borderWidth: 1,
-          borderColor: DARK.borderBranch,
+          borderColor: LIGHT.borderBranch,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: 0.3,
@@ -85,13 +85,13 @@ export function TradeDialog({
         {/* Header */}
         <View
           className="flex-row items-center justify-between px-4 py-3"
-          style={{ borderBottomWidth: 1, borderBottomColor: DARK.borderBranch }}
+          style={{ borderBottomWidth: 1, borderBottomColor: LIGHT.borderBranch }}
         >
           <Text
             style={{
               ...TYPE.heading,
               fontFamily: FONTS.heading,
-              color: DARK.textPrimary,
+              color: LIGHT.textPrimary,
             }}
           >
             {npcName ? `Trade with ${npcName}` : "Trading Post"}
@@ -101,7 +101,7 @@ export function TradeDialog({
             onPress={handleClose}
             accessibilityLabel="Close"
           >
-            <Text style={{ fontSize: 18, fontWeight: "700", color: DARK.textSecondary }}>X</Text>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: LIGHT.textSecondary }}>X</Text>
           </Pressable>
         </View>
 
@@ -116,13 +116,13 @@ export function TradeDialog({
                   className="rounded-lg p-3"
                   style={{
                     borderWidth: 1,
-                    borderColor: isSelected ? ACCENT.sap : DARK.borderBranch,
-                    backgroundColor: isSelected ? "rgba(74,222,128,0.1)" : DARK.bgCanopy,
+                    borderColor: isSelected ? ACCENT.sap : LIGHT.borderBranch,
+                    backgroundColor: isSelected ? "rgba(76,175,80,0.12)" : "rgba(232,245,233,0.5)",
                   }}
                   onPress={() => handleSelectRate(rate)}
                   accessibilityLabel={`Trade ${rate.fromAmount} ${rate.from} for ${rate.toAmount} ${rate.to}`}
                 >
-                  <Text style={{ ...TYPE.body, color: DARK.textPrimary }}>
+                  <Text style={{ ...TYPE.body, color: LIGHT.textPrimary }}>
                     <Text style={{ fontWeight: "500", textTransform: "capitalize" }}>
                       {rate.fromAmount} {rate.from}
                     </Text>
@@ -141,15 +141,15 @@ export function TradeDialog({
             <View className="mt-4 gap-3">
               {/* Quantity row */}
               <View className="flex-row items-center gap-3">
-                <Text style={{ ...TYPE.body, color: DARK.textSecondary }}>Qty:</Text>
+                <Text style={{ ...TYPE.body, color: LIGHT.textSecondary }}>Qty:</Text>
 
                 {/* Minus button */}
                 <Pressable
                   className="min-h-[44px] min-w-[44px] items-center justify-center rounded-lg"
                   style={{
                     borderWidth: 1,
-                    borderColor: DARK.borderBranch,
-                    backgroundColor: DARK.bgCanopy,
+                    borderColor: LIGHT.borderBranch,
+                    backgroundColor: "rgba(232,245,233,0.6)",
                   }}
                   onPress={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
@@ -176,8 +176,8 @@ export function TradeDialog({
                   className="min-h-[44px] min-w-[44px] items-center justify-center rounded-lg"
                   style={{
                     borderWidth: 1,
-                    borderColor: DARK.borderBranch,
-                    backgroundColor: DARK.bgCanopy,
+                    borderColor: LIGHT.borderBranch,
+                    backgroundColor: "rgba(232,245,233,0.6)",
                   }}
                   onPress={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
                   disabled={quantity >= maxQuantity}
@@ -188,7 +188,7 @@ export function TradeDialog({
               </View>
 
               {/* Trade summary */}
-              <Text style={{ ...TYPE.caption, color: DARK.textSecondary }}>
+              <Text style={{ ...TYPE.caption, color: LIGHT.textSecondary }}>
                 Pay: {quantity * selectedRate.fromAmount} {selectedRate.from}
                 {"  \u2192  "}
                 Get: {quantity * selectedRate.toAmount} {selectedRate.to}
@@ -200,7 +200,7 @@ export function TradeDialog({
                 style={{ backgroundColor: ACCENT.sap }}
                 onPress={handleTrade}
               >
-                <Text style={{ fontWeight: "700", color: DARK.bgDeep }}>Trade</Text>
+                <Text style={{ fontWeight: "700", color: LIGHT.textPrimary }}>Trade</Text>
               </Button>
             </View>
           ) : null}
@@ -209,15 +209,15 @@ export function TradeDialog({
         {/* Close action */}
         <View
           className="px-4 py-3"
-          style={{ borderTopWidth: 1, borderTopColor: DARK.borderBranch }}
+          style={{ borderTopWidth: 1, borderTopColor: LIGHT.borderBranch }}
         >
           <Button
             className="min-h-[44px] w-full rounded-xl bg-transparent"
-            style={{ borderWidth: 2, borderColor: DARK.borderBranch }}
+            style={{ borderWidth: 2, borderColor: LIGHT.borderBranch }}
             variant="outline"
             onPress={handleClose}
           >
-            <Text style={{ fontWeight: "700", color: DARK.textSecondary }}>Close</Text>
+            <Text style={{ fontWeight: "700", color: LIGHT.textSecondary }}>Close</Text>
           </Button>
         </View>
       </View>

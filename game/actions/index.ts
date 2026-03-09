@@ -1,3 +1,13 @@
+export {
+  dispatchSmelt,
+  dispatchTradeBuy,
+  dispatchTradeSell,
+  dispatchUpgradeTool,
+  type SmeltContext,
+  type TradeBuyContext,
+  type TradeSellContext,
+  type UpgradeToolContext,
+} from "./craftingActions.ts";
 export type { TileCell } from "./queries.ts";
 export {
   findCell,

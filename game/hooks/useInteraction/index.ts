@@ -14,6 +14,7 @@ import { showToast } from "@/game/ui/Toast";
 import {
   handleAxeAction,
   handleCompostBinAction,
+  handleCropAction,
   handleDefaultAction,
   handleFishingRodAction,
   handleHammerAction,
@@ -27,6 +28,7 @@ import {
 import {
   buildTileState,
   findCampfireAtGrid,
+  findCropAtGrid,
   findForgeAtGrid,
   findNpcNear,
   findTrapAtGrid,
@@ -56,6 +58,12 @@ export function useInteraction() {
     const tree = findTreeAtGrid(gridX, gridZ);
     if (tree) {
       setSelection({ type: "tree", gridX, gridZ, entityId: tree.id });
+      return;
+    }
+
+    const crop = findCropAtGrid(gridX, gridZ);
+    if (crop) {
+      setSelection({ type: "crop", gridX, gridZ, entityId: crop.id });
       return;
     }
 
@@ -134,10 +142,18 @@ export function useInteraction() {
         handleTrowelAction(selection, store, species, tool);
         break;
       case "watering-can":
-        handleWateringCanAction(selection, store, tool);
+        if (selection.type === "crop") {
+          handleCropAction(selection, store, tool);
+        } else {
+          handleWateringCanAction(selection, store, tool);
+        }
         break;
       case "axe":
-        handleAxeAction(selection, store, tool);
+        if (selection.type === "crop") {
+          handleCropAction(selection, store, tool);
+        } else {
+          handleAxeAction(selection, store, tool);
+        }
         break;
       case "pruning-shears":
         handlePruningShears(selection, store, tool);

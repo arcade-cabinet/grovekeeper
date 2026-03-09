@@ -20,7 +20,7 @@ export type {
   PrestigeInfo,
 } from "./types.ts";
 
-const panelBg = "rgba(240,253,244,0.92)";
+const panelBg = "rgba(255,255,255,0.88)";
 const borderColor = LIGHT.borderBranch;
 
 export function PauseMenu({
@@ -184,7 +184,7 @@ export function PauseMenu({
                 style={{ backgroundColor: ACCENT.greenBright }}
                 onPress={handleClose}
               >
-                <Text style={{ fontWeight: "700", color: "#FFF" }}>Continue Playing</Text>
+                <Text style={{ fontWeight: "700", color: "#FAFAFA" }}>Continue Playing</Text>
               </Button>
               <Button
                 className="min-h-[44px] w-full rounded-xl bg-transparent"

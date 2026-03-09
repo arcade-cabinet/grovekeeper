@@ -13,7 +13,7 @@
 
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, FONTS, HUD_PANEL, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, HUD_PANEL, LIGHT, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
 import { useGameStore } from "@/game/stores";
 import {
   canCook,
@@ -89,7 +89,7 @@ export function CookingPanel({ open, onClose }: CookingPanelProps) {
       {/* Backdrop */}
       <Pressable
         style={StyleSheet.absoluteFillObject}
-        className="bg-black/50"
+        className="bg-black/20"
         onPress={onClose}
         accessibilityLabel="Close cooking panel"
       />
@@ -174,8 +174,8 @@ function RecipeRow({
 const styles = StyleSheet.create({
   panel: {
     ...HUD_PANEL,
-    backgroundColor: "rgba(26, 58, 30, 0.92)",
-    borderColor: DARK.borderBranch,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    borderColor: LIGHT.borderBranch,
     borderWidth: 1,
     borderRadius: RADIUS.organic,
     width: "100%",
@@ -190,12 +190,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACE[3],
     paddingVertical: SPACE[2],
     borderBottomWidth: 1,
-    borderBottomColor: DARK.borderBranch,
+    borderBottomColor: LIGHT.borderBranch,
   },
   title: {
     ...TYPE.display,
     fontFamily: FONTS.heading,
-    color: DARK.textPrimary,
+    color: LIGHT.textPrimary,
   },
   closeButton: {
     minHeight: 44,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   },
   closeText: {
     ...TYPE.heading,
-    color: DARK.textSecondary,
+    color: LIGHT.textSecondary,
   },
   scrollArea: {
     flexGrow: 0,
@@ -215,9 +215,9 @@ const styles = StyleSheet.create({
     gap: SPACE[2],
   },
   recipeRow: {
-    backgroundColor: "rgba(13, 31, 15, 0.6)",
+    backgroundColor: "rgba(232,245,233,0.6)",
     borderWidth: 1,
-    borderColor: DARK.borderBranch,
+    borderColor: LIGHT.borderBranch,
     borderRadius: RADIUS.organic,
     padding: SPACE[2],
   },
@@ -232,11 +232,11 @@ const styles = StyleSheet.create({
   },
   recipeName: {
     ...TYPE.heading,
-    color: DARK.textPrimary,
+    color: LIGHT.textPrimary,
   },
   recipeTime: {
     ...TYPE.caption,
-    color: DARK.textMuted,
+    color: LIGHT.textMuted,
   },
   ingredientRow: {
     flexDirection: "row",
@@ -272,14 +272,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   cookButtonDisabled: {
-    backgroundColor: DARK.surfaceStone,
+    backgroundColor: "#CFD8DC",
   },
   cookButtonText: {
     ...TYPE.label,
     fontWeight: "700",
-    color: DARK.bgDeep,
+    color: "#FAFAFA",
   },
   cookButtonTextDisabled: {
-    color: DARK.textMuted,
+    color: LIGHT.textMuted,
   },
 });

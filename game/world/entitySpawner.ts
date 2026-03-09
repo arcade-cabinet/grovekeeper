@@ -10,6 +10,7 @@
 
 import gridConfig from "@/config/game/grid.json" with { type: "json" };
 import vegetationConfig from "@/config/game/vegetation.json" with { type: "json" };
+import type { CropComponent } from "@/game/ecs/components/structures";
 import type { RockComponent } from "@/game/ecs/components/terrain";
 import type {
   BushComponent,
@@ -17,6 +18,7 @@ import type {
   TreeComponent,
   VegetationSeason,
 } from "@/game/ecs/components/vegetation";
+import { getCropById, getCrops } from "@/game/systems/cropGrowth";
 import { resolveTreeModelPath } from "@/game/systems/vegetationPlacement";
 import { scopedRNG } from "@/game/utils/seedWords";
 import type { BiomeType } from "./biomeMapper.ts";
@@ -63,12 +65,19 @@ export interface RockPlacement {
   rotationY: number;
 }
 
+/** A crop entity ready to be added to ECS. Spec §8.4.4. */
+export interface CropPlacement {
+  position: { x: number; y: number; z: number };
+  crop: CropComponent;
+}
+
 /** All entity placements produced for one chunk. */
 export interface EntitySpawnerResult {
   trees: TreePlacement[];
   bushes: BushPlacement[];
   grass: GrassPlacement[];
   rocks: RockPlacement[];
+  crops: CropPlacement[];
 }
 
 // ── Config accessors ─────────────────────────────────────────────────────────
@@ -78,9 +87,11 @@ interface BiomeDensityConfig {
   bushesPerChunk: number;
   grassPatchesPerChunk: number;
   rocksPerChunk: number;
+  cropsPerChunk: number;
 }
 
 const biomeDensity = vegetationConfig.biomeDensity as Record<string, BiomeDensityConfig>;
+const biomeCropPool = vegetationConfig.biomeCropPool as Record<string, string[]>;
 const bushShapes: string[] = vegetationConfig.bushShapes;
 
 interface SpeciesModelEntry {
@@ -335,6 +346,58 @@ function spawnRocks(
   return result;
 }
 
+function spawnCrops(
+  worldSeed: string,
+  chunkX: number,
+  chunkZ: number,
+  densityKey: VegetationDensityKey,
+  count: number,
+  heightmap: Float32Array,
+): CropPlacement[] {
+  if (count <= 0) return [];
+
+  const pool = biomeCropPool[densityKey] ?? [];
+  if (pool.length === 0) return [];
+
+  const rng = scopedRNG("entity-crops", worldSeed, chunkX, chunkZ);
+  const result: CropPlacement[] = [];
+  const allCrops = getCrops();
+
+  for (let i = 0; i < count; i++) {
+    const localX = rng() * CHUNK_SIZE;
+    const localZ = rng() * CHUNK_SIZE;
+    const xi = Math.floor(Math.min(localX, CHUNK_SIZE - 1));
+    const zi = Math.floor(Math.min(localZ, CHUNK_SIZE - 1));
+    const y = heightmap[zi * CHUNK_SIZE + xi];
+
+    const cropId = pool[Math.floor(rng() * pool.length)];
+    const def = getCropById(cropId) ?? allCrops[0];
+
+    result.push({
+      position: { x: chunkX * CHUNK_SIZE + localX, y, z: chunkZ * CHUNK_SIZE + localZ },
+      crop: {
+        cropId: def.id as CropComponent["cropId"],
+        // Wild crops spawn at stage 2 (Growing) — nearly ready, rewards exploration.
+        stage: 2,
+        progress: 0,
+        watered: false,
+        modelPath: def.modelPath,
+      },
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Return the biome crop species pool for the given density key.
+ * Used by tests and ChunkManager to validate crop placements.
+ * Spec §8.4.4.
+ */
+export function getBiomeCropPool(densityKey: VegetationDensityKey): string[] {
+  return biomeCropPool[densityKey] ?? [];
+}
+
 // ── Main export ──────────────────────────────────────────────────────────────
 
 /**
@@ -380,5 +443,6 @@ export function spawnChunkEntities(
       heightmap,
     ),
     rocks: spawnRocks(worldSeed, chunkX, chunkZ, density.rocksPerChunk, heightmap),
+    crops: spawnCrops(worldSeed, chunkX, chunkZ, densityKey, density.cropsPerChunk ?? 0, heightmap),
   };
 }

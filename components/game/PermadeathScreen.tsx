@@ -47,13 +47,13 @@ export function PermadeathScreen({ open, onReturnToMenu }: PermadeathScreenProps
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(249,168,212,0.2)",
+    backgroundColor: "rgba(244,143,177,0.15)",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 200,
   },
   panel: {
-    backgroundColor: "rgba(255,251,235,0.92)",
+    backgroundColor: "rgba(255,255,255,0.9)",
     borderWidth: 2,
     borderColor: ACCENT.blossom,
     borderRadius: RADIUS.organic,
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     width: "85%",
     shadowColor: ACCENT.blossom,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 12,
   },

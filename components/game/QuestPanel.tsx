@@ -7,7 +7,7 @@
 import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, DARK, HUD_PANEL, TYPE } from "@/components/ui/tokens";
+import { ACCENT, HUD_PANEL, LIGHT, TYPE } from "@/components/ui/tokens";
 import type { QuestBranchComponent } from "@/game/ecs/components/dialogue";
 import { questBranchQuery } from "@/game/ecs/world";
 import {
@@ -176,7 +176,7 @@ function ObjectiveProgress({ objective }: { objective: QuestObjectiveDisplay }) 
           style={{
             ...TYPE.caption,
             flex: 1,
-            color: objective.completed ? ACCENT.sap : DARK.textSecondary,
+            color: objective.completed ? ACCENT.sap : LIGHT.textSecondary,
             textDecorationLine: objective.completed ? "line-through" : "none",
           }}
           numberOfLines={1}
@@ -188,7 +188,7 @@ function ObjectiveProgress({ objective }: { objective: QuestObjectiveDisplay }) 
             ...TYPE.caption,
             fontWeight: "700",
             marginLeft: 8,
-            color: DARK.textPrimary,
+            color: LIGHT.textPrimary,
           }}
         >
           {objective.current}/{objective.target}
@@ -198,7 +198,7 @@ function ObjectiveProgress({ objective }: { objective: QuestObjectiveDisplay }) 
       {/* Progress bar */}
       <View
         className="mt-0.5 h-1.5 overflow-hidden rounded-full"
-        style={{ backgroundColor: DARK.surfaceStone }}
+        style={{ backgroundColor: "rgba(102,187,106,0.2)" }}
       >
         <View
           className="h-full rounded-full"
@@ -230,21 +230,21 @@ function QuestCard({
     <View
       className="mb-2 rounded-xl px-3 py-2"
       style={{
-        backgroundColor: DARK.bgCanopy,
+        backgroundColor: "rgba(255,255,255,0.7)",
         borderWidth: 1,
-        borderColor: DARK.borderBranch,
+        borderColor: LIGHT.borderBranch,
       }}
     >
       {/* Header */}
       <View className="mb-1 flex-row items-center">
         <Text style={{ marginRight: 6, fontSize: 14 }}>{quest.icon}</Text>
         <Text
-          style={{ ...TYPE.caption, flex: 1, fontWeight: "700", color: DARK.textPrimary }}
+          style={{ ...TYPE.caption, flex: 1, fontWeight: "700", color: LIGHT.textPrimary }}
           numberOfLines={1}
         >
           {quest.chainName}
         </Text>
-        <Text style={{ ...TYPE.caption, color: DARK.textMuted }}>
+        <Text style={{ ...TYPE.caption, color: LIGHT.textMuted }}>
           {quest.currentStepIndex + 1}/{quest.totalSteps}
         </Text>
       </View>
@@ -268,7 +268,7 @@ function QuestCard({
               onPress={() => onClaimReward(quest.chainId)}
               accessibilityLabel={`Claim reward for ${step.name}`}
             >
-              <Text style={{ ...TYPE.caption, fontWeight: "700", color: DARK.bgDeep }}>
+              <Text style={{ ...TYPE.caption, fontWeight: "700", color: LIGHT.textPrimary }}>
                 Claim Reward
               </Text>
             </Pressable>
@@ -297,13 +297,13 @@ export function QuestPanel({ quests, onClaimReward, onDismiss, compact = false }
     return (
       <View className="rounded-lg px-2 py-1" style={HUD_PANEL}>
         <Text
-          style={{ ...TYPE.caption, fontWeight: "700", color: DARK.textPrimary }}
+          style={{ ...TYPE.caption, fontWeight: "700", color: LIGHT.textPrimary }}
           numberOfLines={1}
         >
           {first.icon} {step.name}
         </Text>
         {firstIncomplete && (
-          <Text style={{ ...TYPE.caption, color: DARK.textSecondary }} numberOfLines={1}>
+          <Text style={{ ...TYPE.caption, color: LIGHT.textSecondary }} numberOfLines={1}>
             {firstIncomplete.description}: {firstIncomplete.current}/{firstIncomplete.target}
           </Text>
         )}
@@ -315,14 +315,14 @@ export function QuestPanel({ quests, onClaimReward, onDismiss, compact = false }
     <View className="max-h-[300px] w-[220px]">
       {/* Header */}
       <View className="mb-1 flex-row items-center justify-between">
-        <Text style={{ ...TYPE.label, fontWeight: "700", color: DARK.textPrimary }}>Quests</Text>
+        <Text style={{ ...TYPE.label, fontWeight: "700", color: LIGHT.textPrimary }}>Quests</Text>
         {onDismiss ? (
           <Pressable
             className="min-h-[28px] min-w-[28px] items-center justify-center"
             onPress={onDismiss}
             accessibilityLabel="Close quest panel"
           >
-            <Text style={{ ...TYPE.label, fontWeight: "700", color: DARK.textPrimary }}>X</Text>
+            <Text style={{ ...TYPE.label, fontWeight: "700", color: LIGHT.textPrimary }}>X</Text>
           </Pressable>
         ) : null}
       </View>
