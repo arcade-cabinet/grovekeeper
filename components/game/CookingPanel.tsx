@@ -11,9 +11,9 @@
  * Spec §7.3 (Campfire Cooking), §22 (Crafting)
  */
 
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, FONTS, HUD_PANEL, LIGHT, RADIUS, SPACE, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, LIGHT, RADIUS, SPACE } from "@/components/ui/tokens";
 import { useGameStore } from "@/game/stores";
 import {
   canCook,
@@ -28,6 +28,7 @@ import {
   formatRecipeEffect,
   type RecipeDisplay,
 } from "./cookingPanelLogic.ts";
+import { getIngredientEmoji, sharedStyles } from "./craftingPanelShared.ts";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -53,8 +54,6 @@ export function CookingPanel({ open, onClose }: CookingPanelProps) {
 
   if (!open) return null;
 
-  // Build inventory map from resources (cast to Record<string, number> for
-  // compatibility with CookingRecipe cropId keys).
   const inventory = resources as unknown as Record<string, number>;
   const recipeDisplays = buildAllRecipeDisplays(inventory);
 
@@ -66,16 +65,9 @@ export function CookingPanel({ open, onClose }: CookingPanelProps) {
       return;
     }
 
-    // Deduct ingredients (for now we apply immediately rather than waiting
-    // for the cooking timer -- timer-based cooking will be wired via the
-    // game loop's advanceCooking tick once ECS campfire cooking slots are
-    // connected to the CookingPanel).
     deductIngredients(recipe, inventory);
-
-    // Start the cooking state (creates a CookingSlotState for future use)
     startCooking(recipe);
 
-    // Apply food effects immediately (instant campfire cooking MVP)
     const newHunger = Math.min(maxHunger, hunger + recipe.output.saturation);
     const newHearts = Math.min(maxHearts, hearts + recipe.output.healing);
     setHunger(newHunger);
@@ -85,33 +77,42 @@ export function CookingPanel({ open, onClose }: CookingPanelProps) {
   };
 
   return (
-    <View style={StyleSheet.absoluteFillObject} className="items-center justify-center px-4">
-      {/* Backdrop */}
-      <Pressable
-        style={StyleSheet.absoluteFillObject}
-        className="bg-black/20"
-        onPress={onClose}
-        accessibilityLabel="Close cooking panel"
-      />
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+      <View style={sharedStyles.backdrop}>
+        <Pressable
+          style={StyleSheet.absoluteFillObject}
+          onPress={onClose}
+          accessibilityLabel="Close cooking panel"
+        />
 
-      {/* Panel */}
-      <View style={styles.panel} testID="cooking-panel">
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Campfire Cooking</Text>
-          <Pressable style={styles.closeButton} onPress={onClose} accessibilityLabel="Close">
-            <Text style={styles.closeText}>X</Text>
-          </Pressable>
+        <View style={sharedStyles.panel} testID="cooking-panel">
+          {/* Header */}
+          <View style={sharedStyles.header}>
+            <View style={styles.titleRow}>
+              <Text style={sharedStyles.titleIcon}>{"\uD83C\uDF73"}</Text>
+              <Text style={sharedStyles.title}>Campfire Cooking</Text>
+            </View>
+            <Pressable
+              style={sharedStyles.closeButton}
+              onPress={onClose}
+              accessibilityLabel="Close"
+            >
+              <Text style={sharedStyles.closeText}>{"\u2715"}</Text>
+            </Pressable>
+          </View>
+
+          {/* Recipe list */}
+          <ScrollView
+            style={sharedStyles.scrollArea}
+            contentContainerStyle={sharedStyles.scrollContent}
+          >
+            {recipeDisplays.map((recipe) => (
+              <RecipeRow key={recipe.id} recipe={recipe} onCook={handleCook} />
+            ))}
+          </ScrollView>
         </View>
-
-        {/* Recipe list */}
-        <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
-          {recipeDisplays.map((recipe) => (
-            <RecipeRow key={recipe.id} recipe={recipe} onCook={handleCook} />
-          ))}
-        </ScrollView>
       </View>
-    </View>
+    </Modal>
   );
 }
 
@@ -130,35 +131,51 @@ function RecipeRow({
   const timeText = formatCookingTime(recipe.cookingTimeSec);
 
   return (
-    <View style={[styles.recipeRow, !recipe.canCook && styles.recipeRowDisabled]}>
+    <View style={[sharedStyles.card, !recipe.canCook && sharedStyles.cardDisabled]}>
       {/* Name + time */}
-      <View style={styles.recipeHeader}>
-        <Text style={styles.recipeName}>{recipe.name}</Text>
-        <Text style={styles.recipeTime}>{timeText}</Text>
+      <View style={sharedStyles.cardHeader}>
+        <Text style={sharedStyles.cardName}>{recipe.name}</Text>
+        <Text style={sharedStyles.cardTime}>{timeText}</Text>
       </View>
 
-      {/* Ingredients */}
-      <View style={styles.ingredientRow}>
+      {/* Ingredients as chips */}
+      <View style={sharedStyles.ingredientRow}>
         {recipe.ingredients.map((ing) => (
-          <Text
+          <View
             key={ing.cropId}
-            style={[styles.ingredientText, !ing.sufficient && styles.ingredientInsufficient]}
+            style={[
+              sharedStyles.ingredientChip,
+              !ing.sufficient && sharedStyles.ingredientChipInsufficient,
+            ]}
           >
-            {ing.name} {ing.owned}/{ing.needed}
-          </Text>
+            <Text style={sharedStyles.ingredientEmoji}>{getIngredientEmoji(ing.cropId)}</Text>
+            <Text
+              style={[
+                sharedStyles.ingredientText,
+                !ing.sufficient && sharedStyles.ingredientTextInsufficient,
+              ]}
+            >
+              {ing.owned}/{ing.needed}
+            </Text>
+          </View>
         ))}
       </View>
 
       {/* Effect + Cook button */}
       <View style={styles.recipeFooter}>
-        <Text style={styles.effectText}>{effectText}</Text>
+        <Text style={sharedStyles.effectText}>{effectText}</Text>
         <Pressable
-          style={[styles.cookButton, !recipe.canCook && styles.cookButtonDisabled]}
+          style={[styles.cookButton, !recipe.canCook && sharedStyles.actionButtonDisabled]}
           onPress={() => onCook(recipe.id)}
           disabled={!recipe.canCook}
           accessibilityLabel={`Cook ${recipe.name}`}
         >
-          <Text style={[styles.cookButtonText, !recipe.canCook && styles.cookButtonTextDisabled]}>
+          <Text
+            style={[
+              sharedStyles.actionButtonText,
+              !recipe.canCook && sharedStyles.actionButtonTextDisabled,
+            ]}
+          >
             Cook
           </Text>
         </Pressable>
@@ -168,118 +185,24 @@ function RecipeRow({
 }
 
 // ---------------------------------------------------------------------------
-// Styles
+// Local styles
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
-  panel: {
-    ...HUD_PANEL,
-    backgroundColor: "rgba(255,255,255,0.92)",
-    borderColor: LIGHT.borderBranch,
-    borderWidth: 1,
-    borderRadius: RADIUS.organic,
-    width: "100%",
-    maxWidth: 380,
-    maxHeight: "80%",
-    zIndex: 1,
-  },
-  header: {
+  titleRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: SPACE[3],
-    paddingVertical: SPACE[2],
-    borderBottomWidth: 1,
-    borderBottomColor: LIGHT.borderBranch,
-  },
-  title: {
-    ...TYPE.display,
-    fontFamily: FONTS.heading,
-    color: LIGHT.textPrimary,
-  },
-  closeButton: {
-    minHeight: 44,
-    minWidth: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  closeText: {
-    ...TYPE.heading,
-    color: LIGHT.textSecondary,
-  },
-  scrollArea: {
-    flexGrow: 0,
-  },
-  scrollContent: {
-    padding: SPACE[2],
-    gap: SPACE[2],
-  },
-  recipeRow: {
-    backgroundColor: "rgba(232,245,233,0.6)",
-    borderWidth: 1,
-    borderColor: LIGHT.borderBranch,
-    borderRadius: RADIUS.organic,
-    padding: SPACE[2],
-  },
-  recipeRowDisabled: {
-    opacity: 0.5,
-  },
-  recipeHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACE[1],
-  },
-  recipeName: {
-    ...TYPE.heading,
-    color: LIGHT.textPrimary,
-  },
-  recipeTime: {
-    ...TYPE.caption,
-    color: LIGHT.textMuted,
-  },
-  ingredientRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACE[2],
-    marginBottom: SPACE[1],
-  },
-  ingredientText: {
-    ...TYPE.label,
-    color: ACCENT.sap,
-  },
-  ingredientInsufficient: {
-    color: ACCENT.ember,
   },
   recipeFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-  effectText: {
-    ...TYPE.caption,
-    color: ACCENT.amber,
-    flex: 1,
+    marginTop: SPACE[0],
   },
   cookButton: {
+    ...sharedStyles.actionButton,
     backgroundColor: ACCENT.sap,
-    borderRadius: RADIUS.organic,
     paddingHorizontal: SPACE[3],
-    paddingVertical: SPACE[1],
-    minHeight: 44,
-    minWidth: 64,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cookButtonDisabled: {
-    backgroundColor: "#CFD8DC",
-  },
-  cookButtonText: {
-    ...TYPE.label,
-    fontWeight: "700",
-    color: "#FAFAFA",
-  },
-  cookButtonTextDisabled: {
-    color: LIGHT.textMuted,
+    minWidth: 72,
   },
 });

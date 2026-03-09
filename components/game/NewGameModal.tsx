@@ -1,23 +1,43 @@
 /**
  * NewGameModal -- survival-only, 4 difficulty tiers, Wind Waker bright.
  *
- * Spec §26, §37. Semi-transparent panel over the 3D world (§0.2).
- * Brand: docs/plans/2026-03-07-ux-brand-design.md §9
+ * Spec S26, S37. Semi-transparent panel over the 3D world (S0.2).
+ * Brand: docs/plans/2026-03-07-ux-brand-design.md S9
  */
-import { useState } from "react";
-import { Modal, Pressable, ScrollView, Switch, TextInput, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Modal,
+  Pressable,
+  Animated as RNAnimated,
+  ScrollView,
+  Switch,
+  TextInput,
+  View,
+} from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
 import { generateSeedPhrase } from "@/game/utils/seedWords";
+import { TIERS } from "./difficultyTiers.ts";
+import {
+  animateButtonPressIn,
+  animateButtonPressOut,
+  createButtonScale,
+  createEmberPulse,
+  createGlowPulse,
+  interpolateEmberBackground,
+  interpolateGlowRadius,
+  startEmberPulse,
+} from "./mainMenuAnimations.ts";
+import { useReducedMotion } from "./mainMenuBackground.tsx";
+import { type DifficultyTier, TierCard } from "./TierCard.tsx";
 
 // ---------------------------------------------------------------------------
-// Types — survival-only, no exploration mode
+// Types -- survival-only, no exploration mode
 // ---------------------------------------------------------------------------
 
 export type Difficulty = "seedling" | "sapling" | "hardwood" | "ironwood";
 
-/** Config produced by the modal, fed into gameStore.resetGame(). */
 export interface NewGameConfig {
   worldSeed: string;
   difficulty: Difficulty;
@@ -31,59 +51,6 @@ export interface NewGameModalProps {
 }
 
 // ---------------------------------------------------------------------------
-// Difficulty tiers (unified doc §3)
-// ---------------------------------------------------------------------------
-
-interface DifficultyTier {
-  id: Difficulty;
-  name: string;
-  icon: string;
-  hearts: number;
-  tagline: string;
-  color: string;
-  permadeathForced: "on" | "off" | "optional";
-}
-
-const TIERS: DifficultyTier[] = [
-  {
-    id: "seedling",
-    name: "Seedling",
-    icon: "\u{1F331}",
-    hearts: 7,
-    tagline: "Gentle survival",
-    color: ACCENT.sap,
-    permadeathForced: "off",
-  },
-  {
-    id: "sapling",
-    name: "Sapling",
-    icon: "\u{1F33F}",
-    hearts: 5,
-    tagline: "The intended experience",
-    color: ACCENT.frost,
-    permadeathForced: "optional",
-  },
-  {
-    id: "hardwood",
-    name: "Hardwood",
-    icon: "\u{1F525}",
-    hearts: 4,
-    tagline: "Nature fights back",
-    color: ACCENT.amber,
-    permadeathForced: "optional",
-  },
-  {
-    id: "ironwood",
-    name: "Ironwood",
-    icon: "\u{1F480}",
-    hearts: 3,
-    tagline: "One bad winter ends it all",
-    color: ACCENT.ember,
-    permadeathForced: "on",
-  },
-];
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -91,23 +58,41 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
   const [seedPhrase, setSeedPhrase] = useState(() => generateSeedPhrase());
   const [difficulty, setDifficulty] = useState<Difficulty>("sapling");
   const [permadeath, setPermadeath] = useState(false);
+  const reduceMotion = useReducedMotion();
 
-  const handleShuffle = () => {
-    setSeedPhrase(generateSeedPhrase(Date.now()));
-  };
+  const handleShuffle = () => setSeedPhrase(generateSeedPhrase(Date.now()));
 
   const handleTierSelect = (tier: DifficultyTier) => {
-    setDifficulty(tier.id);
+    setDifficulty(tier.id as Difficulty);
     if (tier.permadeathForced === "on") setPermadeath(true);
     else if (tier.permadeathForced === "off") setPermadeath(false);
   };
 
-  const handleStart = () => {
-    onStart({ worldSeed: seedPhrase, difficulty, permadeath });
-  };
+  const handleStart = () => onStart({ worldSeed: seedPhrase, difficulty, permadeath });
 
   const activeTier = TIERS.find((t) => t.id === difficulty) ?? TIERS[1];
   const showPermadeath = activeTier.permadeathForced !== "off";
+
+  // Begin button glow + press animation
+  const beginGlow = useMemo(() => createGlowPulse(reduceMotion), [reduceMotion]);
+  const { scale: beginScale } = useMemo(() => createButtonScale(), []);
+  useEffect(() => {
+    if (reduceMotion || !open) return;
+    beginGlow.loop.start();
+    return () => beginGlow.loop.stop();
+  }, [beginGlow, reduceMotion, open]);
+
+  // Ember pulse for permadeath
+  const emberAnim = useMemo(() => createEmberPulse(), []);
+  useEffect(() => {
+    if (reduceMotion || !showPermadeath) return;
+    const loop = startEmberPulse(emberAnim, reduceMotion);
+    loop.start();
+    return () => loop.stop();
+  }, [emberAnim, reduceMotion, showPermadeath]);
+
+  const emberBg = interpolateEmberBackground(emberAnim);
+  const beginGlowRadius = interpolateGlowRadius(beginGlow.anim);
 
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
@@ -136,37 +121,47 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
               New Grove
             </Text>
 
-            {/* World Seed */}
+            {/* World Seed with decorative frame */}
             <View className="mb-4">
               <Text style={{ ...TYPE.label, color: LIGHT.textMuted, marginBottom: 6 }}>
-                WORLD SEED
+                {"\u{1F33F}"} WORLD SEED
               </Text>
               <View
-                className="flex-row items-center gap-2 rounded-xl px-3 py-2"
                 style={{
-                  backgroundColor: "rgba(232,245,233,0.7)",
-                  borderWidth: 1,
-                  borderColor: LIGHT.borderBranch,
-                  borderRadius: 8,
+                  borderWidth: 2,
+                  borderColor: ACCENT.sap,
+                  borderRadius: 12,
+                  padding: 2,
+                  backgroundColor: `${ACCENT.sap}08`,
                 }}
               >
-                <TextInput
-                  className="flex-1 text-base"
-                  style={{ color: LIGHT.textPrimary, fontFamily: FONTS.body }}
-                  value={seedPhrase}
-                  onChangeText={setSeedPhrase}
-                  accessibilityLabel="World seed phrase"
-                  placeholder="Adjective Adjective Noun"
-                  placeholderTextColor={LIGHT.textMuted}
-                />
-                <Pressable
-                  onPress={handleShuffle}
-                  className="min-h-[36px] min-w-[36px] items-center justify-center rounded-lg"
-                  style={{ backgroundColor: `${ACCENT.sap}20` }}
-                  accessibilityLabel="Shuffle seed phrase"
+                <View
+                  className="flex-row items-center gap-2 rounded-lg px-3 py-2"
+                  style={{
+                    backgroundColor: "rgba(232,245,233,0.7)",
+                    borderWidth: 1,
+                    borderColor: LIGHT.borderBranch,
+                    borderRadius: 8,
+                  }}
                 >
-                  <Text className="text-base">{"\u{1F500}"}</Text>
-                </Pressable>
+                  <TextInput
+                    className="flex-1 text-base"
+                    style={{ color: LIGHT.textPrimary, fontFamily: FONTS.body }}
+                    value={seedPhrase}
+                    onChangeText={setSeedPhrase}
+                    accessibilityLabel="World seed phrase"
+                    placeholder="Adjective Adjective Noun"
+                    placeholderTextColor={LIGHT.textMuted}
+                  />
+                  <Pressable
+                    onPress={handleShuffle}
+                    className="min-h-[36px] min-w-[36px] items-center justify-center rounded-lg"
+                    style={{ backgroundColor: `${ACCENT.sap}20` }}
+                    accessibilityLabel="Shuffle seed phrase"
+                  >
+                    <Text className="text-base">{"\u{1F500}"}</Text>
+                  </Pressable>
+                </View>
               </View>
               <Text
                 className="mt-1 text-center"
@@ -188,6 +183,7 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
                     tier={tier}
                     isSelected={difficulty === tier.id}
                     onSelect={() => handleTierSelect(tier)}
+                    reduceMotion={reduceMotion}
                   />
                 ))}
               </View>
@@ -200,22 +196,36 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
               </Text>
             </View>
 
-            {/* Permadeath toggle */}
+            {/* Permadeath toggle -- ember styling */}
             {showPermadeath ? (
-              <View
+              <RNAnimated.View
                 className="mb-4 flex-row items-center justify-between rounded-lg p-3"
                 style={{
-                  backgroundColor: "rgba(232,245,233,0.7)",
+                  backgroundColor: permadeath ? emberBg : "rgba(232,245,233,0.7)",
                   borderWidth: 1,
-                  borderColor: LIGHT.borderBranch,
+                  borderColor: permadeath ? ACCENT.ember : LIGHT.borderBranch,
                   borderRadius: 8,
                 }}
               >
                 <View className="mr-3 shrink">
-                  <Text style={{ ...TYPE.body, color: LIGHT.textPrimary, fontWeight: "600" }}>
-                    Permadeath
-                  </Text>
-                  <Text style={{ ...TYPE.caption, color: LIGHT.textMuted }}>
+                  <View className="flex-row items-center gap-1">
+                    {permadeath && <Text style={{ fontSize: 14 }}>{"\u{26A0}\uFE0F"}</Text>}
+                    <Text
+                      style={{
+                        ...TYPE.body,
+                        color: permadeath ? ACCENT.ember : LIGHT.textPrimary,
+                        fontWeight: "700",
+                      }}
+                    >
+                      Permadeath
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      ...TYPE.caption,
+                      color: permadeath ? ACCENT.ember : LIGHT.textMuted,
+                    }}
+                  >
                     {activeTier.permadeathForced === "on"
                       ? "Always on for Ironwood"
                       : "Optional \u2014 death is permanent"}
@@ -225,10 +235,10 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
                   value={permadeath}
                   onValueChange={setPermadeath}
                   disabled={activeTier.permadeathForced === "on"}
-                  trackColor={{ false: "#CFD8DC", true: ACCENT.sap }}
+                  trackColor={{ false: "#CFD8DC", true: ACCENT.ember }}
                   thumbColor="#FAFAFA"
                 />
-              </View>
+              </RNAnimated.View>
             ) : null}
 
             {/* Actions */}
@@ -247,71 +257,41 @@ export function NewGameModal({ open, onClose, onStart }: NewGameModalProps) {
                   Cancel
                 </Text>
               </Button>
-              <Pressable
-                className="min-h-[44px] flex-1 items-center justify-center rounded-xl"
-                style={{
-                  backgroundColor: ACCENT.sap,
-                  shadowColor: ACCENT.sap,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.35,
-                  shadowRadius: 12,
-                  elevation: 4,
-                }}
-                onPress={handleStart}
-                accessibilityRole="button"
-                accessibilityLabel="Begin Your Grove"
-                testID="btn-begin-grove"
-              >
-                <Text style={{ ...TYPE.heading, color: "#FAFAFA" }}>Begin Your Grove</Text>
-              </Pressable>
+              <RNAnimated.View style={{ flex: 1, transform: [{ scale: beginScale }] }}>
+                <Pressable
+                  className="min-h-[44px] flex-1 items-center justify-center rounded-xl"
+                  style={{
+                    backgroundColor: ACCENT.sap,
+                    shadowColor: ACCENT.gold,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                  onPress={handleStart}
+                  onPressIn={() => animateButtonPressIn(beginScale)}
+                  onPressOut={() => animateButtonPressOut(beginScale)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Begin Your Grove"
+                  testID="btn-begin-grove"
+                >
+                  <RNAnimated.Text
+                    style={{
+                      ...TYPE.heading,
+                      color: "#FAFAFA",
+                      textShadowColor: ACCENT.gold,
+                      textShadowOffset: { width: 0, height: 0 },
+                      textShadowRadius: beginGlowRadius,
+                    }}
+                  >
+                    Begin Your Grove
+                  </RNAnimated.Text>
+                </Pressable>
+              </RNAnimated.View>
             </View>
           </ScrollView>
         </View>
       </View>
     </Modal>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// TierCard — 2x2 grid difficulty selection
-// ---------------------------------------------------------------------------
-
-function TierCard({
-  tier,
-  isSelected,
-  onSelect,
-}: Readonly<{
-  tier: DifficultyTier;
-  isSelected: boolean;
-  onSelect: () => void;
-}>) {
-  return (
-    <Pressable
-      className="items-center justify-center rounded-lg p-2"
-      style={{
-        width: "47%",
-        minHeight: 72,
-        backgroundColor: isSelected ? `${tier.color}20` : "rgba(255,255,255,0.5)",
-        borderWidth: 2,
-        borderColor: isSelected ? tier.color : LIGHT.borderBranch,
-      }}
-      onPress={onSelect}
-      accessibilityLabel={`${tier.name}: ${tier.tagline}`}
-    >
-      <Text className="text-lg">{tier.icon}</Text>
-      <Text
-        style={{
-          ...TYPE.label,
-          color: isSelected ? tier.color : LIGHT.textSecondary,
-          fontWeight: "700",
-        }}
-      >
-        {tier.name}
-      </Text>
-      <Text style={{ ...TYPE.caption, color: LIGHT.textMuted }}>
-        {tier.hearts}
-        {"\u2665"}
-      </Text>
-    </Pressable>
   );
 }

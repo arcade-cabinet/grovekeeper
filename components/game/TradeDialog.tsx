@@ -1,18 +1,26 @@
 /**
  * TradeDialog -- FPS HUD overlay for trading resources with an NPC.
  *
- * Shows available trade rates (supply/demand adjusted by caller), lets the
- * player select one, adjust quantity with +/- buttons, and execute the trade.
+ * Dark forest RPG aesthetic: semi-transparent dark panel with gold accents.
+ * Features:
+ *   - NPC greeting with portrait circle
+ *   - Trade rate cards with buy/sell price
+ *   - Quantity selector (TradeQuantitySelector subcomponent)
+ *   - Total cost with afford/can't-afford color coding (green vs red)
+ *   - Split view: cost (left) -> gain (right)
+ *
  * Renders as an absolute-positioned HUD overlay, not a system Modal.
  */
 
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, TYPE } from "@/components/ui/tokens";
 import type { ResourceType } from "@/game/config/resources";
 import type { TradeRate } from "@/game/systems/trading";
+import { portraitBgColor, portraitColor } from "./dialogueAnimations.ts";
+import { TradeQuantitySelector } from "./TradeQuantitySelector.tsx";
+import { computeTradeSummary, formatResourceName, maxTradeQuantity } from "./tradeDialogLogic.ts";
 
 export interface TradeDialogProps {
   open: boolean;
@@ -35,12 +43,11 @@ export function TradeDialog({
   const [selectedRate, setSelectedRate] = useState<TradeRate | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-  const maxQuantity = selectedRate
-    ? Math.max(1, Math.floor((resources[selectedRate.from] ?? 0) / selectedRate.fromAmount))
-    : 1;
+  const maxQty = selectedRate ? maxTradeQuantity(selectedRate, resources) : 1;
+  const summary = selectedRate ? computeTradeSummary(selectedRate, quantity, resources) : null;
 
   const handleTrade = () => {
-    if (!selectedRate) return;
+    if (!selectedRate || !summary?.canAfford) return;
     onExecuteTrade(selectedRate, quantity);
   };
 
@@ -57,168 +64,150 @@ export function TradeDialog({
 
   if (!open) return null;
 
+  const displayName = npcName ?? "Merchant";
+  const initial = displayName.charAt(0).toUpperCase();
+  const borderCol = portraitColor(displayName);
+  const bgCol = portraitBgColor(displayName);
+
   return (
     <View style={StyleSheet.absoluteFillObject} className="items-center justify-center px-4">
-      {/* Backdrop — tap to close */}
       <Pressable
         style={StyleSheet.absoluteFillObject}
-        className="bg-black/20"
+        className="bg-black/40"
         onPress={handleClose}
         accessibilityLabel="Close trade dialog"
       />
 
-      {/* Trade panel */}
       <View
-        className="w-full max-w-sm rounded-2xl"
+        className="w-full max-w-sm overflow-hidden rounded-2xl"
         style={{
-          backgroundColor: "rgba(255,255,255,0.92)",
-          borderWidth: 1,
-          borderColor: LIGHT.borderBranch,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.3,
+          backgroundColor: "rgba(15,45,20,0.94)",
+          borderWidth: 2,
+          borderColor: ACCENT.gold,
+          shadowColor: ACCENT.gold,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.25,
           shadowRadius: 16,
           elevation: 12,
           zIndex: 1,
         }}
       >
-        {/* Header */}
+        {/* Header with portrait */}
         <View
           className="flex-row items-center justify-between px-4 py-3"
-          style={{ borderBottomWidth: 1, borderBottomColor: LIGHT.borderBranch }}
+          style={{ borderBottomWidth: 1, borderBottomColor: "rgba(255,213,79,0.2)" }}
         >
-          <Text
-            style={{
-              ...TYPE.heading,
-              fontFamily: FONTS.heading,
-              color: LIGHT.textPrimary,
-            }}
-          >
-            {npcName ? `Trade with ${npcName}` : "Trading Post"}
-          </Text>
+          <View className="flex-row items-center">
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                borderWidth: 2,
+                borderColor: borderCol,
+                backgroundColor: bgCol,
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  fontFamily: FONTS.heading,
+                  color: borderCol,
+                }}
+              >
+                {initial}
+              </Text>
+            </View>
+            <View>
+              <Text style={{ ...TYPE.heading, fontFamily: FONTS.heading, color: ACCENT.gold }}>
+                {displayName}
+              </Text>
+              <Text style={{ ...TYPE.caption, color: "rgba(232,245,233,0.5)", marginTop: 1 }}>
+                Trading Post
+              </Text>
+            </View>
+          </View>
           <Pressable
             className="min-h-[44px] min-w-[44px] items-center justify-center"
             onPress={handleClose}
             accessibilityLabel="Close"
           >
-            <Text style={{ fontSize: 18, fontWeight: "700", color: LIGHT.textSecondary }}>X</Text>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: ACCENT.gold }}>X</Text>
           </Pressable>
         </View>
 
+        {/* NPC greeting */}
+        <View className="px-4 py-2">
+          <Text style={{ ...TYPE.caption, fontStyle: "italic", color: "rgba(232,245,233,0.6)" }}>
+            "What can I interest you in today?"
+          </Text>
+        </View>
+
         {/* Trade rates list */}
-        <ScrollView className="px-4 py-3">
+        <ScrollView className="px-4 pb-2" style={{ maxHeight: 200 }}>
           <View className="gap-2">
             {rates.map((rate) => {
               const isSelected = selectedRate === rate;
               return (
                 <Pressable
                   key={`${rate.from}-${rate.to}`}
-                  className="rounded-lg p-3"
+                  className="flex-row items-center justify-between rounded-lg px-3 py-3"
                   style={{
                     borderWidth: 1,
-                    borderColor: isSelected ? ACCENT.sap : LIGHT.borderBranch,
-                    backgroundColor: isSelected ? "rgba(76,175,80,0.12)" : "rgba(232,245,233,0.5)",
+                    borderColor: isSelected ? ACCENT.gold : "rgba(255,213,79,0.15)",
+                    backgroundColor: isSelected ? "rgba(255,213,79,0.1)" : "rgba(232,245,233,0.04)",
                   }}
                   onPress={() => handleSelectRate(rate)}
                   accessibilityLabel={`Trade ${rate.fromAmount} ${rate.from} for ${rate.toAmount} ${rate.to}`}
                 >
-                  <Text style={{ ...TYPE.body, color: LIGHT.textPrimary }}>
-                    <Text style={{ fontWeight: "500", textTransform: "capitalize" }}>
-                      {rate.fromAmount} {rate.from}
-                    </Text>
-                    {"  \u2192  "}
-                    <Text style={{ fontWeight: "500", textTransform: "capitalize" }}>
-                      {rate.toAmount} {rate.to}
-                    </Text>
+                  <Text style={{ ...TYPE.body, fontWeight: "600", color: ACCENT.ember }}>
+                    {rate.fromAmount} {formatResourceName(rate.from)}
+                  </Text>
+                  <Text style={{ fontSize: 16, color: ACCENT.gold, marginHorizontal: 8 }}>
+                    {"\u2192"}
+                  </Text>
+                  <Text style={{ ...TYPE.body, fontWeight: "600", color: ACCENT.sap }}>
+                    {rate.toAmount} {formatResourceName(rate.to)}
                   </Text>
                 </Pressable>
               );
             })}
           </View>
 
-          {/* Quantity selector + execute */}
-          {selectedRate ? (
-            <View className="mt-4 gap-3">
-              {/* Quantity row */}
-              <View className="flex-row items-center gap-3">
-                <Text style={{ ...TYPE.body, color: LIGHT.textSecondary }}>Qty:</Text>
-
-                {/* Minus button */}
-                <Pressable
-                  className="min-h-[44px] min-w-[44px] items-center justify-center rounded-lg"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: LIGHT.borderBranch,
-                    backgroundColor: "rgba(232,245,233,0.6)",
-                  }}
-                  onPress={() => setQuantity((q) => Math.max(1, q - 1))}
-                  disabled={quantity <= 1}
-                  accessibilityLabel="Decrease quantity"
-                >
-                  <Text style={{ fontSize: 18, fontWeight: "700", color: ACCENT.sap }}>-</Text>
-                </Pressable>
-
-                {/* Quantity display */}
-                <Text
-                  style={{
-                    minWidth: 32,
-                    textAlign: "center",
-                    fontSize: 18,
-                    fontWeight: "700",
-                    color: ACCENT.sap,
-                  }}
-                >
-                  {quantity}
-                </Text>
-
-                {/* Plus button */}
-                <Pressable
-                  className="min-h-[44px] min-w-[44px] items-center justify-center rounded-lg"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: LIGHT.borderBranch,
-                    backgroundColor: "rgba(232,245,233,0.6)",
-                  }}
-                  onPress={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
-                  disabled={quantity >= maxQuantity}
-                  accessibilityLabel="Increase quantity"
-                >
-                  <Text style={{ fontSize: 18, fontWeight: "700", color: ACCENT.sap }}>+</Text>
-                </Pressable>
-              </View>
-
-              {/* Trade summary */}
-              <Text style={{ ...TYPE.caption, color: LIGHT.textSecondary }}>
-                Pay: {quantity * selectedRate.fromAmount} {selectedRate.from}
-                {"  \u2192  "}
-                Get: {quantity * selectedRate.toAmount} {selectedRate.to}
-              </Text>
-
-              {/* Trade button */}
-              <Button
-                className="min-h-[44px] w-full rounded-xl"
-                style={{ backgroundColor: ACCENT.sap }}
-                onPress={handleTrade}
-              >
-                <Text style={{ fontWeight: "700", color: LIGHT.textPrimary }}>Trade</Text>
-              </Button>
-            </View>
+          {selectedRate && summary ? (
+            <TradeQuantitySelector
+              selectedRate={selectedRate}
+              summary={summary}
+              quantity={quantity}
+              maxQty={maxQty}
+              onQuantityChange={setQuantity}
+              onTrade={handleTrade}
+            />
           ) : null}
         </ScrollView>
 
         {/* Close action */}
         <View
           className="px-4 py-3"
-          style={{ borderTopWidth: 1, borderTopColor: LIGHT.borderBranch }}
+          style={{ borderTopWidth: 1, borderTopColor: "rgba(255,213,79,0.15)" }}
         >
-          <Button
-            className="min-h-[44px] w-full rounded-xl bg-transparent"
-            style={{ borderWidth: 2, borderColor: LIGHT.borderBranch }}
-            variant="outline"
+          <Pressable
+            className="min-h-[44px] w-full items-center justify-center rounded-xl active:opacity-80"
+            style={{
+              borderWidth: 1,
+              borderColor: "rgba(255,213,79,0.25)",
+              backgroundColor: "rgba(255,213,79,0.06)",
+            }}
             onPress={handleClose}
           >
-            <Text style={{ fontWeight: "700", color: LIGHT.textSecondary }}>Close</Text>
-          </Button>
+            <Text style={{ fontWeight: "700", fontFamily: FONTS.heading, color: ACCENT.gold }}>
+              Close
+            </Text>
+          </Pressable>
         </View>
       </View>
     </View>

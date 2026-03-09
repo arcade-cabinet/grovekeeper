@@ -1,32 +1,20 @@
 /**
- * ToolWheel -- Tool selector dialog with icon grid and tool unlock previews.
+ * ToolWheel -- Radial tool selector with pie layout and smooth animation.
  *
- * Displays all game tools in a 3-column grid. Unlocked tools are selectable,
- * locked tools show their unlock level. If the player meets the level
- * requirement, tapping an unowned tool auto-unlocks it.
+ * Tools arranged in a circle around a center hub. Spring scale-in animation
+ * on open. Selected tool gets golden highlight + scale-up. Center shows
+ * currently selected tool name. Semi-transparent dark backdrop.
+ *
+ * Spec S11: Tab key (desktop) or long-press (mobile) opens the tool selector.
  */
 
-import type { LucideIcon } from "lucide-react-native";
-import {
-  AxeIcon,
-  BookOpenIcon,
-  CloudRainIcon,
-  DropletsIcon,
-  GitMergeIcon,
-  RecycleIcon,
-  ScissorsIcon,
-  ShieldIcon,
-  ShovelIcon,
-  SparklesIcon,
-  SproutIcon,
-  WrenchIcon,
-} from "lucide-react-native";
-import { Modal, Pressable, ScrollView, View } from "react-native";
-import { Icon } from "@/components/ui/icon";
+import { useEffect, useRef } from "react";
+import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, HUD_PANEL, LIGHT, TYPE } from "@/components/ui/tokens";
+import { ACCENT, LIGHT, RADIUS, TYPE } from "@/components/ui/tokens";
 import type { ToolData } from "@/game/config/tools";
 import { TOOLS } from "@/game/config/tools";
+import { computeRadialPositions, TOOL_EMOJI } from "./toolWheelLayout.ts";
 import { useToolWheelTabKey } from "./toolWheelLogic.ts";
 
 // ---------------------------------------------------------------------------
@@ -46,23 +34,13 @@ export interface ToolWheelProps {
 }
 
 // ---------------------------------------------------------------------------
-// Icon mapping (mirrors ToolBelt but with extra tools)
+// Layout constants
 // ---------------------------------------------------------------------------
 
-const TOOL_ICONS: Record<string, LucideIcon> = {
-  trowel: ShovelIcon,
-  "watering-can": DropletsIcon,
-  almanac: BookOpenIcon,
-  "pruning-shears": ScissorsIcon,
-  "seed-pouch": SproutIcon,
-  shovel: WrenchIcon,
-  axe: AxeIcon,
-  "compost-bin": RecycleIcon,
-  "rain-catcher": CloudRainIcon,
-  "fertilizer-spreader": SparklesIcon,
-  scarecrow: ShieldIcon,
-  "grafting-tool": GitMergeIcon,
-};
+const WHEEL_RADIUS = 110;
+const TOOL_SLOT_SIZE = 56;
+const CENTER_SIZE = 64;
+const WHEEL_TOTAL = WHEEL_RADIUS * 2 + TOOL_SLOT_SIZE + 24;
 
 // ---------------------------------------------------------------------------
 // Component
@@ -78,9 +56,23 @@ export function ToolWheel({
   onSelectTool,
   onUnlockTool,
 }: ToolWheelProps) {
-  // Tab key (web) toggles the wheel open/closed.
-  // On mobile, the parent should wire a long-press gesture to onOpen/onClose.
   useToolWheelTabKey(() => (open ? onClose() : onOpen?.()));
+
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (open) {
+      scaleAnim.setValue(0.3);
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 7,
+        tension: 60,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      scaleAnim.setValue(0);
+    }
+  }, [open, scaleAnim]);
 
   const handleSelectTool = (tool: ToolData) => {
     if (unlockedTools.includes(tool.id)) {
@@ -95,90 +87,154 @@ export function ToolWheel({
 
   if (!open) return null;
 
+  const positions = computeRadialPositions(TOOLS.length, WHEEL_RADIUS);
+  const selectedToolData = TOOLS.find((t) => t.id === selectedTool);
+
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 items-center justify-center bg-black/20">
-        {/* Backdrop dismiss */}
+    <Modal visible transparent animationType="none" onRequestClose={onClose}>
+      <View style={styles.backdrop}>
+        {/* Dismiss on tap outside */}
         <Pressable
-          className="absolute inset-0"
+          style={StyleSheet.absoluteFill}
           onPress={onClose}
           accessibilityLabel="Close tool selector"
         />
 
-        {/* Dialog */}
-        <View
-          className="mx-4 w-full max-w-xs rounded-2xl p-4 shadow-lg"
-          style={{
-            ...HUD_PANEL,
-            backgroundColor: "rgba(255,255,255,0.9)",
-          }}
+        <Animated.View
+          style={[styles.wheelContainer, { transform: [{ scale: scaleAnim }], opacity: scaleAnim }]}
         >
-          {/* Header */}
-          <Text
-            style={{
-              ...TYPE.heading,
-              textAlign: "center",
-              marginBottom: 12,
-              color: LIGHT.textPrimary,
-            }}
-          >
-            Tools
-          </Text>
+          {/* Center hub: shows selected tool name */}
+          <View style={styles.centerHub}>
+            <Text style={styles.centerEmoji}>{TOOL_EMOJI[selectedTool] ?? "\u{1FA93}"}</Text>
+            <Text style={styles.centerText} numberOfLines={1}>
+              {selectedToolData?.name ?? ""}
+            </Text>
+          </View>
 
-          {/* 3-column grid */}
-          <ScrollView>
-            <View className="flex-row flex-wrap justify-center gap-3">
-              {TOOLS.map((tool) => {
-                const isUnlocked = unlockedTools.includes(tool.id);
-                const isSelected = selectedTool === tool.id;
-                const canUnlock = level >= tool.unlockLevel;
-                const IconComponent = TOOL_ICONS[tool.id] ?? WrenchIcon;
+          {/* Radial tool slots */}
+          {TOOLS.map((tool, i) => {
+            const pos = positions[i];
+            const isUnlocked = unlockedTools.includes(tool.id);
+            const isSelected = selectedTool === tool.id;
+            const canUnlock = level >= tool.unlockLevel;
+            const emoji = TOOL_EMOJI[tool.id] ?? "\u{1F527}";
 
-                return (
-                  <Pressable
-                    key={tool.id}
-                    className="h-20 w-[30%] items-center justify-center rounded-xl p-2"
-                    style={{
-                      borderWidth: 2,
-                      backgroundColor: isSelected
-                        ? "rgba(76,175,80,0.15)"
-                        : isUnlocked
-                          ? "rgba(232,245,233,0.7)"
-                          : "rgba(207,216,220,0.3)",
-                      borderColor: isSelected ? ACCENT.sap : "transparent",
-                      opacity: isUnlocked || canUnlock ? 1 : 0.5,
-                    }}
-                    disabled={!isUnlocked && !canUnlock}
-                    onPress={() => handleSelectTool(tool)}
-                    accessibilityLabel={`${tool.name}${!isUnlocked ? ` (unlock at level ${tool.unlockLevel})` : ""}${isSelected ? " (selected)" : ""}`}
-                  >
-                    <Icon
-                      as={IconComponent}
-                      size={24}
-                      className="mb-1"
-                      color={isUnlocked ? ACCENT.sap : LIGHT.textMuted}
-                    />
-                    <Text
-                      style={{
-                        ...TYPE.caption,
-                        textAlign: "center",
-                        color: LIGHT.textPrimary,
-                      }}
-                    >
-                      {tool.name}
-                    </Text>
-                    {!isUnlocked && (
-                      <Text style={{ ...TYPE.caption, color: ACCENT.amber }}>
-                        Lv.{tool.unlockLevel}
-                      </Text>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-          </ScrollView>
-        </View>
+            return (
+              <Pressable
+                key={tool.id}
+                style={[
+                  styles.toolSlot,
+                  {
+                    left: WHEEL_TOTAL / 2 + pos.x - TOOL_SLOT_SIZE / 2,
+                    top: WHEEL_TOTAL / 2 + pos.y - TOOL_SLOT_SIZE / 2,
+                  },
+                  isSelected && styles.toolSlotSelected,
+                  !isUnlocked && !canUnlock && styles.toolSlotLocked,
+                ]}
+                disabled={!isUnlocked && !canUnlock}
+                onPress={() => handleSelectTool(tool)}
+                accessibilityLabel={`${tool.name}${!isUnlocked ? ` (unlock at level ${tool.unlockLevel})` : ""}${isSelected ? " (selected)" : ""}`}
+              >
+                <Text style={[styles.toolEmoji, isSelected && styles.toolEmojiSelected]}>
+                  {emoji}
+                </Text>
+                <Text
+                  style={[styles.toolName, isSelected && styles.toolNameSelected]}
+                  numberOfLines={1}
+                >
+                  {tool.name}
+                </Text>
+                {!isUnlocked && <Text style={styles.toolLevel}>Lv.{tool.unlockLevel}</Text>}
+              </Pressable>
+            );
+          })}
+        </Animated.View>
       </View>
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  wheelContainer: {
+    width: WHEEL_TOTAL,
+    height: WHEEL_TOTAL,
+    position: "relative",
+  },
+  centerHub: {
+    position: "absolute",
+    left: WHEEL_TOTAL / 2 - CENTER_SIZE / 2,
+    top: WHEEL_TOTAL / 2 - CENTER_SIZE / 2,
+    width: CENTER_SIZE,
+    height: CENTER_SIZE,
+    borderRadius: CENTER_SIZE / 2,
+    backgroundColor: "rgba(232,245,233,0.9)",
+    borderWidth: 2,
+    borderColor: ACCENT.sap,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+    shadowColor: ACCENT.sap,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  centerEmoji: {
+    fontSize: 20,
+  },
+  centerText: {
+    ...TYPE.caption,
+    color: LIGHT.textPrimary,
+    marginTop: 1,
+  },
+  toolSlot: {
+    position: "absolute",
+    width: TOOL_SLOT_SIZE,
+    height: TOOL_SLOT_SIZE,
+    borderRadius: RADIUS.organic,
+    backgroundColor: "rgba(232,245,233,0.85)",
+    borderWidth: 2,
+    borderColor: "rgba(102,187,106,0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 2,
+  },
+  toolSlotSelected: {
+    borderColor: ACCENT.gold,
+    backgroundColor: "rgba(255,213,79,0.15)",
+    transform: [{ scale: 1.1 }],
+    shadowColor: ACCENT.gold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+  },
+  toolSlotLocked: {
+    opacity: 0.4,
+  },
+  toolEmoji: {
+    fontSize: 20,
+  },
+  toolEmojiSelected: {
+    fontSize: 22,
+  },
+  toolName: {
+    ...TYPE.caption,
+    fontSize: 8,
+    color: LIGHT.textPrimary,
+    textAlign: "center",
+  },
+  toolNameSelected: {
+    color: ACCENT.gold,
+    fontWeight: "700",
+  },
+  toolLevel: {
+    ...TYPE.caption,
+    fontSize: 7,
+    color: ACCENT.amber,
+  },
+});

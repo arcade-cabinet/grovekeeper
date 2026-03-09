@@ -1,13 +1,19 @@
 /**
- * QuestPanel -- Active quest tracker sidebar (Spec §14.4).
+ * QuestPanel -- Active quest tracker sidebar (Spec SS14.4).
  * ConnectedQuestPanel reads from ECS questBranchQuery + Legend State.
  * mapQuestBranchToDisplay is the pure mapping function (exported for tests).
+ *
+ * Dark forest RPG aesthetic:
+ *   - Quest cards with golden border for active quest (QuestCard subcomponent)
+ *   - Objective checklist with checkmark styling (ObjectiveProgress)
+ *   - Progress bars with sap/amber coloring
+ *   - Compact mode for HUD overlay
  */
 
 import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, HUD_PANEL, LIGHT, TYPE } from "@/components/ui/tokens";
+import { ACCENT, FONTS, TYPE } from "@/components/ui/tokens";
 import type { QuestBranchComponent } from "@/game/ecs/components/dialogue";
 import { questBranchQuery } from "@/game/ecs/world";
 import {
@@ -17,6 +23,7 @@ import {
 } from "@/game/quests/questChainEngine";
 import type { QuestChainState } from "@/game/quests/types";
 import { useGameStore } from "@/game/stores";
+import { QuestCard } from "./QuestCard.tsx";
 import { showToast } from "./Toast.tsx";
 
 // ---------------------------------------------------------------------------
@@ -59,7 +66,7 @@ export interface QuestPanelProps {
 
 /**
  * Map ECS questBranch entities + store chain state to display objects.
- * Pure function — safe to call in tests without React context.
+ * Pure function -- safe to call in tests without React context.
  */
 export function mapQuestBranchToDisplay(
   branches: ReadonlyArray<{ questBranch: QuestBranchComponent }>,
@@ -103,7 +110,7 @@ export function mapQuestBranchToDisplay(
     result.push({
       chainId: qb.questChainId,
       chainName: def?.name ?? qb.questChainId,
-      icon: def?.icon ?? "📜",
+      icon: def?.icon ?? "\u{1F4DC}",
       currentStep,
       totalSteps,
       currentStepIndex: qb.currentStep,
@@ -160,126 +167,6 @@ export function ConnectedQuestPanel({ onDismiss, compact }: ConnectedQuestPanelP
 }
 
 // ---------------------------------------------------------------------------
-// Progress bar
-// ---------------------------------------------------------------------------
-
-function ObjectiveProgress({ objective }: { objective: QuestObjectiveDisplay }) {
-  const pct =
-    objective.target > 0
-      ? Math.min(100, Math.round((objective.current / objective.target) * 100))
-      : 0;
-
-  return (
-    <View style={{ marginBottom: 4 }}>
-      <View className="flex-row items-center justify-between">
-        <Text
-          style={{
-            ...TYPE.caption,
-            flex: 1,
-            color: objective.completed ? ACCENT.sap : LIGHT.textSecondary,
-            textDecorationLine: objective.completed ? "line-through" : "none",
-          }}
-          numberOfLines={1}
-        >
-          {objective.description}
-        </Text>
-        <Text
-          style={{
-            ...TYPE.caption,
-            fontWeight: "700",
-            marginLeft: 8,
-            color: LIGHT.textPrimary,
-          }}
-        >
-          {objective.current}/{objective.target}
-        </Text>
-      </View>
-
-      {/* Progress bar */}
-      <View
-        className="mt-0.5 h-1.5 overflow-hidden rounded-full"
-        style={{ backgroundColor: "rgba(102,187,106,0.2)" }}
-      >
-        <View
-          className="h-full rounded-full"
-          style={{
-            width: `${pct}%`,
-            backgroundColor: objective.completed ? ACCENT.sap : ACCENT.amber,
-          }}
-        />
-      </View>
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Single quest card
-// ---------------------------------------------------------------------------
-
-function QuestCard({
-  quest,
-  onClaimReward,
-}: {
-  quest: ActiveQuestDisplay;
-  onClaimReward?: (chainId: string) => void;
-}) {
-  const step = quest.currentStep;
-  const canClaim = step?.completed && !step.rewardClaimed;
-
-  return (
-    <View
-      className="mb-2 rounded-xl px-3 py-2"
-      style={{
-        backgroundColor: "rgba(255,255,255,0.7)",
-        borderWidth: 1,
-        borderColor: LIGHT.borderBranch,
-      }}
-    >
-      {/* Header */}
-      <View className="mb-1 flex-row items-center">
-        <Text style={{ marginRight: 6, fontSize: 14 }}>{quest.icon}</Text>
-        <Text
-          style={{ ...TYPE.caption, flex: 1, fontWeight: "700", color: LIGHT.textPrimary }}
-          numberOfLines={1}
-        >
-          {quest.chainName}
-        </Text>
-        <Text style={{ ...TYPE.caption, color: LIGHT.textMuted }}>
-          {quest.currentStepIndex + 1}/{quest.totalSteps}
-        </Text>
-      </View>
-
-      {/* Current step */}
-      {step ? (
-        <>
-          <Text style={{ ...TYPE.caption, fontWeight: "500", marginBottom: 4, color: ACCENT.sap }}>
-            {step.name}
-          </Text>
-
-          {step.objectives.map((obj, i) => (
-            <ObjectiveProgress key={`${quest.chainId}-obj-${i}`} objective={obj} />
-          ))}
-
-          {/* Claim button */}
-          {canClaim && onClaimReward ? (
-            <Pressable
-              className="mt-1.5 min-h-[44px] items-center justify-center rounded-lg"
-              style={{ backgroundColor: ACCENT.amber }}
-              onPress={() => onClaimReward(quest.chainId)}
-              accessibilityLabel={`Claim reward for ${step.name}`}
-            >
-              <Text style={{ ...TYPE.caption, fontWeight: "700", color: LIGHT.textPrimary }}>
-                Claim Reward
-              </Text>
-            </Pressable>
-          ) : null}
-        </>
-      ) : null}
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Panel
 // ---------------------------------------------------------------------------
 
@@ -287,7 +174,6 @@ export function QuestPanel({ quests, onClaimReward, onDismiss, compact = false }
   if (quests.length === 0) return null;
 
   if (compact) {
-    // Compact mode: show only first quest, minimal
     const first = quests[0];
     const step = first.currentStep;
     if (!step) return null;
@@ -295,15 +181,30 @@ export function QuestPanel({ quests, onClaimReward, onDismiss, compact = false }
     const firstIncomplete = step.objectives.find((o) => !o.completed);
 
     return (
-      <View className="rounded-lg px-2 py-1" style={HUD_PANEL}>
+      <View
+        className="rounded-lg px-3 py-2"
+        style={{
+          backgroundColor: "rgba(15,45,20,0.85)",
+          borderWidth: 1,
+          borderColor: "rgba(255,213,79,0.2)",
+        }}
+      >
         <Text
-          style={{ ...TYPE.caption, fontWeight: "700", color: LIGHT.textPrimary }}
+          style={{
+            ...TYPE.caption,
+            fontWeight: "700",
+            fontFamily: FONTS.heading,
+            color: ACCENT.gold,
+          }}
           numberOfLines={1}
         >
           {first.icon} {step.name}
         </Text>
         {firstIncomplete && (
-          <Text style={{ ...TYPE.caption, color: LIGHT.textSecondary }} numberOfLines={1}>
+          <Text
+            style={{ ...TYPE.caption, fontFamily: FONTS.data, color: "rgba(232,245,233,0.6)" }}
+            numberOfLines={1}
+          >
             {firstIncomplete.description}: {firstIncomplete.current}/{firstIncomplete.target}
           </Text>
         )}
@@ -312,22 +213,41 @@ export function QuestPanel({ quests, onClaimReward, onDismiss, compact = false }
   }
 
   return (
-    <View className="max-h-[300px] w-[220px]">
+    <View
+      className="max-h-[320px] w-[220px] overflow-hidden rounded-xl"
+      style={{
+        backgroundColor: "rgba(15,45,20,0.9)",
+        borderWidth: 1,
+        borderColor: "rgba(255,213,79,0.2)",
+      }}
+    >
       {/* Header */}
-      <View className="mb-1 flex-row items-center justify-between">
-        <Text style={{ ...TYPE.label, fontWeight: "700", color: LIGHT.textPrimary }}>Quests</Text>
+      <View
+        className="flex-row items-center justify-between px-3 py-2"
+        style={{ borderBottomWidth: 1, borderBottomColor: "rgba(255,213,79,0.15)" }}
+      >
+        <Text
+          style={{
+            ...TYPE.label,
+            fontWeight: "700",
+            fontFamily: FONTS.heading,
+            color: ACCENT.gold,
+          }}
+        >
+          Quests
+        </Text>
         {onDismiss ? (
           <Pressable
             className="min-h-[28px] min-w-[28px] items-center justify-center"
             onPress={onDismiss}
             accessibilityLabel="Close quest panel"
           >
-            <Text style={{ ...TYPE.label, fontWeight: "700", color: LIGHT.textPrimary }}>X</Text>
+            <Text style={{ ...TYPE.label, fontWeight: "700", color: ACCENT.gold }}>X</Text>
           </Pressable>
         ) : null}
       </View>
 
-      <ScrollView>
+      <ScrollView className="px-2 py-2">
         {quests.map((quest) => (
           <QuestCard key={quest.chainId} quest={quest} onClaimReward={onClaimReward} />
         ))}

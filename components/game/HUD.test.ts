@@ -11,6 +11,12 @@ jest.mock("react-native-safe-area-context", () => ({
   SafeAreaView: "SafeAreaView",
 }));
 
+jest.mock("react-native-svg", () => ({
+  __esModule: true,
+  default: "Svg",
+  Path: "Path",
+}));
+
 jest.mock("./QuestPanel", () => ({ ConnectedQuestPanel: () => null }));
 
 jest.mock("lucide-react-native", () => ({
@@ -54,6 +60,14 @@ jest.mock("@/game/systems/time", () => ({
 }));
 
 jest.mock("./HeartsDisplay", () => ({ HeartsDisplay: () => null }));
+jest.mock("./hudWidgets", () => ({
+  Crosshair: () => null,
+  StaminaRing: () => null,
+  Compass: () => null,
+  HungerIndicator: () => null,
+  BodyTempIndicator: () => null,
+  TimeChip: () => null,
+}));
 jest.mock("./ResourceBar", () => ({ ResourceBar: () => null }));
 jest.mock("./XPBar", () => ({ XPBar: () => null }));
 jest.mock("./StaminaGauge", () => ({ StaminaGauge: () => null }));
@@ -124,7 +138,9 @@ describe("findNearestUndiscoveredSpirit (Spec §24)", () => {
 
   it("returns the position of the only undiscovered spirit", () => {
     const spirits = [makeSpirit(10, 20, false)];
-    expect(findNearestUndiscoveredSpirit(spirits, 0, 0)).toEqual({ x: 10, z: 20 });
+    const result = findNearestUndiscoveredSpirit(spirits, 0, 0);
+    expect(result).toMatchObject({ x: 10, z: 20 });
+    expect(result?.distance).toBeGreaterThan(0);
   });
 
   it("skips discovered spirits regardless of proximity", () => {
@@ -132,7 +148,7 @@ describe("findNearestUndiscoveredSpirit (Spec §24)", () => {
       makeSpirit(1, 0, true), // discovered and closest — must be ignored
       makeSpirit(50, 0, false), // undiscovered — expected result
     ];
-    expect(findNearestUndiscoveredSpirit(spirits, 0, 0)).toEqual({ x: 50, z: 0 });
+    expect(findNearestUndiscoveredSpirit(spirits, 0, 0)).toMatchObject({ x: 50, z: 0 });
   });
 
   it("returns the nearest when multiple undiscovered spirits exist", () => {
@@ -141,7 +157,7 @@ describe("findNearestUndiscoveredSpirit (Spec §24)", () => {
       makeSpirit(10, 0, false), // closest
       makeSpirit(50, 0, false),
     ];
-    expect(findNearestUndiscoveredSpirit(spirits, 0, 0)).toEqual({ x: 10, z: 0 });
+    expect(findNearestUndiscoveredSpirit(spirits, 0, 0)).toMatchObject({ x: 10, z: 0 });
   });
 
   it("accounts for player offset when computing distance", () => {
@@ -150,7 +166,9 @@ describe("findNearestUndiscoveredSpirit (Spec §24)", () => {
       makeSpirit(25, 0, false), // dist from (10, 0) = 15
     ];
     // Player at (10, 0) → spirit at x=15 is nearest (dist=5)
-    expect(findNearestUndiscoveredSpirit(spirits, 10, 0)).toEqual({ x: 15, z: 0 });
+    const result = findNearestUndiscoveredSpirit(spirits, 10, 0);
+    expect(result).toMatchObject({ x: 15, z: 0 });
+    expect(result?.distance).toBe(5);
   });
 });
 

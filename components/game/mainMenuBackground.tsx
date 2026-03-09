@@ -1,13 +1,14 @@
 /**
- * Background decoration components for MainMenu (Spec §26).
+ * Background decoration components for MainMenu (Spec S26).
  *
  * Extracted from MainMenu.tsx to keep that file under 300 lines.
- * Contains: floating leaf particles, tree silhouettes, useReducedMotion hook.
+ * Contains: floating leaf particles (varied), tree silhouettes, useReducedMotion hook.
  */
 
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Dimensions, Animated as RNAnimated, View } from "react-native";
 import Svg, { Ellipse, Rect } from "react-native-svg";
+import type { VariedLeafConfig } from "./mainMenuAnimations.ts";
 
 // ---------------------------------------------------------------------------
 // Colors (match MainMenu.tsx C constants)
@@ -15,10 +16,9 @@ import Svg, { Ellipse, Rect } from "react-native-svg";
 
 const FOREST_GREEN = "#66BB6A";
 const BARK_BROWN = "#8D6E63";
-const LEAF_LIGHT = "#4CAF50";
 
 // ---------------------------------------------------------------------------
-// Leaf particle types + config
+// Legacy leaf types (kept for backwards compat if needed)
 // ---------------------------------------------------------------------------
 
 export interface LeafConfig {
@@ -40,7 +40,7 @@ export const LEAF_CONFIGS: LeafConfig[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// FloatingLeaf
+// FloatingLeaf (original — kept for any external refs)
 // ---------------------------------------------------------------------------
 
 export function FloatingLeaf({ config }: { config: LeafConfig }) {
@@ -82,12 +82,66 @@ export function FloatingLeaf({ config }: { config: LeafConfig }) {
         left: screenWidth * config.startX,
         top: screenHeight * config.startY,
         fontSize: 14,
-        color: LEAF_LIGHT,
         opacity,
         transform: [{ translateX }, { translateY }, { rotate }],
       }}
     >
       {"\u{1F343}"}
+    </RNAnimated.Text>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// VariedFloatingLeaf — different sizes, speeds, leaf types, slight sway
+// ---------------------------------------------------------------------------
+
+export function VariedFloatingLeaf({ config }: { config: VariedLeafConfig }) {
+  const progress = useRef(new RNAnimated.Value(0)).current;
+  const screenWidth = Dimensions.get("window").width;
+  const screenHeight = Dimensions.get("window").height;
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const animation = RNAnimated.loop(
+        RNAnimated.timing(progress, {
+          toValue: 1,
+          duration: config.duration,
+          useNativeDriver: true,
+        }),
+      );
+      animation.start();
+      return () => animation.stop();
+    }, config.delay);
+
+    return () => clearTimeout(timeout);
+  }, [progress, config.duration, config.delay]);
+
+  const translateX = progress.interpolate({
+    inputRange: [0, 0.25, 0.5, 0.75, 1],
+    outputRange: [0, config.dx * 0.4, config.dx * 0.2, config.dx * 0.8, config.dx],
+  });
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [0, config.dy] });
+  const rotate = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", `${config.rotation}deg`],
+  });
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.08, 0.85, 1],
+    outputRange: [0, 0.55, 0.35, 0],
+  });
+
+  return (
+    <RNAnimated.Text
+      style={{
+        position: "absolute",
+        left: screenWidth * config.startX,
+        top: screenHeight * config.startY,
+        fontSize: config.size,
+        opacity,
+        transform: [{ translateX }, { translateY }, { rotate }],
+      }}
+    >
+      {config.emoji}
     </RNAnimated.Text>
   );
 }

@@ -1,17 +1,26 @@
 /**
  * MainMenu -- entry screen for Grovekeeper.
- * Spec §26. Wind Waker bright aesthetic. Mobile-first, portrait-primary.
+ * Spec S26. Wind Waker bright aesthetic. Mobile-first, portrait-primary.
  *
- * Renders as a semi-transparent overlay on the 3D world (§0.2 Zelda-style immersion).
- * Brand: docs/plans/2026-03-07-ux-brand-design.md §8
+ * Renders as a semi-transparent overlay on the 3D world (S0.2 Zelda-style immersion).
+ * Brand: docs/plans/2026-03-07-ux-brand-design.md S8
  * Tokens: components/ui/tokens.ts
  */
-import { useMemo } from "react";
-import { View } from "react-native";
+import { useEffect, useMemo, useRef } from "react";
+import { Animated as RNAnimated, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { ACCENT, FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
-import { FloatingLeaf, LEAF_CONFIGS, useReducedMotion } from "./mainMenuBackground.tsx";
+import {
+  animateButtonPressIn,
+  animateButtonPressOut,
+  createButtonScale,
+  createGlowPulse,
+  generateVariedLeaves,
+  interpolateGlowOpacity,
+  interpolateGlowRadius,
+} from "./mainMenuAnimations.ts";
+import { useReducedMotion, VariedFloatingLeaf } from "./mainMenuBackground.tsx";
 import { hasSave, primaryButtonLabel, treeSummaryText } from "./mainMenuLogic.ts";
 
 // ---------------------------------------------------------------------------
@@ -26,27 +35,72 @@ export interface MainMenuProps {
 }
 
 // ---------------------------------------------------------------------------
-// Main menu component — Wind Waker bright overlay
+// Animated button wrapper — scale spring on press
+// ---------------------------------------------------------------------------
+
+function AnimatedButton({
+  onPress,
+  testID,
+  style,
+  children,
+}: {
+  onPress: () => void;
+  testID: string;
+  style: Record<string, unknown>;
+  children: React.ReactNode;
+}) {
+  const { scale } = useMemo(() => createButtonScale(), []);
+
+  return (
+    <RNAnimated.View style={{ transform: [{ scale }] }}>
+      <Button
+        className="min-h-[48px] w-full overflow-hidden rounded-xl"
+        onPress={onPress}
+        onPressIn={() => animateButtonPressIn(scale)}
+        onPressOut={() => animateButtonPressOut(scale)}
+        testID={testID}
+        style={style}
+      >
+        {children}
+      </Button>
+    </RNAnimated.View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main menu component -- Wind Waker bright overlay
 // ---------------------------------------------------------------------------
 
 export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: MainMenuProps) {
   const saveExists = hasSave(treesPlanted);
   const reduceMotion = useReducedMotion();
-  const leaves = useMemo(() => LEAF_CONFIGS, []);
+  const leaves = useMemo(() => generateVariedLeaves(8), []);
+
+  // Logo glow pulse
+  const glowRefs = useMemo(() => createGlowPulse(reduceMotion), [reduceMotion]);
+  useEffect(() => {
+    if (reduceMotion) return;
+    glowRefs.loop.start();
+    return () => glowRefs.loop.stop();
+  }, [glowRefs, reduceMotion]);
+
+  const glowRadius = interpolateGlowRadius(glowRefs.anim);
+  const glowOpacity = interpolateGlowOpacity(glowRefs.anim);
 
   return (
     <View
       className="flex-1 items-center justify-center px-4 py-6"
       style={{ backgroundColor: "rgba(232,245,233,0.75)" }}
     >
-      {/* Background: floating leaf particles */}
+      {/* Background: varied floating leaf particles */}
       <View className="absolute inset-0 overflow-hidden" pointerEvents="none">
-        {!reduceMotion && leaves.map((leaf, i) => <FloatingLeaf key={`leaf-${i}`} config={leaf} />)}
+        {!reduceMotion &&
+          leaves.map((leaf, i) => <VariedFloatingLeaf key={`leaf-${i}`} config={leaf} />)}
       </View>
 
-      {/* Logo: GROVEKEEPER wordmark */}
+      {/* Logo: GROVEKEEPER wordmark with animated golden glow */}
       <View className="z-10 mb-2 items-center">
-        <Text
+        <RNAnimated.Text
           style={{
             ...TYPE.hero,
             fontFamily: FONTS.display,
@@ -54,11 +108,12 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
             letterSpacing: 4,
             textShadowColor: ACCENT.gold,
             textShadowOffset: { width: 0, height: 0 },
-            textShadowRadius: 12,
+            textShadowRadius: glowRadius,
+            opacity: glowOpacity,
           }}
         >
           GROVEKEEPER
-        </Text>
+        </RNAnimated.Text>
         <Text
           style={{
             ...TYPE.body,
@@ -72,7 +127,7 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
         </Text>
       </View>
 
-      {/* Save preview card (if save exists) */}
+      {/* Save preview card */}
       {saveExists && (
         <View
           className="z-10 mb-4 w-full"
@@ -85,10 +140,11 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
             borderRadius: 8,
           }}
         >
-          <Text style={{ ...TYPE.label, color: LIGHT.textMuted, marginBottom: 4 }}>
-            SAVED GROVE
-          </Text>
-          <Text style={{ ...TYPE.body, color: LIGHT.textPrimary }}>
+          <View className="flex-row items-center gap-2">
+            <Text style={{ fontSize: 18 }}>{"\u{1F333}"}</Text>
+            <Text style={{ ...TYPE.label, color: LIGHT.textMuted }}>SAVED GROVE</Text>
+          </View>
+          <Text style={{ ...TYPE.body, color: LIGHT.textPrimary, marginTop: 4, fontWeight: "600" }}>
             {treeSummaryText(treesPlanted)}
           </Text>
         </View>
@@ -96,10 +152,9 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
 
       {/* Buttons */}
       <View className="z-10 w-full gap-3" style={{ maxWidth: 340 }}>
-        {/* Continue — primary green */}
+        {/* Continue -- primary green with press animation */}
         {saveExists && (
-          <Button
-            className="min-h-[48px] w-full overflow-hidden rounded-xl"
+          <AnimatedButton
             onPress={onContinue}
             testID="btn-continue-grove"
             style={{
@@ -112,13 +167,13 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
             }}
           >
             <Text style={{ ...TYPE.heading, color: "#FAFAFA" }}>Continue Grove</Text>
-          </Button>
+          </AnimatedButton>
         )}
 
         {/* New Grove */}
-        <Button
-          className="min-h-[48px] w-full rounded-xl"
-          variant={saveExists ? "outline" : "default"}
+        <AnimatedButton
+          onPress={onNewGrove}
+          testID="btn-new-grove"
           style={
             saveExists
               ? {
@@ -135,8 +190,6 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
                   elevation: 4,
                 }
           }
-          onPress={onNewGrove}
-          testID="btn-new-grove"
         >
           <Text
             style={{
@@ -146,9 +199,9 @@ export function MainMenu({ treesPlanted, onContinue, onNewGrove, onSettings }: M
           >
             {saveExists ? "New Grove" : primaryButtonLabel(treesPlanted)}
           </Text>
-        </Button>
+        </AnimatedButton>
 
-        {/* Settings — ghost button */}
+        {/* Settings -- ghost button */}
         <Button
           className="min-h-[44px] w-full rounded-xl"
           variant="ghost"

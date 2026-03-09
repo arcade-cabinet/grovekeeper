@@ -10,14 +10,15 @@
  * Host component drives `phase` from 0 (idle) to 4 (done).
  * Component calls `onComplete` once phase 4 is reached.
  *
- * Bright whimsical Zelda aesthetic -- soft greens, warm cream.
+ * Visual: animated seed-to-tree sprouting, vine progress bar, rotating tips.
  */
 import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Animated as RNAnimated, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ACCENT, LIGHT, TYPE } from "@/components/ui/tokens";
-import { Logo } from "./Logo.tsx";
+import { FONTS, LIGHT, TYPE } from "@/components/ui/tokens";
+import { SproutAnimation, VineProgressBar } from "./LoadingScreenVisuals.tsx";
+import { animateTaglineIn, createTaglineFade } from "./loadingScreenAnimations.ts";
 import {
   getPhaseLabel,
   getProgressPercent,
@@ -31,9 +32,7 @@ import {
 // ---------------------------------------------------------------------------
 
 export interface LoadingScreenProps {
-  /** Current loading phase (0-4). Host drives this as async steps complete. */
   phase: LoadingPhase;
-  /** Called once when phase transitions to 4 (loading complete). */
   onComplete?: () => void;
 }
 
@@ -54,92 +53,6 @@ function useReducedMotion(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Animated logo (gentle breathing pulse)
-// ---------------------------------------------------------------------------
-
-function AnimatedLogo({ reduceMotion }: { reduceMotion: boolean }) {
-  const scale = useRef(new RNAnimated.Value(1)).current;
-
-  useEffect(() => {
-    if (reduceMotion) return;
-
-    const pulse = RNAnimated.loop(
-      RNAnimated.sequence([
-        RNAnimated.timing(scale, {
-          toValue: 1.06,
-          duration: 1800,
-          useNativeDriver: true,
-        }),
-        RNAnimated.timing(scale, {
-          toValue: 1,
-          duration: 1800,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    pulse.start();
-    return () => pulse.stop();
-  }, [scale, reduceMotion]);
-
-  return (
-    <RNAnimated.View style={{ transform: [{ scale }] }}>
-      <Logo size={140} />
-    </RNAnimated.View>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Progress bar
-// ---------------------------------------------------------------------------
-
-function ProgressBar({ percent, reduceMotion }: { percent: number; reduceMotion: boolean }) {
-  const width = useRef(new RNAnimated.Value(0)).current;
-
-  useEffect(() => {
-    if (reduceMotion) {
-      width.setValue(percent);
-      return;
-    }
-    RNAnimated.timing(width, {
-      toValue: percent,
-      duration: 400,
-      useNativeDriver: false,
-    }).start();
-  }, [percent, width, reduceMotion]);
-
-  const animatedWidth = width.interpolate({
-    inputRange: [0, 100],
-    outputRange: ["0%", "100%"],
-    extrapolate: "clamp",
-  });
-
-  return (
-    <View
-      style={{
-        width: "100%",
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: "rgba(102,187,106,0.2)",
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: LIGHT.borderBranch,
-      }}
-      accessibilityRole="progressbar"
-      accessibilityValue={{ min: 0, max: 100, now: percent }}
-    >
-      <RNAnimated.View
-        style={{
-          height: "100%",
-          width: animatedWidth,
-          borderRadius: 5,
-          backgroundColor: ACCENT.greenBright,
-        }}
-      />
-    </View>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Tip rotator
 // ---------------------------------------------------------------------------
 
@@ -155,7 +68,6 @@ function TipRotator({ reduceMotion }: { reduceMotion: boolean }) {
       return;
     }
 
-    // Fade out -> update -> fade in
     RNAnimated.timing(opacity, {
       toValue: 0,
       duration: 300,
@@ -203,6 +115,12 @@ export function LoadingScreen({ phase, onComplete }: LoadingScreenProps) {
   const percent = getProgressPercent(phase);
   const label = getPhaseLabel(phase);
 
+  // Tagline fade-in
+  const taglineFade = useMemo(() => createTaglineFade(), []);
+  useEffect(() => {
+    animateTaglineIn(taglineFade, reduceMotion);
+  }, [taglineFade, reduceMotion]);
+
   useEffect(() => {
     if (phase === 4 && !completedRef.current) {
       completedRef.current = true;
@@ -214,17 +132,21 @@ export function LoadingScreen({ phase, onComplete }: LoadingScreenProps) {
     <LinearGradient
       colors={[LIGHT.bgDeep, LIGHT.bgCanopy, LIGHT.bgWarm]}
       locations={[0, 0.5, 1]}
-      style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 32,
+      }}
     >
-      {/* Animated logo */}
-      <AnimatedLogo reduceMotion={reduceMotion} />
+      {/* Animated seed-to-tree sprout */}
+      <SproutAnimation phase={phase} reduceMotion={reduceMotion} />
 
       {/* Spacer */}
-      <View style={{ height: 32 }} />
+      <View style={{ height: 24 }} />
 
       {/* Progress area */}
-      <View style={{ width: "100%", maxWidth: 320, gap: 12, alignItems: "center" }}>
-        {/* Phase label */}
+      <View style={{ width: "100%", maxWidth: 320, gap: 10, alignItems: "center" }}>
         <Text
           style={{
             ...TYPE.body,
@@ -236,27 +158,34 @@ export function LoadingScreen({ phase, onComplete }: LoadingScreenProps) {
           {label}
         </Text>
 
-        {/* Progress bar */}
-        <ProgressBar percent={percent} reduceMotion={reduceMotion} />
+        <VineProgressBar percent={percent} reduceMotion={reduceMotion} />
 
-        {/* Percent readout for accessibility */}
-        <Text
-          style={{
-            ...TYPE.caption,
-            color: LIGHT.textMuted,
-          }}
-        >
-          {Math.round(percent)}%
-        </Text>
+        <Text style={{ ...TYPE.caption, color: LIGHT.textMuted }}>{Math.round(percent)}%</Text>
       </View>
 
       {/* Spacer */}
-      <View style={{ height: 40 }} />
+      <View style={{ height: 32 }} />
 
       {/* Rotating tips */}
       <View style={{ width: "100%", maxWidth: 280 }}>
         <TipRotator reduceMotion={reduceMotion} />
       </View>
+
+      {/* Tagline with fade-in */}
+      <RNAnimated.View style={{ opacity: taglineFade, marginTop: 24 }}>
+        <Text
+          style={{
+            ...TYPE.body,
+            fontFamily: FONTS.display,
+            color: LIGHT.textPrimary,
+            textAlign: "center",
+            letterSpacing: 1,
+            fontSize: 13,
+          }}
+        >
+          Every forest begins with a single seed.
+        </Text>
+      </RNAnimated.View>
     </LinearGradient>
   );
 }
