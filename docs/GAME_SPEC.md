@@ -2709,3 +2709,130 @@ Files:
 - `game/world/villageLayout/lots.ts` — `buildLots()`, `pickBlueprintId()`, blueprint pool
 - `game/world/villageLayout/furniture.ts` — `lampPostsAlongStreet()`, `wellAtIntersection()`, `buildingFrontFurniture()`
 - `game/world/villageLayout.test.ts` — 37 tests covering determinism, grid dims, buildings, lots, furniture, cross-street probability, height sampling
+
+---
+
+## 47. PBR Material Cache
+
+Loads, caches, and maps `MeshStandardMaterial` instances backed by physically-based texture
+sets (Color/Normal/Roughness/AO maps). Provides biome, species, and structure surface lookups
+so every procedural mesh can be resolved to a fully-textured material without any inline
+constants or dynamic `require()` calls (Metro does not support dynamic require).
+
+### 47.1 Texture Registry
+
+Sixteen static texture sets live under `assets/textures/`. Each set contains four 2K JPEG maps:
+
+| Category | Key | Notes |
+|----------|-----|-------|
+| terrain | `terrain/grass_green` | Default ground surface |
+| terrain | `terrain/forest_floor` | Forest/meadow biomes |
+| terrain | `terrain/dirt_path` | Paths and roads |
+| terrain | `terrain/cobblestone` | Village plazas |
+| terrain | `terrain/snow_ground` | Winter overlay |
+| terrain | `terrain/sand_beach` | Coastal/beach biomes |
+| bark | `bark/oak` | Default bark; oak, elm, ash, maple, redwood, baobab, ironbark, golden-apple, worldtree |
+| bark | `bark/birch` | Birch, silver-birch, ghost-birch |
+| bark | `bark/pine` | Pine, cedar, spruce, elder-pine |
+| bark | `bark/sakura` | Cherry-blossom, flame-maple, mystic-fern |
+| building | `building/stone_wall` | Stone and masonry |
+| building | `building/wood_planks` | Wooden structures |
+| building | `building/plaster_white` | Plaster/whitewash walls |
+| building | `building/thatch_roof` | Roof surfaces |
+| foliage | `foliage/leaves_green` | Spring/Summer deciduous canopy |
+| foliage | `foliage/leaves_autumn` | Autumn deciduous canopy |
+
+Each key maps to four Metro-static `require()` calls (color, normal, roughness, ao).
+
+### 47.2 Data Model
+
+```typescript
+// Texture entry stored in the compile-time registry
+interface TextureEntry {
+  color: number;     // Metro asset number from require()
+  normal: number;
+  roughness: number;
+  ao: number;
+}
+
+// Material loading options (all optional, sane defaults)
+interface PBRMaterialOptions {
+  repeatX?: number;       // UV repeat (default 4)
+  repeatY?: number;       // UV repeat (default 4)
+}
+```
+
+### 47.3 Cache Behaviour
+
+1. `getPBRMaterial(key, options?)` — returns cached `MeshStandardMaterial` if already loaded.
+2. On first call: uses `expo-asset` `Asset.fromModule(id).localUri` (or falls back to `.uri`)
+   to resolve the Metro asset number to a URI, then loads all four textures via `THREE.TextureLoader`.
+3. Color map uses `SRGBColorSpace`; normal, roughness, ao maps use `LinearSRGBColorSpace`.
+4. All maps use `RepeatWrapping` with configurable UV repeat.
+5. Unknown keys throw `Error("PBRMaterialCache: unknown key '<key>'")` — no silent fallbacks.
+6. `disposePBRMaterials()` disposes all cached textures and materials then clears the cache.
+   Called on scene teardown to prevent memory leaks.
+
+### 47.4 Mapping Functions (pure, testable without Three.js)
+
+**Terrain — `game/materials/terrainMaterials.ts`**
+
+| Biome | Key |
+|-------|-----|
+| `forest` | `terrain/forest_floor` |
+| `village` | `terrain/cobblestone` |
+| `path` | `terrain/dirt_path` |
+| `beach` | `terrain/sand_beach` |
+| `tundra` | `terrain/snow_ground` |
+| *(any other)* | `terrain/grass_green` |
+
+`getSeasonOverlay(season)` returns `"terrain/snow_ground"` for `"winter"`, `null` otherwise.
+
+**Tree bark — `game/materials/treeMaterials.ts`**
+
+| Bark group | Species IDs |
+|-----------|-------------|
+| `bark/birch` | `birch`, `silver-birch`, `ghost-birch` |
+| `bark/pine` | `elder-pine`, `cedar` |
+| `bark/sakura` | `cherry-blossom`, `flame-maple`, `mystic-fern` |
+| `bark/oak` | all others (default) |
+
+`getFoliageMaterialKey(species, season)` — conifers (`elder-pine`, `cedar`) are evergreen;
+returns `null` for non-conifers in winter (bare branches), `"foliage/leaves_autumn"` for autumn,
+`"foliage/leaves_green"` otherwise.
+
+**Building — `game/materials/buildingMaterials.ts`**
+
+| Surface | Key |
+|---------|-----|
+| `wall` | `building/stone_wall` |
+| `wood` | `building/wood_planks` |
+| `plaster` | `building/plaster_white` |
+| `roof` | `building/thatch_roof` |
+| `floor` | `building/stone_wall` |
+| *(any other)* | `building/stone_wall` |
+
+`getBuildingMaterialKey(surface)` → string. No unknown-key throwing here — surfaces are
+interior strings so default is safe.
+
+### 47.5 Integration Points
+
+- `components/scene/Ground.tsx` — calls `getBiomeMaterialKey` + `getPBRMaterial`
+- `components/entities/TreeInstances.tsx` — calls `getBarkMaterialKey` + `getFoliageMaterialKey`
+- `components/entities/StructureInstances.tsx` — calls `getBuildingMaterialKey`
+- Scene teardown (`app/game/index.tsx`) — calls `disposePBRMaterials()`
+
+### 47.6 Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `game/materials/PBRMaterialCache.ts` | Singleton cache: `getPBRMaterial`, `disposePBRMaterials` |
+| `game/materials/terrainMaterials.ts` | `getBiomeMaterialKey`, `getSeasonOverlay` |
+| `game/materials/treeMaterials.ts` | `getBarkMaterialKey`, `getFoliageMaterialKey` |
+| `game/materials/buildingMaterials.ts` | `getBuildingMaterialKey` |
+| `game/materials/index.ts` | Barrel re-export |
+| `game/materials/terrainMaterials.test.ts` | Mapping tests — all biomes, season overlay |
+| `game/materials/treeMaterials.test.ts` | Mapping tests — all 18 species IDs + seasons |
+| `game/materials/buildingMaterials.test.ts` | Mapping tests — all surfaces + unknown default |
+
+Status: **COMPLETE** — spec written 2026-03-08; implementation + tests added.
