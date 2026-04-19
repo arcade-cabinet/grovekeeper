@@ -1,4 +1,4 @@
-import type { NpcFunction } from "@/game/npcs/types";
+import type { NpcFunction } from "@/npcs/types";
 import type { SerializedTree } from "@/stores/gameStore";
 import { getStageScale } from "@/systems/growth";
 import { hashString } from "@/shared/utils/seedRNG";

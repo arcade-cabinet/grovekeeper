@@ -9,16 +9,16 @@ import {
   initializeEventState,
   resolveEncounter as resolveEncounterPure,
   updateEvents,
-} from "@/game/events/eventScheduler";
-import type { EventState } from "@/game/events/types";
+} from "@/events/eventScheduler";
+import type { EventState } from "@/events/types";
 import {
   advanceObjectives,
   claimStepReward,
   computeAvailableChains,
   initializeChainState,
   startChain,
-} from "@/game/quests/questChainEngine";
-import type { QuestChainState } from "@/game/quests/types";
+} from "@/quests/questChainEngine";
+import type { QuestChainState } from "@/quests/types";
 import {
   canAffordExpansion,
   getNextExpansionTier,
@@ -58,7 +58,7 @@ import {
   purchaseOffer,
   updateMerchant,
 } from "@/systems/travelingMerchant";
-import { showToast } from "@/game/ui/Toast";
+import { showToast } from "@/ui/game/Toast";
 
 export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";
 

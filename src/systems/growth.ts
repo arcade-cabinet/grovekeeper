@@ -8,7 +8,7 @@ import {
 import { getActiveDifficulty } from "@/config/difficulty";
 import { getSpeciesById } from "@/config/trees";
 import { gridCellsQuery, structuresQuery, treesQuery } from "@/world";
-import { getGrowthMultiplier as getStructureGrowthMult } from "@/game/structures/StructureManager";
+import { getGrowthMultiplier as getStructureGrowthMult } from "@/structures/StructureManager";
 
 /**
  * Calculate the visual scale for a tree at a given stage + progress.
