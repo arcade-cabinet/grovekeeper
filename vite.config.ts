@@ -1,14 +1,14 @@
+import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import { viteStaticCopy } from "vite-plugin-static-copy";
-import path from "path";
 import { defineConfig } from "vite";
+import solid from "vite-plugin-solid";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 export default defineConfig({
   base: process.env.GITHUB_ACTIONS ? "/grovekeeper/" : "/",
   cacheDir: ".vite",
   plugins: [
-    react(),
+    solid(),
     tailwindcss(),
     viteStaticCopy({
       targets: [
@@ -29,7 +29,6 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes("@babylonjs/")) {
-            // Keep shader/material/debug chunks lazy-loaded
             if (
               id.includes("/Shaders/") ||
               id.includes("/ShadersInclude/") ||
@@ -46,6 +45,7 @@ export default defineConfig({
             return "babylon";
           }
           if (id.includes("node_modules/sql.js")) return "sqljs";
+          if (id.includes("node_modules/tone")) return "tone";
         },
       },
     },
