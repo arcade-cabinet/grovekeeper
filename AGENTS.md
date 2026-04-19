@@ -1,3 +1,9 @@
+---
+title: Grovekeeper — Agent Operating Protocols
+updated: 2026-04-19
+status: current
+---
+
 # AGENTS.md -- Grovekeeper Multi-Agent Orchestration
 
 **Purpose:** Guide any AI agent (Claude Code, Cursor, Cline, Windsurf, or custom) to effectively contribute to Grovekeeper. This document defines agent roles, coordination protocols, and the project memory bank that survives between sessions.

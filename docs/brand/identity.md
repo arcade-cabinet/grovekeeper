@@ -1,3 +1,10 @@
+---
+title: Brand Identity
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Brand Identity
 
 ## Tagline

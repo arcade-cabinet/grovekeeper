@@ -1,3 +1,9 @@
+---
+title: Grovekeeper — Claude Entry Point
+updated: 2026-04-19
+status: current
+---
+
 # CLAUDE.md -- Grovekeeper
 
 See `docs/` for complete game design, architecture, and brand documentation.

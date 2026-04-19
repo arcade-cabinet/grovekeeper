@@ -1,3 +1,10 @@
+---
+title: Phase A: Foundation Alignment
+updated: 2026-04-19
+status: current
+domain: context
+---
+
 # Phase A: Foundation Alignment — Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

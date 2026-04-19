@@ -1,3 +1,10 @@
+---
+title: Core Game Loop
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Core Game Loop
 
 Grovekeeper is a cozy 2.5D isometric tree-planting simulation with idle tending mechanics. The core loop follows five repeating phases:

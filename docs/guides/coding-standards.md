@@ -1,3 +1,10 @@
+---
+title: Coding Standards
+updated: 2026-04-19
+status: current
+domain: technical
+---
+
 # Coding Standards
 
 This document defines the coding conventions enforced across the Grovekeeper codebase. Consistency is maintained through Biome 2.3 for automated linting and formatting, TypeScript for type safety, and Vitest for testing.

@@ -1,3 +1,10 @@
+---
+title: Grid System
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Grid System
 
 The grove is a square grid of plantable tiles viewed from a locked orthographic diorama camera angle. The grid starts at 12x12 and expands through five tiers (0-4) as the player levels up.

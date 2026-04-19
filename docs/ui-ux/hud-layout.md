@@ -1,3 +1,10 @@
+---
+title: HUD Layout
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # HUD Layout
 
 The HUD (Heads-Up Display) overlays the BabylonJS canvas using absolute and

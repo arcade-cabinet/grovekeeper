@@ -1,3 +1,10 @@
+---
+title: State Management
+updated: 2026-04-19
+status: current
+domain: technical
+---
+
 # State Management
 
 Grovekeeper splits state across two systems: **Miniplex ECS** for per-frame runtime data and **Zustand** for persistent player data. This document covers the Zustand store in detail.

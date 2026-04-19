@@ -1,3 +1,10 @@
+---
+title: Contributing
+updated: 2026-04-19
+status: current
+domain: technical
+---
+
 # Contributing
 
 This guide covers how to contribute to Grovekeeper, including agent roles for AI-assisted development, parallel work boundaries, and the memory bank protocol that preserves context between sessions.

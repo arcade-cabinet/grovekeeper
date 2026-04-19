@@ -1,3 +1,10 @@
+---
+title: Controls
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Controls
 
 Grovekeeper is mobile-first. The virtual joystick is the primary input method;

@@ -1,3 +1,10 @@
+---
+title: Tools
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Tools
 
 The player has access to 8 tools, unlocked progressively as they level up. Tools are the primary means of interacting with the grid and its trees.

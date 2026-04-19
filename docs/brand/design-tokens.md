@@ -1,3 +1,10 @@
+---
+title: Design Tokens
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Design Tokens
 
 All CSS custom properties are defined in `src/index.css` under the `:root`

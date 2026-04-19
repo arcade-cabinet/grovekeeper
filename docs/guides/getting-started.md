@@ -1,3 +1,10 @@
+---
+title: Getting Started
+updated: 2026-04-19
+status: current
+domain: technical
+---
+
 # Getting Started
 
 This guide covers how to set up, run, and build the Grovekeeper project locally.

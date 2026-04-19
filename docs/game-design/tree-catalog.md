@@ -1,3 +1,10 @@
+---
+title: Tree Catalog
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Tree Catalog
 
 Grovekeeper has 15 tree species: 12 base species available through normal leveling, and 3 prestige species unlocked via the prestige system.

@@ -1,3 +1,10 @@
+---
+title: ECS Patterns
+updated: 2026-04-19
+status: current
+domain: technical
+---
+
 # ECS Patterns
 
 Grovekeeper uses [Miniplex 2.x](https://github.com/hmans/miniplex) as its Entity-Component-System framework. The ECS manages all runtime game state that changes every frame: entity positions, tree growth progress, grid cell occupancy, and player location.
