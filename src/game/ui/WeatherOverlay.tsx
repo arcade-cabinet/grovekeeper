@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { create } from "zustand";
-import type { WeatherType } from "../systems/weather";
+import type { WeatherType } from "@/systems/weather";
 
 // ---------------------------------------------------------------------------
 // Store — updated from the game loop

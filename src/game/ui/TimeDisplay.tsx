@@ -1,4 +1,4 @@
-import type { GameTime, Season } from "../systems/time";
+import type { GameTime, Season } from "@/systems/time";
 
 interface TimeDisplayProps {
   time: GameTime;

@@ -35,13 +35,13 @@ import {
   advancePathFollow,
   createPathFollow,
   type PathFollowState,
-} from "../systems/pathFollowing";
+} from "@/input/pathFollowing";
 import {
   buildWalkabilityGrid,
   findPath,
   type TileCoord,
-} from "../systems/pathfinding";
-import { BASE_TRADE_RATES, executeTrade } from "../systems/trading";
+} from "@/input/pathfinding";
+import { BASE_TRADE_RATES, executeTrade } from "@/systems/trading";
 
 // ──────────────────────────────────────────────
 // Types

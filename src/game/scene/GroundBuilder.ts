@@ -13,7 +13,7 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import type { Season } from "../systems/time";
+import type { Season } from "@/systems/time";
 import type { ZoneDefinition } from "../world/types";
 
 /** Biome base colors (R, G, B in 0-1 range) — vibrant and distinct. */

@@ -3,8 +3,8 @@ import {
   cancelNpcMovement,
   isNpcMoving,
   startNpcPath,
-} from "../systems/npcMovement";
-import type { WalkabilityGrid } from "../systems/pathfinding";
+} from "@/systems/npcMovement";
+import type { WalkabilityGrid } from "@/input/pathfinding";
 
 // ──────────────────────────────────────────────
 // Types

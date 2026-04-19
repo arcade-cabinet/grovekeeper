@@ -8,22 +8,22 @@
 
 import { farmerQuery, treesQuery } from "@/world";
 import { useGameStore } from "@/stores/gameStore";
-import { growthSystem } from "../systems/growth";
-import { harvestSystem, initHarvestable } from "../systems/harvest";
-import { staminaSystem } from "../systems/stamina";
+import { growthSystem } from "@/systems/growth";
+import { harvestSystem, initHarvestable } from "@/systems/harvest";
+import { staminaSystem } from "@/systems/stamina";
 import {
   type GameTime,
   initializeTime,
   type Season,
   updateTime,
-} from "../systems/time";
+} from "@/systems/time";
 import {
   getWeatherGrowthMultiplier,
   initializeWeather,
   updateWeather,
   type WeatherState,
   type WeatherType,
-} from "../systems/weather";
+} from "@/systems/weather";
 import { hashString } from "@/shared/utils/seedRNG";
 
 export interface HeadlessLoopConfig {

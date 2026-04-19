@@ -1,5 +1,5 @@
 import { COLORS } from "@/config/config";
-import type { WeatherType } from "../systems/weather";
+import type { WeatherType } from "@/systems/weather";
 
 interface WeatherForecastProps {
   currentWeather: WeatherType;

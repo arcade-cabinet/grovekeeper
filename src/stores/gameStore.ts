@@ -22,42 +22,42 @@ import type { QuestChainState } from "@/game/quests/types";
 import {
   canAffordExpansion,
   getNextExpansionTier,
-} from "@/game/systems/gridExpansion";
-import { checkNewUnlocks } from "@/game/systems/levelUnlocks";
+} from "@/systems/gridExpansion";
+import { checkNewUnlocks } from "@/systems/levelUnlocks";
 import {
   initializeMarketEventState,
   type MarketEventState,
   updateMarketEvents,
-} from "@/game/systems/marketEvents";
+} from "@/systems/marketEvents";
 import {
   calculatePrestigeBonus,
   canPrestige,
   getPrestigeResetState,
   getUnlockedPrestigeSpecies,
-} from "@/game/systems/prestige";
-import type { ActiveQuest } from "@/game/systems/quests";
+} from "@/systems/prestige";
+import type { ActiveQuest } from "@/systems/quests";
 import {
   computeDiscoveryTier,
   createEmptyProgress,
   type SpeciesProgress,
-} from "@/game/systems/speciesDiscovery";
+} from "@/systems/speciesDiscovery";
 import {
   initializeMarketState,
   type MarketState,
   pruneHistory,
   recordTrade,
-} from "@/game/systems/supplyDemand";
-import type { Season } from "@/game/systems/time";
+} from "@/systems/supplyDemand";
+import type { Season } from "@/systems/time";
 import {
   canAffordToolUpgrade,
   getToolUpgradeTier,
-} from "@/game/systems/toolUpgrades";
+} from "@/systems/toolUpgrades";
 import {
   initializeMerchantState,
   type MerchantState,
   purchaseOffer,
   updateMerchant,
-} from "@/game/systems/travelingMerchant";
+} from "@/systems/travelingMerchant";
 import { showToast } from "@/game/ui/Toast";
 
 export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";

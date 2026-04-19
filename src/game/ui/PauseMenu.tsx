@@ -15,18 +15,18 @@ import { getDifficultyById } from "@/config/difficulty";
 import { TOOLS } from "@/config/tools";
 import { TREE_SPECIES } from "@/config/trees";
 import { useGameStore } from "@/stores/gameStore";
-import { ACHIEVEMENT_DEFS } from "../systems/achievements";
+import { ACHIEVEMENT_DEFS } from "@/systems/achievements";
 import {
   canAffordExpansion,
   getNextExpansionTier,
-} from "../systems/gridExpansion";
+} from "@/systems/gridExpansion";
 import {
   calculatePrestigeBonus,
   canPrestige,
   getUnlockedCosmetics,
   PRESTIGE_COSMETICS,
   PRESTIGE_MIN_LEVEL,
-} from "../systems/prestige";
+} from "@/systems/prestige";
 import { FarmerMascot } from "./FarmerMascot";
 import { RulesModal } from "./RulesModal";
 import { StatsDashboard } from "./StatsDashboard";

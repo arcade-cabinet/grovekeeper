@@ -8,7 +8,7 @@
  * Deterministic randomness via seeded RNG from seedRNG.ts.
  */
 
-import type { Season } from "../systems/time";
+import type { Season } from "@/systems/time";
 import { createRNG, hashString } from "@/shared/utils/seedRNG";
 import type {
   EncounterDef,

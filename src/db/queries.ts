@@ -8,7 +8,7 @@
 import { getDb } from "./client";
 import * as schema from "./schema";
 import type { ResourceType } from "@/config/resources";
-import type { Season } from "../game/systems/time";
+import type { Season } from "@/systems/time";
 
 // ─── Types ────────────────────────────────────────────────────
 export interface HydratedGameState {

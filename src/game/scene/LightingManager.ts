@@ -10,8 +10,8 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { Scene } from "@babylonjs/core/scene";
-import type { GameTime } from "../systems/time";
-import { getSkyColors } from "../systems/time";
+import type { GameTime } from "@/systems/time";
+import { getSkyColors } from "@/systems/time";
 
 export class LightingManager {
   hemiLight: HemisphericLight | null = null;

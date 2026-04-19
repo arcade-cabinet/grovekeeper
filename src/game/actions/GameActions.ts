@@ -22,7 +22,7 @@ import {
 } from "@/world";
 import { useGameStore } from "@/stores/gameStore";
 import { canPlace, getTemplate } from "../structures/StructureManager";
-import { collectHarvest, initHarvestable } from "../systems/harvest";
+import { collectHarvest, initHarvestable } from "@/systems/harvest";
 
 // ──────────────────────────────────────────────
 // Helpers

@@ -2,12 +2,12 @@ import {
   advancePathFollow,
   createPathFollow,
   type PathFollowState,
-} from "./pathFollowing";
+} from "@/input/pathFollowing";
 import {
   findPath,
   type TileCoord,
   type WalkabilityGrid,
-} from "./pathfinding";
+} from "@/input/pathfinding";
 
 import { NPC_MOVE_SPEED } from "@/config/config";
 

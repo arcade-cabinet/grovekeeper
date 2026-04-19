@@ -9,8 +9,8 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { COLORS } from "@/config/config";
 import { useGameStore } from "@/stores/gameStore";
-import type { TradeRate } from "../systems/trading";
-import { executeTrade, getTradeRates } from "../systems/trading";
+import type { TradeRate } from "@/systems/trading";
+import { executeTrade, getTradeRates } from "@/systems/trading";
 import { showToast } from "./Toast";
 
 interface TradeDialogProps {

@@ -52,40 +52,40 @@ import {
   getStaminaMultiplier as getStructureStaminaMult,
   getTemplate,
 } from "../structures/StructureManager";
-import { ACHIEVEMENT_DEFS, checkAchievements } from "../systems/achievements";
-import { getStageScale, growthSystem } from "../systems/growth";
+import { ACHIEVEMENT_DEFS, checkAchievements } from "@/systems/achievements";
+import { getStageScale, growthSystem } from "@/systems/growth";
 import {
   collectHarvest,
   harvestSystem,
   initHarvestable,
-} from "../systems/harvest";
-import type { GroundTapInfo, ObjectTapInfo } from "../systems/InputManager";
-import { InputManager } from "../systems/InputManager";
-import { movementSystem, setMovementBounds } from "../systems/movement";
-import { calculateAllOfflineGrowth } from "../systems/offlineGrowth";
-import { audioManager } from "../systems/AudioManager";
+} from "@/systems/harvest";
+import type { GroundTapInfo, ObjectTapInfo } from "@/input/InputManager";
+import { InputManager } from "@/input/InputManager";
+import { movementSystem, setMovementBounds } from "@/systems/movement";
+import { calculateAllOfflineGrowth } from "@/systems/offlineGrowth";
+import { audioManager } from "@/systems/AudioManager";
 import { NpcBrain } from "../ai/NpcBrain";
 import type { NpcBrainContext } from "../ai/NpcBrain";
 import {
   cancelAllNpcMovements,
   isNpcMoving,
   updateNpcMovement,
-} from "../systems/npcMovement";
-import { TutorialController } from "../systems/tutorialController";
-import { buildWalkabilityGrid, type WalkabilityGrid } from "../systems/pathfinding";
-import { hapticLight, hapticMedium, hapticSuccess } from "../systems/platform";
+} from "@/systems/npcMovement";
+import { TutorialController } from "@/systems/tutorialController";
+import { buildWalkabilityGrid, type WalkabilityGrid } from "@/input/pathfinding";
+import { hapticLight, hapticMedium, hapticSuccess } from "@/systems/platform";
 import {
   deserializeGrove,
   loadGroveFromStorage,
   saveGroveToStorage,
-} from "../systems/saveLoad";
-import { staminaSystem } from "../systems/stamina";
+} from "@/systems/saveLoad";
+import { staminaSystem } from "@/systems/stamina";
 import {
   type GameTime,
   initializeTime,
   type Season,
   updateTime,
-} from "../systems/time";
+} from "@/systems/time";
 import {
   getWeatherGrowthMultiplier,
   getWeatherStaminaMultiplier,
@@ -94,7 +94,7 @@ import {
   updateWeather,
   type WeatherState,
   type WeatherType,
-} from "../systems/weather";
+} from "@/systems/weather";
 import { showAchievement } from "../ui/AchievementPopup";
 import type { TileState } from "../ui/ActionButton";
 import { showParticle } from "../ui/FloatingParticles";

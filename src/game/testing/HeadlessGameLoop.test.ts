@@ -12,7 +12,7 @@ import {
 } from "@/archetypes";
 import { world } from "@/world";
 import { useGameStore } from "@/stores/gameStore";
-import { initHarvestable } from "../systems/harvest";
+import { initHarvestable } from "@/systems/harvest";
 import { HeadlessGameLoop } from "./HeadlessGameLoop";
 
 /** Set up a minimal world for simulation. */

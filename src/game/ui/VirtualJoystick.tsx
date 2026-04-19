@@ -1,5 +1,5 @@
 import { useCallback, useRef } from "react";
-import { hapticLight } from "../systems/platform";
+import { hapticLight } from "@/systems/platform";
 
 interface VirtualJoystickProps {
   movementRef: React.RefObject<{ x: number; z: number }>;

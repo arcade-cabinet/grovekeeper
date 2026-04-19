@@ -29,7 +29,7 @@ import {
 import type { ResourceType } from "@/config/resources";
 import { getSpeciesById } from "@/config/trees";
 import { useGameStore } from "@/stores/gameStore";
-import { BASE_TRADE_RATES, executeTrade } from "../systems/trading";
+import { BASE_TRADE_RATES, executeTrade } from "@/systems/trading";
 
 // ──────────────────────────────────────────────
 // Governor Profile

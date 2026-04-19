@@ -11,7 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { COLORS } from "@/config/config";
-import type { ActiveQuest, GoalDifficulty } from "../systems/quests";
+import type { ActiveQuest, GoalDifficulty } from "@/systems/quests";
 
 interface QuestPanelProps {
   quests: ActiveQuest[];
