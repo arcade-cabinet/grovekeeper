@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createRNG } from "../utils/seedRNG";
+import { createRNG } from "@/shared/utils/seedRNG";
 import { generateWorld, pickWeighted } from "./WorldGenerator";
 
 // ============================================

@@ -9,7 +9,7 @@
  * a flood-fill growth approach so they always form connected groups.
  */
 
-import { createRNG, hashString } from "../utils/seedRNG";
+import { createRNG, hashString } from "@/shared/utils/seedRNG";
 
 // ============================================
 // Public Types

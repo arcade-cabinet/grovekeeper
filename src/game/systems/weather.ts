@@ -14,7 +14,7 @@
  */
 
 import { getActiveDifficulty } from "@/config/difficulty";
-import { createRNG, hashString } from "../utils/seedRNG";
+import { createRNG, hashString } from "@/shared/utils/seedRNG";
 
 // ============================================
 // Public Types

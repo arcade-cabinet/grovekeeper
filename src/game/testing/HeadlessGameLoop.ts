@@ -24,7 +24,7 @@ import {
   type WeatherState,
   type WeatherType,
 } from "../systems/weather";
-import { hashString } from "../utils/seedRNG";
+import { hashString } from "@/shared/utils/seedRNG";
 
 export interface HeadlessLoopConfig {
   /** Simulation ticks per second (default: 30). */

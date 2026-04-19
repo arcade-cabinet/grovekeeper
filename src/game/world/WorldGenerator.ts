@@ -5,7 +5,7 @@
  * scales with player level. Prestige unlocks enchanted biome zones.
  */
 
-import { createRNG, hashString } from "../utils/seedRNG";
+import { createRNG, hashString } from "@/shared/utils/seedRNG";
 import { ZONE_ARCHETYPES, type ZoneArchetype } from "./archetypes";
 import type {
   ConnectionDirection,

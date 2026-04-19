@@ -8,7 +8,7 @@
  */
 
 import type { ResourceType } from "@/config/resources";
-import { createRNG, hashString } from "../utils/seedRNG";
+import { createRNG, hashString } from "@/shared/utils/seedRNG";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
