@@ -85,8 +85,8 @@ import { showToast } from "@/ui/game/Toast";
 
 // Re-export XP helpers from the legacy store for now; they will move to a
 // dedicated util file once gameStore.ts is deleted.
-export { xpToNext, totalXpForLevel, levelFromXp } from "@/stores/gameStore";
-import { levelFromXp } from "@/stores/gameStore";
+export { xpToNext, totalXpForLevel, levelFromXp } from "@/shared/utils/xp";
+import { levelFromXp } from "@/shared/utils/xp";
 
 type GameScreenValue = "menu" | "playing" | "paused" | "seedSelect" | "rules";
 
