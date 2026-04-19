@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createPlayerEntity } from "../ecs/archetypes";
-import { type Entity, world } from "../ecs/world";
+import { createPlayerEntity } from "@/archetypes";
+import { type Entity, world } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import { drainStamina, staminaSystem } from "./stamina";
 

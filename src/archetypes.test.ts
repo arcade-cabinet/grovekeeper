@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { SerializedTree } from "../stores/gameStore";
-import { getStageScale } from "../systems/growth";
+import type { SerializedTree } from "@/game/stores/gameStore";
+import { getStageScale } from "@/game/systems/growth";
 import {
   createGridCellEntity,
   createPlayerEntity,

@@ -1,5 +1,5 @@
 import type { Scene } from "@babylonjs/core/scene";
-import type { GridCellComponent } from "../ecs/world";
+import type { GridCellComponent } from "@/world";
 import { keysToWorld } from "../hooks/useKeyboardInput";
 import { screenToGroundPlane } from "../utils/projection";
 import {

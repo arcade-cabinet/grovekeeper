@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createGridCellEntity, createTreeEntity } from "../ecs/archetypes";
-import { gridCellsQuery, treesQuery, world } from "../ecs/world";
+import { createGridCellEntity, createTreeEntity } from "@/archetypes";
+import { gridCellsQuery, treesQuery, world } from "@/world";
 import {
   deserializeGrove,
   type GroveSaveData,

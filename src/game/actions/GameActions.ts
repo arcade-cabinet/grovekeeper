@@ -11,15 +11,15 @@
 import type { ResourceType } from "../constants/resources";
 import { getToolById } from "../constants/tools";
 import { getSpeciesById } from "../constants/trees";
-import { createTreeEntity } from "../ecs/archetypes";
-import type { Entity, GridCellComponent } from "../ecs/world";
+import { createTreeEntity } from "@/archetypes";
+import type { Entity, GridCellComponent } from "@/world";
 import {
   generateEntityId,
   gridCellsQuery,
   playerQuery,
   treesQuery,
   world,
-} from "../ecs/world";
+} from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import { canPlace, getTemplate } from "../structures/StructureManager";
 import { collectHarvest, initHarvestable } from "../systems/harvest";

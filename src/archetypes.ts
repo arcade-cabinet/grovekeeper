@@ -1,9 +1,9 @@
-import type { NpcFunction } from "../npcs/types";
-import type { SerializedTree } from "../stores/gameStore";
-import { getStageScale } from "../systems/growth";
-import { hashString } from "../utils/seedRNG";
-import type { Entity } from "./world";
-import { generateEntityId } from "./world";
+import type { NpcFunction } from "@/game/npcs/types";
+import type { SerializedTree } from "@/game/stores/gameStore";
+import { getStageScale } from "@/game/systems/growth";
+import { hashString } from "@/game/utils/seedRNG";
+import type { Entity } from "@/world";
+import { generateEntityId } from "@/world";
 
 export const createTreeEntity = (
   gridX: number,

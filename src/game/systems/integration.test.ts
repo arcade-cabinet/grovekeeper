@@ -12,8 +12,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { MAX_STAGE } from "../constants/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "../constants/difficulty";
-import { createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
-import { world } from "../ecs/world";
+import { createPlayerEntity, createTreeEntity } from "@/archetypes";
+import { world } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import {
   canAffordExpansion,

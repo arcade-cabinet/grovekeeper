@@ -8,7 +8,7 @@
 
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import { treesQuery } from "../ecs/world";
+import { treesQuery } from "@/world";
 import type { Season } from "../systems/time";
 import { buildSpeciesTreeMesh } from "../utils/treeMeshBuilder";
 

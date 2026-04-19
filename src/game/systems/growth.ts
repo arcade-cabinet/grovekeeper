@@ -7,7 +7,7 @@ import {
 } from "../constants/config";
 import { getActiveDifficulty } from "../constants/difficulty";
 import { getSpeciesById } from "../constants/trees";
-import { gridCellsQuery, structuresQuery, treesQuery } from "../ecs/world";
+import { gridCellsQuery, structuresQuery, treesQuery } from "@/world";
 import { getGrowthMultiplier as getStructureGrowthMult } from "../structures/StructureManager";
 
 /**

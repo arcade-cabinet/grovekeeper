@@ -4,8 +4,8 @@
  * Tests each action in isolation with a minimal ECS world and fresh store.
  */
 import { beforeEach, describe, expect, it } from "vitest";
-import { createGridCellEntity, createPlayerEntity } from "../ecs/archetypes";
-import { gridCellsQuery, treesQuery, world } from "../ecs/world";
+import { createGridCellEntity, createPlayerEntity } from "@/archetypes";
+import { gridCellsQuery, treesQuery, world } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import { initHarvestable } from "../systems/harvest";
 import {

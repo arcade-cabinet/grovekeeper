@@ -1,6 +1,6 @@
 import { getActiveDifficulty } from "../constants/difficulty";
-import type { Entity } from "../ecs/world";
-import { farmerQuery } from "../ecs/world";
+import type { Entity } from "@/world";
+import { farmerQuery } from "@/world";
 
 const BASE_STAMINA_REGEN_PER_SEC = 2;
 

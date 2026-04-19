@@ -1,5 +1,5 @@
 import { PLAYER_SPEED } from "../constants/config";
-import { playerQuery } from "../ecs/world";
+import { playerQuery } from "@/world";
 
 export interface MovementInput {
   x: number; // -1 to 1

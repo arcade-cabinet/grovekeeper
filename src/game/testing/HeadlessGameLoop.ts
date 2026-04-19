@@ -6,7 +6,7 @@
  * Uses a fixed timestep for deterministic, reproducible results.
  */
 
-import { farmerQuery, treesQuery } from "../ecs/world";
+import { farmerQuery, treesQuery } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import { growthSystem } from "../systems/growth";
 import { harvestSystem, initHarvestable } from "../systems/harvest";

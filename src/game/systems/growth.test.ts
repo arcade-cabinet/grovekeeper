@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createGridCellEntity, createTreeEntity } from "../ecs/archetypes";
-import { world } from "../ecs/world";
+import { createGridCellEntity, createTreeEntity } from "@/archetypes";
+import { world } from "@/world";
 import { calcGrowthRate, getStageScale, growthSystem } from "./growth";
 
 describe("Growth System (5-Stage)", () => {

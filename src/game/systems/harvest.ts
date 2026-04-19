@@ -2,8 +2,8 @@
 
 import { getActiveDifficulty } from "../constants/difficulty";
 import { getSpeciesById } from "../constants/trees";
-import type { Entity } from "../ecs/world";
-import { harvestableQuery, structuresQuery, world } from "../ecs/world";
+import type { Entity } from "@/world";
+import { harvestableQuery, structuresQuery, world } from "@/world";
 import { getHarvestMultiplier } from "../structures/StructureManager";
 
 /**

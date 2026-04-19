@@ -16,8 +16,8 @@ import { getActiveDifficulty } from "../constants/difficulty";
 import type { ResourceType } from "../constants/resources";
 import { getToolById, TOOLS } from "../constants/tools";
 import { getSpeciesById } from "../constants/trees";
-import { createPlayerEntity, createTreeEntity } from "../ecs/archetypes";
-import type { Entity, GridCellComponent } from "../ecs/world";
+import { createPlayerEntity, createTreeEntity } from "@/archetypes";
+import type { Entity, GridCellComponent } from "@/world";
 import {
   generateEntityId,
   gridCellsQuery,
@@ -28,7 +28,7 @@ import {
   structuresQuery,
   treesQuery,
   world,
-} from "../ecs/world";
+} from "@/world";
 import { isPlayerAdjacent } from "../npcs/NpcManager";
 import { getChainDef } from "../quests/questChainEngine";
 // Scene managers

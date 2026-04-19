@@ -16,7 +16,7 @@ import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import { npcsQuery } from "../ecs/world";
+import { npcsQuery } from "@/world";
 import { getNpcTemplate } from "../npcs/NpcManager";
 import type { HatStyle, NpcAppearance } from "../npcs/types";
 import { loadModel } from "./ModelLoader";

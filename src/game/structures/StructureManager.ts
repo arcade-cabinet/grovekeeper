@@ -5,7 +5,7 @@
  * from JSON data and provides methods for placement validation and effect calculations.
  */
 
-import type { StructureComponent } from "../ecs/world";
+import type { StructureComponent } from "@/world";
 import structureData from "./data/structures.json";
 import type { StructureTemplate } from "./types";
 

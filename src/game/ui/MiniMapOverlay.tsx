@@ -2,13 +2,13 @@ import { RiCloseLine } from "@remixicon/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { COLORS } from "../constants/config";
-import type { GridCellComponent, TreeComponent } from "../ecs/world";
+import type { GridCellComponent, TreeComponent } from "@/world";
 import {
   gridCellsQuery,
   playerQuery,
   structuresQuery,
   treesQuery,
-} from "../ecs/world";
+} from "@/world";
 
 // --- SVG rendering types ---
 

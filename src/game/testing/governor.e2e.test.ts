@@ -13,8 +13,8 @@ import {
   createGridCellEntity,
   createPlayerEntity,
   createTreeEntity,
-} from "../ecs/archetypes";
-import { gridCellsQuery, world } from "../ecs/world";
+} from "@/archetypes";
+import { gridCellsQuery, world } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import { initHarvestable } from "../systems/harvest";
 import type { GovernorProfile } from "./GovernorAgent";

@@ -10,9 +10,9 @@ import {
   createGridCellEntity,
   createNpcEntity,
   createWildTreeEntity,
-} from "../ecs/archetypes";
-import type { Entity } from "../ecs/world";
-import { gridCellsQuery, npcsQuery, world } from "../ecs/world";
+} from "@/archetypes";
+import type { Entity } from "@/world";
+import { gridCellsQuery, npcsQuery, world } from "@/world";
 import { getNpcTemplate } from "../npcs/NpcManager";
 import { createRNG, hashString } from "../utils/seedRNG";
 import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types";

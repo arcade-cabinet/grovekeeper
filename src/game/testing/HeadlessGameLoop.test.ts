@@ -9,8 +9,8 @@ import {
   createGridCellEntity,
   createPlayerEntity,
   createTreeEntity,
-} from "../ecs/archetypes";
-import { world } from "../ecs/world";
+} from "@/archetypes";
+import { world } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import { initHarvestable } from "../systems/harvest";
 import { HeadlessGameLoop } from "./HeadlessGameLoop";

@@ -7,7 +7,7 @@
 
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import type { Entity } from "../ecs/world";
+import type { Entity } from "@/world";
 import {
   createStructureMesh,
   disposeStructureMesh,

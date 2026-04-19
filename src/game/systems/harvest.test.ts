@@ -1,7 +1,7 @@
 // src/game/systems/harvest.test.ts
 import { beforeEach, describe, expect, it } from "vitest";
-import { createTreeEntity } from "../ecs/archetypes";
-import { world } from "../ecs/world";
+import { createTreeEntity } from "@/archetypes";
+import { world } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import { collectHarvest, harvestSystem, initHarvestable } from "./harvest";
 

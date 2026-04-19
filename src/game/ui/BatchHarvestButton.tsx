@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { COLORS } from "../constants/config";
-import { harvestableQuery } from "../ecs/world";
+import { harvestableQuery } from "@/world";
 
 interface BatchHarvestButtonProps {
   onBatchHarvest: () => void;

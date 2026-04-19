@@ -1,4 +1,4 @@
-import type { GridCellComponent } from "../ecs/world";
+import type { GridCellComponent } from "@/world";
 
 // ---------------------------------------------------------------------------
 // Walkability Grid

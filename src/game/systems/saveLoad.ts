@@ -1,5 +1,5 @@
-import { createGridCellEntity, createTreeEntity } from "../ecs/archetypes";
-import { gridCellsQuery, treesQuery, world } from "../ecs/world";
+import { createGridCellEntity, createTreeEntity } from "@/archetypes";
+import { gridCellsQuery, treesQuery, world } from "@/world";
 import { getStageScale } from "./growth";
 
 export interface TreeSave {

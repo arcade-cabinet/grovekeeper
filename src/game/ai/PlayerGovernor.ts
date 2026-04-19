@@ -28,8 +28,8 @@ import {
 } from "../actions/GameActions";
 import type { ResourceType } from "../constants/resources";
 import { getSpeciesById } from "../constants/trees";
-import type { GridCellComponent } from "../ecs/world";
-import { gridCellsQuery, playerQuery } from "../ecs/world";
+import type { GridCellComponent } from "@/world";
+import { gridCellsQuery, playerQuery } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import {
   advancePathFollow,

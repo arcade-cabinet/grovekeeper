@@ -1,5 +1,5 @@
 import { World } from "miniplex";
-import type { NpcFunction } from "../npcs/types";
+import type { NpcFunction } from "@/game/npcs/types";
 
 // Component types
 export interface Position {

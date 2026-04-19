@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { gridCellsQuery, world } from "../ecs/world";
+import { gridCellsQuery, world } from "@/world";
 import type { ZoneDefinition } from "./types";
 import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";
 

@@ -8,8 +8,8 @@ import {
   createGridCellEntity,
   createPlayerEntity,
   createTreeEntity,
-} from "../ecs/archetypes";
-import { treesQuery, world } from "../ecs/world";
+} from "@/archetypes";
+import { treesQuery, world } from "@/world";
 import { useGameStore } from "../stores/gameStore";
 import { initHarvestable } from "../systems/harvest";
 import type { GovernorProfile } from "./GovernorAgent";
