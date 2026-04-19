@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createGridCellEntity, createPlayerEntity } from "@/archetypes";
 import { gridCellsQuery, treesQuery, world } from "@/world";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { initHarvestable } from "../systems/harvest";
 import {
   clearRock,

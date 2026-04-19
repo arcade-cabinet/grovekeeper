@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { COLORS } from "../constants/config";
 import type { ResourceType } from "../constants/resources";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { getAvailableTemplates } from "../structures/StructureManager";
 import type { StructureTemplate } from "../structures/types";
 

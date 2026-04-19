@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { emptyResources, type ResourceType } from "../constants/resources";
-import { getToolById } from "../constants/tools";
-import { getSpeciesById } from "../constants/trees";
+import { emptyResources, type ResourceType } from "@/game/constants/resources";
+import { getToolById } from "@/game/constants/tools";
+import { getSpeciesById } from "@/game/constants/trees";
 import {
   advanceFestivalChallenge,
   type EventContext,
@@ -9,56 +9,56 @@ import {
   initializeEventState,
   resolveEncounter as resolveEncounterPure,
   updateEvents,
-} from "../events/eventScheduler";
-import type { EventState } from "../events/types";
+} from "@/game/events/eventScheduler";
+import type { EventState } from "@/game/events/types";
 import {
   advanceObjectives,
   claimStepReward,
   computeAvailableChains,
   initializeChainState,
   startChain,
-} from "../quests/questChainEngine";
-import type { QuestChainState } from "../quests/types";
+} from "@/game/quests/questChainEngine";
+import type { QuestChainState } from "@/game/quests/types";
 import {
   canAffordExpansion,
   getNextExpansionTier,
-} from "../systems/gridExpansion";
-import { checkNewUnlocks } from "../systems/levelUnlocks";
+} from "@/game/systems/gridExpansion";
+import { checkNewUnlocks } from "@/game/systems/levelUnlocks";
 import {
   initializeMarketEventState,
   type MarketEventState,
   updateMarketEvents,
-} from "../systems/marketEvents";
+} from "@/game/systems/marketEvents";
 import {
   calculatePrestigeBonus,
   canPrestige,
   getPrestigeResetState,
   getUnlockedPrestigeSpecies,
-} from "../systems/prestige";
-import type { ActiveQuest } from "../systems/quests";
+} from "@/game/systems/prestige";
+import type { ActiveQuest } from "@/game/systems/quests";
 import {
   computeDiscoveryTier,
   createEmptyProgress,
   type SpeciesProgress,
-} from "../systems/speciesDiscovery";
+} from "@/game/systems/speciesDiscovery";
 import {
   initializeMarketState,
   type MarketState,
   pruneHistory,
   recordTrade,
-} from "../systems/supplyDemand";
-import type { Season } from "../systems/time";
+} from "@/game/systems/supplyDemand";
+import type { Season } from "@/game/systems/time";
 import {
   canAffordToolUpgrade,
   getToolUpgradeTier,
-} from "../systems/toolUpgrades";
+} from "@/game/systems/toolUpgrades";
 import {
   initializeMerchantState,
   type MerchantState,
   purchaseOffer,
   updateMerchant,
-} from "../systems/travelingMerchant";
-import { showToast } from "../ui/Toast";
+} from "@/game/systems/travelingMerchant";
+import { showToast } from "@/game/ui/Toast";
 
 export type GameScreen = "menu" | "playing" | "paused" | "seedSelect" | "rules";
 

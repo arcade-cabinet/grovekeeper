@@ -1,4 +1,4 @@
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 
 /**
  * Vertical stamina bar positioned on the right side of the screen.

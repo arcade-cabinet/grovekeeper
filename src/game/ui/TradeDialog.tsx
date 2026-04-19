@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { COLORS } from "../constants/config";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import type { TradeRate } from "../systems/trading";
 import { executeTrade, getTradeRates } from "../systems/trading";
 import { showToast } from "./Toast";

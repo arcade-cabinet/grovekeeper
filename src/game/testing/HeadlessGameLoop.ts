@@ -7,7 +7,7 @@
  */
 
 import { farmerQuery, treesQuery } from "@/world";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { growthSystem } from "../systems/growth";
 import { harvestSystem, initHarvestable } from "../systems/harvest";
 import { staminaSystem } from "../systems/stamina";

@@ -10,7 +10,7 @@ import {
   createTreeEntity,
 } from "@/archetypes";
 import { treesQuery, world } from "@/world";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { initHarvestable } from "../systems/harvest";
 import type { GovernorProfile } from "./GovernorAgent";
 import { DEFAULT_PROFILE, GovernorAgent } from "./GovernorAgent";

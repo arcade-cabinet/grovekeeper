@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { COLORS } from "../constants/config";
 import { TREE_SPECIES, type TreeSpeciesData } from "../constants/trees";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 
 interface SeedSelectProps {
   open: boolean;

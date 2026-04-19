@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SerializedTree } from "@/game/stores/gameStore";
+import type { SerializedTree } from "@/stores/gameStore";
 import { getStageScale } from "@/game/systems/growth";
 import {
   createGridCellEntity,

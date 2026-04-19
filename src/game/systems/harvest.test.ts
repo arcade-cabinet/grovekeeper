@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createTreeEntity } from "@/archetypes";
 import { world } from "@/world";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { collectHarvest, harvestSystem, initHarvestable } from "./harvest";
 
 describe("Harvest System", () => {

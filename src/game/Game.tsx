@@ -5,7 +5,7 @@ import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { hydrateGameStore, setupNewGame } from "@/db/queries";
 import { COLORS } from "./constants/config";
 import { getDifficultyById } from "./constants/difficulty";
-import { useGameStore } from "./stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { initializePlatform } from "./systems/platform";
 import { generateDailyQuests } from "./systems/quests";
 import { GameErrorBoundary } from "./ui/ErrorBoundary";
@@ -86,7 +86,7 @@ export const Game = () => {
 
     // Refresh quests once per day or if none exist
     if (activeQuests.length === 0 || now - lastQuestRefresh > oneDayMs) {
-      const completedSet = new Set(completedGoalIds);
+      const completedSet = new Set<string>(completedGoalIds);
       const newQuests = generateDailyQuests(currentSeason, level, completedSet);
       setActiveQuests(newQuests);
       setLastQuestRefresh(now);

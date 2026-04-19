@@ -1,7 +1,7 @@
 import { RiBuilding2Line, RiMenuLine, RiToolsLine } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import { COLORS } from "../constants/config";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import type { GameTime } from "../systems/time";
 import { QuestPanel } from "./QuestPanel";
 import { ResourceBar } from "./ResourceBar";

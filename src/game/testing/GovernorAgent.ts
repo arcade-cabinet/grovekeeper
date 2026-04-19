@@ -28,7 +28,7 @@ import {
 } from "../actions/GameActions";
 import type { ResourceType } from "../constants/resources";
 import { getSpeciesById } from "../constants/trees";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { BASE_TRADE_RATES, executeTrade } from "../systems/trading";
 
 // ──────────────────────────────────────────────

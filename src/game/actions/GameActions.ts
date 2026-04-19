@@ -20,7 +20,7 @@ import {
   treesQuery,
   world,
 } from "@/world";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { canPlace, getTemplate } from "../structures/StructureManager";
 import { collectHarvest, initHarvestable } from "../systems/harvest";
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { discoverZone, isZoneDiscovered } from "./discovery";
 
 describe("discovery", () => {

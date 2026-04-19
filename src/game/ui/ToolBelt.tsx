@@ -10,7 +10,7 @@ import {
 } from "@remixicon/react";
 import { COLORS } from "../constants/config";
 import { TOOLS } from "../constants/tools";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {
   trowel: <RiPlantLine className="w-5 h-5" />,

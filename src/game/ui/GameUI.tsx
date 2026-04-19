@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { COLORS } from "../constants/config";
 import { getNpcTemplate } from "../npcs/NpcManager";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import type { StructureTemplate } from "../structures/types";
 import { getCosmeticById } from "../systems/prestige";
 import type { GameTime } from "../systems/time";

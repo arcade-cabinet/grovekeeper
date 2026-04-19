@@ -14,7 +14,7 @@ import { MAX_STAGE } from "../constants/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "../constants/difficulty";
 import { createPlayerEntity, createTreeEntity } from "@/archetypes";
 import { world } from "@/world";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import {
   canAffordExpansion,
   GRID_EXPANSION_TIERS,

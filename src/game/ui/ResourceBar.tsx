@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { COLORS } from "../constants/config";
 import type { ResourceType } from "../constants/resources";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 
 const RESOURCE_EMOJIS: Record<ResourceType, string> = {
   timber: "\u{1FAB5}",

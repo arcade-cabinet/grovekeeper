@@ -6,7 +6,7 @@
  * the game store.
  */
 
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import difficultyData from "./difficulty.json";
 
 export interface DifficultyTier {

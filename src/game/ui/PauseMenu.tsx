@@ -14,7 +14,7 @@ import { COLORS } from "../constants/config";
 import { getDifficultyById } from "../constants/difficulty";
 import { TOOLS } from "../constants/tools";
 import { TREE_SPECIES } from "../constants/trees";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { ACHIEVEMENT_DEFS } from "../systems/achievements";
 import {
   canAffordExpansion,

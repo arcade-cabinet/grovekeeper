@@ -1,6 +1,6 @@
 import { COLORS } from "../constants/config";
 import { getNpcTemplate } from "../npcs/NpcManager";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { getActionLabel, type TileState } from "./ActionButton";
 
 interface MobileActionButtonsProps {

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { COLORS } from "../constants/config";
 import { TOOLS, type ToolData } from "../constants/tools";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 
 interface ToolWheelProps {
   open: boolean;

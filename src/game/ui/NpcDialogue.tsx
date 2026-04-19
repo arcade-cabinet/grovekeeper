@@ -17,7 +17,7 @@ import { COLORS } from "../constants/config";
 import { RESOURCE_TYPES, type ResourceType } from "../constants/resources";
 import { getDialogueNode, getNpcTemplate } from "../npcs/NpcManager";
 import type { DialogueAction, DialogueNode } from "../npcs/types";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { showParticle } from "./FloatingParticles";
 import { showToast } from "./Toast";
 

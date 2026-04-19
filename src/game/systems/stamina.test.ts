@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createPlayerEntity } from "@/archetypes";
 import { type Entity, world } from "@/world";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import { drainStamina, staminaSystem } from "./stamina";
 
 describe("Stamina System", () => {

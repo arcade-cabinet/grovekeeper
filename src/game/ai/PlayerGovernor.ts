@@ -30,7 +30,7 @@ import type { ResourceType } from "../constants/resources";
 import { getSpeciesById } from "../constants/trees";
 import type { GridCellComponent } from "@/world";
 import { gridCellsQuery, playerQuery } from "@/world";
-import { useGameStore } from "../stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import {
   advancePathFollow,
   createPathFollow,

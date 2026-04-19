@@ -45,8 +45,8 @@ import {
   TreeMeshManager,
 } from "../scene";
 import type { NpcQuestMarkerType } from "../scene";
-import type { SerializedTree } from "../stores/gameStore";
-import { useGameStore } from "../stores/gameStore";
+import type { SerializedTree } from "@/stores/gameStore";
+import { useGameStore } from "@/stores/gameStore";
 import {
   canPlace,
   getStaminaMultiplier as getStructureStaminaMult,
