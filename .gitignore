@@ -39,3 +39,12 @@ test-results/
 # Screenshots from visual testing
 *.png
 !public/*.png
+
+# Expo (migration canceled — leftover local-only artifacts)
+.expo/
+expo-env.d.ts
+
+# Session-local memory/logs (not a shared artifact)
+.remember/
+memory-bank/
+.claude/
