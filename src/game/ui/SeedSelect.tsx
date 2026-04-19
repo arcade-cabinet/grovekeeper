@@ -7,8 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { COLORS } from "../constants/config";
-import { TREE_SPECIES, type TreeSpeciesData } from "../constants/trees";
+import { COLORS } from "@/config/config";
+import { TREE_SPECIES, type TreeSpeciesData } from "@/config/trees";
 import { useGameStore } from "@/stores/gameStore";
 
 interface SeedSelectProps {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import { getNpcTemplate } from "../npcs/NpcManager";
 import { useGameStore } from "@/stores/gameStore";
 import type { StructureTemplate } from "../structures/types";

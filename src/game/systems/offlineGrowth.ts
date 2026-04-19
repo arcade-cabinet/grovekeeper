@@ -1,5 +1,5 @@
-import { DIFFICULTY_MULTIPLIERS, MAX_STAGE } from "../constants/config";
-import { getActiveDifficulty } from "../constants/difficulty";
+import { DIFFICULTY_MULTIPLIERS, MAX_STAGE } from "@/config/config";
+import { getActiveDifficulty } from "@/config/difficulty";
 
 /**
  * Offline Growth Calculator

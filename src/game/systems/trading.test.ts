@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ResourceType } from "../constants/resources";
+import type { ResourceType } from "@/config/resources";
 import type { TradeRate } from "./trading";
 import { calculateTradeOutput, executeTrade, getTradeRates } from "./trading";
 

@@ -5,7 +5,7 @@
  * dialogue trees define conversation flow with branching choices.
  */
 
-import type { ResourceType } from "../constants/resources";
+import type { ResourceType } from "@/config/resources";
 
 export type NpcFunction =
   | "trading"

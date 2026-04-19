@@ -1,4 +1,4 @@
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 
 export const Logo = ({ size = 200 }: { size?: number }) => {
   const scale = size / 200;

@@ -11,11 +11,11 @@ import { getDb, isDbInitialized } from "@/db/client";
 import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { persistGameStore, saveGroveToDb } from "@/db/queries";
 import { PlayerGovernor } from "../ai/PlayerGovernor";
-import { COLORS, GRID_SIZE } from "../constants/config";
-import { getActiveDifficulty } from "../constants/difficulty";
-import type { ResourceType } from "../constants/resources";
-import { getToolById, TOOLS } from "../constants/tools";
-import { getSpeciesById } from "../constants/trees";
+import { COLORS, GRID_SIZE } from "@/config/config";
+import { getActiveDifficulty } from "@/config/difficulty";
+import type { ResourceType } from "@/config/resources";
+import { getToolById, TOOLS } from "@/config/tools";
+import { getSpeciesById } from "@/config/trees";
 import { createPlayerEntity, createTreeEntity } from "@/archetypes";
 import type { Entity, GridCellComponent } from "@/world";
 import {

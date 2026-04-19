@@ -10,7 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import type { ActiveQuest, GoalDifficulty } from "../systems/quests";
 
 interface QuestPanelProps {

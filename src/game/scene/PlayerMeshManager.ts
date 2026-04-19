@@ -14,7 +14,7 @@ import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder"
 import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import { playerQuery } from "@/world";
 import { loadModel } from "./ModelLoader";
 

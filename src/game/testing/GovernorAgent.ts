@@ -26,8 +26,8 @@ import {
   spendToolStamina,
   waterTree,
 } from "../actions/GameActions";
-import type { ResourceType } from "../constants/resources";
-import { getSpeciesById } from "../constants/trees";
+import type { ResourceType } from "@/config/resources";
+import { getSpeciesById } from "@/config/trees";
 import { useGameStore } from "@/stores/gameStore";
 import { BASE_TRADE_RATES, executeTrade } from "../systems/trading";
 

@@ -5,7 +5,7 @@
  * by combining goals from different pools to create varied objectives.
  */
 
-import type { ResourceType } from "../constants/resources";
+import type { ResourceType } from "@/config/resources";
 import type { Season } from "./time";
 
 // ============================================

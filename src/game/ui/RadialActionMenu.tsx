@@ -8,7 +8,7 @@
  */
 
 import { useEffect } from "react";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import type { RadialAction } from "./radialActions";
 
 const RING_RADIUS = 70; // px from center to button center

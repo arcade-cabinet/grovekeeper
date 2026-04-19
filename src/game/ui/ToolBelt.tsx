@@ -8,8 +8,8 @@ import {
   RiSeedlingLine,
   RiToolsLine,
 } from "@remixicon/react";
-import { COLORS } from "../constants/config";
-import { TOOLS } from "../constants/tools";
+import { COLORS } from "@/config/config";
+import { TOOLS } from "@/config/tools";
 import { useGameStore } from "@/stores/gameStore";
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {

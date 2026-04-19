@@ -13,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { COLORS } from "../constants/config";
-import { RESOURCE_TYPES, type ResourceType } from "../constants/resources";
+import { COLORS } from "@/config/config";
+import { RESOURCE_TYPES, type ResourceType } from "@/config/resources";
 import { getDialogueNode, getNpcTemplate } from "../npcs/NpcManager";
 import type { DialogueAction, DialogueNode } from "../npcs/types";
 import { useGameStore } from "@/stores/gameStore";

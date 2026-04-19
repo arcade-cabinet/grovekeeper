@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import { harvestableQuery } from "@/world";
 
 interface BatchHarvestButtonProps {

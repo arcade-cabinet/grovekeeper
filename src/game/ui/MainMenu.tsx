@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import { useGameStore } from "@/stores/gameStore";
 import { FarmerMascot } from "./FarmerMascot";
 import { Logo } from "./Logo";

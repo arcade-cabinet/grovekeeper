@@ -1,7 +1,7 @@
 // src/game/systems/harvest.ts
 
-import { getActiveDifficulty } from "../constants/difficulty";
-import { getSpeciesById } from "../constants/trees";
+import { getActiveDifficulty } from "@/config/difficulty";
+import { getSpeciesById } from "@/config/trees";
 import type { Entity } from "@/world";
 import { harvestableQuery, structuresQuery, world } from "@/world";
 import { getHarvestMultiplier } from "../structures/StructureManager";

@@ -9,7 +9,7 @@ import {
   type WalkabilityGrid,
 } from "./pathfinding";
 
-import { NPC_MOVE_SPEED } from "../constants/config";
+import { NPC_MOVE_SPEED } from "@/config/config";
 
 /** Active path states keyed by NPC entity ID. */
 const activePaths = new Map<string, PathFollowState>();

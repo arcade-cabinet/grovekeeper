@@ -1,4 +1,4 @@
-import { PLAYER_SPEED } from "../constants/config";
+import { PLAYER_SPEED } from "@/config/config";
 import { playerQuery } from "@/world";
 
 export interface MovementInput {

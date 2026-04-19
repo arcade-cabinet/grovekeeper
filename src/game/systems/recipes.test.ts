@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RESOURCE_TYPES, type ResourceType } from "../constants/resources";
+import { RESOURCE_TYPES, type ResourceType } from "@/config/resources";
 import {
   RECIPES,
   TIER_LABELS,

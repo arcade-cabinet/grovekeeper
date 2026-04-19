@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { emptyResources, type ResourceType } from "@/game/constants/resources";
-import { getToolById } from "@/game/constants/tools";
-import { getSpeciesById } from "@/game/constants/trees";
+import { emptyResources, type ResourceType } from "@/config/resources";
+import { getToolById } from "@/config/tools";
+import { getSpeciesById } from "@/config/trees";
 import {
   advanceFestivalChallenge,
   type EventContext,

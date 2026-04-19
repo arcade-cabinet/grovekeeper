@@ -3,7 +3,7 @@
  * Pure functions for trade rate calculations and execution.
  */
 
-import type { ResourceType } from "../constants/resources";
+import type { ResourceType } from "@/config/resources";
 
 export interface TradeRate {
   from: ResourceType;

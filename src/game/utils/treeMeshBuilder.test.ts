@@ -210,7 +210,7 @@ vi.mock("@babylonjs/core/Maths/math.color", () => {
 // Import modules under test (after mocks)
 // ---------------------------------------------------------------------------
 
-import { PRESTIGE_TREE_SPECIES, TREE_SPECIES } from "../constants/trees";
+import { PRESTIGE_TREE_SPECIES, TREE_SPECIES } from "@/config/trees";
 import {
   buildSpeciesTreeMesh,
   disposeTreeMaterialCache,

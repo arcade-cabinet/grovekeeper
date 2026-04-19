@@ -7,7 +7,7 @@
  */
 import { getDb } from "./client";
 import * as schema from "./schema";
-import type { ResourceType } from "../game/constants/resources";
+import type { ResourceType } from "@/config/resources";
 import type { Season } from "../game/systems/time";
 
 // ─── Types ────────────────────────────────────────────────────

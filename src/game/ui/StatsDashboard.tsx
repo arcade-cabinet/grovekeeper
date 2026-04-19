@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import { useGameStore } from "@/stores/gameStore";
 
 interface StatsDashboardProps {

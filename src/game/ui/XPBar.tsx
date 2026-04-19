@@ -1,4 +1,4 @@
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import { totalXpForLevel, useGameStore, xpToNext } from "@/stores/gameStore";
 
 export const XPBar = () => {

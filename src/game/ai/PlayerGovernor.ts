@@ -26,8 +26,8 @@ import {
   spendToolStamina,
   waterTree,
 } from "../actions/GameActions";
-import type { ResourceType } from "../constants/resources";
-import { getSpeciesById } from "../constants/trees";
+import type { ResourceType } from "@/config/resources";
+import { getSpeciesById } from "@/config/trees";
 import type { GridCellComponent } from "@/world";
 import { gridCellsQuery, playerQuery } from "@/world";
 import { useGameStore } from "@/stores/gameStore";

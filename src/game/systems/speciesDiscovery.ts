@@ -11,8 +11,8 @@
  * All functions are PURE -- no imports from stores or ECS.
  */
 
-import type { DiscoveryTier } from "../constants/codex";
-import { PRESTIGE_TREE_SPECIES, TREE_SPECIES } from "../constants/trees";
+import type { DiscoveryTier } from "@/config/codex";
+import { PRESTIGE_TREE_SPECIES, TREE_SPECIES } from "@/config/trees";
 
 // ---------------------------------------------------------------------------
 // Types

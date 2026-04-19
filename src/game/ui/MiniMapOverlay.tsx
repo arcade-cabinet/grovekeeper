@@ -1,7 +1,7 @@
 import { RiCloseLine } from "@remixicon/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import type { GridCellComponent, TreeComponent } from "@/world";
 import {
   gridCellsQuery,

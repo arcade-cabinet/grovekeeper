@@ -1,4 +1,4 @@
-import { CELL_SIZE } from "../constants/config";
+import { CELL_SIZE } from "@/config/config";
 import type { TileCoord } from "./pathfinding";
 
 /** Waypoint threshold — how close we need to be before advancing. */

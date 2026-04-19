@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 
 interface Props {
   /** data-tutorial-id value of the target element */

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { create } from "zustand";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import { ACHIEVEMENT_DEFS } from "../systems/achievements";
 
 // ---------------------------------------------------------------------------

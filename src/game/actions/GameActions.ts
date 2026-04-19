@@ -8,9 +8,9 @@
  * Used by the GovernorAgent for automated playtesting and E2E tests.
  */
 
-import type { ResourceType } from "../constants/resources";
-import { getToolById } from "../constants/tools";
-import { getSpeciesById } from "../constants/trees";
+import type { ResourceType } from "@/config/resources";
+import { getToolById } from "@/config/tools";
+import { getSpeciesById } from "@/config/trees";
 import { createTreeEntity } from "@/archetypes";
 import type { Entity, GridCellComponent } from "@/world";
 import {

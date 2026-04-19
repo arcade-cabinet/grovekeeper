@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { COLORS } from "../constants/config";
-import type { ResourceType } from "../constants/resources";
+import { COLORS } from "@/config/config";
+import type { ResourceType } from "@/config/resources";
 import { useGameStore } from "@/stores/gameStore";
 
 const RESOURCE_EMOJIS: Record<ResourceType, string> = {

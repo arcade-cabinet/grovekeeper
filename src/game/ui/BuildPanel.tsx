@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { COLORS } from "../constants/config";
-import type { ResourceType } from "../constants/resources";
+import { COLORS } from "@/config/config";
+import type { ResourceType } from "@/config/resources";
 import { useGameStore } from "@/stores/gameStore";
 import { getAvailableTemplates } from "../structures/StructureManager";
 import type { StructureTemplate } from "../structures/types";

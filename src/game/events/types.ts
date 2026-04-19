@@ -6,7 +6,7 @@
  */
 
 import type { Season } from "../systems/time";
-import type { ResourceType } from "../constants/resources";
+import type { ResourceType } from "@/config/resources";
 
 export type EventType = "festival" | "encounter";
 

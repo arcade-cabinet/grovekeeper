@@ -4,9 +4,9 @@ import {
   SEASON_GROWTH_MULTIPLIERS,
   STAGE_VISUALS,
   WATER_BONUS,
-} from "../constants/config";
-import { getActiveDifficulty } from "../constants/difficulty";
-import { getSpeciesById } from "../constants/trees";
+} from "@/config/config";
+import { getActiveDifficulty } from "@/config/difficulty";
+import { getSpeciesById } from "@/config/trees";
 import { gridCellsQuery, structuresQuery, treesQuery } from "@/world";
 import { getGrowthMultiplier as getStructureGrowthMult } from "../structures/StructureManager";
 

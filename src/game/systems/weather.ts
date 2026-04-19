@@ -13,7 +13,7 @@
  * - Windstorm: 10% chance to damage seedling/sprout trees, lasts 30-60 game seconds
  */
 
-import { getActiveDifficulty } from "../constants/difficulty";
+import { getActiveDifficulty } from "@/config/difficulty";
 import { createRNG, hashString } from "../utils/seedRNG";
 
 // ============================================

@@ -8,7 +8,7 @@
  *   Tier 3 (Advanced)     — Level 11-18 — large quantities, powerful effects
  *   Tier 4 (Master)       — Level 19-25 — end-game crafts
  */
-import type { ResourceType } from "../constants/resources";
+import type { ResourceType } from "@/config/resources";
 
 // ---------------------------------------------------------------------------
 // Output types — discriminated union so consumers can branch on `kind`

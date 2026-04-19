@@ -8,7 +8,7 @@
  * Chains complement the existing daily quest system in systems/quests.ts.
  */
 
-import type { ResourceType } from "../constants/resources";
+import type { ResourceType } from "@/config/resources";
 
 export type QuestChainCategory = "npc" | "main_story" | "seasonal";
 

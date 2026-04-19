@@ -16,7 +16,7 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 
-import { getSpeciesById } from "../constants/trees";
+import { getSpeciesById } from "@/config/trees";
 import { createRNG, hashString } from "./seedRNG";
 import { createSPSTree, type SPSTreeParams } from "./spsTreeGenerator";
 

@@ -14,8 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { COLORS } from "../constants/config";
-import { DIFFICULTY_TIERS, type DifficultyTier } from "../constants/difficulty";
+import { COLORS } from "@/config/config";
+import { DIFFICULTY_TIERS, type DifficultyTier } from "@/config/difficulty";
 
 interface NewGameModalProps {
   open: boolean;

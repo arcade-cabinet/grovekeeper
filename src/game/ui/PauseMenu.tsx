@@ -10,10 +10,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isDbInitialized } from "@/db/client";
 import { exportSaveFile, importSaveFile } from "@/db/export";
-import { COLORS } from "../constants/config";
-import { getDifficultyById } from "../constants/difficulty";
-import { TOOLS } from "../constants/tools";
-import { TREE_SPECIES } from "../constants/trees";
+import { COLORS } from "@/config/config";
+import { getDifficultyById } from "@/config/difficulty";
+import { TOOLS } from "@/config/tools";
+import { TREE_SPECIES } from "@/config/trees";
 import { useGameStore } from "@/stores/gameStore";
 import { ACHIEVEMENT_DEFS } from "../systems/achievements";
 import {

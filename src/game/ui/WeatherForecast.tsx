@@ -1,4 +1,4 @@
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import type { WeatherType } from "../systems/weather";
 
 interface WeatherForecastProps {

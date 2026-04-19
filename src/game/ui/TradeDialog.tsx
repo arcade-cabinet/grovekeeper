@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { COLORS } from "../constants/config";
+import { COLORS } from "@/config/config";
 import { useGameStore } from "@/stores/gameStore";
 import type { TradeRate } from "../systems/trading";
 import { executeTrade, getTradeRates } from "../systems/trading";

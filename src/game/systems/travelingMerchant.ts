@@ -7,7 +7,7 @@
  * Pure functions -- no side effects.
  */
 
-import type { ResourceType } from "../constants/resources";
+import type { ResourceType } from "@/config/resources";
 import { createRNG, hashString } from "../utils/seedRNG";
 
 // ── Types ────────────────────────────────────────────────────────────────────

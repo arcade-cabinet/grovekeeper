@@ -1,4 +1,4 @@
-import { getActiveDifficulty } from "../constants/difficulty";
+import { getActiveDifficulty } from "@/config/difficulty";
 import type { Entity } from "@/world";
 import { farmerQuery } from "@/world";
 

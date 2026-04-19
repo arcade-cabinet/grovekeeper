@@ -15,8 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { COLORS } from "../constants/config";
-import { TOOLS, type ToolData } from "../constants/tools";
+import { COLORS } from "@/config/config";
+import { TOOLS, type ToolData } from "@/config/tools";
 import { useGameStore } from "@/stores/gameStore";
 
 interface ToolWheelProps {
