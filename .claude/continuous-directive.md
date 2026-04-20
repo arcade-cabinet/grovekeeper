@@ -43,7 +43,7 @@ The user has made clear, repeatedly, that continuous execution requires:
 
 ## Operating loop (hard rules)
 
-```
+```text
 while true:
     # 1. Check state
     ci = gh pr checks 23       # red → fix CI first
