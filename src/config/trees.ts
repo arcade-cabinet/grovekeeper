@@ -7,6 +7,12 @@ export interface TreeSpeciesData {
   difficulty: 1 | 2 | 3 | 4 | 5;
   unlockLevel: number;
   biome: string;
+  /** 1-2 sentence cozy/gardeny flavour shown in the codex and seed picker. */
+  description?: string;
+  /** 1 sentence player-facing hint shown before the species is unlocked. */
+  codexHint?: string;
+  /** The season in which this species grows most vigorously. */
+  preferredSeason?: "spring" | "summer" | "autumn" | "winter";
   baseGrowthTimes: [number, number, number, number, number]; // seconds per stage 0-4
   yield: { resource: ResourceType; amount: number }[];
   harvestCycleSec: number;

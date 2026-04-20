@@ -33,6 +33,8 @@ export interface AchievementDef {
   id: string;
   name: string;
   description: string;
+  /** 1-sentence cozy celebratory line shown in the achievement unlock toast/popup. */
+  flavor?: string;
 }
 
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
@@ -40,76 +42,94 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "first-seed",
     name: "First Seed",
     description: "Plant your first tree.",
+    flavor: "Every great forest began exactly like this.",
   },
   {
     id: "seed-spreader",
     name: "Seed Spreader",
     description: "Plant 50 trees (cumulative).",
+    flavor: "Fifty small promises to the earth, and the earth is listening.",
   },
   {
     id: "forest-founder",
     name: "Forest Founder",
     description: "Plant 200 trees (cumulative).",
+    flavor: "Two hundred roots drinking deep — a real forest is taking shape.",
   },
   {
     id: "one-of-each",
     name: "One of Each",
     description: "Plant every base species at least once.",
+    flavor:
+      "Twelve different voices, one grove — what a wonderful conversation.",
   },
   {
     id: "patient-gardener",
     name: "Patient Gardener",
     description: "Grow any tree to Mature (stage 3).",
+    flavor: "Good things grow slowly, and yours is growing beautifully.",
   },
   {
     id: "old-growth-guardian",
     name: "Old Growth Guardian",
     description: "Grow any tree to Old Growth (stage 4).",
+    flavor:
+      "Old Growth is the forest's highest honour — you earned every ring.",
   },
   {
     id: "timber-baron",
     name: "Timber Baron",
     description: "Accumulate 1,000 timber (lifetime).",
+    flavor: "A thousand timbers gathered, one careful harvest at a time.",
   },
   {
     id: "sap-collector",
     name: "Sap Collector",
     description: "Accumulate 500 sap (lifetime).",
+    flavor: "Five hundred drops of sweetness, drawn patiently from living wood.",
   },
   {
     id: "the-giving-tree",
     name: "The Giving Tree",
     description: "Harvest 500 fruit (lifetime).",
+    flavor: "The grove gives freely to those who tend it with care.",
   },
   {
     id: "canopy-complete",
     name: "Canopy Complete",
     description: "Fill an entire grid row with mature+ trees.",
+    flavor:
+      "A wall of leafy green, shoulder to shoulder, sheltering everything beneath.",
   },
   {
     id: "full-grove",
     name: "Full Grove",
     description: "Fill the entire grid with trees.",
+    flavor: "Not a patch of bare earth remains — the grove is gloriously full.",
   },
   {
     id: "biodiversity",
     name: "Biodiversity",
     description: "Have 5 or more species growing simultaneously.",
+    flavor: "A grove with many voices sings the richest song.",
   },
   {
     id: "seasonal-veteran",
     name: "Seasonal Veteran",
     description: "Experience all 4 seasons.",
+    flavor: "Spring's hope, summer's warmth, autumn's gold, winter's quiet — you know them all.",
   },
   {
     id: "enchanted-grove",
     name: "Enchanted Grove",
     description: "Have 5 Old Growth trees simultaneously.",
+    flavor: "Five ancient pillars standing tall — the grove hums with deep magic.",
   },
   {
     id: "new-beginnings",
     name: "New Beginnings",
     description: "Prestige for the first time.",
+    flavor: "To begin again is the forest's oldest wisdom.",
   },
 
   // --- Exploration (4) ---
@@ -117,21 +137,25 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "zone-hopper",
     name: "Zone Hopper",
     description: "Visit all 5 zone types.",
+    flavor: "Five landscapes, five different skies — the valley has no more secrets from you.",
   },
   {
     id: "cartographer",
     name: "Cartographer",
     description: "Discover 10 zones.",
+    flavor: "Ten new clearings mapped, each one a story waiting to be grown.",
   },
   {
     id: "wild-harvester",
     name: "Wild Harvester",
     description: "Harvest 10 wild trees.",
+    flavor: "The wild forest shares what it has grown, and you are grateful.",
   },
   {
     id: "forest-keeper",
     name: "Forest Keeper",
     description: "Let 10 wild trees regrow.",
+    flavor: "Giving the forest space to breathe is the quietest kind of kindness.",
   },
 
   // --- Tool Mastery (4) ---
@@ -139,21 +163,25 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "hydration-hero",
     name: "Hydration Hero",
     description: "Water 100 trees.",
+    flavor: "A hundred times you carried water to a thirsty root — the grove remembers.",
   },
   {
     id: "master-pruner",
     name: "Master Pruner",
     description: "Prune 50 trees.",
+    flavor: "Clean cuts and careful hands: fifty trees are stronger for your attention.",
   },
   {
     id: "rock-breaker",
     name: "Rock Breaker",
     description: "Clear 25 rocks with the shovel.",
+    flavor: "Every rock cleared is a welcome mat rolled out for a new seed.",
   },
   {
     id: "tool-collector",
     name: "Tool Collector",
     description: "Unlock all 12 tools.",
+    flavor: "A grovekeeper with every tool is ready for anything the forest asks.",
   },
 
   // --- Seasonal (3) ---
@@ -161,16 +189,19 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "spring-planter",
     name: "Spring Planter",
     description: "Plant 20 trees in spring.",
+    flavor: "Twenty seeds tucked into warm spring soil — by autumn, what a sight.",
   },
   {
     id: "autumn-harvester",
     name: "Autumn Harvester",
     description: "Harvest 30 trees in autumn.",
+    flavor: "Thirty generous trees gave everything they had, right on time.",
   },
   {
     id: "winter-survivor",
     name: "Winter Survivor",
     description: "Have 20 trees survive winter.",
+    flavor: "Twenty trees made it through the cold, roots firm and hearts patient.",
   },
 
   // --- Structure (3) ---
@@ -178,16 +209,19 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "first-builder",
     name: "First Builder",
     description: "Build your first structure.",
+    flavor: "The grove now has a home within its home — your first small wonder.",
   },
   {
     id: "architect",
     name: "Architect",
     description: "Build all structure types.",
+    flavor: "Well, greenhouse, shed, and more — every corner of the grove is cared for.",
   },
   {
     id: "master-builder",
     name: "Master Builder",
     description: "Upgrade any structure to tier 3.",
+    flavor: "A tier-3 structure is craftsmanship at its finest — the grove stands proud.",
   },
 
   // --- Collector (3) ---
@@ -195,16 +229,19 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "lumber-lord",
     name: "Lumber Lord",
     description: "Accumulate 5,000 timber (lifetime).",
+    flavor: "Five thousand timbers stacked — enough to build a whole village, twice over.",
   },
   {
     id: "resource-mogul",
     name: "Resource Mogul",
     description: "Have 1,000 of each resource (lifetime).",
+    flavor: "Timber, sap, fruit, and acorns in abundance — the grove holds nothing back.",
   },
   {
     id: "seed-hoarder",
     name: "Seed Hoarder",
     description: "Collect 50 seeds of one species.",
+    flavor: "Fifty seeds in your pocket, each one a tree that hasn't happened yet.",
   },
 
   // --- Wild Forest (3) ---
@@ -212,16 +249,19 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "forager",
     name: "Forager",
     description: "Harvest 50 wild trees.",
+    flavor: "Fifty wild trees gave their gifts freely — you accepted with grateful hands.",
   },
   {
     id: "reforestation",
     name: "Reforestation",
     description: "Let 10 wild trees regrow after chopping.",
+    flavor: "The forest grows back where you let it — your trust is rewarded.",
   },
   {
     id: "wild-collector",
     name: "Wild Collector",
     description: "Harvest all wild species at least once.",
+    flavor: "Every wild species harvested at least once — the full tapestry, gathered.",
   },
 ];
 

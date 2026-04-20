@@ -46,6 +46,12 @@ export interface NpcTemplate {
   appearance: NpcAppearance;
   requiredLevel: number;
   dialogue: { greeting: string; idle: string[] };
+  /**
+   * Extended dialogue pool. The NpcDialogue UI picks one entry at random on
+   * each interaction, providing more variety than the short `idle` list above.
+   * All entries are standalone lines — no branching required.
+   */
+  dialogueLines?: string[];
   tradeConfig?: { bonusRates: NpcTradeRate[] };
   seedConfig?: { stock: NpcSeedStock[] };
   questConfig?: { specialQuestIds: string[] };
