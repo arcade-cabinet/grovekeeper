@@ -1,3 +1,4 @@
+export { BorderTreeManager } from "./BorderTreeManager";
 export { CameraManager } from "./CameraManager";
 export type { WorldBounds } from "./GroundBuilder";
 export { GroundBuilder } from "./GroundBuilder";

@@ -69,6 +69,7 @@ import {
 import { staminaSystem } from "@/systems/stamina";
 import {
   type GameTime,
+  getGameTime,
   initializeTime,
   type Season,
   updateTime,
@@ -139,6 +140,7 @@ import startingWorldData from "@/world-data/data/starting-world.json";
 import type { NpcQuestMarkerType } from "../scene";
 // Scene managers
 import {
+  BorderTreeManager,
   CameraManager,
   disposeModelCache,
   GroundBuilder,
@@ -184,6 +186,7 @@ export const GameScene = () => {
   const skyManager = new SkyManager();
   const playerMesh = new PlayerMeshManager();
   const treeMesh = new TreeMeshManager();
+  const borderTrees = new BorderTreeManager();
   const npcMesh = new NpcMeshManager();
   const worldManager = new WorldManager();
   const inputManager = new InputManager();
@@ -511,6 +514,16 @@ export const GameScene = () => {
       }
       // Flushes all registered zones into a single draw call (thin instances)
       ground.commitPlantableGrid(scene);
+
+      // --- Border trees (decorative, outside playable grid) ---
+      // Placed after bounds + seed are known. Static for the lifetime of the
+      // scene; rebuildAll is called only on season change.
+      borderTrees.init(
+        scene,
+        bounds,
+        getGameTime().season,
+        groveSeedRef.current || "default",
+      );
 
       // --- Selection ring setup ---
       const selRing = selectionRing;
@@ -1134,6 +1147,12 @@ export const GameScene = () => {
           sa.trackSeason(currentTime.season);
 
           tMesh.rebuildAll(scene, currentTime.season, currentIsNight);
+          borderTrees.rebuildAll(
+            scene,
+            bounds,
+            currentTime.season,
+            groveSeedRef.current || "default",
+          );
           audioManager.play("seasonChange");
         }
 
@@ -1278,6 +1297,7 @@ export const GameScene = () => {
       worldMgr.dispose();
       nMesh.dispose();
       tMesh.dispose();
+      borderTrees.dispose();
       pMesh.dispose();
       disposeModelCache();
       sky.dispose();
