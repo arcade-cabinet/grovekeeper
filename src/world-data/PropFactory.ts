@@ -11,6 +11,12 @@
  *   draw call per prop. For prop types with child meshes the root and every
  *   child each get their own thin-instance buffer so the full composite still
  *   renders correctly.
+ *
+ * Material Cache:
+ *   All prop materials are drawn from a shared StandardMaterial cache keyed
+ *   by (r,g,b,alpha,emissive?,sceneUid). This means 10 boulder instances share
+ *   exactly 1 StandardMaterial object instead of 10.  The palette is small
+ *   (~15 distinct colors) so cache size is bounded.
  */
 
 // Side-effect import: augments Mesh prototype with thinInstance* methods.
@@ -28,6 +34,73 @@ import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import type { PropPlacement } from "./types";
+
+// ---------------------------------------------------------------------------
+// Shared material cache — keyed by color fingerprint + scene uid
+// ---------------------------------------------------------------------------
+
+/**
+ * A compact descriptor for a StandardMaterial with optional alpha and
+ * emissive.  Two materials with identical descriptors are structurally
+ * identical and can be safely shared across prop instances.
+ */
+interface MatSpec {
+  r: number;
+  g: number;
+  b: number;
+  alpha?: number;
+  emissiveR?: number;
+  emissiveG?: number;
+  emissiveB?: number;
+}
+
+/** Module-level cache: survives scene reloads if the scene uid is in the key. */
+const _propMatCache = new Map<string, StandardMaterial>();
+
+/**
+ * Return (or create) a StandardMaterial that matches the given spec.
+ * Materials are cached per-scene so we never cross scene boundaries.
+ */
+function getPropMaterial(scene: Scene, spec: MatSpec): StandardMaterial {
+  const key = `${scene.uid}|${spec.r},${spec.g},${spec.b}|a${spec.alpha ?? 1}|e${spec.emissiveR ?? 0},${spec.emissiveG ?? 0},${spec.emissiveB ?? 0}`;
+  const cached = _propMatCache.get(key);
+  if (cached) return cached;
+
+  const mat = new StandardMaterial(`propMat_${key}`, scene);
+  mat.diffuseColor = new Color3(spec.r, spec.g, spec.b);
+
+  if (spec.alpha !== undefined && spec.alpha < 1) {
+    mat.alpha = spec.alpha;
+    mat.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
+    mat.backFaceCulling = false;
+  }
+
+  if (
+    spec.emissiveR !== undefined ||
+    spec.emissiveG !== undefined ||
+    spec.emissiveB !== undefined
+  ) {
+    mat.emissiveColor = new Color3(
+      spec.emissiveR ?? 0,
+      spec.emissiveG ?? 0,
+      spec.emissiveB ?? 0,
+    );
+  }
+
+  _propMatCache.set(key, mat);
+  return mat;
+}
+
+/**
+ * Dispose all cached prop materials and clear the cache.
+ * Call when disposing the BabylonJS scene.
+ */
+export function disposePropMaterialCache(): void {
+  for (const mat of _propMatCache.values()) {
+    mat.dispose();
+  }
+  _propMatCache.clear();
+}
 
 // ---------------------------------------------------------------------------
 // Scratch buffers — allocated once, reused across all batch calls.
@@ -49,9 +122,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     );
     log.rotation.z = Math.PI / 2;
     log.position.y = 0.12;
-    const mat = new StandardMaterial(`${name}_mat`, scene);
-    mat.diffuseColor = new Color3(0.35, 0.22, 0.12);
-    log.material = mat;
+    log.material = getPropMaterial(scene, { r: 0.35, g: 0.22, b: 0.12 });
     return log;
   },
 
@@ -77,12 +148,8 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
       stem.position.x = (i - 1) * 0.08;
       stem.position.z = (i % 2) * 0.06;
       stem.parent = root;
-      const stemMat = new StandardMaterial(`${name}_stemMat${i}`, scene);
-      stemMat.diffuseColor = new Color3(0.9, 0.85, 0.7);
-      stem.material = stemMat;
-      const capMat = new StandardMaterial(`${name}_capMat${i}`, scene);
-      capMat.diffuseColor = new Color3(0.7, 0.15, 0.1);
-      cap.material = capMat;
+      stem.material = getPropMaterial(scene, { r: 0.9, g: 0.85, b: 0.7 });
+      cap.material = getPropMaterial(scene, { r: 0.7, g: 0.15, b: 0.1 });
     }
     return root;
   },
@@ -113,12 +180,9 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
       stem.position.x = Math.sin(i * 1.3) * 0.15;
       stem.position.z = Math.cos(i * 1.3) * 0.15;
       stem.parent = root;
-      const stemMat = new StandardMaterial(`${name}_fsMat${i}`, scene);
-      stemMat.diffuseColor = new Color3(0.2, 0.5, 0.15);
-      stem.material = stemMat;
-      const flMat = new StandardMaterial(`${name}_flMat${i}`, scene);
-      flMat.diffuseColor = colors[i % colors.length];
-      flower.material = flMat;
+      stem.material = getPropMaterial(scene, { r: 0.2, g: 0.5, b: 0.15 });
+      const fc = colors[i % colors.length];
+      flower.material = getPropMaterial(scene, { r: fc.r, g: fc.g, b: fc.b });
     }
     return root;
   },
@@ -127,9 +191,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     const rock = CreateSphere(name, { diameter: 0.5, segments: 6 }, scene);
     rock.scaling = new Vector3(1.2, 0.7, 1.0);
     rock.position.y = 0.15;
-    const mat = new StandardMaterial(`${name}_mat`, scene);
-    mat.diffuseColor = new Color3(0.45, 0.42, 0.4);
-    rock.material = mat;
+    rock.material = getPropMaterial(scene, { r: 0.45, g: 0.42, b: 0.4 });
     return rock;
   },
 
@@ -140,9 +202,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
       scene,
     );
     post.position.y = 0.5;
-    const postMat = new StandardMaterial(`${name}_postMat`, scene);
-    postMat.diffuseColor = new Color3(0.4, 0.26, 0.13);
-    post.material = postMat;
+    post.material = getPropMaterial(scene, { r: 0.4, g: 0.26, b: 0.13 });
 
     const plank1 = CreateBox(
       `${name}_plank1`,
@@ -160,8 +220,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     plank2.position.y = 0.2;
     plank2.rotation.y = -0.4;
     plank2.parent = post;
-    const plankMat = new StandardMaterial(`${name}_plankMat`, scene);
-    plankMat.diffuseColor = new Color3(0.55, 0.38, 0.2);
+    const plankMat = getPropMaterial(scene, { r: 0.55, g: 0.38, b: 0.2 });
     plank1.material = plankMat;
     plank2.material = plankMat;
     return post;
@@ -174,9 +233,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
       scene,
     );
     post.position.y = 0.4;
-    const postMat = new StandardMaterial(`${name}_postMat`, scene);
-    postMat.diffuseColor = new Color3(0.3, 0.3, 0.3);
-    post.material = postMat;
+    post.material = getPropMaterial(scene, { r: 0.3, g: 0.3, b: 0.3 });
 
     const body = CreateBox(
       `${name}_body`,
@@ -185,10 +242,14 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     );
     body.position.y = 0.4;
     body.parent = post;
-    const bodyMat = new StandardMaterial(`${name}_bodyMat`, scene);
-    bodyMat.diffuseColor = new Color3(1.0, 0.85, 0.5);
-    bodyMat.emissiveColor = new Color3(0.8, 0.6, 0.2);
-    body.material = bodyMat;
+    body.material = getPropMaterial(scene, {
+      r: 1.0,
+      g: 0.85,
+      b: 0.5,
+      emissiveR: 0.8,
+      emissiveG: 0.6,
+      emissiveB: 0.2,
+    });
 
     const cap = CreateBox(
       `${name}_cap`,
@@ -197,9 +258,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     );
     cap.position.y = 0.52;
     cap.parent = post;
-    const capMat = new StandardMaterial(`${name}_capMat`, scene);
-    capMat.diffuseColor = new Color3(0.3, 0.3, 0.3);
-    cap.material = capMat;
+    cap.material = getPropMaterial(scene, { r: 0.3, g: 0.3, b: 0.3 });
     return post;
   },
 
@@ -207,10 +266,8 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     const root = CreateBox(`${name}_root`, { size: 0.01 }, scene);
     root.isVisible = false;
 
-    const postMat = new StandardMaterial(`${name}_postMat`, scene);
-    postMat.diffuseColor = new Color3(0.45, 0.3, 0.15);
-    const railMat = new StandardMaterial(`${name}_railMat`, scene);
-    railMat.diffuseColor = new Color3(0.5, 0.35, 0.18);
+    const fencePostMat = getPropMaterial(scene, { r: 0.45, g: 0.3, b: 0.15 });
+    const fenceRailMat = getPropMaterial(scene, { r: 0.5, g: 0.35, b: 0.18 });
 
     const lPost = CreateCylinder(
       `${name}_lp`,
@@ -220,7 +277,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     lPost.position.y = 0.25;
     lPost.position.x = -0.3;
     lPost.parent = root;
-    lPost.material = postMat;
+    lPost.material = fencePostMat;
 
     const rPost = CreateCylinder(
       `${name}_rp`,
@@ -230,7 +287,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     rPost.position.y = 0.25;
     rPost.position.x = 0.3;
     rPost.parent = root;
-    rPost.material = postMat;
+    rPost.material = fencePostMat;
 
     const topRail = CreateBox(
       `${name}_tr`,
@@ -239,7 +296,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     );
     topRail.position.y = 0.4;
     topRail.parent = root;
-    topRail.material = railMat;
+    topRail.material = fenceRailMat;
 
     const botRail = CreateBox(
       `${name}_br`,
@@ -248,7 +305,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     );
     botRail.position.y = 0.2;
     botRail.parent = root;
-    botRail.material = railMat;
+    botRail.material = fenceRailMat;
     return root;
   },
 
@@ -259,9 +316,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
       scene,
     );
     trunk.position.y = 0.125;
-    const trunkMat = new StandardMaterial(`${name}_trunkMat`, scene);
-    trunkMat.diffuseColor = new Color3(0.4, 0.28, 0.14);
-    trunk.material = trunkMat;
+    trunk.material = getPropMaterial(scene, { r: 0.4, g: 0.28, b: 0.14 });
 
     const top = CreateCylinder(
       `${name}_top`,
@@ -270,9 +325,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     );
     top.position.y = 0.14;
     top.parent = trunk;
-    const topMat = new StandardMaterial(`${name}_topMat`, scene);
-    topMat.diffuseColor = new Color3(0.25, 0.16, 0.08);
-    top.material = topMat;
+    top.material = getPropMaterial(scene, { r: 0.25, g: 0.16, b: 0.08 });
     return trunk;
   },
 
@@ -283,9 +336,8 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
       scene,
     );
     pedestal.position.y = 0.25;
-    const stoneMat = new StandardMaterial(`${name}_stoneMat`, scene);
-    stoneMat.diffuseColor = new Color3(0.6, 0.58, 0.55);
-    pedestal.material = stoneMat;
+    const birdbathStoneMat = getPropMaterial(scene, { r: 0.6, g: 0.58, b: 0.55 });
+    pedestal.material = birdbathStoneMat;
 
     const bowl = CreateSphere(
       `${name}_bowl`,
@@ -295,7 +347,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     bowl.scaling.y = 0.4;
     bowl.position.y = 0.3;
     bowl.parent = pedestal;
-    bowl.material = stoneMat;
+    bowl.material = birdbathStoneMat;
 
     const water = CreateCylinder(
       `${name}_water`,
@@ -304,10 +356,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     );
     water.position.y = 0.35;
     water.parent = pedestal;
-    const waterMat = new StandardMaterial(`${name}_waterMat`, scene);
-    waterMat.diffuseColor = new Color3(0.3, 0.55, 0.75);
-    waterMat.alpha = 0.7;
-    water.material = waterMat;
+    water.material = getPropMaterial(scene, { r: 0.3, g: 0.55, b: 0.75, alpha: 0.7 });
     return pedestal;
   },
 
@@ -315,8 +364,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     const root = CreateBox(`${name}_root`, { size: 0.01 }, scene);
     root.isVisible = false;
 
-    const stoneMat = new StandardMaterial(`${name}_stoneMat`, scene);
-    stoneMat.diffuseColor = new Color3(0.4, 0.38, 0.35);
+    const campfireStoneMat = getPropMaterial(scene, { r: 0.4, g: 0.38, b: 0.35 });
     for (let i = 0; i < 6; i++) {
       const angle = (i / 6) * Math.PI * 2;
       const stone = CreateSphere(
@@ -328,11 +376,10 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
       stone.position.z = Math.sin(angle) * 0.18;
       stone.position.y = 0.04;
       stone.parent = root;
-      stone.material = stoneMat;
+      stone.material = campfireStoneMat;
     }
 
-    const logMat = new StandardMaterial(`${name}_logMat`, scene);
-    logMat.diffuseColor = new Color3(0.35, 0.22, 0.1);
+    const campfireLogMat = getPropMaterial(scene, { r: 0.35, g: 0.22, b: 0.1 });
     const log1 = CreateCylinder(
       `${name}_l1`,
       { height: 0.3, diameter: 0.05, tessellation: 6 },
@@ -342,7 +389,7 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     log1.rotation.y = 0.4;
     log1.position.y = 0.06;
     log1.parent = root;
-    log1.material = logMat;
+    log1.material = campfireLogMat;
     const log2 = CreateCylinder(
       `${name}_l2`,
       { height: 0.3, diameter: 0.05, tessellation: 6 },
@@ -352,11 +399,16 @@ const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
     log2.rotation.y = -0.4;
     log2.position.y = 0.09;
     log2.parent = root;
-    log2.material = logMat;
+    log2.material = campfireLogMat;
 
-    const flameMat = new StandardMaterial(`${name}_flameMat`, scene);
-    flameMat.diffuseColor = new Color3(1.0, 0.5, 0.0);
-    flameMat.emissiveColor = new Color3(1.0, 0.4, 0.0);
+    const flameMat = getPropMaterial(scene, {
+      r: 1.0,
+      g: 0.5,
+      b: 0.0,
+      emissiveR: 1.0,
+      emissiveG: 0.4,
+      emissiveB: 0.0,
+    });
     const flame1 = CreateSphere(
       `${name}_f1`,
       { diameter: 0.1, segments: 4 },
