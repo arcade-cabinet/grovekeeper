@@ -170,3 +170,45 @@ re-encode, and pixel-ratio clamp, THEN reconsider engines with data in hand.
   trees or the claim is stale. Need Spector.js capture.
 - **Mobile vs desktop gap.** The 54MB texture upload cost dominates first-
   frame on mobile but is invisible on desktop. Need real device numbers.
+
+## Post-port results (1.0.0-alpha.1, 2026-04-20)
+
+### Bundle sizes (`pnpm build`, raw disk — gzip varies by server)
+
+| Chunk | Pre-port (raw) | Post-port (raw) | Delta | Notes |
+|---|---:|---:|---:|---|
+| `babylon-*.js` (monolith) | 2,413 KB | — | — | split into two |
+| `babylon-core-*.js` | — | 2,064 KB | — | first-frame path |
+| `babylon-loaders-*.js` | — | 348 KB | — | **lazy-loaded** — not in initial parse |
+| `index-*.js` | 468 KB | 308 KB | −160 KB | Radix/framer/shadcn purged |
+| `GameScene-*.js` | 335 KB | 308 KB | −27 KB | smaller render loop |
+| CSS | — | 52 KB | — | Tailwind 4 + hand-rolled primitives |
+| `public/textures/` | 54 MB | ~6 MB | −48 MB | 1024² → 512² resize + metadata strip |
+
+**Initial first-paint payload** drops from `index (468KB) + babylon (2413KB) = 2881 KB raw`
+to `index (308KB) + babylon-core (2064KB) = 2372 KB raw`. Then `babylon-loaders`
+(348 KB) is **deferred** until the first `loadModel()` or skybox attach fires —
+not downloaded at all for initial scene-less screens.
+
+### Shipped optimizations
+
+| Wave | Task | Mechanism |
+|---|---|---|
+| B | B11 | Tree mesh `clone()` → `createInstance()` — shared template, batched draw calls |
+| B | B23 | Stage-4 tree meshes: `doNotSyncBoundingInfo = true` on top of `freezeWorldMatrix` |
+| B | B9 | Textures resized 1024² → 512², metadata stripped — 54 MB → 6 MB on disk, ~160 MB → ~20 MB VRAM |
+| B | B8 | `growthSystem` uses numeric-packed spatial keys + module-scope Map/Set (was `new Set<string>()` per frame, ~18k string allocs/sec removed) |
+| B | B13 | `engine.setHardwareScalingLevel(...)` clamp on touch; `scene.performancePriority = Intermediate`; `skipPointerMovePicking`; `autoClear = false` |
+| T | T20 | Plantable grid: 4 subdivided wireframe `CreateGround` meshes → **1 thin-instance mesh** with 308 matrices |
+| T | T21 | Border trees: per-tree Mesh → **thin-instance buffer** per species (≤6 source meshes, 120 instances) |
+| T | T22 | `createPropMeshBatch` for any prop type with >4 instances — one draw call per prop type, not per instance |
+| T | T24 | `@babylonjs/loaders` + HDR skybox converted to dynamic `import()`; `manualChunks` split Babylon into core/loaders |
+| T | T26 | SPS particle factories mutate `.position.set(...)` / `.scale.set(...)` in place (was `new Vector3(...)` per particle) |
+| T | T42 | Stage-transition scale pulse (perf: Map lookup + 1 sin per transitioned tree; no per-frame allocation) |
+
+### Open perf items deferred to 1.0 (tracked in `.claude/plans/grovekeeper-1.0-polish.prq.md`)
+
+- **T23 material atlas** — 40+ `new StandardMaterial`/`new PBRMaterial` call sites; consolidate bark/leaf/ground into shared atlases with per-instance UV offsets. Biggest remaining draw-call win.
+- **Full Lighthouse audit** on the deployed build. The T27 `?perf=1` frame profiler lands the runtime instrumentation; this section gets updated once Lighthouse has run against production.
+- **Real-device numbers** (mobile Safari / Chrome Android) — need a physical device pass.
+- **Spector.js capture** of an active scene to verify the <50 draw-call target post-thin-instancing.
