@@ -1,3 +1,11 @@
+---
+title: Architecture Overview
+updated: 2026-04-19
+status: stale
+domain: technical
+stale_reason: "References pre-port src/game/ layout + React architecture. See docs/architecture/state-management.md and ecs-patterns.md for the current Solid+Koota picture."
+---
+
 # Architecture Overview
 
 Grovekeeper is a cozy 2.5D isometric tree-planting simulation and idle tending game. It is built as a mobile-first PWA (portrait orientation) with desktop as a secondary target. Sessions are designed around 3-15 minute commute-friendly play.

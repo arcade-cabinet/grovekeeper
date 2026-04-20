@@ -1,3 +1,9 @@
+---
+title: Grovekeeper — Claude Entry Point
+updated: 2026-04-19
+status: current
+---
+
 # CLAUDE.md -- Grovekeeper
 
 See `docs/` for complete game design, architecture, and brand documentation.
@@ -25,19 +31,21 @@ Every decision -- from UI layout to performance budgets to touch targets -- must
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Runtime | React 19 | UI layer, component model |
-| 3D Engine | BabylonJS 8.x | Scene rendering, procedural meshes |
-| ECS | Miniplex 2.x | Entity-component-system |
-| ECS React | miniplex-react | React hooks for ECS queries |
-| State | Zustand 5.x | Persistent game state via localStorage |
+| Runtime | SolidJS 1.9 | Fine-grained reactivity, no VDOM |
+| 3D Engine | BabylonJS 8.x | Scene rendering, procedural meshes, GPU instancing |
+| ECS + State | Koota 0.6 | Single state system: runtime ECS + persistent traits |
+| Audio | Tone.js 15 | All SFX synthesized; no raw Web Audio API |
 | Input | InputManager (custom) | Unified pointer/keyboard/tap-to-move with A* pathfinding |
-| Styling | Tailwind CSS 4.x + shadcn/ui | UI component library |
-| Bundler | Vite 6.x | Fast dev server, HMR |
+| Styling | Tailwind CSS 4.x | Hand-rolled Solid primitives (no shadcn/Radix) |
+| Bundler | Vite 6.x | Fast dev server, HMR, vite-plugin-solid |
 | Language | TypeScript 5.7+ | Strict mode |
 | Lint/Fmt | Biome 2.3 | Single tool for lint + format |
 | Package Mgr | pnpm | Fast, strict |
-| Testing | Vitest 4.x + @testing-library/react | TDD approach |
+| Testing | Vitest 4.x + @solidjs/testing-library | Node (happy-dom) + Browser (playwright) |
 | Mobile Native | Capacitor 8.x | PWA + native bridge |
+
+Historical: was React 19 + Miniplex + Zustand + shadcn/Radix pre-1.0.0-alpha.1.
+Migration details in `CHANGELOG.md` and the B1-B24 commit history.
 
 ## Common Commands
 

@@ -1,3 +1,11 @@
+---
+title: Rendering Architecture
+updated: 2026-04-19
+status: stale
+domain: technical
+stale_reason: "References pre-port src/game/scene/ layout. Scene managers now live under src/engine/scene/ and are orchestrated by src/engine/scenes/GameScene.tsx."
+---
+
 # Rendering Architecture
 
 Grovekeeper's 3D rendering is handled by BabylonJS 8.50.x in an imperative (not declarative) style. Scene management is split across 8 specialized managers in `src/game/scene/`, coordinated by `GameScene.tsx` (~400 lines).

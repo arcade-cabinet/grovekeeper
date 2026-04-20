@@ -35,7 +35,7 @@
       }
     },
     {
-      "includes": ["src/components/ui/**"],
+      "includes": ["src/ui/primitives/**"],
       "linter": {
         "rules": {
           "suspicious": { "noDocumentCookie": "off", "noArrayIndexKey": "off" },
@@ -43,28 +43,30 @@
             "noRedundantRoles": "off",
             "useSemanticElements": "off",
             "useFocusableInteractive": "off",
-            "useAriaPropsForRole": "off"
+            "useAriaPropsForRole": "off",
+            "noStaticElementInteractions": "off"
           },
           "security": { "noDangerouslySetInnerHtml": "off" }
         }
       }
     },
     {
-      "includes": ["src/game/ui/**"],
+      "includes": ["src/ui/**"],
       "linter": {
         "rules": {
           "a11y": {
             "useButtonType": "off",
             "noSvgWithoutTitle": "off",
             "useKeyWithClickEvents": "off",
-            "useSemanticElements": "off"
+            "useSemanticElements": "off",
+            "noStaticElementInteractions": "off"
           },
           "suspicious": { "noArrayIndexKey": "off" }
         }
       }
     },
     {
-      "includes": ["src/game/scenes/**"],
+      "includes": ["src/engine/scenes/**"],
       "linter": {
         "rules": {
           "style": { "noNonNullAssertion": "off" },

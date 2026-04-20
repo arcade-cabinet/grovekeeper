@@ -1,0 +1,36 @@
+{
+  "max_lines": 300,
+  "spec_dirs": [
+    "src/systems",
+    "src/engine",
+    "src/input",
+    "src/world-data",
+    "src/structures",
+    "src/npcs",
+    "src/ai",
+    "src/ecs"
+  ],
+  "ban_patterns": [
+    {
+      "pattern": "Math\\.random\\(\\)",
+      "message": "Use scopedRNG() from @/shared/utils/seedRNG instead of Math.random() in engine/systems code — determinism matters.",
+      "globs": [
+        "src/engine/**",
+        "src/systems/**",
+        "src/world-data/**",
+        "src/npcs/**",
+        "src/ai/**"
+      ]
+    },
+    {
+      "pattern": "\\.(glb|gltf)",
+      "message": "No GLB imports in hot game code — geometry is procedural. NPC model loading goes through src/engine/scene/ModelLoader.ts only.",
+      "globs": [
+        "src/systems/**",
+        "src/world-data/**",
+        "src/engine/scene/BorderTreeManager.ts",
+        "src/engine/scene/TreeMeshManager.ts"
+      ]
+    }
+  ]
+}

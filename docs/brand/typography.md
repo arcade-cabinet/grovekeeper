@@ -1,3 +1,10 @@
+---
+title: Typography
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Typography
 
 ## Font Stack

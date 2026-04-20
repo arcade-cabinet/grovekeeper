@@ -19,7 +19,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
 
     /* Linting */
     "forceConsistentCasingInFileNames": true,
@@ -27,8 +28,7 @@
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "next-themes": ["src/next-themes.tsx"]
+      "@/*": ["src/*"]
     }
   },
   "include": ["src"],

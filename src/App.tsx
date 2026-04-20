@@ -1,11 +1,11 @@
-import { Game } from "./game/Game";
-import { AchievementPopupContainer } from "./game/ui/AchievementPopup";
-import { FloatingParticlesContainer } from "./game/ui/FloatingParticles";
-import { ToastContainer } from "./game/ui/Toast";
+import { Game } from "@/Game";
+import { AchievementPopupContainer } from "@/ui/game/AchievementPopup";
+import { FloatingParticlesContainer } from "@/ui/game/FloatingParticles";
+import { ToastContainer } from "@/ui/game/Toast";
 
 function App() {
   return (
-    <div className="grove-game-container">
+    <div class="grove-game-container">
       <Game />
       <ToastContainer />
       <FloatingParticlesContainer />

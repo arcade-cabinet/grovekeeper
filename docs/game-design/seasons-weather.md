@@ -1,3 +1,10 @@
+---
+title: Seasons and Weather
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Seasons and Weather
 
 Grovekeeper features a continuous day/night cycle with four seasons and dynamic weather events that affect tree growth rates and player stamina costs.

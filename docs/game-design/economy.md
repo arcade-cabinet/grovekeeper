@@ -1,3 +1,10 @@
+---
+title: Economy
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Economy
 
 Grovekeeper uses a four-resource economy with coins as a secondary currency. Resources are earned by harvesting trees and spent on seeds and grid expansion.

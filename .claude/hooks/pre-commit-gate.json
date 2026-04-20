@@ -1,0 +1,7 @@
+{
+  "steps": [
+    "pnpm lint",
+    "npx tsc --noEmit",
+    "pnpm test"
+  ]
+}

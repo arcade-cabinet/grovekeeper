@@ -52,34 +52,34 @@
 /* Grovekeeper Design Tokens (§5) */
 :root {
   /* Primary — "Forest Floor" */
-  --gk-deep-canopy: #1A3A2A;
-  --gk-grove-green: #2D6A4F;
-  --gk-moss: #4A7C59;
-  --gk-sage-mist: #7FB285;
-  --gk-morning-dew: #C8E6C9;
-  --gk-parchment: #F5F0E3;
+  --gk-deep-canopy: #1a3a2a;
+  --gk-grove-green: #2d6a4f;
+  --gk-moss: #4a7c59;
+  --gk-sage-mist: #7fb285;
+  --gk-morning-dew: #c8e6c9;
+  --gk-parchment: #f5f0e3;
 
   /* Earth — "Rich Soil" */
-  --gk-heartwood: #5C3D2E;
-  --gk-bark-brown: #8B6F47;
-  --gk-warm-clay: #C49A6C;
-  --gk-dry-straw: #D4C5A0;
+  --gk-heartwood: #5c3d2e;
+  --gk-bark-brown: #8b6f47;
+  --gk-warm-clay: #c49a6c;
+  --gk-dry-straw: #d4c5a0;
 
   /* Seasonal */
-  --gk-spring-bloom: #E8A0BF;
-  --gk-summer-gold: #E9C46A;
-  --gk-autumn-ember: #E76F51;
-  --gk-winter-frost: #A8DADC;
+  --gk-spring-bloom: #e8a0bf;
+  --gk-summer-gold: #e9c46a;
+  --gk-autumn-ember: #e76f51;
+  --gk-winter-frost: #a8dadc;
 
   /* Functional */
-  --gk-success: #52B788;
-  --gk-warning: #F4A261;
-  --gk-danger: #E76F51;
-  --gk-info: #6AADCF;
+  --gk-success: #52b788;
+  --gk-warning: #f4a261;
+  --gk-danger: #e76f51;
+  --gk-info: #6aadcf;
 
   /* Typography */
-  --gk-font-display: 'Fredoka', 'Nunito', sans-serif;
-  --gk-font-body: 'Nunito', 'Segoe UI', sans-serif;
+  --gk-font-display: "Fredoka", "Nunito", sans-serif;
+  --gk-font-body: "Nunito", "Segoe UI", sans-serif;
 
   /* Type Scale */
   --gk-text-xs: 0.75rem;
@@ -210,7 +210,12 @@
     font-family: var(--gk-font-body);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--gk-font-display);
     letter-spacing: -0.02em;
   }
@@ -218,16 +223,17 @@
   button {
     font-family: var(--gk-font-display);
   }
-  
+
   /* Prevent pull-to-refresh and bounce on mobile */
-  html, body {
+  html,
+  body {
     overscroll-behavior: none;
     overflow: hidden;
     position: fixed;
     width: 100%;
     height: 100%;
   }
-  
+
   #root {
     width: 100%;
     height: 100%;
@@ -243,7 +249,7 @@
   /* md: 768px (tablets) */
   /* lg: 1024px (landscape tablets, small laptops) */
   /* xl: 1280px (desktops) */
-  
+
   .grove-game-container {
     width: 100vw;
     height: 100vh;
@@ -251,20 +257,20 @@
     overflow: hidden;
     position: relative;
   }
-  
+
   /* Safe area padding for notched devices */
   .safe-area-top {
     padding-top: env(safe-area-inset-top, 0px);
   }
-  
+
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  
+
   .safe-area-left {
     padding-left: env(safe-area-inset-left, 0px);
   }
-  
+
   .safe-area-right {
     padding-right: env(safe-area-inset-right, 0px);
   }
@@ -272,7 +278,13 @@
 
 /* Custom xs breakpoint for very small screens */
 @media (min-width: 320px) {
-  .xs\:block { display: block; }
-  .xs\:hidden { display: none; }
-  .xs\:flex { display: flex; }
+  .xs\:block {
+    display: block;
+  }
+  .xs\:hidden {
+    display: none;
+  }
+  .xs\:flex {
+    display: flex;
+  }
 }

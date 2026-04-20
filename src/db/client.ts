@@ -4,8 +4,9 @@
  * Provides getDb() which returns the Drizzle instance and the underlying
  * sql.js Database. Lazily initialized by initDatabase().
  */
-import { drizzle } from "drizzle-orm/sql-js";
+
 import type { SQLJsDatabase } from "drizzle-orm/sql-js";
+import { drizzle } from "drizzle-orm/sql-js";
 import type { Database } from "sql.js";
 import * as schema from "./schema";
 

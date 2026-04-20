@@ -4,7 +4,7 @@
 /// <reference types="react-dom" />
 
 // Import all module declarations
-import './modules';
+import "./modules";
 
 // Global augmentation for better TypeScript support
 declare global {
@@ -21,7 +21,7 @@ declare global {
 }
 
 // Ambient module declarations for better IDE support
-declare module 'react' {
+declare module "react" {
   interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
     [key: string]: any;
   }
@@ -38,4 +38,6 @@ export type PropsWithChildren<P = any> = P & {
   [key: string]: any;
 };
 
-export type ComponentWithProps<P = any> = React.ComponentType<P & Record<string, any>>;
+export type ComponentWithProps<P = any> = React.ComponentType<
+  P & Record<string, any>
+>;

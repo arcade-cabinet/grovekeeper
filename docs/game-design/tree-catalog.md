@@ -1,3 +1,11 @@
+---
+title: Tree Catalog
+updated: 2026-04-19
+status: stale
+domain: product
+stale_reason: "References pre-port src/game/constants/ file paths. Species catalog content is still accurate; source of truth now lives in src/config/trees.json + src/config/trees.ts."
+---
+
 # Tree Catalog
 
 Grovekeeper has 15 tree species: 12 base species available through normal leveling, and 3 prestige species unlocked via the prestige system.

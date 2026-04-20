@@ -1,3 +1,11 @@
+---
+title: Brand Identity
+updated: 2026-04-19
+status: stale
+domain: product
+stale_reason: "Contains some file-path references that predate the src/ layout restructure. Identity content (tagline, palette intent) is still accurate."
+---
+
 # Brand Identity
 
 ## Tagline

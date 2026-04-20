@@ -1,3 +1,10 @@
+---
+title: Grovekeeper Documentation
+updated: 2026-04-19
+status: current
+domain: context
+---
+
 # Grovekeeper Documentation
 
 > "Every forest begins with a single seed."

@@ -1,3 +1,11 @@
+---
+title: Design Tokens
+updated: 2026-04-19
+status: stale
+domain: product
+stale_reason: "References pre-port shadcn + Radix integration. Current UI uses hand-rolled Solid primitives under src/ui/primitives/ with the cn() helper from src/shared/utils.ts."
+---
+
 # Design Tokens
 
 All CSS custom properties are defined in `src/index.css` under the `:root`

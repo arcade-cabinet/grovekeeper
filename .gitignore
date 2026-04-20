@@ -39,3 +39,27 @@ test-results/
 # Screenshots from visual testing
 *.png
 !public/*.png
+
+# Expo (migration canceled — leftover local-only artifacts)
+.expo/
+expo-env.d.ts
+
+# Session-local memory/logs (not a shared artifact)
+.remember/
+memory-bank/
+.ralph-tui/
+
+# Claude Code: share hooks/skills/settings/directives; ignore transient
+# runtime state + per-session markers inside .claude/.
+.claude/state/
+.claude/logs/
+.claude/cache/
+.claude/tmp/
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
+.claude/.last-*
+
+# Ad-hoc scratch files accidentally committed to public/
+public/test.txt
+public/testdir/

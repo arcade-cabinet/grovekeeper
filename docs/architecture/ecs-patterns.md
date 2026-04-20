@@ -1,216 +1,303 @@
+---
+title: ECS Patterns
+updated: 2026-04-20
+status: current
+domain: technical
+---
+
 # ECS Patterns
 
-Grovekeeper uses [Miniplex 2.x](https://github.com/hmans/miniplex) as its Entity-Component-System framework. The ECS manages all runtime game state that changes every frame: entity positions, tree growth progress, grid cell occupancy, and player location.
+Grovekeeper uses [Koota 0.6](https://github.com/eliaspekkari/koota) as both the Entity-Component-System framework and the persistent state store. Koota manages all game state — entities (trees, players, NPCs) with traits (components) at runtime, and world-level singleton traits (player progression, time, resources) across sessions.
 
-## Entity Interface
+## Core Concepts
 
-All entities share a single `Entity` interface defined in `src/game/ecs/world.ts`. Components are optional properties on the interface:
+**World**: A Koota world is a container for entities and singleton traits. The world itself is entity ID 0; all user-spawned entities have IDs >= 1.
+
+**Traits**: Immutable schemas that define the shape of component data. A trait is created with `trait({ ...schema })` and instantiated by calling it as a function: `Tree({ speciesId: "white-oak", stage: 0 })`.
+
+**Entities**: Objects that hold zero or more trait instances. Each entity is identified by a unique ID and can be queried by the traits it possesses.
+
+## Defining Traits
+
+Traits are defined centrally in `src/traits.ts`. Use `trait()` from the koota package:
 
 ```typescript
-interface Entity {
-  id: string;
-  position?: Position;
-  renderable?: Renderable;
-  tree?: TreeComponent;
-  player?: PlayerComponent;
-  gridCell?: GridCellComponent;
-  farmerState?: FarmerState;
-  harvestable?: {
-    resources: { type: string; amount: number }[];
-    cooldownElapsed: number;
-    cooldownTotal: number;
-    ready: boolean;
-  };
+import { trait } from "koota";
+
+// Scalar trait — no mutable references in the default value
+export const Position = trait({ x: 0, y: 0, z: 0 });
+
+// Entity trait — describes trees
+export const Tree = trait({
+  speciesId: "white-oak",
+  stage: 0 as 0 | 1 | 2 | 3 | 4,  // Seed, Sprout, Sapling, Mature, Old Growth
+  progress: 0,
+  watered: false,
+  totalGrowthTime: 0,
+  plantedAt: 0,
+  meshSeed: 0,
+});
+```
+
+### Factory Defaults for Mutable Types
+
+When a trait's default value is a mutable reference (array, record), use a factory function to avoid shared state:
+
+```typescript
+// ✓ Correct: factory prevents shared reference
+export const Achievements = trait({ items: () => [] as string[] });
+export const Harvestable = trait({
+  resources: () => [] as { type: string; amount: number }[],
+  cooldownElapsed: 0,
+  ready: false,
+});
+
+// ✗ Wrong: shared array across all trait instances
+export const BadTrait = trait({ items: [] as string[] });
+```
+
+**Important gotcha**: A factory-only trait `trait(() => [...])` resolves to `Trait<{}>`. Always wrap in an object schema: `trait({ items: () => [...] })`.
+
+## Creating the World
+
+The world is instantiated in `src/koota.ts` with all world-level singleton traits registered:
+
+```typescript
+export const koota = createWorld(
+  Time,
+  CurrentSeason,
+  PlayerProgress,
+  Resources,
+  Achievements,
+  // ... more singleton traits
+);
+```
+
+Singleton traits are set on the world itself (entity 0) during world creation. Access them globally via `koota.get(Trait)` / `koota.set(Trait, ...)`.
+
+## Spawning Entities
+
+Create entities with `koota.spawn()`, passing trait instances:
+
+```typescript
+const tree = koota.spawn(
+  Tree({ speciesId: "white-oak", stage: 0 }),
+  Position({ x: 5, y: 0, z: 7 }),
+  Renderable({ meshId: null, visible: true, scale: 0 })
+);
+```
+
+The spawn helper in `src/koota.ts` provides convenient factories for common entity types:
+
+```typescript
+export function spawnPlayer(): ReturnType<typeof koota.spawn> {
+  return koota.spawn(
+    IsPlayer,
+    Position({ x: 6, y: 0, z: 6 }),
+    FarmerState({ stamina: 100, maxStamina: 100 }),
+    Renderable({ visible: true, scale: 1 })
+  );
 }
 ```
 
-### Component Types
+## Querying Entities
 
-**Position** -- 3D world coordinates for any positioned entity.
+Iterate over entities matching a set of traits using `koota.query()`:
 
 ```typescript
-interface Position {
-  x: number;  // grid X
-  y: number;  // height (usually 0)
-  z: number;  // grid Z
+for (const e of koota.query(Tree, Position, Renderable)) {
+  const pos = e.get(Position);
+  const tree = e.get(Tree);
+  const render = e.get(Renderable);
+  // Process tree growth, update visuals, etc.
 }
 ```
 
-**TreeComponent** -- Growth state for a planted tree.
+Query is synchronous and returns a `QueryResult` — an iterable collection.
+
+## Mutating Traits
+
+### Setting Trait Data
+
+Replace some or all fields of a trait instance on an entity:
 
 ```typescript
-interface TreeComponent {
-  speciesId: string;        // references TREE_SPECIES or PRESTIGE_TREE_SPECIES
-  stage: 0 | 1 | 2 | 3 | 4;  // Seed, Sprout, Sapling, Mature, Old Growth
-  progress: number;         // [0, 1) within current stage
-  watered: boolean;         // whether tree has been watered (1.3x growth bonus)
-  totalGrowthTime: number;  // cumulative seconds grown
-  plantedAt: number;        // timestamp when planted
-  meshSeed: number;         // seed for deterministic procedural mesh generation
-}
+// Overwrite partial fields
+e.set(Tree, { stage: 1, progress: 0 });
+
+// Or use a functional update
+e.set(Tree, prev => ({ ...prev, stage: prev.stage + 1 }));
 ```
 
-**PlayerComponent** -- Player state synced from Zustand each frame.
+### Adding and Removing Traits
 
 ```typescript
-interface PlayerComponent {
-  coins: number;
-  xp: number;
-  level: number;
-  currentTool: string;
-  unlockedTools: string[];
-  unlockedSpecies: string[];
-}
+// Add a trait (must not already exist)
+e.add(Renderable({ meshId: "mesh_123", visible: true, scale: 1 }));
+
+// Remove a trait by reference
+e.remove(Renderable);
+
+// Check if entity has a trait
+if (e.has(Tree)) { /* ... */ }
 ```
 
-**GridCellComponent** -- State of a single tile on the grid.
+### Destroying Entities
 
 ```typescript
-interface GridCellComponent {
-  gridX: number;
-  gridZ: number;
-  type: "soil" | "water" | "rock" | "path";
-  occupied: boolean;
-  treeEntityId: string | null;
-}
+e.destroy();
 ```
 
-**Renderable** -- Visual representation metadata.
+**Critical gotcha**: The world itself is entity 0, which holds all singleton traits. Calling `e.destroy()` on the world nukes singleton state. Use the helper `destroyAllEntitiesExceptWorld()` from `src/koota.ts` in test cleanup:
 
 ```typescript
-interface Renderable {
-  meshId: string | null;
-  visible: boolean;
-  scale: number;  // lerped toward target for smooth growth animations
-}
+beforeEach(() => {
+  destroyAllEntitiesExceptWorld();
+  // Now safe to spawn test entities
+});
 ```
 
-**FarmerState** -- Stamina tracking for the player entity.
+## World-Level Singletons
+
+Singleton traits live on the world entity (ID 0) and are set during `createWorld()`. Access them without entity context:
 
 ```typescript
-interface FarmerState {
-  stamina: number;
-  maxStamina: number;
-}
+// Read
+const time = koota.get(Time);
+const progress = koota.get(PlayerProgress);
+
+// Write
+koota.set(Time, { gameTimeMicroseconds: 86400000 });
+koota.set(PlayerProgress, prev => ({
+  ...prev,
+  level: prev.level + 1,
+}));
 ```
 
-## World and Queries
+## Reactivity and Subscriptions
 
-The ECS world is a singleton created in `world.ts`:
+Koota provides subscription APIs for trait changes:
 
 ```typescript
-export const world = new World<Entity>();
+// Fire when an entity gains a trait
+const unsub = koota.onAdd(Tree, (e) => console.log("Tree planted:", e.id()));
+
+// Fire when an entity loses a trait (called BEFORE the trait is removed)
+koota.onRemove(Tree, (e) => console.log("Tree removed:", e.id()));
+
+// Fire when a trait's data changes
+koota.onChange(Tree, (e) => console.log("Tree updated:", e.get(Tree)));
+
+// Fire when an entity enters/exits a query result
+koota.onQueryAdd([Tree, Position], (e) => console.log("Tree can grow"));
+koota.onQueryRemove([Tree, Position], (e) => console.log("Tree can't grow"));
+
+// Call unsub() to clean up the listener
+unsub();
 ```
 
-Pre-defined queries provide efficient access to entity subsets:
-
-| Query              | Components Required                    | Usage                              |
-|--------------------|----------------------------------------|------------------------------------|
-| `treesQuery`       | `tree`, `position`, `renderable`       | Growth system, mesh sync           |
-| `playerQuery`      | `player`, `position`                   | Movement system, action detection  |
-| `farmerQuery`      | `farmerState`, `position`              | Stamina system                     |
-| `gridCellsQuery`   | `gridCell`, `position`                 | Grid operations, tile lookup       |
-| `harvestableQuery` | `tree`, `harvestable`                  | Harvest cooldown system            |
-
-Queries are reactive. When an entity gains or loses the required components, it is automatically added to or removed from the query result set.
-
-## Entity Factory Functions
-
-Factory functions in `src/game/ecs/archetypes.ts` create entities with the correct component shape:
-
-| Factory                | Creates                         | Key Behavior                           |
-|------------------------|---------------------------------|----------------------------------------|
-| `createTreeEntity`     | New tree at grid position       | Generates meshSeed from position hash  |
-| `restoreTreeEntity`    | Tree from serialized save data  | Preserves all saved state              |
-| `createPlayerEntity`   | Player entity                   | Starts at grid center, default tools   |
-| `createGridCellEntity` | Grid tile                       | Sets tile type, unoccupied by default  |
-
-### ID Generation
-
-Entity IDs use a timestamp prefix combined with an incrementing counter to avoid collisions after page reloads:
-
-```typescript
-let entityIdCounter = 0;
-export const generateEntityId = (): string => {
-  entityIdCounter += 1;
-  return `entity_${Date.now()}_${entityIdCounter}`;
-};
-```
+**Note on onRemove**: The listener fires BEFORE the trait is removed from the mask. If you need to read the trait value, do it synchronously. If you need to defer, use `queueMicrotask()`.
 
 ## Systems
 
-Systems are pure functions that operate on the ECS world each frame. They follow a consistent pattern:
+Systems are pure functions that run every frame. They iterate over entity queries and mutate trait data:
 
 ```typescript
-function systemName(world: World, deltaTime: number, ...context): void {
-  for (const entity of relevantQuery) {
-    // Read component data
-    // Compute new values
-    // Mutate component data in place
+export function growthSystem(
+  world: typeof koota,
+  dt: number,
+  season: Season,
+  weatherMult: number
+): void {
+  for (const e of world.query(Tree, Position)) {
+    const tree = e.get(Tree);
+    const growth = computeGrowth(tree, season, weatherMult);
+    e.set(Tree, { progress: tree.progress + growth * dt });
+
+    // Advance to next stage?
+    if (e.get(Tree).progress >= 1) {
+      e.set(Tree, { stage: tree.stage + 1, progress: 0 });
+    }
   }
 }
 ```
 
-### System Execution Order
+Systems must:
+- **Not create/destroy entities** — entity lifecycle is managed by the game loop
+- **Not import persistence stores directly** — take context as parameters
+- **Be deterministic** — same inputs always produce same outputs
+- **Run in order** — the game loop controls execution sequence
 
-Systems run sequentially inside `GameScene.tsx`'s `engine.runRenderLoop` callback:
+## Solid.js Integration
 
-1. **Time system** (`updateTime`) -- Advances game clock, determines season.
-2. **Weather system** (`updateWeather`) -- Rolls for weather events based on season probabilities.
-3. **Movement system** (`movementSystem`) -- Applies joystick/WASD input to player position.
-4. **Growth system** (`growthSystem`) -- Advances tree growth based on species, season, weather, and water state.
-5. **Stamina system** (`staminaSystem`) -- Regenerates stamina over time.
-6. **Harvest system** (`harvestSystem`) -- Advances harvest cooldown timers on mature trees.
-
-Additional periodic checks (not every frame):
-
-- **Achievement check** -- Every 5 seconds, evaluates all 15 achievement triggers.
-- **Time persistence** -- Every 5 seconds, syncs game time to Zustand store.
-- **Auto-save** -- Every 30 seconds, serializes ECS state to localStorage.
-
-### System Purity Rules
-
-- Systems must not import from `gameStore.ts` directly. Context values (season, weather multipliers) are passed as arguments.
-- Side effects (toast notifications, XP awards) are handled by the caller in `GameScene.tsx`, not inside the system.
-- Systems must not create or destroy entities. Entity lifecycle is managed by the game loop.
-
-## ECS vs Zustand Split
-
-The split between ECS and Zustand follows a clear rule:
-
-| Changes every frame?   | Persists across sessions? | Where it lives |
-|------------------------|---------------------------|----------------|
-| Yes                    | No                        | ECS only       |
-| Yes                    | Yes                       | ECS + serialized to Zustand |
-| No                     | Yes                       | Zustand only   |
-
-**ECS-only examples:** Player position during movement, tree renderable.scale during growth animation.
-
-**ECS + serialized examples:** Tree stage and progress (stored in ECS at runtime, serialized to `groveData` in Zustand on save).
-
-**Zustand-only examples:** Player level, XP, coins, resources, unlocked tools/species, achievements, settings.
-
-## Grove Serialization
-
-Trees are serialized from ECS to Zustand for persistence:
+Solid components subscribe to entity queries via the `useQuery` hook from `src/ecs/solid.ts`:
 
 ```typescript
-interface SerializedTree {
-  speciesId: string;
-  gridX: number;
-  gridZ: number;
-  stage: 0 | 1 | 2 | 3 | 4;
-  progress: number;
-  watered: boolean;
-  totalGrowthTime: number;
-  plantedAt: number;
-  meshSeed: number;
+import { useQuery } from "@/ecs/solid";
+import { Tree, Position, Renderable } from "@/traits";
+
+export function TreeRenderer() {
+  const trees = useQuery(Tree, Position, Renderable);
+
+  return (
+    <For each={trees()}>
+      {(e) => (
+        <TreeMesh
+          species={e.get(Tree).speciesId}
+          pos={e.get(Position)}
+        />
+      )}
+    </For>
+  );
 }
 ```
 
-Serialization happens:
-- On manual save (debounced 1 second after plant/harvest actions)
-- Every 30 seconds via auto-save
-- Immediately when the browser tab loses focus (`visibilitychange` event)
+The hook subscribes to `onQueryAdd` and `onQueryRemove` internally, updating the signal on trait changes. Cleanup is automatic via `onCleanup()`.
 
-On load, serialized trees are restored into the ECS world via `restoreTreeEntity`, and grid cells are marked as occupied.
+## Trait Catalog
+
+All traits are centralized in `src/traits.ts` for discoverability. Categories include:
+
+- **Spatial**: `Position`, `Renderable`, `MeshRef`
+- **Trees**: `Tree`, `Harvestable`, `Wild`, `Pruned`
+- **Grid**: `GridCell`, `Zone`, `Prop`
+- **Actors**: `IsPlayer`, `FarmerState`, `Npc`
+- **World**: `Time`, `CurrentSeason`, `PlayerProgress`, `Resources`, `Achievements`, etc.
+
+Link to [`src/traits.ts`](../../../src/traits.ts) for the complete catalog.
+
+## Serialization
+
+Persistence is handled by individual systems, not by Koota itself. For example, `src/systems/saveLoad.ts` reads entity data and stores it in persistent state (Legend State, localStorage, or IndexedDB as configured).
+
+The game loop periodically calls save systems to serialize relevant entities:
+
+```typescript
+// Pseudo-code in the game loop
+const saveData = {
+  trees: koota.query(Tree, Position).map(e => ({
+    ...e.get(Tree),
+    ...e.get(Position),
+  })),
+  player: koota.query(IsPlayer, FarmerState).map(e => ({
+    ...e.get(FarmerState),
+    ...e.get(Position),
+  })),
+};
+await savePersistentState(saveData);
+```
+
+On load, spawned entities are recreated from saved data.
+
+## Historical Note
+
+Prior to Koota, Grovekeeper used Miniplex 2.x. Miniplex was a query-only ECS; state persistence required a separate store. Koota consolidates both roles in a single system, simplifying the architecture and reducing context switching between entity data and player progression.
+
+## See Also
+
+- [`src/koota.ts`](../../../src/koota.ts) — World instantiation and spawn helpers
+- [`src/traits.ts`](../../../src/traits.ts) — Trait definitions
+- [`src/ecs/solid.ts`](../../../src/ecs/solid.ts) — Solid.js integration hooks
+- [`src/actions.ts`](../../../src/actions.ts) — ~63 action mutators
+- [`src/systems/`](../../../src/systems/) — System implementations
+- [state-management.md](./state-management.md) — Persistence and player progression

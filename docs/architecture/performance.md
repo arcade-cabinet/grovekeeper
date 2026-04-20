@@ -1,3 +1,10 @@
+---
+title: Performance
+updated: 2026-04-19
+status: current
+domain: technical
+---
+
 # Performance
 
 Grovekeeper targets mobile-first performance with a secondary desktop profile. Performance budgets are enforced through architectural choices, not runtime monitoring.

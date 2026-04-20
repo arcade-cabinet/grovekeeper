@@ -1,3 +1,10 @@
+---
+title: Progression
+updated: 2026-04-19
+status: current
+domain: product
+---
+
 # Progression
 
 Progression in Grovekeeper spans three interconnected systems: XP and levels, achievements, and prestige. Each provides short-term, mid-term, and long-term goals respectively.

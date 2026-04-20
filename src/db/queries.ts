@@ -5,10 +5,11 @@
  * persistGameStore() — reads current Zustand state → writes to SQLite tables
  * saveGroveToDb() / loadGroveFromDb() — ECS tree/tile serialization via SQLite
  */
+
+import type { ResourceType } from "@/config/resources";
+import type { Season } from "@/systems/time";
 import { getDb } from "./client";
 import * as schema from "./schema";
-import type { ResourceType } from "../game/constants/resources";
-import type { Season } from "../game/systems/time";
 
 // ─── Types ────────────────────────────────────────────────────
 export interface HydratedGameState {
@@ -57,7 +58,10 @@ export interface HydratedGameState {
   soundEnabled: boolean;
   toolUpgrades: Record<string, number>;
   placedStructures: { templateId: string; worldX: number; worldZ: number }[];
-  groveData: { trees: SerializedTreeDb[]; playerPosition: { x: number; z: number } } | null;
+  groveData: {
+    trees: SerializedTreeDb[];
+    playerPosition: { x: number; z: number };
+  } | null;
 }
 
 export interface SerializedTreeDb {
@@ -88,8 +92,18 @@ export function hydrateGameStore(): HydratedGameState {
 
   // resources
   const resourceRows = db.select().from(schema.resources).all();
-  const resources: Record<string, number> = { timber: 0, sap: 0, fruit: 0, acorns: 0 };
-  const lifetimeResources: Record<string, number> = { timber: 0, sap: 0, fruit: 0, acorns: 0 };
+  const resources: Record<string, number> = {
+    timber: 0,
+    sap: 0,
+    fruit: 0,
+    acorns: 0,
+  };
+  const lifetimeResources: Record<string, number> = {
+    timber: 0,
+    sap: 0,
+    fruit: 0,
+    acorns: 0,
+  };
   for (const r of resourceRows) {
     resources[r.type] = r.current;
     lifetimeResources[r.type] = r.lifetime;
@@ -144,22 +158,23 @@ export function hydrateGameStore(): HydratedGameState {
 
   // Build groveData from tree/position tables
   const treeRows = db.select().from(schema.trees).all();
-  const groveData = treeRows.length > 0
-    ? {
-        trees: treeRows.map((t) => ({
-          speciesId: t.speciesId,
-          gridX: t.gridX,
-          gridZ: t.gridZ,
-          stage: t.stage as 0 | 1 | 2 | 3 | 4,
-          progress: t.progress,
-          watered: Boolean(t.watered),
-          totalGrowthTime: t.totalGrowthTime,
-          plantedAt: t.plantedAt,
-          meshSeed: t.meshSeed,
-        })),
-        playerPosition: { x: ws?.playerPosX ?? 6, z: ws?.playerPosZ ?? 6 },
-      }
-    : null;
+  const groveData =
+    treeRows.length > 0
+      ? {
+          trees: treeRows.map((t) => ({
+            speciesId: t.speciesId,
+            gridX: t.gridX,
+            gridZ: t.gridZ,
+            stage: t.stage as 0 | 1 | 2 | 3 | 4,
+            progress: t.progress,
+            watered: Boolean(t.watered),
+            totalGrowthTime: t.totalGrowthTime,
+            plantedAt: t.plantedAt,
+            meshSeed: t.meshSeed,
+          })),
+          playerPosition: { x: ws?.playerPosX ?? 6, z: ws?.playerPosZ ?? 6 },
+        }
+      : null;
 
   return {
     difficulty: config?.difficulty ?? "normal",
@@ -218,8 +233,7 @@ export function hydrateGameStore(): HydratedGameState {
  * Uses upsert pattern: delete all rows, re-insert.
  * This is fast for small singleton tables in an in-memory SQLite.
  */
-// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot with heterogeneous value types
-export function persistGameStore(state: Record<string, any>): void {
+export function persistGameStore(state: Record<string, unknown>): void {
   const { db, sqlDb } = getDb();
 
   // Use a transaction for atomicity
@@ -240,34 +254,45 @@ export function persistGameStore(state: Record<string, any>): void {
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
-function persistPlayer(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+function persistPlayer(
+  db: ReturnType<typeof getDb>["db"],
+  sqlDb: ReturnType<typeof getDb>["sqlDb"],
+  state: Record<string, unknown>,
+): void {
   sqlDb.run("DELETE FROM player");
-  db.insert(schema.player).values({
-    level: state.level as number,
-    xp: state.xp as number,
-    coins: state.coins as number,
-    stamina: state.stamina as number,
-    maxStamina: state.maxStamina as number,
-    selectedTool: state.selectedTool as string,
-    selectedSpecies: state.selectedSpecies as string,
-    gridSize: state.gridSize as number,
-    prestigeCount: state.prestigeCount as number,
-    activeBorderCosmetic: (state.activeBorderCosmetic as string | null) ?? null,
-  }).run();
+  db.insert(schema.player)
+    .values({
+      level: state.level as number,
+      xp: state.xp as number,
+      coins: state.coins as number,
+      stamina: state.stamina as number,
+      maxStamina: state.maxStamina as number,
+      selectedTool: state.selectedTool as string,
+      selectedSpecies: state.selectedSpecies as string,
+      gridSize: state.gridSize as number,
+      prestigeCount: state.prestigeCount as number,
+      activeBorderCosmetic:
+        (state.activeBorderCosmetic as string | null) ?? null,
+    })
+    .run();
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
-function persistResources(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+function persistResources(
+  db: ReturnType<typeof getDb>["db"],
+  sqlDb: ReturnType<typeof getDb>["sqlDb"],
+  state: Record<string, unknown>,
+): void {
   sqlDb.run("DELETE FROM resources");
   const resources = state.resources as Record<string, number>;
   const lifetimeResources = state.lifetimeResources as Record<string, number>;
   for (const type of ["timber", "sap", "fruit", "acorns"]) {
-    db.insert(schema.resources).values({
-      type,
-      current: resources?.[type] ?? 0,
-      lifetime: lifetimeResources?.[type] ?? 0,
-    }).run();
+    db.insert(schema.resources)
+      .values({
+        type,
+        current: resources?.[type] ?? 0,
+        lifetime: lifetimeResources?.[type] ?? 0,
+      })
+      .run();
   }
 
   sqlDb.run("DELETE FROM seeds");
@@ -281,8 +306,11 @@ function persistResources(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
-function persistUnlocks(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+function persistUnlocks(
+  db: ReturnType<typeof getDb>["db"],
+  sqlDb: ReturnType<typeof getDb>["sqlDb"],
+  state: Record<string, unknown>,
+): void {
   sqlDb.run("DELETE FROM unlocks");
   const unlockedTools = state.unlockedTools as string[];
   if (unlockedTools) {
@@ -293,7 +321,9 @@ function persistUnlocks(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<ty
   const unlockedSpecies = state.unlockedSpecies as string[];
   if (unlockedSpecies) {
     for (const speciesId of unlockedSpecies) {
-      db.insert(schema.unlocks).values({ type: "species", itemId: speciesId }).run();
+      db.insert(schema.unlocks)
+        .values({ type: "species", itemId: speciesId })
+        .run();
     }
   }
 
@@ -306,57 +336,80 @@ function persistUnlocks(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<ty
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
-function persistWorldAndTime(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+function persistWorldAndTime(
+  db: ReturnType<typeof getDb>["db"],
+  sqlDb: ReturnType<typeof getDb>["sqlDb"],
+  state: Record<string, unknown>,
+): void {
   sqlDb.run("DELETE FROM world_state");
-  const groveData = state.groveData as { playerPosition?: { x: number; z: number } } | null;
-  db.insert(schema.worldState).values({
-    worldSeed: (state.worldSeed as string) ?? "",
-    discoveredZonesJson: JSON.stringify(state.discoveredZones ?? ["starting-grove"]),
-    currentZoneId: (state.currentZoneId as string) ?? "starting-grove",
-    playerPosX: groveData?.playerPosition?.x ?? 6,
-    playerPosZ: groveData?.playerPosition?.z ?? 6,
-  }).run();
+  const groveData = state.groveData as {
+    playerPosition?: { x: number; z: number };
+  } | null;
+  db.insert(schema.worldState)
+    .values({
+      worldSeed: (state.worldSeed as string) ?? "",
+      discoveredZonesJson: JSON.stringify(
+        state.discoveredZones ?? ["starting-grove"],
+      ),
+      currentZoneId: (state.currentZoneId as string) ?? "starting-grove",
+      playerPosX: groveData?.playerPosition?.x ?? 6,
+      playerPosZ: groveData?.playerPosition?.z ?? 6,
+    })
+    .run();
 
   sqlDb.run("DELETE FROM time_state");
-  db.insert(schema.timeState).values({
-    gameTimeMicroseconds: (state.gameTimeMicroseconds as number) ?? 0,
-    season: (state.currentSeason as string) ?? "spring",
-    day: (state.currentDay as number) ?? 1,
-  }).run();
+  db.insert(schema.timeState)
+    .values({
+      gameTimeMicroseconds: (state.gameTimeMicroseconds as number) ?? 0,
+      season: (state.currentSeason as string) ?? "spring",
+      day: (state.currentDay as number) ?? 1,
+    })
+    .run();
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
-function persistTracking(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+function persistTracking(
+  db: ReturnType<typeof getDb>["db"],
+  sqlDb: ReturnType<typeof getDb>["sqlDb"],
+  state: Record<string, unknown>,
+): void {
   sqlDb.run("DELETE FROM tracking");
-  db.insert(schema.tracking).values({
-    treesPlanted: (state.treesPlanted as number) ?? 0,
-    treesMatured: (state.treesMatured as number) ?? 0,
-    treesHarvested: (state.treesHarvested as number) ?? 0,
-    treesWatered: (state.treesWatered as number) ?? 0,
-    seasonsExperiencedJson: JSON.stringify(state.seasonsExperienced ?? []),
-    speciesPlantedJson: JSON.stringify(state.speciesPlanted ?? []),
-    toolUseCountsJson: JSON.stringify(state.toolUseCounts ?? {}),
-    wildTreesHarvested: (state.wildTreesHarvested as number) ?? 0,
-    wildTreesRegrown: (state.wildTreesRegrown as number) ?? 0,
-    visitedZoneTypesJson: JSON.stringify(state.visitedZoneTypes ?? []),
-    treesPlantedInSpring: (state.treesPlantedInSpring as number) ?? 0,
-    treesHarvestedInAutumn: (state.treesHarvestedInAutumn as number) ?? 0,
-    wildSpeciesHarvestedJson: JSON.stringify(state.wildSpeciesHarvested ?? []),
-    completedQuestIdsJson: JSON.stringify(state.completedQuestIds ?? []),
-    completedGoalIdsJson: JSON.stringify(state.completedGoalIds ?? []),
-    lastQuestRefresh: (state.lastQuestRefresh as number) ?? 0,
-  }).run();
+  db.insert(schema.tracking)
+    .values({
+      treesPlanted: (state.treesPlanted as number) ?? 0,
+      treesMatured: (state.treesMatured as number) ?? 0,
+      treesHarvested: (state.treesHarvested as number) ?? 0,
+      treesWatered: (state.treesWatered as number) ?? 0,
+      seasonsExperiencedJson: JSON.stringify(state.seasonsExperienced ?? []),
+      speciesPlantedJson: JSON.stringify(state.speciesPlanted ?? []),
+      toolUseCountsJson: JSON.stringify(state.toolUseCounts ?? {}),
+      wildTreesHarvested: (state.wildTreesHarvested as number) ?? 0,
+      wildTreesRegrown: (state.wildTreesRegrown as number) ?? 0,
+      visitedZoneTypesJson: JSON.stringify(state.visitedZoneTypes ?? []),
+      treesPlantedInSpring: (state.treesPlantedInSpring as number) ?? 0,
+      treesHarvestedInAutumn: (state.treesHarvestedInAutumn as number) ?? 0,
+      wildSpeciesHarvestedJson: JSON.stringify(
+        state.wildSpeciesHarvested ?? [],
+      ),
+      completedQuestIdsJson: JSON.stringify(state.completedQuestIds ?? []),
+      completedGoalIdsJson: JSON.stringify(state.completedGoalIds ?? []),
+      lastQuestRefresh: (state.lastQuestRefresh as number) ?? 0,
+    })
+    .run();
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
-function persistSettingsAndUpgrades(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+function persistSettingsAndUpgrades(
+  db: ReturnType<typeof getDb>["db"],
+  sqlDb: ReturnType<typeof getDb>["sqlDb"],
+  state: Record<string, unknown>,
+): void {
   sqlDb.run("DELETE FROM settings");
-  db.insert(schema.settings).values({
-    hasSeenRules: (state.hasSeenRules as boolean) ?? false,
-    hapticsEnabled: (state.hapticsEnabled as boolean) ?? true,
-    soundEnabled: (state.soundEnabled as boolean) ?? true,
-  }).run();
+  db.insert(schema.settings)
+    .values({
+      hasSeenRules: (state.hasSeenRules as boolean) ?? false,
+      hapticsEnabled: (state.hapticsEnabled as boolean) ?? true,
+      soundEnabled: (state.soundEnabled as boolean) ?? true,
+    })
+    .run();
 
   sqlDb.run("DELETE FROM tool_upgrades");
   const toolUpgrades = state.toolUpgrades as Record<string, number>;
@@ -369,17 +422,26 @@ function persistSettingsAndUpgrades(db: ReturnType<typeof getDb>["db"], sqlDb: R
   }
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: state is an arbitrary Zustand snapshot
-function persistStructures(db: ReturnType<typeof getDb>["db"], sqlDb: ReturnType<typeof getDb>["sqlDb"], state: Record<string, any>): void {
+function persistStructures(
+  db: ReturnType<typeof getDb>["db"],
+  sqlDb: ReturnType<typeof getDb>["sqlDb"],
+  state: Record<string, unknown>,
+): void {
   sqlDb.run("DELETE FROM structures");
-  const placedStructures = state.placedStructures as { templateId: string; worldX: number; worldZ: number }[];
+  const placedStructures = state.placedStructures as {
+    templateId: string;
+    worldX: number;
+    worldZ: number;
+  }[];
   if (placedStructures) {
     for (const struct of placedStructures) {
-      db.insert(schema.structures).values({
-        templateId: struct.templateId,
-        worldX: struct.worldX,
-        worldZ: struct.worldZ,
-      }).run();
+      db.insert(schema.structures)
+        .values({
+          templateId: struct.templateId,
+          worldX: struct.worldX,
+          worldZ: struct.worldZ,
+        })
+        .run();
     }
   }
 }
@@ -399,24 +461,26 @@ export function saveGroveToDb(
   try {
     sqlDb.run("DELETE FROM trees");
     for (const t of treesData) {
-      db.insert(schema.trees).values({
-        speciesId: t.speciesId,
-        gridX: t.gridX,
-        gridZ: t.gridZ,
-        stage: t.stage,
-        progress: t.progress,
-        watered: t.watered,
-        totalGrowthTime: t.totalGrowthTime,
-        plantedAt: t.plantedAt,
-        meshSeed: t.meshSeed,
-      }).run();
+      db.insert(schema.trees)
+        .values({
+          speciesId: t.speciesId,
+          gridX: t.gridX,
+          gridZ: t.gridZ,
+          stage: t.stage,
+          progress: t.progress,
+          watered: t.watered,
+          totalGrowthTime: t.totalGrowthTime,
+          plantedAt: t.plantedAt,
+          meshSeed: t.meshSeed,
+        })
+        .run();
     }
 
     // Update player position in world_state
-    sqlDb.run(
-      "UPDATE world_state SET player_pos_x = ?, player_pos_z = ?",
-      [playerPos.x, playerPos.z],
-    );
+    sqlDb.run("UPDATE world_state SET player_pos_x = ?, player_pos_z = ?", [
+      playerPos.x,
+      playerPos.z,
+    ]);
 
     sqlDb.run("COMMIT");
   } catch (e) {
@@ -428,7 +492,10 @@ export function saveGroveToDb(
 /**
  * Load tree data from the trees table.
  */
-export function loadGroveFromDb(): { trees: SerializedTreeDb[]; playerPosition: { x: number; z: number } } | null {
+export function loadGroveFromDb(): {
+  trees: SerializedTreeDb[];
+  playerPosition: { x: number; z: number };
+} | null {
   const { db } = getDb();
 
   const treeRows = db.select().from(schema.trees).all();
@@ -489,29 +556,35 @@ export function setupNewGame(
     sqlDb.run("DELETE FROM tool_upgrades");
 
     // save_config (immutable after creation)
-    db.insert(schema.saveConfig).values({
-      difficulty,
-      permadeath,
-      version: 1,
-      createdAt: Date.now(),
-    }).run();
+    db.insert(schema.saveConfig)
+      .values({
+        difficulty,
+        permadeath,
+        version: 1,
+        createdAt: Date.now(),
+      })
+      .run();
 
     // player
-    db.insert(schema.player).values({
-      level: 1,
-      xp: 0,
-      coins: 100,
-      stamina: 100,
-      maxStamina: 100,
-    }).run();
+    db.insert(schema.player)
+      .values({
+        level: 1,
+        xp: 0,
+        coins: 100,
+        stamina: 100,
+        maxStamina: 100,
+      })
+      .run();
 
     // resources
     for (const type of ["timber", "sap", "fruit", "acorns"]) {
-      db.insert(schema.resources).values({
-        type,
-        current: startingResources[type] ?? 0,
-        lifetime: 0,
-      }).run();
+      db.insert(schema.resources)
+        .values({
+          type,
+          current: startingResources[type] ?? 0,
+          lifetime: 0,
+        })
+        .run();
     }
 
     // seeds
@@ -523,19 +596,25 @@ export function setupNewGame(
 
     // default unlocks
     db.insert(schema.unlocks).values({ type: "tool", itemId: "trowel" }).run();
-    db.insert(schema.unlocks).values({ type: "tool", itemId: "watering-can" }).run();
-    db.insert(schema.unlocks).values({ type: "species", itemId: "white-oak" }).run();
+    db.insert(schema.unlocks)
+      .values({ type: "tool", itemId: "watering-can" })
+      .run();
+    db.insert(schema.unlocks)
+      .values({ type: "species", itemId: "white-oak" })
+      .run();
 
     // world_state
     db.insert(schema.worldState).values({}).run();
 
     // time_state (Spring, Day 1, 8:00 AM)
     const initialGameTime = calculateInitialGameTime();
-    db.insert(schema.timeState).values({
-      gameTimeMicroseconds: initialGameTime,
-      season: "spring",
-      day: 1,
-    }).run();
+    db.insert(schema.timeState)
+      .values({
+        gameTimeMicroseconds: initialGameTime,
+        season: "spring",
+        day: 1,
+      })
+      .run();
 
     // tracking
     db.insert(schema.tracking).values({}).run();
@@ -562,9 +641,10 @@ function calculateInitialGameTime(): number {
   const daysPerMonth = 30;
   const monthsPerYear = 12;
 
-  const totalDays = ((year - 1) * monthsPerYear * daysPerMonth) +
-                   ((month - 1) * daysPerMonth) +
-                   (day - 1);
+  const totalDays =
+    (year - 1) * monthsPerYear * daysPerMonth +
+    (month - 1) * daysPerMonth +
+    (day - 1);
   const totalHours = totalDays * hoursPerDay + hours;
   const totalMinutes = totalHours * minutesPerHour;
   const totalSeconds = totalMinutes * secondsPerMinute;

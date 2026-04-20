@@ -1,0 +1,9 @@
+{
+  "types": ["timber", "sap", "fruit", "acorns"],
+  "info": {
+    "timber": { "name": "Timber", "icon": "tree" },
+    "sap": { "name": "Sap", "icon": "droplet" },
+    "fruit": { "name": "Fruit", "icon": "apple" },
+    "acorns": { "name": "Acorns", "icon": "nut" }
+  }
+}

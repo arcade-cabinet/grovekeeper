@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi, beforeAll } from "vitest";
-import initSqlJs, { type Database } from "sql.js";
 import { drizzle } from "drizzle-orm/sql-js";
-import * as schema from "./schema";
+import initSqlJs, { type Database } from "sql.js";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppDatabase } from "./client";
+import * as schema from "./schema";
 
 // We'll create a real in-memory SQL.js database (no WASM needed in Node/happy-dom)
 let SQL: Awaited<ReturnType<typeof initSqlJs>>;
@@ -165,12 +165,23 @@ beforeEach(() => {
 });
 
 // Import AFTER mocking
-const { hydrateGameStore, persistGameStore, saveGroveToDb, loadGroveFromDb, setupNewGame } = await import("./queries");
+const {
+  hydrateGameStore,
+  persistGameStore,
+  saveGroveToDb,
+  loadGroveFromDb,
+  setupNewGame,
+} = await import("./queries");
 
 describe("Database Queries", () => {
   describe("setupNewGame", () => {
     it("creates save_config with chosen difficulty", () => {
-      setupNewGame("hard", false, { timber: 10, sap: 5, fruit: 5, acorns: 10 }, { "white-oak": 8 });
+      setupNewGame(
+        "hard",
+        false,
+        { timber: 10, sap: 5, fruit: 5, acorns: 10 },
+        { "white-oak": 8 },
+      );
       const config = db.select().from(schema.saveConfig).all();
       expect(config).toHaveLength(1);
       expect(config[0].difficulty).toBe("hard");
@@ -186,15 +197,24 @@ describe("Database Queries", () => {
     it("inserts default unlocks (trowel, watering-can, white-oak)", () => {
       setupNewGame("normal", false, {}, {});
       const unlockRows = db.select().from(schema.unlocks).all();
-      const tools = unlockRows.filter((u) => u.type === "tool").map((u) => u.itemId);
-      const species = unlockRows.filter((u) => u.type === "species").map((u) => u.itemId);
+      const tools = unlockRows
+        .filter((u) => u.type === "tool")
+        .map((u) => u.itemId);
+      const species = unlockRows
+        .filter((u) => u.type === "species")
+        .map((u) => u.itemId);
       expect(tools).toContain("trowel");
       expect(tools).toContain("watering-can");
       expect(species).toContain("white-oak");
     });
 
     it("inserts starting resources correctly", () => {
-      setupNewGame("explore", false, { timber: 50, sap: 30, fruit: 20, acorns: 30 }, {});
+      setupNewGame(
+        "explore",
+        false,
+        { timber: 50, sap: 30, fruit: 20, acorns: 30 },
+        {},
+      );
       const resourceRows = db.select().from(schema.resources).all();
       const timberRow = resourceRows.find((r) => r.type === "timber");
       expect(timberRow).toBeDefined();
@@ -242,7 +262,12 @@ describe("Database Queries", () => {
     });
 
     it("hydrates after setupNewGame", () => {
-      setupNewGame("hard", true, { timber: 10, sap: 5, fruit: 5, acorns: 10 }, { "white-oak": 8 });
+      setupNewGame(
+        "hard",
+        true,
+        { timber: 10, sap: 5, fruit: 5, acorns: 10 },
+        { "white-oak": 8 },
+      );
       const state = hydrateGameStore();
       expect(state.difficulty).toBe("hard");
       expect(state.permadeath).toBe(true);
