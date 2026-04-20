@@ -1,6 +1,12 @@
 export type { ZoneArchetype } from "./archetypes";
 export { getArchetype, ZONE_ARCHETYPES } from "./archetypes";
-export { createPropMesh, disposePropMeshes } from "./PropFactory";
+export {
+  createPropMesh,
+  createPropMeshBatch,
+  disposePropBatch,
+  disposePropMeshes,
+} from "./PropFactory";
+export type { PropBatch, PropBatchPosition } from "./PropFactory";
 export type {
   ConnectionDirection,
   GroundMaterial,

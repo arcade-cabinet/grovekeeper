@@ -13,14 +13,26 @@ import {
   disposeStructureMesh,
 } from "@/structures/BlockMeshFactory";
 import { getTemplate } from "@/structures/StructureManager";
-import { createPropMesh, disposePropMeshes } from "./PropFactory";
+import {
+  createPropMesh,
+  createPropMeshBatch,
+  disposePropBatch,
+  disposePropMeshes,
+  type PropBatch,
+} from "./PropFactory";
 import type { WorldDefinition, ZoneDefinition } from "./types";
 import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";
+
+/** Threshold: prop types with more than this many instances use the batch API. */
+const PROP_BATCH_THRESHOLD = 4;
 
 interface LoadedZone {
   definition: ZoneDefinition;
   entities: Entity[];
+  /** Rare props created individually (count ≤ PROP_BATCH_THRESHOLD per type). */
   propMeshes: Mesh[];
+  /** Batched prop groups created with thin instances (count > PROP_BATCH_THRESHOLD). */
+  propBatches: PropBatch[];
   structMeshes: Mesh[];
 }
 
@@ -53,14 +65,62 @@ export class WorldManager {
 
     const entities = loadZoneEntities(zoneDef);
 
-    // Create prop meshes
+    // Group props by type so we can batch-render common types in one draw call.
+    // Types with more than PROP_BATCH_THRESHOLD instances use thin instances;
+    // rare types (≤ threshold) use the standard single-mesh path.
     const propMeshes: Mesh[] = [];
+    const propBatches: PropBatch[] = [];
+
     if (zoneDef.props) {
+      // Group placements by propId.
+      const byType = new Map<
+        string,
+        Array<{ worldX: number; worldZ: number; scale?: number }>
+      >();
       for (const prop of zoneDef.props) {
         const worldX = zoneDef.origin.x + prop.localX;
         const worldZ = zoneDef.origin.z + prop.localZ;
-        const mesh = createPropMesh(this.scene, prop, worldX, worldZ);
-        if (mesh) propMeshes.push(mesh);
+        let group = byType.get(prop.propId);
+        if (!group) {
+          group = [];
+          byType.set(prop.propId, group);
+        }
+        group.push({ worldX, worldZ, scale: prop.scale });
+      }
+
+      for (const [propId, instances] of byType) {
+        if (instances.length > PROP_BATCH_THRESHOLD) {
+          // Use thin-instance batch — one draw call per prop type.
+          const batch = createPropMeshBatch(
+            this.scene,
+            propId,
+            instances.map((p) => ({
+              worldX: p.worldX,
+              worldZ: p.worldZ,
+              scale: p.scale,
+            })),
+            zoneId,
+          );
+          if (batch) propBatches.push(batch);
+        } else {
+          // Rare prop type — create individually.
+          for (const inst of instances) {
+            const prop = zoneDef.props.find(
+              (p) =>
+                p.propId === propId &&
+                zoneDef.origin.x + p.localX === inst.worldX &&
+                zoneDef.origin.z + p.localZ === inst.worldZ,
+            );
+            if (!prop) continue;
+            const mesh = createPropMesh(
+              this.scene,
+              prop,
+              inst.worldX,
+              inst.worldZ,
+            );
+            if (mesh) propMeshes.push(mesh);
+          }
+        }
       }
     }
 
@@ -86,6 +146,7 @@ export class WorldManager {
       definition: zoneDef,
       entities,
       propMeshes,
+      propBatches,
       structMeshes,
     });
   }
@@ -97,6 +158,7 @@ export class WorldManager {
 
     unloadZoneEntities(loaded.entities);
     disposePropMeshes(loaded.propMeshes);
+    for (const batch of loaded.propBatches) disposePropBatch(batch);
     for (const mesh of loaded.structMeshes) disposeStructureMesh(mesh);
     this.loadedZones.delete(zoneId);
   }

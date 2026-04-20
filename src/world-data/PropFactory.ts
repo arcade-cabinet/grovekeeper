@@ -4,17 +4,41 @@
  * Props are non-interactive decorative elements placed in zones
  * (fallen logs, mushroom clusters, wild flowers, etc.).
  * Built from simple BabylonJS primitives.
+ *
+ * Batch API (createPropMeshBatch):
+ *   When many props of the same type appear in a zone (>4), use the batch
+ *   API to create one thin-instanced draw call per prop type instead of one
+ *   draw call per prop. For prop types with child meshes the root and every
+ *   child each get their own thin-instance buffer so the full composite still
+ *   renders correctly.
  */
 
+// Side-effect import: augments Mesh prototype with thinInstance* methods.
+import "@babylonjs/core/Meshes/thinInstanceMesh";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import {
+  Matrix,
+  Quaternion,
+  Vector3,
+} from "@babylonjs/core/Maths/math.vector";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import type { PropPlacement } from "./types";
+
+// ---------------------------------------------------------------------------
+// Scratch buffers — allocated once, reused across all batch calls.
+// ---------------------------------------------------------------------------
+
+const _scaleVec = new Vector3(1, 1, 1);
+const _quat = new Quaternion();
+const _transVec = new Vector3(0, 0, 0);
+const _instanceMat = Matrix.Identity();
+const _childLocalMat = Matrix.Identity();
+const _combinedMat = Matrix.Identity();
 
 const propBuilders: Record<string, (scene: Scene, name: string) => Mesh> = {
   "fallen-log": (scene, name) => {
@@ -382,6 +406,164 @@ export function createPropMesh(
  */
 export function disposePropMeshes(meshes: Mesh[]): void {
   for (const mesh of meshes) {
+    mesh.dispose();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Batch API — thin-instanced props for types with many instances in a zone.
+// ---------------------------------------------------------------------------
+
+/** Position/orientation descriptor for one instance in a batch. */
+export interface PropBatchPosition {
+  /** World-space X coordinate. */
+  worldX: number;
+  /** World-space Z coordinate. */
+  worldZ: number;
+  /** Uniform scale multiplier (default 1). */
+  scale?: number;
+  /** Y-axis rotation in radians (default 0). */
+  rotY?: number;
+}
+
+/** Handle returned by createPropMeshBatch — required for later disposal. */
+export interface PropBatch {
+  /**
+   * Source (template) meshes registered for thin-instance rendering.
+   * Includes the root mesh and all child meshes for composite props.
+   * Pass to disposePropBatch() when the zone is unloaded.
+   */
+  sourceMeshes: Mesh[];
+}
+
+/**
+ * Create a thin-instanced batch for many props of the same type.
+ *
+ * Builds ONE template mesh (plus child template meshes for composite props),
+ * parks them below the ground plane at y=-9999, and writes all instance
+ * transforms into a single thinInstanceSetBuffer per mesh. This collapses
+ * N draw calls into 1 (root) + C (children) draw calls regardless of N.
+ *
+ * Use when positions.length > 4.  For ≤4 props prefer createPropMesh().
+ *
+ * @param scene     - Active BabylonJS Scene.
+ * @param propId    - Prop type identifier (e.g. "boulder", "fallen-log").
+ * @param positions - Array of world-space placements.
+ * @param batchId   - Unique identifier used in mesh names (e.g. zone id).
+ * @returns PropBatch handle, or null if propId is unknown.
+ */
+export function createPropMeshBatch(
+  scene: Scene,
+  propId: string,
+  positions: PropBatchPosition[],
+  batchId = "batch",
+): PropBatch | null {
+  const builder = propBuilders[propId];
+  if (!builder) return null;
+  if (positions.length === 0) return { sourceMeshes: [] };
+
+  // Build a throw-away template at the origin to harvest its geometry and
+  // child layout.  We park it far below the ground so it never renders.
+  const templateName = `prop_batch_template_${propId}_${batchId}`;
+  const template = builder(scene, templateName);
+  template.position.y = -9999;
+  template.isPickable = false;
+  template.doNotSyncBoundingInfo = true;
+  template.alwaysSelectAsActiveMesh = false;
+  // Template must be visible (even invisible-root composites need this flag
+  // true so BabylonJS registers thin-instance draw calls).
+  template.isVisible = true;
+  template.freezeWorldMatrix();
+
+  // Collect children (deep) — each needs its own thin-instance buffer.
+  const children = template.getChildMeshes(false) as Mesh[];
+
+  // Park children below ground too and freeze them.
+  for (const child of children) {
+    child.position.y += -9999;
+    child.isPickable = false;
+    child.doNotSyncBoundingInfo = true;
+    child.alwaysSelectAsActiveMesh = false;
+    child.isVisible = true;
+    child.freezeWorldMatrix();
+  }
+
+  const count = positions.length;
+  // Build the instance matrix buffer for the root mesh.
+  const rootMatrices = new Float32Array(16 * count);
+
+  for (let i = 0; i < count; i++) {
+    const pos = positions[i];
+    const s = pos.scale ?? 1;
+    const ry = pos.rotY ?? 0;
+
+    _scaleVec.set(s, s, s);
+    Quaternion.RotationYawPitchRollToRef(ry, 0, 0, _quat);
+    _transVec.set(pos.worldX, 0, pos.worldZ);
+
+    Matrix.ComposeToRef(_scaleVec, _quat, _transVec, _instanceMat);
+    _instanceMat.copyToArray(rootMatrices, i * 16);
+  }
+
+  template.thinInstanceSetBuffer("matrix", rootMatrices, 16, true);
+
+  // For each child, compute its world matrix for every instance by combining
+  // the child's local transform with the instance world matrix:
+  //   child_world_i = child_local × instance_world_i
+  // This accounts for the child's position/rotation/scaling offset inside
+  // the composite prop, transformed by each instance's placement.
+  if (children.length > 0) {
+    // Detach children from the template parent so their thin-instance
+    // matrices are interpreted as true world matrices, not parent-relative.
+    for (const child of children) {
+      // Capture child local position/rotation/scaling BEFORE detaching.
+      const cx = child.position.x;
+      const cy = child.position.y + 9999; // undo our earlier y-park offset
+      const cz = child.position.z;
+      const crx = child.rotation.x;
+      const cry = child.rotation.y;
+      const crz = child.rotation.z;
+      const csx = child.scaling.x;
+      const csy = child.scaling.y;
+      const csz = child.scaling.z;
+
+      // Build child local matrix once.
+      const childQuat = Quaternion.RotationYawPitchRoll(cry, crx, crz);
+      const childScale = new Vector3(csx, csy, csz);
+      const childTrans = new Vector3(cx, cy, cz);
+      Matrix.ComposeToRef(childScale, childQuat, childTrans, _childLocalMat);
+
+      const childMatrices = new Float32Array(16 * count);
+      for (let i = 0; i < count; i++) {
+        const pos = positions[i];
+        const s = pos.scale ?? 1;
+        const ry = pos.rotY ?? 0;
+
+        _scaleVec.set(s, s, s);
+        Quaternion.RotationYawPitchRollToRef(ry, 0, 0, _quat);
+        _transVec.set(pos.worldX, 0, pos.worldZ);
+
+        Matrix.ComposeToRef(_scaleVec, _quat, _transVec, _instanceMat);
+        // child_world = child_local × instance_world
+        _childLocalMat.multiplyToRef(_instanceMat, _combinedMat);
+        _combinedMat.copyToArray(childMatrices, i * 16);
+      }
+
+      // Detach from parent so BabylonJS treats the thin-instance matrices
+      // as absolute world matrices rather than parent-relative.
+      child.parent = null;
+      child.thinInstanceSetBuffer("matrix", childMatrices, 16, true);
+    }
+  }
+
+  return { sourceMeshes: [template, ...children] };
+}
+
+/**
+ * Dispose all source meshes produced by createPropMeshBatch.
+ */
+export function disposePropBatch(batch: PropBatch): void {
+  for (const mesh of batch.sourceMeshes) {
     mesh.dispose();
   }
 }
