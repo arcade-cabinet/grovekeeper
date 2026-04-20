@@ -7,8 +7,15 @@ import {
 } from "@/config/config";
 import { getActiveDifficulty } from "@/config/difficulty";
 import { getSpeciesById } from "@/config/trees";
+import { koota } from "@/koota";
 import { getGrowthMultiplier as getStructureGrowthMult } from "@/structures/StructureManager";
-import { gridCellsQuery, structuresQuery, treesQuery } from "@/world";
+import {
+  GridCell,
+  Position,
+  Renderable,
+  Structure,
+  Tree,
+} from "@/traits";
 
 /**
  * Calculate the visual scale for a tree at a given stage + progress.
@@ -91,6 +98,32 @@ const packCoord = (x: number, z: number): number =>
 const _waterTiles = new Set<number>();
 const _treeCounts = new Map<number, number>();
 
+interface StructureShape {
+  templateId: string;
+  effectType?: "growth_boost" | "harvest_boost" | "stamina_regen" | "storage";
+  effectRadius?: number;
+  effectMagnitude?: number;
+}
+
+function buildStructuresAdapter(): Iterable<{
+  structure?: StructureShape;
+  position?: { x: number; z: number };
+}> {
+  const result: {
+    structure?: StructureShape;
+    position?: { x: number; z: number };
+  }[] = [];
+  for (const e of koota.query(Structure, Position)) {
+    const s = e.get(Structure);
+    const p = e.get(Position);
+    result.push({
+      structure: s,
+      position: { x: p.x, z: p.z },
+    });
+  }
+  return result;
+}
+
 export function growthSystem(
   deltaTime: number,
   currentSeason: string,
@@ -99,26 +132,32 @@ export function growthSystem(
   _waterTiles.clear();
   _treeCounts.clear();
 
-  for (const cell of gridCellsQuery) {
-    if (cell.gridCell?.type === "water") {
-      _waterTiles.add(packCoord(cell.gridCell.gridX, cell.gridCell.gridZ));
+  for (const cell of koota.query(GridCell, Position)) {
+    const gc = cell.get(GridCell);
+    if (gc.type === "water") {
+      _waterTiles.add(packCoord(gc.gridX, gc.gridZ));
     }
   }
 
-  for (const entity of treesQuery) {
-    if (!entity.position) continue;
-    const key = packCoord(entity.position.x, entity.position.z);
+  for (const entity of koota.query(Tree, Position, Renderable)) {
+    const p = entity.get(Position);
+    const key = packCoord(p.x, p.z);
     _treeCounts.set(key, (_treeCounts.get(key) ?? 0) + 1);
   }
 
-  for (const entity of treesQuery) {
-    if (!entity.tree || !entity.renderable) continue;
+  const structuresAdapter = buildStructuresAdapter();
 
-    const tree = entity.tree;
+  for (const entity of koota.query(Tree, Position, Renderable)) {
+    const tree = entity.get(Tree);
+    const position = entity.get(Position);
+    const renderable = entity.get(Renderable);
 
     // Don't grow past max stage
     if (tree.stage >= MAX_STAGE) {
-      entity.renderable.scale = getStageScale(tree.stage, 0);
+      entity.set(Renderable, {
+        ...renderable,
+        scale: getStageScale(tree.stage, 0),
+      });
       continue;
     }
 
@@ -138,18 +177,19 @@ export function growthSystem(
     });
 
     if (rate <= 0) {
-      entity.renderable.scale = getStageScale(tree.stage, tree.progress);
+      entity.set(Renderable, {
+        ...renderable,
+        scale: getStageScale(tree.stage, tree.progress),
+      });
       continue;
     }
 
     // Structure growth boost
-    const structureMult = entity.position
-      ? getStructureGrowthMult(
-          entity.position.x,
-          entity.position.z,
-          structuresQuery,
-        )
-      : 1.0;
+    const structureMult = getStructureGrowthMult(
+      position.x,
+      position.z,
+      structuresAdapter,
+    );
 
     // Fertilized bonus (2x growth for the current stage cycle)
     const fertilizedMult = tree.fertilized ? 2.0 : 1.0;
@@ -158,9 +198,9 @@ export function growthSystem(
     let speciesBonus = 1.0;
 
     // Silver Birch: +20% growth near water tiles
-    if (tree.speciesId === "silver-birch" && entity.position) {
-      const px = entity.position.x;
-      const pz = entity.position.z;
+    if (tree.speciesId === "silver-birch") {
+      const px = position.x;
+      const pz = position.z;
       for (let dx = -1; dx <= 1; dx++) {
         for (let dz = -1; dz <= 1; dz++) {
           if (dx === 0 && dz === 0) continue;
@@ -174,9 +214,9 @@ export function growthSystem(
     }
 
     // Mystic Fern: +15% per adjacent tree (max +60%)
-    if (tree.speciesId === "mystic-fern" && entity.position) {
-      const px = entity.position.x;
-      const pz = entity.position.z;
+    if (tree.speciesId === "mystic-fern") {
+      const px = position.x;
+      const pz = position.z;
       let adjacentCount = 0;
       for (let dx = -1; dx <= 1; dx++) {
         for (let dz = -1; dz <= 1; dz++) {
@@ -189,33 +229,47 @@ export function growthSystem(
 
     // Advance progress (weather + structure + fertilized + species + difficulty multipliers)
     const difficultyGrowthMult = getActiveDifficulty().growthSpeedMult;
-    tree.progress +=
+    let newProgress =
+      tree.progress +
       rate *
-      weatherMultiplier *
-      structureMult *
-      fertilizedMult *
-      speciesBonus *
-      difficultyGrowthMult *
-      deltaTime;
-    tree.totalGrowthTime += deltaTime;
+        weatherMultiplier *
+        structureMult *
+        fertilizedMult *
+        speciesBonus *
+        difficultyGrowthMult *
+        deltaTime;
+    const newTotalGrowthTime = tree.totalGrowthTime + deltaTime;
+    let newStage = tree.stage;
+    let newWatered = tree.watered;
+    let newFertilized = tree.fertilized;
 
     // Handle stage transition
-    while (tree.progress >= 1 && tree.stage < MAX_STAGE) {
-      tree.progress -= 1;
-      tree.stage = (tree.stage + 1) as 0 | 1 | 2 | 3 | 4;
-      tree.watered = false;
+    while (newProgress >= 1 && newStage < MAX_STAGE) {
+      newProgress -= 1;
+      newStage = (newStage + 1) as 0 | 1 | 2 | 3 | 4;
+      newWatered = false;
       // Fertilized bonus expires after one stage cycle
-      if (tree.fertilized) {
-        tree.fertilized = false;
+      if (newFertilized) {
+        newFertilized = false;
       }
     }
 
     // Clamp progress at max stage
-    if (tree.stage >= MAX_STAGE) {
-      tree.progress = Math.min(tree.progress, 0.99);
+    if (newStage >= MAX_STAGE) {
+      newProgress = Math.min(newProgress, 0.99);
     }
 
-    // Update visual scale
-    entity.renderable.scale = getStageScale(tree.stage, tree.progress);
+    entity.set(Tree, {
+      ...tree,
+      progress: newProgress,
+      stage: newStage,
+      watered: newWatered,
+      fertilized: newFertilized,
+      totalGrowthTime: newTotalGrowthTime,
+    });
+    entity.set(Renderable, {
+      ...renderable,
+      scale: getStageScale(newStage, newProgress),
+    });
   }
 }

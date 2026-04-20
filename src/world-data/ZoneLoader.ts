@@ -6,15 +6,12 @@
  * overlaying any sparse tile overrides.
  */
 
-import {
-  createGridCellEntity,
-  createNpcEntity,
-  createWildTreeEntity,
-} from "@/archetypes";
+import type { Entity } from "koota";
+import { koota } from "@/koota";
 import { getNpcTemplate } from "@/npcs/NpcManager";
 import { createRNG, hashString } from "@/shared/utils/seedRNG";
-import type { Entity } from "@/world";
-import { gridCellsQuery, npcsQuery, world } from "@/world";
+import { spawnGridCell, spawnNpc, spawnWildTree } from "@/startup";
+import { GridCell, Npc, Position, Zone } from "@/traits";
 import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types";
 import { pickWeighted } from "./WorldGenerator";
 
@@ -44,10 +41,9 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
   // Build set of existing cell positions to avoid duplicates
   // (e.g. when restoring a saved game that already has starting-grove cells)
   const existing = new Set<string>();
-  for (const cell of gridCellsQuery) {
-    if (cell.gridCell) {
-      existing.add(`${cell.gridCell.gridX},${cell.gridCell.gridZ}`);
-    }
+  for (const cell of koota.query(GridCell, Position)) {
+    const gc = cell.get(GridCell);
+    existing.add(`${gc.gridX},${gc.gridZ}`);
   }
 
   // Build tile override map for O(1) lookup
@@ -61,7 +57,11 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
   const defaultType = materialToCellType(zone.groundMaterial);
 
   // Track which cells are soil (available for wild tree placement)
-  const soilCells: { worldX: number; worldZ: number }[] = [];
+  const soilCells: {
+    worldX: number;
+    worldZ: number;
+    entity: Entity;
+  }[] = [];
 
   for (let z = 0; z < zone.size.height; z++) {
     for (let x = 0; x < zone.size.width; x++) {
@@ -73,15 +73,14 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
 
       const cellType = overrides.get(`${x},${z}`) ?? defaultType;
 
-      const entity = createGridCellEntity(worldX, worldZ, cellType);
+      const entity = spawnGridCell(worldX, worldZ, cellType);
       // Tag entity with zone membership
-      (entity as Entity & { zoneId?: string }).zoneId = zone.id;
-      world.add(entity);
+      entity.add(Zone({ zoneId: zone.id, localX: x, localZ: z }));
       entities.push(entity);
 
       // Track unoccupied soil cells for wild tree spawning
       if (cellType === "soil") {
-        soilCells.push({ worldX, worldZ });
+        soilCells.push({ worldX, worldZ, entity });
       }
     }
   }
@@ -98,7 +97,6 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
       soilCells,
       zone.wildTrees,
       zone.wildTreeDensity,
-      entities,
     );
     entities.push(...wildTreeEntities);
   }
@@ -107,10 +105,9 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
   if (zone.npcs) {
     // Build set of existing NPC positions to avoid duplicates on reload
     const existingNpcs = new Set<string>();
-    for (const npc of npcsQuery) {
-      if (npc.position) {
-        existingNpcs.add(`${npc.position.x},${npc.position.z}`);
-      }
+    for (const npc of koota.query(Npc, Position)) {
+      const p = npc.get(Position);
+      existingNpcs.add(`${p.x},${p.z}`);
     }
 
     for (const npcPlacement of zone.npcs) {
@@ -122,7 +119,7 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
       // Skip if NPC already exists at this position (idempotent loading)
       if (existingNpcs.has(`${worldX},${worldZ}`)) continue;
       // Player level is checked at interaction time, so create all NPCs
-      const npcEntity = createNpcEntity(
+      const npcEntity = spawnNpc(
         worldX,
         worldZ,
         template.id,
@@ -130,8 +127,13 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
         99, // always create; level gating happens on interaction
         template.requiredLevel,
       );
-      (npcEntity as Entity & { zoneId?: string }).zoneId = zone.id;
-      world.add(npcEntity);
+      npcEntity.add(
+        Zone({
+          zoneId: zone.id,
+          localX: npcPlacement.localX,
+          localZ: npcPlacement.localZ,
+        }),
+      );
       entities.push(npcEntity);
     }
   }
@@ -145,10 +147,9 @@ export function loadZoneEntities(zone: ZoneDefinition): Entity[] {
  */
 function spawnWildTrees(
   zoneId: string,
-  soilCells: { worldX: number; worldZ: number }[],
+  soilCells: { worldX: number; worldZ: number; entity: Entity }[],
   wildTrees: WildTreeSpec[],
   density: number,
-  gridEntities: Entity[],
 ): Entity[] {
   if (soilCells.length === 0) return [];
 
@@ -174,24 +175,24 @@ function spawnWildTrees(
     // Random starting stage between 2-4 (Sapling through Old Growth)
     const stage = (Math.floor(rng() * 3) + 2) as 0 | 1 | 2 | 3 | 4;
 
-    const treeEntity = createWildTreeEntity(
+    const treeEntity = spawnWildTree(
       cell.worldX,
       cell.worldZ,
       speciesId,
       stage,
     );
-    (treeEntity as Entity & { zoneId?: string }).zoneId = zoneId;
-    world.add(treeEntity);
+    treeEntity.add(Zone({ zoneId, localX: 0, localZ: 0 }));
     entities.push(treeEntity);
 
     // Mark the grid cell as occupied
-    const gridEntity = gridEntities.find(
-      (e) =>
-        e.gridCell?.gridX === cell.worldX && e.gridCell?.gridZ === cell.worldZ,
-    );
-    if (gridEntity?.gridCell) {
-      gridEntity.gridCell.occupied = true;
-      gridEntity.gridCell.treeEntityId = treeEntity.id;
+    const gridEntity = cell.entity;
+    if (gridEntity.has(GridCell)) {
+      const gc = gridEntity.get(GridCell);
+      gridEntity.set(GridCell, {
+        ...gc,
+        occupied: true,
+        treeEntity,
+      });
     }
   }
 
@@ -203,6 +204,6 @@ function spawnWildTrees(
  */
 export function unloadZoneEntities(entities: Entity[]): void {
   for (const entity of entities) {
-    world.remove(entity);
+    entity.destroy();
   }
 }

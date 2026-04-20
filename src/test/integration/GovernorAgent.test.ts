@@ -5,15 +5,9 @@
  */
 import { beforeEach, describe, expect, it } from "vitest";
 import { actions as gameActions } from "@/actions";
-import {
-  createGridCellEntity,
-  createPlayerEntity,
-  createTreeEntity,
-} from "@/archetypes";
-import { koota, spawnPlayer } from "@/koota";
+import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { spawnGridCell, spawnTree } from "@/startup";
 import { useGameStore } from "@/stores/gameStore";
-import { initHarvestable } from "@/systems/harvest";
 import {
   FarmerState,
   GridCell,
@@ -26,34 +20,17 @@ import {
   Tracking,
   Tree,
 } from "@/traits";
-import { world } from "@/world";
 import type { GovernorProfile } from "./GovernorAgent";
 import { DEFAULT_PROFILE, GovernorAgent } from "./GovernorAgent";
 
 /**
- * Set up a minimal 4x4 world in BOTH Miniplex and Koota. The Governor reads
- * from Koota; legacy test scaffolding still uses Miniplex fixtures.
+ * Set up a minimal 4x4 world in Koota. The Governor reads from Koota.
  */
 function setupWorld() {
-  for (const entity of [...world]) world.remove(entity);
+  destroyAllEntitiesExceptWorld();
   useGameStore.getState().resetGame();
-
-  const player = createPlayerEntity();
-  player.position!.x = 2;
-  player.position!.z = 2;
-  world.add(player);
-
-  for (let x = 0; x < 4; x++) {
-    for (let z = 0; z < 4; z++) {
-      world.add(createGridCellEntity(x, z, "soil"));
-    }
-  }
-
-  useGameStore.getState().addSeed("white-oak", 20);
-
-  // Koota mirror.
-  for (const entity of koota.query()) entity.destroy();
   gameActions().resetGame();
+
   const kPlayer = spawnPlayer();
   kPlayer.set(Position, { x: 2, y: 0, z: 2 });
   for (let x = 0; x < 4; x++) {
@@ -62,6 +39,7 @@ function setupWorld() {
     }
   }
   gameActions().addSeed("white-oak", 20);
+  useGameStore.getState().addSeed("white-oak", 20);
 }
 
 describe("GovernorAgent", () => {
@@ -80,15 +58,12 @@ describe("GovernorAgent", () => {
     };
     const governor = new GovernorAgent(profile);
 
-    // Run fewer ticks than the interval — no decision yet
     for (let i = 0; i < 4; i++) governor.update();
     expect(governor.stats.decisionsMade).toBe(0);
 
-    // One more tick reaches the interval — first decision fires
     governor.update();
     expect(governor.stats.decisionsMade).toBe(1);
 
-    // Run another full interval — second decision
     for (let i = 0; i < 5; i++) governor.update();
     expect(governor.stats.decisionsMade).toBe(2);
   });
@@ -105,7 +80,6 @@ describe("GovernorAgent", () => {
     };
     const governor = new GovernorAgent(profile, 4);
 
-    // Run enough ticks for several planting cycles
     for (let i = 0; i < 30; i++) governor.update();
 
     expect(koota.get(Tracking)?.treesPlanted ?? 0).toBeGreaterThan(0);
@@ -113,18 +87,6 @@ describe("GovernorAgent", () => {
   });
 
   it("waters unwatered trees when water weight is high", () => {
-    // Plant tree in Miniplex (legacy setup).
-    const tree1 = createTreeEntity(0, 0, "white-oak");
-    world.add(tree1);
-    const cell1 = [...world.with("gridCell")].find(
-      (c) => c.gridCell?.gridX === 0 && c.gridCell?.gridZ === 0,
-    );
-    if (cell1?.gridCell) {
-      cell1.gridCell.occupied = true;
-      cell1.gridCell.treeEntityId = tree1.id;
-    }
-
-    // Mirror in Koota so the governor can see the tree.
     const kTree = spawnTree(0, 0, "white-oak");
     const kCell = koota.query(GridCell).find((c) => {
       const gc = c.get(GridCell);
@@ -136,7 +98,7 @@ describe("GovernorAgent", () => {
         kCell.set(GridCell, {
           ...gc,
           occupied: true,
-          treeEntityId: String(kTree),
+          treeEntity: kTree,
         });
     }
 
@@ -158,22 +120,6 @@ describe("GovernorAgent", () => {
   });
 
   it("harvests ready trees when harvest weight is high", () => {
-    // Miniplex legacy fixtures.
-    const tree = createTreeEntity(1, 1, "white-oak");
-    tree.tree!.stage = 3;
-    world.add(tree);
-    initHarvestable(tree);
-    tree.harvestable!.ready = true;
-
-    const cell = [...world.with("gridCell")].find(
-      (c) => c.gridCell?.gridX === 1 && c.gridCell?.gridZ === 1,
-    );
-    if (cell?.gridCell) {
-      cell.gridCell.occupied = true;
-      cell.gridCell.treeEntityId = tree.id;
-    }
-
-    // Koota mirror.
     const kTree = spawnTree(1, 1, "white-oak");
     const td = kTree.get(Tree);
     if (td) kTree.set(Tree, { ...td, stage: 3 });
@@ -195,11 +141,10 @@ describe("GovernorAgent", () => {
         kCell.set(GridCell, {
           ...gc,
           occupied: true,
-          treeEntityId: String(kTree),
+          treeEntity: kTree,
         });
     }
 
-    // Unlock axe (needs level 7)
     useGameStore.setState({ unlockedTools: ["trowel", "watering-can", "axe"] });
     const pp = koota.get(PlayerProgress);
     if (pp)
@@ -226,7 +171,6 @@ describe("GovernorAgent", () => {
   });
 
   it("falls back to exploring when no actions are possible", () => {
-    // Empty world, no seeds
     useGameStore.setState({ seeds: {} });
     koota.set(Seeds, {});
 
@@ -241,7 +185,6 @@ describe("GovernorAgent", () => {
     };
     const governor = new GovernorAgent(profile, 4);
 
-    // Should not throw
     expect(() => {
       for (let i = 0; i < 30; i++) governor.update();
     }).not.toThrow();
@@ -251,7 +194,6 @@ describe("GovernorAgent", () => {
 
   it("respects preferred species", () => {
     useGameStore.getState().addSeed("elder-pine", 10);
-    // Elder-pine seedCost: { timber: 5 }
     useGameStore.getState().addResource("timber", 50);
     gameActions().addSeed("elder-pine", 10);
     gameActions().addResource("timber", 50);
@@ -294,29 +236,12 @@ describe("GovernorAgent", () => {
     };
     const governor = new GovernorAgent(profile, 4);
 
-    // With 0 stamina, plant evaluator should return 0 desirability
     for (let i = 0; i < 10; i++) governor.update();
 
-    // Should not have planted (stamina was 0)
     expect(koota.get(Tracking)?.treesPlanted ?? 0).toBe(0);
   });
 
   it("prunes mature unpruned trees", () => {
-    // Miniplex legacy.
-    const tree = createTreeEntity(1, 1, "white-oak");
-    tree.tree!.stage = 3;
-    world.add(tree);
-    initHarvestable(tree);
-
-    const cell = [...world.with("gridCell")].find(
-      (c) => c.gridCell?.gridX === 1 && c.gridCell?.gridZ === 1,
-    );
-    if (cell?.gridCell) {
-      cell.gridCell.occupied = true;
-      cell.gridCell.treeEntityId = tree.id;
-    }
-
-    // Koota mirror.
     const kTree = spawnTree(1, 1, "white-oak");
     const td = kTree.get(Tree);
     if (td) kTree.set(Tree, { ...td, stage: 3 });
@@ -367,7 +292,6 @@ describe("GovernorAgent", () => {
   });
 
   it("trades resources when target resource is zero", () => {
-    // Give timber but no sap — governor should trade timber → sap (and may chain to fruit)
     useGameStore.getState().addResource("timber", 20);
     gameActions().addResource("timber", 20);
 
@@ -388,12 +312,10 @@ describe("GovernorAgent", () => {
     const resources = koota.get(Resources);
     expect(governor.stats.tradesExecuted).toBeGreaterThan(0);
     expect(resources?.timber ?? 0).toBeLessThan(20);
-    // Governor chains trades: timber→sap→fruit.
     expect(resources?.sap ?? 0).toBeGreaterThan(-1);
   });
 
   it("skips invalid species in pickSpecies", () => {
-    // Add seeds for a non-existent species
     useGameStore.setState({ seeds: { "phantom-tree": 10 } });
     koota.set(Seeds, { "phantom-tree": 10 });
 
@@ -411,12 +333,10 @@ describe("GovernorAgent", () => {
 
     for (let i = 0; i < 20; i++) governor.update();
 
-    // Should not have planted any trees (phantom species should be skipped)
     expect(koota.get(Tracking)?.treesPlanted ?? 0).toBe(0);
   });
 
   it("prefers species that produce needed resources", () => {
-    // Low sap (< 5 threshold), have silver-birch seeds (yields sap, seedCost: 4 sap)
     useGameStore.setState({
       resources: { timber: 0, sap: 4, fruit: 0, acorns: 0 },
       seeds: { "white-oak": 10, "silver-birch": 10 },
@@ -438,7 +358,6 @@ describe("GovernorAgent", () => {
 
     for (let i = 0; i < 20; i++) governor.update();
 
-    // Should prefer silver-birch over white-oak because sap is low
     const birches = koota.query(Tree).filter((t) => {
       const data = t.get(Tree);
       return data?.speciesId === "silver-birch";

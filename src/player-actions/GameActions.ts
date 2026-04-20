@@ -249,7 +249,7 @@ export function plantTree(
   cellEntity.set(GridCell, {
     ...gc,
     occupied: true,
-    treeEntityId: String(tree),
+    treeEntity: tree,
   });
 
   // Update tracking stats
@@ -325,7 +325,7 @@ export function harvestTree(
         cellEntity.set(GridCell, {
           ...gc,
           occupied: false,
-          treeEntityId: null,
+          treeEntity: null,
         });
     }
   }
@@ -416,7 +416,7 @@ export function removeSeedling(tree: Entity | undefined | null): boolean {
         cellEntity.set(GridCell, {
           ...gc,
           occupied: false,
-          treeEntityId: null,
+          treeEntity: null,
         });
     }
   }

@@ -1,5 +1,6 @@
 import type { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+import type { Entity } from "koota";
 import { relation, trait } from "koota";
 import type { ResourceType } from "@/config/resources";
 import type { EventState } from "@/events/types";
@@ -53,7 +54,7 @@ export const GridCell = trait({
   gridZ: 0,
   type: "soil" as "soil" | "water" | "rock" | "path",
   occupied: false,
-  treeEntityId: null as string | null,
+  treeEntity: null as Entity | null,
 });
 
 export const Zone = trait({

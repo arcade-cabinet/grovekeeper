@@ -17,9 +17,10 @@
 import type { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
+import { koota } from "@/koota";
 import { buildSpeciesTreeMesh } from "@/shared/utils/treeMeshBuilder";
 import type { Season } from "@/systems/time";
-import { treesQuery } from "@/world";
+import { Position, Renderable, Tree } from "@/traits";
 
 type TreeMesh = InstancedMesh | Mesh;
 
@@ -29,22 +30,17 @@ const LERP_SPEED = 3.0;
 const TREE_VISUAL_SCALE = 0.5;
 
 export class TreeMeshManager {
-  /** Live tree meshes keyed by entity ID. InstancedMesh when sharing a
-   * template with ≥1 siblings, Mesh only for the very first tree of a
-   * (species, season, night) combo. */
-  readonly meshes = new Map<string, TreeMesh>();
-  /** Template mesh cache keyed by `${speciesId}_${season}[_night]`.
-   * Templates are ALSO rendered — Babylon draws the template alongside
-   * its instances in the same draw call. We set the template's position
-   * once (off-world at y=-1000) and keep it enabled. */
+  /** Live tree meshes keyed by entity numeric id. */
+  readonly meshes = new Map<number, TreeMesh>();
+  /** Template mesh cache keyed by `${speciesId}_${season}[_night]`. */
   private templates = new Map<string, Mesh>();
   /** Set of entity IDs whose world matrices are frozen (stage 4). */
-  private frozen = new Set<string>();
+  private frozen = new Set<number>();
 
   /** Create or retrieve a cached template, then create an instance. */
   createMesh(
     scene: Scene,
-    entityId: string,
+    entityId: number,
     speciesId: string,
     season: Season | undefined,
     _meshSeed: number | undefined,
@@ -95,33 +91,36 @@ export class TreeMeshManager {
   ): void {
     const lerpFactor = Math.min(1, dt * LERP_SPEED);
 
-    for (const entity of treesQuery) {
-      if (!entity.position || !entity.tree || !entity.renderable) continue;
+    for (const entity of koota.query(Tree, Position, Renderable)) {
+      const tree = entity.get(Tree);
+      const position = entity.get(Position);
+      const renderable = entity.get(Renderable);
+      const eid = entity.id();
 
-      let mesh = this.meshes.get(entity.id);
+      let mesh = this.meshes.get(eid);
       if (!mesh) {
         mesh = this.createMesh(
           scene,
-          entity.id,
-          entity.tree.speciesId,
+          eid,
+          tree.speciesId,
           season,
-          entity.tree.meshSeed,
+          tree.meshSeed,
           isNight,
         );
       }
 
-      mesh.position.x = entity.position.x;
-      mesh.position.z = entity.position.z;
+      mesh.position.x = position.x;
+      mesh.position.z = position.z;
 
-      const targetScale = entity.renderable.scale * TREE_VISUAL_SCALE;
+      const targetScale = renderable.scale * TREE_VISUAL_SCALE;
       const currentScale = mesh.scaling.x;
       const isScaling = Math.abs(targetScale - currentScale) > 0.001;
 
       if (isScaling) {
         // Unfreeze if it was frozen (tree is growing again)
-        if (this.frozen.has(entity.id)) {
+        if (this.frozen.has(eid)) {
           mesh.unfreezeWorldMatrix();
-          this.frozen.delete(entity.id);
+          this.frozen.delete(eid);
         }
         const smoothed =
           currentScale + (targetScale - currentScale) * lerpFactor;
@@ -129,10 +128,10 @@ export class TreeMeshManager {
         mesh.position.y = smoothed * 0.4;
       } else {
         // Freeze stage 4 trees for performance
-        if (entity.tree.stage === 4 && !this.frozen.has(entity.id)) {
+        if (tree.stage === 4 && !this.frozen.has(eid)) {
           mesh.freezeWorldMatrix();
           mesh.isPickable = false;
-          this.frozen.add(entity.id);
+          this.frozen.add(eid);
         }
         if (currentScale !== targetScale) {
           mesh.scaling.setAll(targetScale);
@@ -143,7 +142,7 @@ export class TreeMeshManager {
   }
 
   /** Remove a single tree mesh (e.g. on harvest). */
-  removeMesh(entityId: string): void {
+  removeMesh(entityId: number): void {
     const mesh = this.meshes.get(entityId);
     if (mesh) {
       mesh.dispose();
@@ -162,20 +161,21 @@ export class TreeMeshManager {
     this.frozen.clear();
 
     // Rebuild each tree entity's mesh
-    for (const entity of treesQuery) {
-      if (!entity.tree) continue;
-      const oldMesh = this.meshes.get(entity.id);
+    for (const entity of koota.query(Tree, Position, Renderable)) {
+      const tree = entity.get(Tree);
+      const renderable = entity.get(Renderable);
+      const eid = entity.id();
+      const oldMesh = this.meshes.get(eid);
       const savedScale =
-        oldMesh?.scaling.x ??
-        (entity.renderable?.scale ?? 1) * TREE_VISUAL_SCALE;
+        oldMesh?.scaling.x ?? renderable.scale * TREE_VISUAL_SCALE;
       if (oldMesh) oldMesh.dispose();
 
       const newMesh = this.createMesh(
         scene,
-        entity.id,
-        entity.tree.speciesId,
+        eid,
+        tree.speciesId,
         season,
-        entity.tree.meshSeed,
+        tree.meshSeed,
         isNight,
       );
       newMesh.scaling.setAll(savedScale);

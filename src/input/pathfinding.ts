@@ -1,4 +1,13 @@
-import type { GridCellComponent } from "@/world";
+/**
+ * Shape of a grid cell component as passed in from queries.
+ * Matches the Koota GridCell trait schema.
+ */
+interface GridCellComponent {
+  gridX: number;
+  gridZ: number;
+  type: "soil" | "water" | "rock" | "path";
+  occupied: boolean;
+}
 
 // ---------------------------------------------------------------------------
 // Walkability Grid

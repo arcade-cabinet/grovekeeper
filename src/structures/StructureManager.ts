@@ -5,9 +5,19 @@
  * from JSON data and provides methods for placement validation and effect calculations.
  */
 
-import type { StructureComponent } from "@/world";
 import structureData from "./data/structures.json";
 import type { StructureTemplate } from "./types";
+
+/**
+ * Shape of a structure component as passed in from queries.
+ * Matches the Koota Structure trait schema.
+ */
+interface StructureComponent {
+  templateId: string;
+  effectType?: "growth_boost" | "harvest_boost" | "stamina_regen" | "storage";
+  effectRadius?: number;
+  effectMagnitude?: number;
+}
 
 // ---------------------------------------------------------------------------
 // Template registry (loaded once from JSON)

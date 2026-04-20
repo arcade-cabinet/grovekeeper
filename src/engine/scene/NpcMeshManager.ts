@@ -16,9 +16,10 @@ import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
+import { koota } from "@/koota";
 import { getNpcTemplate } from "@/npcs/NpcManager";
 import type { HatStyle, NpcAppearance } from "@/npcs/types";
-import { npcsQuery } from "@/world";
+import { Npc, Position, Renderable } from "@/traits";
 import { loadModel } from "./ModelLoader";
 
 /** Scale for loaded .glb NPC models. */
@@ -95,7 +96,7 @@ interface NpcMeshEntry {
 }
 
 export class NpcMeshManager {
-  private meshes = new Map<string, NpcMeshEntry>();
+  private meshes = new Map<number, NpcMeshEntry>();
 
   private createHat(
     scene: Scene,
@@ -182,7 +183,7 @@ export class NpcMeshManager {
 
   private createPrimitiveMesh(
     scene: Scene,
-    entityId: string,
+    entityId: number,
     appearance: NpcAppearance,
   ): Mesh {
     const name = `npc_${entityId}`;
@@ -232,85 +233,79 @@ export class NpcMeshManager {
 
   /** Create meshes for new NPC entities and sync positions. */
   async update(scene: Scene): Promise<void> {
-    for (const entity of npcsQuery) {
-      if (!entity.npc || !entity.position) continue;
+    for (const entity of koota.query(Npc, Position, Renderable)) {
+      const eid = entity.id();
+      if (this.meshes.has(eid)) continue;
 
-      if (!this.meshes.has(entity.id)) {
-        const template = getNpcTemplate(entity.npc.templateId);
-        if (!template) continue;
+      const npc = entity.get(Npc);
+      const pos = entity.get(Position);
 
-        // Try .glb model first
-        const modelFile = NPC_MODEL_MAP[entity.npc.templateId];
-        let mesh: Mesh;
-        let idleAnim: AnimationGroup | undefined;
+      const template = getNpcTemplate(npc.templateId);
+      if (!template) continue;
 
-        if (modelFile) {
-          const loaded = await loadModel(scene, modelFile, `npc_${entity.id}`);
-          if (loaded) {
-            mesh = loaded.mesh;
-            const s = NPC_MODEL_SCALE * template.appearance.scale;
-            mesh.scaling.set(s, s, -s);
-            mesh.isPickable = true;
-            mesh.name = `npc_${entity.id}`;
+      // Try .glb model first
+      const modelFile = NPC_MODEL_MAP[npc.templateId];
+      let mesh: Mesh;
+      let idleAnim: AnimationGroup | undefined;
 
-            // .glb imports set rotationQuaternion which overrides .rotation (Euler).
-            // Null it so our idle sway animation can use .rotation.x/z.
-            mesh.rotationQuaternion = null;
-            for (const child of mesh.getChildMeshes()) {
-              child.rotationQuaternion = null;
+      if (modelFile) {
+        const loaded = await loadModel(scene, modelFile, `npc_${eid}`);
+        if (loaded) {
+          mesh = loaded.mesh;
+          const s = NPC_MODEL_SCALE * template.appearance.scale;
+          mesh.scaling.set(s, s, -s);
+          mesh.isPickable = true;
+          mesh.name = `npc_${eid}`;
+
+          // .glb imports set rotationQuaternion which overrides .rotation (Euler).
+          // Null it so our idle sway animation can use .rotation.x/z.
+          mesh.rotationQuaternion = null;
+          for (const child of mesh.getChildMeshes()) {
+            child.rotationQuaternion = null;
+          }
+
+          // Find and start idle animation
+          for (const ag of loaded.animations) {
+            if (ag.name.toLowerCase().includes("idle")) {
+              ag.start(true);
+              idleAnim = ag;
+              break;
             }
-
-            // Find and start idle animation
-            for (const ag of loaded.animations) {
-              if (ag.name.toLowerCase().includes("idle")) {
-                ag.start(true);
-                idleAnim = ag;
-                break;
-              }
-            }
-          } else {
-            // Fallback to primitive
-            mesh = this.createPrimitiveMesh(
-              scene,
-              entity.id,
-              template.appearance,
-            );
-            mesh.isPickable = true;
           }
         } else {
-          mesh = this.createPrimitiveMesh(
-            scene,
-            entity.id,
-            template.appearance,
-          );
+          // Fallback to primitive
+          mesh = this.createPrimitiveMesh(scene, eid, template.appearance);
           mesh.isPickable = true;
         }
-
-        mesh.position.x = entity.position.x;
-        const baseY = mesh.position.y || 0.3;
-        mesh.position.y = baseY;
-        mesh.position.z = entity.position.z;
-
-        // Store NPC metadata on the mesh for picking
-        mesh.metadata = {
-          entityId: entity.id,
-          entityType: "npc",
-          templateId: entity.npc.templateId,
-        };
-
-        // Random phase offset so NPCs don't breathe in unison
-        const phaseOffset = Math.random() * Math.PI * 2;
-        this.meshes.set(entity.id, {
-          mesh,
-          idleAnim,
-          baseY,
-          phaseOffset,
-          facingAngle: 0,
-          templateId: entity.npc.templateId,
-          markerMesh: null,
-          markerType: "none",
-        });
+      } else {
+        mesh = this.createPrimitiveMesh(scene, eid, template.appearance);
+        mesh.isPickable = true;
       }
+
+      mesh.position.x = pos.x;
+      const baseY = mesh.position.y || 0.3;
+      mesh.position.y = baseY;
+      mesh.position.z = pos.z;
+
+      // Store NPC metadata on the mesh for picking
+      mesh.metadata = {
+        entityId: eid,
+        entityType: "npc",
+        templateId: npc.templateId,
+      };
+
+      // Random phase offset so NPCs don't breathe in unison
+      const phaseOffset = Math.random() * Math.PI * 2;
+      this.meshes.set(eid, {
+        mesh,
+        idleAnim,
+        baseY,
+        phaseOffset,
+        facingAngle: 0,
+        templateId: npc.templateId,
+        markerMesh: null,
+        markerType: "none",
+      });
     }
   }
 
@@ -428,7 +423,7 @@ export class NpcMeshManager {
   }
 
   /** Remove a specific NPC mesh. */
-  removeMesh(entityId: string): void {
+  removeMesh(entityId: number): void {
     const entry = this.meshes.get(entityId);
     if (entry) {
       entry.idleAnim?.stop();

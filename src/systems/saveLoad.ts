@@ -1,5 +1,7 @@
-import { createGridCellEntity, createTreeEntity } from "@/archetypes";
-import { gridCellsQuery, treesQuery, world } from "@/world";
+import type { Entity } from "koota";
+import { destroyAllEntitiesExceptWorld, koota } from "@/koota";
+import { restoreTree, spawnGridCell } from "@/startup";
+import { GridCell, Harvestable, Position, Renderable, Tree } from "@/traits";
 import { getStageScale } from "./growth";
 
 export interface TreeSave {
@@ -41,30 +43,34 @@ export function serializeGrove(
   groveSeed: string,
 ): GroveSaveData {
   const trees: TreeSave[] = [];
-  for (const entity of treesQuery) {
-    if (!entity.tree || !entity.position) continue;
+  for (const entity of koota.query(Tree, Position)) {
+    const tree = entity.get(Tree);
+    const pos = entity.get(Position);
+    const harvestable = entity.has(Harvestable)
+      ? entity.get(Harvestable)
+      : undefined;
     trees.push({
-      col: Math.round(entity.position.x),
-      row: Math.round(entity.position.z),
-      speciesId: entity.tree.speciesId,
-      meshSeed: entity.tree.meshSeed,
-      stage: entity.tree.stage,
-      progress: entity.tree.progress,
-      watered: entity.tree.watered,
-      totalGrowthTime: entity.tree.totalGrowthTime,
-      plantedAt: entity.tree.plantedAt,
-      harvestCooldownElapsed: entity.harvestable?.cooldownElapsed,
-      harvestReady: entity.harvestable?.ready,
+      col: Math.round(pos.x),
+      row: Math.round(pos.z),
+      speciesId: tree.speciesId,
+      meshSeed: tree.meshSeed,
+      stage: tree.stage,
+      progress: tree.progress,
+      watered: tree.watered,
+      totalGrowthTime: tree.totalGrowthTime,
+      plantedAt: tree.plantedAt,
+      harvestCooldownElapsed: harvestable?.cooldownElapsed,
+      harvestReady: harvestable?.ready,
     });
   }
 
   const tiles: TileSave[] = [];
-  for (const entity of gridCellsQuery) {
-    if (!entity.gridCell) continue;
+  for (const entity of koota.query(GridCell, Position)) {
+    const gc = entity.get(GridCell);
     tiles.push({
-      col: entity.gridCell.gridX,
-      row: entity.gridCell.gridZ,
-      type: entity.gridCell.type,
+      col: gc.gridX,
+      row: gc.gridZ,
+      type: gc.type,
     });
   }
 
@@ -82,55 +88,49 @@ export function serializeGrove(
  * Clear the ECS world and recreate entities from save data.
  */
 export function deserializeGrove(data: GroveSaveData): void {
-  // Clear all existing entities
-  for (const entity of [...world]) {
-    world.remove(entity);
-  }
+  // Clear all existing entities (preserves world-level singleton traits)
+  destroyAllEntitiesExceptWorld();
 
   // Recreate grid cells
+  const cellMap = new Map<string, Entity>();
   for (const tile of data.tiles) {
-    world.add(
-      createGridCellEntity(
-        tile.col,
-        tile.row,
-        tile.type as "soil" | "water" | "rock" | "path",
-      ),
+    const cell = spawnGridCell(
+      tile.col,
+      tile.row,
+      tile.type as "soil" | "water" | "rock" | "path",
     );
-  }
-
-  // Build a map for marking cells as occupied
-  const cellMap = new Map<string, (typeof gridCellsQuery.entities)[number]>();
-  for (const entity of gridCellsQuery) {
-    if (entity.gridCell) {
-      cellMap.set(`${entity.gridCell.gridX},${entity.gridCell.gridZ}`, entity);
-    }
+    cellMap.set(`${tile.col},${tile.row}`, cell);
   }
 
   // Recreate trees
   for (const treeSave of data.trees) {
-    const tree = createTreeEntity(
-      treeSave.col,
-      treeSave.row,
-      treeSave.speciesId,
-    );
-    const treeComp = tree.tree;
-    const renderComp = tree.renderable;
-    if (!treeComp || !renderComp) continue;
-    treeComp.stage = treeSave.stage as 0 | 1 | 2 | 3 | 4;
-    treeComp.progress = treeSave.progress;
-    treeComp.watered = treeSave.watered;
-    treeComp.totalGrowthTime = treeSave.totalGrowthTime;
-    treeComp.meshSeed = treeSave.meshSeed;
-    treeComp.plantedAt = treeSave.plantedAt ?? Date.now();
+    const treeEntity = restoreTree({
+      speciesId: treeSave.speciesId,
+      gridX: treeSave.col,
+      gridZ: treeSave.row,
+      stage: treeSave.stage as 0 | 1 | 2 | 3 | 4,
+      progress: treeSave.progress,
+      watered: treeSave.watered,
+      totalGrowthTime: treeSave.totalGrowthTime,
+      plantedAt: treeSave.plantedAt ?? Date.now(),
+      meshSeed: treeSave.meshSeed,
+    });
     // Restore correct visual scale for the tree's growth stage
-    renderComp.scale = getStageScale(treeSave.stage, treeSave.progress);
-    world.add(tree);
+    const renderable = treeEntity.get(Renderable);
+    treeEntity.set(Renderable, {
+      ...renderable,
+      scale: getStageScale(treeSave.stage, treeSave.progress),
+    });
 
     // Mark cell as occupied
     const cell = cellMap.get(`${treeSave.col},${treeSave.row}`);
-    if (cell?.gridCell) {
-      cell.gridCell.occupied = true;
-      cell.gridCell.treeEntityId = tree.id;
+    if (cell?.has(GridCell)) {
+      const gc = cell.get(GridCell);
+      cell.set(GridCell, {
+        ...gc,
+        occupied: true,
+        treeEntity,
+      });
     }
   }
 }

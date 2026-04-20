@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { gridCellsQuery, world } from "@/world";
+import { destroyAllEntitiesExceptWorld, koota } from "@/koota";
+import { GridCell, Position, Tree, Zone } from "@/traits";
 import type { ZoneDefinition } from "./types";
 import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";
 
@@ -20,9 +21,7 @@ const testZone: ZoneDefinition = {
 
 describe("ZoneLoader", () => {
   beforeEach(() => {
-    for (const entity of [...world]) {
-      world.remove(entity);
-    }
+    destroyAllEntitiesExceptWorld();
   });
 
   describe("loadZoneEntities", () => {
@@ -36,45 +35,54 @@ describe("ZoneLoader", () => {
       const entities = loadZoneEntities(testZone);
       // First entity: local (0,0) + origin (5,10) = world (5,10)
       const first = entities[0];
-      expect(first.gridCell?.gridX).toBe(5);
-      expect(first.gridCell?.gridZ).toBe(10);
+      const gc = first.get(GridCell);
+      expect(gc.gridX).toBe(5);
+      expect(gc.gridZ).toBe(10);
     });
 
     it("applies default ground material as cell type", () => {
       const entities = loadZoneEntities(testZone);
       // Default for "soil" is "soil"
-      const soilCell = entities.find(
-        (e) => e.gridCell?.gridX === 5 && e.gridCell?.gridZ === 10,
-      );
-      expect(soilCell?.gridCell?.type).toBe("soil");
+      const soilCell = entities.find((e) => {
+        if (!e.has(GridCell)) return false;
+        const gc = e.get(GridCell);
+        return gc.gridX === 5 && gc.gridZ === 10;
+      });
+      expect(soilCell).toBeDefined();
+      expect(soilCell?.get(GridCell).type).toBe("soil");
     });
 
     it("applies tile overrides from zone definition", () => {
       const entities = loadZoneEntities(testZone);
       // Water at local (1,1) = world (6, 11)
-      const waterCell = entities.find(
-        (e) => e.gridCell?.gridX === 6 && e.gridCell?.gridZ === 11,
-      );
-      expect(waterCell?.gridCell?.type).toBe("water");
+      const waterCell = entities.find((e) => {
+        if (!e.has(GridCell)) return false;
+        const gc = e.get(GridCell);
+        return gc.gridX === 6 && gc.gridZ === 11;
+      });
+      expect(waterCell?.get(GridCell).type).toBe("water");
 
       // Rock at local (2,0) = world (7, 10)
-      const rockCell = entities.find(
-        (e) => e.gridCell?.gridX === 7 && e.gridCell?.gridZ === 10,
-      );
-      expect(rockCell?.gridCell?.type).toBe("rock");
+      const rockCell = entities.find((e) => {
+        if (!e.has(GridCell)) return false;
+        const gc = e.get(GridCell);
+        return gc.gridX === 7 && gc.gridZ === 10;
+      });
+      expect(rockCell?.get(GridCell).type).toBe("rock");
     });
 
     it("adds entities to the ECS world", () => {
-      const countBefore = [...gridCellsQuery].length;
+      const countBefore = Array.from(koota.query(GridCell, Position)).length;
       loadZoneEntities(testZone);
-      const countAfter = [...gridCellsQuery].length;
+      const countAfter = Array.from(koota.query(GridCell, Position)).length;
       expect(countAfter - countBefore).toBe(9);
     });
 
     it("tags entities with zoneId", () => {
       const entities = loadZoneEntities(testZone);
       for (const entity of entities) {
-        expect((entity as { zoneId?: string }).zoneId).toBe("test-zone");
+        expect(entity.has(Zone)).toBe(true);
+        expect(entity.get(Zone).zoneId).toBe("test-zone");
       }
     });
   });
@@ -82,11 +90,15 @@ describe("ZoneLoader", () => {
   describe("unloadZoneEntities", () => {
     it("removes entities from the ECS world", () => {
       const entities = loadZoneEntities(testZone);
-      const countAfterLoad = [...gridCellsQuery].length;
+      const countAfterLoad = Array.from(
+        koota.query(GridCell, Position),
+      ).length;
       expect(countAfterLoad).toBe(9);
 
       unloadZoneEntities(entities);
-      const countAfterUnload = [...gridCellsQuery].length;
+      const countAfterUnload = Array.from(
+        koota.query(GridCell, Position),
+      ).length;
       expect(countAfterUnload).toBe(0);
     });
   });
@@ -110,51 +122,54 @@ describe("ZoneLoader", () => {
 
     it("spawns wild tree entities when zone has wildTrees", () => {
       const entities = loadZoneEntities(wildZone);
-      const trees = entities.filter((e) => e.tree);
+      const trees = entities.filter((e) => e.has(Tree));
       expect(trees.length).toBeGreaterThan(0);
     });
 
     it("wild trees have wild flag set to true", () => {
       const entities = loadZoneEntities(wildZone);
-      const trees = entities.filter((e) => e.tree);
+      const trees = entities.filter((e) => e.has(Tree));
       for (const tree of trees) {
-        expect(tree.tree!.wild).toBe(true);
+        expect(tree.get(Tree).wild).toBe(true);
       }
     });
 
     it("wild trees start at stage 2-4", () => {
       const entities = loadZoneEntities(wildZone);
-      const trees = entities.filter((e) => e.tree);
+      const trees = entities.filter((e) => e.has(Tree));
       for (const tree of trees) {
-        expect(tree.tree!.stage).toBeGreaterThanOrEqual(2);
-        expect(tree.tree!.stage).toBeLessThanOrEqual(4);
+        const t = tree.get(Tree);
+        expect(t.stage).toBeGreaterThanOrEqual(2);
+        expect(t.stage).toBeLessThanOrEqual(4);
       }
     });
 
     it("marks grid cells as occupied for wild trees", () => {
       const entities = loadZoneEntities(wildZone);
-      const trees = entities.filter((e) => e.tree);
+      const trees = entities.filter((e) => e.has(Tree));
       for (const tree of trees) {
-        const cell = entities.find(
-          (e) =>
-            e.gridCell &&
-            e.gridCell.gridX === tree.position!.x &&
-            e.gridCell.gridZ === tree.position!.z,
-        );
-        expect(cell?.gridCell?.occupied).toBe(true);
-        expect(cell?.gridCell?.treeEntityId).toBe(tree.id);
+        const pos = tree.get(Position);
+        const cell = entities.find((e) => {
+          if (!e.has(GridCell)) return false;
+          const gc = e.get(GridCell);
+          return gc.gridX === pos.x && gc.gridZ === pos.z;
+        });
+        expect(cell).toBeDefined();
+        const gc = cell?.get(GridCell);
+        expect(gc?.occupied).toBe(true);
+        expect(gc?.treeEntity).toBe(tree);
       }
     });
 
     it("does not spawn wild trees in zone without wildTrees", () => {
       const entities = loadZoneEntities(testZone); // testZone has no wildTrees
-      const trees = entities.filter((e) => e.tree);
+      const trees = entities.filter((e) => e.has(Tree));
       expect(trees.length).toBe(0);
     });
 
     it("spawns count proportional to density", () => {
       const entities = loadZoneEntities(wildZone);
-      const trees = entities.filter((e) => e.tree);
+      const trees = entities.filter((e) => e.has(Tree));
       // 6x6 = 36 tiles, with water overrides some are non-soil
       // wildTreeDensity = 0.5, so expect roughly 50% of soil tiles
       // Exact count depends on RNG but should be > 5 and < 36
@@ -164,8 +179,8 @@ describe("ZoneLoader", () => {
 
     it("uses species from weighted list", () => {
       const entities = loadZoneEntities(wildZone);
-      const trees = entities.filter((e) => e.tree);
-      const speciesSet = new Set(trees.map((t) => t.tree!.speciesId));
+      const trees = entities.filter((e) => e.has(Tree));
+      const speciesSet = new Set(trees.map((t) => t.get(Tree).speciesId));
       // At least one of the two species should appear
       expect(speciesSet.has("white-oak") || speciesSet.has("elder-pine")).toBe(
         true,
@@ -183,7 +198,7 @@ describe("ZoneLoader", () => {
         size: { width: 1, height: 1 },
       };
       const entities = loadZoneEntities(grassZone);
-      expect(entities[0].gridCell?.type).toBe("soil");
+      expect(entities[0].get(GridCell).type).toBe("soil");
     });
 
     it("maps stone to path cell type", () => {
@@ -195,7 +210,7 @@ describe("ZoneLoader", () => {
         size: { width: 1, height: 1 },
       };
       const entities = loadZoneEntities(stoneZone);
-      expect(entities[0].gridCell?.type).toBe("path");
+      expect(entities[0].get(GridCell).type).toBe("path");
     });
 
     it("maps dirt to soil cell type", () => {
@@ -207,7 +222,7 @@ describe("ZoneLoader", () => {
         size: { width: 1, height: 1 },
       };
       const entities = loadZoneEntities(dirtZone);
-      expect(entities[0].gridCell?.type).toBe("soil");
+      expect(entities[0].get(GridCell).type).toBe("soil");
     });
   });
 });

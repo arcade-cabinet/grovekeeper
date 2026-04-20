@@ -1,6 +1,7 @@
 import { COLORS } from "@/config/config";
+import { koota } from "@/koota";
+import { Harvestable, Tree } from "@/traits";
 import { Button } from "@/ui/primitives/button";
-import { harvestableQuery } from "@/world";
 
 interface BatchHarvestButtonProps {
   onBatchHarvest: () => void;
@@ -11,8 +12,9 @@ export const BatchHarvestButton = ({
 }: BatchHarvestButtonProps) => {
   // Count ready trees
   let readyCount = 0;
-  for (const entity of harvestableQuery) {
-    if (entity.harvestable?.ready) readyCount++;
+  for (const entity of koota.query(Tree, Harvestable)) {
+    const h = entity.get(Harvestable);
+    if (h.ready) readyCount++;
   }
 
   if (readyCount < 2) return null;

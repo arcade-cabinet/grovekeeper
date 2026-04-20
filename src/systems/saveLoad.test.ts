@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createGridCellEntity, createTreeEntity } from "@/archetypes";
-import { gridCellsQuery, treesQuery, world } from "@/world";
+import { destroyAllEntitiesExceptWorld, koota } from "@/koota";
+import { spawnGridCell, spawnTree } from "@/startup";
+import { GridCell, Position, Tree } from "@/traits";
 import {
   deserializeGrove,
   type GroveSaveData,
@@ -9,19 +10,20 @@ import {
 
 describe("Save/Load System", () => {
   beforeEach(() => {
-    for (const entity of [...world]) {
-      world.remove(entity);
-    }
+    destroyAllEntitiesExceptWorld();
   });
 
   describe("serializeGrove", () => {
     it("serializes tree entities", () => {
-      const tree = createTreeEntity(3, 5, "white-oak");
-      tree.tree!.stage = 2;
-      tree.tree!.progress = 0.6;
-      tree.tree!.watered = true;
-      tree.tree!.totalGrowthTime = 120;
-      world.add(tree);
+      const tree = spawnTree(3, 5, "white-oak");
+      const t = tree.get(Tree);
+      tree.set(Tree, {
+        ...t,
+        stage: 2,
+        progress: 0.6,
+        watered: true,
+        totalGrowthTime: 120,
+      });
 
       const data = serializeGrove(12, "test-seed");
 
@@ -35,8 +37,8 @@ describe("Save/Load System", () => {
     });
 
     it("serializes grid tiles", () => {
-      world.add(createGridCellEntity(0, 0, "soil"));
-      world.add(createGridCellEntity(1, 0, "water"));
+      spawnGridCell(0, 0, "soil");
+      spawnGridCell(1, 0, "water");
 
       const data = serializeGrove(12, "test-seed");
 
@@ -76,13 +78,15 @@ describe("Save/Load System", () => {
 
       deserializeGrove(saveData);
 
-      const trees = [...treesQuery];
+      const trees = Array.from(koota.query(Tree, Position));
       expect(trees).toHaveLength(1);
-      expect(trees[0].tree!.speciesId).toBe("white-oak");
-      expect(trees[0].tree!.stage).toBe(3);
-      expect(trees[0].tree!.progress).toBeCloseTo(0.4);
-      expect(trees[0].position!.x).toBe(3);
-      expect(trees[0].position!.z).toBe(5);
+      const t = trees[0].get(Tree);
+      const p = trees[0].get(Position);
+      expect(t.speciesId).toBe("white-oak");
+      expect(t.stage).toBe(3);
+      expect(t.progress).toBeCloseTo(0.4);
+      expect(p.x).toBe(3);
+      expect(p.z).toBe(5);
     });
 
     it("recreates grid cell entities from save data", () => {
@@ -100,13 +104,13 @@ describe("Save/Load System", () => {
 
       deserializeGrove(saveData);
 
-      const cells = [...gridCellsQuery];
+      const cells = Array.from(koota.query(GridCell, Position));
       expect(cells).toHaveLength(2);
     });
 
     it("clears existing entities before loading", () => {
-      world.add(createTreeEntity(0, 0, "white-oak"));
-      world.add(createTreeEntity(1, 1, "white-oak"));
+      spawnTree(0, 0, "white-oak");
+      spawnTree(1, 1, "white-oak");
 
       const saveData: GroveSaveData = {
         version: 1,
@@ -131,35 +135,37 @@ describe("Save/Load System", () => {
 
       deserializeGrove(saveData);
 
-      const trees = [...treesQuery];
+      const trees = Array.from(koota.query(Tree, Position));
       expect(trees).toHaveLength(1);
-      expect(trees[0].tree!.speciesId).toBe("elder-pine");
+      expect(trees[0].get(Tree).speciesId).toBe("elder-pine");
     });
 
     it("round-trips correctly (serialize then deserialize)", () => {
-      const tree = createTreeEntity(7, 9, "cherry-blossom");
-      tree.tree!.stage = 3;
-      tree.tree!.progress = 0.75;
-      tree.tree!.watered = true;
-      tree.tree!.totalGrowthTime = 300;
-      world.add(tree);
+      const tree = spawnTree(7, 9, "cherry-blossom");
+      const t = tree.get(Tree);
+      tree.set(Tree, {
+        ...t,
+        stage: 3,
+        progress: 0.75,
+        watered: true,
+        totalGrowthTime: 300,
+      });
 
-      world.add(createGridCellEntity(7, 9, "soil"));
+      spawnGridCell(7, 9, "soil");
 
       const saved = serializeGrove(12, "round-trip");
 
       // Clear and reload
-      for (const entity of [...world]) {
-        world.remove(entity);
-      }
+      destroyAllEntitiesExceptWorld();
 
       deserializeGrove(saved);
 
-      const trees = [...treesQuery];
+      const trees = Array.from(koota.query(Tree, Position));
       expect(trees).toHaveLength(1);
-      expect(trees[0].tree!.speciesId).toBe("cherry-blossom");
-      expect(trees[0].tree!.stage).toBe(3);
-      expect(trees[0].tree!.progress).toBeCloseTo(0.75);
+      const t2 = trees[0].get(Tree);
+      expect(t2.speciesId).toBe("cherry-blossom");
+      expect(t2.stage).toBe(3);
+      expect(t2.progress).toBeCloseTo(0.75);
     });
 
     it("marks grid cells as occupied when trees exist on them", () => {
@@ -186,12 +192,15 @@ describe("Save/Load System", () => {
 
       deserializeGrove(saveData);
 
-      const cells = [...gridCellsQuery];
-      const occupiedCell = cells.find(
-        (c) => c.gridCell!.gridX === 3 && c.gridCell!.gridZ === 5,
-      );
-      expect(occupiedCell?.gridCell!.occupied).toBe(true);
-      expect(occupiedCell?.gridCell!.treeEntityId).toBeTruthy();
+      const cells = Array.from(koota.query(GridCell, Position));
+      const occupiedCell = cells.find((c) => {
+        const gc = c.get(GridCell);
+        return gc.gridX === 3 && gc.gridZ === 5;
+      });
+      expect(occupiedCell).toBeDefined();
+      const gc = occupiedCell?.get(GridCell);
+      expect(gc?.occupied).toBe(true);
+      expect(gc?.treeEntity).toBeTruthy();
     });
   });
 });

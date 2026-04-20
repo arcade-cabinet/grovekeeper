@@ -5,27 +5,24 @@
  * grows trees, regenerates stamina, and manages harvest cooldowns.
  */
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  createGridCellEntity,
-  createPlayerEntity,
-  createTreeEntity,
-} from "@/archetypes";
+import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
+import { spawnGridCell, spawnTree } from "@/startup";
 import { useGameStore } from "@/stores/gameStore";
 import { initHarvestable } from "@/systems/harvest";
-import { world } from "@/world";
+import { FarmerState, Harvestable, IsPlayer, Tree } from "@/traits";
 import { HeadlessGameLoop } from "./HeadlessGameLoop";
 
 /** Set up a minimal world for simulation. */
 function setupWorld() {
-  for (const entity of [...world]) world.remove(entity);
+  destroyAllEntitiesExceptWorld();
   useGameStore.getState().resetGame();
 
-  world.add(createPlayerEntity());
+  spawnPlayer();
 
   // 4x4 soil grid
   for (let x = 0; x < 4; x++) {
     for (let z = 0; z < 4; z++) {
-      world.add(createGridCellEntity(x, z, "soil"));
+      spawnGridCell(x, z, "soil");
     }
   }
 }
@@ -49,8 +46,7 @@ describe("HeadlessGameLoop", () => {
   it("advances game time", () => {
     const loop = new HeadlessGameLoop({ ticksPerSecond: 30 });
     const timeBefore = useGameStore.getState().gameTimeMicroseconds;
-    loop.run(300); // 10 seconds at 30 TPS
-    // After syncing, game time should have advanced
+    loop.run(300);
     expect(loop.gameTime).not.toBeNull();
     expect(loop.gameTime!.microseconds).toBeGreaterThan(timeBefore);
   });
@@ -62,60 +58,51 @@ describe("HeadlessGameLoop", () => {
   });
 
   it("grows trees over time", () => {
-    const tree = createTreeEntity(0, 0, "white-oak");
-    world.add(tree);
+    const tree = spawnTree(0, 0, "white-oak");
 
     const loop = new HeadlessGameLoop({ ticksPerSecond: 30 });
-    const progressBefore = tree.tree!.progress;
+    const progressBefore = tree.get(Tree).progress;
 
-    // Run for ~5 seconds of game time (150 ticks at 30 TPS)
     loop.run(150);
 
-    expect(tree.tree!.progress).toBeGreaterThan(progressBefore);
+    expect(tree.get(Tree).progress).toBeGreaterThan(progressBefore);
   });
 
   it("regenerates stamina via staminaSystem", () => {
-    // Drain some stamina first
-    const player = [...world.with("farmerState")][0];
-    player.farmerState!.stamina = 50;
+    const player = koota.queryFirst(IsPlayer, FarmerState);
+    if (!player) throw new Error("no player");
+    player.set(FarmerState, { ...player.get(FarmerState), stamina: 50 });
 
     const loop = new HeadlessGameLoop({ ticksPerSecond: 30 });
-    loop.run(300); // 10 seconds
+    loop.run(300);
 
-    // Stamina should have regenerated (2/sec base rate)
-    expect(player.farmerState!.stamina).toBeGreaterThan(50);
+    expect(player.get(FarmerState).stamina).toBeGreaterThan(50);
   });
 
   it("advances harvest cooldowns", () => {
-    const tree = createTreeEntity(0, 0, "white-oak");
-    tree.tree!.stage = 3;
-    world.add(tree);
+    const tree = spawnTree(0, 0, "white-oak");
+    tree.set(Tree, { ...tree.get(Tree), stage: 3 });
     initHarvestable(tree);
 
-    expect(tree.harvestable!.ready).toBe(false);
+    expect(tree.get(Harvestable).ready).toBe(false);
 
     const loop = new HeadlessGameLoop({ ticksPerSecond: 30 });
-    // White oak harvest cycle is 45 seconds, run for 50s = 1500 ticks
     loop.run(1500);
 
-    expect(tree.harvestable!.ready).toBe(true);
+    expect(tree.get(Harvestable).ready).toBe(true);
   });
 
   it("promotes trees to harvestable at stage 3", () => {
-    const tree = createTreeEntity(0, 0, "white-oak");
-    // Start at stage 2 with high progress so it will advance
-    tree.tree!.stage = 2;
-    tree.tree!.progress = 0.95;
-    world.add(tree);
+    const tree = spawnTree(0, 0, "white-oak");
+    tree.set(Tree, { ...tree.get(Tree), stage: 2, progress: 0.95 });
 
-    expect(tree.harvestable).toBeUndefined();
+    expect(tree.has(Harvestable)).toBe(false);
 
     const loop = new HeadlessGameLoop({ ticksPerSecond: 30 });
-    loop.run(300); // Run long enough for stage transition
+    loop.run(300);
 
-    // Tree should have advanced to stage 3+ and been given harvestable component
-    if (tree.tree!.stage >= 3) {
-      expect(tree.harvestable).toBeDefined();
+    if (tree.get(Tree).stage >= 3) {
+      expect(tree.has(Harvestable)).toBe(true);
     }
   });
 
@@ -126,7 +113,6 @@ describe("HeadlessGameLoop", () => {
       weatherSeed: 12345,
     });
     loop.run(30);
-    // Should not throw — weather state is initialized
     expect(loop.weather).toBeDefined();
   });
 
@@ -137,12 +123,10 @@ describe("HeadlessGameLoop", () => {
   });
 
   it("fast-forwards many ticks without errors", () => {
-    const tree = createTreeEntity(0, 0, "white-oak");
-    world.add(tree);
+    spawnTree(0, 0, "white-oak");
 
     const loop = new HeadlessGameLoop({ ticksPerSecond: 30 });
 
-    // 3000 ticks = 100s of game time — should complete without throwing
     expect(() => loop.run(3000)).not.toThrow();
     expect(loop.ticks).toBe(3000);
   });

@@ -6,6 +6,7 @@
  * Uses a fixed timestep for deterministic, reproducible results.
  */
 
+import { koota } from "@/koota";
 import { hashString } from "@/shared/utils/seedRNG";
 import { useGameStore } from "@/stores/gameStore";
 import { growthSystem } from "@/systems/growth";
@@ -24,7 +25,7 @@ import {
   type WeatherState,
   type WeatherType,
 } from "@/systems/weather";
-import { farmerQuery, treesQuery } from "@/world";
+import { FarmerState, Harvestable, IsPlayer, Tree } from "@/traits";
 
 export interface HeadlessLoopConfig {
   /** Simulation ticks per second (default: 30). */
@@ -127,8 +128,9 @@ export class HeadlessGameLoop {
     harvestSystem(this._dt);
 
     // 4. Promote newly mature trees to harvestable
-    for (const entity of treesQuery) {
-      if (entity.tree && entity.tree.stage >= 3 && !entity.harvestable) {
+    for (const entity of koota.query(Tree)) {
+      const t = entity.get(Tree);
+      if (t.stage >= 3 && !entity.has(Harvestable)) {
         initHarvestable(entity);
       }
     }
@@ -159,10 +161,9 @@ export class HeadlessGameLoop {
    */
   private syncStaminaToECS(): void {
     const storeStamina = useGameStore.getState().stamina;
-    for (const entity of farmerQuery) {
-      if (entity.farmerState) {
-        entity.farmerState.stamina = storeStamina;
-      }
+    for (const entity of koota.query(IsPlayer, FarmerState)) {
+      const fs = entity.get(FarmerState);
+      entity.set(FarmerState, { ...fs, stamina: storeStamina });
     }
   }
 
@@ -171,11 +172,9 @@ export class HeadlessGameLoop {
    * staminaSystem regenerates on ECS; push that back to the store.
    */
   private syncStaminaToStore(): void {
-    for (const entity of farmerQuery) {
-      if (entity.farmerState) {
-        useGameStore.setState({ stamina: entity.farmerState.stamina });
-        break;
-      }
+    const entity = koota.queryFirst(IsPlayer, FarmerState);
+    if (entity) {
+      useGameStore.setState({ stamina: entity.get(FarmerState).stamina });
     }
   }
 }

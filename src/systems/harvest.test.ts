@@ -1,114 +1,118 @@
 // src/game/systems/harvest.test.ts
+import type { Entity } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createTreeEntity } from "@/archetypes";
+import { destroyAllEntitiesExceptWorld, koota } from "@/koota";
+import { spawnTree } from "@/startup";
 import { useGameStore } from "@/stores/gameStore";
-import { koota } from "@/koota";
-import { Difficulty } from "@/traits";
-import { world } from "@/world";
+import { Difficulty, Harvestable, Tree } from "@/traits";
 import { collectHarvest, harvestSystem, initHarvestable } from "./harvest";
+
+function setStage(entity: Entity, stage: 0 | 1 | 2 | 3 | 4): void {
+  entity.set(Tree, { ...entity.get(Tree), stage });
+}
+
+function setPruned(entity: Entity, pruned: boolean): void {
+  entity.set(Tree, { ...entity.get(Tree), pruned });
+}
+
+function setReady(entity: Entity, ready: boolean): void {
+  entity.set(Harvestable, { ...entity.get(Harvestable), ready });
+}
 
 describe("Harvest System", () => {
   beforeEach(() => {
-    for (const entity of [...world]) {
-      world.remove(entity);
-    }
+    destroyAllEntitiesExceptWorld();
     useGameStore.getState().resetGame();
   });
 
   describe("initHarvestable", () => {
     it("adds harvestable component to mature tree (stage 3)", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 3);
 
       initHarvestable(tree);
 
-      expect(tree.harvestable).toBeDefined();
-      expect(tree.harvestable!.ready).toBe(false);
-      expect(tree.harvestable!.cooldownTotal).toBe(45); // white-oak harvest cycle
-      expect(tree.harvestable!.resources.length).toBeGreaterThan(0);
+      expect(tree.has(Harvestable)).toBe(true);
+      const h = tree.get(Harvestable);
+      expect(h.ready).toBe(false);
+      expect(h.cooldownTotal).toBe(45); // white-oak harvest cycle
+      expect(h.resources.length).toBeGreaterThan(0);
     });
 
     it("stores base yields without multipliers", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 4; // Old Growth
-      tree.tree!.pruned = true;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 4); // Old Growth
+      setPruned(tree, true);
 
       initHarvestable(tree);
 
       // Base yield should be stored, not multiplied
-      const baseAmount = tree.harvestable!.resources[0].amount;
-      expect(baseAmount).toBe(2); // white-oak base timber yield
+      const h = tree.get(Harvestable);
+      expect(h.resources[0].amount).toBe(2); // white-oak base timber yield
     });
 
     it("does not add harvestable to immature tree (stage < 3)", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 2;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 2);
 
       initHarvestable(tree);
 
-      expect(tree.harvestable).toBeUndefined();
+      expect(tree.has(Harvestable)).toBe(false);
     });
   });
 
   describe("harvestSystem", () => {
     it("advances cooldown elapsed time", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 3);
       initHarvestable(tree);
 
       harvestSystem(10);
 
-      expect(tree.harvestable!.cooldownElapsed).toBe(10);
+      expect(tree.get(Harvestable).cooldownElapsed).toBe(10);
     });
 
     it("marks tree ready when cooldown completes", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 3);
       initHarvestable(tree);
 
       harvestSystem(50); // > 45 sec cooldown for white-oak
 
-      expect(tree.harvestable!.ready).toBe(true);
+      expect(tree.get(Harvestable).ready).toBe(true);
     });
 
     it("does not advance past ready", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 3);
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
 
       harvestSystem(100);
 
-      expect(tree.harvestable!.ready).toBe(true);
+      expect(tree.get(Harvestable).ready).toBe(true);
     });
   });
 
   describe("collectHarvest", () => {
     it("returns resources and resets cooldown", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 3);
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
 
       const result = collectHarvest(tree);
 
       expect(result).not.toBeNull();
       expect(result!.length).toBeGreaterThan(0);
-      expect(tree.harvestable!.ready).toBe(false);
-      expect(tree.harvestable!.cooldownElapsed).toBe(0);
+      const h = tree.get(Harvestable);
+      expect(h.ready).toBe(false);
+      expect(h.cooldownElapsed).toBe(0);
     });
 
     it("returns null if not ready", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 3);
       initHarvestable(tree);
 
       const result = collectHarvest(tree);
@@ -117,18 +121,16 @@ describe("Harvest System", () => {
     });
 
     it("pruned tree gets 1.5x yield at collect time", () => {
-      const normalTree = createTreeEntity(0, 0, "white-oak");
-      normalTree.tree!.stage = 3;
-      world.add(normalTree);
+      const normalTree = spawnTree(0, 0, "white-oak");
+      setStage(normalTree, 3);
       initHarvestable(normalTree);
-      normalTree.harvestable!.ready = true;
+      setReady(normalTree, true);
 
-      const prunedTree = createTreeEntity(1, 0, "white-oak");
-      prunedTree.tree!.stage = 3;
-      prunedTree.tree!.pruned = true;
-      world.add(prunedTree);
+      const prunedTree = spawnTree(1, 0, "white-oak");
+      setStage(prunedTree, 3);
+      setPruned(prunedTree, true);
       initHarvestable(prunedTree);
-      prunedTree.harvestable!.ready = true;
+      setReady(prunedTree, true);
 
       const normalResult = collectHarvest(normalTree)!;
       const prunedResult = collectHarvest(prunedTree)!;
@@ -136,17 +138,15 @@ describe("Harvest System", () => {
     });
 
     it("old growth (stage 4) gets 1.5x yield at collect time", () => {
-      const matureTree = createTreeEntity(0, 0, "white-oak");
-      matureTree.tree!.stage = 3;
-      world.add(matureTree);
+      const matureTree = spawnTree(0, 0, "white-oak");
+      setStage(matureTree, 3);
       initHarvestable(matureTree);
-      matureTree.harvestable!.ready = true;
+      setReady(matureTree, true);
 
-      const oldTree = createTreeEntity(1, 0, "white-oak");
-      oldTree.tree!.stage = 4;
-      world.add(oldTree);
+      const oldTree = spawnTree(1, 0, "white-oak");
+      setStage(oldTree, 4);
       initHarvestable(oldTree);
-      oldTree.harvestable!.ready = true;
+      setReady(oldTree, true);
 
       const matureResult = collectHarvest(matureTree)!;
       const oldResult = collectHarvest(oldTree)!;
@@ -154,28 +154,26 @@ describe("Harvest System", () => {
     });
 
     it("clears pruned flag after harvest", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      tree.tree!.pruned = true;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 3);
+      setPruned(tree, true);
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
 
       collectHarvest(tree);
 
-      expect(tree.tree!.pruned).toBe(false);
+      expect(tree.get(Tree).pruned).toBe(false);
     });
 
     it("golden apple gets 3x fruit in autumn", () => {
-      const tree = createTreeEntity(0, 0, "golden-apple");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "golden-apple");
+      setStage(tree, 3);
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
 
       const summerResult = collectHarvest(tree, "summer")!;
       // Reset for another harvest
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const autumnResult = collectHarvest(tree, "autumn")!;
 
       // Find fruit resources
@@ -187,13 +185,12 @@ describe("Harvest System", () => {
     });
 
     it("golden apple autumn bonus does not apply in spring", () => {
-      const tree = createTreeEntity(0, 0, "golden-apple");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "golden-apple");
+      setStage(tree, 3);
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const springResult = collectHarvest(tree, "spring")!;
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const summerResult = collectHarvest(tree, "summer")!;
 
       const springFruit =
@@ -204,19 +201,17 @@ describe("Harvest System", () => {
     });
 
     it("ironbark gets 3x timber at old growth (stage 4)", () => {
-      const matureTree = createTreeEntity(0, 0, "ironbark");
-      matureTree.tree!.stage = 3;
-      world.add(matureTree);
+      const matureTree = spawnTree(0, 0, "ironbark");
+      setStage(matureTree, 3);
       initHarvestable(matureTree);
-      matureTree.harvestable!.ready = true;
+      setReady(matureTree, true);
       const matureResult = collectHarvest(matureTree)!;
 
-      for (const e of [...world]) world.remove(e);
-      const oldTree = createTreeEntity(0, 0, "ironbark");
-      oldTree.tree!.stage = 4;
-      world.add(oldTree);
+      destroyAllEntitiesExceptWorld();
+      const oldTree = spawnTree(0, 0, "ironbark");
+      setStage(oldTree, 4);
       initHarvestable(oldTree);
-      oldTree.harvestable!.ready = true;
+      setReady(oldTree, true);
       const oldResult = collectHarvest(oldTree)!;
 
       const matureTimber =
@@ -228,20 +223,17 @@ describe("Harvest System", () => {
     });
 
     it("ironbark 3x bonus does not apply at stage 3", () => {
-      // Compare ironbark at stage 3 vs stage 4 to isolate the 3x bonus
-      const matureTree = createTreeEntity(0, 0, "ironbark");
-      matureTree.tree!.stage = 3;
-      world.add(matureTree);
+      const matureTree = spawnTree(0, 0, "ironbark");
+      setStage(matureTree, 3);
       initHarvestable(matureTree);
-      matureTree.harvestable!.ready = true;
+      setReady(matureTree, true);
       const matureResult = collectHarvest(matureTree)!;
 
-      for (const e of [...world]) world.remove(e);
-      const oldTree = createTreeEntity(0, 0, "ironbark");
-      oldTree.tree!.stage = 4;
-      world.add(oldTree);
+      destroyAllEntitiesExceptWorld();
+      const oldTree = spawnTree(0, 0, "ironbark");
+      setStage(oldTree, 4);
       initHarvestable(oldTree);
-      oldTree.harvestable!.ready = true;
+      setReady(oldTree, true);
       const oldResult = collectHarvest(oldTree)!;
 
       const matureTimber =
@@ -249,14 +241,12 @@ describe("Harvest System", () => {
       const oldTimber = oldResult.find((r) => r.type === "timber")?.amount ?? 0;
 
       // Stage 3 should NOT have the 3x bonus — old growth should be significantly higher
-      // Old growth = stage(1.5x) * ironbark(3.0x) = 4.5x vs stage 3 = 1x
       expect(oldTimber / matureTimber).toBeGreaterThanOrEqual(4);
     });
 
     it("collectHarvest returns null for entity without harvestable component", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 2;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 2);
       // No initHarvestable called
       expect(collectHarvest(tree)).toBeNull();
     });
@@ -264,22 +254,20 @@ describe("Harvest System", () => {
     it("stacked multipliers: old growth + pruned + difficulty", () => {
       koota.set(Difficulty, { id: "explore", permadeath: false }); // 1.3x yield
 
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 4; // old growth: 1.5x
-      tree.tree!.pruned = true; // pruned: 1.5x
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 4); // old growth: 1.5x
+      setPruned(tree, true); // pruned: 1.5x
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const result = collectHarvest(tree)!;
 
       // Base tree at stage 3 no pruning normal difficulty
-      for (const e of [...world]) world.remove(e);
+      destroyAllEntitiesExceptWorld();
       koota.set(Difficulty, { id: "normal", permadeath: false });
-      const baseTree = createTreeEntity(0, 0, "white-oak");
-      baseTree.tree!.stage = 3;
-      world.add(baseTree);
+      const baseTree = spawnTree(0, 0, "white-oak");
+      setStage(baseTree, 3);
       initHarvestable(baseTree);
-      baseTree.harvestable!.ready = true;
+      setReady(baseTree, true);
       const baseResult = collectHarvest(baseTree)!;
 
       // Boosted: 1.5 * 1.5 * 1.3 = 2.925x
@@ -289,19 +277,15 @@ describe("Harvest System", () => {
     });
 
     it("uses Math.ceil for yield rounding with fractional multipliers", () => {
-      // Explore difficulty has 1.3x yield mult. White-oak base timber = 2.
-      // 2 * 1.3 = 2.6 → Math.ceil = 3
       koota.set(Difficulty, { id: "explore", permadeath: false });
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setStage(tree, 3);
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const result = collectHarvest(tree)!;
 
       const timber = result.find((r) => r.type === "timber");
       expect(timber).toBeDefined();
-      // Base 2 * 1.3 = 2.6, ceil'd to 3
       expect(timber!.amount).toBe(3);
       koota.set(Difficulty, { id: "normal", permadeath: false });
     });

@@ -6,11 +6,11 @@
  * managers in src/game/scene/.
  */
 
+import type { Entity } from "koota";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { NpcBrainContext } from "@/ai/NpcBrain";
 import { NpcBrain } from "@/ai/NpcBrain";
 import { PlayerGovernor } from "@/ai/PlayerGovernor";
-import { createPlayerEntity, createTreeEntity } from "@/archetypes";
 import { COLORS, GRID_SIZE } from "@/config/config";
 import { getActiveDifficulty } from "@/config/difficulty";
 import type { ResourceType } from "@/config/resources";
@@ -25,10 +25,12 @@ import {
   buildWalkabilityGrid,
   type WalkabilityGrid,
 } from "@/input/pathfinding";
+import { koota, spawnPlayer } from "@/koota";
 import { isPlayerAdjacent } from "@/npcs/NpcManager";
 import { getChainDef } from "@/quests/questChainEngine";
 import { createRNG, hashString } from "@/shared/utils/seedRNG";
 import { worldToScreen } from "@/shared/utils/worldToScreen";
+import { spawnTree } from "@/startup";
 import type { SerializedTree } from "@/stores/gameStore";
 import { useGameStore } from "@/stores/gameStore";
 import {
@@ -82,19 +84,35 @@ import type { RadialAction } from "@/ui/game/radialActions";
 import { getActionsForTile } from "@/ui/game/radialActions";
 import { showToast } from "@/ui/game/Toast";
 import { setShowPetals, setWeatherVisual } from "@/ui/game/WeatherOverlay";
-import type { Entity, GridCellComponent } from "@/world";
 import {
-  generateEntityId,
-  gridCellsQuery,
-  npcsQuery,
-  playerQuery,
-  rainCatchersQuery,
-  scarecrowsQuery,
-  structuresQuery,
-  treesQuery,
-  world,
-} from "@/world";
+  GridCell,
+  Harvestable,
+  IsPlayer,
+  Npc,
+  Position,
+  RainCatcher,
+  Renderable,
+  Scarecrow,
+  Structure,
+  Tree,
+} from "@/traits";
 import type { WorldDefinition } from "@/world-data";
+
+/** Shape matching Koota GridCell trait, used for tool action params. */
+interface GridCellComponent {
+  gridX: number;
+  gridZ: number;
+  type: "soil" | "water" | "rock" | "path";
+  occupied: boolean;
+  treeEntity: Entity | null;
+}
+
+interface StructureComponent {
+  templateId: string;
+  effectType?: "growth_boost" | "harvest_boost" | "stamina_regen" | "storage";
+  effectRadius?: number;
+  effectMagnitude?: number;
+}
 // World system
 import { WorldManager } from "@/world-data";
 import startingWorldData from "@/world-data/data/starting-world.json";
@@ -121,12 +139,12 @@ interface RadialTarget {
   gridZ: number;
   cellType: string;
   occupied: boolean;
-  treeEntityId: string | null;
+  treeEntity: Entity | null;
   treeStage: number;
   treeWatered: boolean;
   hasNpc: boolean;
   /** Entity from object pick, if any. */
-  entity: { entityId: string; entityType: string } | null;
+  entity: { entityId: number; entityType: string } | null;
 }
 
 export const GameScene = () => {
@@ -171,6 +189,7 @@ export const GameScene = () => {
   const [playerTileInfo, setPlayerTileInfo] = useState<TileState | null>(null);
   const lastPlayerGridRef = useRef<string>("");
   const nearbyNpcRef = useRef<Entity | null>(null);
+  // Note: Entity is Koota entity ref
   const [nearbyNpcTemplateId, setNearbyNpcTemplateId] = useState<string | null>(
     null,
   );
@@ -260,23 +279,24 @@ export const GameScene = () => {
   // --- Save/restore ---
   const saveCurrentGrove = useCallback(() => {
     const trees: SerializedTree[] = [];
-    for (const entity of treesQuery) {
-      if (!entity.tree || !entity.position) continue;
+    for (const entity of koota.query(Tree, Position)) {
+      const tree = entity.get(Tree);
+      const pos = entity.get(Position);
       trees.push({
-        speciesId: entity.tree.speciesId,
-        gridX: entity.position.x,
-        gridZ: entity.position.z,
-        stage: entity.tree.stage,
-        progress: entity.tree.progress,
-        watered: entity.tree.watered,
-        totalGrowthTime: entity.tree.totalGrowthTime,
-        plantedAt: entity.tree.plantedAt,
-        meshSeed: entity.tree.meshSeed,
+        speciesId: tree.speciesId,
+        gridX: pos.x,
+        gridZ: pos.z,
+        stage: tree.stage,
+        progress: tree.progress,
+        watered: tree.watered,
+        totalGrowthTime: tree.totalGrowthTime,
+        plantedAt: tree.plantedAt,
+        meshSeed: tree.meshSeed,
       });
     }
-    const player = playerQuery.first;
-    const playerPos = player?.position
-      ? { x: player.position.x, z: player.position.z }
+    const player = koota.queryFirst(IsPlayer, Position);
+    const playerPos = player
+      ? { x: player.get(Position).x, z: player.get(Position).z }
       : { x: 6, z: 6 };
     useGameStore.getState().saveGrove(trees, playerPos);
   }, []);
@@ -289,7 +309,7 @@ export const GameScene = () => {
 
   // --- ECS initialization ---
   useEffect(() => {
-    if (playerQuery.first === undefined) {
+    if (koota.queryFirst(IsPlayer, Position) === undefined) {
       const savedGrove = loadGroveFromStorage();
       if (savedGrove) {
         deserializeGrove(savedGrove);
@@ -298,12 +318,16 @@ export const GameScene = () => {
         // Apply offline growth inline to avoid stale closure issues
         const elapsedSeconds = (Date.now() - savedGrove.timestamp) / 1000;
         if (elapsedSeconds > 60) {
-          const offlineTrees = Array.from(treesQuery).map((e) => ({
-            speciesId: e.tree?.speciesId,
-            stage: e.tree?.stage,
-            progress: e.tree?.progress,
-            watered: e.tree?.watered,
-          }));
+          const treeEntities = Array.from(koota.query(Tree, Position, Renderable));
+          const offlineTrees = treeEntities.map((e) => {
+            const t = e.get(Tree);
+            return {
+              speciesId: t.speciesId,
+              stage: t.stage,
+              progress: t.progress,
+              watered: t.watered,
+            };
+          });
           const results = calculateAllOfflineGrowth(
             offlineTrees,
             elapsedSeconds,
@@ -318,21 +342,23 @@ export const GameScene = () => {
             },
           );
           let stagesAdvanced = 0;
-          const treeEntities = Array.from(treesQuery);
           for (let i = 0; i < treeEntities.length; i++) {
             const entity = treeEntities[i];
             const result = results[i];
-            if (entity.tree && result) {
-              if (result.stage > entity.tree.stage) stagesAdvanced++;
-              entity.tree.stage = result.stage as 0 | 1 | 2 | 3 | 4;
-              entity.tree.progress = result.progress;
-              entity.tree.watered = result.watered;
-              if (entity.renderable) {
-                entity.renderable.scale = getStageScale(
-                  result.stage,
-                  result.progress,
-                );
-              }
+            if (result) {
+              const t = entity.get(Tree);
+              if (result.stage > t.stage) stagesAdvanced++;
+              entity.set(Tree, {
+                ...t,
+                stage: result.stage as 0 | 1 | 2 | 3 | 4,
+                progress: result.progress,
+                watered: result.watered,
+              });
+              const r = entity.get(Renderable);
+              entity.set(Renderable, {
+                ...r,
+                scale: getStageScale(result.stage, result.progress),
+              });
             }
           }
           if (stagesAdvanced > 0) {
@@ -345,26 +371,30 @@ export const GameScene = () => {
           }
         }
 
-        world.add(createPlayerEntity());
+        spawnPlayer();
 
         // Restore player position inline
         const groveData = useGameStore.getState().groveData;
         if (groveData) {
-          const player = playerQuery.first;
-          if (player?.position) {
-            player.position.x = groveData.playerPosition.x;
-            player.position.z = groveData.playerPosition.z;
+          const player = koota.queryFirst(IsPlayer, Position);
+          if (player) {
+            const p = player.get(Position);
+            player.set(Position, {
+              ...p,
+              x: groveData.playerPosition.x,
+              z: groveData.playerPosition.z,
+            });
           }
         }
 
-        for (const tree of treesQuery) {
-          if (tree.tree && tree.tree.stage >= 3) initHarvestable(tree);
+        for (const tree of koota.query(Tree, Position)) {
+          if (tree.get(Tree).stage >= 3) initHarvestable(tree);
         }
       } else {
         // New game: only create player here; grid cells come from
         // WorldManager.loadAllZones() during BabylonJS init
         groveSeedRef.current = `grove-${Date.now()}`;
-        world.add(createPlayerEntity());
+        spawnPlayer();
       }
     }
     initializeTime(useGameStore.getState().gameTimeMicroseconds);
@@ -478,19 +508,25 @@ export const GameScene = () => {
           },
         },
         getScene: () => scene,
-        getGridCells: () => gridCellsQuery,
+        getGridCells: () => {
+          const snap: { gridCell: GridCellComponent }[] = [];
+          for (const e of koota.query(GridCell, Position)) {
+            snap.push({ gridCell: e.get(GridCell) });
+          }
+          return snap;
+        },
         getWorldBounds: () => worldMgr.getWorldBounds(),
         getPlayerWorldPos: () => {
-          const p = playerQuery.first;
-          return p?.position
-            ? { x: p.position.x, z: p.position.z }
-            : { x: 0, z: 0 };
+          const p = koota.queryFirst(IsPlayer, Position);
+          if (!p) return { x: 0, z: 0 };
+          const pos = p.get(Position);
+          return { x: pos.x, z: pos.z };
         },
         getPlayerTile: () => {
-          const p = playerQuery.first;
-          return p?.position
-            ? { x: Math.round(p.position.x), z: Math.round(p.position.z) }
-            : { x: 0, z: 0 };
+          const p = koota.queryFirst(IsPlayer, Position);
+          if (!p) return { x: 0, z: 0 };
+          const pos = p.get(Position);
+          return { x: Math.round(pos.x), z: Math.round(pos.z) };
         },
       });
 
@@ -516,37 +552,31 @@ export const GameScene = () => {
         // Look up tile context
         let cellType = "soil";
         let occupied = false;
-        let treeEntityId: string | null = null;
+        let treeEntity: Entity | null = null;
         let treeStage = -1;
         let treeWatered = false;
 
-        for (const cell of gridCellsQuery) {
-          if (cell.gridCell?.gridX === gx && cell.gridCell?.gridZ === gz) {
-            cellType = cell.gridCell.type;
-            occupied = cell.gridCell.occupied;
-            treeEntityId = cell.gridCell.treeEntityId ?? null;
+        for (const cell of koota.query(GridCell, Position)) {
+          const gc = cell.get(GridCell);
+          if (gc.gridX === gx && gc.gridZ === gz) {
+            cellType = gc.type;
+            occupied = gc.occupied;
+            treeEntity = gc.treeEntity ?? null;
             break;
           }
         }
 
-        if (occupied && treeEntityId) {
-          for (const t of treesQuery) {
-            if (t.id === treeEntityId && t.tree) {
-              treeStage = t.tree.stage;
-              treeWatered = t.tree.watered;
-              break;
-            }
-          }
+        if (occupied && treeEntity?.has(Tree)) {
+          const t = treeEntity.get(Tree);
+          treeStage = t.stage;
+          treeWatered = t.watered;
         }
 
         // Check for NPC at this tile
         let hasNpc = false;
-        for (const npcEntity of npcsQuery) {
-          if (!npcEntity.npc || !npcEntity.position) continue;
-          if (
-            Math.round(npcEntity.position.x) === gx &&
-            Math.round(npcEntity.position.z) === gz
-          ) {
+        for (const npcEntity of koota.query(Npc, Position, Renderable)) {
+          const p = npcEntity.get(Position);
+          if (Math.round(p.x) === gx && Math.round(p.z) === gz) {
             hasNpc = true;
             break;
           }
@@ -559,11 +589,16 @@ export const GameScene = () => {
           gridZ: gz,
           cellType,
           occupied,
-          treeEntityId,
+          treeEntity,
           treeStage,
           treeWatered,
           hasNpc,
-          entity: info.entity,
+          entity: info.entity
+            ? {
+                entityId: Number(info.entity.entityId),
+                entityType: info.entity.entityType,
+              }
+            : null,
         };
 
         // Build actions — skip if no actions (path tiles)
@@ -577,10 +612,11 @@ export const GameScene = () => {
         if (actions.length === 0) return;
 
         // Check adjacency (Chebyshev distance)
-        const player = playerQuery.first;
-        if (!player?.position) return;
-        const px = Math.round(player.position.x);
-        const pz = Math.round(player.position.z);
+        const player = koota.queryFirst(IsPlayer, Position);
+        if (!player) return;
+        const pp = player.get(Position);
+        const px = Math.round(pp.x);
+        const pz = Math.round(pp.z);
         const dist = Math.max(Math.abs(gx - px), Math.abs(gz - pz));
 
         if (dist <= 1) {
@@ -611,11 +647,12 @@ export const GameScene = () => {
         wType: WeatherType,
         gtSec: number,
       ): void {
-        for (const entity of treesQuery) {
-          if (!entity.tree) continue;
-          const tree = entity.tree;
+        for (const entity of koota.query(Tree, Position)) {
+          const tree = entity.get(Tree);
+          const position = entity.get(Position);
+          const eid = entity.id();
 
-          if (tree.stage >= 3 && !entity.harvestable) {
+          if (tree.stage >= 3 && !entity.has(Harvestable)) {
             initHarvestable(entity);
             useGameStore.getState().incrementTreesMatured();
           }
@@ -629,7 +666,7 @@ export const GameScene = () => {
             [4, 50],
           ] as const) {
             if (tree.stage >= stage) {
-              const key = `${entity.id}:${stage}`;
+              const key = `${eid}:${stage}`;
               if (!milestoneXpRef.current.has(key)) {
                 milestoneXpRef.current.add(key);
                 useGameStore
@@ -657,23 +694,22 @@ export const GameScene = () => {
             tree.speciesId !== "ironbark"
           ) {
             let scarecrowProtected = false;
-            if (entity.position) {
-              for (const sc of scarecrowsQuery) {
-                if (!sc.position || !sc.scarecrow) continue;
-                const sdx = Math.abs(entity.position.x - sc.position.x);
-                const sdz = Math.abs(entity.position.z - sc.position.z);
-                if (sdx <= sc.scarecrow.radius && sdz <= sc.scarecrow.radius) {
-                  scarecrowProtected = true;
-                  break;
-                }
+            for (const sc of koota.query(Scarecrow, Position)) {
+              const scPos = sc.get(Position);
+              const scData = sc.get(Scarecrow);
+              const sdx = Math.abs(position.x - scPos.x);
+              const sdz = Math.abs(position.z - scPos.z);
+              if (sdx <= scData.radius && sdz <= scData.radius) {
+                scarecrowProtected = true;
+                break;
               }
             }
             if (scarecrowProtected) continue;
             const windRng = createRNG(
-              hashString(`wind-${entity.id}-${Math.floor(gtSec / 30)}`),
+              hashString(`wind-${eid}-${Math.floor(gtSec / 30)}`),
             );
             if (rollWindstormDamage(windRng())) {
-              tree.progress = 0;
+              entity.set(Tree, { ...tree, progress: 0 });
               showToast("A young tree was damaged by wind!", "warning");
             }
           }
@@ -682,19 +718,23 @@ export const GameScene = () => {
 
       function checkAndAwardAchievementsInLoop(): void {
         const store = useGameStore.getState();
-        const currentTreeData = Array.from(treesQuery)
-          .filter((e) => e.tree && e.position)
-          .map((e) => ({
-            speciesId: e.tree?.speciesId,
-            stage: e.tree?.stage,
-            gridX: Math.round(e.position?.x),
-            gridZ: Math.round(e.position?.z),
-          }));
+        const currentTreeData = Array.from(koota.query(Tree, Position)).map(
+          (e) => {
+            const t = e.get(Tree);
+            const p = e.get(Position);
+            return {
+              speciesId: t.speciesId,
+              stage: t.stage,
+              gridX: Math.round(p.x),
+              gridZ: Math.round(p.z),
+            };
+          },
+        );
 
         // Count plantable tiles for full-grove achievement
         let plantableTileCount = 0;
-        for (const cell of gridCellsQuery) {
-          if (cell.gridCell && cell.gridCell.type === "soil") {
+        for (const cell of koota.query(GridCell, Position)) {
+          if (cell.get(GridCell).type === "soil") {
             plantableTileCount++;
           }
         }
@@ -799,27 +839,34 @@ export const GameScene = () => {
         }
 
         // Cherry blossom petals
-        setShowPetals(
-          treesQuery.entities.some(
-            (t) => t.tree?.speciesId === "cherry-blossom" && t.tree.stage >= 3,
-          ),
-        );
+        let hasBlossomingCherry = false;
+        for (const e of koota.query(Tree, Position)) {
+          const t = e.get(Tree);
+          if (t.speciesId === "cherry-blossom" && t.stage >= 3) {
+            hasBlossomingCherry = true;
+            break;
+          }
+        }
+        setShowPetals(hasBlossomingCherry);
 
         const weatherGrowthMult = getWeatherGrowthMultiplier(weatherType);
 
         // Rain catcher auto-watering during rain
         if (weatherType === "rain") {
-          for (const catcher of rainCatchersQuery) {
-            if (!catcher.position || !catcher.rainCatcher) continue;
-            const cx = catcher.position.x;
-            const cz = catcher.position.z;
-            const radius = catcher.rainCatcher.radius;
-            for (const tree of treesQuery) {
-              if (!tree.tree || !tree.position || tree.tree.watered) continue;
-              const dx = Math.abs(tree.position.x - cx);
-              const dz = Math.abs(tree.position.z - cz);
+          for (const catcher of koota.query(RainCatcher, Position)) {
+            const cPos = catcher.get(Position);
+            const cData = catcher.get(RainCatcher);
+            const cx = cPos.x;
+            const cz = cPos.z;
+            const radius = cData.radius;
+            for (const tree of koota.query(Tree, Position)) {
+              const t = tree.get(Tree);
+              if (t.watered) continue;
+              const tPos = tree.get(Position);
+              const dx = Math.abs(tPos.x - cx);
+              const dz = Math.abs(tPos.z - cz);
               if (dx <= radius && dz <= radius) {
-                tree.tree.watered = true;
+                tree.set(Tree, { ...t, watered: true });
               }
             }
           }
@@ -893,28 +940,21 @@ export const GameScene = () => {
 
         // Update player tile info for action button disabled state
         {
-          const player = playerQuery.first;
-          if (player?.position) {
-            const gx = Math.round(player.position.x);
-            const gz = Math.round(player.position.z);
+          const player = koota.queryFirst(IsPlayer, Position);
+          if (player) {
+            const pp = player.get(Position);
+            const gx = Math.round(pp.x);
+            const gz = Math.round(pp.z);
             const gridKey = `${gx},${gz}`;
             if (gridKey !== lastPlayerGridRef.current) {
               lastPlayerGridRef.current = gridKey;
               let found = false;
-              for (const cell of gridCellsQuery) {
-                if (
-                  cell.gridCell?.gridX === gx &&
-                  cell.gridCell?.gridZ === gz
-                ) {
-                  const gc = cell.gridCell;
+              for (const cell of koota.query(GridCell, Position)) {
+                const gc = cell.get(GridCell);
+                if (gc.gridX === gx && gc.gridZ === gz) {
                   let treeStage = -1;
-                  if (gc.occupied && gc.treeEntityId) {
-                    for (const t of treesQuery) {
-                      if (t.id === gc.treeEntityId && t.tree) {
-                        treeStage = t.tree.stage;
-                        break;
-                      }
-                    }
+                  if (gc.occupied && gc.treeEntity?.has(Tree)) {
+                    treeStage = gc.treeEntity.get(Tree).stage;
                   }
                   setPlayerTileInfo({
                     occupied: gc.occupied,
@@ -928,24 +968,22 @@ export const GameScene = () => {
               if (!found) setPlayerTileInfo(null);
 
               // NPC proximity check (runs when player grid cell changes)
-              let foundNpc: typeof nearbyNpcRef.current = null;
-              for (const npcEntity of npcsQuery) {
-                if (!npcEntity.npc || !npcEntity.position) continue;
-                if (
-                  isPlayerAdjacent(
-                    gx,
-                    gz,
-                    npcEntity.position.x,
-                    npcEntity.position.z,
-                  )
-                ) {
+              let foundNpc: Entity | null = null;
+              for (const npcEntity of koota.query(Npc, Position, Renderable)) {
+                const p = npcEntity.get(Position);
+                if (isPlayerAdjacent(gx, gz, p.x, p.z)) {
                   foundNpc = npcEntity;
                   break;
                 }
               }
-              if (foundNpc?.id !== nearbyNpcRef.current?.id) {
+              const foundNpcId = foundNpc?.id();
+              const currentNpcId = nearbyNpcRef.current?.id();
+              if (foundNpcId !== currentNpcId) {
                 nearbyNpcRef.current = foundNpc;
-                setNearbyNpcTemplateId(foundNpc?.npc?.templateId ?? null);
+                const templateId = foundNpc?.has(Npc)
+                  ? foundNpc.get(Npc).templateId
+                  : null;
+                setNearbyNpcTemplateId(templateId);
               }
             }
           }
@@ -970,31 +1008,38 @@ export const GameScene = () => {
         // Rebuild walkability grid at most every 0.5s (rarely changes)
         walkGridAge += dt;
         if (!cachedWalkGrid || walkGridAge > 0.5) {
-          cachedWalkGrid = buildWalkabilityGrid(gridCellsQuery, bounds);
+          const cellSnapshot: { gridCell: GridCellComponent }[] = [];
+          for (const e of koota.query(GridCell, Position)) {
+            cellSnapshot.push({ gridCell: e.get(GridCell) });
+          }
+          cachedWalkGrid = buildWalkabilityGrid(cellSnapshot, bounds);
           walkGridAge = 0;
         }
         const walkGrid = cachedWalkGrid;
 
-        for (const npcEntity of npcsQuery) {
-          if (!npcEntity.npc || !npcEntity.position) continue;
+        for (const npcEntity of koota.query(Npc, Position, Renderable)) {
+          const npc = npcEntity.get(Npc);
+          const npcPos = npcEntity.get(Position);
+          const eid = npcEntity.id();
+          const eidKey = String(eid);
 
           // Create brain if not exists
-          if (!npcBrains.has(npcEntity.id)) {
+          if (!npcBrains.has(eidKey)) {
             npcBrains.set(
-              npcEntity.id,
+              eidKey,
               new NpcBrain(
-                npcEntity.id,
-                npcEntity.npc.templateId,
-                npcEntity.position.x,
-                npcEntity.position.z,
+                eidKey,
+                npc.templateId,
+                npcPos.x,
+                npcPos.z,
               ),
             );
           }
 
-          const brain = npcBrains.get(npcEntity.id);
+          const brain = npcBrains.get(eidKey);
           if (!brain) continue;
-          const npcX = npcEntity.position.x;
-          const npcZ = npcEntity.position.z;
+          const npcX = npcPos.x;
+          const npcZ = npcPos.z;
           const distToPlayer = Math.max(
             Math.abs(px - npcX),
             Math.abs(pz - npcZ),
@@ -1014,10 +1059,9 @@ export const GameScene = () => {
           brain.update(dt, ctx);
 
           // Apply NPC movement from pathfinding
-          if (isNpcMoving(npcEntity.id)) {
-            const result = updateNpcMovement(npcEntity.id, npcX, npcZ, dt);
-            npcEntity.position.x = result.x;
-            npcEntity.position.z = result.z;
+          if (isNpcMoving(eidKey)) {
+            const result = updateNpcMovement(eidKey, npcX, npcZ, dt);
+            npcEntity.set(Position, { ...npcPos, x: result.x, z: result.z });
           }
         }
 
@@ -1116,19 +1160,23 @@ export const GameScene = () => {
 
       // Start tutorial if player hasn't seen rules
       if (!useGameStore.getState().hasSeenRules) {
-        const elderRowan = [...npcsQuery].find(
-          (e) => e.npc?.templateId === "elder-rowan",
-        );
+        let elderRowan: Entity | null = null;
+        for (const e of koota.query(Npc, Position, Renderable)) {
+          if (e.get(Npc).templateId === "elder-rowan") {
+            elderRowan = e;
+            break;
+          }
+        }
 
         // Resolve brain lazily — brains are created on first game loop frame
         const getElderBrain = () =>
-          elderRowan ? npcBrainsRef.current.get(elderRowan.id) : null;
+          elderRowan ? npcBrainsRef.current.get(String(elderRowan.id())) : null;
 
         tutorialRef.current.start({
           openDialogue: (dialogueId: string) => {
             setTutorialDialogueId(dialogueId);
-            if (elderRowan) {
-              setNearbyNpcTemplateId(elderRowan.npc?.templateId ?? null);
+            if (elderRowan?.has(Npc)) {
+              setNearbyNpcTemplateId(elderRowan.get(Npc).templateId);
             }
             setNpcDialogueOpen(true);
           },
@@ -1190,38 +1238,36 @@ export const GameScene = () => {
 
   // --- Tool actions ---
 
-  const findTreeOnCell = (treeEntityId: string) => {
-    for (const tree of treesQuery) {
-      if (tree.id === treeEntityId && tree.tree) return tree;
-    }
-    return null;
-  };
-
-  const findCellAtPlayer = () => {
-    const player = playerQuery.first;
-    if (!player?.position) return null;
-    const gridX = Math.round(player.position.x);
-    const gridZ = Math.round(player.position.z);
-    for (const cell of gridCellsQuery) {
-      if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
-        return cell.gridCell;
+  /** Find the cell entity at the player's current position. */
+  const findCellAtPlayer = (): Entity | null => {
+    const player = koota.queryFirst(IsPlayer, Position);
+    if (!player) return null;
+    const pp = player.get(Position);
+    const gridX = Math.round(pp.x);
+    const gridZ = Math.round(pp.z);
+    for (const cell of koota.query(GridCell, Position)) {
+      const gc = cell.get(GridCell);
+      if (gc.gridX === gridX && gc.gridZ === gridZ) {
+        return cell;
       }
     }
     return null;
   };
 
-  const useTrowel = async (gc: GridCellComponent) => {
+  const useTrowel = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
     if (gc.occupied) return;
     audioManager.play("click");
     if (hapticsEnabled) await hapticLight();
     setSeedSelectOpen(true);
   };
 
-  const useWateringCan = async (gc: GridCellComponent) => {
-    if (!gc.occupied || !gc.treeEntityId) return;
-    const tree = findTreeOnCell(gc.treeEntityId);
-    if (!tree?.tree) return;
-    tree.tree.watered = true;
+  const useWateringCan = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
+    if (!gc.occupied || !gc.treeEntity?.has(Tree)) return;
+    const tree = gc.treeEntity;
+    const t = tree.get(Tree);
+    tree.set(Tree, { ...t, watered: true });
     addXp(5);
     incrementTreesWatered();
     useGameStore.getState().advanceQuestObjective("trees_watered", 1);
@@ -1231,10 +1277,12 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticLight();
   };
 
-  const useAxe = async (gc: GridCellComponent) => {
-    if (!gc.occupied || !gc.treeEntityId) return;
-    const tree = findTreeOnCell(gc.treeEntityId);
-    if (!tree?.tree || tree.tree.stage < 3) return;
+  const useAxe = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
+    if (!gc.occupied || !gc.treeEntity?.has(Tree)) return;
+    const tree = gc.treeEntity;
+    const t = tree.get(Tree);
+    if (t.stage < 3) return;
 
     const harvestResources = collectHarvest(
       tree,
@@ -1244,7 +1292,7 @@ export const GameScene = () => {
       for (const r of harvestResources)
         addResource(r.type as ResourceType, r.amount);
     } else {
-      const species = getSpeciesById(tree.tree.speciesId);
+      const species = getSpeciesById(t.speciesId);
       if (species)
         for (const y of species.yield) addResource(y.resource, y.amount);
     }
@@ -1255,12 +1303,12 @@ export const GameScene = () => {
     useGameStore
       .getState()
       .trackSpeciesHarvest(
-        tree.tree.speciesId,
+        t.speciesId,
         harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0,
       );
     showParticle("+50 XP");
 
-    const harvestSpecies = getSpeciesById(tree.tree.speciesId);
+    const harvestSpecies = getSpeciesById(t.speciesId);
     const gains = harvestResources ?? harvestSpecies?.yield ?? [];
     for (const g of gains) {
       const name =
@@ -1281,20 +1329,20 @@ export const GameScene = () => {
       showToast(`${summary}, +50 XP`, "success");
     }
 
-    treeMeshRef.current.removeMesh(tree.id);
-    world.remove(tree);
-    gc.occupied = false;
-    gc.treeEntityId = null;
+    treeMeshRef.current.removeMesh(tree.id());
+    tree.destroy();
+    cell.set(GridCell, { ...gc, occupied: false, treeEntity: null });
     debouncedSaveGrove();
     audioManager.play("harvest");
     if (hapticsEnabled) await hapticSuccess();
   };
 
-  const useCompostBin = async (gc: GridCellComponent) => {
-    if (!gc.occupied || !gc.treeEntityId) return;
-    const tree = findTreeOnCell(gc.treeEntityId);
-    if (!tree?.tree) return;
-    if (tree.tree.fertilized) {
+  const useCompostBin = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
+    if (!gc.occupied || !gc.treeEntity?.has(Tree)) return;
+    const tree = gc.treeEntity;
+    const t = tree.get(Tree);
+    if (t.fertilized) {
       showToast("Already fertilized!", "info");
       return;
     }
@@ -1303,7 +1351,7 @@ export const GameScene = () => {
       showToast("Need 5 acorns to fertilize", "warning");
       return;
     }
-    tree.tree.fertilized = true;
+    tree.set(Tree, { ...t, fertilized: true });
     addXp(5);
     showParticle("+5 XP");
     showToast("Fertilized! 2x growth for this stage.", "success");
@@ -1311,18 +1359,24 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticLight();
   };
 
-  const usePruningShears = async (gc: GridCellComponent) => {
-    if (!gc.occupied || !gc.treeEntityId) return;
-    const tree = findTreeOnCell(gc.treeEntityId);
-    if (!tree?.tree || tree.tree.stage < 3) return;
+  const usePruningShears = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
+    if (!gc.occupied || !gc.treeEntity?.has(Tree)) return;
+    const tree = gc.treeEntity;
+    const t = tree.get(Tree);
+    if (t.stage < 3) return;
     // Speed up harvest cooldown by 30%
-    if (tree.harvestable) {
-      tree.harvestable.cooldownElapsed += tree.harvestable.cooldownTotal * 0.3;
+    if (tree.has(Harvestable)) {
+      const h = tree.get(Harvestable);
+      tree.set(Harvestable, {
+        ...h,
+        cooldownElapsed: h.cooldownElapsed + h.cooldownTotal * 0.3,
+      });
     }
     // Mark pruned for 1.5x yield bonus on next harvest
-    tree.tree.pruned = true;
+    tree.set(Tree, { ...t, pruned: true });
     // Re-init harvestable to recalculate yields with pruned bonus
-    if (tree.harvestable) {
+    if (tree.has(Harvestable)) {
       initHarvestable(tree);
     }
     addXp(5);
@@ -1332,11 +1386,11 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticLight();
   };
 
-  const useShovel = async (gc: GridCellComponent) => {
+  const useShovel = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
     // Clear rocks → soil
     if (gc.type === "rock") {
-      gc.type = "soil";
-      gc.occupied = false;
+      cell.set(GridCell, { ...gc, type: "soil", occupied: false });
       addXp(12);
       showParticle("+12 XP");
       showToast("Cleared rocks!", "success");
@@ -1346,13 +1400,13 @@ export const GameScene = () => {
       return;
     }
     // Remove stage 0-1 (seed/sprout) trees — dig them up
-    if (gc.occupied && gc.treeEntityId) {
-      const tree = findTreeOnCell(gc.treeEntityId);
-      if (tree?.tree && tree.tree.stage <= 1) {
-        treeMeshRef.current.removeMesh(tree.id);
-        world.remove(tree);
-        gc.occupied = false;
-        gc.treeEntityId = null;
+    if (gc.occupied && gc.treeEntity?.has(Tree)) {
+      const tree = gc.treeEntity;
+      const t = tree.get(Tree);
+      if (t.stage <= 1) {
+        treeMeshRef.current.removeMesh(tree.id());
+        tree.destroy();
+        cell.set(GridCell, { ...gc, occupied: false, treeEntity: null });
         addXp(5);
         showParticle("+5 XP");
         showToast("Removed seedling.", "success");
@@ -1363,41 +1417,42 @@ export const GameScene = () => {
     }
   };
 
-  const useAlmanac = async (gc: GridCellComponent) => {
-    if (!gc.occupied || !gc.treeEntityId) return;
-    const tree = findTreeOnCell(gc.treeEntityId);
-    if (!tree?.tree) return;
-    const species = getSpeciesById(tree.tree.speciesId);
+  const useAlmanac = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
+    if (!gc.occupied || !gc.treeEntity?.has(Tree)) return;
+    const tree = gc.treeEntity;
+    const t = tree.get(Tree);
+    const species = getSpeciesById(t.speciesId);
     const stageName = ["Seed", "Sprout", "Sapling", "Mature", "Old Growth"][
-      tree.tree.stage
+      t.stage
     ];
     showToast(
-      `${species?.name ?? tree.tree.speciesId} — ${stageName} (${Math.round(tree.tree.progress * 100)}%)`,
+      `${species?.name ?? t.speciesId} — ${stageName} (${Math.round(t.progress * 100)}%)`,
       "info",
     );
   };
 
-  const useSeedPouch = async (_gc: GridCellComponent) => {
+  const useSeedPouch = async (_cell: Entity) => {
     setSeedSelectOpen(true);
   };
 
-  const useRainCatcher = async (gc: GridCellComponent) => {
+  const useRainCatcher = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
     if (gc.occupied) {
       showToast("Tile is occupied!", "warning");
       return;
     }
-    const player = playerQuery.first;
-    if (!player?.position) return;
-    const worldX = Math.round(player.position.x);
-    const worldZ = Math.round(player.position.z);
+    const player = koota.queryFirst(IsPlayer, Position);
+    if (!player) return;
+    const pp = player.get(Position);
+    const worldX = Math.round(pp.x);
+    const worldZ = Math.round(pp.z);
 
-    const entity = {
-      id: generateEntityId(),
-      position: { x: worldX, y: 0, z: worldZ },
-      rainCatcher: { radius: 2 },
-    };
-    world.add(entity);
-    gc.occupied = true;
+    koota.spawn(
+      Position({ x: worldX, y: 0, z: worldZ }),
+      RainCatcher({ radius: 2 }),
+    );
+    cell.set(GridCell, { ...gc, occupied: true });
     addXp(10);
     showParticle("+10 XP");
     showToast(
@@ -1408,23 +1463,25 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticMedium();
   };
 
-  const useFertilizerSpreader = async (_gc: GridCellComponent) => {
+  const useFertilizerSpreader = async (_cell: Entity) => {
     // Area fertilize: all trees in 2-tile radius, costs 3 acorns
     if (!useGameStore.getState().spendResource("acorns" as ResourceType, 3)) {
       showToast("Need 3 acorns to spread fertilizer", "warning");
       return;
     }
-    const player = playerQuery.first;
-    if (!player?.position) return;
-    const px = player.position.x;
-    const pz = player.position.z;
+    const player = koota.queryFirst(IsPlayer, Position);
+    if (!player) return;
+    const pp = player.get(Position);
+    const px = pp.x;
+    const pz = pp.z;
     let count = 0;
-    for (const tree of treesQuery) {
-      if (!tree.tree || !tree.position) continue;
-      const dx = Math.abs(tree.position.x - px);
-      const dz = Math.abs(tree.position.z - pz);
-      if (dx <= 2 && dz <= 2 && !tree.tree.fertilized) {
-        tree.tree.fertilized = true;
+    for (const tree of koota.query(Tree, Position)) {
+      const t = tree.get(Tree);
+      const tPos = tree.get(Position);
+      const dx = Math.abs(tPos.x - px);
+      const dz = Math.abs(tPos.z - pz);
+      if (dx <= 2 && dz <= 2 && !t.fertilized) {
+        tree.set(Tree, { ...t, fertilized: true });
         count++;
       }
     }
@@ -1435,23 +1492,23 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticMedium();
   };
 
-  const useScarecrow = async (gc: GridCellComponent) => {
+  const useScarecrow = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
     if (gc.occupied) {
       showToast("Tile is occupied!", "warning");
       return;
     }
-    const player = playerQuery.first;
-    if (!player?.position) return;
-    const worldX = Math.round(player.position.x);
-    const worldZ = Math.round(player.position.z);
+    const player = koota.queryFirst(IsPlayer, Position);
+    if (!player) return;
+    const pp = player.get(Position);
+    const worldX = Math.round(pp.x);
+    const worldZ = Math.round(pp.z);
 
-    const entity = {
-      id: generateEntityId(),
-      position: { x: worldX, y: 0, z: worldZ },
-      scarecrow: { radius: 3 },
-    };
-    world.add(entity);
-    gc.occupied = true;
+    koota.spawn(
+      Position({ x: worldX, y: 0, z: worldZ }),
+      Scarecrow({ radius: 3 }),
+    );
+    cell.set(GridCell, { ...gc, occupied: true });
     addXp(10);
     showParticle("+10 XP");
     showToast("Scarecrow placed! Protects nearby trees from wind.", "success");
@@ -1459,24 +1516,27 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticMedium();
   };
 
-  const useGraftingTool = async (gc: GridCellComponent) => {
-    if (!gc.occupied || !gc.treeEntityId) return;
-    const tree = findTreeOnCell(gc.treeEntityId);
-    if (!tree?.tree || tree.tree.stage < 3) {
+  const useGraftingTool = async (cell: Entity) => {
+    const gc = cell.get(GridCell);
+    if (!gc.occupied || !gc.treeEntity?.has(Tree)) return;
+    const tree = gc.treeEntity;
+    const t = tree.get(Tree);
+    if (t.stage < 3) {
       showToast("Need a Mature+ tree to graft", "info");
       return;
     }
     // Find 2 nearest different species trees
-    const player = playerQuery.first;
-    if (!player?.position) return;
+    const player = koota.queryFirst(IsPlayer, Position);
+    if (!player) return;
     const nearbySpecies: string[] = [];
-    for (const other of treesQuery) {
-      if (!other.tree || !other.position || other === tree) continue;
+    for (const other of koota.query(Tree, Position)) {
+      if (other === tree) continue;
+      const ot = other.get(Tree);
       if (
-        other.tree.speciesId !== tree.tree.speciesId &&
-        !nearbySpecies.includes(other.tree.speciesId)
+        ot.speciesId !== t.speciesId &&
+        !nearbySpecies.includes(ot.speciesId)
       ) {
-        nearbySpecies.push(other.tree.speciesId);
+        nearbySpecies.push(ot.speciesId);
         if (nearbySpecies.length >= 2) break;
       }
     }
@@ -1498,25 +1558,24 @@ export const GameScene = () => {
     if (hapticsEnabled) await hapticSuccess();
   };
 
-  const toolActions: Record<string, (gc: GridCellComponent) => Promise<void>> =
-    {
-      trowel: useTrowel,
-      "watering-can": useWateringCan,
-      axe: useAxe,
-      "compost-bin": useCompostBin,
-      "pruning-shears": usePruningShears,
-      shovel: useShovel,
-      almanac: useAlmanac,
-      "seed-pouch": useSeedPouch,
-      "rain-catcher": useRainCatcher,
-      "fertilizer-spreader": useFertilizerSpreader,
-      scarecrow: useScarecrow,
-      "grafting-tool": useGraftingTool,
-    };
+  const toolActions: Record<string, (cell: Entity) => Promise<void>> = {
+    trowel: useTrowel,
+    "watering-can": useWateringCan,
+    axe: useAxe,
+    "compost-bin": useCompostBin,
+    "pruning-shears": usePruningShears,
+    shovel: useShovel,
+    almanac: useAlmanac,
+    "seed-pouch": useSeedPouch,
+    "rain-catcher": useRainCatcher,
+    "fertilizer-spreader": useFertilizerSpreader,
+    scarecrow: useScarecrow,
+    "grafting-tool": useGraftingTool,
+  };
 
   const handleAction = async () => {
     // NPC interaction — open dialogue when near an NPC
-    if (nearbyNpcRef.current?.npc) {
+    if (nearbyNpcRef.current?.has(Npc)) {
       setNpcDialogueOpen(true);
       return;
     }
@@ -1525,18 +1584,23 @@ export const GameScene = () => {
 
     // Build mode — place a structure at player position
     if (store.buildMode && store.buildTemplateId) {
-      const player = playerQuery.first;
-      if (!player?.position) return;
-      const worldX = Math.round(player.position.x);
-      const worldZ = Math.round(player.position.z);
+      const player = koota.queryFirst(IsPlayer, Position);
+      if (!player) return;
+      const pp = player.get(Position);
+      const worldX = Math.round(pp.x);
+      const worldZ = Math.round(pp.z);
       const template = getTemplate(store.buildTemplateId);
       if (!template) {
         store.setBuildMode(false);
         return;
       }
 
-      // Validate placement
-      if (!canPlace(template.id, worldX, worldZ, gridCellsQuery)) {
+      // Validate placement — build cell snapshot in miniplex-shape
+      const cellSnapshot: { gridCell: GridCellComponent }[] = [];
+      for (const e of koota.query(GridCell, Position)) {
+        cellSnapshot.push({ gridCell: e.get(GridCell) });
+      }
+      if (!canPlace(template.id, worldX, worldZ, cellSnapshot)) {
         showToast("Can't build here!", "warning");
         return;
       }
@@ -1554,27 +1618,23 @@ export const GameScene = () => {
       }
 
       // Create structure ECS entity
-      const structureEntity = {
-        id: generateEntityId(),
-        position: { x: worldX, y: 0, z: worldZ },
-        structure: {
+      koota.spawn(
+        Position({ x: worldX, y: 0, z: worldZ }),
+        Structure({
           templateId: template.id,
           effectType: template.effect?.type,
           effectRadius: template.effect?.radius,
           effectMagnitude: template.effect?.magnitude,
-        },
-      };
-      world.add(structureEntity);
+        }),
+      );
 
       // Mark grid cells as occupied
       for (let dx = 0; dx < template.footprint.width; dx++) {
         for (let dz = 0; dz < template.footprint.depth; dz++) {
-          for (const cell of gridCellsQuery) {
-            if (
-              cell.gridCell?.gridX === worldX + dx &&
-              cell.gridCell?.gridZ === worldZ + dz
-            ) {
-              cell.gridCell.occupied = true;
+          for (const cell of koota.query(GridCell, Position)) {
+            const gc = cell.get(GridCell);
+            if (gc.gridX === worldX + dx && gc.gridZ === worldZ + dz) {
+              cell.set(GridCell, { ...gc, occupied: true });
             }
           }
         }
@@ -1593,20 +1653,30 @@ export const GameScene = () => {
     }
 
     // Normal tool action
-    const gc = findCellAtPlayer();
-    if (!gc) return;
+    const cell = findCellAtPlayer();
+    if (!cell) return;
     const tool = getToolById(selectedTool);
     if (tool && tool.staminaCost > 0) {
       const weatherStaminaMult = weatherRef.current
         ? getWeatherStaminaMultiplier(weatherRef.current.current.type)
         : 1.0;
       // Structure stamina reduction
-      const player = playerQuery.first;
-      const structStaminaMult = player?.position
+      const player = koota.queryFirst(IsPlayer, Position);
+      const structAdapter: {
+        structure?: StructureComponent;
+        position?: { x: number; z: number };
+      }[] = [];
+      for (const e of koota.query(Structure, Position)) {
+        structAdapter.push({
+          structure: e.get(Structure),
+          position: e.get(Position),
+        });
+      }
+      const structStaminaMult = player
         ? getStructureStaminaMult(
-            player.position.x,
-            player.position.z,
-            structuresQuery,
+            player.get(Position).x,
+            player.get(Position).z,
+            structAdapter,
           )
         : 1.0;
       const difficultyStaminaMult = getActiveDifficulty().staminaDrainMult;
@@ -1619,14 +1689,15 @@ export const GameScene = () => {
       if (!useGameStore.getState().spendStamina(adjustedCost)) return;
     }
     const action = toolActions[selectedTool];
-    if (action) await action(gc);
+    if (action) await action(cell);
   };
 
   const handlePlant = async () => {
-    const player = playerQuery.first;
-    if (!player?.position) return;
-    const gridX = Math.round(player.position.x);
-    const gridZ = Math.round(player.position.z);
+    const player = koota.queryFirst(IsPlayer, Position);
+    if (!player) return;
+    const pp = player.get(Position);
+    const gridX = Math.round(pp.x);
+    const gridZ = Math.round(pp.z);
 
     const species = getSpeciesById(selectedSpecies);
     const store = useGameStore.getState();
@@ -1652,9 +1723,10 @@ export const GameScene = () => {
       }
     }
 
-    for (const cell of gridCellsQuery) {
-      if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
-        if (cell.gridCell.occupied) {
+    for (const cell of koota.query(GridCell, Position)) {
+      const gc = cell.get(GridCell);
+      if (gc.gridX === gridX && gc.gridZ === gridZ) {
+        if (gc.occupied) {
           // Refund all costs if tile is occupied
           useGameStore.getState().addSeed(selectedSpecies, 1);
           if (species?.seedCost) {
@@ -1667,10 +1739,12 @@ export const GameScene = () => {
           return;
         }
 
-        const tree = createTreeEntity(gridX, gridZ, selectedSpecies);
-        world.add(tree);
-        cell.gridCell.occupied = true;
-        cell.gridCell.treeEntityId = tree.id;
+        const tree = spawnTree(gridX, gridZ, selectedSpecies);
+        cell.set(GridCell, {
+          ...gc,
+          occupied: true,
+          treeEntity: tree,
+        });
 
         incrementTreesPlanted();
         useGameStore.getState().trackSpeciesPlanted(selectedSpecies);
@@ -1692,8 +1766,10 @@ export const GameScene = () => {
   const handleBatchHarvest = useCallback(() => {
     let count = 0;
     const gains: Record<string, number> = {};
-    for (const entity of treesQuery) {
-      if (!entity.harvestable?.ready || !entity.tree) continue;
+    for (const entity of koota.query(Tree, Harvestable)) {
+      const h = entity.get(Harvestable);
+      if (!h.ready) continue;
+      const t = entity.get(Tree);
       // Cost 5 stamina per tree (bulk discount)
       if (!useGameStore.getState().spendStamina(5)) break;
       const harvestResources = collectHarvest(
@@ -1706,7 +1782,7 @@ export const GameScene = () => {
           gains[r.type] = (gains[r.type] ?? 0) + r.amount;
         }
       } else {
-        const species = getSpeciesById(entity.tree.speciesId);
+        const species = getSpeciesById(t.speciesId);
         if (species) {
           for (const y of species.yield) {
             addResource(y.resource, y.amount);
@@ -1718,7 +1794,7 @@ export const GameScene = () => {
       useGameStore
         .getState()
         .trackSpeciesHarvest(
-          entity.tree.speciesId,
+          t.speciesId,
           harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0,
         );
       count++;
@@ -1754,14 +1830,15 @@ export const GameScene = () => {
 
       // NPC talk
       if (actionId === "talk") {
-        for (const npcEntity of npcsQuery) {
-          if (!npcEntity.npc || !npcEntity.position) continue;
+        for (const npcEntity of koota.query(Npc, Position, Renderable)) {
+          const npc = npcEntity.get(Npc);
+          const p = npcEntity.get(Position);
           if (
-            Math.round(npcEntity.position.x) === target.gridX &&
-            Math.round(npcEntity.position.z) === target.gridZ
+            Math.round(p.x) === target.gridX &&
+            Math.round(p.z) === target.gridZ
           ) {
             nearbyNpcRef.current = npcEntity;
-            setNearbyNpcTemplateId(npcEntity.npc.templateId);
+            setNearbyNpcTemplateId(npc.templateId);
             setNpcDialogueOpen(true);
             break;
           }
@@ -1770,43 +1847,41 @@ export const GameScene = () => {
       }
 
       // Find the grid cell at the target tile
-      let gc: GridCellComponent | null = null;
-      for (const cell of gridCellsQuery) {
-        if (
-          cell.gridCell?.gridX === target.gridX &&
-          cell.gridCell?.gridZ === target.gridZ
-        ) {
-          gc = cell.gridCell;
+      let cell: Entity | null = null;
+      for (const c of koota.query(GridCell, Position)) {
+        const gc = c.get(GridCell);
+        if (gc.gridX === target.gridX && gc.gridZ === target.gridZ) {
+          cell = c;
           break;
         }
       }
-      if (!gc) return;
+      if (!cell) return;
 
       // Map radial action IDs to tool actions
       switch (actionId) {
         case "water":
-          await toolActions["watering-can"]?.(gc);
+          await toolActions["watering-can"]?.(cell);
           break;
         case "harvest":
-          await toolActions.axe?.(gc);
+          await toolActions.axe?.(cell);
           break;
         case "prune":
-          await toolActions["pruning-shears"]?.(gc);
+          await toolActions["pruning-shears"]?.(cell);
           break;
         case "plant":
-          await toolActions.trowel?.(gc);
+          await toolActions.trowel?.(cell);
           break;
         case "clear":
-          await toolActions.shovel?.(gc);
+          await toolActions.shovel?.(cell);
           break;
         case "dig-up":
-          await toolActions.shovel?.(gc);
+          await toolActions.shovel?.(cell);
           break;
         case "fertilize":
-          await toolActions["compost-bin"]?.(gc);
+          await toolActions["compost-bin"]?.(cell);
           break;
         case "inspect":
-          await toolActions.almanac?.(gc);
+          await toolActions.almanac?.(cell);
           break;
       }
     },

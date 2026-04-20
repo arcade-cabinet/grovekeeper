@@ -2,13 +2,20 @@ import type { Scene } from "@babylonjs/core/scene";
 import { keysToWorld } from "@/hooks/useKeyboardInput";
 import { screenToGroundPlane } from "@/shared/utils/projection";
 import { isMobileDevice } from "@/systems/platform";
-import type { GridCellComponent } from "@/world";
 import {
   advancePathFollow,
   createPathFollow,
   type PathFollowState,
 } from "./pathFollowing";
 import { buildWalkabilityGrid, findPath, type TileCoord } from "./pathfinding";
+
+/** Shape of a grid cell component (matches Koota GridCell trait schema). */
+interface GridCellComponent {
+  gridX: number;
+  gridZ: number;
+  type: "soil" | "water" | "rock" | "path";
+  occupied: boolean;
+}
 
 // ---------------------------------------------------------------------------
 // Types

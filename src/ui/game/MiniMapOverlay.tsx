@@ -1,28 +1,29 @@
 import { RiCloseLine } from "@remixicon/react";
 import { useEffect, useState } from "react";
 import { COLORS } from "@/config/config";
-import { Button } from "@/ui/primitives/button";
-import type { GridCellComponent, TreeComponent } from "@/world";
+import { koota } from "@/koota";
 import {
-  gridCellsQuery,
-  playerQuery,
-  structuresQuery,
-  treesQuery,
-} from "@/world";
+  GridCell,
+  IsPlayer,
+  Position,
+  Structure,
+  Tree,
+} from "@/traits";
+import { Button } from "@/ui/primitives/button";
 
 // --- SVG rendering types ---
 
 interface MinimapCell {
   gridX: number;
   gridZ: number;
-  type: GridCellComponent["type"];
+  type: "soil" | "water" | "rock" | "path";
   occupied: boolean;
 }
 
 interface MinimapTree {
   x: number;
   z: number;
-  stage: TreeComponent["stage"];
+  stage: 0 | 1 | 2 | 3 | 4;
 }
 
 interface MinimapStructure {
@@ -74,10 +75,8 @@ function readSnapshot(): MinimapSnapshot {
   let maxX = Number.NEGATIVE_INFINITY;
   let maxZ = Number.NEGATIVE_INFINITY;
 
-  for (const entity of gridCellsQuery) {
-    const gc = entity.gridCell;
-    const pos = entity.position;
-    if (!gc || !pos) continue;
+  for (const entity of koota.query(GridCell, Position)) {
+    const gc = entity.get(GridCell);
 
     cells.push({
       gridX: gc.gridX,
@@ -92,27 +91,21 @@ function readSnapshot(): MinimapSnapshot {
     if (gc.gridZ > maxZ) maxZ = gc.gridZ;
   }
 
-  for (const entity of treesQuery) {
-    const t = entity.tree;
-    const pos = entity.position;
-    if (!t || !pos) continue;
-
+  for (const entity of koota.query(Tree, Position)) {
+    const t = entity.get(Tree);
+    const pos = entity.get(Position);
     trees.push({ x: pos.x, z: pos.z, stage: t.stage });
   }
 
-  for (const entity of structuresQuery) {
-    const pos = entity.position;
-    if (!pos) continue;
-
+  for (const entity of koota.query(Structure, Position)) {
+    const pos = entity.get(Position);
     structures.push({ x: pos.x, z: pos.z });
   }
 
-  for (const entity of playerQuery) {
-    const pos = entity.position;
-    if (!pos) continue;
-
+  const playerEntity = koota.queryFirst(IsPlayer, Position);
+  if (playerEntity) {
+    const pos = playerEntity.get(Position);
     player = { x: pos.x, z: pos.z };
-    break;
   }
 
   // Fallback if no grid cells loaded yet

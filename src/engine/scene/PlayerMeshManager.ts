@@ -15,7 +15,8 @@ import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import { COLORS } from "@/config/config";
-import { playerQuery } from "@/world";
+import { koota } from "@/koota";
+import { IsPlayer, Position } from "@/traits";
 import { loadModel } from "./ModelLoader";
 
 /** Scale for loaded .glb models to match world unit size. */
@@ -188,15 +189,16 @@ export class PlayerMeshManager {
 
   /** Sync mesh position to player entity, smoothly rotate, and jiggle. */
   update(): void {
-    const playerEntity = playerQuery.first;
-    if (!playerEntity?.position || !this.mesh) return;
+    const playerEntity = koota.queryFirst(IsPlayer, Position);
+    if (!playerEntity || !this.mesh) return;
+    const playerPos = playerEntity.get(Position);
 
     const now = performance.now();
     const dt = Math.min((now - this.lastUpdateTime) / 1000, 0.1); // seconds, capped
     this.lastUpdateTime = now;
 
-    const newX = playerEntity.position.x;
-    const newZ = playerEntity.position.z;
+    const newX = playerPos.x;
+    const newZ = playerPos.z;
 
     this.mesh.position.x = newX;
     this.mesh.position.z = newZ;

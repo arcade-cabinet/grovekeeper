@@ -9,14 +9,14 @@
  * - Growth → Harvest lifecycle
  * - Grid expansion with resource spending
  */
+import type { Entity } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createPlayerEntity, createTreeEntity } from "@/archetypes";
 import { MAX_STAGE } from "@/config/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "@/config/difficulty";
+import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
+import { spawnTree } from "@/startup";
 import { useGameStore } from "@/stores/gameStore";
-import { koota, spawnPlayer } from "@/koota";
-import { Difficulty, FarmerState } from "@/traits";
-import { world } from "@/world";
+import { Difficulty, FarmerState, Harvestable, Tree } from "@/traits";
 import {
   canAffordExpansion,
   GRID_EXPANSION_TIERS,
@@ -37,20 +37,26 @@ import {
   updateWeather,
 } from "./weather";
 
-/** Helper: get difficulty tier, asserting it exists. */
 function difficulty(id: string) {
   const tier = getDifficultyById(id);
   if (!tier) throw new Error(`Unknown difficulty: ${id}`);
   return tier;
 }
 
+function setTreeStage(entity: Entity, stage: 0 | 1 | 2 | 3 | 4): void {
+  entity.set(Tree, { ...entity.get(Tree), stage });
+}
+
+function setReady(entity: Entity, ready: boolean): void {
+  entity.set(Harvestable, { ...entity.get(Harvestable), ready });
+}
+
 /** Helper: create a harvestable tree at given stage, added to world. */
-function makeHarvestableTree(speciesId: string, stage: 3 | 4 = 3) {
-  const tree = createTreeEntity(0, 0, speciesId);
-  tree.tree!.stage = stage;
-  world.add(tree);
+function makeHarvestableTree(speciesId: string, stage: 3 | 4 = 3): Entity {
+  const tree = spawnTree(0, 0, speciesId);
+  setTreeStage(tree, stage);
   initHarvestable(tree);
-  tree.harvestable!.ready = true;
+  setReady(tree, true);
   return tree;
 }
 
@@ -60,26 +66,20 @@ function measureProgress(
   season = "summer",
   weatherMult = 1,
 ) {
-  const tree = createTreeEntity(0, 0, "white-oak");
-  world.add(tree);
+  const tree = spawnTree(0, 0, "white-oak");
   koota.set(Difficulty, { id: difficultyId, permadeath: false });
   growthSystem(0.5, season, weatherMult);
-  const progress = tree.tree!.progress;
-  world.remove(tree);
+  const progress = tree.get(Tree).progress;
+  tree.destroy();
   return progress;
 }
 
 describe("Cross-System Integration Tests", () => {
   beforeEach(() => {
-    for (const entity of [...world]) {
-      world.remove(entity);
-    }
+    destroyAllEntitiesExceptWorld();
     useGameStore.getState().resetGame();
   });
 
-  // ===================================================================
-  // Difficulty × Growth
-  // ===================================================================
   describe("Difficulty tiers affect growth rates", () => {
     it("explore difficulty has 1.3x growth multiplier", () => {
       expect(
@@ -113,9 +113,6 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Difficulty × Harvest Yields
-  // ===================================================================
   describe("Difficulty tiers affect harvest yields", () => {
     it("explore difficulty gives higher yields than normal", () => {
       koota.set(Difficulty, { id: "explore", permadeath: false });
@@ -124,7 +121,7 @@ describe("Cross-System Integration Tests", () => {
 
       koota.set(Difficulty, { id: "normal", permadeath: false });
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const normalResult = collectHarvest(tree)!;
 
       expect(exploreResult[0].amount).toBeGreaterThanOrEqual(
@@ -139,7 +136,7 @@ describe("Cross-System Integration Tests", () => {
 
       koota.set(Difficulty, { id: "ultra-brutal", permadeath: false });
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const brutalResult = collectHarvest(tree)!;
 
       expect(brutalResult[0].amount).toBeLessThanOrEqual(
@@ -148,9 +145,6 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Difficulty × Weather
-  // ===================================================================
   describe("Difficulty tiers affect weather system", () => {
     it("explore difficulty has 0 windstorm damage chance", () => {
       koota.set(Difficulty, { id: "explore", permadeath: false });
@@ -177,7 +171,6 @@ describe("Cross-System Integration Tests", () => {
           return getWeatherGrowthMultiplier("drought");
         },
       );
-      // Each tier has harsher drought: explore (0.8) > normal (0.5) > ultra-brutal (0.2)
       expect(droughtByDifficulty[0]).toBeGreaterThan(droughtByDifficulty[1]);
       expect(droughtByDifficulty[1]).toBeGreaterThan(droughtByDifficulty[2]);
     });
@@ -195,11 +188,7 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Difficulty × Stamina
-  // ===================================================================
   describe("Difficulty tiers affect stamina", () => {
-    /** Measure stamina regen from 50 over 1 second at given difficulty. */
     function measureRegen(difficultyId: string) {
       const player = spawnPlayer();
       koota.set(Difficulty, { id: difficultyId, permadeath: false });
@@ -219,9 +208,6 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Weather × Growth Integration
-  // ===================================================================
   describe("Weather affects growth via weather multiplier", () => {
     it("rain weather boosts growth by the rain multiplier", () => {
       const rainMult = getWeatherGrowthMultiplier("rain");
@@ -238,12 +224,8 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Season × Growth
-  // ===================================================================
   describe("Seasons affect growth rates", () => {
     it("spring grows 1.5x faster than summer", () => {
-      // Use calcGrowthRate directly (pure function, no stage wrapping)
       const springRate = calcGrowthRate({
         baseTime: 15,
         difficulty: 1,
@@ -280,28 +262,23 @@ describe("Cross-System Integration Tests", () => {
     });
 
     it("winter stops non-evergreen growth completely", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
       growthSystem(100, "winter");
-      expect(tree.tree!.progress).toBe(0);
+      expect(tree.get(Tree).progress).toBe(0);
     });
 
     it("evergreen trees still grow in winter (slow)", () => {
-      const tree = createTreeEntity(0, 0, "elder-pine");
-      world.add(tree);
+      const tree = spawnTree(0, 0, "elder-pine");
       growthSystem(100, "winter");
-      expect(tree.tree!.progress).toBeGreaterThan(0);
+      expect(tree.get(Tree).progress).toBeGreaterThan(0);
     });
   });
 
-  // ===================================================================
-  // Season × Harvest (Golden Apple)
-  // ===================================================================
   describe("Season × Harvest special multipliers", () => {
     it("golden apple yields 3x fruit in autumn vs summer", () => {
       const tree = makeHarvestableTree("golden-apple");
       const summerResult = collectHarvest(tree, "summer")!;
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const autumnResult = collectHarvest(tree, "autumn")!;
 
       const summerFruit =
@@ -315,9 +292,9 @@ describe("Cross-System Integration Tests", () => {
       const tree = makeHarvestableTree("ironbark");
       const matureResult = collectHarvest(tree)!;
 
-      tree.tree!.stage = 4;
+      setTreeStage(tree, 4);
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const oldResult = collectHarvest(tree)!;
 
       const matureTimber =
@@ -327,9 +304,6 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Season × Market Prices
-  // ===================================================================
   describe("Seasons affect market prices", () => {
     it("spring halves seed costs", () => {
       expect(getSeasonalSeedCostMultiplier("spring")).toBe(0.5);
@@ -355,75 +329,64 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Growth → Harvest Lifecycle
-  // ===================================================================
   describe("Growth to Harvest lifecycle", () => {
     it("tree must reach stage 3 before becoming harvestable", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 2;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setTreeStage(tree, 2);
       initHarvestable(tree);
-      expect(tree.harvestable).toBeUndefined();
+      expect(tree.has(Harvestable)).toBe(false);
 
-      tree.tree!.stage = 3;
+      setTreeStage(tree, 3);
       initHarvestable(tree);
-      expect(tree.harvestable).toBeDefined();
+      expect(tree.has(Harvestable)).toBe(true);
     });
 
     it("harvest cooldown must complete before collection", () => {
-      const tree = createTreeEntity(0, 0, "white-oak");
-      tree.tree!.stage = 3;
-      world.add(tree);
+      const tree = spawnTree(0, 0, "white-oak");
+      setTreeStage(tree, 3);
       initHarvestable(tree);
 
       expect(collectHarvest(tree)).toBeNull();
       harvestSystem(20);
       expect(collectHarvest(tree)).toBeNull();
-      harvestSystem(30); // white-oak: 45 sec cooldown
-      expect(tree.harvestable!.ready).toBe(true);
+      harvestSystem(30);
+      expect(tree.get(Harvestable).ready).toBe(true);
       expect(collectHarvest(tree)).not.toBeNull();
     });
 
     it("pruned bonus is consumed after harvest", () => {
       const tree = makeHarvestableTree("white-oak");
-      tree.tree!.pruned = true;
+      tree.set(Tree, { ...tree.get(Tree), pruned: true });
       collectHarvest(tree);
-      expect(tree.tree!.pruned).toBe(false);
+      expect(tree.get(Tree).pruned).toBe(false);
     });
 
     it("stacked multipliers: old growth + pruned", () => {
       const tree = makeHarvestableTree("white-oak");
       const baseResult = collectHarvest(tree)!;
 
-      tree.tree!.stage = 4;
-      tree.tree!.pruned = true;
+      setTreeStage(tree, 4);
+      tree.set(Tree, { ...tree.get(Tree), pruned: true });
       initHarvestable(tree);
-      tree.harvestable!.ready = true;
+      setReady(tree, true);
       const boostedResult = collectHarvest(tree)!;
 
       expect(boostedResult[0].amount).toBeGreaterThan(baseResult[0].amount);
     });
   });
 
-  // ===================================================================
-  // Weather State Machine
-  // ===================================================================
   describe("Weather state machine transitions", () => {
     it("clear → new weather roll → clear cycle", () => {
       let state = initializeWeather(0);
       expect(state.current.type).toBe("clear");
 
-      // Advance past first check
       state = updateWeather(state, 300, "spring", 42);
       const firstWeather = state.current.type;
       expect(["clear", "rain", "drought", "windstorm"]).toContain(firstWeather);
 
-      // If non-clear, let it expire and go to clear waiting state
       if (firstWeather !== "clear") {
         const eventEnd = state.current.startTime + state.current.duration;
         state = updateWeather(state, eventEnd + 1, "spring", 42);
-        // Should be waiting in clear state until next check
         expect(state.current.type).toBe("clear");
       }
     });
@@ -435,17 +398,13 @@ describe("Cross-System Integration Tests", () => {
         const result = updateWeather(state, 300, "spring", seed);
         types.add(result.current.type);
       }
-      // Should see at least 3 different types over 200 rolls
       expect(types.size).toBeGreaterThanOrEqual(3);
     });
   });
 
-  // ===================================================================
-  // Grid Expansion + Resource Spending
-  // ===================================================================
   describe("Grid expansion with resource economy", () => {
     it("expansion from 12 to 16 requires level 5 and resources", () => {
-      const tier = GRID_EXPANSION_TIERS[1]; // 16x16
+      const tier = GRID_EXPANSION_TIERS[1];
       expect(tier.requiredLevel).toBe(5);
       expect(canAffordExpansion(tier, { timber: 100, sap: 50 }, 5)).toBe(true);
       expect(canAffordExpansion(tier, { timber: 99, sap: 50 }, 5)).toBe(false);
@@ -463,9 +422,6 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Prestige Bonus Stacking
-  // ===================================================================
   describe("Prestige bonuses scale correctly", () => {
     it("prestige count 0 returns neutral bonuses", () => {
       const bonus = calculatePrestigeBonus(0);
@@ -498,9 +454,6 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Multiple Multiplier Stacking
-  // ===================================================================
   describe("Multiple multiplier stacking in growth", () => {
     it("watered + spring stacks multiplicatively", () => {
       const rate = calcGrowthRate({
@@ -519,7 +472,6 @@ describe("Cross-System Integration Tests", () => {
         evergreen: false,
       });
 
-      // spring (1.5x) * water (1.3x) = 1.95x
       expect(rate / baseRate).toBeCloseTo(1.5 * 1.3, 1);
     });
 
@@ -534,7 +486,6 @@ describe("Cross-System Integration Tests", () => {
       });
       expect(rate).toBeGreaterThan(0);
 
-      // Compare to summer as baseline
       const summerRate = calcGrowthRate({
         baseTime: 15,
         difficulty: 1,
@@ -548,9 +499,6 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Stage Transitions with Visual Updates
-  // ===================================================================
   describe("Stage transitions update visual scale", () => {
     it("scale increases with each stage", () => {
       const scales = [0, 1, 2, 3, 4].map((s) => getStageScale(s, 0));
@@ -575,9 +523,6 @@ describe("Cross-System Integration Tests", () => {
     });
   });
 
-  // ===================================================================
-  // Difficulty Tier Data Integrity
-  // ===================================================================
   describe("Difficulty tier data integrity", () => {
     it("all 5 tiers exist with valid multipliers", () => {
       expect(DIFFICULTY_TIERS).toHaveLength(5);

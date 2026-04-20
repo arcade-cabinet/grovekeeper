@@ -12,9 +12,36 @@ import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import { useEffect, useRef } from "react";
+import { koota } from "@/koota";
 import { canPlace } from "@/structures/StructureManager";
 import type { StructureTemplate } from "@/structures/types";
-import { gridCellsQuery, playerQuery } from "@/world";
+import { GridCell, IsPlayer, Position } from "@/traits";
+
+/**
+ * Build an iterable snapshot of grid cells in miniplex-shaped format
+ * for StructureManager.canPlace.
+ */
+function gridCellsSnapshot(): Iterable<{
+  gridCell?: {
+    gridX: number;
+    gridZ: number;
+    occupied: boolean;
+    type: string;
+  };
+}> {
+  const result: {
+    gridCell: {
+      gridX: number;
+      gridZ: number;
+      occupied: boolean;
+      type: string;
+    };
+  }[] = [];
+  for (const e of koota.query(GridCell, Position)) {
+    result.push({ gridCell: e.get(GridCell) });
+  }
+  return result;
+}
 
 interface PlacementGhostProps {
   scene: Scene | null;
@@ -78,11 +105,12 @@ export const PlacementGhost = ({
     const observer = scene.onBeforeRenderObservable.add(() => {
       if (!ghost || ghost.isDisposed()) return;
 
-      const player = playerQuery.first;
-      if (!player?.position) return;
+      const player = koota.queryFirst(IsPlayer, Position);
+      if (!player) return;
+      const playerPos = player.get(Position);
 
-      const gridX = Math.round(player.position.x);
-      const gridZ = Math.round(player.position.z);
+      const gridX = Math.round(playerPos.x);
+      const gridZ = Math.round(playerPos.z);
       lastGridPos.current = { x: gridX, z: gridZ };
 
       // Position ghost at center of footprint
@@ -90,7 +118,7 @@ export const PlacementGhost = ({
       ghost.position.z = gridZ + (template.footprint.depth - 1) / 2;
 
       // Check validity
-      const valid = canPlace(template.id, gridX, gridZ, gridCellsQuery);
+      const valid = canPlace(template.id, gridX, gridZ, gridCellsSnapshot());
       ghost.material = valid ? validMatRef.current : invalidMatRef.current;
     });
 
@@ -125,7 +153,7 @@ export const PlacementGhost = ({
         style={{ background: "#4CAF50" }}
         onClick={() => {
           const { x, z } = lastGridPos.current;
-          if (canPlace(template.id, x, z, gridCellsQuery)) {
+          if (canPlace(template.id, x, z, gridCellsSnapshot())) {
             onConfirm(x, z);
           }
         }}

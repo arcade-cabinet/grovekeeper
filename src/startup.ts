@@ -6,8 +6,7 @@ import { getStageScale } from "@/systems/growth";
 import { GridCell, Npc, Position, Renderable, Tree } from "@/traits";
 
 /**
- * Koota-native entity spawners — successors to src/archetypes.ts
- * (which still exists for miniplex consumers during coexistence).
+ * Koota-native entity spawners.
  *
  * Pattern ref: reference-codebases/koota/examples/revade/src/actions.ts —
  * spawners return the entity; callers add more traits/relations as
@@ -106,7 +105,7 @@ export function spawnGridCell(
       gridZ,
       type,
       occupied: false,
-      treeEntityId: null,
+      treeEntity: null,
     }),
   );
 }
