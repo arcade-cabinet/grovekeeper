@@ -4,14 +4,20 @@
  * Creates a single ground mesh with a DynamicTexture whose pixels are
  * painted using distance-field blending from zone boundaries. Zone
  * transitions are smooth gradients — no hard edges.
+ *
+ * Plantable grid overlay uses BabylonJS thinInstances: a single 1×1 unit
+ * quad mesh is shared across all plantable tiles via thinInstanceSetBuffer,
+ * reducing grid overlay draw calls from N zones → 1 draw call.
  */
 
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { CreateGround } from "@babylonjs/core/Meshes/Builders/groundBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+// Side-effect import: augments Mesh with thinInstanceSetBuffer and friends
+import "@babylonjs/core/Meshes/thinInstanceMesh";
 import type { Scene } from "@babylonjs/core/scene";
 import type { Season } from "@/systems/time";
 import type { ZoneDefinition } from "@/world-data/types";
@@ -45,9 +51,18 @@ export interface WorldBounds {
   maxZ: number;
 }
 
+/** Pending zone entry collected by addPlantableGrid before committing. */
+interface PendingZone {
+  origin: { x: number; z: number };
+  size: { width: number; height: number };
+}
+
 export class GroundBuilder {
   private groundMesh: Mesh | null = null;
-  private gridOverlays: Mesh[] = [];
+  /** Single thin-instanced mesh shared by all plantable grid tiles. */
+  private gridMesh: Mesh | null = null;
+  /** Zones accumulated by addPlantableGrid, flushed by commitPlantableGrid. */
+  private pendingZones: PendingZone[] = [];
   private groundMat: StandardMaterial | null = null;
   private biomeTexture: DynamicTexture | null = null;
   private zones: ZoneDefinition[] = [];
@@ -102,38 +117,78 @@ export class GroundBuilder {
   }
 
   /**
-   * Add a subtle wireframe grid overlay for plantable zones.
-   * Call after init() for zones where players can plant trees.
+   * Register a plantable zone's grid overlay.
+   *
+   * Does NOT create any mesh immediately — call commitPlantableGrid() after
+   * all zones are registered to flush all tiles into a single thin-instanced
+   * draw call.
+   *
+   * Signature is intentionally unchanged so callers do not need updating.
    */
   addPlantableGrid(
-    scene: Scene,
-    zoneId: string,
+    _scene: Scene,
+    _zoneId: string,
     origin: { x: number; z: number },
     size: { width: number; height: number },
   ): void {
-    const centerX = origin.x + size.width / 2 - 0.5;
-    const centerZ = origin.z + size.height / 2 - 0.5;
+    this.pendingZones.push({ origin, size });
+  }
 
-    const overlay = CreateGround(
-      `zone_grid_${zoneId}`,
-      {
-        width: size.width,
-        height: size.height,
-        subdivisionsX: size.width,
-        subdivisionsY: size.height,
-      },
+  /**
+   * Commit all registered plantable zones as a single thin-instanced mesh.
+   *
+   * Must be called once after all addPlantableGrid() calls. Creates one
+   * 1×1 quad source mesh whose thin-instance buffer holds one matrix per
+   * plantable tile — reducing grid overlay draw calls from N zones → 1.
+   *
+   * Draw call budget:
+   *   Before: 1 mesh × N plantable zones (N = 4 in starting-world)
+   *   After:  1 mesh for all plantable tiles combined
+   */
+  commitPlantableGrid(scene: Scene): void {
+    if (this.pendingZones.length === 0) return;
+
+    // Count total tiles across all pending zones
+    let totalTiles = 0;
+    for (const zone of this.pendingZones) {
+      totalTiles += zone.size.width * zone.size.height;
+    }
+
+    // Build a Float32Array of 4×4 column-major matrices (16 floats each)
+    const matricesData = new Float32Array(16 * totalTiles);
+    let idx = 0;
+    for (const zone of this.pendingZones) {
+      for (let row = 0; row < zone.size.height; row++) {
+        for (let col = 0; col < zone.size.width; col++) {
+          const worldX = zone.origin.x + col;
+          const worldZ = zone.origin.z + row;
+          // Translate to tile centre; 0.01 Y lifts it just above the ground
+          const mat = Matrix.Translation(worldX, 0.01, worldZ);
+          mat.copyToArray(matricesData, idx * 16);
+          idx++;
+        }
+      }
+    }
+
+    // Single 1×1 unit quad — one source mesh for all plantable tiles
+    this.gridMesh = CreateGround(
+      "plantable_grid",
+      { width: 1, height: 1, subdivisions: 1 },
       scene,
     );
-    overlay.position = new Vector3(centerX, 0.01, centerZ);
 
-    const gridMat = new StandardMaterial(`gridMat_${zoneId}`, scene);
+    const gridMat = new StandardMaterial("plantable_gridMat", scene);
     gridMat.diffuseColor = new Color3(0.35, 0.28, 0.18);
     gridMat.specularColor = new Color3(0, 0, 0);
     gridMat.alpha = 0.15;
     gridMat.wireframe = true;
-    overlay.material = gridMat;
+    this.gridMesh.material = gridMat;
 
-    this.gridOverlays.push(overlay);
+    // Upload all instance matrices — static geometry, no per-frame updates
+    this.gridMesh.thinInstanceSetBuffer("matrix", matricesData, 16, false);
+
+    // Clear pending list — zones are now baked into the GPU buffer
+    this.pendingZones = [];
   }
 
   /** Update ground visuals when the season changes. */
@@ -269,11 +324,12 @@ export class GroundBuilder {
 
   dispose(): void {
     this.groundMesh?.dispose();
-    for (const m of this.gridOverlays) m.dispose();
+    this.gridMesh?.dispose();
     this.groundMat?.dispose();
     this.biomeTexture?.dispose();
     this.groundMesh = null;
-    this.gridOverlays = [];
+    this.gridMesh = null;
+    this.pendingZones = [];
     this.groundMat = null;
     this.biomeTexture = null;
   }

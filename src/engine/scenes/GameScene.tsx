@@ -490,15 +490,22 @@ export const GameScene = () => {
       cam.init(scene, spawnPos);
       lights.init(scene);
       ground.init(scene, bounds, worldDef.zones);
-      sky.init(scene);
+      // sky.init is async — lazy-loads HDRCubeTexture + sceneHelpers.
+      // Fire it without await so the skybox loads in the background while
+      // the rest of the scene (ground, player, trees) initialises.  The
+      // render loop starts immediately and the sky appears within a frame
+      // or two once the dynamic import resolves.
+      void sky.init(scene);
       await pMesh.init(scene);
 
-      // Add plantable grid overlays for zones where players can plant
+      // Register plantable zones, then commit as one thin-instanced grid mesh
       for (const zone of worldDef.zones) {
         if (zone.plantable) {
           ground.addPlantableGrid(scene, zone.id, zone.origin, zone.size);
         }
       }
+      // Flushes all registered zones into a single draw call (thin instances)
+      ground.commitPlantableGrid(scene);
 
       // --- Selection ring setup ---
       const selRing = selectionRing;
@@ -1363,6 +1370,7 @@ export const GameScene = () => {
     cell.set(GridCell, { ...gc, occupied: false, treeEntity: null });
     debouncedSaveGrove();
     audioManager.play("harvest");
+    cameraManager.shake(0.08, 200);
     if (hapticsEnabled()) await hapticSuccess();
   };
 
@@ -1425,6 +1433,7 @@ export const GameScene = () => {
       showToast("Cleared rocks!", "success");
       debouncedSaveGrove();
       audioManager.play("chop");
+      cameraManager.shake(0.05, 150);
       if (hapticsEnabled()) await hapticMedium();
       return;
     }
