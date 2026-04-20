@@ -1,6 +1,6 @@
 ---
 title: Code Quality & Project Standards
-updated: 2026-04-19
+updated: 2026-04-20
 status: current
 ---
 
@@ -27,7 +27,7 @@ Non-negotiable code quality, testing, and development practices for Grovekeeper.
 ## Testing Strategy
 
 - **Unit tests:** Pure logic (math, RNG, state transitions)
-- **Integration tests:** Real resources (ECS queries, Zustand actions, world generation)
+- **Integration tests:** Real resources (Koota queries + trait mutations, world generation)
 - **E2E tests:** Full game loops (tutorial → prestige reset)
 - **Visual verification:** Screenshot-based verification of UI polish (not just "does it render")
 - **Coverage target:** Unit + integration coverage ≥70%
@@ -72,9 +72,17 @@ Before making changes, read (in order):
 1. `CLAUDE.md` — project identity and tech stack
 2. `AGENTS.md` — multi-agent protocols and memory bank
 3. `docs/README.md` — documentation index
-4. `src/game/Game.tsx` — screen routing
-5. `src/game/scenes/GameScene.tsx` — game loop orchestrator
-6. `src/game/stores/gameStore.ts` — persistent state
+4. `src/main.tsx` — entry point and WorldProvider mount
+5. `src/App.tsx` — root component
+6. `src/Game.tsx` — screen router (menu | playing)
+7. `src/engine/scenes/GameScene.tsx` — BabylonJS canvas + game loop orchestrator
+8. `src/engine/scene/SceneManager.ts` — scene subsystems coordination
+9. `src/koota.ts` — Koota world + spawn helpers
+10. `src/traits.ts` — central trait catalog
+11. `src/actions.ts` — action bundle
+12. `src/ecs/solid.ts` — Solid↔Koota reactive hooks
+13. `src/systems/growth.ts` — core game system (example)
+14. `src/world-data/WorldManager.ts` — world data layer
 
 ## Type Safety & Linting
 
