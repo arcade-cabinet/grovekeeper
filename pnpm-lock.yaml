@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@babylonjs/core':
-        specifier: ^8.50.0
-        version: 8.50.0
+        specifier: ^8.56.2
+        version: 8.56.2
       '@babylonjs/loaders':
         specifier: ^8.50.0
-        version: 8.50.0(@babylonjs/core@8.50.0)(babylonjs-gltf2interface@8.50.0)
+        version: 8.50.0(@babylonjs/core@8.56.2)(babylonjs-gltf2interface@8.50.0)
       '@capacitor/android':
         specifier: ^8.0.2
         version: 8.0.2(@capacitor/core@8.0.2)
@@ -218,8 +218,8 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
-  '@babylonjs/core@8.50.0':
-    resolution: {integrity: sha512-qC+0Ofbtf4KuCu+nnx5aUDDEp4zfGcTe9k+48QyDDcdDo5UDyxuAXkLqS2pNKGZymG7VTPqwjr7CVB5saIHbWQ==}
+  '@babylonjs/core@8.56.2':
+    resolution: {integrity: sha512-UShs1pt8tSTLYOoITWclXPNrUZUpuHvB2Ur2L1D+uM8c9qaAYOi9gjkurOkQwIlbPGqwQHWImGEyiyix0mQ1dg==}
 
   '@babylonjs/loaders@8.50.0':
     resolution: {integrity: sha512-1LNUuMxxCFnWt1o/dDLnT1p1PwlN08LCvpUZOQM5Lxd49fXvycZluRFT2kqlJ1E96ctWr7EH7vrXdkPIsTM5jw==}
@@ -1023,6 +1023,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -1910,6 +1911,7 @@ packages:
   tar@7.5.7:
     resolution: {integrity: sha512-fov56fJiRuThVFXD6o6/Q354S7pnWMJIVlDBYijsTNx6jKSE4pvrDTs6lUnmGvNyfJwFQQwWy3owKz1ucIhveQ==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
 
   through2@4.0.2:
     resolution: {integrity: sha512-iOqSav00cVxEEICeD7TjLB1sueEL+81Wpzp2bY17uZjZN0pWZPuo4suZ/61VujxmqSGFfgOcNuTZ85QJwNZQpw==}
@@ -2275,11 +2277,11 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@babylonjs/core@8.50.0': {}
+  '@babylonjs/core@8.56.2': {}
 
-  '@babylonjs/loaders@8.50.0(@babylonjs/core@8.50.0)(babylonjs-gltf2interface@8.50.0)':
+  '@babylonjs/loaders@8.50.0(@babylonjs/core@8.56.2)(babylonjs-gltf2interface@8.50.0)':
     dependencies:
-      '@babylonjs/core': 8.50.0
+      '@babylonjs/core': 8.56.2
       babylonjs-gltf2interface: 8.50.0
 
   '@bcoe/v8-coverage@1.0.2': {}
