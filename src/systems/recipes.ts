@@ -49,7 +49,11 @@ export interface XpOutput {
   amount: number;
 }
 
-export type RecipeOutput = ResourceOutput | SeedOutput | EffectOutput | XpOutput;
+export type RecipeOutput =
+  | ResourceOutput
+  | SeedOutput
+  | EffectOutput
+  | XpOutput;
 
 // ---------------------------------------------------------------------------
 // Recipe tier
@@ -110,7 +114,12 @@ export const RECIPES: Recipe[] = [
       { type: "acorns", amount: 3 },
     ],
     outputs: [
-      { kind: "effect", effect: "growth_boost", magnitude: 0.15, durationSec: 120 },
+      {
+        kind: "effect",
+        effect: "growth_boost",
+        magnitude: 0.15,
+        durationSec: 120,
+      },
     ],
   },
   {
@@ -121,7 +130,11 @@ export const RECIPES: Recipe[] = [
     requiredLevel: 2,
     inputs: [{ type: "acorns", amount: 10 }],
     outputs: [
-      { kind: "seed", speciesPool: ["white-oak", "elder-pine", "weeping-willow"], amount: 3 },
+      {
+        kind: "seed",
+        speciesPool: ["white-oak", "elder-pine", "weeping-willow"],
+        amount: 3,
+      },
     ],
   },
   {
@@ -135,7 +148,12 @@ export const RECIPES: Recipe[] = [
       { type: "fruit", amount: 3 },
     ],
     outputs: [
-      { kind: "effect", effect: "stamina_restore", magnitude: 30, durationSec: 0 },
+      {
+        kind: "effect",
+        effect: "stamina_restore",
+        magnitude: 30,
+        durationSec: 0,
+      },
     ],
   },
   {
@@ -149,7 +167,12 @@ export const RECIPES: Recipe[] = [
       { type: "sap", amount: 4 },
     ],
     outputs: [
-      { kind: "effect", effect: "growth_boost", magnitude: 0.1, durationSec: 180 },
+      {
+        kind: "effect",
+        effect: "growth_boost",
+        magnitude: 0.1,
+        durationSec: 180,
+      },
     ],
   },
   {
@@ -191,7 +214,12 @@ export const RECIPES: Recipe[] = [
       { type: "fruit", amount: 8 },
     ],
     outputs: [
-      { kind: "effect", effect: "growth_boost", magnitude: 0.35, durationSec: 180 },
+      {
+        kind: "effect",
+        effect: "growth_boost",
+        magnitude: 0.35,
+        durationSec: 180,
+      },
     ],
   },
   {
@@ -219,7 +247,12 @@ export const RECIPES: Recipe[] = [
       { type: "timber", amount: 5 },
     ],
     outputs: [
-      { kind: "effect", effect: "harvest_boost", magnitude: 0.25, durationSec: 240 },
+      {
+        kind: "effect",
+        effect: "harvest_boost",
+        magnitude: 0.25,
+        durationSec: 240,
+      },
     ],
   },
   {
@@ -233,7 +266,11 @@ export const RECIPES: Recipe[] = [
       { type: "fruit", amount: 10 },
     ],
     outputs: [
-      { kind: "seed", speciesPool: ["cherry-blossom", "ghost-birch", "silver-birch"], amount: 5 },
+      {
+        kind: "seed",
+        speciesPool: ["cherry-blossom", "ghost-birch", "silver-birch"],
+        amount: 5,
+      },
     ],
   },
   {
@@ -247,7 +284,12 @@ export const RECIPES: Recipe[] = [
       { type: "fruit", amount: 10 },
     ],
     outputs: [
-      { kind: "effect", effect: "growth_boost", magnitude: 0.2, durationSec: 600 },
+      {
+        kind: "effect",
+        effect: "growth_boost",
+        magnitude: 0.2,
+        durationSec: 600,
+      },
     ],
     requiredStructure: "trading-post",
   },
@@ -271,7 +313,8 @@ export const RECIPES: Recipe[] = [
   {
     id: "essence-of-growth",
     name: "Essence of Growth",
-    description: "Distilled essence that massively accelerates all nearby trees",
+    description:
+      "Distilled essence that massively accelerates all nearby trees",
     tier: 3,
     requiredLevel: 13,
     inputs: [
@@ -280,7 +323,12 @@ export const RECIPES: Recipe[] = [
       { type: "acorns", amount: 10 },
     ],
     outputs: [
-      { kind: "effect", effect: "growth_boost", magnitude: 0.5, durationSec: 300 },
+      {
+        kind: "effect",
+        effect: "growth_boost",
+        magnitude: 0.5,
+        durationSec: 300,
+      },
     ],
   },
   {
@@ -294,7 +342,12 @@ export const RECIPES: Recipe[] = [
       { type: "timber", amount: 15 },
     ],
     outputs: [
-      { kind: "effect", effect: "weather_protection", magnitude: 1, durationSec: 600 },
+      {
+        kind: "effect",
+        effect: "weather_protection",
+        magnitude: 1,
+        durationSec: 600,
+      },
     ],
   },
   {
@@ -309,7 +362,12 @@ export const RECIPES: Recipe[] = [
       { type: "timber", amount: 15 },
     ],
     outputs: [
-      { kind: "effect", effect: "growth_boost", magnitude: 0.6, durationSec: 420 },
+      {
+        kind: "effect",
+        effect: "growth_boost",
+        magnitude: 0.6,
+        durationSec: 420,
+      },
     ],
   },
   {
@@ -323,7 +381,11 @@ export const RECIPES: Recipe[] = [
       { type: "fruit", amount: 20 },
     ],
     outputs: [
-      { kind: "seed", speciesPool: ["redwood", "flame-maple", "ironbark"], amount: 3 },
+      {
+        kind: "seed",
+        speciesPool: ["redwood", "flame-maple", "ironbark"],
+        amount: 3,
+      },
     ],
   },
   {
@@ -338,7 +400,12 @@ export const RECIPES: Recipe[] = [
       { type: "timber", amount: 10 },
     ],
     outputs: [
-      { kind: "effect", effect: "stamina_restore", magnitude: 100, durationSec: 0 },
+      {
+        kind: "effect",
+        effect: "stamina_restore",
+        magnitude: 100,
+        durationSec: 0,
+      },
     ],
   },
 
@@ -373,7 +440,12 @@ export const RECIPES: Recipe[] = [
       { type: "acorns", amount: 25 },
     ],
     outputs: [
-      { kind: "effect", effect: "permanent_growth_boost", magnitude: 0.25, durationSec: -1 },
+      {
+        kind: "effect",
+        effect: "permanent_growth_boost",
+        magnitude: 0.25,
+        durationSec: -1,
+      },
     ],
   },
   {
@@ -406,7 +478,12 @@ export const RECIPES: Recipe[] = [
       { type: "acorns", amount: 15 },
     ],
     outputs: [
-      { kind: "effect", effect: "all_resources_double", magnitude: 2, durationSec: 300 },
+      {
+        kind: "effect",
+        effect: "all_resources_double",
+        magnitude: 2,
+        durationSec: 300,
+      },
     ],
   },
   {
@@ -421,7 +498,11 @@ export const RECIPES: Recipe[] = [
       { type: "sap", amount: 20 },
     ],
     outputs: [
-      { kind: "seed", speciesPool: ["crystal-oak", "moonwood-ash", "worldtree"], amount: 1 },
+      {
+        kind: "seed",
+        speciesPool: ["crystal-oak", "moonwood-ash", "worldtree"],
+        amount: 1,
+      },
     ],
   },
   {
@@ -437,7 +518,12 @@ export const RECIPES: Recipe[] = [
       { type: "acorns", amount: 25 },
     ],
     outputs: [
-      { kind: "effect", effect: "xp_multiplier", magnitude: 2, durationSec: 1440 },
+      {
+        kind: "effect",
+        effect: "xp_multiplier",
+        magnitude: 2,
+        durationSec: 1440,
+      },
     ],
   },
 ];

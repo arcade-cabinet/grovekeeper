@@ -21,9 +21,9 @@ import { StaminaGauge } from "./StaminaGauge";
 import { ToolBelt } from "./ToolBelt";
 import { ToolWheel } from "./ToolWheel";
 import { TradeDialog } from "./TradeDialog";
+import { TutorialOverlay } from "./TutorialOverlay";
 import { VirtualJoystick } from "./VirtualJoystick";
 import { WeatherForecast } from "./WeatherForecast";
-import { TutorialOverlay } from "./TutorialOverlay";
 import { WeatherOverlay } from "./WeatherOverlay";
 
 interface GameUIProps {
@@ -366,6 +366,7 @@ const BottomControls = ({
       {/* Action button - right side */}
       <div className="flex flex-col items-center gap-1 flex-shrink-0">
         <button
+          type="button"
           data-tutorial-id="action-button"
           className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl shadow-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
           style={{

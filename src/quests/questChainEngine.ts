@@ -59,7 +59,10 @@ export const computeAvailableChains = (
 
   for (const chain of chainData as QuestChainDef[]) {
     // Skip already active or completed
-    if (state.activeChains[chain.id] || state.completedChainIds.includes(chain.id)) {
+    if (
+      state.activeChains[chain.id] ||
+      state.completedChainIds.includes(chain.id)
+    ) {
       continue;
     }
 
@@ -121,7 +124,10 @@ export const advanceObjectives = (
   state: QuestChainState,
   eventType: string,
   amount: number = 1,
-): { state: QuestChainState; completedSteps: { chainId: string; stepId: string }[] } => {
+): {
+  state: QuestChainState;
+  completedSteps: { chainId: string; stepId: string }[];
+} => {
   const completedSteps: { chainId: string; stepId: string }[] = [];
   let changed = false;
   const updatedChains = { ...state.activeChains };
@@ -144,7 +150,10 @@ export const advanceObjectives = (
       const objDef = stepDef.objectives.find((o) => o.id === obj.objectiveId);
       if (!objDef || objDef.targetType !== eventType) return obj;
 
-      const newProgress = Math.min(obj.currentProgress + amount, objDef.targetAmount);
+      const newProgress = Math.min(
+        obj.currentProgress + amount,
+        objDef.targetAmount,
+      );
       const nowCompleted = newProgress >= objDef.targetAmount;
       stepChanged = true;
 
@@ -211,7 +220,10 @@ export const claimStepReward = (
   if (!stepDef) return { state, stepDef: null };
 
   // Mark reward claimed
-  const claimedStep: ChainStepProgress = { ...currentStep, rewardClaimed: true };
+  const claimedStep: ChainStepProgress = {
+    ...currentStep,
+    rewardClaimed: true,
+  };
   const updatedSteps = [...progress.steps];
   updatedSteps[progress.currentStepIndex] = claimedStep;
 

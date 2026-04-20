@@ -45,38 +45,62 @@ describe("codex constants", () => {
     it("has an entry for every species in trees.ts", () => {
       for (const speciesId of ALL_SPECIES_IDS) {
         const entry = getCodexEntry(speciesId);
-        expect(entry, `Missing codex entry for species: ${speciesId}`).toBeDefined();
+        expect(
+          entry,
+          `Missing codex entry for species: ${speciesId}`,
+        ).toBeDefined();
       }
     });
 
     it("every entry has all 4 lore tiers", () => {
       const entries = getAllCodexEntries();
       for (const entry of entries) {
-        expect(entry.lore.tier1.length, `${entry.speciesId} tier1 lore is empty`).toBeGreaterThan(0);
-        expect(entry.lore.tier2.length, `${entry.speciesId} tier2 lore is empty`).toBeGreaterThan(0);
-        expect(entry.lore.tier3.length, `${entry.speciesId} tier3 lore is empty`).toBeGreaterThan(0);
-        expect(entry.lore.tier4.length, `${entry.speciesId} tier4 lore is empty`).toBeGreaterThan(0);
+        expect(
+          entry.lore.tier1.length,
+          `${entry.speciesId} tier1 lore is empty`,
+        ).toBeGreaterThan(0);
+        expect(
+          entry.lore.tier2.length,
+          `${entry.speciesId} tier2 lore is empty`,
+        ).toBeGreaterThan(0);
+        expect(
+          entry.lore.tier3.length,
+          `${entry.speciesId} tier3 lore is empty`,
+        ).toBeGreaterThan(0);
+        expect(
+          entry.lore.tier4.length,
+          `${entry.speciesId} tier4 lore is empty`,
+        ).toBeGreaterThan(0);
       }
     });
 
     it("every entry has a non-empty habitat", () => {
       const entries = getAllCodexEntries();
       for (const entry of entries) {
-        expect(entry.habitat.length, `${entry.speciesId} habitat is empty`).toBeGreaterThan(0);
+        expect(
+          entry.habitat.length,
+          `${entry.speciesId} habitat is empty`,
+        ).toBeGreaterThan(0);
       }
     });
 
     it("every entry has a non-empty growthTip", () => {
       const entries = getAllCodexEntries();
       for (const entry of entries) {
-        expect(entry.growthTip.length, `${entry.speciesId} growthTip is empty`).toBeGreaterThan(0);
+        expect(
+          entry.growthTip.length,
+          `${entry.speciesId} growthTip is empty`,
+        ).toBeGreaterThan(0);
       }
     });
 
     it("every entry has a non-empty funFact", () => {
       const entries = getAllCodexEntries();
       for (const entry of entries) {
-        expect(entry.funFact.length, `${entry.speciesId} funFact is empty`).toBeGreaterThan(0);
+        expect(
+          entry.funFact.length,
+          `${entry.speciesId} funFact is empty`,
+        ).toBeGreaterThan(0);
       }
     });
 
@@ -128,9 +152,17 @@ describe("codex constants", () => {
 
     it("every biome has a non-empty name, description, and climate", () => {
       for (const biome of BIOME_CODEX) {
-        expect(biome.name.length, `${biome.id} name is empty`).toBeGreaterThan(0);
-        expect(biome.description.length, `${biome.id} description is empty`).toBeGreaterThan(0);
-        expect(biome.climate.length, `${biome.id} climate is empty`).toBeGreaterThan(0);
+        expect(biome.name.length, `${biome.id} name is empty`).toBeGreaterThan(
+          0,
+        );
+        expect(
+          biome.description.length,
+          `${biome.id} description is empty`,
+        ).toBeGreaterThan(0);
+        expect(
+          biome.climate.length,
+          `${biome.id} climate is empty`,
+        ).toBeGreaterThan(0);
       }
     });
 
@@ -167,10 +199,9 @@ describe("codex constants", () => {
         ),
       );
       for (const biome of speciesBiomes) {
-        expect(
-          biomeIds,
-          `No biome codex entry for biome: ${biome}`,
-        ).toContain(biome);
+        expect(biomeIds, `No biome codex entry for biome: ${biome}`).toContain(
+          biome,
+        );
       }
     });
   });

@@ -1,7 +1,7 @@
 import { RiMapLine } from "@remixicon/react";
 import { useEffect, useState } from "react";
-import { Button } from "@/ui/primitives/button";
 import { COLORS } from "@/config/config";
+import { Button } from "@/ui/primitives/button";
 import type { GridCellComponent, TreeComponent } from "@/world";
 import {
   gridCellsQuery,

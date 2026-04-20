@@ -8,10 +8,13 @@
  * Used by the GovernorAgent for automated playtesting and E2E tests.
  */
 
+import { createTreeEntity } from "@/archetypes";
 import type { ResourceType } from "@/config/resources";
 import { getToolById } from "@/config/tools";
 import { getSpeciesById } from "@/config/trees";
-import { createTreeEntity } from "@/archetypes";
+import { useGameStore } from "@/stores/gameStore";
+import { canPlace, getTemplate } from "@/structures/StructureManager";
+import { collectHarvest, initHarvestable } from "@/systems/harvest";
 import type { Entity, GridCellComponent } from "@/world";
 import {
   generateEntityId,
@@ -20,9 +23,6 @@ import {
   treesQuery,
   world,
 } from "@/world";
-import { useGameStore } from "@/stores/gameStore";
-import { canPlace, getTemplate } from "@/structures/StructureManager";
-import { collectHarvest, initHarvestable } from "@/systems/harvest";
 
 // ──────────────────────────────────────────────
 // Helpers

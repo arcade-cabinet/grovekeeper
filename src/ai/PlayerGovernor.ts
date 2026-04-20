@@ -13,6 +13,18 @@
  */
 
 import { GameEntity, GoalEvaluator, Think } from "yuka";
+import type { ResourceType } from "@/config/resources";
+import { getSpeciesById } from "@/config/trees";
+import {
+  advancePathFollow,
+  createPathFollow,
+  type PathFollowState,
+} from "@/input/pathFollowing";
+import {
+  buildWalkabilityGrid,
+  findPath,
+  type TileCoord,
+} from "@/input/pathfinding";
 import {
   findHarvestableTrees,
   findMatureTrees,
@@ -26,22 +38,10 @@ import {
   spendToolStamina,
   waterTree,
 } from "@/player-actions/GameActions";
-import type { ResourceType } from "@/config/resources";
-import { getSpeciesById } from "@/config/trees";
+import { useGameStore } from "@/stores/gameStore";
+import { BASE_TRADE_RATES, executeTrade } from "@/systems/trading";
 import type { GridCellComponent } from "@/world";
 import { gridCellsQuery, playerQuery } from "@/world";
-import { useGameStore } from "@/stores/gameStore";
-import {
-  advancePathFollow,
-  createPathFollow,
-  type PathFollowState,
-} from "@/input/pathFollowing";
-import {
-  buildWalkabilityGrid,
-  findPath,
-  type TileCoord,
-} from "@/input/pathfinding";
-import { BASE_TRADE_RATES, executeTrade } from "@/systems/trading";
 
 // ──────────────────────────────────────────────
 // Types

@@ -13,7 +13,9 @@ import { saveDatabaseToIndexedDB } from "./persist";
 export function exportSaveFile(): void {
   const { sqlDb } = getDb();
   const data = sqlDb.export();
-  const blob = new Blob([data.buffer as ArrayBuffer], { type: "application/x-sqlite3" });
+  const blob = new Blob([data.buffer as ArrayBuffer], {
+    type: "application/x-sqlite3",
+  });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");

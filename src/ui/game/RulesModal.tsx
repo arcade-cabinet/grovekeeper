@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { COLORS } from "@/config/config";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -7,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/ui/primitives/dialog";
-import { COLORS } from "@/config/config";
 
 interface RulesModalProps {
   open: boolean;

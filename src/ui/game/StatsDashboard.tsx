@@ -1,11 +1,11 @@
+import { COLORS } from "@/config/config";
+import { useGameStore } from "@/stores/gameStore";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/ui/primitives/dialog";
-import { COLORS } from "@/config/config";
-import { useGameStore } from "@/stores/gameStore";
 
 interface StatsDashboardProps {
   open: boolean;

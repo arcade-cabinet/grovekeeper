@@ -7,17 +7,17 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { COLORS } from "@/config/config";
+import { RESOURCE_TYPES, type ResourceType } from "@/config/resources";
+import { getDialogueNode, getNpcTemplate } from "@/npcs/NpcManager";
+import type { DialogueAction, DialogueNode } from "@/npcs/types";
+import { useGameStore } from "@/stores/gameStore";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/ui/primitives/dialog";
-import { COLORS } from "@/config/config";
-import { RESOURCE_TYPES, type ResourceType } from "@/config/resources";
-import { getDialogueNode, getNpcTemplate } from "@/npcs/NpcManager";
-import type { DialogueAction, DialogueNode } from "@/npcs/types";
-import { useGameStore } from "@/stores/gameStore";
 import { showParticle } from "./FloatingParticles";
 import { showToast } from "./Toast";
 

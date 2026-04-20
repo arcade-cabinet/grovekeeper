@@ -2,9 +2,9 @@
 
 import { getActiveDifficulty } from "@/config/difficulty";
 import { getSpeciesById } from "@/config/trees";
+import { getHarvestMultiplier } from "@/structures/StructureManager";
 import type { Entity } from "@/world";
 import { harvestableQuery, structuresQuery, world } from "@/world";
-import { getHarvestMultiplier } from "@/structures/StructureManager";
 
 /**
  * Initialize the harvestable component on a tree entity.

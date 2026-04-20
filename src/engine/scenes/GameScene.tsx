@@ -7,44 +7,28 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getDb, isDbInitialized } from "@/db/client";
-import { saveDatabaseToIndexedDB } from "@/db/persist";
-import { persistGameStore, saveGroveToDb } from "@/db/queries";
+import type { NpcBrainContext } from "@/ai/NpcBrain";
+import { NpcBrain } from "@/ai/NpcBrain";
 import { PlayerGovernor } from "@/ai/PlayerGovernor";
+import { createPlayerEntity, createTreeEntity } from "@/archetypes";
 import { COLORS, GRID_SIZE } from "@/config/config";
 import { getActiveDifficulty } from "@/config/difficulty";
 import type { ResourceType } from "@/config/resources";
 import { getToolById, TOOLS } from "@/config/tools";
 import { getSpeciesById } from "@/config/trees";
-import { createPlayerEntity, createTreeEntity } from "@/archetypes";
-import type { Entity, GridCellComponent } from "@/world";
+import { getDb, isDbInitialized } from "@/db/client";
+import { saveDatabaseToIndexedDB } from "@/db/persist";
+import { persistGameStore, saveGroveToDb } from "@/db/queries";
+import type { GroundTapInfo, ObjectTapInfo } from "@/input/InputManager";
+import { InputManager } from "@/input/InputManager";
 import {
-  generateEntityId,
-  gridCellsQuery,
-  npcsQuery,
-  playerQuery,
-  rainCatchersQuery,
-  scarecrowsQuery,
-  structuresQuery,
-  treesQuery,
-  world,
-} from "@/world";
+  buildWalkabilityGrid,
+  type WalkabilityGrid,
+} from "@/input/pathfinding";
 import { isPlayerAdjacent } from "@/npcs/NpcManager";
 import { getChainDef } from "@/quests/questChainEngine";
-// Scene managers
-import {
-  CameraManager,
-  disposeModelCache,
-  GroundBuilder,
-  LightingManager,
-  NpcMeshManager,
-  PlayerMeshManager,
-  SceneManager,
-  SelectionRingManager,
-  SkyManager,
-  TreeMeshManager,
-} from "../scene";
-import type { NpcQuestMarkerType } from "../scene";
+import { createRNG, hashString } from "@/shared/utils/seedRNG";
+import { worldToScreen } from "@/shared/utils/worldToScreen";
 import type { SerializedTree } from "@/stores/gameStore";
 import { useGameStore } from "@/stores/gameStore";
 import {
@@ -52,6 +36,7 @@ import {
   getStaminaMultiplier as getStructureStaminaMult,
   getTemplate,
 } from "@/structures/StructureManager";
+import { audioManager } from "@/systems/AudioManager";
 import { ACHIEVEMENT_DEFS, checkAchievements } from "@/systems/achievements";
 import { getStageScale, growthSystem } from "@/systems/growth";
 import {
@@ -59,20 +44,13 @@ import {
   harvestSystem,
   initHarvestable,
 } from "@/systems/harvest";
-import type { GroundTapInfo, ObjectTapInfo } from "@/input/InputManager";
-import { InputManager } from "@/input/InputManager";
 import { movementSystem, setMovementBounds } from "@/systems/movement";
-import { calculateAllOfflineGrowth } from "@/systems/offlineGrowth";
-import { audioManager } from "@/systems/AudioManager";
-import { NpcBrain } from "@/ai/NpcBrain";
-import type { NpcBrainContext } from "@/ai/NpcBrain";
 import {
   cancelAllNpcMovements,
   isNpcMoving,
   updateNpcMovement,
 } from "@/systems/npcMovement";
-import { TutorialController } from "@/systems/tutorialController";
-import { buildWalkabilityGrid, type WalkabilityGrid } from "@/input/pathfinding";
+import { calculateAllOfflineGrowth } from "@/systems/offlineGrowth";
 import { hapticLight, hapticMedium, hapticSuccess } from "@/systems/platform";
 import {
   deserializeGrove,
@@ -86,6 +64,7 @@ import {
   type Season,
   updateTime,
 } from "@/systems/time";
+import { TutorialController } from "@/systems/tutorialController";
 import {
   getWeatherGrowthMultiplier,
   getWeatherStaminaMultiplier,
@@ -103,12 +82,36 @@ import type { RadialAction } from "@/ui/game/radialActions";
 import { getActionsForTile } from "@/ui/game/radialActions";
 import { showToast } from "@/ui/game/Toast";
 import { setShowPetals, setWeatherVisual } from "@/ui/game/WeatherOverlay";
-import { createRNG, hashString } from "@/shared/utils/seedRNG";
-import { worldToScreen } from "@/shared/utils/worldToScreen";
+import type { Entity, GridCellComponent } from "@/world";
+import {
+  generateEntityId,
+  gridCellsQuery,
+  npcsQuery,
+  playerQuery,
+  rainCatchersQuery,
+  scarecrowsQuery,
+  structuresQuery,
+  treesQuery,
+  world,
+} from "@/world";
 import type { WorldDefinition } from "@/world-data";
 // World system
 import { WorldManager } from "@/world-data";
 import startingWorldData from "@/world-data/data/starting-world.json";
+import type { NpcQuestMarkerType } from "../scene";
+// Scene managers
+import {
+  CameraManager,
+  disposeModelCache,
+  GroundBuilder,
+  LightingManager,
+  NpcMeshManager,
+  PlayerMeshManager,
+  SceneManager,
+  SelectionRingManager,
+  SkyManager,
+  TreeMeshManager,
+} from "../scene";
 
 /** Radial menu target — tile info for the tapped position. */
 interface RadialTarget {
@@ -172,9 +175,15 @@ export const GameScene = () => {
     null,
   );
   const [npcDialogueOpen, setNpcDialogueOpen] = useState(false);
-  const [tutorialHighlightId, setTutorialHighlightId] = useState<string | null>(null);
-  const [tutorialHighlightLabel, setTutorialHighlightLabel] = useState<string | null>(null);
-  const [tutorialDialogueId, setTutorialDialogueId] = useState<string | null>(null);
+  const [tutorialHighlightId, setTutorialHighlightId] = useState<string | null>(
+    null,
+  );
+  const [tutorialHighlightLabel, setTutorialHighlightLabel] = useState<
+    string | null
+  >(null);
+  const [tutorialDialogueId, setTutorialDialogueId] = useState<string | null>(
+    null,
+  );
 
   // Radial action menu state
   const [radialTarget, setRadialTarget] = useState<RadialTarget | null>(null);
@@ -370,7 +379,7 @@ export const GameScene = () => {
         if (isDbInitialized()) {
           try {
             const state = useGameStore.getState();
-            persistGameStore(state);
+            persistGameStore(state as unknown as Record<string, unknown>);
             // Save grove trees to DB
             const groveData = state.groveData;
             if (groveData) {
@@ -397,7 +406,8 @@ export const GameScene = () => {
 
   // --- BabylonJS initialization ---
   useEffect(() => {
-    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
     let cancelled = false;
 
     const sm = sceneManagerRef.current;
@@ -411,7 +421,7 @@ export const GameScene = () => {
     const worldMgr = worldManagerRef.current;
 
     const initBabylon = async () => {
-      const { scene } = await sm.init(canvasRef.current!);
+      const { scene } = await sm.init(canvas);
       // React StrictMode double-mounts: if cleanup ran during async init,
       // the engine/scene from this mount are stale — bail out.
       if (cancelled) return;
@@ -444,7 +454,7 @@ export const GameScene = () => {
 
       // --- InputManager setup ---
       inputManagerRef.current.init({
-        canvas: canvasRef.current!,
+        canvas,
         movementRef,
         callbacks: {
           onAction: () => handleAction(),
@@ -622,9 +632,13 @@ export const GameScene = () => {
               const key = `${entity.id}:${stage}`;
               if (!milestoneXpRef.current.has(key)) {
                 milestoneXpRef.current.add(key);
-                useGameStore.getState().trackSpeciesGrowth(tree.speciesId, stage);
+                useGameStore
+                  .getState()
+                  .trackSpeciesGrowth(tree.speciesId, stage);
                 if (stage === 3) {
-                  useGameStore.getState().advanceQuestObjective("saplings_grown", 1);
+                  useGameStore
+                    .getState()
+                    .advanceQuestObjective("saplings_grown", 1);
                 }
                 const xpAmount =
                   stage === 2
@@ -1081,7 +1095,9 @@ export const GameScene = () => {
           // SQLite auto-save
           if (isDbInitialized()) {
             try {
-              persistGameStore(useGameStore.getState());
+              persistGameStore(
+                useGameStore.getState() as unknown as Record<string, unknown>,
+              );
               const { sqlDb } = getDb();
               saveDatabaseToIndexedDB(sqlDb.export()).catch((err) => {
                 console.warn("Auto-save IndexedDB flush failed:", err);
@@ -1236,7 +1252,12 @@ export const GameScene = () => {
     addXp(50);
     incrementTreesHarvested();
     useGameStore.getState().advanceQuestObjective("trees_harvested", 1);
-    useGameStore.getState().trackSpeciesHarvest(tree.tree.speciesId, harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0);
+    useGameStore
+      .getState()
+      .trackSpeciesHarvest(
+        tree.tree.speciesId,
+        harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0,
+      );
     showParticle("+50 XP");
 
     const harvestSpecies = getSpeciesById(tree.tree.speciesId);
@@ -1694,7 +1715,12 @@ export const GameScene = () => {
         }
       }
       incrementTreesHarvested();
-      useGameStore.getState().trackSpeciesHarvest(entity.tree.speciesId, harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0);
+      useGameStore
+        .getState()
+        .trackSpeciesHarvest(
+          entity.tree.speciesId,
+          harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0,
+        );
       count++;
     }
     if (count > 0) {

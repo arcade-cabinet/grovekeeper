@@ -1,10 +1,10 @@
 import { GameEntity, GoalEvaluator, Think } from "yuka";
+import type { WalkabilityGrid } from "@/input/pathfinding";
 import {
   cancelNpcMovement,
   isNpcMoving,
   startNpcPath,
 } from "@/systems/npcMovement";
-import type { WalkabilityGrid } from "@/input/pathfinding";
 
 // ──────────────────────────────────────────────
 // Types
@@ -68,7 +68,9 @@ class IdleEvaluator extends GoalEvaluator<NpcEntity> {
   calculateDesirability(): number {
     return this.characterBias * 0.1;
   }
-  setGoal(): void { /* Unused — we dispatch behaviors manually, not via Yuka goals */ }
+  setGoal(): void {
+    /* Unused — we dispatch behaviors manually, not via Yuka goals */
+  }
 }
 
 class WanderEvaluator extends GoalEvaluator<NpcEntity> {
@@ -76,7 +78,9 @@ class WanderEvaluator extends GoalEvaluator<NpcEntity> {
     if (entity.wanderTimer > 0) return 0;
     return this.characterBias * 0.15;
   }
-  setGoal(): void { /* Unused — we dispatch behaviors manually, not via Yuka goals */ }
+  setGoal(): void {
+    /* Unused — we dispatch behaviors manually, not via Yuka goals */
+  }
 }
 
 class ApproachPlayerEvaluator extends GoalEvaluator<NpcEntity> {
@@ -91,7 +95,9 @@ class ApproachPlayerEvaluator extends GoalEvaluator<NpcEntity> {
     // Within notice range but beyond approach range — mild interest
     return this.characterBias * 0.3;
   }
-  setGoal(): void { /* Unused — we dispatch behaviors manually, not via Yuka goals */ }
+  setGoal(): void {
+    /* Unused — we dispatch behaviors manually, not via Yuka goals */
+  }
 }
 
 class ReturnHomeEvaluator extends GoalEvaluator<NpcEntity> {
@@ -107,7 +113,9 @@ class ReturnHomeEvaluator extends GoalEvaluator<NpcEntity> {
     if (homeDist <= 2) return 0;
     return this.characterBias * 0.6;
   }
-  setGoal(): void { /* Unused — we dispatch behaviors manually, not via Yuka goals */ }
+  setGoal(): void {
+    /* Unused — we dispatch behaviors manually, not via Yuka goals */
+  }
 }
 
 // ──────────────────────────────────────────────
@@ -279,8 +287,10 @@ export class NpcBrain {
 
   private executeWander(ctx: NpcBrainContext): void {
     // Pick a random walkable tile within WANDER_RANGE of home
-    const offsetX = Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
-    const offsetZ = Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
+    const offsetX =
+      Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
+    const offsetZ =
+      Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
     const targetX = this.homeX + offsetX;
     const targetZ = this.homeZ + offsetZ;
 

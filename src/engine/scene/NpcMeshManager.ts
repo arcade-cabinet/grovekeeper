@@ -9,16 +9,16 @@
 
 import type { AnimationGroup } from "@babylonjs/core/Animations/animationGroup";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
-import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 import { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import { npcsQuery } from "@/world";
 import { getNpcTemplate } from "@/npcs/NpcManager";
 import type { HatStyle, NpcAppearance } from "@/npcs/types";
+import { npcsQuery } from "@/world";
 import { loadModel } from "./ModelLoader";
 
 /** Scale for loaded .glb NPC models. */
@@ -356,7 +356,9 @@ export class NpcMeshManager {
       if (entry.markerMesh) {
         const markerPhase = t * MARKER_BOB_SPEED + entry.phaseOffset;
         entry.markerMesh.position.y =
-          entry.baseY + MARKER_Y_OFFSET + Math.sin(markerPhase) * MARKER_BOB_AMP;
+          entry.baseY +
+          MARKER_Y_OFFSET +
+          Math.sin(markerPhase) * MARKER_BOB_AMP;
         // Keep marker at NPC x/z (it's not parented, so it stays independent of NPC rotation)
         entry.markerMesh.position.x = npcX;
         entry.markerMesh.position.z = npcZ;
@@ -393,11 +395,7 @@ export class NpcMeshManager {
       const color = newType === "available" ? "#FFD700" : "#87CEEB";
 
       const markerName = `npc_marker_${entityId}`;
-      const plane = CreatePlane(
-        markerName,
-        { size: MARKER_SIZE },
-        scene,
-      );
+      const plane = CreatePlane(markerName, { size: MARKER_SIZE }, scene);
       plane.billboardMode = Mesh.BILLBOARDMODE_ALL;
       plane.isPickable = false;
       plane.position.x = entry.mesh.position.x;
@@ -405,12 +403,7 @@ export class NpcMeshManager {
       plane.position.y = entry.baseY + MARKER_Y_OFFSET;
 
       // DynamicTexture for the symbol
-      const tex = new DynamicTexture(
-        `${markerName}_tex`,
-        64,
-        scene,
-        false,
-      );
+      const tex = new DynamicTexture(`${markerName}_tex`, 64, scene, false);
       tex.hasAlpha = true;
 
       const ctx = tex.getContext() as unknown as CanvasRenderingContext2D;

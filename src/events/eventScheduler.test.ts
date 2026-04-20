@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { EventState } from "./types";
 import {
   advanceFestivalChallenge,
+  type EventContext,
   getActiveFestivalGrowthBoost,
   getActiveFestivalHarvestBoost,
   getEncounterDef,
@@ -11,8 +11,8 @@ import {
   isFestivalActive,
   resolveEncounter,
   updateEvents,
-  type EventContext,
 } from "./eventScheduler";
+import type { EventState } from "./types";
 
 // ============================================
 // Helpers
@@ -865,7 +865,11 @@ describe("Edge cases", () => {
 
   it("updateEvents with no matching events returns unchanged active state", () => {
     const state = initializeEventState();
-    const ctx = makeContext({ currentDay: 1, season: "spring", playerLevel: 1 });
+    const ctx = makeContext({
+      currentDay: 1,
+      season: "spring",
+      playerLevel: 1,
+    });
     const result = updateEvents(state, ctx);
     // No festival triggers on day 1 of spring
     expect(result.festivalStarted).toBeNull();

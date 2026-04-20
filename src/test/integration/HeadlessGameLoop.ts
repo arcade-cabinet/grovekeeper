@@ -6,7 +6,7 @@
  * Uses a fixed timestep for deterministic, reproducible results.
  */
 
-import { farmerQuery, treesQuery } from "@/world";
+import { hashString } from "@/shared/utils/seedRNG";
 import { useGameStore } from "@/stores/gameStore";
 import { growthSystem } from "@/systems/growth";
 import { harvestSystem, initHarvestable } from "@/systems/harvest";
@@ -24,7 +24,7 @@ import {
   type WeatherState,
   type WeatherType,
 } from "@/systems/weather";
-import { hashString } from "@/shared/utils/seedRNG";
+import { farmerQuery, treesQuery } from "@/world";
 
 export interface HeadlessLoopConfig {
   /** Simulation ticks per second (default: 30). */

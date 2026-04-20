@@ -1,4 +1,6 @@
 import { RiTrophyLine } from "@remixicon/react";
+import { COLORS } from "@/config/config";
+import type { ActiveQuest, GoalDifficulty } from "@/systems/quests";
 import { Button } from "@/ui/primitives/button";
 import { Progress } from "@/ui/primitives/progress";
 import { ScrollArea } from "@/ui/primitives/scroll-area";
@@ -10,8 +12,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/ui/primitives/sheet";
-import { COLORS } from "@/config/config";
-import type { ActiveQuest, GoalDifficulty } from "@/systems/quests";
 
 interface QuestPanelProps {
   quests: ActiveQuest[];

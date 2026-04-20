@@ -6,6 +6,8 @@
  * and permadeath toggle based on selected difficulty.
  */
 import { useState } from "react";
+import { COLORS } from "@/config/config";
+import { DIFFICULTY_TIERS, type DifficultyTier } from "@/config/difficulty";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -14,8 +16,6 @@ import {
   DialogTitle,
 } from "@/ui/primitives/dialog";
 import { Switch } from "@/ui/primitives/switch";
-import { COLORS } from "@/config/config";
-import { DIFFICULTY_TIERS, type DifficultyTier } from "@/config/difficulty";
 
 interface NewGameModalProps {
   open: boolean;

@@ -14,7 +14,12 @@
         "description": "Plant your first tree to show Rowan you're serious about the grove.",
         "npcDialogueId": "rowan-greeting",
         "objectives": [
-          { "id": "rh1-plant", "description": "Plant a tree", "targetType": "trees_planted", "targetAmount": 1 }
+          {
+            "id": "rh1-plant",
+            "description": "Plant a tree",
+            "targetType": "trees_planted",
+            "targetAmount": 1
+          }
         ],
         "reward": { "xp": 25, "resources": { "timber": 5 } }
       },
@@ -24,7 +29,12 @@
         "description": "Grow 3 trees to sapling stage to learn patience from Rowan.",
         "npcDialogueId": "rowan-seasons",
         "objectives": [
-          { "id": "rh2-grow", "description": "Grow 3 trees to Sapling", "targetType": "saplings_grown", "targetAmount": 3 }
+          {
+            "id": "rh2-grow",
+            "description": "Grow 3 trees to Sapling",
+            "targetType": "saplings_grown",
+            "targetAmount": 3
+          }
         ],
         "reward": { "xp": 50, "resources": { "sap": 5 }, "friendshipPoints": 5 }
       },
@@ -34,9 +44,18 @@
         "description": "Rowan tells you about the Worldtree. Reach level 5 to hear the full story.",
         "npcDialogueId": "rowan-worldtree",
         "objectives": [
-          { "id": "rh3-level", "description": "Reach level 5", "targetType": "player_level", "targetAmount": 5 }
+          {
+            "id": "rh3-level",
+            "description": "Reach level 5",
+            "targetType": "player_level",
+            "targetAmount": 5
+          }
         ],
-        "reward": { "xp": 75, "seeds": [{ "speciesId": "elder-pine", "amount": 3 }], "friendshipPoints": 10 }
+        "reward": {
+          "xp": 75,
+          "seeds": [{ "speciesId": "elder-pine", "amount": 3 }],
+          "friendshipPoints": 10
+        }
       },
       {
         "id": "rowan-history-4",
@@ -44,9 +63,18 @@
         "description": "Prove you are a true keeper by growing a tree to Old Growth.",
         "npcDialogueId": "rowan-old-growth",
         "objectives": [
-          { "id": "rh4-old-growth", "description": "Grow a tree to Old Growth", "targetType": "ancient_trees_grown", "targetAmount": 1 }
+          {
+            "id": "rh4-old-growth",
+            "description": "Grow a tree to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 1
+          }
         ],
-        "reward": { "xp": 150, "resources": { "timber": 20, "acorns": 10 }, "friendshipPoints": 15 },
+        "reward": {
+          "xp": 150,
+          "resources": { "timber": 20, "acorns": 10 },
+          "friendshipPoints": 15
+        },
         "completionDialogueId": "rowan-exploration"
       }
     ]
@@ -66,7 +94,12 @@
         "description": "Gather resources for your first trade with Hazel.",
         "npcDialogueId": "hazel-greeting",
         "objectives": [
-          { "id": "ht1-timber", "description": "Gather 15 timber", "targetType": "timber_collected", "targetAmount": 15 }
+          {
+            "id": "ht1-timber",
+            "description": "Gather 15 timber",
+            "targetType": "timber_collected",
+            "targetAmount": 15
+          }
         ],
         "reward": { "xp": 30, "resources": { "sap": 8 } }
       },
@@ -76,9 +109,18 @@
         "description": "Hazel explains seasonal prices. Harvest 5 trees to build stock.",
         "npcDialogueId": "hazel-seasonal-info",
         "objectives": [
-          { "id": "ht2-harvest", "description": "Harvest 5 trees", "targetType": "trees_harvested", "targetAmount": 5 }
+          {
+            "id": "ht2-harvest",
+            "description": "Harvest 5 trees",
+            "targetType": "trees_harvested",
+            "targetAmount": 5
+          }
         ],
-        "reward": { "xp": 60, "resources": { "fruit": 10, "acorns": 8 }, "friendshipPoints": 5 }
+        "reward": {
+          "xp": 60,
+          "resources": { "fruit": 10, "acorns": 8 },
+          "friendshipPoints": 5
+        }
       },
       {
         "id": "hazel-trade-3",
@@ -86,12 +128,36 @@
         "description": "Collect all 4 resource types to prove your trading prowess.",
         "npcDialogueId": "hazel-best-deals",
         "objectives": [
-          { "id": "ht3-timber", "description": "Have 20 timber", "targetType": "timber_collected", "targetAmount": 20 },
-          { "id": "ht3-sap", "description": "Have 15 sap", "targetType": "sap_collected", "targetAmount": 15 },
-          { "id": "ht3-fruit", "description": "Have 10 fruit", "targetType": "fruit_collected", "targetAmount": 10 },
-          { "id": "ht3-acorns", "description": "Have 10 acorns", "targetType": "acorns_collected", "targetAmount": 10 }
+          {
+            "id": "ht3-timber",
+            "description": "Have 20 timber",
+            "targetType": "timber_collected",
+            "targetAmount": 20
+          },
+          {
+            "id": "ht3-sap",
+            "description": "Have 15 sap",
+            "targetType": "sap_collected",
+            "targetAmount": 15
+          },
+          {
+            "id": "ht3-fruit",
+            "description": "Have 10 fruit",
+            "targetType": "fruit_collected",
+            "targetAmount": 10
+          },
+          {
+            "id": "ht3-acorns",
+            "description": "Have 10 acorns",
+            "targetType": "acorns_collected",
+            "targetAmount": 10
+          }
         ],
-        "reward": { "xp": 100, "resources": { "timber": 15, "sap": 15, "fruit": 15, "acorns": 15 }, "friendshipPoints": 10 }
+        "reward": {
+          "xp": 100,
+          "resources": { "timber": 15, "sap": 15, "fruit": 15, "acorns": 15 },
+          "friendshipPoints": 10
+        }
       }
     ]
   },
@@ -110,9 +176,17 @@
         "description": "Plant 3 different species for Fern's catalogue.",
         "npcDialogueId": "fern-greeting",
         "objectives": [
-          { "id": "fc1-species", "description": "Plant 3 different species", "targetType": "unique_species_planted", "targetAmount": 3 }
+          {
+            "id": "fc1-species",
+            "description": "Plant 3 different species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 3
+          }
         ],
-        "reward": { "xp": 40, "seeds": [{ "speciesId": "silver-birch", "amount": 3 }] }
+        "reward": {
+          "xp": 40,
+          "seeds": [{ "speciesId": "silver-birch", "amount": 3 }]
+        }
       },
       {
         "id": "fern-collect-2",
@@ -120,9 +194,18 @@
         "description": "Grow 5 trees to Mature so Fern can study their full characteristics.",
         "npcDialogueId": "fern-discoveries",
         "objectives": [
-          { "id": "fc2-mature", "description": "Grow 5 trees to Mature", "targetType": "mature_trees_grown", "targetAmount": 5 }
+          {
+            "id": "fc2-mature",
+            "description": "Grow 5 trees to Mature",
+            "targetType": "mature_trees_grown",
+            "targetAmount": 5
+          }
         ],
-        "reward": { "xp": 75, "resources": { "sap": 10 }, "friendshipPoints": 5 }
+        "reward": {
+          "xp": 75,
+          "resources": { "sap": 10 },
+          "friendshipPoints": 5
+        }
       },
       {
         "id": "fern-collect-3",
@@ -130,9 +213,19 @@
         "description": "Plant a Cherry Blossom for Fern's rare species collection.",
         "npcDialogueId": "fern-rare-species",
         "objectives": [
-          { "id": "fc3-cherry", "description": "Plant a Cherry Blossom", "targetType": "cherry_planted", "targetAmount": 1, "speciesId": "cherry-blossom" }
+          {
+            "id": "fc3-cherry",
+            "description": "Plant a Cherry Blossom",
+            "targetType": "cherry_planted",
+            "targetAmount": 1,
+            "speciesId": "cherry-blossom"
+          }
         ],
-        "reward": { "xp": 100, "seeds": [{ "speciesId": "golden-apple", "amount": 2 }], "friendshipPoints": 10 }
+        "reward": {
+          "xp": 100,
+          "seeds": [{ "speciesId": "golden-apple", "amount": 2 }],
+          "friendshipPoints": 10
+        }
       },
       {
         "id": "fern-collect-4",
@@ -140,9 +233,19 @@
         "description": "Fern is fascinated by Ghost Birch trees. Plant one if you've unlocked it.",
         "npcDialogueId": "fern-ghost-birch",
         "objectives": [
-          { "id": "fc4-ghost", "description": "Plant a Ghost Birch", "targetType": "ghost_birch_planted", "targetAmount": 1, "speciesId": "ghost-birch" }
+          {
+            "id": "fc4-ghost",
+            "description": "Plant a Ghost Birch",
+            "targetType": "ghost_birch_planted",
+            "targetAmount": 1,
+            "speciesId": "ghost-birch"
+          }
         ],
-        "reward": { "xp": 200, "resources": { "timber": 25, "sap": 15, "fruit": 10, "acorns": 10 }, "friendshipPoints": 15 }
+        "reward": {
+          "xp": 200,
+          "resources": { "timber": 25, "sap": 15, "fruit": 10, "acorns": 10 },
+          "friendshipPoints": 15
+        }
       }
     ]
   },
@@ -161,9 +264,17 @@
         "description": "Plant 5 trees to show Blossom your dedication to beauty.",
         "npcDialogueId": "blossom-greeting",
         "objectives": [
-          { "id": "bs1-plant", "description": "Plant 5 trees", "targetType": "trees_planted", "targetAmount": 5 }
+          {
+            "id": "bs1-plant",
+            "description": "Plant 5 trees",
+            "targetType": "trees_planted",
+            "targetAmount": 5
+          }
         ],
-        "reward": { "xp": 35, "seeds": [{ "speciesId": "cherry-blossom", "amount": 2 }] }
+        "reward": {
+          "xp": 35,
+          "seeds": [{ "speciesId": "cherry-blossom", "amount": 2 }]
+        }
       },
       {
         "id": "blossom-seeds-2",
@@ -171,9 +282,19 @@
         "description": "Grow a Cherry Blossom to Mature stage.",
         "npcDialogueId": "blossom-cherry-info",
         "objectives": [
-          { "id": "bs2-cherry-mature", "description": "Grow Cherry Blossom to Mature", "targetType": "cherry_mature", "targetAmount": 1, "speciesId": "cherry-blossom" }
+          {
+            "id": "bs2-cherry-mature",
+            "description": "Grow Cherry Blossom to Mature",
+            "targetType": "cherry_mature",
+            "targetAmount": 1,
+            "speciesId": "cherry-blossom"
+          }
         ],
-        "reward": { "xp": 80, "resources": { "fruit": 15 }, "friendshipPoints": 5 }
+        "reward": {
+          "xp": 80,
+          "resources": { "fruit": 15 },
+          "friendshipPoints": 5
+        }
       },
       {
         "id": "blossom-seeds-3",
@@ -181,9 +302,19 @@
         "description": "Blossom wants to see a Golden Apple tree in full glory.",
         "npcDialogueId": "blossom-golden-apple",
         "objectives": [
-          { "id": "bs3-golden", "description": "Grow Golden Apple to Old Growth", "targetType": "golden_apple_old_growth", "targetAmount": 1, "speciesId": "golden-apple" }
+          {
+            "id": "bs3-golden",
+            "description": "Grow Golden Apple to Old Growth",
+            "targetType": "golden_apple_old_growth",
+            "targetAmount": 1,
+            "speciesId": "golden-apple"
+          }
         ],
-        "reward": { "xp": 150, "seeds": [{ "speciesId": "flame-maple", "amount": 2 }], "friendshipPoints": 10 }
+        "reward": {
+          "xp": 150,
+          "seeds": [{ "speciesId": "flame-maple", "amount": 2 }],
+          "friendshipPoints": 10
+        }
       }
     ]
   },
@@ -202,7 +333,12 @@
         "description": "Water 10 trees to prepare them for changing weather.",
         "npcDialogueId": "bramble-greeting",
         "objectives": [
-          { "id": "bw1-water", "description": "Water 10 trees", "targetType": "trees_watered", "targetAmount": 10 }
+          {
+            "id": "bw1-water",
+            "description": "Water 10 trees",
+            "targetType": "trees_watered",
+            "targetAmount": 10
+          }
         ],
         "reward": { "xp": 30, "resources": { "sap": 5 } }
       },
@@ -212,9 +348,18 @@
         "description": "Bramble teaches you to use rain. Grow 3 trees during a rainy day.",
         "npcDialogueId": "bramble-rain-tips",
         "objectives": [
-          { "id": "bw2-rain-grow", "description": "Grow 3 trees to Sapling during rain", "targetType": "saplings_grown", "targetAmount": 3 }
+          {
+            "id": "bw2-rain-grow",
+            "description": "Grow 3 trees to Sapling during rain",
+            "targetType": "saplings_grown",
+            "targetAmount": 3
+          }
         ],
-        "reward": { "xp": 60, "resources": { "sap": 10 }, "friendshipPoints": 5 }
+        "reward": {
+          "xp": 60,
+          "resources": { "sap": 10 },
+          "friendshipPoints": 5
+        }
       },
       {
         "id": "bramble-weather-3",
@@ -222,9 +367,18 @@
         "description": "Prove your resilience by keeping 10 trees alive through a full season cycle.",
         "npcDialogueId": "bramble-seasons",
         "objectives": [
-          { "id": "bw3-survive", "description": "Have 10 living trees across a season change", "targetType": "trees_survived_season", "targetAmount": 10 }
+          {
+            "id": "bw3-survive",
+            "description": "Have 10 living trees across a season change",
+            "targetType": "trees_survived_season",
+            "targetAmount": 10
+          }
         ],
-        "reward": { "xp": 100, "resources": { "timber": 15, "sap": 10 }, "friendshipPoints": 10 }
+        "reward": {
+          "xp": 100,
+          "resources": { "timber": 15, "sap": 10 },
+          "friendshipPoints": 10
+        }
       }
     ]
   },
@@ -243,8 +397,18 @@
         "description": "Oakley needs timber and sap. Gather resources for your first project.",
         "npcDialogueId": "oakley-greeting",
         "objectives": [
-          { "id": "oc1-timber", "description": "Gather 25 timber", "targetType": "timber_collected", "targetAmount": 25 },
-          { "id": "oc1-sap", "description": "Gather 10 sap", "targetType": "sap_collected", "targetAmount": 10 }
+          {
+            "id": "oc1-timber",
+            "description": "Gather 25 timber",
+            "targetType": "timber_collected",
+            "targetAmount": 25
+          },
+          {
+            "id": "oc1-sap",
+            "description": "Gather 10 sap",
+            "targetType": "sap_collected",
+            "targetAmount": 10
+          }
         ],
         "reward": { "xp": 50, "unlockRecipe": "wooden-plank" }
       },
@@ -254,9 +418,18 @@
         "description": "Build your first structure to impress Oakley.",
         "npcDialogueId": "oakley-first-structure",
         "objectives": [
-          { "id": "oc2-build", "description": "Build a structure", "targetType": "structures_built", "targetAmount": 1 }
+          {
+            "id": "oc2-build",
+            "description": "Build a structure",
+            "targetType": "structures_built",
+            "targetAmount": 1
+          }
         ],
-        "reward": { "xp": 80, "resources": { "timber": 15, "sap": 8 }, "friendshipPoints": 5 }
+        "reward": {
+          "xp": 80,
+          "resources": { "timber": 15, "sap": 8 },
+          "friendshipPoints": 5
+        }
       },
       {
         "id": "oakley-craft-3",
@@ -264,9 +437,19 @@
         "description": "Build 3 different structures to prove your carpentry skills.",
         "npcDialogueId": "oakley-advanced-recipes",
         "objectives": [
-          { "id": "oc3-structures", "description": "Build 3 structures", "targetType": "structures_built", "targetAmount": 3 }
+          {
+            "id": "oc3-structures",
+            "description": "Build 3 structures",
+            "targetType": "structures_built",
+            "targetAmount": 3
+          }
         ],
-        "reward": { "xp": 150, "resources": { "timber": 30 }, "unlockRecipe": "hardwood-beam", "friendshipPoints": 10 }
+        "reward": {
+          "xp": 150,
+          "resources": { "timber": 30 },
+          "unlockRecipe": "hardwood-beam",
+          "friendshipPoints": 10
+        }
       }
     ]
   },
@@ -285,7 +468,12 @@
         "description": "Sage teaches you about the mycelium network. Plant 10 trees to awaken it.",
         "npcDialogueId": "sage-greeting",
         "objectives": [
-          { "id": "sl1-plant", "description": "Plant 10 trees in any zone", "targetType": "trees_planted", "targetAmount": 10 }
+          {
+            "id": "sl1-plant",
+            "description": "Plant 10 trees in any zone",
+            "targetType": "trees_planted",
+            "targetAmount": 10
+          }
         ],
         "reward": { "xp": 75, "resources": { "acorns": 15 } }
       },
@@ -295,10 +483,24 @@
         "description": "Reach level 15 and grow 3 trees to Old Growth to unlock deeper lore.",
         "npcDialogueId": "sage-worldtree-lore",
         "objectives": [
-          { "id": "sl2-level", "description": "Reach level 15", "targetType": "player_level", "targetAmount": 15 },
-          { "id": "sl2-old-growth", "description": "Grow 3 trees to Old Growth", "targetType": "ancient_trees_grown", "targetAmount": 3 }
+          {
+            "id": "sl2-level",
+            "description": "Reach level 15",
+            "targetType": "player_level",
+            "targetAmount": 15
+          },
+          {
+            "id": "sl2-old-growth",
+            "description": "Grow 3 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 3
+          }
         ],
-        "reward": { "xp": 200, "seeds": [{ "speciesId": "mystic-fern", "amount": 2 }], "friendshipPoints": 10 }
+        "reward": {
+          "xp": 200,
+          "seeds": [{ "speciesId": "mystic-fern", "amount": 2 }],
+          "friendshipPoints": 10
+        }
       },
       {
         "id": "sage-lore-3",
@@ -306,9 +508,18 @@
         "description": "Sage reveals the secret of Prestige. Reach level 20 to hear the full story.",
         "npcDialogueId": "sage-prestige",
         "objectives": [
-          { "id": "sl3-level", "description": "Reach level 20", "targetType": "player_level", "targetAmount": 20 }
+          {
+            "id": "sl3-level",
+            "description": "Reach level 20",
+            "targetType": "player_level",
+            "targetAmount": 20
+          }
         ],
-        "reward": { "xp": 300, "resources": { "timber": 50, "sap": 30, "fruit": 20, "acorns": 20 }, "friendshipPoints": 15 }
+        "reward": {
+          "xp": 300,
+          "resources": { "timber": 50, "sap": 30, "fruit": 20, "acorns": 20 },
+          "friendshipPoints": 15
+        }
       }
     ]
   },
@@ -328,8 +539,18 @@
         "description": "Rowan notices the forest is struggling. Plant 10 new trees to help.",
         "npcDialogueId": "rowan-greeting",
         "objectives": [
-          { "id": "df1-plant", "description": "Plant 10 trees", "targetType": "trees_planted", "targetAmount": 10 },
-          { "id": "df1-water", "description": "Water 15 trees", "targetType": "trees_watered", "targetAmount": 15 }
+          {
+            "id": "df1-plant",
+            "description": "Plant 10 trees",
+            "targetType": "trees_planted",
+            "targetAmount": 10
+          },
+          {
+            "id": "df1-water",
+            "description": "Water 15 trees",
+            "targetType": "trees_watered",
+            "targetAmount": 15
+          }
         ],
         "reward": { "xp": 75, "resources": { "timber": 10, "sap": 10 } }
       },
@@ -339,10 +560,24 @@
         "description": "Visit Botanist Fern and Sage to learn what's causing the decay.",
         "npcDialogueId": "rowan-north-woods",
         "objectives": [
-          { "id": "df2-species", "description": "Plant 5 different species", "targetType": "unique_species_planted", "targetAmount": 5 },
-          { "id": "df2-mature", "description": "Grow 5 trees to Mature", "targetType": "mature_trees_grown", "targetAmount": 5 }
+          {
+            "id": "df2-species",
+            "description": "Plant 5 different species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 5
+          },
+          {
+            "id": "df2-mature",
+            "description": "Grow 5 trees to Mature",
+            "targetType": "mature_trees_grown",
+            "targetAmount": 5
+          }
         ],
-        "reward": { "xp": 125, "seeds": [{ "speciesId": "elder-pine", "amount": 5 }], "friendshipPoints": 5 }
+        "reward": {
+          "xp": 125,
+          "seeds": [{ "speciesId": "elder-pine", "amount": 5 }],
+          "friendshipPoints": 5
+        }
       },
       {
         "id": "dying-forest-3",
@@ -350,10 +585,23 @@
         "description": "Grow diverse old-growth trees to strengthen the forest's root network.",
         "npcDialogueId": "rowan-old-growth",
         "objectives": [
-          { "id": "df3-old-growth", "description": "Grow 3 trees to Old Growth", "targetType": "ancient_trees_grown", "targetAmount": 3 },
-          { "id": "df3-harvest", "description": "Harvest 10 mature trees to spread seeds", "targetType": "trees_harvested", "targetAmount": 10 }
+          {
+            "id": "df3-old-growth",
+            "description": "Grow 3 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 3
+          },
+          {
+            "id": "df3-harvest",
+            "description": "Harvest 10 mature trees to spread seeds",
+            "targetType": "trees_harvested",
+            "targetAmount": 10
+          }
         ],
-        "reward": { "xp": 200, "resources": { "timber": 30, "sap": 20, "fruit": 15, "acorns": 15 } }
+        "reward": {
+          "xp": 200,
+          "resources": { "timber": 30, "sap": 20, "fruit": 15, "acorns": 15 }
+        }
       },
       {
         "id": "dying-forest-4",
@@ -361,11 +609,30 @@
         "description": "Reach level 15 and grow an ancient forest to restore the valley.",
         "npcDialogueId": "rowan-worldtree",
         "objectives": [
-          { "id": "df4-level", "description": "Reach level 15", "targetType": "player_level", "targetAmount": 15 },
-          { "id": "df4-old-growth", "description": "Grow 5 trees to Old Growth", "targetType": "ancient_trees_grown", "targetAmount": 5 },
-          { "id": "df4-species", "description": "Plant 8 different species", "targetType": "unique_species_planted", "targetAmount": 8 }
+          {
+            "id": "df4-level",
+            "description": "Reach level 15",
+            "targetType": "player_level",
+            "targetAmount": 15
+          },
+          {
+            "id": "df4-old-growth",
+            "description": "Grow 5 trees to Old Growth",
+            "targetType": "ancient_trees_grown",
+            "targetAmount": 5
+          },
+          {
+            "id": "df4-species",
+            "description": "Plant 8 different species",
+            "targetType": "unique_species_planted",
+            "targetAmount": 8
+          }
         ],
-        "reward": { "xp": 500, "resources": { "timber": 50, "sap": 50, "fruit": 30, "acorns": 30 }, "seeds": [{ "speciesId": "redwood", "amount": 3 }] },
+        "reward": {
+          "xp": 500,
+          "resources": { "timber": 50, "sap": 50, "fruit": 30, "acorns": 30 },
+          "seeds": [{ "speciesId": "redwood", "amount": 3 }]
+        },
         "completionDialogueId": "rowan-exploration"
       }
     ]

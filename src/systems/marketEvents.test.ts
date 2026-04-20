@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { MarketEventState } from "./marketEvents";
 import {
-  MARKET_EVENTS,
   getActiveMarketEventModifiers,
   initializeMarketEventState,
   isMarketEventActive,
+  MARKET_EVENTS,
   updateMarketEvents,
 } from "./marketEvents";
 

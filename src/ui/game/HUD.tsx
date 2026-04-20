@@ -1,8 +1,8 @@
 import { RiBuilding2Line, RiMenuLine, RiToolsLine } from "@remixicon/react";
-import { Button } from "@/ui/primitives/button";
 import { COLORS } from "@/config/config";
 import { useGameStore } from "@/stores/gameStore";
 import type { GameTime } from "@/systems/time";
+import { Button } from "@/ui/primitives/button";
 import { QuestPanel } from "./QuestPanel";
 import { ResourceBar } from "./ResourceBar";
 import { TimeDisplay, TimeDisplayCompact } from "./TimeDisplay";

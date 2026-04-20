@@ -1,5 +1,4 @@
 import { createActions } from "koota";
-import { koota } from "@/koota";
 import { emptyResources, type ResourceType } from "@/config/resources";
 import { getToolById } from "@/config/tools";
 import { getSpeciesById } from "@/config/trees";
@@ -11,6 +10,7 @@ import {
   resolveEncounter as resolveEncounterPure,
   updateEvents,
 } from "@/events/eventScheduler";
+import { koota } from "@/koota";
 import {
   advanceObjectives,
   claimStepReward,
@@ -85,7 +85,8 @@ import { showToast } from "@/ui/game/Toast";
 
 // Re-export XP helpers from the legacy store for now; they will move to a
 // dedicated util file once gameStore.ts is deleted.
-export { xpToNext, totalXpForLevel, levelFromXp } from "@/shared/utils/xp";
+export { levelFromXp, totalXpForLevel, xpToNext } from "@/shared/utils/xp";
+
 import { levelFromXp } from "@/shared/utils/xp";
 
 type GameScreenValue = "menu" | "playing" | "paused" | "seedSelect" | "rules";
@@ -589,7 +590,11 @@ export const gameActions = createActions((world) => {
         });
         world.set(ToolUpgrades, {});
         world.set(Grid, { gridSize: 12 });
-        world.set(Build, { mode: false, templateId: null, placedStructures: [] });
+        world.set(Build, {
+          mode: false,
+          templateId: null,
+          placedStructures: [],
+        });
         world.set(WorldMeta, {
           currentZoneId: "starting-grove",
           worldSeed: "",
@@ -872,9 +877,7 @@ export const gameActions = createActions((world) => {
         if (!offer || offer.quantity <= 0) return false;
 
         for (const [resource, amount] of Object.entries(offer.cost)) {
-          if (
-            (resources[resource as ResourceType] ?? 0) < (amount as number)
-          ) {
+          if ((resources[resource as ResourceType] ?? 0) < (amount as number)) {
             return false;
           }
         }
@@ -1121,7 +1124,10 @@ export const gameActions = createActions((world) => {
         if (dbState.screen !== undefined) {
           world.set(GameScreen, { value: dbState.screen });
         }
-        if (dbState.difficulty !== undefined || dbState.permadeath !== undefined) {
+        if (
+          dbState.difficulty !== undefined ||
+          dbState.permadeath !== undefined
+        ) {
           const cur = world.get(Difficulty);
           world.set(Difficulty, {
             id: dbState.difficulty ?? cur?.id ?? "normal",
@@ -1188,9 +1194,10 @@ export const gameActions = createActions((world) => {
 
         // Time
         if (dbState.gameTimeMicroseconds !== undefined) {
+          const microseconds = dbState.gameTimeMicroseconds;
           world.set(Time, (prev) => ({
             ...prev,
-            gameTimeMicroseconds: dbState.gameTimeMicroseconds!,
+            gameTimeMicroseconds: microseconds,
           }));
         }
         if (dbState.currentSeason !== undefined) {
@@ -1231,10 +1238,7 @@ export const gameActions = createActions((world) => {
           world.set(Achievements, dbState.achievements);
 
         // Stamina (on player entity)
-        if (
-          dbState.stamina !== undefined ||
-          dbState.maxStamina !== undefined
-        ) {
+        if (dbState.stamina !== undefined || dbState.maxStamina !== undefined) {
           const player = world.queryFirst(IsPlayer, FarmerState);
           if (player) {
             const cur = player.get(FarmerState);

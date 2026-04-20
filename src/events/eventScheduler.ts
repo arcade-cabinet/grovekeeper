@@ -8,16 +8,16 @@
  * Deterministic randomness via seeded RNG from seedRNG.ts.
  */
 
-import type { Season } from "@/systems/time";
 import { createRNG, hashString } from "@/shared/utils/seedRNG";
+import type { Season } from "@/systems/time";
+import encountersData from "./data/encounters.json";
+import festivalsData from "./data/festivals.json";
 import type {
   EncounterDef,
   EventState,
   FestivalChallenge,
   FestivalDef,
 } from "./types";
-import festivalsData from "./data/festivals.json";
-import encountersData from "./data/encounters.json";
 
 // ============================================
 // Constants
@@ -121,12 +121,13 @@ export function updateEvents(
           f.season === context.season && f.triggerDay === context.currentDay,
       );
       if (matchingFestival) {
-        const challenges: FestivalChallenge[] =
-          matchingFestival.challenges.map((c) => ({
+        const challenges: FestivalChallenge[] = matchingFestival.challenges.map(
+          (c) => ({
             ...c,
             currentProgress: 0,
             completed: false,
-          }));
+          }),
+        );
         nextState = {
           ...nextState,
           activeFestival: {
@@ -230,10 +231,7 @@ export function resolveEncounter(
       ...state.activeEncounter,
       resolved: true,
     },
-    resolvedEncounterIds: [
-      ...state.resolvedEncounterIds,
-      definitionId,
-    ],
+    resolvedEncounterIds: [...state.resolvedEncounterIds, definitionId],
   };
 }
 

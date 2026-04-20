@@ -104,7 +104,8 @@ export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
             color: COLORS.soilDark,
           }}
         >
-          <RiSeedlingLine className="w-3 h-3 inline" /> {selectedSpecies} ({"\u{00D7}"}
+          <RiSeedlingLine className="w-3 h-3 inline" /> {selectedSpecies} (
+          {"\u{00D7}"}
           {seeds[selectedSpecies] ?? 0})
         </div>
       )}

@@ -1,16 +1,16 @@
-import { relation, trait } from "koota";
 import type { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
-import type { NpcFunction } from "@/npcs/types";
-import type { ActiveQuest } from "@/systems/quests";
-import type { Season } from "@/systems/time";
-import type { QuestChainState } from "@/quests/types";
-import type { EventState } from "@/events/types";
-import type { MarketState } from "@/systems/supplyDemand";
-import type { MerchantState } from "@/systems/travelingMerchant";
-import type { MarketEventState } from "@/systems/marketEvents";
-import type { SpeciesProgress } from "@/systems/speciesDiscovery";
+import { relation, trait } from "koota";
 import type { ResourceType } from "@/config/resources";
+import type { EventState } from "@/events/types";
+import type { NpcFunction } from "@/npcs/types";
+import type { QuestChainState } from "@/quests/types";
+import type { MarketEventState } from "@/systems/marketEvents";
+import type { ActiveQuest } from "@/systems/quests";
+import type { SpeciesProgress } from "@/systems/speciesDiscovery";
+import type { MarketState } from "@/systems/supplyDemand";
+import type { Season } from "@/systems/time";
+import type { MerchantState } from "@/systems/travelingMerchant";
 
 // ─── Spatial traits ───────────────────────────────────────────
 
@@ -22,7 +22,7 @@ export const Renderable = trait({
   scale: 0,
 });
 
-export const MeshRef = trait(() => null! as Mesh);
+export const MeshRef = trait(() => null as Mesh | null);
 
 // ─── Tree traits ──────────────────────────────────────────────
 
@@ -191,9 +191,7 @@ export const Build = trait({
     [] as { templateId: string; worldX: number; worldZ: number }[],
 });
 
-export const ToolUpgrades = trait(
-  () => ({}) as Record<string, number>,
-);
+export const ToolUpgrades = trait(() => ({}) as Record<string, number>);
 
 export const WorldMeta = trait({
   currentZoneId: "starting-grove",

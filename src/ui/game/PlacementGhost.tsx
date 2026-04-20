@@ -12,9 +12,9 @@ import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import { useEffect, useRef } from "react";
-import { gridCellsQuery, playerQuery } from "@/world";
 import { canPlace } from "@/structures/StructureManager";
 import type { StructureTemplate } from "@/structures/types";
+import { gridCellsQuery, playerQuery } from "@/world";
 
 interface PlacementGhostProps {
   scene: Scene | null;

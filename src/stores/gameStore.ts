@@ -291,6 +291,7 @@ export {
   totalXpForLevel,
   xpToNext,
 } from "@/shared/utils/xp";
+
 import { levelFromXp } from "@/shared/utils/xp";
 
 // Initial game time: Spring, Day 1, 8:00 AM

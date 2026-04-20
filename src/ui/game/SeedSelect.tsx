@@ -1,4 +1,7 @@
 import { RiLock2Line } from "@remixicon/react";
+import { COLORS } from "@/config/config";
+import { TREE_SPECIES, type TreeSpeciesData } from "@/config/trees";
+import { useGameStore } from "@/stores/gameStore";
 import { Button } from "@/ui/primitives/button";
 import { Card } from "@/ui/primitives/card";
 import {
@@ -7,9 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/ui/primitives/dialog";
-import { COLORS } from "@/config/config";
-import { TREE_SPECIES, type TreeSpeciesData } from "@/config/trees";
-import { useGameStore } from "@/stores/gameStore";
 
 interface SeedSelectProps {
   open: boolean;
@@ -101,26 +101,46 @@ export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
                   style={{ background: `${COLORS.soilDark}20` }}
                 >
                   {isUnlocked ? (
-                    <svg width="36" height="48" viewBox="0 0 36 48" fill="none" className="mb-1">
+                    <svg
+                      width="36"
+                      height="48"
+                      viewBox="0 0 36 48"
+                      fill="none"
+                      className="mb-1"
+                    >
                       {/* Trunk */}
                       <rect
-                        x="15" y="28" width="6" height="16" rx="1.5"
+                        x="15"
+                        y="28"
+                        width="6"
+                        height="16"
+                        rx="1.5"
                         fill={species.meshParams.color.trunk}
                       />
                       {/* Canopy layers */}
                       <ellipse
-                        cx="18" cy="22" rx="14" ry="12"
+                        cx="18"
+                        cy="22"
+                        rx="14"
+                        ry="12"
                         fill={species.meshParams.color.canopy}
                       />
                       <ellipse
-                        cx="18" cy="16" rx="10" ry="10"
+                        cx="18"
+                        cy="16"
+                        rx="10"
+                        ry="10"
                         fill={species.meshParams.color.canopy}
                         opacity="0.7"
                       />
                       {/* Highlight */}
                       <ellipse
-                        cx="14" cy="16" rx="4" ry="3"
-                        fill="white" opacity="0.15"
+                        cx="14"
+                        cy="16"
+                        rx="4"
+                        ry="3"
+                        fill="white"
+                        opacity="0.15"
                       />
                     </svg>
                   ) : (

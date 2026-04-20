@@ -1,15 +1,9 @@
 import type { Entity } from "koota";
 import { koota } from "@/koota";
-import {
-  GridCell,
-  Npc,
-  Position,
-  Renderable,
-  Tree,
-} from "@/traits";
-import { getStageScale } from "@/systems/growth";
-import { hashString } from "@/shared/utils/seedRNG";
 import type { NpcFunction } from "@/npcs/types";
+import { hashString } from "@/shared/utils/seedRNG";
+import { getStageScale } from "@/systems/growth";
+import { GridCell, Npc, Position, Renderable, Tree } from "@/traits";
 
 /**
  * Koota-native entity spawners — successors to src/archetypes.ts

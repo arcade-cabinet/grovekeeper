@@ -35,7 +35,7 @@
       }
     },
     {
-      "includes": ["src/components/ui/**"],
+      "includes": ["src/ui/primitives/**"],
       "linter": {
         "rules": {
           "suspicious": { "noDocumentCookie": "off", "noArrayIndexKey": "off" },
@@ -50,7 +50,7 @@
       }
     },
     {
-      "includes": ["src/game/ui/**"],
+      "includes": ["src/ui/**"],
       "linter": {
         "rules": {
           "a11y": {
@@ -64,7 +64,7 @@
       }
     },
     {
-      "includes": ["src/game/scenes/**"],
+      "includes": ["src/engine/scenes/**"],
       "linter": {
         "rules": {
           "style": { "noNonNullAssertion": "off" },

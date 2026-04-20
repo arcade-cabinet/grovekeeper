@@ -12,6 +12,8 @@
  */
 
 import { GameEntity, GoalEvaluator, Think } from "yuka";
+import type { ResourceType } from "@/config/resources";
+import { getSpeciesById } from "@/config/trees";
 import {
   findHarvestableTrees,
   findMatureTrees,
@@ -26,8 +28,6 @@ import {
   spendToolStamina,
   waterTree,
 } from "@/player-actions/GameActions";
-import type { ResourceType } from "@/config/resources";
-import { getSpeciesById } from "@/config/trees";
 import { useGameStore } from "@/stores/gameStore";
 import { BASE_TRADE_RATES, executeTrade } from "@/systems/trading";
 

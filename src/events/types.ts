@@ -5,8 +5,8 @@
  * Encounters are brief one-off events (mysterious traveler, rare species sighting).
  */
 
-import type { Season } from "@/systems/time";
 import type { ResourceType } from "@/config/resources";
+import type { Season } from "@/systems/time";
 
 export type EventType = "festival" | "encounter";
 

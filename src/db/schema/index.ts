@@ -5,16 +5,20 @@
  * achievements, structures, and forward-compatible columns for
  * survival systems (exposure, building integrity, diseases).
  */
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // ─── save_config ─────────────────────────────────────────────
 // Immutable after creation. Locked to chosen difficulty.
 export const saveConfig = sqliteTable("save_config", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   difficulty: text("difficulty").notNull().default("normal"),
-  permadeath: integer("permadeath", { mode: "boolean" }).notNull().default(false),
+  permadeath: integer("permadeath", { mode: "boolean" })
+    .notNull()
+    .default(false),
   version: integer("version").notNull().default(1),
-  createdAt: integer("created_at").notNull().$defaultFn(() => Date.now()),
+  createdAt: integer("created_at")
+    .notNull()
+    .$defaultFn(() => Date.now()),
 });
 
 // ─── player ──────────────────────────────────────────────────
@@ -78,13 +82,19 @@ export const trees = sqliteTable("trees", {
   stage: integer("stage").notNull().default(0),
   progress: real("progress").notNull().default(0),
   watered: integer("watered", { mode: "boolean" }).notNull().default(false),
-  fertilized: integer("fertilized", { mode: "boolean" }).notNull().default(false),
+  fertilized: integer("fertilized", { mode: "boolean" })
+    .notNull()
+    .default(false),
   pruned: integer("pruned", { mode: "boolean" }).notNull().default(false),
   totalGrowthTime: real("total_growth_time").notNull().default(0),
-  plantedAt: integer("planted_at").notNull().$defaultFn(() => Date.now()),
+  plantedAt: integer("planted_at")
+    .notNull()
+    .$defaultFn(() => Date.now()),
   meshSeed: integer("mesh_seed").notNull().default(0),
   harvestCooldownElapsed: real("harvest_cooldown_elapsed").notNull().default(0),
-  harvestReady: integer("harvest_ready", { mode: "boolean" }).notNull().default(false),
+  harvestReady: integer("harvest_ready", { mode: "boolean" })
+    .notNull()
+    .default(false),
   // Forward-compatible: PR 3 disease system
   blightType: text("blight_type"),
 });
@@ -134,7 +144,9 @@ export const questGoals = sqliteTable("quest_goals", {
 export const worldState = sqliteTable("world_state", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   worldSeed: text("world_seed").notNull().default(""),
-  discoveredZonesJson: text("discovered_zones_json").notNull().default('["starting-grove"]'),
+  discoveredZonesJson: text("discovered_zones_json")
+    .notNull()
+    .default('["starting-grove"]'),
   currentZoneId: text("current_zone_id").notNull().default("starting-grove"),
   playerPosX: real("player_pos_x").notNull().default(6),
   playerPosZ: real("player_pos_z").notNull().default(6),
@@ -157,16 +169,24 @@ export const tracking = sqliteTable("tracking", {
   treesMatured: integer("trees_matured").notNull().default(0),
   treesHarvested: integer("trees_harvested").notNull().default(0),
   treesWatered: integer("trees_watered").notNull().default(0),
-  seasonsExperiencedJson: text("seasons_experienced_json").notNull().default("[]"),
+  seasonsExperiencedJson: text("seasons_experienced_json")
+    .notNull()
+    .default("[]"),
   speciesPlantedJson: text("species_planted_json").notNull().default("[]"),
   toolUseCountsJson: text("tool_use_counts_json").notNull().default("{}"),
   wildTreesHarvested: integer("wild_trees_harvested").notNull().default(0),
   wildTreesRegrown: integer("wild_trees_regrown").notNull().default(0),
   visitedZoneTypesJson: text("visited_zone_types_json").notNull().default("[]"),
   treesPlantedInSpring: integer("trees_planted_in_spring").notNull().default(0),
-  treesHarvestedInAutumn: integer("trees_harvested_in_autumn").notNull().default(0),
-  wildSpeciesHarvestedJson: text("wild_species_harvested_json").notNull().default("[]"),
-  completedQuestIdsJson: text("completed_quest_ids_json").notNull().default("[]"),
+  treesHarvestedInAutumn: integer("trees_harvested_in_autumn")
+    .notNull()
+    .default(0),
+  wildSpeciesHarvestedJson: text("wild_species_harvested_json")
+    .notNull()
+    .default("[]"),
+  completedQuestIdsJson: text("completed_quest_ids_json")
+    .notNull()
+    .default("[]"),
   completedGoalIdsJson: text("completed_goal_ids_json").notNull().default("[]"),
   lastQuestRefresh: integer("last_quest_refresh").notNull().default(0),
 });
@@ -175,9 +195,15 @@ export const tracking = sqliteTable("tracking", {
 // Singleton. User preferences.
 export const settings = sqliteTable("settings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  hasSeenRules: integer("has_seen_rules", { mode: "boolean" }).notNull().default(false),
-  hapticsEnabled: integer("haptics_enabled", { mode: "boolean" }).notNull().default(true),
-  soundEnabled: integer("sound_enabled", { mode: "boolean" }).notNull().default(true),
+  hasSeenRules: integer("has_seen_rules", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  hapticsEnabled: integer("haptics_enabled", { mode: "boolean" })
+    .notNull()
+    .default(true),
+  soundEnabled: integer("sound_enabled", { mode: "boolean" })
+    .notNull()
+    .default(true),
 });
 
 // ─── tool_upgrades ───────────────────────────────────────────

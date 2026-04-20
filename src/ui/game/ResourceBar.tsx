@@ -24,7 +24,13 @@ const RESOURCE_TYPES: ResourceType[] = ["timber", "sap", "fruit", "acorns"];
  * Uses a ref to track the previous value and triggers a CSS animation
  * (scale bump + highlight flash) when the value changes.
  */
-const ResourceCell = ({ type, value }: { type: ResourceType; value: number }) => {
+const ResourceCell = ({
+  type,
+  value,
+}: {
+  type: ResourceType;
+  value: number;
+}) => {
   const prevRef = useRef(value);
   const cellRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +52,10 @@ const ResourceCell = ({ type, value }: { type: ResourceType; value: number }) =>
       className="flex items-center gap-0.5 sm:gap-1 min-w-0 rounded px-1 motion-safe:transition-colors"
     >
       <span className="shrink-0">{RESOURCE_EMOJIS[type]}</span>
-      <span className="truncate tabular-nums" style={{ color: COLORS.soilDark }}>
+      <span
+        className="truncate tabular-nums"
+        style={{ color: COLORS.soilDark }}
+      >
         {value}
         <span className="hidden md:inline"> {RESOURCE_LABELS[type]}</span>
       </span>

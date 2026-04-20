@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { COLORS } from "@/config/config";
+import { useGameStore } from "@/stores/gameStore";
+import type { TradeRate } from "@/systems/trading";
+import { executeTrade, getTradeRates } from "@/systems/trading";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -7,10 +11,6 @@ import {
   DialogTitle,
 } from "@/ui/primitives/dialog";
 import { Slider } from "@/ui/primitives/slider";
-import { COLORS } from "@/config/config";
-import { useGameStore } from "@/stores/gameStore";
-import type { TradeRate } from "@/systems/trading";
-import { executeTrade, getTradeRates } from "@/systems/trading";
 import { showToast } from "./Toast";
 
 interface TradeDialogProps {

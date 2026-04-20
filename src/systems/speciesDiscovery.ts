@@ -49,8 +49,7 @@ const OLD_GROWTH_STAGE = 4;
 const LEGENDARY_HARVEST_THRESHOLD = 10;
 
 /** Total number of species in the game. */
-const TOTAL_SPECIES_COUNT =
-  TREE_SPECIES.length + PRESTIGE_TREE_SPECIES.length;
+const TOTAL_SPECIES_COUNT = TREE_SPECIES.length + PRESTIGE_TREE_SPECIES.length;
 
 // ---------------------------------------------------------------------------
 // Functions

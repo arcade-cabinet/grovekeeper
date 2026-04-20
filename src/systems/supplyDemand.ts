@@ -8,8 +8,8 @@
  * Pure functions -- no side effects.
  */
 
-import { RESOURCE_TYPES } from "@/config/resources";
 import type { ResourceType } from "@/config/resources";
+import { RESOURCE_TYPES } from "@/config/resources";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

@@ -8,6 +8,9 @@ import {
   RiSeedlingLine,
   RiToolsLine,
 } from "@remixicon/react";
+import { COLORS } from "@/config/config";
+import { TOOLS, type ToolData } from "@/config/tools";
+import { useGameStore } from "@/stores/gameStore";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -15,9 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/ui/primitives/dialog";
-import { COLORS } from "@/config/config";
-import { TOOLS, type ToolData } from "@/config/tools";
-import { useGameStore } from "@/stores/gameStore";
 
 interface ToolWheelProps {
   open: boolean;

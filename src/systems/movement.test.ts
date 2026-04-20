@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { GRID_SIZE, PLAYER_SPEED } from "@/config/config";
 import { createPlayerEntity } from "@/archetypes";
+import { GRID_SIZE, PLAYER_SPEED } from "@/config/config";
 import { world } from "@/world";
 import {
   getPlayerPosition,

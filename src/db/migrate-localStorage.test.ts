@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, beforeAll, vi } from "vitest";
-import initSqlJs, { type Database } from "sql.js";
 import { drizzle } from "drizzle-orm/sql-js";
-import * as schema from "./schema";
+import initSqlJs, { type Database } from "sql.js";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AppDatabase } from "./client";
 import { migrateFromLocalStorage } from "./migrate-localStorage";
+import * as schema from "./schema";
 
 let SQL: Awaited<ReturnType<typeof initSqlJs>>;
 let rawDb: Database;
@@ -276,9 +276,15 @@ describe("migrateFromLocalStorage", () => {
     migrateFromLocalStorage(db);
 
     // Should archive and remove originals
-    expect(localStorage.setItem).toHaveBeenCalledWith("grove-keeper-save-archived", data);
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      "grove-keeper-save-archived",
+      data,
+    );
     expect(localStorage.removeItem).toHaveBeenCalledWith("grove-keeper-save");
-    expect(localStorage.setItem).toHaveBeenCalledWith("grovekeeper-grove-archived", '{"trees":[]}');
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      "grovekeeper-grove-archived",
+      '{"trees":[]}',
+    );
     expect(localStorage.removeItem).toHaveBeenCalledWith("grovekeeper-grove");
   });
 });

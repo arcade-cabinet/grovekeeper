@@ -10,11 +10,11 @@
  * - Grid expansion with resource spending
  */
 import { beforeEach, describe, expect, it } from "vitest";
+import { createPlayerEntity, createTreeEntity } from "@/archetypes";
 import { MAX_STAGE } from "@/config/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "@/config/difficulty";
-import { createPlayerEntity, createTreeEntity } from "@/archetypes";
-import { world } from "@/world";
 import { useGameStore } from "@/stores/gameStore";
+import { world } from "@/world";
 import {
   canAffordExpansion,
   GRID_EXPANSION_TIERS,

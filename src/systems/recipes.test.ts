@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { RESOURCE_TYPES, type ResourceType } from "@/config/resources";
 import {
-  RECIPES,
-  TIER_LABELS,
   calculateCraftCost,
   canCraft,
   getRecipeById,
   getRecipes,
   getRecipesByTier,
   getRecipesForLevel,
+  RECIPES,
   type Recipe,
   type RecipeTier,
+  TIER_LABELS,
 } from "./recipes";
 
 // ---------------------------------------------------------------------------
@@ -306,9 +306,13 @@ describe("canCraft", () => {
     const recipe = getRecipeById("simple-fertilizer")!;
 
     // Missing acorns
-    expect(canCraft(recipe, makeResources({ fruit: 5, acorns: 0 }))).toBe(false);
+    expect(canCraft(recipe, makeResources({ fruit: 5, acorns: 0 }))).toBe(
+      false,
+    );
     // Missing fruit
-    expect(canCraft(recipe, makeResources({ fruit: 0, acorns: 3 }))).toBe(false);
+    expect(canCraft(recipe, makeResources({ fruit: 0, acorns: 3 }))).toBe(
+      false,
+    );
     // Both sufficient
     expect(canCraft(recipe, makeResources({ fruit: 5, acorns: 3 }))).toBe(true);
   });
@@ -402,9 +406,7 @@ describe("output types", () => {
   });
 
   it("catalog contains xp outputs", () => {
-    const hasXp = RECIPES.some((r) =>
-      r.outputs.some((o) => o.kind === "xp"),
-    );
+    const hasXp = RECIPES.some((r) => r.outputs.some((o) => o.kind === "xp"));
     expect(hasXp).toBe(true);
   });
 

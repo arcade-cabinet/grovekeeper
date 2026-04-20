@@ -11,10 +11,10 @@ import {
   createNpcEntity,
   createWildTreeEntity,
 } from "@/archetypes";
-import type { Entity } from "@/world";
-import { gridCellsQuery, npcsQuery, world } from "@/world";
 import { getNpcTemplate } from "@/npcs/NpcManager";
 import { createRNG, hashString } from "@/shared/utils/seedRNG";
+import type { Entity } from "@/world";
+import { gridCellsQuery, npcsQuery, world } from "@/world";
 import type { GroundMaterial, WildTreeSpec, ZoneDefinition } from "./types";
 import { pickWeighted } from "./WorldGenerator";
 

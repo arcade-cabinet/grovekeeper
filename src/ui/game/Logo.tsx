@@ -19,23 +19,76 @@ export const Logo = ({ size = 200 }: { size?: number }) => {
         fill={COLORS.barkBrown}
       />
       {/* Bark detail lines */}
-      <line x1="98" y1="70" x2="97" y2="95" stroke={COLORS.soilDark} strokeWidth="0.5" opacity="0.4" />
-      <line x1="102" y1="72" x2="103" y2="92" stroke={COLORS.soilDark} strokeWidth="0.5" opacity="0.4" />
+      <line
+        x1="98"
+        y1="70"
+        x2="97"
+        y2="95"
+        stroke={COLORS.soilDark}
+        strokeWidth="0.5"
+        opacity="0.4"
+      />
+      <line
+        x1="102"
+        y1="72"
+        x2="103"
+        y2="92"
+        stroke={COLORS.soilDark}
+        strokeWidth="0.5"
+        opacity="0.4"
+      />
 
       {/* Canopy layers — bottom to top for natural overlap */}
       <ellipse cx="100" cy="52" rx="42" ry="28" fill={COLORS.forestGreen} />
-      <ellipse cx="85" cy="48" rx="28" ry="22" fill={COLORS.leafLight} opacity="0.85" />
-      <ellipse cx="115" cy="46" rx="26" ry="20" fill={COLORS.leafLight} opacity="0.75" />
+      <ellipse
+        cx="85"
+        cy="48"
+        rx="28"
+        ry="22"
+        fill={COLORS.leafLight}
+        opacity="0.85"
+      />
+      <ellipse
+        cx="115"
+        cy="46"
+        rx="26"
+        ry="20"
+        fill={COLORS.leafLight}
+        opacity="0.75"
+      />
       <ellipse cx="100" cy="38" rx="30" ry="22" fill={COLORS.forestGreen} />
-      <ellipse cx="100" cy="30" rx="20" ry="16" fill={COLORS.leafLight} opacity="0.9" />
+      <ellipse
+        cx="100"
+        cy="30"
+        rx="20"
+        ry="16"
+        fill={COLORS.leafLight}
+        opacity="0.9"
+      />
 
       {/* Highlight spots on canopy */}
       <circle cx="90" cy="35" r="4" fill="white" opacity="0.15" />
       <circle cx="108" cy="28" r="3" fill="white" opacity="0.12" />
 
       {/* Small leaves falling */}
-      <ellipse cx="60" cy="70" rx="3" ry="1.5" fill={COLORS.leafLight} opacity="0.5" transform="rotate(-30 60 70)" />
-      <ellipse cx="140" cy="60" rx="2.5" ry="1.2" fill={COLORS.leafLight} opacity="0.4" transform="rotate(25 140 60)" />
+      <ellipse
+        cx="60"
+        cy="70"
+        rx="3"
+        ry="1.5"
+        fill={COLORS.leafLight}
+        opacity="0.5"
+        transform="rotate(-30 60 70)"
+      />
+      <ellipse
+        cx="140"
+        cy="60"
+        rx="2.5"
+        ry="1.2"
+        fill={COLORS.leafLight}
+        opacity="0.4"
+        transform="rotate(25 140 60)"
+      />
 
       {/* Roots */}
       <path

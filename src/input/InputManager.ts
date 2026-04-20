@@ -1,14 +1,14 @@
 import type { Scene } from "@babylonjs/core/scene";
-import type { GridCellComponent } from "@/world";
 import { keysToWorld } from "@/hooks/useKeyboardInput";
 import { screenToGroundPlane } from "@/shared/utils/projection";
+import { isMobileDevice } from "@/systems/platform";
+import type { GridCellComponent } from "@/world";
 import {
   advancePathFollow,
   createPathFollow,
   type PathFollowState,
 } from "./pathFollowing";
 import { buildWalkabilityGrid, findPath, type TileCoord } from "./pathfinding";
-import { isMobileDevice } from "@/systems/platform";
 
 // ---------------------------------------------------------------------------
 // Types

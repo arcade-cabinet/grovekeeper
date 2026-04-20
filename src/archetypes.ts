@@ -1,7 +1,7 @@
 import type { NpcFunction } from "@/npcs/types";
+import { hashString } from "@/shared/utils/seedRNG";
 import type { SerializedTree } from "@/stores/gameStore";
 import { getStageScale } from "@/systems/growth";
-import { hashString } from "@/shared/utils/seedRNG";
 import type { Entity } from "@/world";
 import { generateEntityId } from "@/world";
 

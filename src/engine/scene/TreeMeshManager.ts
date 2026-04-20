@@ -8,9 +8,9 @@
 
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import { treesQuery } from "@/world";
-import type { Season } from "@/systems/time";
 import { buildSpeciesTreeMesh } from "@/shared/utils/treeMeshBuilder";
+import type { Season } from "@/systems/time";
+import { treesQuery } from "@/world";
 
 /** Lerp speed for smooth growth animations. */
 const LERP_SPEED = 3.0;

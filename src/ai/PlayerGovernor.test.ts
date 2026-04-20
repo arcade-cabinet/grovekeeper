@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { world } from "@/world";
 import { useGameStore } from "@/stores/gameStore";
+import { world } from "@/world";
 import { PlayerGovernor } from "./PlayerGovernor";
 
 // Helper to reset world + store

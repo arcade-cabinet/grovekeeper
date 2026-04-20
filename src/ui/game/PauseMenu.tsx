@@ -1,19 +1,10 @@
 import { useRef, useState } from "react";
-import { Button } from "@/ui/primitives/button";
-import { Card } from "@/ui/primitives/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/ui/primitives/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/primitives/tabs";
-import { isDbInitialized } from "@/db/client";
-import { exportSaveFile, importSaveFile } from "@/db/export";
 import { COLORS } from "@/config/config";
 import { getDifficultyById } from "@/config/difficulty";
 import { TOOLS } from "@/config/tools";
 import { TREE_SPECIES } from "@/config/trees";
+import { isDbInitialized } from "@/db/client";
+import { exportSaveFile, importSaveFile } from "@/db/export";
 import { useGameStore } from "@/stores/gameStore";
 import { ACHIEVEMENT_DEFS } from "@/systems/achievements";
 import {
@@ -27,6 +18,15 @@ import {
   PRESTIGE_COSMETICS,
   PRESTIGE_MIN_LEVEL,
 } from "@/systems/prestige";
+import { Button } from "@/ui/primitives/button";
+import { Card } from "@/ui/primitives/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/ui/primitives/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/primitives/tabs";
 import { FarmerMascot } from "./FarmerMascot";
 import { RulesModal } from "./RulesModal";
 import { StatsDashboard } from "./StatsDashboard";
@@ -148,10 +148,16 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
             <TabsTrigger value="stats" className="flex-1 text-xs min-h-[36px]">
               Stats
             </TabsTrigger>
-            <TabsTrigger value="progress" className="flex-1 text-xs min-h-[36px]">
+            <TabsTrigger
+              value="progress"
+              className="flex-1 text-xs min-h-[36px]"
+            >
               Progress
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1 text-xs min-h-[36px]">
+            <TabsTrigger
+              value="settings"
+              className="flex-1 text-xs min-h-[36px]"
+            >
               Settings
             </TabsTrigger>
           </TabsList>
@@ -347,7 +353,9 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                     size="sm"
                     className="w-full text-xs"
                     style={{
-                      background: canExpand ? COLORS.forestGreen : COLORS.silver,
+                      background: canExpand
+                        ? COLORS.forestGreen
+                        : COLORS.silver,
                       color: "white",
                     }}
                     disabled={!canExpand}
@@ -578,9 +586,7 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                   <span
                     className="absolute top-1 w-6 h-6 bg-white rounded-full shadow motion-safe:transition-transform"
                     style={{
-                      left: soundEnabled
-                        ? "calc(100% - 1.75rem)"
-                        : "0.25rem",
+                      left: soundEnabled ? "calc(100% - 1.75rem)" : "0.25rem",
                     }}
                   />
                 </button>

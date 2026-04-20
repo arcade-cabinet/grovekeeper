@@ -1,10 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { COLORS } from "@/config/config";
+import { getDifficultyById } from "@/config/difficulty";
 import { getDb, isDbInitialized } from "@/db/client";
 import { initDatabase } from "@/db/init";
 import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { hydrateGameStore, setupNewGame } from "@/db/queries";
-import { COLORS } from "@/config/config";
-import { getDifficultyById } from "@/config/difficulty";
 import { useGameStore } from "@/stores/gameStore";
 import { initializePlatform } from "@/systems/platform";
 import { generateDailyQuests } from "@/systems/quests";
@@ -150,7 +150,6 @@ export const Game = () => {
     },
     [hydrateFromDb, setScreen],
   );
-
 
   // Loading state while database initializes
   if (dbLoading) {

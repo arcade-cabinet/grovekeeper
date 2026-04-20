@@ -14,9 +14,9 @@ import {
   createPlayerEntity,
   createTreeEntity,
 } from "@/archetypes";
-import { gridCellsQuery, world } from "@/world";
 import { useGameStore } from "@/stores/gameStore";
 import { initHarvestable } from "@/systems/harvest";
+import { gridCellsQuery, world } from "@/world";
 import type { GovernorProfile } from "./GovernorAgent";
 import { DEFAULT_PROFILE, GovernorAgent } from "./GovernorAgent";
 import { HeadlessGameLoop } from "./HeadlessGameLoop";

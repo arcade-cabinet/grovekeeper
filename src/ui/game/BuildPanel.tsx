@@ -5,6 +5,11 @@
  * and effects. Selecting a structure enters placement mode.
  */
 
+import { COLORS } from "@/config/config";
+import type { ResourceType } from "@/config/resources";
+import { useGameStore } from "@/stores/gameStore";
+import { getAvailableTemplates } from "@/structures/StructureManager";
+import type { StructureTemplate } from "@/structures/types";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -12,11 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/ui/primitives/dialog";
-import { COLORS } from "@/config/config";
-import type { ResourceType } from "@/config/resources";
-import { useGameStore } from "@/stores/gameStore";
-import { getAvailableTemplates } from "@/structures/StructureManager";
-import type { StructureTemplate } from "@/structures/types";
 
 interface BuildPanelProps {
   open: boolean;
@@ -87,6 +87,7 @@ export const BuildPanel = ({
             const affordable = canAfford(template);
             return (
               <button
+                type="button"
                 key={template.id}
                 className="w-full flex items-start gap-3 p-3 rounded-xl transition-colors"
                 style={{

@@ -7,12 +7,12 @@
 
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
-import type { Entity } from "@/world";
 import {
   createStructureMesh,
   disposeStructureMesh,
 } from "@/structures/BlockMeshFactory";
 import { getTemplate } from "@/structures/StructureManager";
+import type { Entity } from "@/world";
 import { createPropMesh, disposePropMeshes } from "./PropFactory";
 import type { WorldDefinition, ZoneDefinition } from "./types";
 import { loadZoneEntities, unloadZoneEntities } from "./ZoneLoader";

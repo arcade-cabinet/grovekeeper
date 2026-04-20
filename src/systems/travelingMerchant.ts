@@ -156,10 +156,7 @@ const ALL_OFFER_TEMPLATES: OfferTemplate[] = [
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function computeNextVisitDay(
-  currentDay: number,
-  rng: () => number,
-): number {
+function computeNextVisitDay(currentDay: number, rng: () => number): number {
   const interval =
     MIN_VISIT_INTERVAL +
     Math.floor(rng() * (MAX_VISIT_INTERVAL - MIN_VISIT_INTERVAL + 1));
@@ -210,9 +207,7 @@ export function generateMerchantOffers(
   const rng = createRNG(seed);
 
   // Filter templates by visit count eligibility
-  const eligible = ALL_OFFER_TEMPLATES.filter(
-    (t) => visitCount >= t.minVisit,
-  );
+  const eligible = ALL_OFFER_TEMPLATES.filter((t) => visitCount >= t.minVisit);
 
   if (eligible.length === 0) return [];
 

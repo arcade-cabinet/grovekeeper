@@ -115,13 +115,23 @@ class AudioManagerImpl {
         });
         break;
       case "toolSelect":
-        this.playTone({ freq: 660, duration: 0.03, type: "square", gain: 0.08 });
+        this.playTone({
+          freq: 660,
+          duration: 0.03,
+          type: "square",
+          gain: 0.08,
+        });
         break;
       case "seasonChange":
         this.playChord([330, 440, 554], 0.5, 0.1);
         break;
       case "build":
-        this.playTone({ freq: 220, duration: 0.08, type: "triangle", gain: 0.2 });
+        this.playTone({
+          freq: 220,
+          duration: 0.08,
+          type: "triangle",
+          gain: 0.2,
+        });
         this.playTone({
           freq: 330,
           duration: 0.08,
@@ -131,7 +141,12 @@ class AudioManagerImpl {
         });
         break;
       case "error":
-        this.playTone({ freq: 200, duration: 0.15, type: "sawtooth", gain: 0.1 });
+        this.playTone({
+          freq: 200,
+          duration: 0.15,
+          type: "sawtooth",
+          gain: 0.1,
+        });
         break;
       case "success":
         this.playTone({ freq: 520, duration: 0.06, type: "sine", gain: 0.15 });
@@ -211,11 +226,7 @@ class AudioManagerImpl {
     setTimeout(() => synth.dispose(), (duration + 0.1) * 1000);
   }
 
-  private playChime(
-    freqs: number[],
-    noteDuration: number,
-    gain: number,
-  ): void {
+  private playChime(freqs: number[], noteDuration: number, gain: number): void {
     for (let i = 0; i < freqs.length; i++) {
       this.playTone({
         freq: freqs[i],
@@ -227,11 +238,7 @@ class AudioManagerImpl {
     }
   }
 
-  private playArpeggio(
-    freqs: number[],
-    noteGap: number,
-    gain: number,
-  ): void {
+  private playArpeggio(freqs: number[], noteGap: number, gain: number): void {
     for (let i = 0; i < freqs.length; i++) {
       this.playTone({
         freq: freqs[i],

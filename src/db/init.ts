@@ -9,9 +9,9 @@
  * 6. Set the singleton client
  */
 import initSqlJs from "sql.js";
-import { setDb, createDrizzleDb } from "./client";
-import { loadDatabaseFromIndexedDB, saveDatabaseToIndexedDB } from "./persist";
+import { createDrizzleDb, setDb } from "./client";
 import { migrateFromLocalStorage } from "./migrate-localStorage";
+import { loadDatabaseFromIndexedDB, saveDatabaseToIndexedDB } from "./persist";
 import * as schema from "./schema";
 
 /**

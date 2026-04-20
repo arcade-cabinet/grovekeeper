@@ -1,3 +1,4 @@
+import { NPC_MOVE_SPEED } from "@/config/config";
 import {
   advancePathFollow,
   createPathFollow,
@@ -8,8 +9,6 @@ import {
   type TileCoord,
   type WalkabilityGrid,
 } from "@/input/pathfinding";
-
-import { NPC_MOVE_SPEED } from "@/config/config";
 
 /** Active path states keyed by NPC entity ID. */
 const activePaths = new Map<string, PathFollowState>();

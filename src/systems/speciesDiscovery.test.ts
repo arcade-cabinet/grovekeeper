@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useGameStore } from "@/stores/gameStore";
+import type { SpeciesProgress } from "./speciesDiscovery";
 import {
   checkDiscoveryProgress,
   computeDiscoveryTier,
   createEmptyProgress,
   getVisibleCodexFields,
 } from "./speciesDiscovery";
-import type { SpeciesProgress } from "./speciesDiscovery";
 
 describe("speciesDiscovery", () => {
   // =========================================================================
@@ -297,7 +297,10 @@ describe("speciesDiscovery", () => {
         const current = getVisibleCodexFields(tiers[i]);
         const previous = getVisibleCodexFields(tiers[i - 1]);
         for (const field of previous) {
-          expect(current, `Tier ${tiers[i]} missing field ${field} from tier ${tiers[i - 1]}`).toContain(field);
+          expect(
+            current,
+            `Tier ${tiers[i]} missing field ${field} from tier ${tiers[i - 1]}`,
+          ).toContain(field);
         }
       }
     });
@@ -329,16 +332,18 @@ describe("speciesDiscovery", () => {
 
     it("trackSpeciesPlanting adds to pendingCodexUnlocks on tier change", () => {
       useGameStore.getState().trackSpeciesPlanting("white-oak");
-      expect(useGameStore.getState().pendingCodexUnlocks).toContain("white-oak");
+      expect(useGameStore.getState().pendingCodexUnlocks).toContain(
+        "white-oak",
+      );
     });
 
     it("trackSpeciesPlanting does not duplicate pending on same-tier re-plant", () => {
       useGameStore.getState().trackSpeciesPlanting("white-oak");
       useGameStore.getState().trackSpeciesPlanting("white-oak");
       // First plant triggers tier 0->1, second plant stays at tier 1
-      const pending = useGameStore.getState().pendingCodexUnlocks.filter(
-        (id) => id === "white-oak",
-      );
+      const pending = useGameStore
+        .getState()
+        .pendingCodexUnlocks.filter((id) => id === "white-oak");
       expect(pending.length).toBe(1);
     });
 
@@ -403,7 +408,9 @@ describe("speciesDiscovery", () => {
       useGameStore.getState().trackSpeciesPlanting("elder-pine");
       const first = useGameStore.getState().consumePendingCodexUnlock();
       expect(first).toBe("white-oak");
-      expect(useGameStore.getState().pendingCodexUnlocks).toEqual(["elder-pine"]);
+      expect(useGameStore.getState().pendingCodexUnlocks).toEqual([
+        "elder-pine",
+      ]);
     });
 
     it("consumePendingCodexUnlock returns null when empty", () => {
@@ -424,7 +431,9 @@ describe("speciesDiscovery", () => {
 
     it("pendingCodexUnlocks is cleared on prestige", () => {
       useGameStore.getState().trackSpeciesPlanting("white-oak");
-      expect(useGameStore.getState().pendingCodexUnlocks.length).toBeGreaterThan(0);
+      expect(
+        useGameStore.getState().pendingCodexUnlocks.length,
+      ).toBeGreaterThan(0);
       useGameStore.setState({ level: 25, xp: 99999 });
       useGameStore.getState().performPrestige();
       expect(useGameStore.getState().pendingCodexUnlocks).toEqual([]);

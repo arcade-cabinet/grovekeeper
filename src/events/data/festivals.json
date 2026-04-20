@@ -10,9 +10,24 @@
     "growthBoost": 1.5,
     "harvestBoost": 1.0,
     "challenges": [
-      { "id": "bloom-plant-10", "description": "Plant 10 trees", "targetType": "plant", "targetAmount": 10 },
-      { "id": "bloom-water-20", "description": "Water 20 trees", "targetType": "water", "targetAmount": 20 },
-      { "id": "bloom-mature-3", "description": "Grow 3 trees to Mature", "targetType": "grow_mature", "targetAmount": 3 }
+      {
+        "id": "bloom-plant-10",
+        "description": "Plant 10 trees",
+        "targetType": "plant",
+        "targetAmount": 10
+      },
+      {
+        "id": "bloom-water-20",
+        "description": "Water 20 trees",
+        "targetType": "water",
+        "targetAmount": 20
+      },
+      {
+        "id": "bloom-mature-3",
+        "description": "Grow 3 trees to Mature",
+        "targetType": "grow_mature",
+        "targetAmount": 3
+      }
     ],
     "completionReward": {
       "xp": 200,
@@ -32,8 +47,18 @@
     "growthBoost": 1.0,
     "harvestBoost": 2.0,
     "challenges": [
-      { "id": "solstice-harvest-15", "description": "Harvest 15 trees", "targetType": "harvest", "targetAmount": 15 },
-      { "id": "solstice-old-growth-2", "description": "Grow 2 trees to Old Growth", "targetType": "grow_old_growth", "targetAmount": 2 }
+      {
+        "id": "solstice-harvest-15",
+        "description": "Harvest 15 trees",
+        "targetType": "harvest",
+        "targetAmount": 15
+      },
+      {
+        "id": "solstice-old-growth-2",
+        "description": "Grow 2 trees to Old Growth",
+        "targetType": "grow_old_growth",
+        "targetAmount": 2
+      }
     ],
     "completionReward": {
       "xp": 250,
@@ -53,9 +78,24 @@
     "growthBoost": 1.25,
     "harvestBoost": 1.75,
     "challenges": [
-      { "id": "harvest-collect-100", "description": "Collect 100 total resources", "targetType": "harvest", "targetAmount": 20 },
-      { "id": "harvest-plant-8", "description": "Plant 8 trees for next spring", "targetType": "plant", "targetAmount": 8 },
-      { "id": "harvest-water-15", "description": "Water 15 trees", "targetType": "water", "targetAmount": 15 }
+      {
+        "id": "harvest-collect-100",
+        "description": "Collect 100 total resources",
+        "targetType": "harvest",
+        "targetAmount": 20
+      },
+      {
+        "id": "harvest-plant-8",
+        "description": "Plant 8 trees for next spring",
+        "targetType": "plant",
+        "targetAmount": 8
+      },
+      {
+        "id": "harvest-water-15",
+        "description": "Water 15 trees",
+        "targetType": "water",
+        "targetAmount": 15
+      }
     ],
     "completionReward": {
       "xp": 225,
@@ -76,8 +116,18 @@
     "growthBoost": 1.0,
     "harvestBoost": 1.25,
     "challenges": [
-      { "id": "frost-water-25", "description": "Water 25 trees to protect from frost", "targetType": "water", "targetAmount": 25 },
-      { "id": "frost-plant-5", "description": "Plant 5 evergreen trees", "targetType": "plant", "targetAmount": 5 }
+      {
+        "id": "frost-water-25",
+        "description": "Water 25 trees to protect from frost",
+        "targetType": "water",
+        "targetAmount": 25
+      },
+      {
+        "id": "frost-plant-5",
+        "description": "Plant 5 evergreen trees",
+        "targetType": "plant",
+        "targetAmount": 5
+      }
     ],
     "completionReward": {
       "xp": 175,

@@ -81,6 +81,7 @@ export const MobileActionButtons = ({
     >
       {/* Pause button */}
       <button
+        type="button"
         className="flex items-center justify-center rounded-full text-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
         style={{
           width: 44,
@@ -96,6 +97,7 @@ export const MobileActionButtons = ({
 
       {/* Seeds button */}
       <button
+        type="button"
         className="flex items-center justify-center rounded-full text-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
         style={{
           width: 44,
