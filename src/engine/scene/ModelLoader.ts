@@ -6,7 +6,6 @@
  * requests. Falls back gracefully if models aren't available.
  */
 
-import "@babylonjs/loaders/glTF"; // side-effect: registers glTF loader plugin
 import type { AnimationGroup } from "@babylonjs/core/Animations/animationGroup";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
@@ -14,6 +13,21 @@ import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 
 const BASE_URL = import.meta.env.BASE_URL ?? "/";
+
+/** Whether the glTF loader side-effect has been registered yet. */
+let glTFLoaderReady: Promise<void> | null = null;
+
+/**
+ * Ensure the glTF loader plugin is registered exactly once.
+ * Lazy-loaded so @babylonjs/loaders lands in a separate chunk
+ * and is not parsed on initial page load.
+ */
+function ensureGltfLoader(): Promise<void> {
+  if (!glTFLoaderReady) {
+    glTFLoaderReady = import("@babylonjs/loaders/glTF").then(() => undefined);
+  }
+  return glTFLoaderReady;
+}
 
 /** Cached template data: root mesh + animation groups. */
 interface ModelTemplate {
@@ -39,6 +53,10 @@ export async function loadModel(
   instanceName: string,
 ): Promise<LoadedModel | null> {
   try {
+    // Ensure @babylonjs/loaders/glTF is registered before the first SceneLoader
+    // call.  Subsequent calls hit the already-resolved promise immediately.
+    await ensureGltfLoader();
+
     // Return clone from cache
     const cached = cache.get(modelPath);
     if (cached) {
