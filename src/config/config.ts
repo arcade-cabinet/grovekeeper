@@ -1,80 +1,38 @@
 // Game configuration constants
-export const GRID_SIZE = 12;
-export const CELL_SIZE = 1;
+import configData from "./config.json";
 
-export const COLORS = {
-  // Core palette
-  forestGreen: "#2D5A27",
-  barkBrown: "#5D4037",
-  soilDark: "#3E2723",
-  leafLight: "#81C784",
-  autumnGold: "#FFB74D",
-  skyMist: "#E8F5E9",
-  sunsetWarm: "#FFAB91",
-  earthRed: "#8D6E63",
+export const GRID_SIZE = configData.grid.size;
+export const CELL_SIZE = configData.grid.cellSize;
 
-  // Surface colors
-  parchment: "#F5F0E3",
-  parchmentDark: "#E8E0CC",
-
-  // Semantic colors
-  success: "#4CAF50",
-  warning: "#FF9800",
-  danger: "#F44336",
-  info: "#64B5F6",
-  gold: "#FFD700",
-  silver: "#9E9E9E",
-
-  // Season accent colors
-  springGreen: "#90EE90",
-  summerYellow: "#FFD54F",
-  autumnOrange: "#FF8A65",
-  winterBlue: "#90CAF9",
-
-  // Prestige / special
-  prestigeGold: "#FFD700",
-  prestigePurple: "#9C27B0",
-} as const;
+export const COLORS = configData.colors as Record<string, string>;
 
 // 5-stage model (spec §15)
-export const STAGE_NAMES = [
+export const STAGE_NAMES = configData.stageNames as [
   "Seed",
   "Sprout",
   "Sapling",
   "Mature",
   "Old Growth",
-] as const;
+];
 export type StageName = (typeof STAGE_NAMES)[number];
 
-export const STAGE_VISUALS = [
-  { name: "Seed", scale: 0.08 }, // stage 0: tiny visible seed
-  { name: "Sprout", scale: 0.15 }, // stage 1: tiny shoot
-  { name: "Sapling", scale: 0.4 }, // stage 2: small trunk + 1 canopy
-  { name: "Mature", scale: 0.8 }, // stage 3: full trunk + 2-3 canopy
-  { name: "Old Growth", scale: 1.2 }, // stage 4: thick trunk + 3 canopy
-] as const;
+export const STAGE_VISUALS = configData.stageVisuals as ReadonlyArray<{
+  name: StageName;
+  scale: number;
+}>;
 
-export const DIFFICULTY_MULTIPLIERS: Record<number, number> = {
-  1: 1.0,
-  2: 1.3,
-  3: 1.6,
-  4: 2.0,
-  5: 2.5,
-};
+export const DIFFICULTY_MULTIPLIERS: Record<number, number> =
+  configData.difficultyMultipliers as Record<number, number>;
 
-export const SEASON_GROWTH_MULTIPLIERS: Record<string, number> = {
-  spring: 1.5,
-  summer: 1.0,
-  autumn: 0.8,
-  winter: 0.0,
-};
+export const SEASON_GROWTH_MULTIPLIERS: Record<string, number> =
+  configData.seasonGrowthMultipliers as Record<string, number>;
 
-export const WATER_BONUS = 1.3;
-export const DROUGHT_PENALTY = 0.5;
+export const WATER_BONUS = configData.tree.waterBonus;
+export const DROUGHT_PENALTY = configData.tree.droughtPenalty;
 
 // Max stage index
-export const MAX_STAGE = 4;
+export const MAX_STAGE = configData.tree.maxStage;
 
-export const PLAYER_SPEED = 3;
-export const NPC_MOVE_SPEED = 1.8;
-export const INTERACTION_RADIUS = 1.5;
+export const PLAYER_SPEED = configData.player.speed;
+export const NPC_MOVE_SPEED = configData.player.npcMoveSpeed;
+export const INTERACTION_RADIUS = configData.player.interactionRadius;
