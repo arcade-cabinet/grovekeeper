@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { COLORS } from "@/config/config";
 import type { ActiveQuest, GoalDifficulty } from "@/systems/quests";
 import { RiTrophyLine } from "@/ui/icons";
@@ -13,6 +13,39 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/ui/primitives/sheet";
+
+/** Human-readable HH:MM:SS countdown to local-midnight quest refresh. */
+function useDailyRefreshCountdown(): () => string {
+  const compute = (): string => {
+    const now = new Date();
+    const midnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0,
+      0,
+      0,
+      0,
+    );
+    const totalSec = Math.max(
+      0,
+      Math.floor((midnight.getTime() - now.getTime()) / 1000),
+    );
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+  const [text, setText] = createSignal(compute());
+  let timer: ReturnType<typeof setInterval> | undefined;
+  onMount(() => {
+    timer = setInterval(() => setText(compute()), 1000);
+  });
+  onCleanup(() => {
+    if (timer) clearInterval(timer);
+  });
+  return text;
+}
 
 interface QuestPanelProps {
   quests: ActiveQuest[];
@@ -36,6 +69,7 @@ const difficultyLabels: Record<GoalDifficulty, string> = {
 export const QuestPanel = (props: QuestPanelProps) => {
   const activeQuests = () => props.quests.filter((q) => !q.completed);
   const completedQuests = () => props.quests.filter((q) => q.completed);
+  const refreshIn = useDailyRefreshCountdown();
 
   return (
     <Sheet>
@@ -76,7 +110,8 @@ export const QuestPanel = (props: QuestPanelProps) => {
             Daily Quests
           </SheetTitle>
           <SheetDescription style={{ color: COLORS.barkBrown }}>
-            Complete quests to earn rewards
+            Complete quests to earn rewards · refreshes in{" "}
+            <span class="tabular-nums font-semibold">{refreshIn()}</span>
           </SheetDescription>
         </SheetHeader>
 
