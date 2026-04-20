@@ -78,25 +78,37 @@ export function calcGrowthRate(params: GrowthRateParams): number {
  * Builds spatial lookup maps once per frame for O(1) neighbor queries,
  * avoiding O(n^2) per-tree iteration over grid cells and other trees.
  */
+// Reusable per-frame spatial lookups — cleared each call instead of
+// reallocated. Keys are packed (x + OFFSET) << 16 | (z + OFFSET) so
+// coordinates in [-32768, 32767] work without string allocation (prior
+// impl used template literals `${x},${z}` producing ~N strings/frame
+// plus an additional ~8N during the silver-birch/mystic-fern neighbor
+// scans — measurable GC pressure on mobile).
+// See docs/PERF_AUDIT.md.
+const COORD_OFFSET = 32768;
+const packCoord = (x: number, z: number): number =>
+  ((x + COORD_OFFSET) << 16) | (z + COORD_OFFSET);
+const _waterTiles = new Set<number>();
+const _treeCounts = new Map<number, number>();
+
 export function growthSystem(
   deltaTime: number,
   currentSeason: string,
   weatherMultiplier = 1.0,
 ): void {
-  // Build per-frame spatial lookups for species bonuses
-  const waterTiles = new Set<string>();
-  const treeCounts = new Map<string, number>();
+  _waterTiles.clear();
+  _treeCounts.clear();
 
   for (const cell of gridCellsQuery) {
     if (cell.gridCell?.type === "water") {
-      waterTiles.add(`${cell.gridCell.gridX},${cell.gridCell.gridZ}`);
+      _waterTiles.add(packCoord(cell.gridCell.gridX, cell.gridCell.gridZ));
     }
   }
 
   for (const entity of treesQuery) {
     if (!entity.position) continue;
-    const key = `${entity.position.x},${entity.position.z}`;
-    treeCounts.set(key, (treeCounts.get(key) ?? 0) + 1);
+    const key = packCoord(entity.position.x, entity.position.z);
+    _treeCounts.set(key, (_treeCounts.get(key) ?? 0) + 1);
   }
 
   for (const entity of treesQuery) {
@@ -152,7 +164,7 @@ export function growthSystem(
       for (let dx = -1; dx <= 1; dx++) {
         for (let dz = -1; dz <= 1; dz++) {
           if (dx === 0 && dz === 0) continue;
-          if (waterTiles.has(`${px + dx},${pz + dz}`)) {
+          if (_waterTiles.has(packCoord(px + dx, pz + dz))) {
             speciesBonus = 1.2;
             dx = 2; // break outer
             break;
@@ -169,7 +181,7 @@ export function growthSystem(
       for (let dx = -1; dx <= 1; dx++) {
         for (let dz = -1; dz <= 1; dz++) {
           if (dx === 0 && dz === 0) continue;
-          adjacentCount += treeCounts.get(`${px + dx},${pz + dz}`) ?? 0;
+          adjacentCount += _treeCounts.get(packCoord(px + dx, pz + dz)) ?? 0;
         }
       }
       speciesBonus = 1 + Math.min(adjacentCount * 0.15, 0.6);
