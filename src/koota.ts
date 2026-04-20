@@ -79,3 +79,19 @@ export function spawnPlayer(): ReturnType<typeof koota.spawn> {
     Renderable({ meshId: null, visible: true, scale: 1 }),
   );
 }
+
+/**
+ * Destroy every entity spawned into the world, EXCEPT the implicit
+ * world entity itself (id 0). Koota stores world-level singleton
+ * traits on entity 0, so iterating `koota.entities` and calling
+ * `.destroy()` unconditionally would wipe those singletons too.
+ *
+ * Use from test beforeEach hooks. Safe to call from anywhere — does
+ * not touch world traits, just user-spawned entities.
+ */
+export function destroyAllEntitiesExceptWorld(): void {
+  for (const e of koota.entities) {
+    if (e.id() === 0) continue;
+    e.destroy();
+  }
+}

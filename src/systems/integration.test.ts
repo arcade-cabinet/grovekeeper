@@ -14,8 +14,8 @@ import { createPlayerEntity, createTreeEntity } from "@/archetypes";
 import { MAX_STAGE } from "@/config/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "@/config/difficulty";
 import { useGameStore } from "@/stores/gameStore";
-import { koota } from "@/koota";
-import { Difficulty } from "@/traits";
+import { koota, spawnPlayer } from "@/koota";
+import { Difficulty, FarmerState } from "@/traits";
 import { world } from "@/world";
 import {
   canAffordExpansion,
@@ -201,13 +201,12 @@ describe("Cross-System Integration Tests", () => {
   describe("Difficulty tiers affect stamina", () => {
     /** Measure stamina regen from 50 over 1 second at given difficulty. */
     function measureRegen(difficultyId: string) {
-      const player = createPlayerEntity();
-      world.add(player);
+      const player = spawnPlayer();
       koota.set(Difficulty, { id: difficultyId, permadeath: false });
-      player.farmerState!.stamina = 50;
+      player.set(FarmerState, { stamina: 50, maxStamina: 100 });
       staminaSystem(1);
-      const result = player.farmerState!.stamina;
-      world.remove(player);
+      const result = player.get(FarmerState).stamina;
+      player.destroy();
       return result;
     }
 

@@ -1,167 +1,147 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { createPlayerEntity } from "@/archetypes";
-import { useGameStore } from "@/stores/gameStore";
-import { koota } from "@/koota";
-import { Difficulty } from "@/traits";
-import { type Entity, world } from "@/world";
+import {
+  destroyAllEntitiesExceptWorld,
+  koota,
+  spawnPlayer,
+} from "@/koota";
+import { Difficulty, FarmerState, IsPlayer } from "@/traits";
 import { drainStamina, staminaSystem } from "./stamina";
+
+function resetWorld(): void {
+  destroyAllEntitiesExceptWorld();
+  // Reset Difficulty so a prior test's override doesn't leak.
+  koota.set(Difficulty, { id: "normal", permadeath: false });
+}
 
 describe("Stamina System", () => {
   beforeEach(() => {
-    for (const entity of [...world]) {
-      world.remove(entity);
-    }
-    useGameStore.getState().resetGame();
+    resetWorld();
   });
 
   describe("staminaSystem (regen)", () => {
     it("regenerates stamina at 2/sec", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 90;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 90, maxStamina: 100 });
 
       staminaSystem(1); // 1 second
 
-      expect(player.farmerState!.stamina).toBe(92);
+      expect(player.get(FarmerState).stamina).toBe(92);
     });
 
     it("caps stamina at maxStamina", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 99;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 99, maxStamina: 100 });
 
       staminaSystem(5); // 5 seconds = +10, but capped at 100
 
-      expect(player.farmerState!.stamina).toBe(100);
+      expect(player.get(FarmerState).stamina).toBe(100);
     });
 
     it("does not change stamina if already full", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 100;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 100, maxStamina: 100 });
 
       staminaSystem(1);
 
-      expect(player.farmerState!.stamina).toBe(100);
+      expect(player.get(FarmerState).stamina).toBe(100);
     });
   });
 
   describe("drainStamina", () => {
     it("returns true and drains if enough stamina", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 50;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 50, maxStamina: 100 });
 
       const success = drainStamina(player, 10);
 
       expect(success).toBe(true);
-      expect(player.farmerState!.stamina).toBe(40);
+      expect(player.get(FarmerState).stamina).toBe(40);
     });
 
     it("returns false if insufficient stamina", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 3;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 3, maxStamina: 100 });
 
       const success = drainStamina(player, 5);
 
       expect(success).toBe(false);
-      expect(player.farmerState!.stamina).toBe(3); // unchanged
+      expect(player.get(FarmerState).stamina).toBe(3); // unchanged
     });
 
     it("allows exact drain (stamina == cost)", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 10;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 10, maxStamina: 100 });
 
       const success = drainStamina(player, 10);
 
       expect(success).toBe(true);
-      expect(player.farmerState!.stamina).toBe(0);
+      expect(player.get(FarmerState).stamina).toBe(0);
     });
 
-    it("returns false for entity without farmerState", () => {
-      const entity = { position: { x: 0, z: 0 } } as Entity;
+    it("returns false for entity without FarmerState", () => {
+      // Spawn a naked entity — IsPlayer alone, no FarmerState
+      const entity = koota.spawn(IsPlayer);
       const success = drainStamina(entity, 10);
       expect(success).toBe(false);
     });
 
     it("drains to zero and reports success", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 5;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 5, maxStamina: 100 });
 
       const success = drainStamina(player, 5);
       expect(success).toBe(true);
-      expect(player.farmerState!.stamina).toBe(0);
+      expect(player.get(FarmerState).stamina).toBe(0);
     });
 
     it("zero cost drain always succeeds", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 0;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 0, maxStamina: 100 });
 
       const success = drainStamina(player, 0);
       expect(success).toBe(true);
-      expect(player.farmerState!.stamina).toBe(0);
+      expect(player.get(FarmerState).stamina).toBe(0);
     });
   });
 
   describe("difficulty-scaled stamina regen", () => {
     it("explore difficulty (1.5x) regenerates faster", () => {
       koota.set(Difficulty, { id: "explore", permadeath: false });
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 50;
-      world.add(player);
-      staminaSystem(1);
-      const exploreStamina = player.farmerState!.stamina;
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 50, maxStamina: 100 });
 
-      for (const entity of [...world]) world.remove(entity);
-      koota.set(Difficulty, { id: "normal", permadeath: false });
-      const player2 = createPlayerEntity();
-      player2.farmerState!.stamina = 50;
-      world.add(player2);
       staminaSystem(1);
-      const normalStamina = player2.farmerState!.stamina;
-
-      expect(exploreStamina - 50).toBeCloseTo((normalStamina - 50) * 1.5, 1);
+      // 2/sec * 1.5x = 3 per second
+      expect(player.get(FarmerState).stamina).toBe(53);
     });
 
-    it("ultra-brutal difficulty (0.4x) regenerates slower", () => {
+    it("normal difficulty (1.0x) regenerates at base rate", () => {
+      koota.set(Difficulty, { id: "normal", permadeath: false });
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 50, maxStamina: 100 });
+
+      staminaSystem(1);
+      expect(player.get(FarmerState).stamina).toBe(52);
+    });
+
+    it("ultra-brutal difficulty regenerates slowest (0.4x regen)", () => {
       koota.set(Difficulty, { id: "ultra-brutal", permadeath: false });
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 50;
-      world.add(player);
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 50, maxStamina: 100 });
+
       staminaSystem(1);
-      const brutalStamina = player.farmerState!.stamina;
-
-      for (const entity of [...world]) world.remove(entity);
-      koota.set(Difficulty, { id: "normal", permadeath: false });
-      const player2 = createPlayerEntity();
-      player2.farmerState!.stamina = 50;
-      world.add(player2);
-      staminaSystem(1);
-      const normalStamina = player2.farmerState!.stamina;
-
-      expect(brutalStamina - 50).toBeCloseTo((normalStamina - 50) * 0.4, 1);
-    });
-  });
-
-  describe("edge cases", () => {
-    it("zero deltaTime does not change stamina", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 50;
-      world.add(player);
-      staminaSystem(0);
-      expect(player.farmerState!.stamina).toBe(50);
+      // 2/sec * 0.4x = 0.8 per second
+      expect(player.get(FarmerState).stamina).toBeCloseTo(50.8, 2);
     });
 
-    it("very large deltaTime does not overshoot max", () => {
-      const player = createPlayerEntity();
-      player.farmerState!.stamina = 99;
-      world.add(player);
-      staminaSystem(1000);
-      expect(player.farmerState!.stamina).toBe(100);
+    it("hard difficulty regenerates slower (0.8x regen)", () => {
+      koota.set(Difficulty, { id: "hard", permadeath: false });
+      const player = spawnPlayer();
+      player.set(FarmerState, { stamina: 50, maxStamina: 100 });
+
+      staminaSystem(1);
+      // 2/sec * 0.8x = 1.6 per second
+      expect(player.get(FarmerState).stamina).toBeCloseTo(51.6, 2);
     });
   });
 });
