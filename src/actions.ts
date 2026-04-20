@@ -23,7 +23,9 @@ import {
   canAffordExpansion,
   getNextExpansionTier,
 } from "@/systems/gridExpansion";
+import { audioManager } from "@/systems/AudioManager";
 import { checkNewUnlocks } from "@/systems/levelUnlocks";
+import { hapticHeavy } from "@/systems/platform";
 import {
   initializeMarketEventState,
   updateMarketEvents,
@@ -254,6 +256,10 @@ export const gameActions = createActions((world) => {
 
           queueMicrotask(() => {
             showToast(`Level ${newLevel}!`, "success");
+            audioManager.play("levelUp");
+            // Fire-and-forget: haptic is async but we don't want to block
+            // the microtask chain on a native bridge roundtrip.
+            void hapticHeavy();
             for (const sid of unlocks.species) {
               const sp = getSpeciesById(sid);
               showToast(`Unlocked: ${sp?.name ?? sid}`, "achievement");
