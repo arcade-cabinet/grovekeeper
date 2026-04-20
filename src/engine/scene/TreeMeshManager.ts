@@ -2,15 +2,26 @@
  * TreeMeshManager — Tree mesh lifecycle, template caching, LOD, and frame sync.
  *
  * Manages the template cache (one template per species+season+night combo),
- * creates tree meshes via clone, handles smooth scale interpolation (lerp),
- * and freezes world matrices on fully-grown (stage 4) trees for performance.
+ * creates tree meshes via InstancedMesh (GPU instancing), handles smooth
+ * scale interpolation (lerp), and freezes world matrices on fully-grown
+ * (stage 4) trees for performance.
+ *
+ * GPU instancing: per docs/PERF_AUDIT.md, the old .clone() approach
+ * produced one draw call per tree plus a full duplicate of every
+ * submesh/material binding. createInstance() shares geometry + materials
+ * with the template so Babylon batches them into a single draw call per
+ * (species, season, night) combo — target: 50 trees → ~5-10 draw calls
+ * instead of 100.
  */
 
+import type { InstancedMesh } from "@babylonjs/core/Meshes/instancedMesh";
 import type { Mesh } from "@babylonjs/core/Meshes/mesh";
 import type { Scene } from "@babylonjs/core/scene";
 import { buildSpeciesTreeMesh } from "@/shared/utils/treeMeshBuilder";
 import type { Season } from "@/systems/time";
 import { treesQuery } from "@/world";
+
+type TreeMesh = InstancedMesh | Mesh;
 
 /** Lerp speed for smooth growth animations. */
 const LERP_SPEED = 3.0;
@@ -18,14 +29,19 @@ const LERP_SPEED = 3.0;
 const TREE_VISUAL_SCALE = 0.5;
 
 export class TreeMeshManager {
-  /** Live tree meshes keyed by entity ID. */
-  readonly meshes = new Map<string, Mesh>();
-  /** Template mesh cache keyed by `${speciesId}_${season}[_night]`. */
+  /** Live tree meshes keyed by entity ID. InstancedMesh when sharing a
+   * template with ≥1 siblings, Mesh only for the very first tree of a
+   * (species, season, night) combo. */
+  readonly meshes = new Map<string, TreeMesh>();
+  /** Template mesh cache keyed by `${speciesId}_${season}[_night]`.
+   * Templates are ALSO rendered — Babylon draws the template alongside
+   * its instances in the same draw call. We set the template's position
+   * once (off-world at y=-1000) and keep it enabled. */
   private templates = new Map<string, Mesh>();
   /** Set of entity IDs whose world matrices are frozen (stage 4). */
   private frozen = new Set<string>();
 
-  /** Create or retrieve a cached template, then clone it. */
+  /** Create or retrieve a cached template, then create an instance. */
   createMesh(
     scene: Scene,
     entityId: string,
@@ -33,7 +49,7 @@ export class TreeMeshManager {
     season: Season | undefined,
     _meshSeed: number | undefined,
     nightTime: boolean,
-  ): Mesh {
+  ): TreeMesh {
     const nightSuffix =
       speciesId === "ghost-birch" && nightTime ? "_night" : "";
     const cacheKey = `${speciesId}_${season ?? "default"}${nightSuffix}`;
@@ -48,17 +64,15 @@ export class TreeMeshManager {
         0,
         nightTime,
       );
-      template.isVisible = false;
-      template.setEnabled(false);
+      // Hide the template off-world instead of disabling — disabled
+      // meshes don't carry their instances in the render pass. Park it
+      // below the ground plane so nothing sees it.
+      template.position.y = -10000;
+      template.isPickable = false;
       this.templates.set(cacheKey, template);
     }
 
-    const mesh = template.clone(`tree_${entityId}`, null);
-    if (!mesh) {
-      throw new Error(
-        `Failed to clone tree template "${cacheKey}" for entity "${entityId}"`,
-      );
-    }
+    const mesh = template.createInstance(`tree_${entityId}`);
     mesh.isVisible = true;
     mesh.setEnabled(true);
     mesh.isPickable = true;
