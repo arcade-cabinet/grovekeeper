@@ -27,7 +27,9 @@ export function useQuery(
   const [entities, setEntities] = createSignal<QueryResult<AnyTrait[]>>(
     koota.query(...traits),
   );
-  const refresh = () => setEntities(koota.query(...traits));
+  // Defer to microtask so we query AFTER Koota finishes mutating masks.
+  const refresh = () =>
+    queueMicrotask(() => setEntities(koota.query(...traits)));
   const unsubAdd = koota.onQueryAdd(traits, refresh);
   const unsubRemove = koota.onQueryRemove(traits, refresh);
   onCleanup(() => {
@@ -46,7 +48,8 @@ export function useQueryFirst(
   const [entity, setEntity] = createSignal<Entity | undefined>(
     koota.queryFirst(...traits),
   );
-  const refresh = () => setEntity(koota.queryFirst(...traits));
+  const refresh = () =>
+    queueMicrotask(() => setEntity(koota.queryFirst(...traits)));
   const unsubAdd = koota.onQueryAdd(traits, refresh);
   const unsubRemove = koota.onQueryRemove(traits, refresh);
   onCleanup(() => {
@@ -86,15 +89,19 @@ export function useTrait<T extends AnyTrait>(
     // mutation inside koota's trait store.
     { equals: false },
   );
-  const refresh = () => setValue(() => readTrait(target, trait));
+  // Remove events fire before Koota clears the mask, so defer the
+  // refresh to observe the post-mutation state. Add/change events work
+  // either way; we deferall three uniformly for consistency.
+  const refreshAsync = () =>
+    queueMicrotask(() => setValue(() => readTrait(target, trait)));
   const unsubChange = koota.onChange(trait, (e) => {
-    if (target === koota || e === target) refresh();
+    if (target === koota || e === target) refreshAsync();
   });
   const unsubAdd = koota.onAdd(trait, (e) => {
-    if (target === koota || e === target) refresh();
+    if (target === koota || e === target) refreshAsync();
   });
   const unsubRemove = koota.onRemove(trait, (e) => {
-    if (target === koota || e === target) refresh();
+    if (target === koota || e === target) refreshAsync();
   });
   onCleanup(() => {
     unsubChange();
@@ -106,6 +113,11 @@ export function useTrait<T extends AnyTrait>(
 
 /**
  * Solid hook — accessor returning whether target has the given trait.
+ *
+ * Remove listeners fire BEFORE Koota flips the entity mask (the mask
+ * clear happens after the subscription loop), so reading `entity.has`
+ * synchronously from inside the callback returns the stale `true`.
+ * Defer the refresh to a microtask so we observe the post-removal state.
  */
 export function useHas(
   target: Entity | World | undefined | null,
@@ -117,12 +129,12 @@ export function useHas(
     return (target as Entity).has(trait);
   };
   const [value, setValue] = createSignal<boolean>(read(), { equals: false });
-  const refresh = () => setValue(read());
+  const refreshAsync = () => queueMicrotask(() => setValue(read()));
   const unsubAdd = koota.onAdd(trait, (e) => {
-    if (target === koota || e === target) refresh();
+    if (target === koota || e === target) refreshAsync();
   });
   const unsubRemove = koota.onRemove(trait, (e) => {
-    if (target === koota || e === target) refresh();
+    if (target === koota || e === target) refreshAsync();
   });
   onCleanup(() => {
     unsubAdd();
