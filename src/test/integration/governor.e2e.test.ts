@@ -5,17 +5,32 @@
  * of ticks. We assert game invariants that must hold regardless of the
  * specific decisions the governor makes.
  *
- * These tests validate the full stack: GameActions → ECS systems → Zustand
- * store, all running headless without BabylonJS or React.
+ * These tests validate the full stack: GameActions → ECS systems → Koota
+ * traits, all running headless without BabylonJS or React.
  */
 import { beforeEach, describe, expect, it } from "vitest";
+import { actions as gameActions } from "@/actions";
 import {
   createGridCellEntity,
   createPlayerEntity,
   createTreeEntity,
 } from "@/archetypes";
+import { koota, spawnPlayer } from "@/koota";
+import { spawnGridCell, spawnTree } from "@/startup";
 import { useGameStore } from "@/stores/gameStore";
 import { initHarvestable } from "@/systems/harvest";
+import {
+  FarmerState,
+  GridCell,
+  Harvestable,
+  IsPlayer,
+  PlayerProgress,
+  Position,
+  Resources,
+  Seeds,
+  Tracking,
+  Tree,
+} from "@/traits";
 import { gridCellsQuery, world } from "@/world";
 import type { GovernorProfile } from "./GovernorAgent";
 import { DEFAULT_PROFILE, GovernorAgent } from "./GovernorAgent";
@@ -23,6 +38,7 @@ import { HeadlessGameLoop } from "./HeadlessGameLoop";
 
 /** Standard test world: 8x8 soil grid, player, seeds, full stamina. */
 function setupWorld(gridSize = 8) {
+  // Miniplex legacy state (used by HeadlessGameLoop and tests with legacy fixtures).
   for (const entity of [...world]) world.remove(entity);
   useGameStore.getState().resetGame();
 
@@ -37,7 +53,6 @@ function setupWorld(gridSize = 8) {
     }
   }
 
-  // Give generous starting seeds (all real species from trees.ts)
   const store = useGameStore.getState();
   store.addSeed("white-oak", 50);
   store.addSeed("elder-pine", 20);
@@ -45,10 +60,34 @@ function setupWorld(gridSize = 8) {
   store.addSeed("golden-apple", 10);
   store.addSeed("weeping-willow", 10);
 
-  // Starting resources to bootstrap the resource chain
   store.addResource("timber", 30);
   store.addResource("sap", 15);
   store.addResource("fruit", 15);
+
+  // Koota mirror so the Koota-reading governor sees the same world.
+  for (const entity of koota.query()) entity.destroy();
+  gameActions().resetGame();
+  const kPlayer = spawnPlayer();
+  kPlayer.set(Position, {
+    x: Math.floor(gridSize / 2),
+    y: 0,
+    z: Math.floor(gridSize / 2),
+  });
+  for (let x = 0; x < gridSize; x++) {
+    for (let z = 0; z < gridSize; z++) {
+      spawnGridCell(x, z, "soil");
+    }
+  }
+
+  const a = gameActions();
+  a.addSeed("white-oak", 50);
+  a.addSeed("elder-pine", 20);
+  a.addSeed("silver-birch", 15);
+  a.addSeed("golden-apple", 10);
+  a.addSeed("weeping-willow", 10);
+  a.addResource("timber", 30);
+  a.addResource("sap", 15);
+  a.addResource("fruit", 15);
 }
 
 /** Run the governor + headless loop for N ticks. */
@@ -72,6 +111,26 @@ function runPlaythrough(
   return { loop, governor, state: useGameStore.getState() };
 }
 
+/** Read Koota-tracked stats for assertions. */
+function kootaStats() {
+  const tracking = koota.get(Tracking);
+  const progress = koota.get(PlayerProgress);
+  const resources = koota.get(Resources);
+  const player = koota.queryFirst(IsPlayer, FarmerState);
+  const farmer = player?.get(FarmerState);
+  return {
+    treesPlanted: tracking?.treesPlanted ?? 0,
+    treesWatered: tracking?.treesWatered ?? 0,
+    treesHarvested: tracking?.treesHarvested ?? 0,
+    speciesPlanted: tracking?.speciesPlanted ?? [],
+    xp: progress?.xp ?? 0,
+    level: progress?.level ?? 1,
+    stamina: farmer?.stamina ?? 0,
+    maxStamina: farmer?.maxStamina ?? 100,
+    resources: resources ?? { timber: 0, sap: 0, fruit: 0, acorns: 0 },
+  };
+}
+
 describe("Governor E2E Playthrough", () => {
   beforeEach(() => setupWorld(8));
 
@@ -80,15 +139,15 @@ describe("Governor E2E Playthrough", () => {
   // ═══════════════════════════════════════════
 
   it("completes a basic playthrough: plant → grow → harvest cycle", () => {
-    const { state, governor } = runPlaythrough(3000);
+    const { governor } = runPlaythrough(3000);
+    const stats = kootaStats();
 
     // Trees should have been planted
-    expect(state.treesPlanted).toBeGreaterThan(0);
+    expect(stats.treesPlanted).toBeGreaterThan(0);
     // XP earned from planting and watering
-    expect(state.xp).toBeGreaterThan(0);
+    expect(stats.xp).toBeGreaterThan(0);
     // Governor made decisions
     expect(governor.stats.decisionsMade).toBeGreaterThan(10);
-    // No crashes = test passes
   });
 
   it("governor plants and waters trees in first 1000 ticks", () => {
@@ -100,10 +159,11 @@ describe("Governor E2E Playthrough", () => {
       decisionInterval: 5,
     };
 
-    const { state } = runPlaythrough(1000, profile);
+    runPlaythrough(1000, profile);
+    const stats = kootaStats();
 
-    expect(state.treesPlanted).toBeGreaterThan(0);
-    expect(state.treesWatered).toBeGreaterThan(0);
+    expect(stats.treesPlanted).toBeGreaterThan(0);
+    expect(stats.treesWatered).toBeGreaterThan(0);
   });
 
   // ═══════════════════════════════════════════
@@ -112,6 +172,7 @@ describe("Governor E2E Playthrough", () => {
 
   it("governor plants preferred species", () => {
     useGameStore.getState().addSeed("elder-pine", 30);
+    gameActions().addSeed("elder-pine", 30);
 
     const profile: GovernorProfile = {
       ...DEFAULT_PROFILE,
@@ -125,10 +186,11 @@ describe("Governor E2E Playthrough", () => {
       decisionInterval: 3,
     };
 
-    const { state } = runPlaythrough(500, profile);
+    runPlaythrough(500, profile);
+    const stats = kootaStats();
 
-    expect(state.treesPlanted).toBeGreaterThan(0);
-    expect(state.speciesPlanted).toContain("elder-pine");
+    expect(stats.treesPlanted).toBeGreaterThan(0);
+    expect(stats.speciesPlanted).toContain("elder-pine");
   });
 
   // ═══════════════════════════════════════════
@@ -136,6 +198,7 @@ describe("Governor E2E Playthrough", () => {
   // ═══════════════════════════════════════════
 
   it("governor harvests mature trees and gains resources", () => {
+    // Miniplex legacy fixtures.
     for (let i = 0; i < 4; i++) {
       const tree = createTreeEntity(i, 0, "white-oak");
       tree.tree.stage = 3;
@@ -150,10 +213,42 @@ describe("Governor E2E Playthrough", () => {
         cell.gridCell.occupied = true;
         cell.gridCell.treeEntityId = tree.id;
       }
+
+      // Koota mirror.
+      const kTree = spawnTree(i, 0, "white-oak");
+      const td = kTree.get(Tree);
+      if (td) kTree.set(Tree, { ...td, stage: 3 });
+      kTree.add(
+        Harvestable({
+          resources: [{ type: "timber", amount: 2 }],
+          cooldownElapsed: 0,
+          cooldownTotal: 45,
+          ready: true,
+        }),
+      );
+      const kCell = koota.query(GridCell).find((c) => {
+        const gc = c.get(GridCell);
+        return gc?.gridX === i && gc?.gridZ === 0;
+      });
+      if (kCell) {
+        const gc = kCell.get(GridCell);
+        if (gc)
+          kCell.set(GridCell, {
+            ...gc,
+            occupied: true,
+            treeEntityId: String(kTree),
+          });
+      }
     }
 
-    // Unlock axe
+    // Unlock axe in both stores.
     useGameStore.setState({ unlockedTools: ["trowel", "watering-can", "axe"] });
+    const pp = koota.get(PlayerProgress);
+    if (pp)
+      koota.set(PlayerProgress, {
+        ...pp,
+        unlockedTools: ["trowel", "watering-can", "axe"],
+      });
 
     const profile: GovernorProfile = {
       ...DEFAULT_PROFILE,
@@ -165,10 +260,11 @@ describe("Governor E2E Playthrough", () => {
       decisionInterval: 3,
     };
 
-    const { state } = runPlaythrough(200, profile);
+    runPlaythrough(200, profile);
+    const stats = kootaStats();
 
-    expect(state.treesHarvested).toBeGreaterThan(0);
-    expect(state.resources.timber).toBeGreaterThan(0);
+    expect(stats.treesHarvested).toBeGreaterThan(0);
+    expect(stats.resources.timber).toBeGreaterThan(0);
   });
 
   // ═══════════════════════════════════════════
@@ -176,26 +272,27 @@ describe("Governor E2E Playthrough", () => {
   // ═══════════════════════════════════════════
 
   it("maintains game invariants over extended play", () => {
-    const { state } = runPlaythrough(6000);
+    runPlaythrough(6000);
+    const stats = kootaStats();
 
     // Resources never go negative
-    expect(state.resources.timber).toBeGreaterThanOrEqual(0);
-    expect(state.resources.sap).toBeGreaterThanOrEqual(0);
-    expect(state.resources.fruit).toBeGreaterThanOrEqual(0);
-    expect(state.resources.acorns).toBeGreaterThanOrEqual(0);
+    expect(stats.resources.timber).toBeGreaterThanOrEqual(0);
+    expect(stats.resources.sap).toBeGreaterThanOrEqual(0);
+    expect(stats.resources.fruit).toBeGreaterThanOrEqual(0);
+    expect(stats.resources.acorns).toBeGreaterThanOrEqual(0);
 
     // Stamina is within bounds
-    expect(state.stamina).toBeGreaterThanOrEqual(0);
-    expect(state.stamina).toBeLessThanOrEqual(state.maxStamina);
+    expect(stats.stamina).toBeGreaterThanOrEqual(0);
+    expect(stats.stamina).toBeLessThanOrEqual(stats.maxStamina);
 
     // XP is non-negative
-    expect(state.xp).toBeGreaterThanOrEqual(0);
+    expect(stats.xp).toBeGreaterThanOrEqual(0);
 
     // Level is at least 1
-    expect(state.level).toBeGreaterThanOrEqual(1);
+    expect(stats.level).toBeGreaterThanOrEqual(1);
 
     // Trees planted is non-negative
-    expect(state.treesPlanted).toBeGreaterThanOrEqual(0);
+    expect(stats.treesPlanted).toBeGreaterThanOrEqual(0);
   });
 
   it("stamina never goes below zero during play", () => {
@@ -236,13 +333,14 @@ describe("Governor E2E Playthrough", () => {
   it("governor handles empty grid gracefully", () => {
     // No seeds, no resources → governor should idle without crashing
     useGameStore.setState({ seeds: {} });
+    koota.set(Seeds, {});
 
     const { governor } = runPlaythrough(1000);
 
     // Should have made decisions (explore fallback)
     expect(governor.stats.decisionsMade).toBeGreaterThan(0);
     // Should not have planted
-    expect(useGameStore.getState().treesPlanted).toBe(0);
+    expect(kootaStats().treesPlanted).toBe(0);
   });
 
   it("governor handles full grid gracefully", () => {
@@ -257,6 +355,17 @@ describe("Governor E2E Playthrough", () => {
           cell.gridCell.occupied = true;
           cell.gridCell.treeEntityId = tree.id;
         }
+
+        // Koota mirror.
+        spawnTree(x, z, "white-oak");
+        const kCell = koota.query(GridCell).find((c) => {
+          const gc = c.get(GridCell);
+          return gc?.gridX === x && gc?.gridZ === z;
+        });
+        if (kCell) {
+          const gc = kCell.get(GridCell);
+          if (gc) kCell.set(GridCell, { ...gc, occupied: true });
+        }
       }
     }
 
@@ -269,14 +378,15 @@ describe("Governor E2E Playthrough", () => {
   // ═══════════════════════════════════════════
 
   it("survives a long playthrough with weather enabled", () => {
-    const { state } = runPlaythrough(3000, DEFAULT_PROFILE, 8, {
+    runPlaythrough(3000, DEFAULT_PROFILE, 8, {
       weatherEnabled: true,
     });
+    const stats = kootaStats();
 
     // Basic invariants still hold with weather
-    expect(state.resources.timber).toBeGreaterThanOrEqual(0);
-    expect(state.stamina).toBeGreaterThanOrEqual(0);
-    expect(state.xp).toBeGreaterThanOrEqual(0);
+    expect(stats.resources.timber).toBeGreaterThanOrEqual(0);
+    expect(stats.stamina).toBeGreaterThanOrEqual(0);
+    expect(stats.xp).toBeGreaterThanOrEqual(0);
   });
 
   // ═══════════════════════════════════════════
@@ -300,6 +410,7 @@ describe("Governor E2E Playthrough", () => {
     useGameStore.setState({
       resources: { timber: 50, sap: 0, fruit: 0, acorns: 0 },
     });
+    koota.set(Resources, { timber: 50, sap: 0, fruit: 0, acorns: 0 });
 
     const profile: GovernorProfile = {
       ...DEFAULT_PROFILE,
@@ -312,11 +423,12 @@ describe("Governor E2E Playthrough", () => {
       decisionInterval: 3,
     };
 
-    const { state, governor } = runPlaythrough(300, profile);
+    const { governor } = runPlaythrough(300, profile);
+    const stats = kootaStats();
 
     // Should have traded timber → sap
     expect(governor.stats.tradesExecuted).toBeGreaterThan(0);
-    expect(state.resources.sap).toBeGreaterThan(0);
+    expect(stats.resources.sap).toBeGreaterThan(0);
   });
 
   // ═══════════════════════════════════════════
@@ -324,11 +436,13 @@ describe("Governor E2E Playthrough", () => {
   // ═══════════════════════════════════════════
 
   it("governor produces diverse resources with valid species", () => {
-    // Give silver-birch (sap+timber) and golden-apple (fruit) seeds
+    // Give silver-birch (sap+timber) and golden-apple (fruit) seeds.
     useGameStore.getState().addSeed("silver-birch", 20);
     useGameStore.getState().addSeed("golden-apple", 20);
+    gameActions().addSeed("silver-birch", 20);
+    gameActions().addSeed("golden-apple", 20);
 
-    // Pre-plant some mature silver-birch and golden-apple for harvesting
+    // Pre-plant some mature silver-birch and golden-apple for harvesting.
     for (let i = 0; i < 3; i++) {
       const tree = createTreeEntity(i, 7, "silver-birch");
       tree.tree.stage = 3;
@@ -342,6 +456,35 @@ describe("Governor E2E Playthrough", () => {
       if (cell?.gridCell) {
         cell.gridCell.occupied = true;
         cell.gridCell.treeEntityId = tree.id;
+      }
+
+      // Koota mirror.
+      const kTree = spawnTree(i, 7, "silver-birch");
+      const td = kTree.get(Tree);
+      if (td) kTree.set(Tree, { ...td, stage: 3 });
+      kTree.add(
+        Harvestable({
+          resources: [
+            { type: "sap", amount: 2 },
+            { type: "timber", amount: 1 },
+          ],
+          cooldownElapsed: 0,
+          cooldownTotal: 50,
+          ready: true,
+        }),
+      );
+      const kCell = koota.query(GridCell).find((c) => {
+        const gc = c.get(GridCell);
+        return gc?.gridX === i && gc?.gridZ === 7;
+      });
+      if (kCell) {
+        const gc = kCell.get(GridCell);
+        if (gc)
+          kCell.set(GridCell, {
+            ...gc,
+            occupied: true,
+            treeEntityId: String(kTree),
+          });
       }
     }
     for (let i = 3; i < 6; i++) {
@@ -358,11 +501,43 @@ describe("Governor E2E Playthrough", () => {
         cell.gridCell.occupied = true;
         cell.gridCell.treeEntityId = tree.id;
       }
+
+      // Koota mirror.
+      const kTree = spawnTree(i, 7, "golden-apple");
+      const td = kTree.get(Tree);
+      if (td) kTree.set(Tree, { ...td, stage: 3 });
+      kTree.add(
+        Harvestable({
+          resources: [{ type: "fruit", amount: 2 }],
+          cooldownElapsed: 0,
+          cooldownTotal: 75,
+          ready: true,
+        }),
+      );
+      const kCell = koota.query(GridCell).find((c) => {
+        const gc = c.get(GridCell);
+        return gc?.gridX === i && gc?.gridZ === 7;
+      });
+      if (kCell) {
+        const gc = kCell.get(GridCell);
+        if (gc)
+          kCell.set(GridCell, {
+            ...gc,
+            occupied: true,
+            treeEntityId: String(kTree),
+          });
+      }
     }
 
     useGameStore.setState({
       unlockedTools: ["trowel", "watering-can", "axe", "pruning-shears"],
     });
+    const pp = koota.get(PlayerProgress);
+    if (pp)
+      koota.set(PlayerProgress, {
+        ...pp,
+        unlockedTools: ["trowel", "watering-can", "axe", "pruning-shears"],
+      });
 
     const profile: GovernorProfile = {
       ...DEFAULT_PROFILE,
@@ -375,11 +550,12 @@ describe("Governor E2E Playthrough", () => {
       decisionInterval: 3,
     };
 
-    const { state } = runPlaythrough(300, profile);
+    runPlaythrough(300, profile);
+    const stats = kootaStats();
 
     // Should have harvested diverse resources
-    expect(state.resources.sap).toBeGreaterThan(0);
-    expect(state.resources.fruit).toBeGreaterThan(0);
+    expect(stats.resources.sap).toBeGreaterThan(0);
+    expect(stats.resources.fruit).toBeGreaterThan(0);
   });
 
   // ═══════════════════════════════════════════

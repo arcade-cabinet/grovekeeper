@@ -1,95 +1,169 @@
 /**
  * GameActions — Headless action layer for tool verbs.
  *
- * Extracts game actions from GameScene.tsx into pure functions that
- * operate on ECS world + Zustand store without React, BabylonJS, haptics,
- * or toast UI. Returns boolean success/failure for each action.
+ * Pure functions that operate on the Koota world via the action bundle
+ * (no React, no BabylonJS, no haptics, no toast UI). Returns
+ * boolean success/failure for each action.
  *
  * Used by the GovernorAgent for automated playtesting and E2E tests.
  */
 
-import { createTreeEntity } from "@/archetypes";
+import type { Entity } from "koota";
+import { actions as gameActions } from "@/actions";
+import { getActiveDifficulty } from "@/config/difficulty";
 import type { ResourceType } from "@/config/resources";
 import { getToolById } from "@/config/tools";
 import { getSpeciesById } from "@/config/trees";
-import { useGameStore } from "@/stores/gameStore";
-import { canPlace, getTemplate } from "@/structures/StructureManager";
-import { collectHarvest, initHarvestable } from "@/systems/harvest";
-import type { Entity, GridCellComponent } from "@/world";
+import { koota } from "@/koota";
+import { spawnTree } from "@/startup";
+import { getTemplate } from "@/structures/StructureManager";
 import {
-  generateEntityId,
-  gridCellsQuery,
-  playerQuery,
-  treesQuery,
-  world,
-} from "@/world";
+  CurrentSeason,
+  GridCell,
+  Harvestable,
+  IsPlayer,
+  Position,
+  Resources,
+  Seeds,
+  Structure,
+  Tree,
+} from "@/traits";
 
 // ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
 
 /** Find the grid cell entity at a given grid coordinate. */
-function findCell(gridX: number, gridZ: number): GridCellComponent | null {
-  for (const cell of gridCellsQuery) {
-    if (cell.gridCell?.gridX === gridX && cell.gridCell?.gridZ === gridZ) {
-      return cell.gridCell;
+function findCellEntity(gridX: number, gridZ: number): Entity | undefined {
+  for (const entity of koota.query(GridCell)) {
+    const gc = entity.get(GridCell);
+    if (gc && gc.gridX === gridX && gc.gridZ === gridZ) return entity;
+  }
+  return undefined;
+}
+
+/**
+ * Initialize the Harvestable trait on a mature tree.
+ * Only applies to Mature (stage 3) and Old Growth (stage 4) trees.
+ */
+function initHarvestable(entity: Entity): void {
+  const tree = entity.get(Tree);
+  if (!tree || tree.stage < 3) return;
+  const species = getSpeciesById(tree.speciesId);
+  if (!species) return;
+  const payload = {
+    resources: species.yield.map((y) => ({
+      type: y.resource,
+      amount: y.amount,
+    })),
+    cooldownElapsed: 0,
+    cooldownTotal: species.harvestCycleSec,
+    ready: false,
+  };
+  if (entity.has(Harvestable)) {
+    entity.set(Harvestable, payload);
+  } else {
+    entity.add(Harvestable(payload));
+  }
+}
+
+/**
+ * Collect harvest resources from a tree entity, applying late-binding
+ * multipliers (season, structures, pruned, species, difficulty).
+ * Returns the resources if ready, resets cooldown. Returns null if not ready.
+ */
+function collectHarvest(
+  entity: Entity,
+  currentSeason?: string,
+): { type: string; amount: number }[] | null {
+  const harvestable = entity.get(Harvestable);
+  const tree = entity.get(Tree);
+  if (!harvestable || !harvestable.ready || !tree) return null;
+
+  const stageMultiplier = tree.stage >= 4 ? 1.5 : 1.0;
+  const prunedMultiplier = tree.pruned ? 1.5 : 1.0;
+
+  // Structure harvest multiplier: sum harvest_boost magnitudes in range.
+  const pos = entity.get(Position);
+  let structureMult = 1.0;
+  if (pos) {
+    let bonus = 0;
+    for (const sEnt of koota.query(Structure, Position)) {
+      const s = sEnt.get(Structure);
+      const sp = sEnt.get(Position);
+      if (!s || !sp) continue;
+      if (s.effectType !== "harvest_boost") continue;
+      if (!s.effectRadius || !s.effectMagnitude) continue;
+      const dx = pos.x - sp.x;
+      const dz = pos.z - sp.z;
+      const dist = Math.sqrt(dx * dx + dz * dz);
+      if (dist <= s.effectRadius) bonus += s.effectMagnitude;
     }
+    structureMult = 1 + bonus;
   }
-  return null;
-}
 
-/** Find the grid cell at the player's current position. */
-function _findCellAtPlayer(): GridCellComponent | null {
-  const player = playerQuery.first;
-  if (!player?.position) return null;
-  return findCell(Math.round(player.position.x), Math.round(player.position.z));
-}
+  // Species-specific bonuses
+  const ironbarkMult =
+    tree.speciesId === "ironbark" && tree.stage >= 4 ? 3.0 : 1.0;
+  const goldenAppleMult =
+    tree.speciesId === "golden-apple" && currentSeason === "autumn" ? 3.0 : 1.0;
+  const difficultyYieldMult = getActiveDifficulty().resourceYieldMult;
 
-/** Find a tree entity by its ID. */
-function findTreeById(treeEntityId: string): Entity | null {
-  for (const tree of treesQuery) {
-    if (tree.id === treeEntityId && tree.tree) return tree;
+  const multiplier =
+    stageMultiplier *
+    prunedMultiplier *
+    structureMult *
+    ironbarkMult *
+    goldenAppleMult *
+    difficultyYieldMult;
+
+  const resources = harvestable.resources.map((r) => ({
+    type: r.type,
+    amount: Math.ceil(r.amount * multiplier),
+  }));
+
+  entity.set(Harvestable, {
+    ...harvestable,
+    ready: false,
+    cooldownElapsed: 0,
+  });
+  if (tree.pruned) {
+    entity.set(Tree, { ...tree, pruned: false });
   }
-  return null;
+
+  return resources;
 }
 
 // ──────────────────────────────────────────────
 // Query Helpers
 // ──────────────────────────────────────────────
 
-/** Find all empty, plantable soil tiles. */
-export function findPlantableTiles(): GridCellComponent[] {
-  const tiles: GridCellComponent[] = [];
-  for (const cell of gridCellsQuery) {
-    if (
-      cell.gridCell &&
-      cell.gridCell.type === "soil" &&
-      !cell.gridCell.occupied
-    ) {
-      tiles.push(cell.gridCell);
-    }
+/** Find all empty, plantable soil tile entities. */
+export function findPlantableTiles(): Entity[] {
+  const tiles: Entity[] = [];
+  for (const entity of koota.query(GridCell)) {
+    const gc = entity.get(GridCell);
+    if (gc && gc.type === "soil" && !gc.occupied) tiles.push(entity);
   }
   return tiles;
 }
 
-/** Find all tree entities that have the watered flag set to false. */
+/** Find all tree entities that have not been watered yet. */
 export function findWaterableTrees(): Entity[] {
   const result: Entity[] = [];
-  for (const tree of treesQuery) {
-    if (tree.tree && !tree.tree.watered) {
-      result.push(tree);
-    }
+  for (const entity of koota.query(Tree)) {
+    const tree = entity.get(Tree);
+    if (tree && !tree.watered) result.push(entity);
   }
   return result;
 }
 
-/** Find all tree entities at stage 3+ with harvestable.ready === true. */
+/** Find all tree entities with Harvestable.ready === true. */
 export function findHarvestableTrees(): Entity[] {
   const result: Entity[] = [];
-  for (const tree of treesQuery) {
-    if (tree.harvestable?.ready) {
-      result.push(tree);
-    }
+  for (const entity of koota.query(Tree, Harvestable)) {
+    const h = entity.get(Harvestable);
+    if (h?.ready) result.push(entity);
   }
   return result;
 }
@@ -97,22 +171,20 @@ export function findHarvestableTrees(): Entity[] {
 /** Find all tree entities at stage 3+ (mature or old growth). */
 export function findMatureTrees(): Entity[] {
   const result: Entity[] = [];
-  for (const tree of treesQuery) {
-    if (tree.tree && tree.tree.stage >= 3) {
-      result.push(tree);
-    }
+  for (const entity of koota.query(Tree)) {
+    const tree = entity.get(Tree);
+    if (tree && tree.stage >= 3) result.push(entity);
   }
   return result;
 }
 
 /** Get the player's current tile coordinates. */
 export function getPlayerTile(): { gridX: number; gridZ: number } | null {
-  const player = playerQuery.first;
-  if (!player?.position) return null;
-  return {
-    gridX: Math.round(player.position.x),
-    gridZ: Math.round(player.position.z),
-  };
+  const player = koota.queryFirst(IsPlayer, Position);
+  if (!player) return null;
+  const pos = player.get(Position);
+  if (!pos) return null;
+  return { gridX: Math.round(pos.x), gridZ: Math.round(pos.z) };
 }
 
 // ──────────────────────────────────────────────
@@ -121,10 +193,9 @@ export function getPlayerTile(): { gridX: number; gridZ: number } | null {
 
 /** Teleport the player directly to a grid position. No pathfinding animation. */
 export function movePlayerTo(gridX: number, gridZ: number): void {
-  const player = playerQuery.first;
-  if (!player?.position) return;
-  player.position.x = gridX;
-  player.position.z = gridZ;
+  const player = koota.queryFirst(IsPlayer, Position);
+  if (!player) return;
+  player.set(Position, (prev) => ({ ...prev, x: gridX, z: gridZ }));
 }
 
 // ──────────────────────────────────────────────
@@ -133,7 +204,8 @@ export function movePlayerTo(gridX: number, gridZ: number): void {
 
 /**
  * Plant a tree at the given grid position.
- * Validates: tile exists, is soil, not occupied, player has seeds (and seed cost resources).
+ * Validates: tile exists, is soil/path, not occupied, player has seeds
+ * (and seed cost resources).
  * Returns true on success.
  */
 export function plantTree(
@@ -141,154 +213,154 @@ export function plantTree(
   gridX: number,
   gridZ: number,
 ): boolean {
-  const store = useGameStore.getState();
+  const a = gameActions();
   const species = getSpeciesById(speciesId);
 
   // Validate seed count
-  const currentSeeds = store.seeds[speciesId] ?? 0;
-  if (currentSeeds < 1) return false;
+  const seeds = koota.get(Seeds) ?? {};
+  if ((seeds[speciesId] ?? 0) < 1) return false;
 
   // Validate seed cost resources
-  if (species?.seedCost) {
+  const resources = koota.get(Resources);
+  if (species?.seedCost && resources) {
     for (const [resource, amount] of Object.entries(species.seedCost)) {
-      if ((store.resources[resource as ResourceType] ?? 0) < amount)
-        return false;
+      if ((resources[resource as ResourceType] ?? 0) < amount) return false;
     }
   }
 
   // Find and validate the target cell
-  const gc = findCell(gridX, gridZ);
+  const cellEntity = findCellEntity(gridX, gridZ);
+  if (!cellEntity) return false;
+  const gc = cellEntity.get(GridCell);
   if (!gc) return false;
   if (gc.type !== "soil" && gc.type !== "path") return false;
   if (gc.occupied) return false;
 
   // Spend seeds and resources
-  store.spendSeed(speciesId, 1);
+  a.spendSeed(speciesId, 1);
   if (species?.seedCost) {
     for (const [resource, amount] of Object.entries(species.seedCost)) {
-      store.spendResource(resource as ResourceType, amount);
+      a.spendResource(resource as ResourceType, amount);
     }
   }
 
   // Create tree entity
-  const tree = createTreeEntity(gridX, gridZ, speciesId);
-  world.add(tree);
-  gc.occupied = true;
-  gc.treeEntityId = tree.id;
+  const tree = spawnTree(gridX, gridZ, speciesId);
+  cellEntity.set(GridCell, {
+    ...gc,
+    occupied: true,
+    treeEntityId: String(tree),
+  });
 
-  // Update store stats
-  store.incrementTreesPlanted();
-  store.trackSpeciesPlanted(speciesId);
+  // Update tracking stats
+  a.incrementTreesPlanted();
+  a.trackSpeciesPlanted(speciesId);
   const plantXp = 10 + (species ? (species.difficulty - 1) * 5 : 0);
-  store.addXp(plantXp);
+  a.addXp(plantXp);
 
   return true;
 }
 
 /**
- * Water a tree by its entity ID.
+ * Water a tree entity.
  * Returns true on success.
  */
-export function waterTree(treeEntityId: string): boolean {
-  const tree = findTreeById(treeEntityId);
-  if (!tree?.tree) return false;
-  if (tree.tree.watered) return false;
+export function waterTree(tree: Entity | undefined | null): boolean {
+  if (!tree || !tree.isAlive() || !tree.has(Tree)) return false;
+  const treeData = tree.get(Tree);
+  if (!treeData || treeData.watered) return false;
 
-  tree.tree.watered = true;
-  const store = useGameStore.getState();
-  store.addXp(5);
-  store.incrementTreesWatered();
+  tree.set(Tree, { ...treeData, watered: true });
+  const a = gameActions();
+  a.addXp(5);
+  a.incrementTreesWatered();
   return true;
 }
 
 /**
- * Harvest a mature+ tree (chop with axe). Removes the tree entity.
+ * Harvest a mature+ tree. Removes the tree entity.
  * Returns the resources gained, or null if the tree couldn't be harvested.
  */
 export function harvestTree(
-  treeEntityId: string,
+  tree: Entity | undefined | null,
 ): { type: string; amount: number }[] | null {
-  const tree = findTreeById(treeEntityId);
-  if (!tree?.tree || tree.tree.stage < 3) return null;
+  if (!tree || !tree.isAlive() || !tree.has(Tree)) return null;
+  const treeData = tree.get(Tree);
+  if (!treeData || treeData.stage < 3) return null;
 
-  const store = useGameStore.getState();
+  const a = gameActions();
+  const season = koota.get(CurrentSeason)?.value;
 
   // Collect harvest resources (late-binding multipliers)
-  const harvestResources = collectHarvest(tree, store.currentSeason);
+  let result: { type: string; amount: number }[] | null = null;
+  const harvestResources = collectHarvest(tree, season);
   if (harvestResources) {
     for (const r of harvestResources) {
-      store.addResource(r.type as ResourceType, r.amount);
+      a.addResource(r.type as ResourceType, r.amount);
     }
+    result = harvestResources;
   } else {
     // Fallback to species base yield
-    const species = getSpeciesById(tree.tree.speciesId);
+    const species = getSpeciesById(treeData.speciesId);
     if (species) {
       const gains = species.yield.map((y) => ({
         type: y.resource,
         amount: y.amount,
       }));
-      for (const g of gains)
-        store.addResource(g.type as ResourceType, g.amount);
-      // Use species yield as return value
-      const result = gains;
-      store.addXp(50);
-      store.incrementTreesHarvested();
-
-      // Find the grid cell to clear occupancy
-      if (tree.position) {
-        const gc = findCell(
-          Math.round(tree.position.x),
-          Math.round(tree.position.z),
-        );
-        if (gc) {
-          gc.occupied = false;
-          gc.treeEntityId = null;
-        }
-      }
-      world.remove(tree);
-      return result;
+      for (const g of gains) a.addResource(g.type as ResourceType, g.amount);
+      result = gains;
     }
   }
 
-  store.addXp(50);
-  store.incrementTreesHarvested();
+  a.addXp(50);
+  a.incrementTreesHarvested();
 
   // Clear grid cell occupancy
-  if (tree.position) {
-    const gc = findCell(
-      Math.round(tree.position.x),
-      Math.round(tree.position.z),
-    );
-    if (gc) {
-      gc.occupied = false;
-      gc.treeEntityId = null;
+  const pos = tree.get(Position);
+  if (pos) {
+    const cellEntity = findCellEntity(Math.round(pos.x), Math.round(pos.z));
+    if (cellEntity) {
+      const gc = cellEntity.get(GridCell);
+      if (gc)
+        cellEntity.set(GridCell, {
+          ...gc,
+          occupied: false,
+          treeEntityId: null,
+        });
     }
   }
 
-  world.remove(tree);
-  return harvestResources;
+  tree.destroy();
+  return result;
 }
 
 /**
  * Prune a mature+ tree for 1.5x yield bonus on next harvest.
  * Returns true on success.
  */
-export function pruneTree(treeEntityId: string): boolean {
-  const tree = findTreeById(treeEntityId);
-  if (!tree?.tree || tree.tree.stage < 3) return false;
+export function pruneTree(tree: Entity | undefined | null): boolean {
+  if (!tree || !tree.isAlive() || !tree.has(Tree)) return false;
+  const treeData = tree.get(Tree);
+  if (!treeData || treeData.stage < 3) return false;
 
   // Speed up harvest cooldown by 30%
-  if (tree.harvestable) {
-    tree.harvestable.cooldownElapsed += tree.harvestable.cooldownTotal * 0.3;
+  if (tree.has(Harvestable)) {
+    const h = tree.get(Harvestable);
+    if (h) {
+      tree.set(Harvestable, {
+        ...h,
+        cooldownElapsed: h.cooldownElapsed + h.cooldownTotal * 0.3,
+      });
+    }
   }
-  tree.tree.pruned = true;
+  tree.set(Tree, { ...treeData, pruned: true });
   // Re-init harvestable to recalculate yields with pruned bonus
-  if (tree.harvestable) {
+  if (tree.has(Harvestable)) {
     initHarvestable(tree);
   }
 
-  const store = useGameStore.getState();
-  store.addXp(5);
+  const a = gameActions();
+  a.addXp(5);
   return true;
 }
 
@@ -297,16 +369,16 @@ export function pruneTree(treeEntityId: string): boolean {
  * Costs 5 acorns.
  * Returns true on success.
  */
-export function fertilizeTree(treeEntityId: string): boolean {
-  const tree = findTreeById(treeEntityId);
-  if (!tree?.tree) return false;
-  if (tree.tree.fertilized) return false;
+export function fertilizeTree(tree: Entity | undefined | null): boolean {
+  if (!tree || !tree.isAlive() || !tree.has(Tree)) return false;
+  const treeData = tree.get(Tree);
+  if (!treeData || treeData.fertilized) return false;
 
-  const store = useGameStore.getState();
-  if (!store.spendResource("acorns" as ResourceType, 5)) return false;
+  const a = gameActions();
+  if (!a.spendResource("acorns" as ResourceType, 5)) return false;
 
-  tree.tree.fertilized = true;
-  store.addXp(5);
+  tree.set(Tree, { ...treeData, fertilized: true });
+  a.addXp(5);
   return true;
 }
 
@@ -315,13 +387,14 @@ export function fertilizeTree(treeEntityId: string): boolean {
  * Returns true on success.
  */
 export function clearRock(gridX: number, gridZ: number): boolean {
-  const gc = findCell(gridX, gridZ);
+  const cellEntity = findCellEntity(gridX, gridZ);
+  if (!cellEntity) return false;
+  const gc = cellEntity.get(GridCell);
   if (!gc || gc.type !== "rock") return false;
 
-  gc.type = "soil";
-  gc.occupied = false;
-  const store = useGameStore.getState();
-  store.addXp(12);
+  cellEntity.set(GridCell, { ...gc, type: "soil", occupied: false });
+  const a = gameActions();
+  a.addXp(12);
   return true;
 }
 
@@ -329,24 +402,28 @@ export function clearRock(gridX: number, gridZ: number): boolean {
  * Remove a seedling (stage 0-1) tree from a tile.
  * Returns true on success.
  */
-export function removeSeedling(treeEntityId: string): boolean {
-  const tree = findTreeById(treeEntityId);
-  if (!tree?.tree || tree.tree.stage > 1) return false;
+export function removeSeedling(tree: Entity | undefined | null): boolean {
+  if (!tree || !tree.isAlive() || !tree.has(Tree)) return false;
+  const treeData = tree.get(Tree);
+  if (!treeData || treeData.stage > 1) return false;
 
-  if (tree.position) {
-    const gc = findCell(
-      Math.round(tree.position.x),
-      Math.round(tree.position.z),
-    );
-    if (gc) {
-      gc.occupied = false;
-      gc.treeEntityId = null;
+  const pos = tree.get(Position);
+  if (pos) {
+    const cellEntity = findCellEntity(Math.round(pos.x), Math.round(pos.z));
+    if (cellEntity) {
+      const gc = cellEntity.get(GridCell);
+      if (gc)
+        cellEntity.set(GridCell, {
+          ...gc,
+          occupied: false,
+          treeEntityId: null,
+        });
     }
   }
 
-  world.remove(tree);
-  const store = useGameStore.getState();
-  store.addXp(5);
+  tree.destroy();
+  const a = gameActions();
+  a.addXp(5);
   return true;
 }
 
@@ -363,44 +440,60 @@ export function placeStructure(
   const template = getTemplate(templateId);
   if (!template) return false;
 
-  const store = useGameStore.getState();
+  const a = gameActions();
+  const resources = koota.get(Resources) ?? {
+    timber: 0,
+    sap: 0,
+    fruit: 0,
+    acorns: 0,
+  };
 
-  // Validate placement against grid
-  if (!canPlace(template.id, worldX, worldZ, gridCellsQuery)) return false;
+  // Validate placement against grid — inline canPlace using koota cells.
+  for (let dx = 0; dx < template.footprint.width; dx++) {
+    for (let dz = 0; dz < template.footprint.depth; dz++) {
+      const cellEntity = findCellEntity(worldX + dx, worldZ + dz);
+      if (!cellEntity) return false;
+      const gc = cellEntity.get(GridCell);
+      if (!gc) return false;
+      if (gc.occupied) return false;
+      if (gc.type === "water" || gc.type === "rock") return false;
+    }
+  }
 
   // Validate all resource costs
   for (const [resource, amount] of Object.entries(template.cost)) {
-    if ((store.resources[resource as ResourceType] ?? 0) < amount) return false;
+    if ((resources[resource as ResourceType] ?? 0) < amount) return false;
   }
 
   // Spend resources
   for (const [resource, amount] of Object.entries(template.cost)) {
-    store.spendResource(resource as ResourceType, amount);
+    a.spendResource(resource as ResourceType, amount);
   }
 
   // Create structure ECS entity
-  const structureEntity: Entity = {
-    id: generateEntityId(),
-    position: { x: worldX, y: 0, z: worldZ },
-    structure: {
+  koota.spawn(
+    Position({ x: worldX, y: 0, z: worldZ }),
+    Structure({
       templateId: template.id,
       effectType: template.effect?.type,
-      effectRadius: template.effect?.radius,
-      effectMagnitude: template.effect?.magnitude,
-    },
-  };
-  world.add(structureEntity);
+      effectRadius: template.effect?.radius ?? 0,
+      effectMagnitude: template.effect?.magnitude ?? 0,
+    }),
+  );
 
   // Mark grid cells as occupied
   for (let dx = 0; dx < template.footprint.width; dx++) {
     for (let dz = 0; dz < template.footprint.depth; dz++) {
-      const gc = findCell(worldX + dx, worldZ + dz);
-      if (gc) gc.occupied = true;
+      const cellEntity = findCellEntity(worldX + dx, worldZ + dz);
+      if (cellEntity) {
+        const gc = cellEntity.get(GridCell);
+        if (gc) cellEntity.set(GridCell, { ...gc, occupied: true });
+      }
     }
   }
 
   // Persist in store
-  store.addPlacedStructure(template.id, worldX, worldZ);
+  a.addPlacedStructure(template.id, worldX, worldZ);
   return true;
 }
 
@@ -411,21 +504,15 @@ export function placeStructure(
 export function spendToolStamina(toolId: string): boolean {
   const tool = getToolById(toolId);
   if (!tool || tool.staminaCost === 0) return true;
-
-  const store = useGameStore.getState();
-  return store.spendStamina(tool.staminaCost);
+  return gameActions().spendStamina(tool.staminaCost);
 }
 
-/**
- * Select a tool in the store.
- */
+/** Select a tool in the store. */
 export function selectTool(toolId: string): void {
-  useGameStore.getState().setSelectedTool(toolId);
+  gameActions().setSelectedTool(toolId);
 }
 
-/**
- * Select a species in the store.
- */
+/** Select a species in the store. */
 export function selectSpecies(speciesId: string): void {
-  useGameStore.getState().setSelectedSpecies(speciesId);
+  gameActions().setSelectedSpecies(speciesId);
 }

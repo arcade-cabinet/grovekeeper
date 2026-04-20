@@ -1,13 +1,26 @@
 /**
  * Unit tests for GameActions — headless action layer.
  *
- * Tests each action in isolation with a minimal ECS world and fresh store.
+ * Tests each action in isolation with a minimal Koota world and fresh state.
  */
+import type { Entity } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createGridCellEntity, createPlayerEntity } from "@/archetypes";
-import { useGameStore } from "@/stores/gameStore";
-import { initHarvestable } from "@/systems/harvest";
-import { gridCellsQuery, treesQuery, world } from "@/world";
+import { actions as gameActions } from "@/actions";
+import { getSpeciesById } from "@/config/trees";
+import { koota, spawnPlayer } from "@/koota";
+import { spawnGridCell } from "@/startup";
+import {
+  FarmerState,
+  GridCell,
+  Harvestable,
+  IsPlayer,
+  PlayerProgress,
+  Position,
+  Resources,
+  Seeds,
+  Tracking,
+  Tree,
+} from "@/traits";
 import {
   clearRock,
   fertilizeTree,
@@ -29,24 +42,66 @@ import {
 
 /** Set up a minimal 4x4 soil grid + player + seeds. */
 function setupWorld() {
-  for (const entity of [...world]) world.remove(entity);
-  useGameStore.getState().resetGame();
+  // Destroy every entity in the world.
+  for (const entity of koota.query()) entity.destroy();
 
-  // Create player at (2, 2)
-  const player = createPlayerEntity();
-  player.position!.x = 2;
-  player.position!.z = 2;
-  world.add(player);
+  // Reset all singleton traits to their defaults.
+  gameActions().resetGame();
 
-  // Create a 4x4 grid of soil tiles
+  // Create player at (2, 2).
+  const player = spawnPlayer();
+  player.set(Position, { x: 2, y: 0, z: 2 });
+
+  // Create a 4x4 grid of soil tiles.
   for (let x = 0; x < 4; x++) {
     for (let z = 0; z < 4; z++) {
-      world.add(createGridCellEntity(x, z, "soil"));
+      spawnGridCell(x, z, "soil");
     }
   }
 
-  // Give starting seeds
-  useGameStore.getState().addSeed("white-oak", 20);
+  // Give starting seeds (resetGame already seeded 10 white-oak).
+  gameActions().addSeed("white-oak", 20);
+}
+
+/** Return the first tree entity, or throw. */
+function firstTree(): Entity {
+  const t = koota.queryFirst(Tree);
+  if (!t) throw new Error("no tree found");
+  return t;
+}
+
+/** Return the tree at a given grid coordinate, or undefined. */
+function treeAt(gridX: number, gridZ: number): Entity | undefined {
+  for (const t of koota.query(Tree, Position)) {
+    const p = t.get(Position);
+    if (p && Math.round(p.x) === gridX && Math.round(p.z) === gridZ) return t;
+  }
+  return undefined;
+}
+
+/** Plant a tree, then stage it up to Mature (3) with Harvestable.ready = true. */
+function setupMatureTree(x: number, z: number): Entity {
+  plantTree("white-oak", x, z);
+  const tree = treeAt(x, z);
+  if (!tree) throw new Error("tree not found");
+  const td = tree.get(Tree);
+  if (td) tree.set(Tree, { ...td, stage: 3, progress: 0 });
+
+  const species = getSpeciesById("white-oak");
+  if (species) {
+    tree.add(
+      Harvestable({
+        resources: species.yield.map((y) => ({
+          type: y.resource,
+          amount: y.amount,
+        })),
+        cooldownElapsed: 0,
+        cooldownTotal: species.harvestCycleSec,
+        ready: true,
+      }),
+    );
+  }
+  return tree;
 }
 
 describe("GameActions", () => {
@@ -58,26 +113,29 @@ describe("GameActions", () => {
       const result = plantTree("white-oak", 0, 0);
       expect(result).toBe(true);
 
-      const state = useGameStore.getState();
-      expect(state.treesPlanted).toBe(1);
-      expect(state.xp).toBeGreaterThan(0);
-      // resetGame gives 10 seeds, addSeed adds 20 = 30 total, minus 1 = 29
-      expect(state.seeds["white-oak"]).toBe(29);
+      // resetGame gives 10 seeds, addSeed adds 20 = 30 total, minus 1 = 29.
+      const seeds = koota.get(Seeds);
+      expect(seeds?.["white-oak"]).toBe(29);
+
+      // Plant granted some XP and incremented the tracker.
+      expect((koota.get(PlayerProgress)?.xp ?? 0)).toBeGreaterThan(0);
+      expect(koota.get(Tracking)?.treesPlanted).toBe(1);
     });
 
     it("creates a tree entity in the ECS world", () => {
       plantTree("white-oak", 1, 1);
-      const trees = [...treesQuery];
+      const trees = koota.query(Tree);
       expect(trees.length).toBe(1);
-      expect(trees[0].tree?.speciesId).toBe("white-oak");
+      expect(trees[0].get(Tree)?.speciesId).toBe("white-oak");
     });
 
     it("marks tile as occupied after planting", () => {
       plantTree("white-oak", 0, 0);
-      const cell = [...gridCellsQuery].find(
-        (c) => c.gridCell?.gridX === 0 && c.gridCell?.gridZ === 0,
-      );
-      expect(cell?.gridCell?.occupied).toBe(true);
+      const cell = koota.query(GridCell).find((c) => {
+        const gc = c.get(GridCell);
+        return gc?.gridX === 0 && gc?.gridZ === 0;
+      });
+      expect(cell?.get(GridCell)?.occupied).toBe(true);
     });
 
     it("fails if tile is occupied", () => {
@@ -87,7 +145,7 @@ describe("GameActions", () => {
     });
 
     it("fails if no seeds available", () => {
-      useGameStore.setState({ seeds: {} });
+      koota.set(Seeds, {});
       const result = plantTree("white-oak", 0, 0);
       expect(result).toBe(false);
     });
@@ -99,7 +157,7 @@ describe("GameActions", () => {
 
     it("tracks species planted", () => {
       plantTree("white-oak", 0, 0);
-      expect(useGameStore.getState().speciesPlanted).toContain("white-oak");
+      expect(koota.get(Tracking)?.speciesPlanted).toContain("white-oak");
     });
   });
 
@@ -107,30 +165,31 @@ describe("GameActions", () => {
   describe("waterTree", () => {
     it("waters an unwatered tree", () => {
       plantTree("white-oak", 1, 1);
-      const tree = [...treesQuery][0];
-      const result = waterTree(tree.id);
+      const tree = firstTree();
+      const result = waterTree(tree);
       expect(result).toBe(true);
-      expect(tree.tree?.watered).toBe(true);
+      expect(tree.get(Tree)?.watered).toBe(true);
     });
 
     it("awards XP for watering", () => {
       plantTree("white-oak", 1, 1);
-      const tree = [...treesQuery][0];
-      const xpBefore = useGameStore.getState().xp;
-      waterTree(tree.id);
-      expect(useGameStore.getState().xp).toBe(xpBefore + 5);
+      const tree = firstTree();
+      const xpBefore = koota.get(PlayerProgress)?.xp ?? 0;
+      waterTree(tree);
+      const xpAfter = koota.get(PlayerProgress)?.xp ?? 0;
+      expect(xpAfter).toBe(xpBefore + 5);
     });
 
     it("fails if tree is already watered", () => {
       plantTree("white-oak", 1, 1);
-      const tree = [...treesQuery][0];
-      waterTree(tree.id);
-      const result = waterTree(tree.id);
+      const tree = firstTree();
+      waterTree(tree);
+      const result = waterTree(tree);
       expect(result).toBe(false);
     });
 
     it("fails for non-existent tree", () => {
-      const result = waterTree("nonexistent");
+      const result = waterTree(undefined);
       expect(result).toBe(false);
     });
   });
@@ -138,64 +197,42 @@ describe("GameActions", () => {
   // ─── harvestTree ─────────────────────────────
   describe("harvestTree", () => {
     it("harvests a mature tree and gains resources", () => {
-      plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      // Advance to stage 3 (mature)
-      tree.tree!.stage = 3;
-      tree.tree!.progress = 0;
-      initHarvestable(tree);
-      tree.harvestable!.ready = true;
-
-      const result = harvestTree(tree.id);
+      const tree = setupMatureTree(0, 0);
+      const result = harvestTree(tree);
       expect(result).not.toBeNull();
       expect(result!.length).toBeGreaterThan(0);
-      expect(useGameStore.getState().treesHarvested).toBe(1);
+      expect(koota.get(Tracking)?.treesHarvested).toBe(1);
     });
 
     it("removes tree from world after harvest", () => {
-      plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      tree.tree!.stage = 3;
-      initHarvestable(tree);
-      tree.harvestable!.ready = true;
-
-      harvestTree(tree.id);
-      expect([...treesQuery].length).toBe(0);
+      const tree = setupMatureTree(0, 0);
+      harvestTree(tree);
+      expect(koota.query(Tree).length).toBe(0);
     });
 
     it("clears tile occupancy after harvest", () => {
-      plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      tree.tree!.stage = 3;
-      initHarvestable(tree);
-      tree.harvestable!.ready = true;
-
-      harvestTree(tree.id);
-      const cell = [...gridCellsQuery].find(
-        (c) => c.gridCell?.gridX === 0 && c.gridCell?.gridZ === 0,
-      );
-      expect(cell?.gridCell?.occupied).toBe(false);
+      const tree = setupMatureTree(0, 0);
+      harvestTree(tree);
+      const cell = koota.query(GridCell).find((c) => {
+        const gc = c.get(GridCell);
+        return gc?.gridX === 0 && gc?.gridZ === 0;
+      });
+      expect(cell?.get(GridCell)?.occupied).toBe(false);
     });
 
     it("fails for immature tree (stage < 3)", () => {
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      const result = harvestTree(tree.id);
+      const tree = firstTree();
+      const result = harvestTree(tree);
       expect(result).toBeNull();
     });
 
     it("adds resources to the store", () => {
-      plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      tree.tree!.stage = 3;
-      initHarvestable(tree);
-      tree.harvestable!.ready = true;
-
-      const timberBefore = useGameStore.getState().resources.timber;
-      harvestTree(tree.id);
-      expect(useGameStore.getState().resources.timber).toBeGreaterThan(
-        timberBefore,
-      );
+      const timberBefore = koota.get(Resources)?.timber ?? 0;
+      const tree = setupMatureTree(0, 0);
+      harvestTree(tree);
+      const timberAfter = koota.get(Resources)?.timber ?? 0;
+      expect(timberAfter).toBeGreaterThan(timberBefore);
     });
   });
 
@@ -203,19 +240,19 @@ describe("GameActions", () => {
   describe("pruneTree", () => {
     it("marks a mature tree as pruned", () => {
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      tree.tree!.stage = 3;
-      initHarvestable(tree);
+      const tree = firstTree();
+      const td = tree.get(Tree);
+      if (td) tree.set(Tree, { ...td, stage: 3 });
 
-      const result = pruneTree(tree.id);
+      const result = pruneTree(tree);
       expect(result).toBe(true);
-      expect(tree.tree?.pruned).toBe(true);
+      expect(tree.get(Tree)?.pruned).toBe(true);
     });
 
     it("fails for immature tree", () => {
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      const result = pruneTree(tree.id);
+      const tree = firstTree();
+      const result = pruneTree(tree);
       expect(result).toBe(false);
     });
   });
@@ -223,37 +260,37 @@ describe("GameActions", () => {
   // ─── fertilizeTree ───────────────────────────
   describe("fertilizeTree", () => {
     it("fertilizes a tree when player has 5 acorns", () => {
-      useGameStore.getState().addResource("acorns", 10);
+      gameActions().addResource("acorns", 10);
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
+      const tree = firstTree();
 
-      const result = fertilizeTree(tree.id);
+      const result = fertilizeTree(tree);
       expect(result).toBe(true);
-      expect(tree.tree?.fertilized).toBe(true);
+      expect(tree.get(Tree)?.fertilized).toBe(true);
     });
 
     it("spends 5 acorns", () => {
-      useGameStore.getState().addResource("acorns", 10);
+      gameActions().addResource("acorns", 10);
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
+      const tree = firstTree();
 
-      fertilizeTree(tree.id);
-      expect(useGameStore.getState().resources.acorns).toBe(5);
+      fertilizeTree(tree);
+      expect(koota.get(Resources)?.acorns).toBe(5);
     });
 
     it("fails if already fertilized", () => {
-      useGameStore.getState().addResource("acorns", 20);
+      gameActions().addResource("acorns", 20);
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      fertilizeTree(tree.id);
-      const result = fertilizeTree(tree.id);
+      const tree = firstTree();
+      fertilizeTree(tree);
+      const result = fertilizeTree(tree);
       expect(result).toBe(false);
     });
 
     it("fails if not enough acorns", () => {
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      const result = fertilizeTree(tree.id);
+      const tree = firstTree();
+      const result = fertilizeTree(tree);
       expect(result).toBe(false);
     });
   });
@@ -261,15 +298,17 @@ describe("GameActions", () => {
   // ─── clearRock ───────────────────────────────
   describe("clearRock", () => {
     it("converts a rock tile to soil", () => {
-      // Add a rock tile at (3, 3)
-      const rockCell = [...gridCellsQuery].find(
-        (c) => c.gridCell?.gridX === 3 && c.gridCell?.gridZ === 3,
-      );
-      if (rockCell?.gridCell) rockCell.gridCell.type = "rock";
+      // Flip a soil tile at (3, 3) into a rock tile.
+      const rockCell = koota.query(GridCell).find((c) => {
+        const gc = c.get(GridCell);
+        return gc?.gridX === 3 && gc?.gridZ === 3;
+      });
+      const gc = rockCell?.get(GridCell);
+      if (rockCell && gc) rockCell.set(GridCell, { ...gc, type: "rock" });
 
       const result = clearRock(3, 3);
       expect(result).toBe(true);
-      expect(rockCell?.gridCell?.type).toBe("soil");
+      expect(rockCell?.get(GridCell)?.type).toBe("soil");
     });
 
     it("fails on non-rock tile", () => {
@@ -282,20 +321,21 @@ describe("GameActions", () => {
   describe("removeSeedling", () => {
     it("removes a stage 0 tree", () => {
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      expect(tree.tree?.stage).toBe(0);
+      const tree = firstTree();
+      expect(tree.get(Tree)?.stage).toBe(0);
 
-      const result = removeSeedling(tree.id);
+      const result = removeSeedling(tree);
       expect(result).toBe(true);
-      expect([...treesQuery].length).toBe(0);
+      expect(koota.query(Tree).length).toBe(0);
     });
 
     it("fails for stage 2+ tree", () => {
       plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      tree.tree!.stage = 2;
+      const tree = firstTree();
+      const td = tree.get(Tree);
+      if (td) tree.set(Tree, { ...td, stage: 2 });
 
-      const result = removeSeedling(tree.id);
+      const result = removeSeedling(tree);
       expect(result).toBe(false);
     });
   });
@@ -314,7 +354,7 @@ describe("GameActions", () => {
     it("findPlantableTiles returns only empty soil tiles", () => {
       plantTree("white-oak", 0, 0);
       const tiles = findPlantableTiles();
-      // 4x4 grid = 16 tiles, minus 1 occupied = 15
+      // 4x4 grid = 16 tiles, minus 1 occupied = 15.
       expect(tiles.length).toBe(15);
     });
 
@@ -323,27 +363,26 @@ describe("GameActions", () => {
       plantTree("white-oak", 1, 0);
       expect(findWaterableTrees().length).toBe(2);
 
-      const tree = [...treesQuery][0];
-      waterTree(tree.id);
+      const tree = firstTree();
+      waterTree(tree);
       expect(findWaterableTrees().length).toBe(1);
     });
 
     it("findHarvestableTrees returns ready-to-harvest trees", () => {
-      plantTree("white-oak", 0, 0);
-      const tree = [...treesQuery][0];
-      tree.tree!.stage = 3;
-      initHarvestable(tree);
-      tree.harvestable!.ready = true;
-
+      setupMatureTree(0, 0);
       expect(findHarvestableTrees().length).toBe(1);
     });
 
     it("findMatureTrees returns stage 3+ trees", () => {
       plantTree("white-oak", 0, 0);
       plantTree("white-oak", 1, 0);
-      const trees = [...treesQuery];
-      trees[0].tree!.stage = 3;
-      trees[1].tree!.stage = 1;
+      const trees = koota.query(Tree, Position);
+      const t0 = trees[0];
+      const t1 = trees[1];
+      const td0 = t0.get(Tree);
+      const td1 = t1.get(Tree);
+      if (td0) t0.set(Tree, { ...td0, stage: 3 });
+      if (td1) t1.set(Tree, { ...td1, stage: 1 });
 
       expect(findMatureTrees().length).toBe(1);
     });
@@ -357,14 +396,19 @@ describe("GameActions", () => {
   // ─── Tool helpers ────────────────────────────
   describe("tool helpers", () => {
     it("spendToolStamina spends stamina for a tool", () => {
-      useGameStore.setState({ stamina: 100 });
+      const player = koota.queryFirst(IsPlayer, FarmerState);
+      if (player) player.set(FarmerState, { stamina: 100, maxStamina: 100 });
       const result = spendToolStamina("trowel");
       expect(result).toBe(true);
-      expect(useGameStore.getState().stamina).toBe(95); // trowel costs 5
+      // trowel costs 5.
+      expect(
+        koota.queryFirst(IsPlayer, FarmerState)?.get(FarmerState)?.stamina,
+      ).toBe(95);
     });
 
     it("spendToolStamina returns false when stamina insufficient", () => {
-      useGameStore.setState({ stamina: 2 });
+      const player = koota.queryFirst(IsPlayer, FarmerState);
+      if (player) player.set(FarmerState, { stamina: 2, maxStamina: 100 });
       const result = spendToolStamina("trowel");
       expect(result).toBe(false);
     });
@@ -376,12 +420,12 @@ describe("GameActions", () => {
 
     it("selectTool updates store", () => {
       selectTool("axe");
-      expect(useGameStore.getState().selectedTool).toBe("axe");
+      expect(koota.get(PlayerProgress)?.selectedTool).toBe("axe");
     });
 
     it("selectSpecies updates store", () => {
       selectSpecies("sugar-maple");
-      expect(useGameStore.getState().selectedSpecies).toBe("sugar-maple");
+      expect(koota.get(PlayerProgress)?.selectedSpecies).toBe("sugar-maple");
     });
   });
 });

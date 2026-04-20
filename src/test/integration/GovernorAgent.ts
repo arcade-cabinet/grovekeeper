@@ -11,9 +11,12 @@
  * atomically — no multi-tick goal chains needed.
  */
 
+import type { Entity } from "koota";
 import { GameEntity, GoalEvaluator, Think } from "yuka";
+import { actions as gameActions } from "@/actions";
 import type { ResourceType } from "@/config/resources";
 import { getSpeciesById } from "@/config/trees";
+import { koota } from "@/koota";
 import {
   findHarvestableTrees,
   findMatureTrees,
@@ -28,8 +31,15 @@ import {
   spendToolStamina,
   waterTree,
 } from "@/player-actions/GameActions";
-import { useGameStore } from "@/stores/gameStore";
 import { BASE_TRADE_RATES, executeTrade } from "@/systems/trading";
+import {
+  GridCell,
+  Harvestable,
+  Position,
+  Resources,
+  Seeds,
+  Tree,
+} from "@/traits";
 
 // ──────────────────────────────────────────────
 // Governor Profile
@@ -96,11 +106,11 @@ type ActionType = "plant" | "water" | "harvest" | "prune" | "trade" | "explore";
 
 class PlantEvaluator extends GoalEvaluator<GovernorEntity> {
   calculateDesirability(): number {
-    const store = useGameStore.getState();
+    const seeds = koota.get(Seeds) ?? {};
     const tiles = findPlantableTiles();
     if (tiles.length === 0) return 0;
 
-    const totalSeeds = Object.values(store.seeds).reduce((a, b) => a + b, 0);
+    const totalSeeds = Object.values(seeds).reduce((a, b) => a + b, 0);
     if (totalSeeds === 0) return 0;
 
     const tileFactor = Math.min(1, tiles.length / 8);
@@ -143,9 +153,11 @@ class PruneEvaluator extends GoalEvaluator<GovernorEntity> {
   calculateDesirability(): number {
     // Score high for mature unpruned trees that aren't yet harvestable.ready —
     // these are in the cooldown window where pruning gives 1.5x yield bonus.
-    const trees = findMatureTrees().filter(
-      (t) => t.tree && !t.tree.pruned && !t.harvestable?.ready,
-    );
+    const trees = findMatureTrees().filter((t) => {
+      const tree = t.get(Tree);
+      const h = t.has(Harvestable) ? t.get(Harvestable) : undefined;
+      return tree && !tree.pruned && !h?.ready;
+    });
     if (trees.length === 0) return 0;
 
     return this.characterBias * Math.min(1, trees.length / 2);
@@ -156,8 +168,8 @@ class PruneEvaluator extends GoalEvaluator<GovernorEntity> {
 
 class TradeEvaluator extends GoalEvaluator<GovernorEntity> {
   calculateDesirability(): number {
-    const store = useGameStore.getState();
-    const { resources } = store;
+    const resources = koota.get(Resources);
+    if (!resources) return 0;
 
     // Score high when we have excess of one resource and zero of another
     for (const rate of BASE_TRADE_RATES) {
@@ -307,14 +319,16 @@ export class GovernorAgent {
     if (tiles.length === 0) return;
 
     const target = tiles[Math.floor(Math.random() * tiles.length)];
+    const gc = target.get(GridCell);
+    if (!gc) return;
     const speciesId = this.pickSpecies();
     if (!speciesId) return;
 
     if (!spendToolStamina("trowel")) return;
 
     selectTool("trowel");
-    movePlayerTo(target.gridX, target.gridZ);
-    plantTree(speciesId, target.gridX, target.gridZ);
+    movePlayerTo(gc.gridX, gc.gridZ);
+    plantTree(speciesId, gc.gridX, gc.gridZ);
   }
 
   private doWater(): void {
@@ -325,14 +339,16 @@ export class GovernorAgent {
 
     // Pick nearest unwatered tree
     const closest = this.pickNearest(trees);
-    const gx = closest.position ? Math.round(closest.position.x) : 0;
-    const gz = closest.position ? Math.round(closest.position.z) : 0;
+    if (!closest) return;
+    const pos = closest.get(Position);
+    const gx = pos ? Math.round(pos.x) : 0;
+    const gz = pos ? Math.round(pos.z) : 0;
 
     if (!spendToolStamina("watering-can")) return;
 
     selectTool("watering-can");
     movePlayerTo(gx, gz);
-    waterTree(closest.id);
+    waterTree(closest);
   }
 
   private doHarvest(): void {
@@ -342,44 +358,50 @@ export class GovernorAgent {
     if (trees.length === 0) return;
 
     const target = trees[0];
-    const gx = target.position ? Math.round(target.position.x) : 0;
-    const gz = target.position ? Math.round(target.position.z) : 0;
+    const pos = target.get(Position);
+    const gx = pos ? Math.round(pos.x) : 0;
+    const gz = pos ? Math.round(pos.z) : 0;
 
     if (!spendToolStamina("axe")) return;
 
     selectTool("axe");
     movePlayerTo(gx, gz);
-    harvestTree(target.id);
+    harvestTree(target);
   }
 
   private doPrune(): void {
     this.stats.prunesAttempted++;
 
-    const trees = findMatureTrees().filter((t) => t.tree && !t.tree.pruned);
+    const trees = findMatureTrees().filter((t) => {
+      const tree = t.get(Tree);
+      return tree && !tree.pruned;
+    });
     if (trees.length === 0) return;
 
     const target = trees[0];
-    const gx = target.position ? Math.round(target.position.x) : 0;
-    const gz = target.position ? Math.round(target.position.z) : 0;
+    const pos = target.get(Position);
+    const gx = pos ? Math.round(pos.x) : 0;
+    const gz = pos ? Math.round(pos.z) : 0;
 
     if (!spendToolStamina("pruning-shears")) return;
 
     selectTool("pruning-shears");
     movePlayerTo(gx, gz);
-    pruneTree(target.id);
+    pruneTree(target);
   }
 
   private doTrade(): void {
-    const store = useGameStore.getState();
-    const { resources } = store;
+    const a = gameActions();
+    const resources = koota.get(Resources);
+    if (!resources) return;
 
     // Find the most beneficial trade: prefer trades where target resource is 0
     for (const rate of BASE_TRADE_RATES) {
       if (resources[rate.from] >= rate.fromAmount) {
         const result = executeTrade(rate, rate.fromAmount, resources);
         if (result) {
-          store.spendResource(result.spend.type, result.spend.amount);
-          store.addResource(result.gain.type, result.gain.amount);
+          a.spendResource(result.spend.type, result.spend.amount);
+          a.addResource(result.gain.type, result.gain.amount);
           this.stats.tradesExecuted++;
           return;
         }
@@ -395,17 +417,19 @@ export class GovernorAgent {
 
   /** Pick the best species to plant based on resource needs, preferences, and seed availability. */
   private pickSpecies(): string | null {
-    const store = useGameStore.getState();
+    const resources = koota.get(Resources);
+    const seeds = koota.get(Seeds) ?? {};
+    if (!resources) return null;
 
     // Priority 1: Pick species that produce a resource we're low on
     const LOW_THRESHOLD = 5;
     const neededResources: ResourceType[] = [];
-    if (store.resources.sap < LOW_THRESHOLD) neededResources.push("sap");
-    if (store.resources.fruit < LOW_THRESHOLD) neededResources.push("fruit");
-    if (store.resources.acorns < LOW_THRESHOLD) neededResources.push("acorns");
+    if (resources.sap < LOW_THRESHOLD) neededResources.push("sap");
+    if (resources.fruit < LOW_THRESHOLD) neededResources.push("fruit");
+    if (resources.acorns < LOW_THRESHOLD) neededResources.push("acorns");
 
     if (neededResources.length > 0) {
-      for (const [sp, count] of Object.entries(store.seeds)) {
+      for (const [sp, count] of Object.entries(seeds)) {
         if (count <= 0) continue;
         const species = getSpeciesById(sp);
         if (!species) continue;
@@ -419,7 +443,7 @@ export class GovernorAgent {
     // Priority 2: Profile preferred species
     if (this.profile.preferredSpecies) {
       for (const sp of this.profile.preferredSpecies) {
-        if ((store.seeds[sp] ?? 0) > 0) {
+        if ((seeds[sp] ?? 0) > 0) {
           // Validate species exists
           if (getSpeciesById(sp)) return sp;
         }
@@ -427,17 +451,15 @@ export class GovernorAgent {
     }
 
     // Priority 3: Any valid species with seeds
-    for (const [sp, count] of Object.entries(store.seeds)) {
+    for (const [sp, count] of Object.entries(seeds)) {
       if (count > 0 && getSpeciesById(sp)) return sp;
     }
 
     return null;
   }
 
-  /** Pick the nearest entity to the current player position. */
-  private pickNearest(
-    entities: { id: string; position?: { x: number; z: number } }[],
-  ): (typeof entities)[0] {
+  /** Pick the nearest Koota entity (with a Position trait) to the current player position. */
+  private pickNearest(entities: Entity[]): Entity | undefined {
     const playerTile = { gridX: 0, gridZ: 0 };
     const tile = getPlayerTile();
     if (tile) {
@@ -445,13 +467,14 @@ export class GovernorAgent {
       playerTile.gridZ = tile.gridZ;
     }
 
-    let closest = entities[0];
+    let closest: Entity | undefined = entities[0];
     let minDist = Number.POSITIVE_INFINITY;
 
     for (const entity of entities) {
-      if (!entity.position) continue;
-      const dx = entity.position.x - playerTile.gridX;
-      const dz = entity.position.z - playerTile.gridZ;
+      const pos = entity.get(Position);
+      if (!pos) continue;
+      const dx = pos.x - playerTile.gridX;
+      const dz = pos.z - playerTile.gridZ;
       const dist = dx * dx + dz * dz;
       if (dist < minDist) {
         minDist = dist;
