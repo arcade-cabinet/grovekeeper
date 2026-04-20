@@ -48,3 +48,8 @@ expo-env.d.ts
 .remember/
 memory-bank/
 .claude/
+.ralph-tui/
+
+# Ad-hoc scratch files accidentally committed to public/
+public/test.txt
+public/testdir/
