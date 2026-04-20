@@ -675,6 +675,10 @@ export const gameActions = createActions((world) => {
           activeQuests: prev.activeQuests.filter((q) => q.id !== questId),
           completedQuestIds: [...prev.completedQuestIds, questId],
         }));
+        // T33: quest-complete feedback. "success" chord is distinct from
+        // "levelUp" fanfare and "achievement" bell; reuses existing sound
+        // rather than synthesizing another Tone.js graph.
+        audioManager.play("success");
       },
       setLastQuestRefresh: (time: number) => {
         world.set(Quests, (prev) => ({ ...prev, lastQuestRefresh: time }));
