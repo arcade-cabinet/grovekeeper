@@ -27,3 +27,26 @@ export function hashString(str: string): number {
   }
   return hash >>> 0;
 }
+
+/**
+ * Scoped deterministic RNG — combines a scope string with any number of
+ * keys (strings or numbers) into a single 32-bit seed, then returns a
+ * Mulberry32 generator. Two callers using the same scope + keys always
+ * get the same sequence, which is how we keep world/NPC/weather rolls
+ * reproducible for a given seed.
+ *
+ * @param scope - Namespace like "npc-mesh" or "weather-roll"
+ * @param keys  - Additional disambiguating values (entity id, world seed, etc.)
+ * @returns A function returning the next pseudo-random number in [0, 1)
+ */
+export function scopedRNG(
+  scope: string,
+  ...keys: Array<string | number>
+): () => number {
+  let seed = hashString(scope);
+  for (const key of keys) {
+    const k = typeof key === "number" ? key | 0 : hashString(key);
+    seed = (seed ^ (k + 0x9e3779b9 + (seed << 6) + (seed >>> 2))) | 0;
+  }
+  return createRNG(seed);
+}

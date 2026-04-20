@@ -19,6 +19,7 @@ import type { Scene } from "@babylonjs/core/scene";
 import { koota } from "@/koota";
 import { getNpcTemplate } from "@/npcs/NpcManager";
 import type { HatStyle, NpcAppearance } from "@/npcs/types";
+import { scopedRNG } from "@/shared/utils/seedRNG";
 import { Npc, Position, Renderable } from "@/traits";
 import { loadModel } from "./ModelLoader";
 
@@ -294,8 +295,10 @@ export class NpcMeshManager {
         templateId: npc.templateId,
       };
 
-      // Random phase offset so NPCs don't breathe in unison
-      const phaseOffset = Math.random() * Math.PI * 2;
+      // Deterministic phase offset so NPCs don't breathe in unison,
+      // but a given NPC always gets the same offset across saves.
+      const phaseOffset =
+        scopedRNG("npc-phase-offset", npc.templateId, eid)() * Math.PI * 2;
       this.meshes.set(eid, {
         mesh,
         idleAnim,
