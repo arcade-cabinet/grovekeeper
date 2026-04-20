@@ -1,4 +1,18 @@
-name: Deploy to GitHub Pages
+name: Deploy
+
+# T105: Deploy to GitHub Pages on every push to main.
+#
+# Architecture note (ci -> release -> cd split):
+# - release.yml owns: release-please PR management + building/attaching release
+#   tarballs and APKs to tagged GitHub Releases (tag-driven).
+# - cd.yml owns: GitHub Pages deployment on every push to main (continuous deploy).
+#
+# Compromise: because release.yml's build-release job only runs on release-please
+# tag events (not on every push), cd.yml cannot purely consume release.yml artifacts
+# for non-release pushes. cd.yml therefore performs its own build for Pages. This is
+# intentional -- Pages always reflects HEAD of main, not only tagged releases.
+# When release.yml does produce a tagged release, its web tarball is attached to the
+# GitHub Release; that artifact and the Pages deployment are identical in content.
 
 on:
   push:
@@ -16,7 +30,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build
+    name: Build for Pages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -32,6 +46,8 @@ jobs:
 
       - name: Build
         run: pnpm build
+        env:
+          NODE_ENV: production
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
@@ -39,7 +55,7 @@ jobs:
           path: dist
 
   deploy:
-    name: Deploy
+    name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     needs: build
     environment:

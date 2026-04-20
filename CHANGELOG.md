@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- CI pipeline split into `ci.yml` (lint+tsc+test+build+size+android-apk on every PR) / `release.yml` (release-please + tagged release asset build) / `cd.yml` (deploy on merge to main). Android APK job gated behind `android/gradlew` existence — skips until `npx cap add android` is run and committed.
+
 ## [1.0.0-alpha.1] - 2026-04-20
 
 First alpha of the 1.0 line. Complete framework port from React + Miniplex + Zustand + shadcn/Radix to SolidJS + Koota + Tone.js + hand-rolled Solid primitives. Babylon 8 and Capacitor 8 stay. All 1387+ tests green, zero type errors, zero lint errors.

@@ -7,13 +7,103 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+      upload_url: ${{ steps.rp.outputs.upload_url }}
     steps:
       - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
+        id: rp
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # Build and attach production assets to the GitHub Release when
+  # release-please creates one (i.e. when a release PR merges).
+  # This is the canonical build for a release - cd.yml deploys what this produces.
+  build-release:
+    name: Build & Attach Release Assets
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build production bundle
+        run: pnpm build
+        env:
+          NODE_ENV: production
+
+      - name: Package web build as tarball
+        run: tar -czf grovekeeper-web.tar.gz dist/
+
+      - name: Upload web tarball to release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: grovekeeper-web.tar.gz
+
+      # Also upload dist/ as a workflow artifact so cd.yml can download it
+      # on the same push-to-main event without waiting for the release tag.
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: dist
+
+      # T103 follow-up: Android APK release build
+      # Gated on android/ being present (same as ci.yml android-apk job).
+      - name: Check for Android project
+        id: android-check
+        run: |
+          if [ -f android/gradlew ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up JDK 21 (Temurin)
+        if: steps.android-check.outputs.present == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        if: steps.android-check.outputs.present == 'true'
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools-version: '34.0.0'
+
+      - name: Sync Capacitor
+        if: steps.android-check.outputs.present == 'true'
+        run: npx cap sync android
+
+      - name: Build release APK
+        if: steps.android-check.outputs.present == 'true'
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Upload APK to release
+        if: steps.android-check.outputs.present == 'true'
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: android/app/build/outputs/apk/release/app-release-unsigned.apk
