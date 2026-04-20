@@ -1,16 +1,25 @@
 /**
- * AudioManager — Web Audio API synthesized sound effects for Grovekeeper.
+ * AudioManager — Tone.js synthesized sound effects for Grovekeeper.
  *
- * All SFX are generated programmatically (no audio files required).
- * Tones are designed to match the cozy woodland aesthetic:
- *   - Soft sine/triangle waves for UI and planting
+ * All SFX are generated programmatically via Tone.js synths (no audio
+ * files required). Tones match the cozy woodland aesthetic:
+ *   - Soft sine/triangle synths for UI and planting
  *   - Gentle chimes for harvesting and achievements
  *   - Filtered noise for weather and tools
  *
+ * Browser autoplay policies require audio to start after a user
+ * gesture. Call `startAudio()` from a click/tap handler before any
+ * `audioManager.play(...)` calls to unlock the audio context.
+ *
  * Usage:
- *   audioManager.play("plant");
+ *   await startAudio();         // once, from user gesture
+ *   audioManager.play("plant"); // any time after
  *   audioManager.setEnabled(false);
  */
+
+import * as Tone from "tone";
+
+type BasicOscType = "sine" | "triangle" | "square" | "sawtooth";
 
 type SoundId =
   | "click"
@@ -26,36 +35,42 @@ type SoundId =
   | "error"
   | "success";
 
-class AudioManagerImpl {
-  private ctx: AudioContext | null = null;
-  private enabled = true;
-  private masterGain: GainNode | null = null;
+/**
+ * Unlock the Tone.js audio context. Must be called from a user gesture
+ * (click/tap/keydown handler) before any play() calls will emit sound.
+ * Safe to call multiple times — Tone.start() resolves immediately if
+ * the context is already running.
+ */
+export async function startAudio(): Promise<void> {
+  await Tone.start();
+}
 
-  /** Lazily create AudioContext (must happen after user gesture on mobile). */
-  private ensureContext(): AudioContext | null {
-    // Re-create if previously disposed (self-healing singleton)
-    if (this.ctx?.state === "closed") {
-      this.ctx = null;
-      this.masterGain = null;
-    }
-    if (this.ctx) return this.ctx;
+class AudioManagerImpl {
+  private enabled = true;
+  private masterGain: Tone.Gain | null = null;
+  private initialized = false;
+
+  /** Lazy initialization — creates master gain + reusable synths. */
+  private ensureInitialized(): boolean {
+    if (this.initialized) return true;
     try {
-      this.ctx = new AudioContext();
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = 0.3; // conservative master volume
-      this.masterGain.connect(this.ctx.destination);
-      return this.ctx;
+      this.masterGain = new Tone.Gain(0.3).toDestination();
+      this.initialized = true;
+      return true;
     } catch {
-      return null;
+      return false;
     }
   }
 
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
-    if (!enabled && this.ctx?.state === "running") {
-      this.ctx.suspend();
-    } else if (enabled && this.ctx?.state === "suspended") {
-      this.ctx.resume();
+    // Use Tone's context wrappers — they handle suspend/resume
+    // semantics across browsers without cross-casting raw contexts.
+    const ctx = Tone.getContext();
+    if (!enabled && ctx.state === "running") {
+      ctx.rawContext.suspend?.call(ctx.rawContext);
+    } else if (enabled && ctx.state === "suspended") {
+      ctx.resume();
     }
   }
 
@@ -65,38 +80,33 @@ class AudioManagerImpl {
 
   play(id: SoundId): void {
     if (!this.enabled) return;
-    const ctx = this.ensureContext();
+    if (!this.ensureInitialized()) return;
     const master = this.masterGain;
-    if (!ctx || !master) return;
-
-    // Resume context if suspended (e.g. after tab switch)
-    if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
-    }
+    if (!master) return;
 
     switch (id) {
       case "click":
-        this.playTone(ctx, { freq: 800, duration: 0.04, type: "sine", gain: 0.15 });
+        this.playTone({ freq: 800, duration: 0.04, type: "sine", gain: 0.15 });
         break;
       case "plant":
-        this.playRisingTone(ctx, 300, 550, 0.12, "triangle", 0.2);
+        this.playRisingTone(300, 550, 0.12, "triangle", 0.2);
         break;
       case "water":
-        this.playNoiseBurst(ctx, 0.1, 600, 0.12);
+        this.playNoiseBurst(0.1, 600, 0.12);
         break;
       case "harvest":
-        this.playChime(ctx, [440, 554, 659], 0.15, 0.2);
+        this.playChime([440, 554, 659], 0.15, 0.2);
         break;
       case "chop":
-        this.playNoiseBurst(ctx, 0.06, 200, 0.15);
+        this.playNoiseBurst(0.06, 200, 0.15);
         break;
       case "levelUp":
-        this.playArpeggio(ctx, [523, 659, 784, 1047], 0.1, 0.2);
+        this.playArpeggio([523, 659, 784, 1047], 0.1, 0.2);
         break;
       case "achievement":
-        this.playArpeggio(ctx, [440, 554, 659, 880], 0.12, 0.25);
+        this.playArpeggio([440, 554, 659, 880], 0.12, 0.25);
         // Sustain final note
-        this.playTone(ctx, {
+        this.playTone({
           freq: 880,
           duration: 0.4,
           type: "sine",
@@ -105,14 +115,14 @@ class AudioManagerImpl {
         });
         break;
       case "toolSelect":
-        this.playTone(ctx, { freq: 660, duration: 0.03, type: "square", gain: 0.08 });
+        this.playTone({ freq: 660, duration: 0.03, type: "square", gain: 0.08 });
         break;
       case "seasonChange":
-        this.playChord(ctx, [330, 440, 554], 0.5, 0.1);
+        this.playChord([330, 440, 554], 0.5, 0.1);
         break;
       case "build":
-        this.playTone(ctx, { freq: 220, duration: 0.08, type: "triangle", gain: 0.2 });
-        this.playTone(ctx, {
+        this.playTone({ freq: 220, duration: 0.08, type: "triangle", gain: 0.2 });
+        this.playTone({
           freq: 330,
           duration: 0.08,
           type: "triangle",
@@ -121,11 +131,11 @@ class AudioManagerImpl {
         });
         break;
       case "error":
-        this.playTone(ctx, { freq: 200, duration: 0.15, type: "sawtooth", gain: 0.1 });
+        this.playTone({ freq: 200, duration: 0.15, type: "sawtooth", gain: 0.1 });
         break;
       case "success":
-        this.playTone(ctx, { freq: 520, duration: 0.06, type: "sine", gain: 0.15 });
-        this.playTone(ctx, {
+        this.playTone({ freq: 520, duration: 0.06, type: "sine", gain: 0.15 });
+        this.playTone({
           freq: 780,
           duration: 0.1,
           type: "sine",
@@ -137,100 +147,93 @@ class AudioManagerImpl {
   }
 
   dispose(): void {
-    if (this.ctx) {
-      if (this.ctx.state === "suspended") {
-        this.ctx.resume().catch(() => {});
-      }
-      this.ctx.close();
-      this.ctx = null;
-      this.masterGain = null;
-    }
+    this.masterGain?.dispose();
+    this.masterGain = null;
+    this.initialized = false;
   }
 
   // ---------------------------------------------------------------------------
-  // Primitive synthesizers
+  // Primitive synthesizers — Tone.js
   // ---------------------------------------------------------------------------
 
-  private playTone(
-    ctx: AudioContext,
-    opts: {
-      freq: number;
-      duration: number;
-      type: OscillatorType;
-      gain: number;
-      delay?: number;
-    },
-  ): void {
+  private playTone(opts: {
+    freq: number;
+    duration: number;
+    type: BasicOscType;
+    gain: number;
+    delay?: number;
+  }): void {
     const master = this.masterGain;
     if (!master) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = opts.type;
-    osc.frequency.value = opts.freq;
-    gain.gain.value = opts.gain;
 
-    const startTime = ctx.currentTime + (opts.delay ?? 0);
-    const endTime = startTime + opts.duration;
+    const synth = new Tone.Synth({
+      oscillator: { type: opts.type },
+      envelope: {
+        attack: 0.005,
+        decay: 0,
+        sustain: 1,
+        release: 0.01,
+      },
+      volume: Tone.gainToDb(opts.gain),
+    }).connect(master);
 
-    // Quick fade-out to prevent clicks
-    gain.gain.setValueAtTime(opts.gain, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, endTime);
+    const startAt = Tone.now() + (opts.delay ?? 0);
+    synth.triggerAttackRelease(opts.freq, opts.duration, startAt);
 
-    osc.connect(gain);
-    gain.connect(master);
-    osc.start(startTime);
-    osc.stop(endTime + 0.01);
+    // Auto-dispose after note ends (+small buffer)
+    setTimeout(
+      () => synth.dispose(),
+      (opts.duration + (opts.delay ?? 0) + 0.1) * 1000,
+    );
   }
 
   private playRisingTone(
-    ctx: AudioContext,
     freqStart: number,
     freqEnd: number,
     duration: number,
-    type: OscillatorType,
+    type: BasicOscType,
     gain: number,
   ): void {
     const master = this.masterGain;
     if (!master) return;
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + duration);
-    g.gain.setValueAtTime(gain, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
-    osc.connect(g);
-    g.connect(master);
-    osc.start();
-    osc.stop(ctx.currentTime + duration + 0.01);
+    const synth = new Tone.Synth({
+      oscillator: { type },
+      envelope: { attack: 0.005, decay: 0, sustain: 1, release: 0.01 },
+      volume: Tone.gainToDb(gain),
+    }).connect(master);
+
+    const startAt = Tone.now();
+    synth.triggerAttack(freqStart, startAt);
+    synth.frequency.exponentialRampTo(freqEnd, duration, startAt);
+    synth.triggerRelease(startAt + duration);
+
+    setTimeout(() => synth.dispose(), (duration + 0.1) * 1000);
   }
 
   private playChime(
-    ctx: AudioContext,
     freqs: number[],
     noteDuration: number,
     gain: number,
   ): void {
     for (let i = 0; i < freqs.length; i++) {
-      this.playTone(ctx, {
+      this.playTone({
         freq: freqs[i],
         duration: noteDuration,
         type: "sine",
         gain,
-        delay: i * noteDuration * 0.6, // overlapping notes
+        delay: i * noteDuration * 0.6,
       });
     }
   }
 
   private playArpeggio(
-    ctx: AudioContext,
     freqs: number[],
     noteGap: number,
     gain: number,
   ): void {
     for (let i = 0; i < freqs.length; i++) {
-      this.playTone(ctx, {
+      this.playTone({
         freq: freqs[i],
         duration: noteGap * 1.5,
         type: "sine",
@@ -240,50 +243,43 @@ class AudioManagerImpl {
     }
   }
 
-  private playChord(
-    ctx: AudioContext,
-    freqs: number[],
-    duration: number,
-    gain: number,
-  ): void {
+  private playChord(freqs: number[], duration: number, gain: number): void {
     for (const freq of freqs) {
-      this.playTone(ctx, { freq, duration, type: "sine", gain });
+      this.playTone({ freq, duration, type: "sine", gain });
     }
   }
 
   private playNoiseBurst(
-    ctx: AudioContext,
     duration: number,
     filterFreq: number,
     gain: number,
   ): void {
-    const bufferSize = Math.floor(ctx.sampleRate * duration);
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    const rng = new Uint32Array(bufferSize);
-    crypto.getRandomValues(rng);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (rng[i] / 2147483647.5 - 1);
-    }
-
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.value = filterFreq;
-
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(gain, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-
     const master = this.masterGain;
     if (!master) return;
-    source.connect(filter);
-    filter.connect(g);
-    g.connect(master);
-    source.start();
-    source.stop(ctx.currentTime + duration + 0.01);
+
+    const noise = new Tone.Noise("white").start();
+    const filter = new Tone.Filter(filterFreq, "lowpass");
+    const envelope = new Tone.AmplitudeEnvelope({
+      attack: 0.005,
+      decay: duration,
+      sustain: 0,
+      release: 0.01,
+    });
+
+    noise.volume.value = Tone.gainToDb(gain);
+    noise.chain(filter, envelope, master);
+
+    const startAt = Tone.now();
+    envelope.triggerAttackRelease(duration, startAt);
+
+    setTimeout(
+      () => {
+        noise.stop().dispose();
+        filter.dispose();
+        envelope.dispose();
+      },
+      (duration + 0.1) * 1000,
+    );
   }
 }
 
