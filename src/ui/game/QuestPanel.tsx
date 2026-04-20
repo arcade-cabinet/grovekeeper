@@ -79,8 +79,9 @@ export const QuestPanel = (props: QuestPanelProps) => {
           background: COLORS.autumnGold,
           color: COLORS.soilDark,
         }}
+        aria-label={`Open quests panel${activeQuests().length > 0 ? ` — ${activeQuests().length} active` : ""}`}
       >
-        <RiTrophyLine class="w-4 h-4 sm:mr-1" />
+        <RiTrophyLine class="w-4 h-4 sm:mr-1" aria-hidden="true" />
         <span class="hidden sm:inline text-xs font-semibold">Quests</span>
         <Show when={activeQuests().length > 0}>
           <span
@@ -219,6 +220,7 @@ const QuestCard = (props: QuestCardProps) => {
                 style={{
                   background: `${COLORS.forestGreen}20`,
                 }}
+                aria-label={`${goal.name}: ${goal.currentProgress} of ${goal.targetAmount}`}
               />
             </div>
           )}
@@ -257,6 +259,7 @@ const QuestCard = (props: QuestCardProps) => {
               color: "white",
             }}
             onClick={props.onClaim}
+            aria-label={`Claim reward for quest: ${props.quest.name}`}
           >
             Claim
           </Button>

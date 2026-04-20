@@ -20,6 +20,11 @@ export const StaminaGauge = () => {
   return (
     <div class="flex flex-col items-center gap-1" style={{ width: "28px" }}>
       <div
+        role="progressbar"
+        aria-label="Stamina"
+        aria-valuenow={pct()}
+        aria-valuemin={0}
+        aria-valuemax={100}
         class="relative w-full rounded-lg overflow-hidden"
         style={{
           height: "100px",

@@ -78,7 +78,7 @@ function collectHarvest(
 ): { type: string; amount: number }[] | null {
   const harvestable = entity.get(Harvestable);
   const tree = entity.get(Tree);
-  if (!harvestable || !harvestable.ready || !tree) return null;
+  if (!harvestable?.ready || !tree) return null;
 
   const stageMultiplier = tree.stage >= 4 ? 1.5 : 1.0;
   const prunedMultiplier = tree.pruned ? 1.5 : 1.0;
@@ -266,7 +266,7 @@ export function plantTree(
  * Returns true on success.
  */
 export function waterTree(tree: Entity | undefined | null): boolean {
-  if (!tree || !tree.isAlive() || !tree.has(Tree)) return false;
+  if (!tree?.isAlive() || !tree.has(Tree)) return false;
   const treeData = tree.get(Tree);
   if (!treeData || treeData.watered) return false;
 
@@ -284,7 +284,7 @@ export function waterTree(tree: Entity | undefined | null): boolean {
 export function harvestTree(
   tree: Entity | undefined | null,
 ): { type: string; amount: number }[] | null {
-  if (!tree || !tree.isAlive() || !tree.has(Tree)) return null;
+  if (!tree?.isAlive() || !tree.has(Tree)) return null;
   const treeData = tree.get(Tree);
   if (!treeData || treeData.stage < 3) return null;
 
@@ -339,7 +339,7 @@ export function harvestTree(
  * Returns true on success.
  */
 export function pruneTree(tree: Entity | undefined | null): boolean {
-  if (!tree || !tree.isAlive() || !tree.has(Tree)) return false;
+  if (!tree?.isAlive() || !tree.has(Tree)) return false;
   const treeData = tree.get(Tree);
   if (!treeData || treeData.stage < 3) return false;
 
@@ -370,7 +370,7 @@ export function pruneTree(tree: Entity | undefined | null): boolean {
  * Returns true on success.
  */
 export function fertilizeTree(tree: Entity | undefined | null): boolean {
-  if (!tree || !tree.isAlive() || !tree.has(Tree)) return false;
+  if (!tree?.isAlive() || !tree.has(Tree)) return false;
   const treeData = tree.get(Tree);
   if (!treeData || treeData.fertilized) return false;
 
@@ -403,7 +403,7 @@ export function clearRock(gridX: number, gridZ: number): boolean {
  * Returns true on success.
  */
 export function removeSeedling(tree: Entity | undefined | null): boolean {
-  if (!tree || !tree.isAlive() || !tree.has(Tree)) return false;
+  if (!tree?.isAlive() || !tree.has(Tree)) return false;
   const treeData = tree.get(Tree);
   if (!treeData || treeData.stage > 1) return false;
 

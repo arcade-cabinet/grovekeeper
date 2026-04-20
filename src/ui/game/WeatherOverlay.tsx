@@ -171,6 +171,7 @@ export const WeatherOverlay = () => {
   return (
     <Show when={ready() && (hasWeather() || showPetals())}>
       <div
+        aria-hidden="true"
         class="absolute inset-0 pointer-events-none"
         style={{ "z-index": 5 }}
       >

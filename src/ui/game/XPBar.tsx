@@ -58,6 +58,11 @@ export const XPBar = () => {
   return (
     <div class="flex items-center justify-center pointer-events-auto">
       <div
+        role="progressbar"
+        aria-label={`Level ${level()} — XP progress`}
+        aria-valuenow={percent()}
+        aria-valuemin={0}
+        aria-valuemax={100}
         class="relative flex items-center rounded-full overflow-hidden"
         style={{
           height: "28px",

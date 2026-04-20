@@ -77,8 +77,9 @@ export const HUD = (props: HUDProps) => {
               color: "white",
             }}
             onClick={() => props.onOpenBuild?.()}
+            aria-label="Open build panel"
           >
-            <RiBuilding2Line class="w-4 h-4 sm:mr-1" />
+            <RiBuilding2Line class="w-4 h-4 sm:mr-1" aria-hidden="true" />
             <span class="hidden sm:inline text-xs">Build</span>
           </Button>
         </Show>
@@ -91,8 +92,9 @@ export const HUD = (props: HUDProps) => {
             color: "white",
           }}
           onClick={props.onOpenTools}
+          aria-label={`Open tools — current tool: ${selectedTool()}`}
         >
-          <RiToolsLine class="w-4 h-4 sm:mr-1" />
+          <RiToolsLine class="w-4 h-4 sm:mr-1" aria-hidden="true" />
           <span class="hidden sm:inline text-xs">{selectedTool()}</span>
         </Button>
 
@@ -101,8 +103,9 @@ export const HUD = (props: HUDProps) => {
           variant="ghost"
           class="w-11 h-11 text-white hover:bg-white/10"
           onClick={props.onOpenMenu}
+          aria-label="Open menu"
         >
-          <RiMenuLine class="w-5 h-5 sm:w-6 sm:h-6" />
+          <RiMenuLine class="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
         </Button>
       </div>
     </div>

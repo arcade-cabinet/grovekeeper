@@ -34,6 +34,8 @@ export const WeatherForecast = (props: WeatherForecastProps) => {
 
   return (
     <div
+      role="region"
+      aria-label={`Weather: ${WEATHER_LABELS[props.currentWeather]}${props.currentWeather !== "clear" ? `, ${Math.ceil(props.weatherTimeRemaining / 60)} minutes remaining` : ""}`}
       class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
       style={{
         background: "rgba(245, 240, 227, 0.9)",
@@ -41,8 +43,8 @@ export const WeatherForecast = (props: WeatherForecastProps) => {
         color: COLORS.soilDark,
       }}
     >
-      <span class="text-sm">{WEATHER_ICONS[props.currentWeather]}</span>
-      <span>{WEATHER_LABELS[props.currentWeather]}</span>
+      <span class="text-sm" aria-hidden="true">{WEATHER_ICONS[props.currentWeather]}</span>
+      <span aria-hidden="true">{WEATHER_LABELS[props.currentWeather]}</span>
       <Show when={props.currentWeather !== "clear"}>
         <span class="opacity-60">~{minutes()}m</span>
       </Show>

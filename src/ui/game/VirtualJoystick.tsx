@@ -105,6 +105,7 @@ export const VirtualJoystick = (props: VirtualJoystickProps) => {
     <div
       ref={baseRef}
       class="md:hidden pointer-events-auto"
+      aria-hidden="true"
       style={{
         position: "fixed",
         bottom: "calc(24px + env(safe-area-inset-bottom, 0px))",
