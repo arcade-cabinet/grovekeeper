@@ -1,8 +1,44 @@
+import { createEffect, createSignal, onCleanup } from "solid-js";
 import { COLORS } from "@/config/config";
 import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
 import { totalXpForLevel, xpToNext } from "@/shared/utils/xp";
 import { PlayerProgress } from "@/traits";
+
+/** Tween a number toward a target, ease-out cubic, over durationMs. */
+function useAnimatedNumber(
+  target: () => number,
+  durationMs = 400,
+): () => number {
+  const [value, setValue] = createSignal(target());
+  let rafId: number | null = null;
+  let fromValue = target();
+  let toValue = target();
+  let startTime = 0;
+
+  createEffect(() => {
+    const next = target();
+    if (next === toValue) return;
+    fromValue = value();
+    toValue = next;
+    startTime = performance.now();
+    if (rafId != null) cancelAnimationFrame(rafId);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - startTime) / durationMs);
+      const eased = 1 - (1 - t) ** 3;
+      setValue(fromValue + (toValue - fromValue) * eased);
+      if (t < 1) rafId = requestAnimationFrame(tick);
+      else rafId = null;
+    };
+    rafId = requestAnimationFrame(tick);
+  });
+
+  onCleanup(() => {
+    if (rafId != null) cancelAnimationFrame(rafId);
+  });
+
+  return value;
+}
 
 export const XPBar = () => {
   const progress = useTrait(koota, PlayerProgress);
@@ -15,7 +51,9 @@ export const XPBar = () => {
     const needed = xpNeeded();
     return needed > 0 ? Math.min((xp() - xpForCurrentLevel()) / needed, 1) : 0;
   };
-  const percent = () => Math.round(currentLevelProgress() * 100);
+  const targetPercent = () => Math.round(currentLevelProgress() * 100);
+  const animatedPercent = useAnimatedNumber(targetPercent, 400);
+  const percent = () => Math.round(animatedPercent());
 
   return (
     <div class="flex items-center justify-center pointer-events-auto">
