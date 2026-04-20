@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSpeciesById, TREE_SPECIES } from "./trees";
+import { __testing, getSpeciesById, TREE_SPECIES } from "./trees";
 
 describe("Tree Species Catalog", () => {
   it("has exactly 12 base species", () => {
@@ -63,5 +63,39 @@ describe("Tree Species Catalog", () => {
     const oak = getSpeciesById("white-oak")!;
     const totalCost = Object.values(oak.seedCost).reduce((a, b) => a + b, 0);
     expect(totalCost).toBe(0);
+  });
+
+  it("runtime validator rejects a species missing required fields", () => {
+    expect(() =>
+      __testing.validateSpecies({ id: "bad" }, "test[0]"),
+    ).toThrowError(/trees\.json: test\[0\]\.name/);
+  });
+
+  it("runtime validator rejects a non-5-tuple baseGrowthTimes", () => {
+    expect(() =>
+      __testing.validateSpecies(
+        {
+          id: "x",
+          name: "X",
+          difficulty: 1,
+          unlockLevel: 1,
+          biome: "b",
+          harvestCycleSec: 1,
+          special: "",
+          evergreen: false,
+          baseGrowthTimes: [1, 2, 3],
+          yield: [],
+          seedCost: {},
+          meshParams: {},
+        },
+        "test[1]",
+      ),
+    ).toThrowError(/baseGrowthTimes must be a 5-tuple/);
+  });
+
+  it("runtime validator rejects a top-level non-array", () => {
+    expect(() =>
+      __testing.validateSpeciesList("not-an-array", "base"),
+    ).toThrowError(/base must be an array/);
   });
 });
