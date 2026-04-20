@@ -403,7 +403,7 @@ export function createSPSTree(
       ((base.paths[a][upper].z - base.paths[a][lower].z) * (g - gl)) /
         (gu - gl);
 
-    particle.position = new Vector3(
+    particle.position.set(
       px,
       py +
         ((0.6 * leafWidth) / leafWHRatio + base.radii[a][upper]) *
@@ -464,9 +464,9 @@ export function createSPSTree(
     const theta = Math.acos(Vector3.Dot(miniDir, Axis.Y) / miniDir.length());
     const sc = trunkTaper ** (clampedBoughs + 1);
 
-    particle.scale = new Vector3(sc, sc, sc);
+    particle.scale.set(sc, sc, sc);
     particle.quaternion = Quaternion.RotationAxis(axis, theta);
-    particle.position = miniTop;
+    particle.position.copyFrom(miniTop);
   };
 
   // Pre-computed random positions for branch mini-trees
@@ -503,9 +503,9 @@ export function createSPSTree(
     const theta = Math.acos(Vector3.Dot(miniDir, Axis.Y) / miniDir.length());
     const sc = trunkTaper ** (clampedBoughs + 1);
 
-    particle.scale = new Vector3(sc, sc, sc);
+    particle.scale.set(sc, sc, sc);
     particle.quaternion = Quaternion.RotationAxis(axis, theta);
-    particle.position = miniPlace;
+    particle.position.copyFrom(miniPlace);
   };
 
   // Add fork-end mini-trees
