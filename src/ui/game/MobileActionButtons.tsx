@@ -88,8 +88,9 @@ export const MobileActionButtons = (props: MobileActionButtonsProps) => {
           "box-shadow": "0 2px 8px rgba(26, 58, 42, 0.15)",
         }}
         onClick={props.onPause}
+        aria-label="Pause"
       >
-        {"\u23F8\uFE0F"}
+        <span aria-hidden="true">{"\u23F8\uFE0F"}</span>
       </button>
 
       <button
@@ -103,8 +104,9 @@ export const MobileActionButtons = (props: MobileActionButtonsProps) => {
           "box-shadow": "0 2px 8px rgba(26, 58, 42, 0.15)",
         }}
         onClick={props.onOpenSeeds}
+        aria-label="Open seed selection"
       >
-        {"\u{1F331}"}
+        <span aria-hidden="true">{"\u{1F331}"}</span>
       </button>
 
       <button
@@ -124,9 +126,11 @@ export const MobileActionButtons = (props: MobileActionButtonsProps) => {
         }}
         disabled={!actionEnabled()}
         onClick={actionEnabled() ? props.onAction : undefined}
+        aria-label={actionStyle().label}
       >
-        {actionStyle().icon}
+        <span aria-hidden="true">{actionStyle().icon}</span>
         <span
+          aria-hidden="true"
           class="text-[10px] font-medium leading-none mt-0.5"
           style={{
             color: actionEnabled() ? "white" : "rgba(255,255,255,0.5)",

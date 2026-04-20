@@ -52,6 +52,7 @@ export const RadialActionMenu = (props: Props) => {
       <div
         role="button"
         tabIndex={-1}
+        aria-label="Dismiss action menu"
         class="fixed inset-0 z-40"
         onClick={props.onDismiss}
       />
@@ -71,8 +72,9 @@ export const RadialActionMenu = (props: Props) => {
               "animation-fill-mode": "backwards",
             }}
             onClick={() => props.onSelect(p.action.id)}
+            aria-label={p.action.label}
           >
-            <span class="text-lg leading-none">{p.action.icon}</span>
+            <span class="text-lg leading-none" aria-hidden="true">{p.action.icon}</span>
           </button>
         )}
       </For>
@@ -80,6 +82,7 @@ export const RadialActionMenu = (props: Props) => {
       <For each={positioned()}>
         {(p) => (
           <span
+            aria-hidden="true"
             class="fixed z-50 text-[10px] font-semibold text-white text-center pointer-events-none motion-safe:animate-in motion-safe:fade-in"
             style={{
               left: `${p.labelX}px`,

@@ -99,6 +99,7 @@ export const ToolWheel = (props: ToolWheelProps) => {
                   disabled={!isUnlocked() && !canUnlock()}
                 >
                   <div
+                    aria-hidden="true"
                     style={{
                       color: isUnlocked()
                         ? COLORS.forestGreen

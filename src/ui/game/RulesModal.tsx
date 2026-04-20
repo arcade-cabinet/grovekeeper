@@ -106,9 +106,9 @@ export const RulesModal = (props: RulesModalProps) => {
             class="text-xl font-bold flex items-center justify-center gap-2"
             style={{ color: COLORS.forestGreen }}
           >
-            <span>🌲</span>
+            <span aria-hidden="true">🌲</span>
             How to Play
-            <span>🌲</span>
+            <span aria-hidden="true">🌲</span>
           </DialogTitle>
           <DialogDescription
             class="text-xs"
@@ -154,7 +154,7 @@ export const RulesModal = (props: RulesModalProps) => {
               border: `1px solid ${COLORS.forestGreen}20`,
             }}
           >
-            <span class="text-5xl">{current().icon}</span>
+            <span class="text-5xl" aria-hidden="true">{current().icon}</span>
             <h4 class="font-bold text-lg" style={{ color: COLORS.soilDark }}>
               {current().title}
             </h4>

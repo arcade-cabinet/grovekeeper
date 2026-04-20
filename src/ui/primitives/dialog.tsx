@@ -28,7 +28,6 @@ function Dialog(props: DialogProps) {
   // read from props. Otherwise, we track internal signal-ish state on an
   // accessor that is kept in sync via createEffect.
   const isControlled = () => props.open !== undefined;
-  // biome-ignore lint/style/noNonNullAssertion: checked via isControlled
   const open = () =>
     isControlled() ? (props.open as boolean) : !!internalOpen;
   let internalOpen = !!props.defaultOpen;
@@ -123,6 +122,7 @@ function DialogContent(
         <div
           role="dialog"
           aria-modal="true"
+          aria-labelledby="dialog-title"
           data-slot="dialog-content"
           data-state="open"
           class={cn(
@@ -188,6 +188,7 @@ function DialogTitle(props: JSX.HTMLAttributes<HTMLHeadingElement>) {
   const [local, rest] = splitProps(props, ["class"]);
   return (
     <h2
+      id="dialog-title"
       data-slot="dialog-title"
       class={cn("text-lg leading-none font-semibold", local.class)}
       {...rest}

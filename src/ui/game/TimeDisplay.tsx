@@ -35,29 +35,33 @@ export const TimeDisplay = (props: TimeDisplayProps) => {
   };
 
   return (
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5" role="region" aria-label="Time and season">
       <div
+        role="group"
         class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+        aria-label={`Time: ${timeString()}`}
         style={{
           background: "rgba(0,0,0,0.25)",
           color: "white",
         }}
       >
-        <span>{getTimeIcon(time().hours)}</span>
-        <span>{timeString()}</span>
+        <span aria-hidden="true">{getTimeIcon(time().hours)}</span>
+        <span aria-hidden="true">{timeString()}</span>
       </div>
 
       <div
+        role="group"
         class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+        aria-label={`Season: ${time().season}, day ${time().day}`}
         style={{
           background: `${seasonColors[time().season]}40`,
           color: "white",
           border: `1px solid ${seasonColors[time().season]}60`,
         }}
       >
-        <span>{seasonIcons[time().season]}</span>
-        <span class="hidden sm:inline capitalize">{time().season}</span>
-        <span class="hidden xs:inline">D{time().day}</span>
+        <span aria-hidden="true">{seasonIcons[time().season]}</span>
+        <span aria-hidden="true" class="hidden sm:inline capitalize">{time().season}</span>
+        <span aria-hidden="true" class="hidden xs:inline">D{time().day}</span>
       </div>
     </div>
   );
@@ -67,14 +71,16 @@ export const TimeDisplayCompact = (props: TimeDisplayProps) => {
   const time = () => props.time;
   return (
     <div
+      role="group"
       class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs"
+      aria-label={`${time().season}, day ${time().day}`}
       style={{
         background: "rgba(0,0,0,0.25)",
         color: "white",
       }}
     >
-      <span class="text-sm">{getTimeIcon(time().hours)}</span>
-      <span class="text-sm">{seasonIcons[time().season]}</span>
+      <span class="text-sm" aria-hidden="true">{getTimeIcon(time().hours)}</span>
+      <span class="text-sm" aria-hidden="true">{seasonIcons[time().season]}</span>
     </div>
   );
 };

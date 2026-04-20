@@ -82,7 +82,7 @@ export class SelectionRingManager {
 
   /** Animate the breathing pulse. Call each frame with delta time in seconds. */
   update(dt: number): void {
-    if (!this.mesh || !this.mesh.isEnabled()) return;
+    if (!this.mesh?.isEnabled()) return;
     if (!this.material) return;
 
     this.phase += PULSE_SPEED * dt;

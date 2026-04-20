@@ -88,7 +88,7 @@ export const NewGameModal = (props: NewGameModalProps) => {
             }}
           >
             <div class="flex items-center gap-2 mb-1">
-              <span class="text-lg">{ICONS[selected().icon] ?? ""}</span>
+              <span class="text-lg" aria-hidden="true">{ICONS[selected().icon] ?? ""}</span>
               <span
                 class="font-bold text-base"
                 style={{ color: selected().color }}
@@ -223,7 +223,7 @@ function DifficultyTile(props: {
           Recommended
         </span>
       </Show>
-      <span class="text-xl mb-0.5">{ICONS[props.tier.icon] ?? ""}</span>
+      <span class="text-xl mb-0.5" aria-hidden="true">{ICONS[props.tier.icon] ?? ""}</span>
       <span
         class="text-xs font-bold"
         style={{

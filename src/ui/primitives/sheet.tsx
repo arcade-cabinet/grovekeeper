@@ -130,6 +130,7 @@ function SheetContent(props: SheetContentProps) {
         <div
           role="dialog"
           aria-modal="true"
+          aria-labelledby="sheet-title"
           data-slot="sheet-content"
           data-state="open"
           class={cn(
@@ -200,6 +201,7 @@ function SheetTitle(props: JSX.HTMLAttributes<HTMLHeadingElement>) {
   const [local, rest] = splitProps(props, ["class"]);
   return (
     <h2
+      id="sheet-title"
       data-slot="sheet-title"
       class={cn("text-foreground font-semibold", local.class)}
       {...rest}

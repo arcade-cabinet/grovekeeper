@@ -116,7 +116,7 @@ export const StatsDashboard = (props: StatsDashboardProps) => {
                     class="flex items-center gap-2 p-2 rounded-lg"
                     style={{ background: "rgba(255,255,255,0.5)" }}
                   >
-                    <span class="text-lg">{s.icon}</span>
+                    <span class="text-lg" aria-hidden="true">{s.icon}</span>
                     <div>
                       <div
                         class="text-xs opacity-60"
@@ -151,7 +151,7 @@ export const StatsDashboard = (props: StatsDashboardProps) => {
                     class="flex items-center gap-2 p-2 rounded-lg"
                     style={{ background: "rgba(255,255,255,0.5)" }}
                   >
-                    <span class="text-lg">{r.icon}</span>
+                    <span class="text-lg" aria-hidden="true">{r.icon}</span>
                     <div>
                       <div
                         class="text-xs opacity-60"

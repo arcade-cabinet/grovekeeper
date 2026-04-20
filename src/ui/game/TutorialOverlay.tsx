@@ -45,6 +45,7 @@ export const TutorialOverlay = (props: Props) => {
 
         return (
           <div
+            aria-hidden="true"
             style={{
               position: "fixed",
               inset: "0",

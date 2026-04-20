@@ -157,7 +157,7 @@ export const PauseMenu = (props: PauseMenuProps) => {
             class="flex items-center gap-3"
             style={{ color: COLORS.soilDark }}
           >
-            <FarmerMascot size={40} animate={false} />
+            <span aria-hidden="true"><FarmerMascot size={40} animate={false} /></span>
             Grove Stats
           </DialogTitle>
         </DialogHeader>

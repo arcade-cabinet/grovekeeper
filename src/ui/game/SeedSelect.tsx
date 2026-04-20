@@ -85,6 +85,11 @@ export const SeedSelect = (props: SeedSelectProps) => {
 
               return (
                 <Card
+                  role="button"
+                  tabIndex={isDisabled() ? -1 : 0}
+                  aria-pressed={isSelected()}
+                  aria-disabled={isDisabled()}
+                  aria-label={`${species.name}${isSelected() ? " (selected)" : ""}${!isUnlocked() ? ` — unlocks at level ${species.unlockLevel}` : !hasSeeds() ? " — no seeds" : ""}`}
                   class={`p-3 cursor-pointer transition-all ${isSelected() ? "ring-2 ring-offset-2" : ""} ${isDisabled() ? "opacity-50" : ""}`}
                   style={{
                     background: isSelected() ? `${COLORS.leafLight}30` : "white",
@@ -101,13 +106,14 @@ export const SeedSelect = (props: SeedSelectProps) => {
                   >
                     <Show
                       when={isUnlocked()}
-                      fallback={<RiLock2Line class="w-8 h-8 mb-2 text-gray-400" />}
+                      fallback={<RiLock2Line class="w-8 h-8 mb-2 text-gray-400" aria-hidden="true" />}
                     >
                       <svg
                         width="36"
                         height="48"
                         viewBox="0 0 36 48"
                         fill="none"
+                        aria-hidden="true"
                         class="mb-1"
                       >
                         <rect
