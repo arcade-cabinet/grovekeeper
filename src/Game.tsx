@@ -62,6 +62,16 @@ export const Game = () => {
           const state = hydrateGameStore();
           gameActions().hydrateFromDb(state);
         }
+        // Used by e2e playthrough determinism. Safe to leave in production —
+        // user-invisible. If grove-seed-override is set (by e2e tests or dev
+        // tooling), override the world seed so RNG is reproducible.
+        const seedOverride =
+          typeof localStorage !== "undefined"
+            ? localStorage.getItem("grove-seed-override")
+            : null;
+        if (seedOverride) {
+          gameActions().setWorldSeed(seedOverride);
+        }
         setDbLoading(false);
       })
       .catch((err) => {

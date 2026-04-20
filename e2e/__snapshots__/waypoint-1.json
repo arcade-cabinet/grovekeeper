@@ -1,0 +1,79 @@
+{
+  "playerProgress": {
+    "level": 1,
+    "xp": 0,
+    "coins": 100,
+    "selectedTool": "trowel",
+    "selectedSpecies": "white-oak",
+    "unlockedTools": [
+      "trowel",
+      "watering-can"
+    ],
+    "unlockedSpecies": [
+      "white-oak"
+    ],
+    "prestigeCount": 0
+  },
+  "resources": {
+    "timber": 20,
+    "sap": 10,
+    "fruit": 10,
+    "acorns": 15
+  },
+  "seeds": {
+    "white-oak": 10
+  },
+  "tracking": {
+    "treesPlanted": 0,
+    "treesMatured": 0,
+    "treesHarvested": 0,
+    "treesWatered": 0,
+    "speciesPlanted": [],
+    "seasonsExperienced": []
+  },
+  "achievements": [],
+  "quests": {
+    "activeCount": 1,
+    "completedCount": 0
+  },
+  "settings": {
+    "hasSeenRules": false,
+    "soundEnabled": true
+  },
+  "difficulty": {
+    "id": "normal",
+    "permadeath": false
+  },
+  "time": {
+    "gameTimeMicroseconds": 5212800000000,
+    "season": "spring",
+    "day": 1
+  },
+  "toolUpgrades": {},
+  "worldMeta": {
+    "currentZoneId": "starting-grove",
+    "worldSeed": "",
+    "discoveredZones": [
+      "starting-grove"
+    ]
+  },
+  "grid": {
+    "gridSize": 12
+  },
+  "screen": "playing",
+  "entityCounts": {
+    "trees": 0,
+    "harvestable": 0,
+    "gridCells": 1,
+    "total": 1
+  },
+  "trees": [],
+  "player": {
+    "position": {
+      "x": 6,
+      "z": 6
+    },
+    "stamina": 100,
+    "maxStamina": 100
+  }
+}

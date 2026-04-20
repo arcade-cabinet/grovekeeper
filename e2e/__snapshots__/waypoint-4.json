@@ -1,0 +1,860 @@
+{
+  "playerProgress": {
+    "level": 1,
+    "xp": 0,
+    "coins": 100,
+    "selectedTool": "trowel",
+    "selectedSpecies": "white-oak",
+    "unlockedTools": [
+      "trowel",
+      "watering-can"
+    ],
+    "unlockedSpecies": [
+      "white-oak"
+    ],
+    "prestigeCount": 0
+  },
+  "resources": {
+    "timber": 20,
+    "sap": 10,
+    "fruit": 10,
+    "acorns": 15
+  },
+  "seeds": {
+    "white-oak": 10
+  },
+  "tracking": {
+    "treesPlanted": 0,
+    "treesMatured": 0,
+    "treesHarvested": 0,
+    "treesWatered": 1,
+    "speciesPlanted": [],
+    "seasonsExperienced": []
+  },
+  "achievements": [],
+  "quests": {
+    "activeCount": 1,
+    "completedCount": 0
+  },
+  "settings": {
+    "hasSeenRules": false,
+    "soundEnabled": true
+  },
+  "difficulty": {
+    "id": "normal",
+    "permadeath": false
+  },
+  "time": {
+    "gameTimeMicroseconds": 5212800000000,
+    "season": "spring",
+    "day": 1
+  },
+  "toolUpgrades": {},
+  "worldMeta": {
+    "currentZoneId": "starting-grove",
+    "worldSeed": "",
+    "discoveredZones": [
+      "starting-grove"
+    ]
+  },
+  "grid": {
+    "gridSize": 12
+  },
+  "screen": "playing",
+  "entityCounts": {
+    "trees": 65,
+    "harvestable": 0,
+    "gridCells": 748,
+    "total": 748
+  },
+  "trees": [
+    {
+      "id": 429,
+      "speciesId": "silver-birch",
+      "stage": 2,
+      "progress": 0.247,
+      "position": {
+        "x": -1,
+        "z": -5
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 430,
+      "speciesId": "white-oak",
+      "stage": 4,
+      "progress": 0.217,
+      "position": {
+        "x": 1,
+        "z": -7
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 431,
+      "speciesId": "white-oak",
+      "stage": 4,
+      "progress": 0.277,
+      "position": {
+        "x": 7,
+        "z": -10
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 432,
+      "speciesId": "white-oak",
+      "stage": 2,
+      "progress": 0.0915,
+      "position": {
+        "x": 5,
+        "z": -8
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 433,
+      "speciesId": "white-oak",
+      "stage": 3,
+      "progress": 0.154,
+      "position": {
+        "x": 3,
+        "z": -7
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 434,
+      "speciesId": "silver-birch",
+      "stage": 3,
+      "progress": 0.463,
+      "position": {
+        "x": 9,
+        "z": -11
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 435,
+      "speciesId": "elder-pine",
+      "stage": 4,
+      "progress": 0.318,
+      "position": {
+        "x": 8,
+        "z": -6
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 436,
+      "speciesId": "elder-pine",
+      "stage": 3,
+      "progress": 0.0035,
+      "position": {
+        "x": 10,
+        "z": -8
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 437,
+      "speciesId": "silver-birch",
+      "stage": 4,
+      "progress": 0.1225,
+      "position": {
+        "x": 10,
+        "z": -9
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 438,
+      "speciesId": "white-oak",
+      "stage": 4,
+      "progress": 0.466,
+      "position": {
+        "x": 9,
+        "z": -9
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 439,
+      "speciesId": "silver-birch",
+      "stage": 3,
+      "progress": 0.159,
+      "position": {
+        "x": 9,
+        "z": -2
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 440,
+      "speciesId": "silver-birch",
+      "stage": 2,
+      "progress": 0.257,
+      "position": {
+        "x": 6,
+        "z": -9
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 441,
+      "speciesId": "white-oak",
+      "stage": 4,
+      "progress": 0.4945,
+      "position": {
+        "x": 8,
+        "z": -3
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 442,
+      "speciesId": "elder-pine",
+      "stage": 4,
+      "progress": 0.005,
+      "position": {
+        "x": 2,
+        "z": -2
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 443,
+      "speciesId": "white-oak",
+      "stage": 3,
+      "progress": 0.0585,
+      "position": {
+        "x": 6,
+        "z": -5
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 444,
+      "speciesId": "elder-pine",
+      "stage": 4,
+      "progress": 0.349,
+      "position": {
+        "x": 7,
+        "z": -5
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 445,
+      "speciesId": "white-oak",
+      "stage": 4,
+      "progress": 0.029,
+      "position": {
+        "x": 7,
+        "z": -9
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 446,
+      "speciesId": "white-oak",
+      "stage": 2,
+      "progress": 0.482,
+      "position": {
+        "x": -1,
+        "z": -4
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 447,
+      "speciesId": "elder-pine",
+      "stage": 4,
+      "progress": 0.4745,
+      "position": {
+        "x": 3,
+        "z": -4
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 448,
+      "speciesId": "elder-pine",
+      "stage": 4,
+      "progress": 0.4625,
+      "position": {
+        "x": 6,
+        "z": -10
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 449,
+      "speciesId": "white-oak",
+      "stage": 2,
+      "progress": 0.2175,
+      "position": {
+        "x": 1,
+        "z": -8
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 450,
+      "speciesId": "silver-birch",
+      "stage": 3,
+      "progress": 0.12,
+      "position": {
+        "x": 10,
+        "z": -4
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 451,
+      "speciesId": "elder-pine",
+      "stage": 4,
+      "progress": 0.2855,
+      "position": {
+        "x": 9,
+        "z": -4
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 452,
+      "speciesId": "white-oak",
+      "stage": 2,
+      "progress": 0.463,
+      "position": {
+        "x": 9,
+        "z": -3
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 453,
+      "speciesId": "elder-pine",
+      "stage": 4,
+      "progress": 0.0025,
+      "position": {
+        "x": 5,
+        "z": -11
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 454,
+      "speciesId": "white-oak",
+      "stage": 3,
+      "progress": 0.057,
+      "position": {
+        "x": 6,
+        "z": -2
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 455,
+      "speciesId": "elder-pine",
+      "stage": 3,
+      "progress": 0.0705,
+      "position": {
+        "x": 0,
+        "z": -7
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 456,
+      "speciesId": "white-oak",
+      "stage": 2,
+      "progress": 0.198,
+      "position": {
+        "x": 9,
+        "z": -10
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 457,
+      "speciesId": "white-oak",
+      "stage": 2,
+      "progress": 0.216,
+      "position": {
+        "x": 1,
+        "z": -5
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 575,
+      "speciesId": "golden-apple",
+      "stage": 2,
+      "progress": 0.163,
+      "position": {
+        "x": 14,
+        "z": 23
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 576,
+      "speciesId": "cherry-blossom",
+      "stage": 3,
+      "progress": 0.055,
+      "position": {
+        "x": 13,
+        "z": 23
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 577,
+      "speciesId": "golden-apple",
+      "stage": 2,
+      "progress": 0.165,
+      "position": {
+        "x": 14,
+        "z": 27
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 678,
+      "speciesId": "ironbark",
+      "stage": 3,
+      "progress": 0.0315,
+      "position": {
+        "x": 22,
+        "z": 25
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 679,
+      "speciesId": "ironbark",
+      "stage": 3,
+      "progress": 0.093,
+      "position": {
+        "x": 20,
+        "z": 22
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 680,
+      "speciesId": "baobab",
+      "stage": 2,
+      "progress": 0.2205,
+      "position": {
+        "x": 23,
+        "z": 27
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 681,
+      "speciesId": "ironbark",
+      "stage": 2,
+      "progress": 0.3515,
+      "position": {
+        "x": 19,
+        "z": 27
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 682,
+      "speciesId": "redwood",
+      "stage": 3,
+      "progress": 0.432,
+      "position": {
+        "x": 21,
+        "z": 23
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 683,
+      "speciesId": "baobab",
+      "stage": 4,
+      "progress": 0.135,
+      "position": {
+        "x": 17,
+        "z": 29
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 684,
+      "speciesId": "redwood",
+      "stage": 2,
+      "progress": 0.372,
+      "position": {
+        "x": 23,
+        "z": 29
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 685,
+      "speciesId": "ironbark",
+      "stage": 3,
+      "progress": 0.0925,
+      "position": {
+        "x": 20,
+        "z": 21
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 686,
+      "speciesId": "ironbark",
+      "stage": 4,
+      "progress": 0.4975,
+      "position": {
+        "x": 23,
+        "z": 20
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 687,
+      "speciesId": "redwood",
+      "stage": 3,
+      "progress": 0.3045,
+      "position": {
+        "x": 25,
+        "z": 20
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 688,
+      "speciesId": "redwood",
+      "stage": 2,
+      "progress": 0.3365,
+      "position": {
+        "x": 24,
+        "z": 21
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 689,
+      "speciesId": "redwood",
+      "stage": 4,
+      "progress": 0.465,
+      "position": {
+        "x": 20,
+        "z": 26
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 690,
+      "speciesId": "ironbark",
+      "stage": 4,
+      "progress": 0.0335,
+      "position": {
+        "x": 22,
+        "z": 29
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 691,
+      "speciesId": "redwood",
+      "stage": 2,
+      "progress": 0.3075,
+      "position": {
+        "x": 25,
+        "z": 26
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 692,
+      "speciesId": "ironbark",
+      "stage": 2,
+      "progress": 0.03,
+      "position": {
+        "x": 22,
+        "z": 22
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 693,
+      "speciesId": "redwood",
+      "stage": 4,
+      "progress": 0.3085,
+      "position": {
+        "x": 25,
+        "z": 28
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 694,
+      "speciesId": "baobab",
+      "stage": 2,
+      "progress": 0.314,
+      "position": {
+        "x": 20,
+        "z": 25
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 695,
+      "speciesId": "redwood",
+      "stage": 2,
+      "progress": 0.4305,
+      "position": {
+        "x": 21,
+        "z": 20
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 696,
+      "speciesId": "redwood",
+      "stage": 3,
+      "progress": 0.431,
+      "position": {
+        "x": 21,
+        "z": 21
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 697,
+      "speciesId": "ironbark",
+      "stage": 2,
+      "progress": 0.383,
+      "position": {
+        "x": 18,
+        "z": 27
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 698,
+      "speciesId": "baobab",
+      "stage": 4,
+      "progress": 0.1575,
+      "position": {
+        "x": 25,
+        "z": 27
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 699,
+      "speciesId": "white-oak",
+      "stage": 4,
+      "progress": 0.2155,
+      "position": {
+        "x": 17,
+        "z": 20
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 700,
+      "speciesId": "baobab",
+      "stage": 3,
+      "progress": 0.316,
+      "position": {
+        "x": 20,
+        "z": 29
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 701,
+      "speciesId": "redwood",
+      "stage": 2,
+      "progress": 0.2195,
+      "position": {
+        "x": 19,
+        "z": 23
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 702,
+      "speciesId": "redwood",
+      "stage": 2,
+      "progress": 0.2505,
+      "position": {
+        "x": 18,
+        "z": 22
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 703,
+      "speciesId": "redwood",
+      "stage": 4,
+      "progress": 0.3375,
+      "position": {
+        "x": 24,
+        "z": 23
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 704,
+      "speciesId": "baobab",
+      "stage": 4,
+      "progress": 0.2515,
+      "position": {
+        "x": 22,
+        "z": 26
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 705,
+      "speciesId": "redwood",
+      "stage": 2,
+      "progress": 0.313,
+      "position": {
+        "x": 16,
+        "z": 21
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 706,
+      "speciesId": "ironbark",
+      "stage": 3,
+      "progress": 0.466,
+      "position": {
+        "x": 24,
+        "z": 20
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 707,
+      "speciesId": "baobab",
+      "stage": 2,
+      "progress": 0.2845,
+      "position": {
+        "x": 21,
+        "z": 29
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 708,
+      "speciesId": "ironbark",
+      "stage": 2,
+      "progress": 0.4445,
+      "position": {
+        "x": 16,
+        "z": 24
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 709,
+      "speciesId": "ironbark",
+      "stage": 3,
+      "progress": 0.3835,
+      "position": {
+        "x": 18,
+        "z": 28
+      },
+      "watered": false,
+      "harvestReady": false
+    },
+    {
+      "id": 710,
+      "speciesId": "baobab",
+      "stage": 4,
+      "progress": 0.163,
+      "position": {
+        "x": 16,
+        "z": 22
+      },
+      "watered": false,
+      "harvestReady": false
+    }
+  ],
+  "player": {
+    "position": {
+      "x": 6,
+      "z": 6
+    },
+    "stamina": 100,
+    "maxStamina": 100
+  }
+}
