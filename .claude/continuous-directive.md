@@ -75,26 +75,23 @@ while true:
     #    - Return to the loop
 ```
 
-## Current port queue (drain top to bottom)
+## Current PRQ
 
-Ordered by (a) dependency safety, (b) CI impact, (c) audit priority:
+The port (B1–B26) is complete. Current work is driven by the **Grovekeeper 1.0 Polish PRQ** at:
 
-- [ ] Port `src/stores/gameStore.ts` consumers (38 files) to Koota `koota/react` useTrait
-- [ ] Port `src/world.ts` miniplex consumers (6 files) to Koota `world.query`
-- [ ] Delete `src/stores/gameStore.ts`, remove `zustand` dep
-- [ ] Delete `src/world.ts` miniplex world, remove `miniplex` dep
-- [ ] Delete `src/archetypes.ts` (callers use startup.ts spawners)
-- [ ] Flip tsconfig `jsxImportSource: "solid-js"` + vite `plugin-solid`
-- [ ] Port all 55 `.tsx` files React → Solid (delegate in chunks of 10 via parallel agents)
-- [ ] Hand-roll 15 Solid game UI components, delete `src/ui/primitives/`, remove @radix-ui/* + cva/clsx/twMerge
-- [ ] Remove `react`, `react-dom`, `@types/react*`, `@vitejs/plugin-react`, `@testing-library/react`, `happy-dom` (swap for @solidjs/testing-library + jsdom or keep happy-dom)
-- [ ] Config extraction: split `src/config/config.ts`, `trees.ts`, `tools.ts`, `resources.ts`, `codex.ts` → JSON + typed loaders (pattern: `difficulty.ts` + `difficulty.json`)
-- [ ] Wire `startAudio()` from a user-gesture handler so Tone.js audio unlocks
-- [ ] Vitest browser mode: 2 projects (node + browser), sample `*.browser.test.tsx` for HUD + ToolWheel
-- [ ] Remaining perf items from PERF_AUDIT: allocation-free buffers in `GroundBuilder`, `CameraManager`, NPC shadow budget, scene.performancePriority
-- [ ] Address SonarCloud 14 new issues + 2 security hotspots
-- [ ] Update `docs/CLAUDE.md` tech stack table (React → SolidJS, add Koota/Tone)
-- [ ] Update `docs/PERF_AUDIT.md` with before/after measurements
-- [ ] Update `CHANGELOG.md` with 1.0.0-alpha.1 entry
-- [ ] Update `.release-please-manifest.json` version target
-- [ ] Mark PR ready for review
+- **Plan:** `.claude/plans/grovekeeper-1.0-polish.prq.md`
+- **State:** `.claude/state/task-batch/batch-grove-1.0-polish.json`
+
+76 atomic tasks across 12 workstreams (W1–W12): review cleanup → perf deferred → audio → juice → tutorial → quests → narrative spine → a11y → content → release → docs → QA. Each task = one commit. Drain sequentially, parallelize where dependency graph allows.
+
+### Drain order (queue pointer)
+
+Read `batch-grove-1.0-polish.json` `pending[]` and work in dependency order:
+1. Finish W1 (T01–T12) — unblocks PR #23 merge
+2. Then W2–W9 in parallel workstreams where deps allow
+3. Then W10 (release infra)
+4. Then W11 (docs), W12 (QA)
+5. Tag v1.0.0
+
+### Next atomic commit
+Check `current_task_id` in the state file. Currently: **T01** — replace `Math.random()` in `src/engine/scene/NpcMeshManager.ts` with `scopedRNG`.
