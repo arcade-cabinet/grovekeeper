@@ -62,9 +62,14 @@ export class TreeMeshManager {
       );
       // Hide the template off-world instead of disabling — disabled
       // meshes don't carry their instances in the render pass. Park it
-      // below the ground plane so nothing sees it.
+      // below the ground plane so nothing sees it, then freeze and
+      // opt out of bounds/picking so the template carries zero per-frame
+      // CPU cost while still keeping its instances renderable.
       template.position.y = -10000;
       template.isPickable = false;
+      template.doNotSyncBoundingInfo = true;
+      template.alwaysSelectAsActiveMesh = false;
+      template.freezeWorldMatrix();
       this.templates.set(cacheKey, template);
     }
 
