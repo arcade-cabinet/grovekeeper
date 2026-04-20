@@ -29,6 +29,28 @@ export class SceneManager {
     });
     this.engine = engine;
 
+    // Hardware scaling — tradeoff between fidelity and fill rate.
+    // Babylon defaults to 1 (render at full device pixel ratio). On
+    // retina mobile that means drawing ~3× more pixels than desktop,
+    // which is the single biggest fill-rate cost for this game.
+    //
+    // Strategy (matches docs/PERF_AUDIT.md recommendation):
+    //   - Touch devices (mobile/tablet): 1 / min(2, DPR) — caps at 2,
+    //     so a 3× retina phone renders at 1.5× (still sharp, ~55% fewer
+    //     pixels). Desktop-class DPR=1 or 2 gets 1.0 (no change).
+    //   - Non-touch: identity (1.0) — assume desktop GPU has headroom.
+    //
+    // Hardware scaling level is `1 / renderScale`, so higher = smaller
+    // framebuffer. Engine.setHardwareScalingLevel(1.5) means render at
+    // 2/3 size then upscale, ~45% fewer pixels than 1.0.
+    const isTouch =
+      "ontouchstart" in window ||
+      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0);
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
+    if (isTouch && dpr > 1) {
+      engine.setHardwareScalingLevel(dpr / Math.min(2, dpr));
+    }
+
     const scene = new Scene(engine);
     // Match clear color to fog/wilderness so any exposed background blends.
     scene.clearColor = new Color4(0.35, 0.48, 0.3, 1);
