@@ -51,9 +51,28 @@ export class SceneManager {
       engine.setHardwareScalingLevel(dpr / Math.min(2, dpr));
     }
 
+    const { ScenePerformancePriority } = await import(
+      "@babylonjs/core/scene"
+    );
     const scene = new Scene(engine);
     // Match clear color to fog/wilderness so any exposed background blends.
     scene.clearColor = new Color4(0.35, 0.48, 0.3, 1);
+
+    // Perf knobs (see docs/PERF_AUDIT.md):
+    //   - performancePriority=Intermediate: skip picking/raycast pre-pass for
+    //     static meshes, batched material activation. ~10-20% CPU off
+    //     the render loop on mobile.
+    //   - skipPointerMovePicking: pointermove never triggers ray-pick; we
+    //     only need ray-pick on pointerdown (tap/click-to-move). Kills a
+    //     hot per-frame mouse-drag cost.
+    //   - autoClear=false: we always draw the ground mesh + fog to the
+    //     viewport, so the extra clear call is wasted. Cleared explicitly
+    //     via engine.clear() only when actually needed (scene changes).
+    scene.performancePriority = ScenePerformancePriority.Intermediate;
+    scene.skipPointerMovePicking = true;
+    scene.autoClear = false;
+    scene.autoClearDepthAndStencil = true; // still need depth reset
+
     this.scene = scene;
 
     this.resizeHandler = () => engine.resize();
