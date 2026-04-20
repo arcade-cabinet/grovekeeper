@@ -4,6 +4,7 @@ export {
   createPropMesh,
   createPropMeshBatch,
   disposePropBatch,
+  disposePropMaterialCache,
   disposePropMeshes,
 } from "./PropFactory";
 export type { PropBatch, PropBatchPosition } from "./PropFactory";
