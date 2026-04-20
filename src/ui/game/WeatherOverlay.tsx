@@ -1,10 +1,6 @@
-import { useEffect, useState } from "react";
+import { createSignal, For, onMount, Show } from "solid-js";
 import { createSimpleStore } from "@/shared/utils/simpleStore";
 import type { WeatherType } from "@/systems/weather";
-
-// ---------------------------------------------------------------------------
-// Store — updated from the game loop
-// ---------------------------------------------------------------------------
 
 export const weatherVisualStore = createSimpleStore<{
   weather: WeatherType;
@@ -18,10 +14,6 @@ export const setWeatherVisual = (w: WeatherType) => {
 export const setShowPetals = (show: boolean) => {
   weatherVisualStore.set((prev) => ({ ...prev, showPetals: show }));
 };
-
-// ---------------------------------------------------------------------------
-// CSS Keyframes (injected once)
-// ---------------------------------------------------------------------------
 
 const KEYFRAMES_ID = "grovekeeper-weather-keyframes";
 
@@ -63,10 +55,6 @@ const ensureKeyframes = () => {
   document.head.appendChild(style);
 };
 
-// ---------------------------------------------------------------------------
-// Rain particles
-// ---------------------------------------------------------------------------
-
 const RAIN_DROP_COUNT = 40;
 
 const RainOverlay = () => {
@@ -80,42 +68,38 @@ const RainOverlay = () => {
 
   return (
     <div
-      className="absolute inset-0 overflow-hidden pointer-events-none"
+      class="absolute inset-0 overflow-hidden pointer-events-none"
       style={{ opacity: 0.6 }}
     >
-      {drops.map((d) => (
-        <div
-          key={d.key}
-          style={{
-            position: "absolute",
-            left: `${d.left}%`,
-            top: 0,
-            width: 2,
-            height: 18,
-            background:
-              "linear-gradient(180deg, transparent, rgba(150,200,255,0.6), rgba(100,160,255,0.3))",
-            borderRadius: 1,
-            animation: `gk-rain-fall ${d.duration}s ${d.delay}s linear infinite`,
-          }}
-        />
-      ))}
-      {/* Blue-grey overlay tint */}
+      <For each={drops}>
+        {(d) => (
+          <div
+            style={{
+              position: "absolute",
+              left: `${d.left}%`,
+              top: "0",
+              width: "2px",
+              height: "18px",
+              background:
+                "linear-gradient(180deg, transparent, rgba(150,200,255,0.6), rgba(100,160,255,0.3))",
+              "border-radius": "1px",
+              animation: `gk-rain-fall ${d.duration}s ${d.delay}s linear infinite`,
+            }}
+          />
+        )}
+      </For>
       <div
-        className="absolute inset-0"
+        class="absolute inset-0"
         style={{ background: "rgba(100,130,170,0.08)" }}
       />
     </div>
   );
 };
 
-// ---------------------------------------------------------------------------
-// Drought shimmer
-// ---------------------------------------------------------------------------
-
 const DroughtOverlay = () => (
-  <div className="absolute inset-0 pointer-events-none">
+  <div class="absolute inset-0 pointer-events-none">
     <div
-      className="absolute inset-0"
+      class="absolute inset-0"
       style={{
         background:
           "linear-gradient(180deg, rgba(255,180,60,0.06) 0%, rgba(255,120,20,0.04) 50%, transparent 100%)",
@@ -124,25 +108,17 @@ const DroughtOverlay = () => (
   </div>
 );
 
-// ---------------------------------------------------------------------------
-// Windstorm
-// ---------------------------------------------------------------------------
-
 const WindstormOverlay = () => (
   <div
-    className="absolute inset-0 pointer-events-none"
+    class="absolute inset-0 pointer-events-none"
     style={{ animation: "gk-wind-sway 2s ease-in-out infinite" }}
   >
     <div
-      className="absolute inset-0"
+      class="absolute inset-0"
       style={{ background: "rgba(120,120,100,0.06)" }}
     />
   </div>
 );
-
-// ---------------------------------------------------------------------------
-// Cherry Blossom Petals
-// ---------------------------------------------------------------------------
 
 const PETAL_COUNT = 25;
 
@@ -156,54 +132,61 @@ const CherryPetalOverlay = () => {
 
   return (
     <div
-      className="absolute inset-0 overflow-hidden pointer-events-none"
+      class="absolute inset-0 overflow-hidden pointer-events-none"
       style={{ opacity: 0.5 }}
     >
-      {petals.map((p) => (
-        <div
-          key={p.key}
-          style={{
-            position: "absolute",
-            left: `${p.left}%`,
-            top: 0,
-            width: 8,
-            height: 8,
-            background:
-              "radial-gradient(circle, rgba(255,182,193,0.9), rgba(255,105,180,0.6))",
-            borderRadius: "50% 0% 50% 0%",
-            animation: `gk-petal-fall ${p.duration}s ${p.delay}s ease-in-out infinite`,
-          }}
-        />
-      ))}
+      <For each={petals}>
+        {(p) => (
+          <div
+            style={{
+              position: "absolute",
+              left: `${p.left}%`,
+              top: "0",
+              width: "8px",
+              height: "8px",
+              background:
+                "radial-gradient(circle, rgba(255,182,193,0.9), rgba(255,105,180,0.6))",
+              "border-radius": "50% 0% 50% 0%",
+              animation: `gk-petal-fall ${p.duration}s ${p.delay}s ease-in-out infinite`,
+            }}
+          />
+        )}
+      </For>
     </div>
   );
 };
 
-// ---------------------------------------------------------------------------
-// Container — mount once, wrapping the game canvas area
-// ---------------------------------------------------------------------------
-
 export const WeatherOverlay = () => {
   const weather = weatherVisualStore.use((s) => s.weather);
   const showPetals = weatherVisualStore.use((s) => s.showPetals);
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = createSignal(false);
 
-  useEffect(() => {
+  onMount(() => {
     ensureKeyframes();
     setReady(true);
-  }, []);
+  });
 
-  if (!ready) return null;
-
-  const hasWeather = weather !== "clear";
-  if (!hasWeather && !showPetals) return null;
+  const hasWeather = () => weather() !== "clear";
 
   return (
-    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }}>
-      {weather === "rain" && <RainOverlay />}
-      {weather === "drought" && <DroughtOverlay />}
-      {weather === "windstorm" && <WindstormOverlay />}
-      {showPetals && <CherryPetalOverlay />}
-    </div>
+    <Show when={ready() && (hasWeather() || showPetals())}>
+      <div
+        class="absolute inset-0 pointer-events-none"
+        style={{ "z-index": 5 }}
+      >
+        <Show when={weather() === "rain"}>
+          <RainOverlay />
+        </Show>
+        <Show when={weather() === "drought"}>
+          <DroughtOverlay />
+        </Show>
+        <Show when={weather() === "windstorm"}>
+          <WindstormOverlay />
+        </Show>
+        <Show when={showPetals()}>
+          <CherryPetalOverlay />
+        </Show>
+      </div>
+    </Show>
   );
 };

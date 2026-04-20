@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createSignal, For, Show } from "solid-js";
 import { COLORS } from "@/config/config";
 import { Button } from "@/ui/primitives/button";
 import {
@@ -66,44 +66,44 @@ const STEPS = [
   },
 ];
 
-export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
-  const [step, setStep] = useState(0);
+export const RulesModal = (props: RulesModalProps) => {
+  const [step, setStep] = createSignal(0);
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       setStep(0);
-      onClose();
+      props.onClose();
     }
   };
 
   const handleNext = () => {
-    if (step < STEPS.length - 1) {
-      setStep(step + 1);
+    if (step() < STEPS.length - 1) {
+      setStep(step() + 1);
     } else {
       setStep(0);
-      onStart();
+      props.onStart();
     }
   };
 
   const handleBack = () => {
-    if (step > 0) setStep(step - 1);
+    if (step() > 0) setStep(step() - 1);
   };
 
-  const current = STEPS[step];
-  const isLast = step === STEPS.length - 1;
+  const current = () => STEPS[step()];
+  const isLast = () => step() === STEPS.length - 1;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-w-sm w-[calc(100%-2rem)] p-0 gap-0 rounded-2xl overflow-hidden"
+        class="max-w-sm w-[calc(100%-2rem)] p-0 gap-0 rounded-2xl overflow-hidden"
         style={{
           background: `linear-gradient(180deg, #faf9f6 0%, ${COLORS.skyMist} 100%)`,
           border: `3px solid ${COLORS.forestGreen}40`,
         }}
       >
-        <DialogHeader className="p-5 pb-3 text-center">
+        <DialogHeader class="p-5 pb-3 text-center">
           <DialogTitle
-            className="text-xl font-bold flex items-center justify-center gap-2"
+            class="text-xl font-bold flex items-center justify-center gap-2"
             style={{ color: COLORS.forestGreen }}
           >
             <span>🌲</span>
@@ -111,100 +111,101 @@ export const RulesModal = ({ open, onClose, onStart }: RulesModalProps) => {
             <span>🌲</span>
           </DialogTitle>
           <DialogDescription
-            className="text-xs"
+            class="text-xs"
             style={{ color: COLORS.barkBrown }}
           >
-            Step {step + 1} of {STEPS.length}
+            Step {step() + 1} of {STEPS.length}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Progress dots */}
-        <div className="flex justify-center gap-1.5 px-5 pb-3">
-          {STEPS.map((s, i) => {
-            let bg = `${COLORS.forestGreen}20`;
-            if (i === step) bg = COLORS.forestGreen;
-            else if (i < step) bg = `${COLORS.forestGreen}60`;
-            return (
-              <button
-                key={s.title}
-                className="w-11 h-11 flex items-center justify-center"
-                onClick={() => setStep(i)}
-                aria-label={`Go to step ${i + 1}`}
-              >
-                <span
-                  className="w-2 h-2 rounded-full motion-safe:transition-all"
-                  style={{
-                    background: bg,
-                    transform: i === step ? "scale(1.3)" : "scale(1)",
-                  }}
-                />
-              </button>
-            );
-          })}
+        <div class="flex justify-center gap-1.5 px-5 pb-3">
+          <For each={STEPS}>
+            {(_s, i) => {
+              const bg = () => {
+                if (i() === step()) return COLORS.forestGreen;
+                if (i() < step()) return `${COLORS.forestGreen}60`;
+                return `${COLORS.forestGreen}20`;
+              };
+              return (
+                <button
+                  type="button"
+                  class="w-11 h-11 flex items-center justify-center"
+                  onClick={() => setStep(i())}
+                  aria-label={`Go to step ${i() + 1}`}
+                >
+                  <span
+                    class="w-2 h-2 rounded-full motion-safe:transition-all"
+                    style={{
+                      background: bg(),
+                      transform: i() === step() ? "scale(1.3)" : "scale(1)",
+                    }}
+                  />
+                </button>
+              );
+            }}
+          </For>
         </div>
 
-        {/* Current step content */}
-        <div className="px-5 pb-4">
+        <div class="px-5 pb-4">
           <div
-            className="flex flex-col items-center gap-3 p-5 rounded-xl text-center"
+            class="flex flex-col items-center gap-3 p-5 rounded-xl text-center"
             style={{
               background: "rgba(255,255,255,0.7)",
               border: `1px solid ${COLORS.forestGreen}20`,
             }}
           >
-            <span className="text-5xl">{current.icon}</span>
-            <h4
-              className="font-bold text-lg"
-              style={{ color: COLORS.soilDark }}
-            >
-              {current.title}
+            <span class="text-5xl">{current().icon}</span>
+            <h4 class="font-bold text-lg" style={{ color: COLORS.soilDark }}>
+              {current().title}
             </h4>
             <p
-              className="text-sm leading-relaxed"
+              class="text-sm leading-relaxed"
               style={{ color: COLORS.barkBrown }}
             >
-              {current.description}
+              {current().description}
             </p>
           </div>
         </div>
 
-        {/* Navigation buttons */}
-        <div className="p-4 pt-0 flex gap-2">
-          {step > 0 ? (
+        <div class="p-4 pt-0 flex gap-2">
+          <Show
+            when={step() > 0}
+            fallback={
+              <Button
+                variant="outline"
+                class="flex-1 h-11 rounded-xl font-semibold"
+                style={{
+                  "border-color": `${COLORS.barkBrown}80`,
+                  color: COLORS.barkBrown,
+                }}
+                onClick={props.onStart}
+              >
+                Skip
+              </Button>
+            }
+          >
             <Button
               variant="outline"
-              className="flex-1 h-11 rounded-xl font-semibold"
+              class="flex-1 h-11 rounded-xl font-semibold"
               style={{
-                borderColor: COLORS.forestGreen,
-                borderWidth: 2,
+                "border-color": COLORS.forestGreen,
+                "border-width": "2px",
                 color: COLORS.forestGreen,
               }}
               onClick={handleBack}
             >
               Back
             </Button>
-          ) : (
-            <Button
-              variant="outline"
-              className="flex-1 h-11 rounded-xl font-semibold"
-              style={{
-                borderColor: `${COLORS.barkBrown}80`,
-                color: COLORS.barkBrown,
-              }}
-              onClick={onStart}
-            >
-              Skip
-            </Button>
-          )}
+          </Show>
           <Button
-            className="flex-1 h-11 rounded-xl font-semibold"
+            class="flex-1 h-11 rounded-xl font-semibold"
             style={{
               background: `linear-gradient(135deg, ${COLORS.forestGreen} 0%, ${COLORS.forestGreen}dd 100%)`,
               color: "white",
             }}
             onClick={handleNext}
           >
-            {isLast ? "Let's Grow!" : "Next"}
+            {isLast() ? "Let's Grow!" : "Next"}
           </Button>
         </div>
       </DialogContent>

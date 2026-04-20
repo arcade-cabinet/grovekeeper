@@ -1,14 +1,14 @@
-import { useTrait } from "koota/react";
-import { useState } from "react";
+import { createSignal, Show } from "solid-js";
 import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
+import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
 import { getNpcTemplate } from "@/npcs/NpcManager";
-import { Build, PlayerProgress } from "@/traits";
 import type { StructureTemplate } from "@/structures/types";
 import { getCosmeticById } from "@/systems/prestige";
 import type { GameTime } from "@/systems/time";
 import type { WeatherType } from "@/systems/weather";
+import { Build, PlayerProgress } from "@/traits";
 import { getActionLabel, type TileState } from "./ActionButton";
 import { BatchHarvestButton } from "./BatchHarvestButton";
 import { BuildPanel } from "./BuildPanel";
@@ -28,6 +28,8 @@ import { TutorialOverlay } from "./TutorialOverlay";
 import { VirtualJoystick } from "./VirtualJoystick";
 import { WeatherForecast } from "./WeatherForecast";
 import { WeatherOverlay } from "./WeatherOverlay";
+
+type Ref<T> = { current: T };
 
 interface GameUIProps {
   onAction: () => void;
@@ -58,7 +60,7 @@ interface GameUIProps {
   radialScreenPos?: { x: number; y: number } | null;
   onRadialAction?: (actionId: string) => void;
   onDismissRadial?: () => void;
-  movementRef?: React.RefObject<{ x: number; z: number }>;
+  movementRef?: Ref<{ x: number; z: number } | null>;
   onJoystickActiveChange?: (active: boolean) => void;
   tutorialDialogueId?: string | null;
   onTutorialDialogueAction?: (actionType: string) => void;
@@ -66,104 +68,77 @@ interface GameUIProps {
   tutorialHighlightLabel?: string | null;
 }
 
-export const GameUI = ({
-  onAction,
-  onPlant,
-  onOpenMenu,
-  onOpenTools,
-  onBatchHarvest,
-  currentWeather,
-  weatherTimeRemaining,
-  seedSelectOpen,
-  setSeedSelectOpen,
-  toolWheelOpen,
-  setToolWheelOpen,
-  pauseMenuOpen,
-  setPauseMenuOpen,
-  onMainMenu,
-  gameTime,
-  playerTileInfo,
-  nearbyNpcTemplateId,
-  npcDialogueOpen,
-  setNpcDialogueOpen,
-  radialActions,
-  radialScreenPos,
-  onRadialAction,
-  onDismissRadial,
-  movementRef,
-  onJoystickActiveChange,
-  tutorialDialogueId,
-  onTutorialDialogueAction,
-  tutorialHighlightId,
-  tutorialHighlightLabel,
-}: GameUIProps) => {
-  const activeBorderCosmetic =
-    useTrait(koota, PlayerProgress)?.activeBorderCosmetic ?? null;
-  const [buildPanelOpen, setBuildPanelOpen] = useState(false);
-  const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
+export const GameUI = (props: GameUIProps) => {
+  const progress = useTrait(koota, PlayerProgress);
+  const activeBorderCosmetic = () => progress()?.activeBorderCosmetic ?? null;
+  const [buildPanelOpen, setBuildPanelOpen] = createSignal(false);
+  const [tradeDialogOpen, setTradeDialogOpen] = createSignal(false);
 
   // Prestige cosmetic border — applied as subtle screen vignette
-  const cosmetic = activeBorderCosmetic
-    ? getCosmeticById(activeBorderCosmetic)
-    : null;
+  const cosmetic = () => {
+    const id = activeBorderCosmetic();
+    return id ? getCosmeticById(id) : null;
+  };
 
   return (
-    <div className="absolute inset-0 pointer-events-none">
+    <div class="absolute inset-0 pointer-events-none">
       {/* Prestige cosmetic vignette border */}
-      {cosmetic && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            border: cosmetic.borderStyle,
-            borderColor: cosmetic.borderColor,
-            boxShadow: cosmetic.glowColor
-              ? `inset 0 0 20px ${cosmetic.glowColor}`
-              : undefined,
-            zIndex: 50,
-          }}
-        />
-      )}
+      <Show when={cosmetic()}>
+        {(c) => (
+          <div
+            class="absolute inset-0 pointer-events-none"
+            style={{
+              border: c().borderStyle,
+              "border-color": c().borderColor,
+              "box-shadow": c().glowColor
+                ? `inset 0 0 20px ${c().glowColor}`
+                : undefined,
+              "z-index": 50,
+            }}
+          />
+        )}
+      </Show>
 
       {/* Weather visual overlay (rain, drought, windstorm) */}
       <WeatherOverlay />
 
       {/* Top HUD bar */}
       <div
-        className="absolute top-0 left-0 right-0 pointer-events-auto"
+        class="absolute top-0 left-0 right-0 pointer-events-auto"
         style={{
           background: `linear-gradient(180deg, ${COLORS.soilDark} 0%, ${COLORS.soilDark}ee 70%, transparent 100%)`,
-          paddingBottom: "env(safe-area-inset-top, 0px)",
+          "padding-bottom": "env(safe-area-inset-top, 0px)",
         }}
       >
-        <div className="pt-[env(safe-area-inset-top,0px)]">
+        <div class="pt-[env(safe-area-inset-top,0px)]">
           <HUD
-            onPlant={onAction}
-            onOpenMenu={onOpenMenu}
-            onOpenTools={onOpenTools}
+            onPlant={props.onAction}
+            onOpenMenu={props.onOpenMenu}
+            onOpenTools={props.onOpenTools}
             onOpenBuild={() => setBuildPanelOpen(true)}
-            gameTime={gameTime}
+            gameTime={props.gameTime}
           />
         </div>
       </div>
 
       {/* Weather forecast widget - below top HUD */}
-      {currentWeather && gameTime && (
+      <Show when={props.currentWeather && props.gameTime}>
         <div
-          className="absolute pointer-events-auto"
-          style={{ top: 64, right: 12 }}
+          class="absolute pointer-events-auto"
+          style={{ top: "64px", right: "12px" }}
         >
           <WeatherForecast
-            currentWeather={currentWeather}
-            weatherTimeRemaining={weatherTimeRemaining ?? 0}
-            currentSeason={gameTime.season}
+            currentWeather={props.currentWeather as WeatherType}
+            weatherTimeRemaining={props.weatherTimeRemaining ?? 0}
+            currentSeason={(props.gameTime as GameTime).season}
           />
         </div>
-      )}
+      </Show>
 
       {/* Tool belt - bottom right */}
       <div
-        className="absolute pointer-events-auto"
-        style={{ bottom: 140, right: 12 }}
+        class="absolute pointer-events-auto"
+        style={{ bottom: "140px", right: "12px" }}
       >
         <ToolBelt
           onSelectTool={(id) => gameActions().setSelectedTool(id)}
@@ -171,86 +146,94 @@ export const GameUI = ({
       </div>
 
       {/* Batch harvest button - above tool belt, higher z-index */}
-      {onBatchHarvest && (
+      <Show when={props.onBatchHarvest}>
         <div
-          className="absolute pointer-events-auto"
-          style={{ bottom: 240, right: 16, zIndex: 10 }}
+          class="absolute pointer-events-auto"
+          style={{ bottom: "240px", right: "16px", "z-index": 10 }}
         >
-          <BatchHarvestButton onBatchHarvest={onBatchHarvest} />
+          <BatchHarvestButton
+            onBatchHarvest={props.onBatchHarvest as () => void}
+          />
         </div>
-      )}
+      </Show>
 
       {/* Stamina gauge - right side */}
       <div
-        className="absolute pointer-events-none"
-        style={{ bottom: 240, right: 20 }}
+        class="absolute pointer-events-none"
+        style={{ bottom: "240px", right: "20px" }}
       >
         <StaminaGauge />
       </div>
 
       {/* Bottom control area — desktop only */}
       <div
-        className="absolute bottom-0 left-0 right-0 pointer-events-auto hidden md:block"
+        class="absolute bottom-0 left-0 right-0 pointer-events-auto hidden md:block"
         style={{
           background: `linear-gradient(0deg, ${COLORS.soilDark} 0%, ${COLORS.soilDark}ee 60%, transparent 100%)`,
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          "padding-bottom": "env(safe-area-inset-bottom, 0px)",
         }}
       >
         <BottomControls
-          onAction={onAction}
-          tileState={playerTileInfo ?? null}
-          nearbyNpcTemplateId={nearbyNpcTemplateId ?? null}
+          onAction={props.onAction}
+          tileState={props.playerTileInfo ?? null}
+          nearbyNpcTemplateId={props.nearbyNpcTemplateId ?? null}
         />
       </div>
 
       {/* Mobile controls — joystick (left) + action buttons (right) */}
-      {movementRef && (
+      <Show when={props.movementRef}>
         <VirtualJoystick
-          movementRef={movementRef}
-          onActiveChange={onJoystickActiveChange}
+          movementRef={
+            props.movementRef as Ref<{ x: number; z: number } | null>
+          }
+          onActiveChange={props.onJoystickActiveChange}
         />
-      )}
+      </Show>
       <MobileActionButtons
-        onAction={onAction}
-        onOpenSeeds={() => setSeedSelectOpen(true)}
-        onPause={() => setPauseMenuOpen(true)}
-        tileState={playerTileInfo ?? null}
-        nearbyNpcTemplateId={nearbyNpcTemplateId ?? null}
+        onAction={props.onAction}
+        onOpenSeeds={() => props.setSeedSelectOpen(true)}
+        onPause={() => props.setPauseMenuOpen(true)}
+        tileState={props.playerTileInfo ?? null}
+        nearbyNpcTemplateId={props.nearbyNpcTemplateId ?? null}
       />
 
       {/* Mini-map - desktop only, bottom-left */}
       <MiniMap />
 
       {/* Radial action menu - shown when tapping ground/objects */}
-      {radialActions &&
-        radialActions.length > 0 &&
-        radialScreenPos &&
-        onRadialAction &&
-        onDismissRadial && (
-          <div className="pointer-events-auto">
-            <RadialActionMenu
-              centerX={radialScreenPos.x}
-              centerY={radialScreenPos.y}
-              actions={radialActions}
-              onSelect={onRadialAction}
-              onDismiss={onDismissRadial}
-            />
-          </div>
-        )}
+      <Show
+        when={
+          props.radialActions &&
+          props.radialActions.length > 0 &&
+          props.radialScreenPos &&
+          props.onRadialAction &&
+          props.onDismissRadial
+        }
+      >
+        <div class="pointer-events-auto">
+          <RadialActionMenu
+            centerX={(props.radialScreenPos as { x: number; y: number }).x}
+            centerY={(props.radialScreenPos as { x: number; y: number }).y}
+            actions={props.radialActions as RadialAction[]}
+            onSelect={props.onRadialAction as (actionId: string) => void}
+            onDismiss={props.onDismissRadial as () => void}
+          />
+        </div>
+      </Show>
 
       {/* Modals */}
-      <div className="pointer-events-auto">
+      <div class="pointer-events-auto">
         <SeedSelect
-          open={seedSelectOpen}
-          onClose={() => setSeedSelectOpen(false)}
-          onSelect={() => onPlant()}
+          open={props.seedSelectOpen}
+          onClose={() => props.setSeedSelectOpen(false)}
+          onSelect={() => props.onPlant()}
         />
         <ToolWheel
-          open={toolWheelOpen}
-          onClose={() => setToolWheelOpen(false)}
+          open={props.toolWheelOpen}
+          onClose={() => props.setToolWheelOpen(false)}
         />
         <BuildPanel
-          open={buildPanelOpen}
+          open={buildPanelOpen()}
           onClose={() => setBuildPanelOpen(false)}
           onSelectStructure={(template) => {
             gameActions().setBuildMode(true, template.id);
@@ -258,64 +241,64 @@ export const GameUI = ({
           }}
         />
         <TradeDialog
-          open={tradeDialogOpen}
+          open={tradeDialogOpen()}
           onClose={() => setTradeDialogOpen(false)}
         />
-        {setNpcDialogueOpen && (
+        <Show when={props.setNpcDialogueOpen}>
           <NpcDialogue
-            open={npcDialogueOpen ?? false}
-            onClose={() => setNpcDialogueOpen(false)}
-            npcTemplateId={nearbyNpcTemplateId ?? null}
+            open={props.npcDialogueOpen ?? false}
+            onClose={() =>
+              (props.setNpcDialogueOpen as (open: boolean) => void)(false)
+            }
+            npcTemplateId={props.nearbyNpcTemplateId ?? null}
             onOpenTrade={() => setTradeDialogOpen(true)}
-            onOpenSeeds={() => setSeedSelectOpen(true)}
-            overrideDialogueId={tutorialDialogueId ?? undefined}
-            onDialogueAction={onTutorialDialogueAction}
+            onOpenSeeds={() => props.setSeedSelectOpen(true)}
+            overrideDialogueId={props.tutorialDialogueId ?? undefined}
+            onDialogueAction={props.onTutorialDialogueAction}
           />
-        )}
+        </Show>
         <PauseMenu
-          open={pauseMenuOpen}
-          onClose={() => setPauseMenuOpen(false)}
-          onMainMenu={onMainMenu}
+          open={props.pauseMenuOpen}
+          onClose={() => props.setPauseMenuOpen(false)}
+          onMainMenu={props.onMainMenu}
         />
       </div>
 
       {/* Tutorial highlight overlay */}
       <TutorialOverlay
-        targetId={tutorialHighlightId ?? null}
-        label={tutorialHighlightLabel ?? null}
+        targetId={props.tutorialHighlightId ?? null}
+        label={props.tutorialHighlightLabel ?? null}
       />
     </div>
   );
 };
 
 // Bottom controls — action button + tool label (joystick removed)
-const BottomControls = ({
-  onAction,
-  tileState,
-  nearbyNpcTemplateId,
-}: {
+const BottomControls = (props: {
   onAction: () => void;
   tileState: TileState | null;
   nearbyNpcTemplateId: string | null;
 }) => {
-  const selectedTool = useTrait(koota, PlayerProgress)?.selectedTool ?? "trowel";
-  const buildMode = useTrait(koota, Build)?.mode ?? false;
+  const progress = useTrait(koota, PlayerProgress);
+  const build = useTrait(koota, Build);
+  const selectedTool = () => progress()?.selectedTool ?? "trowel";
+  const buildMode = () => build()?.mode ?? false;
 
   // Tool-specific action button appearance
   const getActionButtonStyle = () => {
     // NPC interaction override
-    if (nearbyNpcTemplateId) {
-      const npcTemplate = getNpcTemplate(nearbyNpcTemplateId);
+    if (props.nearbyNpcTemplateId) {
+      const npcTemplate = getNpcTemplate(props.nearbyNpcTemplateId);
       return {
         bg: COLORS.autumnGold,
         icon: npcTemplate?.icon ?? "\u{1F4AC}",
         label: "Talk",
       };
     }
-    if (buildMode) {
+    if (buildMode()) {
       return { bg: COLORS.barkBrown, icon: "\u{1F3D7}\uFE0F", label: "Build" };
     }
-    switch (selectedTool) {
+    switch (selectedTool()) {
       case "trowel":
         return { bg: COLORS.leafLight, icon: "\u{1F331}", label: "Plant" };
       case "watering-can":
@@ -345,56 +328,58 @@ const BottomControls = ({
     }
   };
 
-  const actionStyle = getActionButtonStyle();
+  const actionStyle = () => getActionButtonStyle();
 
   // Determine if the action is valid for the current tool + tile combo
-  const actionEnabled =
-    !!nearbyNpcTemplateId ||
-    buildMode ||
-    getActionLabel(selectedTool, tileState).enabled;
+  const actionEnabled = () =>
+    !!props.nearbyNpcTemplateId ||
+    buildMode() ||
+    getActionLabel(selectedTool(), props.tileState).enabled;
 
   return (
-    <div className="relative h-24 sm:h-28 md:h-32 lg:h-36 flex items-center justify-end px-4 sm:px-6 md:px-8 lg:px-12">
+    <div class="relative h-24 sm:h-28 md:h-32 lg:h-36 flex items-center justify-end px-4 sm:px-6 md:px-8 lg:px-12">
       {/* Status text - center (hidden on mobile) */}
-      <div className="hidden md:flex flex-col items-center gap-1 flex-1 justify-center">
+      <div class="hidden md:flex flex-col items-center gap-1 flex-1 justify-center">
         <span
-          className="text-xs font-medium px-3 py-1 rounded-full capitalize"
+          class="text-xs font-medium px-3 py-1 rounded-full capitalize"
           style={{
             background: `${COLORS.forestGreen}dd`,
             color: "white",
           }}
         >
-          {selectedTool}
+          {selectedTool()}
         </span>
       </div>
 
       {/* Action button - right side */}
-      <div className="flex flex-col items-center gap-1 flex-shrink-0">
+      <div class="flex flex-col items-center gap-1 flex-shrink-0">
         <button
           type="button"
           data-tutorial-id="action-button"
-          className="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl shadow-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
+          class="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl shadow-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
           style={{
-            background: actionEnabled
-              ? `linear-gradient(135deg, ${actionStyle.bg} 0%, ${actionStyle.bg}cc 100%)`
+            background: actionEnabled()
+              ? `linear-gradient(135deg, ${actionStyle().bg} 0%, ${actionStyle().bg}cc 100%)`
               : `linear-gradient(135deg, #9E9E9E 0%, #757575 100%)`,
-            border: `3px solid ${actionEnabled ? COLORS.soilDark : "#616161"}`,
-            boxShadow: actionEnabled
-              ? `0 4px 12px ${actionStyle.bg}60, inset 0 2px 4px rgba(255,255,255,0.3)`
+            border: `3px solid ${actionEnabled() ? COLORS.soilDark : "#616161"}`,
+            "box-shadow": actionEnabled()
+              ? `0 4px 12px ${actionStyle().bg}60, inset 0 2px 4px rgba(255,255,255,0.3)`
               : "0 2px 4px rgba(0,0,0,0.15)",
-            opacity: actionEnabled ? 1 : 0.55,
+            opacity: actionEnabled() ? 1 : 0.55,
           }}
-          disabled={!actionEnabled}
-          onClick={actionEnabled ? onAction : undefined}
+          disabled={!actionEnabled()}
+          onClick={actionEnabled() ? props.onAction : undefined}
         >
-          {actionStyle.icon}
+          {actionStyle().icon}
         </button>
         {/* Action label on mobile */}
         <span
-          className="text-xs font-medium md:hidden"
-          style={{ color: actionEnabled ? "white" : "rgba(255,255,255,0.5)" }}
+          class="text-xs font-medium md:hidden"
+          style={{
+            color: actionEnabled() ? "white" : "rgba(255,255,255,0.5)",
+          }}
         >
-          {actionStyle.label}
+          {actionStyle().label}
         </span>
       </div>
     </div>

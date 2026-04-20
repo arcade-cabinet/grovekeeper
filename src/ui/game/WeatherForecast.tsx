@@ -1,9 +1,10 @@
+import { Show } from "solid-js";
 import { COLORS } from "@/config/config";
 import type { WeatherType } from "@/systems/weather";
 
 interface WeatherForecastProps {
   currentWeather: WeatherType;
-  weatherTimeRemaining: number; // seconds remaining on current event
+  weatherTimeRemaining: number;
   currentSeason: string;
 }
 
@@ -28,30 +29,26 @@ const SEASON_HINTS: Record<string, string> = {
   winter: "Cold and dry",
 };
 
-export const WeatherForecast = ({
-  currentWeather,
-  weatherTimeRemaining,
-  currentSeason,
-}: WeatherForecastProps) => {
-  const minutes = Math.ceil(weatherTimeRemaining / 60);
+export const WeatherForecast = (props: WeatherForecastProps) => {
+  const minutes = () => Math.ceil(props.weatherTimeRemaining / 60);
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
+      class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
       style={{
         background: "rgba(245, 240, 227, 0.9)",
         border: `1px solid ${COLORS.barkBrown}`,
         color: COLORS.soilDark,
       }}
     >
-      <span className="text-sm">{WEATHER_ICONS[currentWeather]}</span>
-      <span>{WEATHER_LABELS[currentWeather]}</span>
-      {currentWeather !== "clear" && (
-        <span className="opacity-60">~{minutes}m</span>
-      )}
-      <span className="opacity-40">|</span>
-      <span className="opacity-60 italic">
-        {SEASON_HINTS[currentSeason] ?? ""}
+      <span class="text-sm">{WEATHER_ICONS[props.currentWeather]}</span>
+      <span>{WEATHER_LABELS[props.currentWeather]}</span>
+      <Show when={props.currentWeather !== "clear"}>
+        <span class="opacity-60">~{minutes()}m</span>
+      </Show>
+      <span class="opacity-40">|</span>
+      <span class="opacity-60 italic">
+        {SEASON_HINTS[props.currentSeason] ?? ""}
       </span>
     </div>
   );

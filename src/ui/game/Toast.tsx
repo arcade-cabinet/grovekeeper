@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { createSimpleStore } from "@/shared/utils/simpleStore";
 
 // ---------------------------------------------------------------------------
@@ -51,7 +51,6 @@ function addToast(message: string, type: ToastType = "info"): void {
     return { toasts: next };
   });
 
-  // Auto-dismiss
   setTimeout(() => {
     removeToast(id);
   }, AUTO_DISMISS_MS);
@@ -62,10 +61,6 @@ function removeToast(id: string): void {
     toasts: state.toasts.filter((t) => t.id !== id),
   }));
 }
-
-// ---------------------------------------------------------------------------
-// Convenience helper
-// ---------------------------------------------------------------------------
 
 export const showToast = (message: string, type?: ToastType) => {
   addToast(message, type);
@@ -86,88 +81,71 @@ const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const AnimatedToast = ({ item, onDismissed }: AnimatedToastProps) => {
-  const [phase, setPhase] = useState<"enter" | "visible" | "exit">("enter");
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reduceMotion = useRef(prefersReducedMotion());
+const AnimatedToast = (props: AnimatedToastProps) => {
+  const [phase, setPhase] = createSignal<"enter" | "visible" | "exit">("enter");
+  const reduceMotion = prefersReducedMotion();
 
   // Enter animation on mount
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      setPhase("visible");
-    });
-    return () => cancelAnimationFrame(frame);
-  }, []);
+  const frame = requestAnimationFrame(() => setPhase("visible"));
+  onCleanup(() => cancelAnimationFrame(frame));
 
-  // Schedule exit slightly before auto-dismiss so animation finishes in time
-  useEffect(() => {
-    const remaining = AUTO_DISMISS_MS - (Date.now() - item.createdAt);
-    const exitDelay = Math.max(remaining - TRANSITION_MS, 0);
-
-    timerRef.current = setTimeout(() => {
-      setPhase("exit");
-    }, exitDelay);
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [item.createdAt]);
+  // Schedule exit slightly before auto-dismiss
+  const remaining = AUTO_DISMISS_MS - (Date.now() - props.item.createdAt);
+  const exitDelay = Math.max(remaining - TRANSITION_MS, 0);
+  const exitTimer = setTimeout(() => setPhase("exit"), exitDelay);
+  onCleanup(() => clearTimeout(exitTimer));
 
   // After exit transition completes, tell parent to remove from DOM
-  useEffect(() => {
-    if (phase !== "exit") return;
-    const t = setTimeout(() => onDismissed(item.id), TRANSITION_MS);
-    return () => clearTimeout(t);
-  }, [phase, item.id, onDismissed]);
+  createEffect(() => {
+    if (phase() !== "exit") return;
+    const t = setTimeout(() => props.onDismissed(props.item.id), TRANSITION_MS);
+    onCleanup(() => clearTimeout(t));
+  });
 
-  const colors = TOAST_COLORS[item.type];
+  const colors = () => TOAST_COLORS[props.item.type];
 
-  const noMotion = reduceMotion.current;
-  const translateY = noMotion
-    ? "0px"
-    : phase === "enter"
-      ? "-20px"
-      : phase === "exit"
-        ? "-20px"
-        : "0px";
-  const opacity = phase === "visible" ? 1 : 0;
-  const transitionCSS = noMotion
-    ? "none"
-    : `transform ${TRANSITION_MS}ms ease-out, opacity ${TRANSITION_MS}ms ease-out`;
+  const translateY = () => {
+    if (reduceMotion) return "0px";
+    const p = phase();
+    return p === "enter" || p === "exit" ? "-20px" : "0px";
+  };
+  const opacity = () => (phase() === "visible" ? 1 : 0);
+  const transitionCSS = () =>
+    reduceMotion
+      ? "none"
+      : `transform ${TRANSITION_MS}ms ease-out, opacity ${TRANSITION_MS}ms ease-out`;
 
   return (
     <div
       role="status"
       aria-live="polite"
-      className="flex items-center justify-center pointer-events-auto"
+      class="flex items-center justify-center pointer-events-auto"
       style={{
-        background: colors.bg,
-        color: colors.text,
-        fontWeight: 700,
-        fontSize: 14,
-        lineHeight: "20px",
+        background: colors().bg,
+        color: colors().text,
+        "font-weight": 700,
+        "font-size": "14px",
+        "line-height": "20px",
         padding: "8px 16px",
-        borderRadius: 9999,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-        transform: `translateY(${translateY})`,
-        opacity,
-        transition: transitionCSS,
-        maxWidth: "calc(100vw - 48px)",
-        textAlign: "center",
-        whiteSpace: "nowrap",
+        "border-radius": "9999px",
+        "box-shadow": "0 2px 8px rgba(0,0,0,0.25)",
+        transform: `translateY(${translateY()})`,
+        opacity: opacity(),
+        transition: transitionCSS(),
+        "max-width": "calc(100vw - 48px)",
+        "text-align": "center",
+        "white-space": "nowrap",
         overflow: "hidden",
-        textOverflow: "ellipsis",
+        "text-overflow": "ellipsis",
       }}
-      onClick={() => {
-        setPhase("exit");
-      }}
+      onClick={() => setPhase("exit")}
     >
-      {item.type === "achievement" && (
-        <span style={{ marginRight: 6 }} aria-hidden="true">
+      <Show when={props.item.type === "achievement"}>
+        <span style={{ "margin-right": "6px" }} aria-hidden="true">
           {"\u2728"}
         </span>
-      )}
-      {item.message}
+      </Show>
+      {props.item.message}
     </div>
   );
 };
@@ -179,8 +157,7 @@ const AnimatedToast = ({ item, onDismissed }: AnimatedToastProps) => {
 export const ToastContainer = () => {
   const toasts = toastStore.use((s) => s.toasts);
 
-  // Track which toasts have been removed after their exit animation
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [dismissed, setDismissed] = createSignal<Set<string>>(new Set());
 
   const handleDismissed = (id: string) => {
     setDismissed((prev) => {
@@ -191,33 +168,31 @@ export const ToastContainer = () => {
   };
 
   // Clean up dismissed set when the store already removed the toast
-  useEffect(() => {
+  createEffect(() => {
+    const ids = new Set(toasts().map((t) => t.id));
     setDismissed((prev) => {
-      const ids = new Set(toasts.map((t) => t.id));
       const next = new Set<string>();
       for (const id of prev) {
         if (ids.has(id)) next.add(id);
       }
       return next.size === prev.size ? prev : next;
     });
-  }, [toasts]);
+  });
 
-  const visible = toasts.filter((t) => !dismissed.has(t.id));
-
-  if (visible.length === 0) return null;
+  const visible = () => toasts().filter((t) => !dismissed().has(t.id));
 
   return (
-    <div
-      className="fixed left-0 right-0 flex flex-col items-center gap-2 pointer-events-none"
-      style={{ top: 52, zIndex: 9999 }}
-    >
-      {visible.map((item) => (
-        <AnimatedToast
-          key={item.id}
-          item={item}
-          onDismissed={handleDismissed}
-        />
-      ))}
-    </div>
+    <Show when={visible().length > 0}>
+      <div
+        class="fixed left-0 right-0 flex flex-col items-center gap-2 pointer-events-none"
+        style={{ top: "52px", "z-index": 9999 }}
+      >
+        <For each={visible()}>
+          {(item) => (
+            <AnimatedToast item={item} onDismissed={handleDismissed} />
+          )}
+        </For>
+      </div>
+    </Show>
   );
 };

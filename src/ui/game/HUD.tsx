@@ -1,10 +1,11 @@
-import { RiBuilding2Line, RiMenuLine, RiToolsLine } from "@remixicon/react";
-import { useTrait } from "koota/react";
+import { Show } from "solid-js";
 import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
+import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
 import type { GameTime } from "@/systems/time";
 import { PlayerProgress, Quests } from "@/traits";
+import { RiBuilding2Line, RiMenuLine, RiToolsLine } from "@/ui/icons";
 import { Button } from "@/ui/primitives/button";
 import { QuestPanel } from "./QuestPanel";
 import { ResourceBar } from "./ResourceBar";
@@ -19,19 +20,15 @@ interface HUDProps {
   gameTime: GameTime | null;
 }
 
-export const HUD = ({
-  onOpenMenu,
-  onOpenTools,
-  onOpenBuild,
-  gameTime,
-}: HUDProps) => {
+export const HUD = (props: HUDProps) => {
   const progress = useTrait(koota, PlayerProgress);
-  const selectedTool = progress?.selectedTool ?? "trowel";
-  const level = progress?.level ?? 1;
-  const activeQuests = useTrait(koota, Quests)?.activeQuests ?? [];
+  const selectedTool = () => progress()?.selectedTool ?? "trowel";
+  const level = () => progress()?.level ?? 1;
+  const questsTrait = useTrait(koota, Quests);
+  const activeQuests = () => questsTrait()?.activeQuests ?? [];
 
   const handleClaimReward = (questId: string) => {
-    const quest = activeQuests.find((q) => q.id === questId);
+    const quest = activeQuests().find((q) => q.id === questId);
     if (quest?.completed) {
       const a = gameActions();
       a.addXp(quest.rewards.xp);
@@ -50,71 +47,62 @@ export const HUD = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
-      {/* Left side - Stats */}
-      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 overflow-hidden">
-        {/* Resources */}
+    <div class="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
+      <div class="flex items-center gap-1.5 sm:gap-3 min-w-0 overflow-hidden">
         <ResourceBar />
-
-        {/* Level & XP bar */}
         <XPBar />
-
-        {/* Time display - compact on mobile */}
-        {gameTime && (
-          <>
-            <div className="hidden sm:block">
-              <TimeDisplay time={gameTime} />
-            </div>
-            <div className="block sm:hidden">
-              <TimeDisplayCompact time={gameTime} />
-            </div>
-          </>
-        )}
+        <Show when={props.gameTime}>
+          {(t) => (
+            <>
+              <div class="hidden sm:block">
+                <TimeDisplay time={t()} />
+              </div>
+              <div class="block sm:hidden">
+                <TimeDisplayCompact time={t()} />
+              </div>
+            </>
+          )}
+        </Show>
       </div>
 
-      {/* Right side - Controls */}
-      <div className="flex items-center gap-1 sm:gap-2">
-        {/* Quest panel */}
-        <QuestPanel quests={activeQuests} onClaimReward={handleClaimReward} />
+      <div class="flex items-center gap-1 sm:gap-2">
+        <QuestPanel quests={activeQuests()} onClaimReward={handleClaimReward} />
 
-        {/* Build button (unlocked at level 3) */}
-        {level >= 3 && onOpenBuild && (
+        <Show when={level() >= 3 && props.onOpenBuild}>
           <Button
             size="sm"
-            className="h-11 px-2 sm:px-3 rounded-full"
+            class="h-11 px-2 sm:px-3 rounded-full"
             style={{
               background: COLORS.barkBrown,
               color: "white",
             }}
-            onClick={onOpenBuild}
+            onClick={() => props.onOpenBuild?.()}
           >
-            <RiBuilding2Line className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline text-xs">Build</span>
+            <RiBuilding2Line class="w-4 h-4 sm:mr-1" />
+            <span class="hidden sm:inline text-xs">Build</span>
           </Button>
-        )}
+        </Show>
 
-        {/* Tool selector button */}
         <Button
           size="sm"
-          className="h-11 px-2 sm:px-3 rounded-full"
+          class="h-11 px-2 sm:px-3 rounded-full"
           style={{
             background: COLORS.forestGreen,
             color: "white",
           }}
-          onClick={onOpenTools}
+          onClick={props.onOpenTools}
         >
-          <RiToolsLine className="w-4 h-4 sm:mr-1" />
-          <span className="hidden sm:inline text-xs">{selectedTool}</span>
+          <RiToolsLine class="w-4 h-4 sm:mr-1" />
+          <span class="hidden sm:inline text-xs">{selectedTool()}</span>
         </Button>
 
-        {/* Menu button */}
         <Button
           size="icon"
           variant="ghost"
-          className="w-11 h-11 text-white hover:bg-white/10"
-          onClick={onOpenMenu}
+          class="w-11 h-11 text-white hover:bg-white/10"
+          onClick={props.onOpenMenu}
         >
-          <RiMenuLine className="w-5 h-5 sm:w-6 sm:h-6" />
+          <RiMenuLine class="w-5 h-5 sm:w-6 sm:h-6" />
         </Button>
       </div>
     </div>

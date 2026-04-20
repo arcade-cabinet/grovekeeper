@@ -1,26 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { createEffect, createSignal, onCleanup, Show } from "solid-js";
 import { COLORS } from "@/config/config";
 
 interface Props {
-  /** data-tutorial-id value of the target element */
   targetId: string | null;
-  /** Instruction text to show near the highlight */
   label: string | null;
 }
 
-export const TutorialOverlay = ({ targetId, label }: Props) => {
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+export const TutorialOverlay = (props: Props) => {
+  const [rect, setRect] = createSignal<DOMRect | null>(null);
 
-  useEffect(() => {
-    if (!targetId) {
+  createEffect(() => {
+    const id = props.targetId;
+    if (!id) {
       setRect(null);
       return;
     }
 
     const track = () => {
-      // Sanitize to alphanumeric + hyphens only (prevents selector injection)
-      const safeId = targetId
+      const safeId = id
         .split("")
         .filter((c) => /[a-zA-Z0-9-]/.test(c))
         .join("");
@@ -33,91 +30,89 @@ export const TutorialOverlay = ({ targetId, label }: Props) => {
     };
 
     track();
-    intervalRef.current = setInterval(track, 300);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [targetId]);
-
-  if (!targetId || !rect) return null;
-
-  // Determine if label should go above or below the ring
-  const viewportHeight = globalThis.innerHeight;
-  const spaceBelow = viewportHeight - rect.bottom;
-  const labelAbove = spaceBelow < 80;
-
-  // Clamp label horizontal position to stay within viewport
-  const labelCenterX = rect.left + rect.width / 2;
-  const viewportWidth = globalThis.innerWidth;
+    const interval = setInterval(track, 300);
+    onCleanup(() => clearInterval(interval));
+  });
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        pointerEvents: "none",
-        zIndex: 9999,
+    <Show when={props.targetId && rect()}>
+      {(r) => {
+        const viewportHeight = globalThis.innerHeight;
+        const spaceBelow = viewportHeight - r().bottom;
+        const labelAbove = spaceBelow < 80;
+        const labelCenterX = r().left + r().width / 2;
+        const viewportWidth = globalThis.innerWidth;
+
+        return (
+          <div
+            style={{
+              position: "fixed",
+              inset: "0",
+              "pointer-events": "none",
+              "z-index": 9999,
+            }}
+          >
+            <style>
+              {`
+                @keyframes tutorialPulse {
+                  0%, 100% { opacity: 1; transform: scale(1); }
+                  50% { opacity: 0.7; transform: scale(1.05); }
+                }
+                .tutorial-overlay-ring {
+                  animation: tutorialPulse 1.5s ease-in-out infinite;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                  .tutorial-overlay-ring {
+                    animation: none !important;
+                  }
+                }
+              `}
+            </style>
+
+            <div
+              class="tutorial-overlay-ring"
+              style={{
+                position: "absolute",
+                left: `${r().left - 6}px`,
+                top: `${r().top - 6}px`,
+                width: `${r().width + 12}px`,
+                height: `${r().height + 12}px`,
+                "border-radius": "12px",
+                border: `3px solid ${COLORS.autumnGold}`,
+                "box-shadow": `0 0 12px ${COLORS.autumnGold}80, inset 0 0 12px ${COLORS.autumnGold}40`,
+                "pointer-events": "none",
+              }}
+            />
+
+            <Show when={props.label}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: `${Math.max(8, Math.min(labelCenterX, viewportWidth - 8))}px`,
+                  top: labelAbove
+                    ? `${r().top - 44}px`
+                    : `${r().bottom + 12}px`,
+                  transform: "translateX(-50%)",
+                  background: COLORS.soilDark,
+                  color: "white",
+                  padding: "6px 14px",
+                  "border-radius": "8px",
+                  "font-size": "13px",
+                  "font-weight": 600,
+                  "white-space": "nowrap",
+                  "box-shadow": "0 4px 12px rgba(0,0,0,0.3)",
+                  "pointer-events": "none",
+                  "max-width": "90vw",
+                  overflow: "hidden",
+                  "text-overflow": "ellipsis",
+                }}
+              >
+                {props.label}
+              </div>
+            </Show>
+          </div>
+        );
       }}
-    >
-      <style>
-        {`
-          @keyframes tutorialPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
-          }
-          .tutorial-overlay-ring {
-            animation: tutorialPulse 1.5s ease-in-out infinite;
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .tutorial-overlay-ring {
-              animation: none !important;
-            }
-          }
-        `}
-      </style>
-
-      {/* Pulsing gold ring */}
-      <div
-        className="tutorial-overlay-ring"
-        style={{
-          position: "absolute",
-          left: rect.left - 6,
-          top: rect.top - 6,
-          width: rect.width + 12,
-          height: rect.height + 12,
-          borderRadius: 12,
-          border: `3px solid ${COLORS.autumnGold}`,
-          boxShadow: `0 0 12px ${COLORS.autumnGold}80, inset 0 0 12px ${COLORS.autumnGold}40`,
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Label */}
-      {label && (
-        <div
-          style={{
-            position: "absolute",
-            left: Math.max(8, Math.min(labelCenterX, viewportWidth - 8)),
-            top: labelAbove ? rect.top - 44 : rect.bottom + 12,
-            transform: "translateX(-50%)",
-            background: COLORS.soilDark,
-            color: "white",
-            padding: "6px 14px",
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-            pointerEvents: "none",
-            maxWidth: "90vw",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {label}
-        </div>
-      )}
-    </div>
+    </Show>
   );
 };

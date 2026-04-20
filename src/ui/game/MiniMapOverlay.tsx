@@ -1,17 +1,9 @@
-import { RiCloseLine } from "@remixicon/react";
-import { useEffect, useState } from "react";
+import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { COLORS } from "@/config/config";
 import { koota } from "@/koota";
-import {
-  GridCell,
-  IsPlayer,
-  Position,
-  Structure,
-  Tree,
-} from "@/traits";
+import { GridCell, IsPlayer, Position, Structure, Tree } from "@/traits";
+import { RiCloseLine } from "@/ui/icons";
 import { Button } from "@/ui/primitives/button";
-
-// --- SVG rendering types ---
 
 interface MinimapCell {
   gridX: number;
@@ -44,8 +36,6 @@ interface MinimapSnapshot {
   bounds: { minX: number; minZ: number; maxX: number; maxZ: number };
 }
 
-// --- Shared constants ---
-
 const CELL_COLORS: Record<string, string> = {
   soil: "#8D6E63",
   water: "#64B5F6",
@@ -62,8 +52,6 @@ const TREE_STAGE_COLORS: Record<number, string> = {
   4: "#1B5E20",
 };
 
-// --- Snapshot reader ---
-
 function readSnapshot(): MinimapSnapshot {
   const cells: MinimapCell[] = [];
   const trees: MinimapTree[] = [];
@@ -77,14 +65,13 @@ function readSnapshot(): MinimapSnapshot {
 
   for (const entity of koota.query(GridCell, Position)) {
     const gc = entity.get(GridCell);
-
+    if (!gc) continue;
     cells.push({
       gridX: gc.gridX,
       gridZ: gc.gridZ,
       type: gc.type,
       occupied: gc.occupied,
     });
-
     if (gc.gridX < minX) minX = gc.gridX;
     if (gc.gridZ < minZ) minZ = gc.gridZ;
     if (gc.gridX > maxX) maxX = gc.gridX;
@@ -94,21 +81,20 @@ function readSnapshot(): MinimapSnapshot {
   for (const entity of koota.query(Tree, Position)) {
     const t = entity.get(Tree);
     const pos = entity.get(Position);
-    trees.push({ x: pos.x, z: pos.z, stage: t.stage });
+    if (t && pos) trees.push({ x: pos.x, z: pos.z, stage: t.stage });
   }
 
   for (const entity of koota.query(Structure, Position)) {
     const pos = entity.get(Position);
-    structures.push({ x: pos.x, z: pos.z });
+    if (pos) structures.push({ x: pos.x, z: pos.z });
   }
 
   const playerEntity = koota.queryFirst(IsPlayer, Position);
   if (playerEntity) {
     const pos = playerEntity.get(Position);
-    player = { x: pos.x, z: pos.z };
+    if (pos) player = { x: pos.x, z: pos.z };
   }
 
-  // Fallback if no grid cells loaded yet
   if (cells.length === 0) {
     minX = 0;
     minZ = 0;
@@ -125,127 +111,116 @@ function readSnapshot(): MinimapSnapshot {
   };
 }
 
-// --- SVG content renderer ---
-
-function MinimapSVGContent({
-  snapshot,
-  size,
-}: {
-  snapshot: MinimapSnapshot;
-  size: number;
-}) {
-  const { cells, trees, structures, player, bounds } = snapshot;
-  const worldW = bounds.maxX - bounds.minX;
-  const worldH = bounds.maxZ - bounds.minZ;
-
-  if (worldW <= 0 || worldH <= 0) return null;
-
-  // Scale factor: map world units to SVG units
-  const scaleX = size / worldW;
-  const scaleZ = size / worldH;
-  const cellW = scaleX;
-  const cellH = scaleZ;
+function MinimapSVGContent(props: { snapshot: MinimapSnapshot; size: number }) {
+  const worldW = () => props.snapshot.bounds.maxX - props.snapshot.bounds.minX;
+  const worldH = () => props.snapshot.bounds.maxZ - props.snapshot.bounds.minZ;
+  const scaleX = () => props.size / worldW();
+  const scaleZ = () => props.size / worldH();
 
   return (
-    <svg
-      viewBox={`0 0 ${size} ${size}`}
-      width={size}
-      height={size}
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label="World minimap showing grid cells, trees, structures, and player position"
-      style={{ display: "block", borderRadius: 8 }}
-    >
-      <title>World Map</title>
-
-      {/* Background */}
-      <rect width={size} height={size} fill={COLORS.soilDark} rx={8} />
-
-      {/* Grid cells */}
-      {cells.map((cell) => {
-        const cx = (cell.gridX - bounds.minX) * scaleX;
-        const cz = (cell.gridZ - bounds.minZ) * scaleZ;
-        const fill =
-          cell.type === "soil" && cell.occupied
-            ? CELL_COLORS.occupied
-            : (CELL_COLORS[cell.type] ?? CELL_COLORS.soil);
-
-        return (
-          <rect
-            key={`cell-${cell.gridX}-${cell.gridZ}`}
-            x={cx}
-            y={cz}
-            width={cellW}
-            height={cellH}
-            fill={fill}
-            stroke={COLORS.soilDark}
-            strokeWidth={0.3}
-          />
-        );
-      })}
-
-      {/* Structures */}
-      {structures.map((s) => {
-        const sx = (s.x - bounds.minX) * scaleX;
-        const sz = (s.z - bounds.minZ) * scaleZ;
-
-        return (
-          <rect
-            key={`struct-${s.x}-${s.z}`}
-            x={sx - 2}
-            y={sz - 2}
-            width={4}
-            height={4}
-            fill="#9E9E9E"
-            stroke="#757575"
-            strokeWidth={0.5}
-            rx={0.5}
-          />
-        );
-      })}
-
-      {/* Trees */}
-      {trees.map((t) => {
-        const tx = (t.x - bounds.minX) * scaleX;
-        const tz = (t.z - bounds.minZ) * scaleZ;
-        const fill = TREE_STAGE_COLORS[t.stage] ?? TREE_STAGE_COLORS[0];
-        const radius = 1.2 + t.stage * 0.4;
-
-        return (
-          <circle
-            key={`tree-${t.x}-${t.z}`}
-            cx={tx + cellW / 2}
-            cy={tz + cellH / 2}
-            r={radius}
-            fill={fill}
-          />
-        );
-      })}
-
-      {/* Player */}
-      {player && (
-        <circle
-          cx={(player.x - bounds.minX) * scaleX + cellW / 2}
-          cy={(player.z - bounds.minZ) * scaleZ + cellH / 2}
-          r={4}
-          fill="#FFC107"
-          stroke="#FF8F00"
-          strokeWidth={1}
-          className="minimap-player-pulse"
+    <Show when={worldW() > 0 && worldH() > 0}>
+      <svg
+        viewBox={`0 0 ${props.size} ${props.size}`}
+        width={props.size}
+        height={props.size}
+        xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="World minimap showing grid cells, trees, structures, and player position"
+        style={{ display: "block", "border-radius": "8px" }}
+      >
+        <title>World Map</title>
+        <rect
+          width={props.size}
+          height={props.size}
+          fill={COLORS.soilDark}
+          rx={8}
         />
-      )}
-    </svg>
+
+        <For each={props.snapshot.cells}>
+          {(cell) => {
+            const cx = (cell.gridX - props.snapshot.bounds.minX) * scaleX();
+            const cz = (cell.gridZ - props.snapshot.bounds.minZ) * scaleZ();
+            const fill =
+              cell.type === "soil" && cell.occupied
+                ? CELL_COLORS.occupied
+                : (CELL_COLORS[cell.type] ?? CELL_COLORS.soil);
+            return (
+              <rect
+                x={cx}
+                y={cz}
+                width={scaleX()}
+                height={scaleZ()}
+                fill={fill}
+                stroke={COLORS.soilDark}
+                stroke-width={0.3}
+              />
+            );
+          }}
+        </For>
+
+        <For each={props.snapshot.structures}>
+          {(s) => {
+            const sx = (s.x - props.snapshot.bounds.minX) * scaleX();
+            const sz = (s.z - props.snapshot.bounds.minZ) * scaleZ();
+            return (
+              <rect
+                x={sx - 2}
+                y={sz - 2}
+                width={4}
+                height={4}
+                fill="#9E9E9E"
+                stroke="#757575"
+                stroke-width={0.5}
+                rx={0.5}
+              />
+            );
+          }}
+        </For>
+
+        <For each={props.snapshot.trees}>
+          {(t) => {
+            const tx = (t.x - props.snapshot.bounds.minX) * scaleX();
+            const tz = (t.z - props.snapshot.bounds.minZ) * scaleZ();
+            const fill = TREE_STAGE_COLORS[t.stage] ?? TREE_STAGE_COLORS[0];
+            const radius = 1.2 + t.stage * 0.4;
+            return (
+              <circle
+                cx={tx + scaleX() / 2}
+                cy={tz + scaleZ() / 2}
+                r={radius}
+                fill={fill}
+              />
+            );
+          }}
+        </For>
+
+        <Show when={props.snapshot.player}>
+          {(p) => (
+            <circle
+              cx={
+                (p().x - props.snapshot.bounds.minX) * scaleX() + scaleX() / 2
+              }
+              cy={
+                (p().z - props.snapshot.bounds.minZ) * scaleZ() + scaleZ() / 2
+              }
+              r={4}
+              fill="#FFC107"
+              stroke="#FF8F00"
+              stroke-width={1}
+              class="minimap-player-pulse"
+            />
+          )}
+        </Show>
+      </svg>
+    </Show>
   );
 }
-
-// --- One-time style injection for pulse animation ---
 
 const OVERLAY_STYLE_ID = "grovekeeper-minimap-overlay-pulse";
 
 function injectOverlayPulseStyle() {
   if (typeof document === "undefined") return;
   if (document.getElementById(OVERLAY_STYLE_ID)) return;
-
   const style = document.createElement("style");
   style.id = OVERLAY_STYLE_ID;
   style.textContent = `
@@ -262,128 +237,117 @@ function injectOverlayPulseStyle() {
   document.head.appendChild(style);
 }
 
-// --- MiniMapOverlay ---
-
 interface MiniMapOverlayProps {
   open: boolean;
   onClose: () => void;
 }
 
-export const MiniMapOverlay = ({ open, onClose }: MiniMapOverlayProps) => {
-  const [snapshot, setSnapshot] = useState<MinimapSnapshot>(() =>
-    readSnapshot(),
-  );
+export const MiniMapOverlay = (props: MiniMapOverlayProps) => {
+  const [snapshot, setSnapshot] = createSignal<MinimapSnapshot>(readSnapshot());
 
-  useEffect(() => {
-    injectOverlayPulseStyle();
-  }, []);
+  onMount(() => injectOverlayPulseStyle());
 
-  useEffect(() => {
-    if (!open) return;
-
-    // Read immediately when opened
+  createEffect(() => {
+    if (!props.open) return;
     setSnapshot(readSnapshot());
-
     const interval = setInterval(() => {
       setSnapshot(readSnapshot());
     }, 200);
+    onCleanup(() => clearInterval(interval));
+  });
 
-    return () => clearInterval(interval);
-  }, [open]);
+  const mapSize = () => {
+    const padding = 48;
+    return Math.min(
+      typeof window !== "undefined" ? window.innerWidth - padding * 2 : 300,
+      typeof window !== "undefined"
+        ? window.innerHeight - padding * 2 - 60
+        : 300,
+    );
+  };
 
-  if (!open) return null;
-
-  // Determine the SVG size: fill viewport with padding
-  const padding = 48;
-  const mapSize = Math.min(
-    typeof window !== "undefined" ? window.innerWidth - padding * 2 : 300,
-    typeof window !== "undefined" ? window.innerHeight - padding * 2 - 60 : 300,
-  );
-
-  const handleBackdropKeyDown = (e: React.KeyboardEvent) => {
+  const handleBackdropKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape" || e.key === "Enter") {
-      onClose();
+      props.onClose();
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center pointer-events-auto"
-      style={{
-        background: "rgba(0, 0, 0, 0.75)",
-        backdropFilter: "blur(4px)",
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-label="World map overlay"
-      onClick={onClose}
-      onKeyDown={handleBackdropKeyDown}
-    >
-      {/* Close button */}
-      <div className="absolute top-4 right-4">
-        <Button
-          size="icon"
-          variant="ghost"
-          className="w-11 h-11 rounded-full text-white hover:bg-white/20"
-          onClick={onClose}
-          aria-label="Close map"
-        >
-          <RiCloseLine className="w-6 h-6" />
-        </Button>
-      </div>
-
-      {/* Title */}
+    <Show when={props.open}>
       <div
-        className="text-sm font-bold mb-3 tracking-wide uppercase"
-        style={{ color: COLORS.skyMist }}
-      >
-        World Map
-      </div>
-
-      {/* Map container */}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: wrapper only stops event propagation from backdrop */}
-      <div
-        className="rounded-xl overflow-hidden"
+        class="fixed inset-0 z-50 flex flex-col items-center justify-center pointer-events-auto"
         style={{
-          border: `3px solid ${COLORS.barkBrown}`,
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
+          background: "rgba(0, 0, 0, 0.75)",
+          "backdrop-filter": "blur(4px)",
         }}
-        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="World map overlay"
+        onClick={props.onClose}
+        onKeyDown={handleBackdropKeyDown}
       >
-        <MinimapSVGContent snapshot={snapshot} size={mapSize} />
-      </div>
+        <div class="absolute top-4 right-4">
+          <Button
+            size="icon"
+            variant="ghost"
+            class="w-11 h-11 rounded-full text-white hover:bg-white/20"
+            onClick={props.onClose}
+            aria-label="Close map"
+          >
+            <RiCloseLine class="w-6 h-6" />
+          </Button>
+        </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 mt-4 text-[10px] text-white/70">
-        <span className="flex items-center gap-1">
-          <span
-            className="inline-block w-2 h-2 rounded-full"
-            style={{ background: "#FFC107" }}
-          />
-          You
-        </span>
-        <span className="flex items-center gap-1">
-          <span
-            className="inline-block w-2 h-2 rounded-full"
-            style={{ background: "#43A047" }}
-          />
-          Trees
-        </span>
-        <span className="flex items-center gap-1">
-          <span
-            className="inline-block w-2 h-2 rounded-sm"
-            style={{ background: "#8D6E63" }}
-          />
-          Soil
-        </span>
-        <span className="flex items-center gap-1">
-          <span
-            className="inline-block w-2 h-2 rounded-sm"
-            style={{ background: "#64B5F6" }}
-          />
-          Water
-        </span>
+        <div
+          class="text-sm font-bold mb-3 tracking-wide uppercase"
+          style={{ color: COLORS.skyMist }}
+        >
+          World Map
+        </div>
+
+        <div
+          class="rounded-xl overflow-hidden"
+          style={{
+            border: `3px solid ${COLORS.barkBrown}`,
+            "box-shadow": "0 8px 32px rgba(0, 0, 0, 0.5)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+          role="presentation"
+        >
+          <MinimapSVGContent snapshot={snapshot()} size={mapSize()} />
+        </div>
+
+        <div class="flex items-center gap-4 mt-4 text-[10px] text-white/70">
+          <span class="flex items-center gap-1">
+            <span
+              class="inline-block w-2 h-2 rounded-full"
+              style={{ background: "#FFC107" }}
+            />
+            You
+          </span>
+          <span class="flex items-center gap-1">
+            <span
+              class="inline-block w-2 h-2 rounded-full"
+              style={{ background: "#43A047" }}
+            />
+            Trees
+          </span>
+          <span class="flex items-center gap-1">
+            <span
+              class="inline-block w-2 h-2 rounded-sm"
+              style={{ background: "#8D6E63" }}
+            />
+            Soil
+          </span>
+          <span class="flex items-center gap-1">
+            <span
+              class="inline-block w-2 h-2 rounded-sm"
+              style={{ background: "#64B5F6" }}
+            />
+            Water
+          </span>
+        </div>
       </div>
-    </div>
+    </Show>
   );
 };

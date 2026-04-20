@@ -7,8 +7,7 @@
  */
 
 import type { Entity } from "koota";
-import { useTrait } from "koota/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import { actions as gameActions } from "@/actions";
 import type { NpcBrainContext } from "@/ai/NpcBrain";
 import { NpcBrain } from "@/ai/NpcBrain";
@@ -21,6 +20,7 @@ import { getSpeciesById } from "@/config/trees";
 import { getDb, isDbInitialized } from "@/db/client";
 import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { persistGameStore, saveGroveToDb } from "@/db/queries";
+import { useTrait } from "@/ecs/solid";
 import type { GroundTapInfo, ObjectTapInfo } from "@/input/InputManager";
 import { InputManager } from "@/input/InputManager";
 import {
@@ -163,135 +163,122 @@ interface RadialTarget {
 }
 
 export const GameScene = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const movementRef = useRef({ x: 0, z: 0 });
-  const groveSeedRef = useRef<string>("");
-  const weatherRef = useRef<WeatherState | null>(null);
-  const lastWeatherTypeRef = useRef<WeatherType>("clear");
-  const milestoneXpRef = useRef<Set<string>>(new Set());
+  let canvasRef: HTMLCanvasElement | undefined;
+  let containerRef: HTMLDivElement | undefined;
+  const movementRef = { current: { x: 0, z: 0 } };
+  const groveSeedRef = { current: "" };
+  const weatherRef: { current: WeatherState | null } = { current: null };
+  const lastWeatherTypeRef: { current: WeatherType } = { current: "clear" };
+  const milestoneXpRef = { current: new Set<string>() };
 
-  // Managers (instantiated once, persist across renders via refs)
-  const sceneManagerRef = useRef(new SceneManager());
-  const cameraManagerRef = useRef(new CameraManager());
-  const lightingManagerRef = useRef(new LightingManager());
-  const groundBuilderRef = useRef(new GroundBuilder());
-  const skyManagerRef = useRef(new SkyManager());
-  const playerMeshRef = useRef(new PlayerMeshManager());
-  const treeMeshRef = useRef(new TreeMeshManager());
-  const npcMeshRef = useRef(new NpcMeshManager());
-  const worldManagerRef = useRef(new WorldManager());
-  const inputManagerRef = useRef(new InputManager());
-  const playerGovernorRef = useRef(new PlayerGovernor());
-  const selectionRingRef = useRef(new SelectionRingManager());
-  const npcBrainsRef = useRef(new Map<string, NpcBrain>());
-  const tutorialRef = useRef(new TutorialController());
-  const [autopilot, setAutopilot] = useState(
+  // Managers (instantiated once; Solid component body runs once)
+  const sceneManager = new SceneManager();
+  const cameraManager = new CameraManager();
+  const lightingManager = new LightingManager();
+  const groundBuilder = new GroundBuilder();
+  const skyManager = new SkyManager();
+  const playerMesh = new PlayerMeshManager();
+  const treeMesh = new TreeMeshManager();
+  const npcMesh = new NpcMeshManager();
+  const worldManager = new WorldManager();
+  const inputManager = new InputManager();
+  const playerGovernor = new PlayerGovernor();
+  const selectionRing = new SelectionRingManager();
+  const npcBrains = new Map<string, NpcBrain>();
+  const tutorial = new TutorialController();
+
+  const [autopilot, setAutopilot] = createSignal(
     typeof window !== "undefined" &&
       new URLSearchParams(window.location.search).has("autopilot"),
   );
 
-  const [sceneReady, setSceneReady] = useState(false);
-  const [seedSelectOpen, setSeedSelectOpen] = useState(false);
-  const [toolWheelOpen, setToolWheelOpen] = useState(false);
-  const [pauseMenuOpen, setPauseMenuOpen] = useState(false);
-  const gameTimeRef = useRef<GameTime | null>(null);
-  const [gameTimeState, setGameTimeState] = useState<GameTime | null>(null);
-  const lastGameTimeMinuteRef = useRef<number>(-1);
+  const [sceneReady, setSceneReady] = createSignal(false);
+  const [seedSelectOpen, setSeedSelectOpen] = createSignal(false);
+  const [toolWheelOpen, setToolWheelOpen] = createSignal(false);
+  const [pauseMenuOpen, setPauseMenuOpen] = createSignal(false);
+  const gameTimeRef: { current: GameTime | null } = { current: null };
+  const [gameTimeState, setGameTimeState] = createSignal<GameTime | null>(null);
+  const lastGameTimeMinuteRef = { current: -1 };
   const [currentWeatherType, setCurrentWeatherType] =
-    useState<WeatherType>("clear");
-  const [weatherTimeRemaining, setWeatherTimeRemaining] = useState(0);
-  const [playerTileInfo, setPlayerTileInfo] = useState<TileState | null>(null);
-  const lastPlayerGridRef = useRef<string>("");
-  const nearbyNpcRef = useRef<Entity | null>(null);
+    createSignal<WeatherType>("clear");
+  const [weatherTimeRemaining, setWeatherTimeRemaining] = createSignal(0);
+  const [playerTileInfo, setPlayerTileInfo] = createSignal<TileState | null>(
+    null,
+  );
+  const lastPlayerGridRef = { current: "" };
+  const nearbyNpcRef: { current: Entity | null } = { current: null };
   // Note: Entity is Koota entity ref
-  const [nearbyNpcTemplateId, setNearbyNpcTemplateId] = useState<string | null>(
-    null,
-  );
-  const [npcDialogueOpen, setNpcDialogueOpen] = useState(false);
-  const [tutorialHighlightId, setTutorialHighlightId] = useState<string | null>(
-    null,
-  );
-  const [tutorialHighlightLabel, setTutorialHighlightLabel] = useState<
+  const [nearbyNpcTemplateId, setNearbyNpcTemplateId] = createSignal<
     string | null
   >(null);
-  const [tutorialDialogueId, setTutorialDialogueId] = useState<string | null>(
-    null,
-  );
+  const [npcDialogueOpen, setNpcDialogueOpen] = createSignal(false);
+  const [tutorialHighlightId, setTutorialHighlightId] = createSignal<
+    string | null
+  >(null);
+  const [tutorialHighlightLabel, setTutorialHighlightLabel] = createSignal<
+    string | null
+  >(null);
+  const [tutorialDialogueId, setTutorialDialogueId] = createSignal<
+    string | null
+  >(null);
 
   // Radial action menu state
-  const [radialTarget, setRadialTarget] = useState<RadialTarget | null>(null);
-  const [radialScreenPos, setRadialScreenPos] = useState<{
+  const [radialTarget, setRadialTarget] = createSignal<RadialTarget | null>(
+    null,
+  );
+  const [radialScreenPos, setRadialScreenPos] = createSignal<{
     x: number;
     y: number;
   } | null>(null);
-  const [radialActions, setRadialActions] = useState<RadialAction[]>([]);
-  const pendingRadialRef = useRef<RadialTarget | null>(null);
-  const lastRadialScreenRef = useRef<{ x: number; y: number } | null>(null);
-  const radialTargetRef = useRef<RadialTarget | null>(null);
+  const [radialActions, setRadialActions] = createSignal<RadialAction[]>([]);
+  const pendingRadialRef: { current: RadialTarget | null } = { current: null };
+  const lastRadialScreenRef: { current: { x: number; y: number } | null } = {
+    current: null,
+  };
+  const radialTargetRef: { current: RadialTarget | null } = { current: null };
 
   const progress = useTrait(koota, PlayerProgress);
   const settings = useTrait(koota, Settings);
-  const selectedSpecies = progress?.selectedSpecies ?? "white-oak";
-  const selectedTool = progress?.selectedTool ?? "trowel";
-  const hapticsEnabled = settings?.hapticsEnabled ?? true;
-  const soundEnabled = settings?.soundEnabled ?? true;
+  const selectedSpecies = () => progress()?.selectedSpecies ?? "white-oak";
+  const selectedTool = () => progress()?.selectedTool ?? "trowel";
+  const hapticsEnabled = () => settings()?.hapticsEnabled ?? true;
+  const soundEnabled = () => settings()?.soundEnabled ?? true;
 
-  const setScreen = useCallback(
-    (s: "menu" | "playing" | "paused" | "seedSelect" | "rules") =>
-      gameActions().setScreen(s),
-    [],
-  );
-  const addXp = useCallback((amount: number) => gameActions().addXp(amount), []);
-  const addResource = useCallback(
-    (type: ResourceType, amount: number) =>
-      gameActions().addResource(type, amount),
-    [],
-  );
-  const incrementTreesPlanted = useCallback(
-    () => gameActions().incrementTreesPlanted(),
-    [],
-  );
-  const incrementTreesHarvested = useCallback(
-    () => gameActions().incrementTreesHarvested(),
-    [],
-  );
-  const incrementTreesWatered = useCallback(
-    () => gameActions().incrementTreesWatered(),
-    [],
-  );
+  const setScreen = (
+    s: "menu" | "playing" | "paused" | "seedSelect" | "rules",
+  ) => gameActions().setScreen(s);
+  const addXp = (amount: number) => gameActions().addXp(amount);
+  const addResource = (type: ResourceType, amount: number) =>
+    gameActions().addResource(type, amount);
+  const incrementTreesPlanted = () => gameActions().incrementTreesPlanted();
+  const incrementTreesHarvested = () => gameActions().incrementTreesHarvested();
+  const incrementTreesWatered = () => gameActions().incrementTreesWatered();
 
   // --- Sync audio enabled with Settings trait ---
-  useEffect(() => {
-    audioManager.setEnabled(soundEnabled);
-  }, [soundEnabled]);
+  createEffect(() => {
+    audioManager.setEnabled(soundEnabled());
+  });
 
   // --- InputManager dialog disable sync ---
-  useEffect(() => {
-    inputManagerRef.current.setDisabled(
-      seedSelectOpen ||
-        toolWheelOpen ||
-        pauseMenuOpen ||
-        npcDialogueOpen ||
-        !!radialTarget,
+  createEffect(() => {
+    inputManager.setDisabled(
+      seedSelectOpen() ||
+        toolWheelOpen() ||
+        pauseMenuOpen() ||
+        npcDialogueOpen() ||
+        !!radialTarget(),
     );
-  }, [
-    seedSelectOpen,
-    toolWheelOpen,
-    pauseMenuOpen,
-    npcDialogueOpen,
-    radialTarget,
-  ]);
+  });
 
   // --- Autopilot (PlayerGovernor) toggle with G key ---
-  useEffect(() => {
-    playerGovernorRef.current.enabled = autopilot;
-    if (autopilot) {
-      inputManagerRef.current.setDisabled(true);
+  createEffect(() => {
+    playerGovernor.enabled = autopilot();
+    if (autopilot()) {
+      inputManager.setDisabled(true);
     }
-  }, [autopilot]);
+  });
 
-  useEffect(() => {
+  onMount(() => {
     const handleAutopilotKey = (e: KeyboardEvent) => {
       if (
         e.key.toLowerCase() === "g" &&
@@ -303,11 +290,13 @@ export const GameScene = () => {
       }
     };
     window.addEventListener("keydown", handleAutopilotKey);
-    return () => window.removeEventListener("keydown", handleAutopilotKey);
-  }, []);
+    onCleanup(() =>
+      window.removeEventListener("keydown", handleAutopilotKey),
+    );
+  });
 
   // --- Save/restore ---
-  const saveCurrentGrove = useCallback(() => {
+  const saveCurrentGrove = () => {
     const trees: SerializedTree[] = [];
     for (const entity of koota.query(Tree, Position)) {
       const tree = entity.get(Tree);
@@ -329,16 +318,18 @@ export const GameScene = () => {
       ? { x: player.get(Position).x, z: player.get(Position).z }
       : { x: 6, z: 6 };
     gameActions().saveGrove(trees, playerPos);
-  }, []);
+  };
 
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const debouncedSaveGrove = useCallback(() => {
+  const saveTimerRef: { current: ReturnType<typeof setTimeout> | null } = {
+    current: null,
+  };
+  const debouncedSaveGrove = () => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(saveCurrentGrove, 1000);
-  }, [saveCurrentGrove]);
+  };
 
   // --- ECS initialization ---
-  useEffect(() => {
+  onMount(() => {
     if (koota.queryFirst(IsPlayer, Position) === undefined) {
       const savedGrove = loadGroveFromStorage();
       if (savedGrove) {
@@ -428,10 +419,10 @@ export const GameScene = () => {
       }
     }
     initializeTime(koota.get(Time)?.gameTimeMicroseconds ?? 0);
-  }, []);
+  });
 
   // Auto-save on tab hide — persist to SQLite + IndexedDB
-  useEffect(() => {
+  onMount(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
         saveCurrentGrove();
@@ -460,25 +451,26 @@ export const GameScene = () => {
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibility);
-  }, [saveCurrentGrove]);
+    onCleanup(() =>
+      document.removeEventListener("visibilitychange", handleVisibility),
+    );
+  });
 
   // --- BabylonJS initialization ---
-  useEffect(() => {
-    const canvas = canvasRef.current;
+  onMount(() => {
+    const canvas = canvasRef;
     if (!canvas) return;
     let cancelled = false;
 
-    const sm = sceneManagerRef.current;
-    const cam = cameraManagerRef.current;
-    const lights = lightingManagerRef.current;
-    const ground = groundBuilderRef.current;
-    const sky = skyManagerRef.current;
-    const playerMesh = playerMeshRef.current;
-    const treeMesh = treeMeshRef.current;
-    const npcMesh = npcMeshRef.current;
-    const worldMgr = worldManagerRef.current;
+    const sm = sceneManager;
+    const cam = cameraManager;
+    const lights = lightingManager;
+    const ground = groundBuilder;
+    const sky = skyManager;
+    const pMesh = playerMesh;
+    const tMesh = treeMesh;
+    const nMesh = npcMesh;
+    const worldMgr = worldManager;
 
     const initBabylon = async () => {
       const { scene } = await sm.init(canvas);
@@ -499,7 +491,7 @@ export const GameScene = () => {
       lights.init(scene);
       ground.init(scene, bounds, worldDef.zones);
       sky.init(scene);
-      await playerMesh.init(scene);
+      await pMesh.init(scene);
 
       // Add plantable grid overlays for zones where players can plant
       for (const zone of worldDef.zones) {
@@ -509,11 +501,11 @@ export const GameScene = () => {
       }
 
       // --- Selection ring setup ---
-      const selRing = selectionRingRef.current;
+      const selRing = selectionRing;
       selRing.init(scene);
 
       // --- InputManager setup ---
-      inputManagerRef.current.init({
+      inputManager.init({
         canvas,
         movementRef,
         callbacks: {
@@ -559,7 +551,7 @@ export const GameScene = () => {
       });
 
       // --- PlayerGovernor setup ---
-      playerGovernorRef.current.init({
+      playerGovernor.init({
         movementRef,
         getWorldBounds: () => worldMgr.getWorldBounds(),
       });
@@ -657,11 +649,11 @@ export const GameScene = () => {
         } else {
           // Walk there first, then show
           pendingRadialRef.current = target;
-          inputManagerRef.current.startPathTo(gx, gz);
+          inputManager.startPathTo(gx, gz);
         }
       }
 
-      // --- Helper functions (defined inside useEffect to avoid stale closures) ---
+      // --- Helper functions (defined inside initBabylon to avoid stale closures) ---
 
       function isNightTime(time: GameTime): boolean {
         return (
@@ -745,7 +737,7 @@ export const GameScene = () => {
         const tracking = koota.get(Tracking);
         const progress = koota.get(PlayerProgress);
         const lifetime = koota.get(LifetimeResources);
-        const achievements = koota.get(Achievements) ?? [];
+        const achievements = koota.get(Achievements)?.items ?? [];
         const meta = koota.get(WorldMeta);
         const build = koota.get(Build);
         const placed = build?.placedStructures ?? [];
@@ -913,7 +905,7 @@ export const GameScene = () => {
         }
 
         // InputManager update (path following) — must run before movementSystem
-        inputManagerRef.current.update();
+        inputManager.update();
 
         // Selection ring pulse animation
         selRing.update(dt);
@@ -921,7 +913,7 @@ export const GameScene = () => {
         // Walk-to-act: detect path completion when we have a pending radial target
         if (
           pendingRadialRef.current &&
-          inputManagerRef.current.getMode() === "idle"
+          inputManager.getMode() === "idle"
         ) {
           const pending = pendingRadialRef.current;
           pendingRadialRef.current = null;
@@ -965,7 +957,7 @@ export const GameScene = () => {
         }
 
         // PlayerGovernor update — drives movement when autopilot is active
-        playerGovernorRef.current.update(dt);
+        playerGovernor.update(dt);
 
         // ECS systems
         movementSystem(movementRef.current, dt);
@@ -1028,17 +1020,18 @@ export const GameScene = () => {
         cam.updateViewport();
         lights.update(scene, currentTime);
         sky.update(scene, currentTime.sunIntensity);
-        playerMesh.update();
-        npcMesh.update(scene);
+        pMesh.update();
+        nMesh.update(scene);
 
         // NPC animation: idle sway + face player + quest marker bob
-        const px = playerMesh.mesh?.position.x ?? 0;
-        const pz = playerMesh.mesh?.position.z ?? 0;
-        npcMesh.animate(px, pz, dt);
+        const px = pMesh.mesh?.position.x ?? 0;
+        const pz = pMesh.mesh?.position.z ?? 0;
+        nMesh.animate(px, pz, dt);
 
         // NPC AI brains: evaluate behavior + pathfind movement
-        const npcBrains = npcBrainsRef.current;
-        const bounds = worldManagerRef.current.getWorldBounds();
+        const brains = npcBrains;
+        const npcBounds = worldManager.getWorldBounds();
+        void npcBounds; // bounds retained for future pathfinding context
 
         // Rebuild walkability grid at most every 0.5s (rarely changes)
         walkGridAge += dt;
@@ -1047,7 +1040,7 @@ export const GameScene = () => {
           for (const e of koota.query(GridCell, Position)) {
             cellSnapshot.push({ gridCell: e.get(GridCell) });
           }
-          cachedWalkGrid = buildWalkabilityGrid(cellSnapshot, bounds);
+          cachedWalkGrid = buildWalkabilityGrid(cellSnapshot, npcBounds);
           walkGridAge = 0;
         }
         const walkGrid = cachedWalkGrid;
@@ -1059,8 +1052,8 @@ export const GameScene = () => {
           const eidKey = String(eid);
 
           // Create brain if not exists
-          if (!npcBrains.has(eidKey)) {
-            npcBrains.set(
+          if (!brains.has(eidKey)) {
+            brains.set(
               eidKey,
               new NpcBrain(
                 eidKey,
@@ -1071,7 +1064,7 @@ export const GameScene = () => {
             );
           }
 
-          const brain = npcBrains.get(eidKey);
+          const brain = brains.get(eidKey);
           if (!brain) continue;
           const npcX = npcPos.x;
           const npcZ = npcPos.z;
@@ -1101,7 +1094,6 @@ export const GameScene = () => {
         }
 
         // Tutorial controller update
-        const tutorial = tutorialRef.current;
         if (tutorial.isActive()) {
           tutorial.update(dt);
           const hl = tutorial.getHighlight();
@@ -1112,7 +1104,7 @@ export const GameScene = () => {
         cam.trackTarget(px, pz, dt);
 
         const currentIsNight = isNightTime(currentTime);
-        treeMesh.update(scene, dt, currentTime.season, currentIsNight);
+        tMesh.update(scene, dt, currentTime.season, currentIsNight);
 
         // Season change
         if (lastSeasonUpdate !== currentTime.season) {
@@ -1122,7 +1114,7 @@ export const GameScene = () => {
           sa.setCurrentSeason(currentTime.season);
           sa.trackSeason(currentTime.season);
 
-          treeMesh.rebuildAll(scene, currentTime.season, currentIsNight);
+          tMesh.rebuildAll(scene, currentTime.season, currentIsNight);
           audioManager.play("seasonChange");
         }
 
@@ -1156,8 +1148,8 @@ export const GameScene = () => {
           const npcQuestStates = new Map<string, NpcQuestMarkerType>();
 
           // Mark NPCs that have active (in-progress) quest chains
-          for (const progress of Object.values(chainState.activeChains)) {
-            const def = getChainDef(progress.chainId);
+          for (const chainProgress of Object.values(chainState.activeChains)) {
+            const def = getChainDef(chainProgress.chainId);
             if (def) npcQuestStates.set(def.npcId, "in_progress");
           }
 
@@ -1169,7 +1161,7 @@ export const GameScene = () => {
             }
           }
 
-          npcMesh.updateQuestMarkers(npcQuestStates, scene);
+          nMesh.updateQuestMarkers(npcQuestStates, scene);
         }
 
         // Auto-save every 30s
@@ -1207,9 +1199,9 @@ export const GameScene = () => {
 
         // Resolve brain lazily — brains are created on first game loop frame
         const getElderBrain = () =>
-          elderRowan ? npcBrainsRef.current.get(String(elderRowan.id())) : null;
+          elderRowan ? npcBrains.get(String(elderRowan.id())) : null;
 
-        tutorialRef.current.start({
+        tutorial.start({
           openDialogue: (dialogueId: string) => {
             setTutorialDialogueId(dialogueId);
             if (elderRowan?.has(Npc)) {
@@ -1230,8 +1222,8 @@ export const GameScene = () => {
             onArrival: () => void,
           ) => {
             const brain = getElderBrain();
-            if (brain && playerMeshRef.current.mesh) {
-              const pmesh = playerMeshRef.current.mesh;
+            if (brain && playerMesh.mesh) {
+              const pmesh = playerMesh.mesh;
               brain.setTutorialTarget(
                 Math.round(pmesh.position.x) + 1,
                 Math.round(pmesh.position.z),
@@ -1252,27 +1244,27 @@ export const GameScene = () => {
       console.error("[Grovekeeper] Scene init failed:", err);
     });
 
-    return () => {
+    onCleanup(() => {
       cancelled = true;
-      inputManagerRef.current.dispose();
-      selectionRingRef.current.dispose();
-      tutorialRef.current.dispose();
-      for (const brain of npcBrainsRef.current.values()) brain.dispose();
-      npcBrainsRef.current.clear();
+      inputManager.dispose();
+      selectionRing.dispose();
+      tutorial.dispose();
+      for (const brain of npcBrains.values()) brain.dispose();
+      npcBrains.clear();
       cancelAllNpcMovements();
       audioManager.dispose();
       worldMgr.dispose();
-      npcMesh.dispose();
-      treeMesh.dispose();
-      playerMesh.dispose();
+      nMesh.dispose();
+      tMesh.dispose();
+      pMesh.dispose();
       disposeModelCache();
       sky.dispose();
       ground.dispose();
       lights.dispose();
       cam.dispose();
       sm.dispose();
-    };
-  }, []);
+    });
+  });
 
   // --- Tool actions ---
 
@@ -1296,7 +1288,7 @@ export const GameScene = () => {
     const gc = cell.get(GridCell);
     if (gc.occupied) return;
     audioManager.play("click");
-    if (hapticsEnabled) await hapticLight();
+    if (hapticsEnabled()) await hapticLight();
     setSeedSelectOpen(true);
   };
 
@@ -1309,10 +1301,10 @@ export const GameScene = () => {
     addXp(5);
     incrementTreesWatered();
     gameActions().advanceQuestObjective("trees_watered", 1);
-    tutorialRef.current.onQuestEvent("trees_watered");
+    tutorial.onQuestEvent("trees_watered");
     showParticle("+5 XP");
     audioManager.play("water");
-    if (hapticsEnabled) await hapticLight();
+    if (hapticsEnabled()) await hapticLight();
   };
 
   const useAxe = async (cell: Entity) => {
@@ -1366,12 +1358,12 @@ export const GameScene = () => {
       showToast(`${summary}, +50 XP`, "success");
     }
 
-    treeMeshRef.current.removeMesh(tree.id());
+    treeMesh.removeMesh(tree.id());
     tree.destroy();
     cell.set(GridCell, { ...gc, occupied: false, treeEntity: null });
     debouncedSaveGrove();
     audioManager.play("harvest");
-    if (hapticsEnabled) await hapticSuccess();
+    if (hapticsEnabled()) await hapticSuccess();
   };
 
   const useCompostBin = async (cell: Entity) => {
@@ -1393,7 +1385,7 @@ export const GameScene = () => {
     showParticle("+5 XP");
     showToast("Fertilized! 2x growth for this stage.", "success");
     audioManager.play("success");
-    if (hapticsEnabled) await hapticLight();
+    if (hapticsEnabled()) await hapticLight();
   };
 
   const usePruningShears = async (cell: Entity) => {
@@ -1420,7 +1412,7 @@ export const GameScene = () => {
     showParticle("+5 XP");
     showToast("Pruned! 1.5x yield on next harvest.", "success");
     audioManager.play("chop");
-    if (hapticsEnabled) await hapticLight();
+    if (hapticsEnabled()) await hapticLight();
   };
 
   const useShovel = async (cell: Entity) => {
@@ -1433,7 +1425,7 @@ export const GameScene = () => {
       showToast("Cleared rocks!", "success");
       debouncedSaveGrove();
       audioManager.play("chop");
-      if (hapticsEnabled) await hapticMedium();
+      if (hapticsEnabled()) await hapticMedium();
       return;
     }
     // Remove stage 0-1 (seed/sprout) trees — dig them up
@@ -1441,7 +1433,7 @@ export const GameScene = () => {
       const tree = gc.treeEntity;
       const t = tree.get(Tree);
       if (t.stage <= 1) {
-        treeMeshRef.current.removeMesh(tree.id());
+        treeMesh.removeMesh(tree.id());
         tree.destroy();
         cell.set(GridCell, { ...gc, occupied: false, treeEntity: null });
         addXp(5);
@@ -1449,7 +1441,7 @@ export const GameScene = () => {
         showToast("Removed seedling.", "success");
         debouncedSaveGrove();
         audioManager.play("chop");
-        if (hapticsEnabled) await hapticMedium();
+        if (hapticsEnabled()) await hapticMedium();
       }
     }
   };
@@ -1497,7 +1489,7 @@ export const GameScene = () => {
       "success",
     );
     audioManager.play("build");
-    if (hapticsEnabled) await hapticMedium();
+    if (hapticsEnabled()) await hapticMedium();
   };
 
   const useFertilizerSpreader = async (_cell: Entity) => {
@@ -1526,7 +1518,7 @@ export const GameScene = () => {
     showParticle("+15 XP");
     showToast(`Fertilized ${count} trees! 2x growth.`, "success");
     audioManager.play("success");
-    if (hapticsEnabled) await hapticMedium();
+    if (hapticsEnabled()) await hapticMedium();
   };
 
   const useScarecrow = async (cell: Entity) => {
@@ -1550,7 +1542,7 @@ export const GameScene = () => {
     showParticle("+10 XP");
     showToast("Scarecrow placed! Protects nearby trees from wind.", "success");
     audioManager.play("build");
-    if (hapticsEnabled) await hapticMedium();
+    if (hapticsEnabled()) await hapticMedium();
   };
 
   const useGraftingTool = async (cell: Entity) => {
@@ -1592,7 +1584,7 @@ export const GameScene = () => {
     showParticle("+25 XP");
     showToast(`Grafted! Combined yields with ${nearbySpecies[0]}.`, "success");
     audioManager.play("success");
-    if (hapticsEnabled) await hapticSuccess();
+    if (hapticsEnabled()) await hapticSuccess();
   };
 
   const toolActions: Record<string, (cell: Entity) => Promise<void>> = {
@@ -1691,7 +1683,7 @@ export const GameScene = () => {
       showToast(`Built ${template.name}!`, "success");
       showParticle("+Build");
       audioManager.play("build");
-      if (hapticsEnabled) await hapticSuccess();
+      if (hapticsEnabled()) await hapticSuccess();
       debouncedSaveGrove();
       return;
     }
@@ -1699,7 +1691,7 @@ export const GameScene = () => {
     // Normal tool action
     const cell = findCellAtPlayer();
     if (!cell) return;
-    const tool = getToolById(selectedTool);
+    const tool = getToolById(selectedTool());
     if (tool && tool.staminaCost > 0) {
       const weatherStaminaMult = weatherRef.current
         ? getWeatherStaminaMultiplier(weatherRef.current.current.type)
@@ -1732,7 +1724,7 @@ export const GameScene = () => {
       );
       if (!gameActions().spendStamina(adjustedCost)) return;
     }
-    const action = toolActions[selectedTool];
+    const action = toolActions[selectedTool()];
     if (action) await action(cell);
   };
 
@@ -1743,7 +1735,7 @@ export const GameScene = () => {
     const gridX = Math.round(pp.x);
     const gridZ = Math.round(pp.z);
 
-    const species = getSpeciesById(selectedSpecies);
+    const species = getSpeciesById(selectedSpecies());
     const store = gameActions();
     const seedsSnapshot = koota.get(Seeds) ?? {};
     const resourcesSnapshot = koota.get(Resources) ?? {
@@ -1754,7 +1746,7 @@ export const GameScene = () => {
     };
 
     // Validate ALL costs atomically before spending anything
-    const currentSeeds = seedsSnapshot[selectedSpecies] ?? 0;
+    const currentSeeds = seedsSnapshot[selectedSpecies()] ?? 0;
     if (currentSeeds < 1) return;
 
     if (species?.seedCost) {
@@ -1767,7 +1759,7 @@ export const GameScene = () => {
     }
 
     // All validation passed — now spend resources
-    store.spendSeed(selectedSpecies, 1);
+    store.spendSeed(selectedSpecies(), 1);
     if (species?.seedCost) {
       for (const [resource, amount] of Object.entries(species.seedCost)) {
         store.spendResource(resource as ResourceType, amount);
@@ -1779,7 +1771,7 @@ export const GameScene = () => {
       if (gc.gridX === gridX && gc.gridZ === gridZ) {
         if (gc.occupied) {
           // Refund all costs if tile is occupied
-          store.addSeed(selectedSpecies, 1);
+          store.addSeed(selectedSpecies(), 1);
           if (species?.seedCost) {
             for (const [resource, amount] of Object.entries(species.seedCost)) {
               store.addResource(resource as ResourceType, amount);
@@ -1788,7 +1780,7 @@ export const GameScene = () => {
           return;
         }
 
-        const tree = spawnTree(gridX, gridZ, selectedSpecies);
+        const tree = spawnTree(gridX, gridZ, selectedSpecies());
         cell.set(GridCell, {
           ...gc,
           occupied: true,
@@ -1796,23 +1788,23 @@ export const GameScene = () => {
         });
 
         incrementTreesPlanted();
-        store.trackSpeciesPlanted(selectedSpecies);
-        store.trackSpeciesPlanting(selectedSpecies);
+        store.trackSpeciesPlanted(selectedSpecies());
+        store.trackSpeciesPlanting(selectedSpecies());
         store.advanceQuestObjective("trees_planted", 1);
-        tutorialRef.current.onQuestEvent("trees_planted");
+        tutorial.onQuestEvent("trees_planted");
         const plantXp = 10 + (species ? (species.difficulty - 1) * 5 : 0);
         addXp(plantXp);
         showParticle(`+${plantXp} XP`);
 
         debouncedSaveGrove();
         audioManager.play("plant");
-        if (hapticsEnabled) await hapticMedium();
+        if (hapticsEnabled()) await hapticMedium();
         break;
       }
     }
   };
 
-  const handleBatchHarvest = useCallback(() => {
+  const handleBatchHarvest = () => {
     let count = 0;
     const gains: Record<string, number> = {};
     for (const entity of koota.query(Tree, Harvestable)) {
@@ -1858,168 +1850,165 @@ export const GameScene = () => {
       showToast(`Harvested ${count} trees! ${summary}`, "success");
       audioManager.play("harvest");
     }
-  }, [addResource, addXp, incrementTreesHarvested]);
+  };
 
-  const dismissRadial = useCallback(() => {
+  const dismissRadial = () => {
     radialTargetRef.current = null;
     setRadialTarget(null);
     setRadialActions([]);
     setRadialScreenPos(null);
     lastRadialScreenRef.current = null;
-    selectionRingRef.current.hide();
+    selectionRing.hide();
     pendingRadialRef.current = null;
-  }, []);
+  };
 
-  const handleRadialAction = useCallback(
-    async (actionId: string) => {
-      const target = radialTarget;
-      dismissRadial();
-      if (!target) return;
+  const handleRadialAction = async (actionId: string) => {
+    const target = radialTarget();
+    dismissRadial();
+    if (!target) return;
 
-      // NPC talk
-      if (actionId === "talk") {
-        for (const npcEntity of koota.query(Npc, Position, Renderable)) {
-          const npc = npcEntity.get(Npc);
-          const p = npcEntity.get(Position);
-          if (
-            Math.round(p.x) === target.gridX &&
-            Math.round(p.z) === target.gridZ
-          ) {
-            nearbyNpcRef.current = npcEntity;
-            setNearbyNpcTemplateId(npc.templateId);
-            setNpcDialogueOpen(true);
-            break;
-          }
-        }
-        return;
-      }
-
-      // Find the grid cell at the target tile
-      let cell: Entity | null = null;
-      for (const c of koota.query(GridCell, Position)) {
-        const gc = c.get(GridCell);
-        if (gc.gridX === target.gridX && gc.gridZ === target.gridZ) {
-          cell = c;
+    // NPC talk
+    if (actionId === "talk") {
+      for (const npcEntity of koota.query(Npc, Position, Renderable)) {
+        const npc = npcEntity.get(Npc);
+        const p = npcEntity.get(Position);
+        if (
+          Math.round(p.x) === target.gridX &&
+          Math.round(p.z) === target.gridZ
+        ) {
+          nearbyNpcRef.current = npcEntity;
+          setNearbyNpcTemplateId(npc.templateId);
+          setNpcDialogueOpen(true);
           break;
         }
       }
-      if (!cell) return;
+      return;
+    }
 
-      // Map radial action IDs to tool actions
-      switch (actionId) {
-        case "water":
-          await toolActions["watering-can"]?.(cell);
-          break;
-        case "harvest":
-          await toolActions.axe?.(cell);
-          break;
-        case "prune":
-          await toolActions["pruning-shears"]?.(cell);
-          break;
-        case "plant":
-          await toolActions.trowel?.(cell);
-          break;
-        case "clear":
-          await toolActions.shovel?.(cell);
-          break;
-        case "dig-up":
-          await toolActions.shovel?.(cell);
-          break;
-        case "fertilize":
-          await toolActions["compost-bin"]?.(cell);
-          break;
-        case "inspect":
-          await toolActions.almanac?.(cell);
-          break;
+    // Find the grid cell at the target tile
+    let cell: Entity | null = null;
+    for (const c of koota.query(GridCell, Position)) {
+      const gc = c.get(GridCell);
+      if (gc.gridX === target.gridX && gc.gridZ === target.gridZ) {
+        cell = c;
+        break;
       }
-    },
-    [radialTarget, dismissRadial, toolActions],
-  );
+    }
+    if (!cell) return;
+
+    // Map radial action IDs to tool actions
+    switch (actionId) {
+      case "water":
+        await toolActions["watering-can"]?.(cell);
+        break;
+      case "harvest":
+        await toolActions.axe?.(cell);
+        break;
+      case "prune":
+        await toolActions["pruning-shears"]?.(cell);
+        break;
+      case "plant":
+        await toolActions.trowel?.(cell);
+        break;
+      case "clear":
+        await toolActions.shovel?.(cell);
+        break;
+      case "dig-up":
+        await toolActions.shovel?.(cell);
+        break;
+      case "fertilize":
+        await toolActions["compost-bin"]?.(cell);
+        break;
+      case "inspect":
+        await toolActions.almanac?.(cell);
+        break;
+    }
+  };
 
   return (
-    <div ref={containerRef} className="relative w-full h-full">
+    <div ref={containerRef} class="relative w-full h-full">
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
-        style={{ touchAction: "none" }}
+        class="absolute inset-0 w-full h-full"
+        style={{ "touch-action": "none" }}
       />
       <div
-        className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 transition-opacity duration-500"
+        class="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 transition-opacity duration-500"
         style={{
           background: `linear-gradient(180deg, ${COLORS.skyMist} 0%, ${COLORS.leafLight}40 100%)`,
-          opacity: sceneReady ? 0 : 1,
-          pointerEvents: sceneReady ? "none" : "auto",
+          opacity: sceneReady() ? 0 : 1,
+          "pointer-events": sceneReady() ? "none" : "auto",
         }}
         onTransitionEnd={(e) => {
-          if (e.propertyName === "opacity" && sceneReady) {
+          if (e.propertyName === "opacity" && sceneReady()) {
             (e.currentTarget as HTMLElement).style.display = "none";
           }
         }}
       >
         <div
-          className="w-8 h-8 border-3 border-t-transparent rounded-full motion-safe:animate-spin motion-reduce:animate-pulse"
+          class="w-8 h-8 border-3 border-t-transparent rounded-full motion-safe:animate-spin motion-reduce:animate-pulse"
           style={{
-            borderColor: `${COLORS.forestGreen} transparent ${COLORS.forestGreen} ${COLORS.forestGreen}`,
+            "border-color": `${COLORS.forestGreen} transparent ${COLORS.forestGreen} ${COLORS.forestGreen}`,
           }}
         />
-        <p className="text-sm" style={{ color: COLORS.barkBrown }}>
+        <p class="text-sm" style={{ color: COLORS.barkBrown }}>
           Preparing grove...
         </p>
       </div>
-      {autopilot && (
+      <Show when={autopilot()}>
         <div
-          className="absolute top-12 left-1/2 -translate-x-1/2 z-50 px-3 py-1 rounded-full text-xs font-bold tracking-wider"
+          class="absolute top-12 left-1/2 -translate-x-1/2 z-50 px-3 py-1 rounded-full text-xs font-bold tracking-wider"
           style={{
             background: "rgba(34,197,94,0.85)",
             color: "#fff",
-            pointerEvents: "none",
+            "pointer-events": "none",
           }}
         >
           AUTOPILOT [G]
         </div>
-      )}
+      </Show>
       <GameUI
         onAction={handleAction}
         onPlant={handlePlant}
         onOpenMenu={() => setPauseMenuOpen(true)}
         onOpenTools={() => setToolWheelOpen(true)}
-        seedSelectOpen={seedSelectOpen}
+        seedSelectOpen={seedSelectOpen()}
         setSeedSelectOpen={setSeedSelectOpen}
-        toolWheelOpen={toolWheelOpen}
+        toolWheelOpen={toolWheelOpen()}
         setToolWheelOpen={setToolWheelOpen}
-        pauseMenuOpen={pauseMenuOpen}
+        pauseMenuOpen={pauseMenuOpen()}
         setPauseMenuOpen={setPauseMenuOpen}
         onMainMenu={() => {
           setPauseMenuOpen(false);
           setScreen("menu");
         }}
         onBatchHarvest={handleBatchHarvest}
-        currentWeather={currentWeatherType}
-        weatherTimeRemaining={weatherTimeRemaining}
-        gameTime={gameTimeState}
-        playerTileInfo={playerTileInfo}
-        nearbyNpcTemplateId={nearbyNpcTemplateId}
-        npcDialogueOpen={npcDialogueOpen}
+        currentWeather={currentWeatherType()}
+        weatherTimeRemaining={weatherTimeRemaining()}
+        gameTime={gameTimeState()}
+        playerTileInfo={playerTileInfo()}
+        nearbyNpcTemplateId={nearbyNpcTemplateId()}
+        npcDialogueOpen={npcDialogueOpen()}
         setNpcDialogueOpen={(open) => {
           setNpcDialogueOpen(open);
           if (!open) {
-            tutorialRef.current.onDialogueClosed();
+            tutorial.onDialogueClosed();
             setTutorialDialogueId(null);
           }
         }}
-        tutorialDialogueId={tutorialDialogueId}
+        tutorialDialogueId={tutorialDialogueId()}
         onTutorialDialogueAction={(actionType) => {
-          tutorialRef.current.onDialogueAction(actionType);
+          tutorial.onDialogueAction(actionType);
         }}
-        tutorialHighlightId={tutorialHighlightId}
-        tutorialHighlightLabel={tutorialHighlightLabel}
-        radialActions={radialActions}
-        radialScreenPos={radialScreenPos}
+        tutorialHighlightId={tutorialHighlightId()}
+        tutorialHighlightLabel={tutorialHighlightLabel()}
+        radialActions={radialActions()}
+        radialScreenPos={radialScreenPos()}
         onRadialAction={handleRadialAction}
         onDismissRadial={dismissRadial}
         movementRef={movementRef}
         onJoystickActiveChange={(active) => {
-          inputManagerRef.current.setJoystickActive(active);
+          inputManager.setJoystickActive(active);
         }}
       />
     </div>

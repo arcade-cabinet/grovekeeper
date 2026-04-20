@@ -1,12 +1,13 @@
 import { COLORS } from "@/config/config";
 
-export const Logo = ({ size = 200 }: { size?: number }) => {
-  const scale = size / 200;
+export const Logo = (props: { size?: number }) => {
+  const size = () => props.size ?? 200;
+  const scale = () => size() / 200;
 
   return (
     <svg
-      width={size}
-      height={size * 0.65}
+      width={size()}
+      height={size() * 0.65}
       viewBox="0 0 200 130"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -25,7 +26,7 @@ export const Logo = ({ size = 200 }: { size?: number }) => {
         x2="97"
         y2="95"
         stroke={COLORS.soilDark}
-        strokeWidth="0.5"
+        stroke-width="0.5"
         opacity="0.4"
       />
       <line
@@ -34,7 +35,7 @@ export const Logo = ({ size = 200 }: { size?: number }) => {
         x2="103"
         y2="92"
         stroke={COLORS.soilDark}
-        strokeWidth="0.5"
+        stroke-width="0.5"
         opacity="0.4"
       />
 
@@ -94,30 +95,30 @@ export const Logo = ({ size = 200 }: { size?: number }) => {
       <path
         d="M92 100 Q85 106 72 108"
         stroke={COLORS.barkBrown}
-        strokeWidth="3"
-        strokeLinecap="round"
+        stroke-width="3"
+        stroke-linecap="round"
         fill="none"
       />
       <path
         d="M108 100 Q115 106 128 108"
         stroke={COLORS.barkBrown}
-        strokeWidth="3"
-        strokeLinecap="round"
+        stroke-width="3"
+        stroke-linecap="round"
         fill="none"
       />
       <path
         d="M95 100 Q90 104 82 104"
         stroke={COLORS.barkBrown}
-        strokeWidth="2"
-        strokeLinecap="round"
+        stroke-width="2"
+        stroke-linecap="round"
         fill="none"
         opacity="0.6"
       />
       <path
         d="M105 100 Q110 104 118 104"
         stroke={COLORS.barkBrown}
-        strokeWidth="2"
-        strokeLinecap="round"
+        stroke-width="2"
+        stroke-linecap="round"
         fill="none"
         opacity="0.6"
       />
@@ -126,8 +127,8 @@ export const Logo = ({ size = 200 }: { size?: number }) => {
       <path
         d="M25 108 Q65 104 100 105 Q135 106 175 108"
         stroke={COLORS.soilDark}
-        strokeWidth="2.5"
-        strokeLinecap="round"
+        stroke-width="2.5"
+        stroke-linecap="round"
         fill="none"
         opacity="0.6"
       />
@@ -136,12 +137,12 @@ export const Logo = ({ size = 200 }: { size?: number }) => {
       <text
         x="100"
         y="125"
-        textAnchor="middle"
-        fontFamily="Fredoka, var(--font-heading), sans-serif"
-        fontWeight="600"
-        fontSize={16 * scale}
+        text-anchor="middle"
+        font-family="Fredoka, var(--font-heading), sans-serif"
+        font-weight="600"
+        font-size={String(16 * scale())}
         fill={COLORS.soilDark}
-        letterSpacing="1"
+        letter-spacing="1"
       >
         Grovekeeper
       </text>

@@ -1,11 +1,4 @@
-/**
- * NewGameModal — Difficulty selection UI for starting a new grove.
- *
- * Mobile-first layout: 3 tiles top row (Explore/Normal/Hard),
- * 2 tiles bottom row (Brutal/Ultra Brutal). Shows description panel
- * and permadeath toggle based on selected difficulty.
- */
-import { useState } from "react";
+import { createSignal, For, Show } from "solid-js";
 import { COLORS } from "@/config/config";
 import { DIFFICULTY_TIERS, type DifficultyTier } from "@/config/difficulty";
 import { Button } from "@/ui/primitives/button";
@@ -31,38 +24,30 @@ const ICONS: Record<string, string> = {
   zap: "\u26A1",
 };
 
-export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
-  const [selected, setSelected] = useState<DifficultyTier>(
+export const NewGameModal = (props: NewGameModalProps) => {
+  const [selected, setSelected] = createSignal<DifficultyTier>(
     DIFFICULTY_TIERS.find((t) => t.id === "normal") ?? DIFFICULTY_TIERS[0],
   );
-  const [permadeath, setPermadeath] = useState(false);
+  const [permadeath, setPermadeath] = createSignal(false);
 
   const handleSelect = (tier: DifficultyTier) => {
     setSelected(tier);
-    // Reset permadeath based on forced state (including optional → default off)
     if (tier.permadeathForced === "on") setPermadeath(true);
     else setPermadeath(false);
   };
 
   const handleStart = () => {
-    onStart(selected.id, permadeath);
+    props.onStart(selected().id, permadeath());
   };
 
-  // Split tiers into rows: top 3, bottom 2
   const topRow = DIFFICULTY_TIERS.slice(0, 3);
   const bottomRow = DIFFICULTY_TIERS.slice(3);
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-    >
+    <Dialog open={props.open} onOpenChange={(o) => !o && props.onClose()}>
       <DialogContent
-        className="max-w-sm max-h-[90vh] overflow-y-auto"
+        class="max-w-sm max-h-[90vh] overflow-y-auto"
         style={{ background: COLORS.skyMist }}
-        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.soilDark }}>
@@ -70,128 +55,127 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3 mt-1">
-          {/* Top row: Explore, Normal, Hard */}
-          <div className="grid grid-cols-3 gap-2">
-            {topRow.map((tier) => (
-              <DifficultyTile
-                key={tier.id}
-                tier={tier}
-                isSelected={selected.id === tier.id}
-                onSelect={() => handleSelect(tier)}
-              />
-            ))}
+        <div class="space-y-3 mt-1">
+          <div class="grid grid-cols-3 gap-2">
+            <For each={topRow}>
+              {(tier) => (
+                <DifficultyTile
+                  tier={tier}
+                  isSelected={selected().id === tier.id}
+                  onSelect={() => handleSelect(tier)}
+                />
+              )}
+            </For>
           </div>
 
-          {/* Bottom row: Brutal, Ultra Brutal */}
-          <div className="grid grid-cols-2 gap-2">
-            {bottomRow.map((tier) => (
-              <DifficultyTile
-                key={tier.id}
-                tier={tier}
-                isSelected={selected.id === tier.id}
-                onSelect={() => handleSelect(tier)}
-              />
-            ))}
+          <div class="grid grid-cols-2 gap-2">
+            <For each={bottomRow}>
+              {(tier) => (
+                <DifficultyTile
+                  tier={tier}
+                  isSelected={selected().id === tier.id}
+                  onSelect={() => handleSelect(tier)}
+                />
+              )}
+            </For>
           </div>
 
-          {/* Description panel */}
           <div
-            className="rounded-lg p-3 text-sm"
+            class="rounded-lg p-3 text-sm"
             style={{
               background: "white",
-              border: `2px solid ${selected.color}40`,
+              border: `2px solid ${selected().color}40`,
             }}
           >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">{ICONS[selected.icon] ?? ""}</span>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-lg">{ICONS[selected().icon] ?? ""}</span>
               <span
-                className="font-bold text-base"
-                style={{ color: selected.color }}
+                class="font-bold text-base"
+                style={{ color: selected().color }}
               >
-                {selected.name}
+                {selected().name}
               </span>
             </div>
-            <p className="text-gray-600 text-xs leading-relaxed">
-              {selected.description}
+            <p class="text-gray-600 text-xs leading-relaxed">
+              {selected().description}
             </p>
 
-            {/* Feature summary */}
-            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+            <div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
               <FeatureRow
                 label="Growth"
-                value={`${selected.growthSpeedMult}x`}
+                value={`${selected().growthSpeedMult}x`}
               />
               <FeatureRow
                 label="Yields"
-                value={`${selected.resourceYieldMult}x`}
+                value={`${selected().resourceYieldMult}x`}
               />
               <FeatureRow
                 label="Exposure"
-                value={selected.exposureEnabled ? "Active" : "Off"}
+                value={selected().exposureEnabled ? "Active" : "Off"}
               />
               <FeatureRow
                 label="Disasters"
                 value={
-                  selected.disasterFrequency > 0
-                    ? `${selected.disasterFrequency}/yr`
+                  selected().disasterFrequency > 0
+                    ? `${selected().disasterFrequency}/yr`
                     : "None"
                 }
               />
               <FeatureRow
                 label="Building Decay"
                 value={
-                  selected.buildingDegradationRate > 0
-                    ? `${selected.buildingDegradationRate}%/season`
+                  selected().buildingDegradationRate > 0
+                    ? `${selected().buildingDegradationRate}%/season`
                     : "None"
                 }
               />
               <FeatureRow
                 label="Diseases"
-                value={selected.cropDiseaseEnabled ? "Active" : "None"}
+                value={selected().cropDiseaseEnabled ? "Active" : "None"}
               />
             </div>
           </div>
 
-          {/* Permadeath toggle */}
           <div
-            className="flex items-center justify-between rounded-lg p-3"
+            class="flex items-center justify-between rounded-lg p-3"
             style={{ background: "white", border: "1px solid #E0E0E0" }}
           >
             <div>
               <p
-                className="text-sm font-semibold"
+                class="text-sm font-semibold"
                 style={{ color: COLORS.soilDark }}
               >
                 Permadeath
               </p>
-              <p className="text-[11px] text-gray-500">
-                {permadeathLabel(selected.permadeathForced)}
+              <p class="text-[11px] text-gray-500">
+                {permadeathLabel(selected().permadeathForced)}
               </p>
             </div>
             <Switch
-              checked={permadeath}
+              checked={permadeath()}
               onCheckedChange={setPermadeath}
-              disabled={selected.permadeathForced !== "optional"}
+              disabled={selected().permadeathForced !== "optional"}
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 pt-1">
+          <div class="flex gap-2 pt-1">
             <Button
               variant="outline"
-              className="flex-1 h-11"
-              style={{ borderColor: COLORS.barkBrown, color: COLORS.soilDark }}
-              onClick={onClose}
+              class="flex-1 h-11"
+              style={{
+                "border-color": COLORS.barkBrown,
+                color: COLORS.soilDark,
+              }}
+              onClick={props.onClose}
             >
               Cancel
             </Button>
             <Button
-              className="flex-1 h-11 font-bold"
+              class="flex-1 h-11 font-bold"
               style={{
-                background: `linear-gradient(135deg, ${selected.color} 0%, ${selected.color}dd 100%)`,
+                background: `linear-gradient(135deg, ${selected().color} 0%, ${selected().color}dd 100%)`,
                 color: "white",
-                boxShadow: `0 4px 12px ${selected.color}40`,
+                "box-shadow": `0 4px 12px ${selected().color}40`,
               }}
               onClick={handleStart}
             >
@@ -204,65 +188,59 @@ export const NewGameModal = ({ open, onClose, onStart }: NewGameModalProps) => {
   );
 };
 
-// ─── Helpers ─────────────────────────────────────────────────
-
 function permadeathLabel(forced: string): string {
   if (forced === "on") return "Always on for this difficulty";
   if (forced === "off") return "Disabled for this difficulty";
   return "Optional \u2014 death is permanent";
 }
 
-// ─── Sub-components ──────────────────────────────────────────
-
-function DifficultyTile({
-  tier,
-  isSelected,
-  onSelect,
-}: Readonly<{
+function DifficultyTile(props: {
   tier: DifficultyTier;
   isSelected: boolean;
   onSelect: () => void;
-}>) {
-  const isRecommended = tier.id === "normal";
+}) {
+  const isRecommended = () => props.tier.id === "normal";
 
   return (
     <button
-      aria-label={`${tier.name} difficulty${isRecommended ? " (Recommended)" : ""}: ${tier.tagline}`}
-      className="relative flex flex-col items-center justify-center p-2 rounded-lg transition-all motion-reduce:transition-none min-h-[72px]"
+      type="button"
+      aria-label={`${props.tier.name} difficulty${isRecommended() ? " (Recommended)" : ""}: ${props.tier.tagline}`}
+      class="relative flex flex-col items-center justify-center p-2 rounded-lg transition-all motion-reduce:transition-none min-h-[72px]"
       style={{
-        background: isSelected ? `${tier.color}15` : "white",
-        border: `2px solid ${isSelected ? tier.color : "#E0E0E0"}`,
-        boxShadow: isSelected ? `0 2px 8px ${tier.color}30` : "none",
+        background: props.isSelected ? `${props.tier.color}15` : "white",
+        border: `2px solid ${props.isSelected ? props.tier.color : "#E0E0E0"}`,
+        "box-shadow": props.isSelected
+          ? `0 2px 8px ${props.tier.color}30`
+          : "none",
       }}
-      onClick={onSelect}
+      onClick={props.onSelect}
     >
-      {isRecommended && (
+      <Show when={isRecommended()}>
         <span
-          className="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap"
-          style={{ background: tier.color, color: "white" }}
+          class="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap"
+          style={{ background: props.tier.color, color: "white" }}
         >
           Recommended
         </span>
-      )}
-      <span className="text-xl mb-0.5">{ICONS[tier.icon] ?? ""}</span>
+      </Show>
+      <span class="text-xl mb-0.5">{ICONS[props.tier.icon] ?? ""}</span>
       <span
-        className="text-xs font-bold"
-        style={{ color: isSelected ? tier.color : COLORS.soilDark }}
+        class="text-xs font-bold"
+        style={{
+          color: props.isSelected ? props.tier.color : COLORS.soilDark,
+        }}
       >
-        {tier.name}
+        {props.tier.name}
       </span>
     </button>
   );
 }
 
-function FeatureRow({
-  label,
-  value,
-}: Readonly<{ label: string; value: string }>) {
+function FeatureRow(props: { label: string; value: string }) {
   return (
-    <div className="flex justify-between">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-700">{value}</span>
+    <div class="flex justify-between">
+      <span class="text-gray-500">{props.label}</span>
+      <span class="font-medium text-gray-700">{props.value}</span>
     </div>
   );
 }

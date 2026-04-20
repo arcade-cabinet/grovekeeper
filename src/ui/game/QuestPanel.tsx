@@ -1,6 +1,7 @@
-import { RiTrophyLine } from "@remixicon/react";
+import { For, Show } from "solid-js";
 import { COLORS } from "@/config/config";
 import type { ActiveQuest, GoalDifficulty } from "@/systems/quests";
+import { RiTrophyLine } from "@/ui/icons";
 import { Button } from "@/ui/primitives/button";
 import { Progress } from "@/ui/primitives/progress";
 import { ScrollArea } from "@/ui/primitives/scroll-area";
@@ -32,49 +33,46 @@ const difficultyLabels: Record<GoalDifficulty, string> = {
   epic: "Epic",
 };
 
-export const QuestPanel = ({ quests, onClaimReward }: QuestPanelProps) => {
-  const activeQuests = quests.filter((q) => !q.completed);
-  const completedQuests = quests.filter((q) => q.completed);
+export const QuestPanel = (props: QuestPanelProps) => {
+  const activeQuests = () => props.quests.filter((q) => !q.completed);
+  const completedQuests = () => props.quests.filter((q) => q.completed);
 
   return (
     <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          size="sm"
-          className="h-11 px-3 sm:h-11 sm:px-3 rounded-full relative"
-          style={{
-            background: COLORS.autumnGold,
-            color: COLORS.soilDark,
-          }}
-        >
-          <RiTrophyLine className="w-4 h-4 sm:mr-1" />
-          <span className="hidden sm:inline text-xs font-semibold">Quests</span>
-          {activeQuests.length > 0 && (
-            <span
-              className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
-              style={{
-                background: COLORS.forestGreen,
-                color: "white",
-              }}
-            >
-              {activeQuests.length}
-            </span>
-          )}
-        </Button>
+      <SheetTrigger
+        class="h-11 px-3 sm:h-11 sm:px-3 rounded-full relative inline-flex items-center justify-center text-sm font-medium"
+        style={{
+          background: COLORS.autumnGold,
+          color: COLORS.soilDark,
+        }}
+      >
+        <RiTrophyLine class="w-4 h-4 sm:mr-1" />
+        <span class="hidden sm:inline text-xs font-semibold">Quests</span>
+        <Show when={activeQuests().length > 0}>
+          <span
+            class="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center"
+            style={{
+              background: COLORS.forestGreen,
+              color: "white",
+            }}
+          >
+            {activeQuests().length}
+          </span>
+        </Show>
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-[320px] sm:w-[400px] p-0"
+        class="w-[320px] sm:w-[400px] p-0"
         style={{
           background: `linear-gradient(180deg, #faf9f6 0%, ${COLORS.skyMist} 100%)`,
         }}
       >
-        <SheetHeader className="p-4 pb-2">
+        <SheetHeader class="p-4 pb-2">
           <SheetTitle
-            className="flex items-center gap-2"
+            class="flex items-center gap-2"
             style={{ color: COLORS.forestGreen }}
           >
-            <RiTrophyLine className="w-5 h-5" />
+            <RiTrophyLine class="w-5 h-5" />
             Daily Quests
           </SheetTitle>
           <SheetDescription style={{ color: COLORS.barkBrown }}>
@@ -82,50 +80,48 @@ export const QuestPanel = ({ quests, onClaimReward }: QuestPanelProps) => {
           </SheetDescription>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 h-[calc(100vh-120px)]">
-          <div className="px-4 pb-4 space-y-4">
-            {/* Active Quests */}
-            {activeQuests.length > 0 && (
-              <div className="space-y-2">
+        <ScrollArea class="flex-1 h-[calc(100vh-120px)]">
+          <div class="px-4 pb-4 space-y-4">
+            <Show when={activeQuests().length > 0}>
+              <div class="space-y-2">
                 <h3
-                  className="text-sm font-semibold uppercase tracking-wider"
+                  class="text-sm font-semibold uppercase tracking-wider"
                   style={{ color: COLORS.forestGreen }}
                 >
                   Active
                 </h3>
-                {activeQuests.map((quest) => (
-                  <QuestCard key={quest.id} quest={quest} />
-                ))}
+                <For each={activeQuests()}>
+                  {(quest) => <QuestCard quest={quest} />}
+                </For>
               </div>
-            )}
+            </Show>
 
-            {/* Completed Quests */}
-            {completedQuests.length > 0 && (
-              <div className="space-y-2">
+            <Show when={completedQuests().length > 0}>
+              <div class="space-y-2">
                 <h3
-                  className="text-sm font-semibold uppercase tracking-wider"
+                  class="text-sm font-semibold uppercase tracking-wider"
                   style={{ color: COLORS.autumnGold }}
                 >
                   Completed
                 </h3>
-                {completedQuests.map((quest) => (
-                  <QuestCard
-                    key={quest.id}
-                    quest={quest}
-                    onClaim={() => onClaimReward?.(quest.id)}
-                  />
-                ))}
+                <For each={completedQuests()}>
+                  {(quest) => (
+                    <QuestCard
+                      quest={quest}
+                      onClaim={() => props.onClaimReward?.(quest.id)}
+                    />
+                  )}
+                </For>
               </div>
-            )}
+            </Show>
 
-            {/* Empty state */}
-            {quests.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-sm" style={{ color: COLORS.barkBrown }}>
+            <Show when={props.quests.length === 0}>
+              <div class="text-center py-8">
+                <p class="text-sm" style={{ color: COLORS.barkBrown }}>
                   No active quests. Check back tomorrow!
                 </p>
               </div>
-            )}
+            </Show>
           </div>
         </ScrollArea>
       </SheetContent>
@@ -138,125 +134,126 @@ interface QuestCardProps {
   onClaim?: () => void;
 }
 
-const QuestCard = ({ quest, onClaim }: QuestCardProps) => {
-  const _totalProgress =
-    quest.goals.reduce((sum, g) => sum + g.currentProgress, 0) /
-    quest.goals.reduce((sum, g) => sum + g.targetAmount, 0);
-
+const QuestCard = (props: QuestCardProps) => {
   return (
     <div
-      className="p-3 rounded-xl space-y-2"
+      class="p-3 rounded-xl space-y-2"
       style={{
-        background: quest.completed ? `${COLORS.forestGreen}10` : "white",
-        border: `1px solid ${quest.completed ? COLORS.forestGreen : `${COLORS.forestGreen}30`}`,
+        background: props.quest.completed ? `${COLORS.forestGreen}10` : "white",
+        border: `1px solid ${props.quest.completed ? COLORS.forestGreen : `${COLORS.forestGreen}30`}`,
       }}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
             <h4
-              className="font-semibold text-sm"
+              class="font-semibold text-sm"
               style={{ color: COLORS.soilDark }}
             >
-              {quest.name}
+              {props.quest.name}
             </h4>
             <span
-              className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+              class="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
               style={{
-                background: `${difficultyColors[quest.difficulty]}20`,
-                color: difficultyColors[quest.difficulty],
+                background: `${difficultyColors[props.quest.difficulty]}20`,
+                color: difficultyColors[props.quest.difficulty],
               }}
             >
-              {difficultyLabels[quest.difficulty]}
+              {difficultyLabels[props.quest.difficulty]}
             </span>
           </div>
-          <p className="text-xs" style={{ color: COLORS.barkBrown }}>
-            {quest.description}
+          <p class="text-xs" style={{ color: COLORS.barkBrown }}>
+            {props.quest.description}
           </p>
         </div>
       </div>
 
-      {/* Goals */}
-      <div className="space-y-1.5">
-        {quest.goals.map((goal) => (
-          <div key={goal.id} className="space-y-0.5">
-            <div className="flex items-center justify-between text-xs">
-              <span style={{ color: COLORS.soilDark }}>{goal.name}</span>
-              <span style={{ color: COLORS.barkBrown }}>
-                {goal.currentProgress}/{goal.targetAmount}
-              </span>
+      <div class="space-y-1.5">
+        <For each={props.quest.goals}>
+          {(goal) => (
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between text-xs">
+                <span style={{ color: COLORS.soilDark }}>{goal.name}</span>
+                <span style={{ color: COLORS.barkBrown }}>
+                  {goal.currentProgress}/{goal.targetAmount}
+                </span>
+              </div>
+              <Progress
+                value={(goal.currentProgress / goal.targetAmount) * 100}
+                class="h-1.5"
+                style={{
+                  background: `${COLORS.forestGreen}20`,
+                }}
+              />
             </div>
-            <Progress
-              value={(goal.currentProgress / goal.targetAmount) * 100}
-              className="h-1.5"
-              style={{
-                background: `${COLORS.forestGreen}20`,
-              }}
-            />
-          </div>
-        ))}
+          )}
+        </For>
       </div>
 
-      {/* Rewards */}
       <div
-        className="flex items-center justify-between pt-1 border-t"
-        style={{ borderColor: `${COLORS.forestGreen}20` }}
+        class="flex items-center justify-between pt-1 border-t"
+        style={{ "border-color": `${COLORS.forestGreen}20` }}
       >
-        <div className="flex items-center gap-2 text-xs flex-wrap">
+        <div class="flex items-center gap-2 text-xs flex-wrap">
           <span style={{ color: COLORS.forestGreen }}>
-            +{quest.rewards.xp} XP
+            +{props.quest.rewards.xp} XP
           </span>
-          {quest.rewards.resources?.map((r) => (
-            <span key={r.type} style={{ color: COLORS.autumnGold }}>
-              +{r.amount} {r.type}
-            </span>
-          ))}
-          {quest.rewards.seeds?.map((s) => (
-            <span key={s.speciesId} style={{ color: COLORS.leafLight }}>
-              +{s.amount} {s.speciesId} seeds
-            </span>
-          ))}
+          <For each={props.quest.rewards.resources ?? []}>
+            {(r) => (
+              <span style={{ color: COLORS.autumnGold }}>
+                +{r.amount} {r.type}
+              </span>
+            )}
+          </For>
+          <For each={props.quest.rewards.seeds ?? []}>
+            {(s) => (
+              <span style={{ color: COLORS.leafLight }}>
+                +{s.amount} {s.speciesId} seeds
+              </span>
+            )}
+          </For>
         </div>
-        {quest.completed && onClaim && (
+        <Show when={props.quest.completed && props.onClaim}>
           <Button
             size="sm"
-            className="h-11 px-4 text-xs rounded-full"
+            class="h-11 px-4 text-xs rounded-full"
             style={{
               background: COLORS.forestGreen,
               color: "white",
             }}
-            onClick={onClaim}
+            onClick={props.onClaim}
           >
             Claim
           </Button>
-        )}
+        </Show>
       </div>
     </div>
   );
 };
 
-// Mini quest indicator for HUD
-export const QuestIndicator = ({ quests }: { quests: ActiveQuest[] }) => {
-  const activeCount = quests.filter((q) => !q.completed).length;
-  const completedCount = quests.filter((q) => q.completed).length;
-
-  if (quests.length === 0) return null;
+export const QuestIndicator = (props: { quests: ActiveQuest[] }) => {
+  const activeCount = () =>
+    props.quests.filter((q) => !q.completed).length;
+  const completedCount = () =>
+    props.quests.filter((q) => q.completed).length;
 
   return (
-    <div
-      className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
-      style={{
-        background: "rgba(0,0,0,0.25)",
-        color: "white",
-      }}
-    >
-      <RiTrophyLine className="w-3 h-3" />
-      {completedCount > 0 ? (
-        <span style={{ color: COLORS.autumnGold }}>{completedCount}!</span>
-      ) : (
-        <span>{activeCount}</span>
-      )}
-    </div>
+    <Show when={props.quests.length > 0}>
+      <div
+        class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
+        style={{
+          background: "rgba(0,0,0,0.25)",
+          color: "white",
+        }}
+      >
+        <RiTrophyLine class="w-3 h-3" />
+        <Show
+          when={completedCount() > 0}
+          fallback={<span>{activeCount()}</span>}
+        >
+          <span style={{ color: COLORS.autumnGold }}>{completedCount()}!</span>
+        </Show>
+      </div>
+    </Show>
   );
 };

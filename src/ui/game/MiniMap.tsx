@@ -1,18 +1,10 @@
-import { RiMapLine } from "@remixicon/react";
-import { useEffect, useState } from "react";
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { COLORS } from "@/config/config";
 import { koota } from "@/koota";
-import {
-  GridCell,
-  IsPlayer,
-  Position,
-  Structure,
-  Tree,
-} from "@/traits";
+import { GridCell, IsPlayer, Position, Structure, Tree } from "@/traits";
+import { RiMapLine } from "@/ui/icons";
 import { Button } from "@/ui/primitives/button";
 import { MiniMapOverlay } from "./MiniMapOverlay";
-
-// --- Data types for the snapshot ---
 
 interface MinimapCell {
   gridX: number;
@@ -45,8 +37,6 @@ interface MinimapSnapshot {
   bounds: { minX: number; minZ: number; maxX: number; maxZ: number };
 }
 
-// --- Color constants ---
-
 const CELL_COLORS: Record<string, string> = {
   soil: "#8D6E63",
   water: "#64B5F6",
@@ -63,11 +53,7 @@ const TREE_STAGE_COLORS: Record<number, string> = {
   4: "#1B5E20",
 };
 
-// --- Desktop minimap size ---
-
 const MINIMAP_SIZE = 160;
-
-// --- Snapshot reader ---
 
 function readSnapshot(): MinimapSnapshot {
   const cells: MinimapCell[] = [];
@@ -82,14 +68,13 @@ function readSnapshot(): MinimapSnapshot {
 
   for (const entity of koota.query(GridCell, Position)) {
     const gc = entity.get(GridCell);
-
+    if (!gc) continue;
     cells.push({
       gridX: gc.gridX,
       gridZ: gc.gridZ,
       type: gc.type,
       occupied: gc.occupied,
     });
-
     if (gc.gridX < minX) minX = gc.gridX;
     if (gc.gridZ < minZ) minZ = gc.gridZ;
     if (gc.gridX > maxX) maxX = gc.gridX;
@@ -99,21 +84,20 @@ function readSnapshot(): MinimapSnapshot {
   for (const entity of koota.query(Tree, Position)) {
     const t = entity.get(Tree);
     const pos = entity.get(Position);
-    trees.push({ x: pos.x, z: pos.z, stage: t.stage });
+    if (t && pos) trees.push({ x: pos.x, z: pos.z, stage: t.stage });
   }
 
   for (const entity of koota.query(Structure, Position)) {
     const pos = entity.get(Position);
-    structures.push({ x: pos.x, z: pos.z });
+    if (pos) structures.push({ x: pos.x, z: pos.z });
   }
 
   const playerEntity = koota.queryFirst(IsPlayer, Position);
   if (playerEntity) {
     const pos = playerEntity.get(Position);
-    player = { x: pos.x, z: pos.z };
+    if (pos) player = { x: pos.x, z: pos.z };
   }
 
-  // Fallback if no grid cells loaded yet
   if (cells.length === 0) {
     minX = 0;
     minZ = 0;
@@ -130,171 +114,154 @@ function readSnapshot(): MinimapSnapshot {
   };
 }
 
-// --- SVG rendering ---
-
-function MinimapSVG({
-  snapshot,
-  size,
-}: {
-  snapshot: MinimapSnapshot;
-  size: number;
-}) {
-  const { cells, trees, structures, player, bounds } = snapshot;
-  const worldW = bounds.maxX - bounds.minX;
-  const worldH = bounds.maxZ - bounds.minZ;
-
-  if (worldW <= 0 || worldH <= 0) return null;
-
-  const scaleX = size / worldW;
-  const scaleZ = size / worldH;
-  const cellW = scaleX;
-  const cellH = scaleZ;
+function MinimapSVG(props: { snapshot: MinimapSnapshot; size: number }) {
+  const worldW = () => props.snapshot.bounds.maxX - props.snapshot.bounds.minX;
+  const worldH = () => props.snapshot.bounds.maxZ - props.snapshot.bounds.minZ;
+  const scaleX = () => props.size / worldW();
+  const scaleZ = () => props.size / worldH();
 
   return (
-    <svg
-      viewBox={`0 0 ${size} ${size}`}
-      width={size}
-      height={size}
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label="Minimap showing grid cells, trees, and player position"
-      style={{ display: "block", borderRadius: 8 }}
-    >
-      <title>Minimap</title>
-
-      {/* Background */}
-      <rect width={size} height={size} fill={COLORS.soilDark} rx={8} />
-
-      {/* Grid cells */}
-      {cells.map((cell) => {
-        const cx = (cell.gridX - bounds.minX) * scaleX;
-        const cz = (cell.gridZ - bounds.minZ) * scaleZ;
-        const fill =
-          cell.type === "soil" && cell.occupied
-            ? CELL_COLORS.occupied
-            : (CELL_COLORS[cell.type] ?? CELL_COLORS.soil);
-
-        return (
-          <rect
-            key={`cell-${cell.gridX}-${cell.gridZ}`}
-            x={cx}
-            y={cz}
-            width={cellW}
-            height={cellH}
-            fill={fill}
-            stroke={COLORS.soilDark}
-            strokeWidth={0.3}
-          />
-        );
-      })}
-
-      {/* Structures */}
-      {structures.map((s) => {
-        const sx = (s.x - bounds.minX) * scaleX;
-        const sz = (s.z - bounds.minZ) * scaleZ;
-
-        return (
-          <rect
-            key={`struct-${s.x}-${s.z}`}
-            x={sx - 2}
-            y={sz - 2}
-            width={4}
-            height={4}
-            fill="#9E9E9E"
-            stroke="#757575"
-            strokeWidth={0.5}
-            rx={0.5}
-          />
-        );
-      })}
-
-      {/* Trees */}
-      {trees.map((t) => {
-        const tx = (t.x - bounds.minX) * scaleX;
-        const tz = (t.z - bounds.minZ) * scaleZ;
-        const fill = TREE_STAGE_COLORS[t.stage] ?? TREE_STAGE_COLORS[0];
-        const radius = 1.2 + t.stage * 0.4;
-
-        return (
-          <circle
-            key={`tree-${t.x}-${t.z}`}
-            cx={tx + cellW / 2}
-            cy={tz + cellH / 2}
-            r={radius}
-            fill={fill}
-          />
-        );
-      })}
-
-      {/* Player - pulsing gold circle */}
-      {player && (
-        <circle
-          cx={(player.x - bounds.minX) * scaleX + cellW / 2}
-          cy={(player.z - bounds.minZ) * scaleZ + cellH / 2}
-          r={4}
-          fill="#FFC107"
-          stroke="#FF8F00"
-          strokeWidth={1}
-          className="minimap-player-pulse"
+    <Show when={worldW() > 0 && worldH() > 0}>
+      <svg
+        viewBox={`0 0 ${props.size} ${props.size}`}
+        width={props.size}
+        height={props.size}
+        xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="Minimap showing grid cells, trees, and player position"
+        style={{ display: "block", "border-radius": "8px" }}
+      >
+        <title>Minimap</title>
+        <rect
+          width={props.size}
+          height={props.size}
+          fill={COLORS.soilDark}
+          rx={8}
         />
-      )}
-    </svg>
+
+        <For each={props.snapshot.cells}>
+          {(cell) => {
+            const cx = (cell.gridX - props.snapshot.bounds.minX) * scaleX();
+            const cz = (cell.gridZ - props.snapshot.bounds.minZ) * scaleZ();
+            const fill =
+              cell.type === "soil" && cell.occupied
+                ? CELL_COLORS.occupied
+                : (CELL_COLORS[cell.type] ?? CELL_COLORS.soil);
+            return (
+              <rect
+                x={cx}
+                y={cz}
+                width={scaleX()}
+                height={scaleZ()}
+                fill={fill}
+                stroke={COLORS.soilDark}
+                stroke-width={0.3}
+              />
+            );
+          }}
+        </For>
+
+        <For each={props.snapshot.structures}>
+          {(s) => {
+            const sx = (s.x - props.snapshot.bounds.minX) * scaleX();
+            const sz = (s.z - props.snapshot.bounds.minZ) * scaleZ();
+            return (
+              <rect
+                x={sx - 2}
+                y={sz - 2}
+                width={4}
+                height={4}
+                fill="#9E9E9E"
+                stroke="#757575"
+                stroke-width={0.5}
+                rx={0.5}
+              />
+            );
+          }}
+        </For>
+
+        <For each={props.snapshot.trees}>
+          {(t) => {
+            const tx = (t.x - props.snapshot.bounds.minX) * scaleX();
+            const tz = (t.z - props.snapshot.bounds.minZ) * scaleZ();
+            const fill = TREE_STAGE_COLORS[t.stage] ?? TREE_STAGE_COLORS[0];
+            const radius = 1.2 + t.stage * 0.4;
+            return (
+              <circle
+                cx={tx + scaleX() / 2}
+                cy={tz + scaleZ() / 2}
+                r={radius}
+                fill={fill}
+              />
+            );
+          }}
+        </For>
+
+        <Show when={props.snapshot.player}>
+          {(p) => (
+            <circle
+              cx={
+                (p().x - props.snapshot.bounds.minX) * scaleX() + scaleX() / 2
+              }
+              cy={
+                (p().z - props.snapshot.bounds.minZ) * scaleZ() + scaleZ() / 2
+              }
+              r={4}
+              fill="#FFC107"
+              stroke="#FF8F00"
+              stroke-width={1}
+              class="minimap-player-pulse"
+            />
+          )}
+        </Show>
+      </svg>
+    </Show>
   );
 }
 
-// --- Main component ---
-
 export const MiniMap = () => {
-  const [snapshot, setSnapshot] = useState<MinimapSnapshot>(() =>
-    readSnapshot(),
-  );
-  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [snapshot, setSnapshot] = createSignal<MinimapSnapshot>(readSnapshot());
+  const [overlayOpen, setOverlayOpen] = createSignal(false);
 
-  useEffect(() => {
-    // Initial read
+  onMount(() => {
     setSnapshot(readSnapshot());
-
-    // Poll ECS data at 5fps (200ms)
     const interval = setInterval(() => {
       setSnapshot(readSnapshot());
     }, 200);
-
-    return () => clearInterval(interval);
-  }, []);
+    onCleanup(() => clearInterval(interval));
+  });
 
   return (
     <>
-      {/* Desktop minimap: visible at md+ breakpoint, top-right below HUD */}
       <div
-        className="hidden md:block absolute pointer-events-auto"
+        class="hidden md:block absolute pointer-events-auto"
         style={{
-          top: 56,
-          right: 12,
+          top: "56px",
+          right: "12px",
           background: "rgba(245, 240, 227, 0.92)",
           border: `2px solid ${COLORS.barkBrown}`,
-          borderRadius: 12,
-          padding: 8,
-          boxShadow: "0 4px 12px rgba(26, 58, 42, 0.25)",
+          "border-radius": "12px",
+          padding: "8px",
+          "box-shadow": "0 4px 12px rgba(26, 58, 42, 0.25)",
         }}
       >
-        <MinimapSVG snapshot={snapshot} size={MINIMAP_SIZE} />
+        <MinimapSVG snapshot={snapshot()} size={MINIMAP_SIZE} />
         <div
-          className="text-[10px] font-bold text-center mt-1 tracking-wide uppercase"
+          class="text-[10px] font-bold text-center mt-1 tracking-wide uppercase"
           style={{ color: COLORS.soilDark }}
         >
           Map
         </div>
       </div>
 
-      {/* Mobile map toggle button: visible below md breakpoint */}
       <div
-        className="block md:hidden absolute pointer-events-auto"
-        style={{ top: 56, right: 12 }}
+        class="block md:hidden absolute pointer-events-auto"
+        style={{ top: "56px", right: "12px" }}
       >
         <Button
           size="icon"
           variant="ghost"
-          className="w-11 h-11 rounded-full"
+          class="w-11 h-11 rounded-full"
           style={{
             background: "rgba(245, 240, 227, 0.9)",
             border: `2px solid ${COLORS.barkBrown}`,
@@ -303,17 +270,15 @@ export const MiniMap = () => {
           onClick={() => setOverlayOpen(true)}
           aria-label="Open map"
         >
-          <RiMapLine className="w-5 h-5" />
+          <RiMapLine class="w-5 h-5" />
         </Button>
       </div>
 
-      {/* Mobile fullscreen overlay */}
       <MiniMapOverlay
-        open={overlayOpen}
+        open={overlayOpen()}
         onClose={() => setOverlayOpen(false)}
       />
 
-      {/* Pulse animation */}
       <style>{`
         @media (prefers-reduced-motion: no-preference) {
           .minimap-player-pulse {

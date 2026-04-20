@@ -370,7 +370,9 @@ export const gameActions = createActions((world) => {
       // ── Achievements & tracking lists ────────────────────────
       unlockAchievement: (id: string) => {
         world.set(Achievements, (prev) =>
-          prev.includes(id) ? prev : [...prev, id],
+          prev.items.includes(id)
+            ? prev
+            : { items: [...prev.items, id] },
         );
       },
 
@@ -583,7 +585,7 @@ export const gameActions = createActions((world) => {
           speciesPlanted: [],
           seasonsExperienced: [],
         });
-        world.set(Achievements, []);
+        world.set(Achievements, { items: [] });
         world.set(Quests, {
           activeQuests: [],
           completedQuestIds: [],
@@ -1257,7 +1259,7 @@ export const gameActions = createActions((world) => {
 
         // Achievements
         if (dbState.achievements !== undefined)
-          world.set(Achievements, dbState.achievements);
+          world.set(Achievements, { items: dbState.achievements });
 
         // Stamina (on player entity)
         if (dbState.stamina !== undefined || dbState.maxStamina !== undefined) {

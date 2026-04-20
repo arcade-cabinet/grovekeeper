@@ -1,5 +1,4 @@
-import { useTrait } from "koota/react";
-import { useRef, useState } from "react";
+import { createSignal, For, Show } from "solid-js";
 import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { getDifficultyById } from "@/config/difficulty";
@@ -7,16 +6,8 @@ import { TOOLS } from "@/config/tools";
 import { TREE_SPECIES } from "@/config/trees";
 import { isDbInitialized } from "@/db/client";
 import { exportSaveFile, importSaveFile } from "@/db/export";
+import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
-import {
-  Achievements,
-  Difficulty,
-  Grid,
-  PlayerProgress,
-  Resources,
-  Settings,
-  Tracking,
-} from "@/traits";
 import { ACHIEVEMENT_DEFS } from "@/systems/achievements";
 import {
   canAffordExpansion,
@@ -29,6 +20,15 @@ import {
   PRESTIGE_COSMETICS,
   PRESTIGE_MIN_LEVEL,
 } from "@/systems/prestige";
+import {
+  Achievements,
+  Difficulty,
+  Grid,
+  PlayerProgress,
+  Resources,
+  Settings,
+  Tracking,
+} from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import { Card } from "@/ui/primitives/card";
 import {
@@ -63,35 +63,38 @@ function formatCost(cost: Record<string, number>): string {
     .join(", ");
 }
 
-export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
+export const PauseMenu = (props: PauseMenuProps) => {
   const progress = useTrait(koota, PlayerProgress);
-  const resources = useTrait(koota, Resources) ?? {
-    timber: 0,
-    sap: 0,
-    fruit: 0,
-    acorns: 0,
-  };
-  const achievements = useTrait(koota, Achievements) ?? [];
-  const gridSize = useTrait(koota, Grid)?.gridSize ?? 12;
+  const resourcesTrait = useTrait(koota, Resources);
+  const achievementsTrait = useTrait(koota, Achievements);
+  const gridTrait = useTrait(koota, Grid);
   const settings = useTrait(koota, Settings);
-  const difficulty = useTrait(koota, Difficulty)?.id ?? "normal";
+  const difficultyTrait = useTrait(koota, Difficulty);
   const tracking = useTrait(koota, Tracking);
-  const coins = progress?.coins ?? 0;
-  const xp = progress?.xp ?? 0;
-  const level = progress?.level ?? 1;
-  const unlockedSpecies = progress?.unlockedSpecies ?? ["white-oak"];
-  const unlockedTools = progress?.unlockedTools ?? ["trowel", "watering-can"];
-  const prestigeCount = progress?.prestigeCount ?? 0;
-  const activeBorderCosmetic = progress?.activeBorderCosmetic ?? null;
-  const soundEnabled = settings?.soundEnabled ?? true;
-  const treesPlanted = tracking?.treesPlanted ?? 0;
-  const treesMatured = tracking?.treesMatured ?? 0;
 
-  const [confirmingPrestige, setConfirmingPrestige] = useState(false);
-  const [statsOpen, setStatsOpen] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
-  const importRef = useRef<HTMLInputElement>(null);
-  const diffTier = getDifficultyById(difficulty);
+  const resources = () =>
+    resourcesTrait() ?? { timber: 0, sap: 0, fruit: 0, acorns: 0 };
+  const achievements = (): string[] => achievementsTrait()?.items ?? [];
+  const gridSize = () => gridTrait()?.gridSize ?? 12;
+  const difficulty = () => difficultyTrait()?.id ?? "normal";
+  const coins = () => progress()?.coins ?? 0;
+  const xp = () => progress()?.xp ?? 0;
+  const level = () => progress()?.level ?? 1;
+  const unlockedSpecies = () => progress()?.unlockedSpecies ?? ["white-oak"];
+  const unlockedTools = () =>
+    progress()?.unlockedTools ?? ["trowel", "watering-can"];
+  const prestigeCount = () => progress()?.prestigeCount ?? 0;
+  const activeBorderCosmetic = () => progress()?.activeBorderCosmetic ?? null;
+  const soundEnabled = () => settings()?.soundEnabled ?? true;
+  const treesPlanted = () => tracking()?.treesPlanted ?? 0;
+  const treesMatured = () => tracking()?.treesMatured ?? 0;
+
+  const [confirmingPrestige, setConfirmingPrestige] = createSignal(false);
+  const [statsOpen, setStatsOpen] = createSignal(false);
+  const [rulesOpen, setRulesOpen] = createSignal(false);
+  let importRef: HTMLInputElement | undefined;
+
+  const diffTier = () => getDifficultyById(difficulty());
 
   const expandGrid = () => gameActions().expandGrid();
   const performPrestige = () => gameActions().performPrestige();
@@ -100,21 +103,24 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
   const setSoundEnabled = (v: boolean) => gameActions().setSoundEnabled(v);
 
   // Grid expansion
-  const nextTier = getNextExpansionTier(gridSize);
-  const canExpand = nextTier
-    ? canAffordExpansion(nextTier, resources, level)
-    : false;
+  const nextTier = () => getNextExpansionTier(gridSize());
+  const canExpand = () => {
+    const tier = nextTier();
+    return tier ? canAffordExpansion(tier, resources(), level()) : false;
+  };
 
   // Prestige
-  const isPrestigeEligible = canPrestige(level);
-  const unlockedCosmetics = getUnlockedCosmetics(prestigeCount);
+  const isPrestigeEligible = () => canPrestige(level());
+  const unlockedCosmetics = () => getUnlockedCosmetics(prestigeCount());
+  const lockedCosmetics = () =>
+    PRESTIGE_COSMETICS.filter((c) => c.prestigeRequired > prestigeCount());
 
   const handleExpandGrid = () => {
     expandGrid();
   };
 
   const handlePrestige = () => {
-    if (!confirmingPrestige) {
+    if (!confirmingPrestige()) {
       setConfirmingPrestige(true);
       return;
     }
@@ -130,25 +136,25 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
   const handleOpenChange = (o: boolean) => {
     if (!o) {
       setConfirmingPrestige(false);
-      onClose();
+      props.onClose();
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-w-sm max-h-[85vh] overflow-y-auto"
+        class="max-w-sm max-h-[85vh] overflow-y-auto"
         style={{
           background: COLORS.skyMist,
           border: `3px solid ${COLORS.barkBrown}`,
-          borderRadius: 16,
-          boxShadow: `0 8px 32px rgba(0,0,0,0.15)`,
+          "border-radius": "16px",
+          "box-shadow": "0 8px 32px rgba(0,0,0,0.15)",
         }}
         aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle
-            className="flex items-center gap-3"
+            class="flex items-center gap-3"
             style={{ color: COLORS.soilDark }}
           >
             <FarmerMascot size={40} animate={false} />
@@ -156,125 +162,122 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="stats" className="mt-2">
+        <Tabs defaultValue="stats" class="mt-2">
           <TabsList
-            className="w-full"
+            class="w-full"
             style={{
               background: `${COLORS.parchment}`,
               border: `1px solid ${COLORS.barkBrown}30`,
             }}
           >
-            <TabsTrigger value="stats" className="flex-1 text-xs min-h-[36px]">
+            <TabsTrigger value="stats" class="flex-1 text-xs min-h-[36px]">
               Stats
             </TabsTrigger>
-            <TabsTrigger
-              value="progress"
-              className="flex-1 text-xs min-h-[36px]"
-            >
+            <TabsTrigger value="progress" class="flex-1 text-xs min-h-[36px]">
               Progress
             </TabsTrigger>
-            <TabsTrigger
-              value="settings"
-              className="flex-1 text-xs min-h-[36px]"
-            >
+            <TabsTrigger value="settings" class="flex-1 text-xs min-h-[36px]">
               Settings
             </TabsTrigger>
           </TabsList>
 
           {/* ── Stats tab ── */}
-          <TabsContent value="stats" className="space-y-3 mt-2">
-            <Card className="p-4" style={{ background: "white" }}>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+          <TabsContent value="stats" class="space-y-3 mt-2">
+            <Card class="p-4" style={{ background: "white" }}>
+              <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-500">Level</p>
+                  <p class="text-gray-500">Level</p>
                   <p
-                    className="text-xl font-bold"
+                    class="text-xl font-bold"
                     style={{ color: COLORS.forestGreen }}
                   >
-                    {level}
+                    {level()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">XP</p>
+                  <p class="text-gray-500">XP</p>
                   <p
-                    className="text-xl font-bold"
+                    class="text-xl font-bold"
                     style={{ color: COLORS.forestGreen }}
                   >
-                    {xp}
+                    {xp()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Coins</p>
+                  <p class="text-gray-500">Coins</p>
                   <p
-                    className="text-xl font-bold"
+                    class="text-xl font-bold"
                     style={{ color: COLORS.autumnGold }}
                   >
-                    {coins}
+                    {coins()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Trees Planted</p>
+                  <p class="text-gray-500">Trees Planted</p>
                   <p
-                    className="text-xl font-bold"
+                    class="text-xl font-bold"
                     style={{ color: COLORS.leafLight }}
                   >
-                    {treesPlanted}
+                    {treesPlanted()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Trees Matured</p>
+                  <p class="text-gray-500">Trees Matured</p>
                   <p
-                    className="text-xl font-bold"
+                    class="text-xl font-bold"
                     style={{ color: COLORS.leafLight }}
                   >
-                    {treesMatured}
+                    {treesMatured()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Grid Size</p>
+                  <p class="text-gray-500">Grid Size</p>
                   <p
-                    className="text-xl font-bold"
+                    class="text-xl font-bold"
                     style={{ color: COLORS.forestGreen }}
                   >
-                    {gridSize}x{gridSize}
+                    {gridSize()}x{gridSize()}
                   </p>
                 </div>
               </div>
             </Card>
 
-            <div className="text-sm text-gray-600">
+            <div class="text-sm text-gray-600">
               <p>
-                Species unlocked: {unlockedSpecies.length}/{TREE_SPECIES.length}
+                Species unlocked: {unlockedSpecies().length}/
+                {TREE_SPECIES.length}
               </p>
               <p>
-                Tools unlocked: {unlockedTools.length}/{TOOLS.length}
+                Tools unlocked: {unlockedTools().length}/{TOOLS.length}
               </p>
-              {prestigeCount > 0 && (
+              <Show when={prestigeCount() > 0}>
                 <p style={{ color: COLORS.autumnGold }}>
-                  Prestige: {prestigeCount}
+                  Prestige: {prestigeCount()}
                 </p>
-              )}
-              {diffTier && (
-                <p className="flex items-center gap-1.5 mt-1">
-                  <span
-                    className="inline-block px-2 py-0.5 rounded-full text-xs font-bold text-white"
-                    style={{ background: diffTier.color }}
-                  >
-                    {diffTier.name}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    difficulty (locked)
-                  </span>
-                </p>
-              )}
+              </Show>
+              <Show when={diffTier()}>
+                {(tier) => (
+                  <p class="flex items-center gap-1.5 mt-1">
+                    <span
+                      class="inline-block px-2 py-0.5 rounded-full text-xs font-bold text-white"
+                      style={{ background: tier().color }}
+                    >
+                      {tier().name}
+                    </span>
+                    <span class="text-xs text-gray-400">
+                      difficulty (locked)
+                    </span>
+                  </p>
+                )}
+              </Show>
             </div>
 
             <Button
-              className="w-full"
+              class="w-full"
               variant="outline"
               size="sm"
               style={{
-                borderColor: COLORS.barkBrown,
+                "border-color": COLORS.barkBrown,
                 color: COLORS.soilDark,
               }}
               onClick={() => setStatsOpen(true)}
@@ -284,241 +287,257 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
           </TabsContent>
 
           {/* ── Progress tab (Achievements, Grid, Prestige) ── */}
-          <TabsContent value="progress" className="space-y-3 mt-2">
+          <TabsContent value="progress" class="space-y-3 mt-2">
             {/* Achievements */}
-            <Card className="p-3" style={{ background: "white" }}>
+            <Card class="p-3" style={{ background: "white" }}>
               <h4
-                className="text-sm font-bold mb-2 flex items-center justify-between"
+                class="text-sm font-bold mb-2 flex items-center justify-between"
                 style={{ color: COLORS.soilDark }}
               >
                 <span>Achievements</span>
                 <span
-                  className="text-xs font-normal"
+                  class="text-xs font-normal"
                   style={{ color: COLORS.autumnGold }}
                 >
-                  {achievements.length}/{ACHIEVEMENT_DEFS.length}
+                  {achievements().length}/{ACHIEVEMENT_DEFS.length}
                 </span>
               </h4>
-              <div className="max-h-48 overflow-y-auto space-y-2">
-                {ACHIEVEMENT_DEFS.map((achievement) => {
-                  const isUnlocked = achievements.includes(achievement.id);
-                  return (
-                    <div
-                      key={achievement.id}
-                      className="flex items-start gap-2 p-2 rounded"
-                      style={{
-                        background: isUnlocked
-                          ? `${COLORS.gold}1a`
-                          : "rgba(0, 0, 0, 0.05)",
-                        border: `1px solid ${isUnlocked ? COLORS.gold : "#E0E0E0"}`,
-                      }}
-                    >
+              <div class="max-h-48 overflow-y-auto space-y-2">
+                <For each={ACHIEVEMENT_DEFS}>
+                  {(achievement) => {
+                    const isUnlocked = () =>
+                      achievements().includes(achievement.id);
+                    return (
                       <div
-                        className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full"
+                        class="flex items-start gap-2 p-2 rounded"
                         style={{
-                          background: isUnlocked ? COLORS.gold : COLORS.silver,
-                          color: "white",
-                          fontSize: 12,
+                          background: isUnlocked()
+                            ? `${COLORS.gold}1a`
+                            : "rgba(0, 0, 0, 0.05)",
+                          border: `1px solid ${isUnlocked() ? COLORS.gold : "#E0E0E0"}`,
                         }}
                       >
-                        {isUnlocked ? "\u2713" : "\u{1F512}"}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="text-xs font-semibold"
+                        <div
+                          class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full"
                           style={{
-                            color: isUnlocked ? COLORS.soilDark : COLORS.silver,
+                            background: isUnlocked()
+                              ? COLORS.gold
+                              : COLORS.silver,
+                            color: "white",
+                            "font-size": "12px",
                           }}
                         >
-                          {achievement.name}
-                        </p>
-                        {isUnlocked ? (
-                          <p className="text-[10px] text-gray-600 mt-0.5">
-                            {achievement.description}
+                          {isUnlocked() ? "\u2713" : "\u{1F512}"}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <p
+                            class="text-xs font-semibold"
+                            style={{
+                              color: isUnlocked()
+                                ? COLORS.soilDark
+                                : COLORS.silver,
+                            }}
+                          >
+                            {achievement.name}
                           </p>
-                        ) : (
-                          <p className="text-[10px] text-gray-400 mt-0.5">
-                            ???
-                          </p>
-                        )}
+                          <Show
+                            when={isUnlocked()}
+                            fallback={
+                              <p class="text-[10px] text-gray-400 mt-0.5">
+                                ???
+                              </p>
+                            }
+                          >
+                            <p class="text-[10px] text-gray-600 mt-0.5">
+                              {achievement.description}
+                            </p>
+                          </Show>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }}
+                </For>
               </div>
             </Card>
 
             {/* Grid Expansion */}
-            <Card className="p-3" style={{ background: "white" }}>
+            <Card class="p-3" style={{ background: "white" }}>
               <h4
-                className="text-sm font-bold mb-2"
+                class="text-sm font-bold mb-2"
                 style={{ color: COLORS.soilDark }}
               >
                 Grid Expansion
               </h4>
-              <p className="text-xs text-gray-500 mb-2">
-                Current: {gridSize}x{gridSize}
+              <p class="text-xs text-gray-500 mb-2">
+                Current: {gridSize()}x{gridSize()}
               </p>
-              {nextTier ? (
-                <>
-                  <p className="text-xs text-gray-600 mb-1">
-                    Next: {nextTier.size}x{nextTier.size} (Lv.
-                    {nextTier.requiredLevel})
+              <Show
+                when={nextTier()}
+                fallback={
+                  <p class="text-xs text-gray-500 italic">
+                    Maximum grid size reached.
                   </p>
-                  <p className="text-xs text-gray-500 mb-2">
-                    Cost: {formatCost(nextTier.cost)}
-                  </p>
-                  <Button
-                    size="sm"
-                    className="w-full text-xs"
-                    style={{
-                      background: canExpand
-                        ? COLORS.forestGreen
-                        : COLORS.silver,
-                      color: "white",
-                    }}
-                    disabled={!canExpand}
-                    onClick={handleExpandGrid}
-                  >
-                    Expand to {nextTier.size}x{nextTier.size}
-                  </Button>
-                  {!canExpand && level < nextTier.requiredLevel && (
-                    <p
-                      className="text-[10px] text-center mt-1"
-                      style={{ color: COLORS.earthRed }}
-                    >
-                      Requires Level {nextTier.requiredLevel}
+                }
+              >
+                {(tier) => (
+                  <>
+                    <p class="text-xs text-gray-600 mb-1">
+                      Next: {tier().size}x{tier().size} (Lv.
+                      {tier().requiredLevel})
                     </p>
-                  )}
-                </>
-              ) : (
-                <p className="text-xs text-gray-500 italic">
-                  Maximum grid size reached.
-                </p>
-              )}
+                    <p class="text-xs text-gray-500 mb-2">
+                      Cost: {formatCost(tier().cost)}
+                    </p>
+                    <Button
+                      size="sm"
+                      class="w-full text-xs"
+                      style={{
+                        background: canExpand()
+                          ? COLORS.forestGreen
+                          : COLORS.silver,
+                        color: "white",
+                      }}
+                      disabled={!canExpand()}
+                      onClick={handleExpandGrid}
+                    >
+                      Expand to {tier().size}x{tier().size}
+                    </Button>
+                    <Show when={!canExpand() && level() < tier().requiredLevel}>
+                      <p
+                        class="text-[10px] text-center mt-1"
+                        style={{ color: COLORS.earthRed }}
+                      >
+                        Requires Level {tier().requiredLevel}
+                      </p>
+                    </Show>
+                  </>
+                )}
+              </Show>
             </Card>
 
             {/* Prestige cosmetics */}
-            {unlockedCosmetics.length > 0 && (
-              <Card className="p-3" style={{ background: "white" }}>
+            <Show when={unlockedCosmetics().length > 0}>
+              <Card class="p-3" style={{ background: "white" }}>
                 <h4
-                  className="text-sm font-bold mb-2"
+                  class="text-sm font-bold mb-2"
                   style={{ color: COLORS.soilDark }}
                 >
                   Border Cosmetics
                 </h4>
-                <p className="text-xs text-gray-500 mb-2">
+                <p class="text-xs text-gray-500 mb-2">
                   Customize your grove border (unlocked by prestige)
                 </p>
-                <div className="space-y-2">
+                <div class="space-y-2">
                   <button
-                    className="w-full text-left p-2 rounded text-xs transition-colors"
+                    type="button"
+                    class="w-full text-left p-2 rounded text-xs transition-colors"
                     style={{
                       background:
-                        activeBorderCosmetic === null
+                        activeBorderCosmetic() === null
                           ? `${COLORS.forestGreen}20`
                           : "rgba(0,0,0,0.05)",
-                      border: `1px solid ${activeBorderCosmetic === null ? COLORS.forestGreen : "#E0E0E0"}`,
+                      border: `1px solid ${activeBorderCosmetic() === null ? COLORS.forestGreen : "#E0E0E0"}`,
                     }}
                     onClick={() => setActiveBorderCosmetic(null)}
                   >
                     <div
-                      className="font-semibold"
+                      class="font-semibold"
                       style={{ color: COLORS.soilDark }}
                     >
                       Default Wood Frame
                     </div>
-                    <div className="text-gray-500 mt-0.5">
+                    <div class="text-gray-500 mt-0.5">
                       Classic wooden border
                     </div>
                   </button>
-                  {unlockedCosmetics.map((cosmetic) => (
-                    <button
-                      key={cosmetic.id}
-                      className="w-full text-left p-2 rounded text-xs transition-colors"
-                      style={{
-                        background:
-                          activeBorderCosmetic === cosmetic.id
-                            ? `${COLORS.forestGreen}20`
-                            : "rgba(0,0,0,0.05)",
-                        border: `1px solid ${activeBorderCosmetic === cosmetic.id ? COLORS.forestGreen : "#E0E0E0"}`,
-                      }}
-                      onClick={() => setActiveBorderCosmetic(cosmetic.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div
-                          className="font-semibold"
-                          style={{ color: COLORS.soilDark }}
-                        >
-                          {cosmetic.name}
-                        </div>
-                        {activeBorderCosmetic === cosmetic.id && (
-                          <span style={{ color: COLORS.forestGreen }}>
-                            {"\u2713"}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-gray-500 mt-0.5">
-                        {cosmetic.description}
-                      </div>
-                      <div
-                        className="mt-1 h-4 rounded"
+                  <For each={unlockedCosmetics()}>
+                    {(cosmetic) => (
+                      <button
+                        type="button"
+                        class="w-full text-left p-2 rounded text-xs transition-colors"
                         style={{
-                          border: cosmetic.borderStyle,
-                          borderColor: cosmetic.borderColor,
-                          boxShadow: cosmetic.glowColor
-                            ? `0 0 8px ${cosmetic.glowColor}`
-                            : undefined,
+                          background:
+                            activeBorderCosmetic() === cosmetic.id
+                              ? `${COLORS.forestGreen}20`
+                              : "rgba(0,0,0,0.05)",
+                          border: `1px solid ${activeBorderCosmetic() === cosmetic.id ? COLORS.forestGreen : "#E0E0E0"}`,
                         }}
-                      />
-                    </button>
-                  ))}
-                  {PRESTIGE_COSMETICS.filter(
-                    (c) => c.prestigeRequired > prestigeCount,
-                  ).map((cosmetic) => (
-                    <div
-                      key={cosmetic.id}
-                      className="w-full text-left p-2 rounded text-xs opacity-60"
-                      style={{
-                        background: "rgba(0,0,0,0.02)",
-                        border: "1px dashed #E0E0E0",
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="font-semibold text-gray-400">
-                          {cosmetic.name}
+                        onClick={() => setActiveBorderCosmetic(cosmetic.id)}
+                      >
+                        <div class="flex items-center justify-between">
+                          <div
+                            class="font-semibold"
+                            style={{ color: COLORS.soilDark }}
+                          >
+                            {cosmetic.name}
+                          </div>
+                          <Show when={activeBorderCosmetic() === cosmetic.id}>
+                            <span style={{ color: COLORS.forestGreen }}>
+                              {"\u2713"}
+                            </span>
+                          </Show>
                         </div>
-                        <span
-                          className="text-xs"
-                          style={{ color: COLORS.autumnGold }}
-                        >
-                          Prestige {cosmetic.prestigeRequired}
-                        </span>
+                        <div class="text-gray-500 mt-0.5">
+                          {cosmetic.description}
+                        </div>
+                        <div
+                          class="mt-1 h-4 rounded"
+                          style={{
+                            border: cosmetic.borderStyle,
+                            "border-color": cosmetic.borderColor,
+                            "box-shadow": cosmetic.glowColor
+                              ? `0 0 8px ${cosmetic.glowColor}`
+                              : undefined,
+                          }}
+                        />
+                      </button>
+                    )}
+                  </For>
+                  <For each={lockedCosmetics()}>
+                    {(cosmetic) => (
+                      <div
+                        class="w-full text-left p-2 rounded text-xs opacity-60"
+                        style={{
+                          background: "rgba(0,0,0,0.02)",
+                          border: "1px dashed #E0E0E0",
+                        }}
+                      >
+                        <div class="flex items-center justify-between">
+                          <div class="font-semibold text-gray-400">
+                            {cosmetic.name}
+                          </div>
+                          <span
+                            class="text-xs"
+                            style={{ color: COLORS.autumnGold }}
+                          >
+                            Prestige {cosmetic.prestigeRequired}
+                          </span>
+                        </div>
+                        <div class="text-gray-400 mt-0.5">
+                          {cosmetic.description}
+                        </div>
                       </div>
-                      <div className="text-gray-400 mt-0.5">
-                        {cosmetic.description}
-                      </div>
-                    </div>
-                  ))}
+                    )}
+                  </For>
                 </div>
               </Card>
-            )}
+            </Show>
 
             {/* Prestige */}
-            <Card className="p-3" style={{ background: "white" }}>
+            <Card class="p-3" style={{ background: "white" }}>
               <h4
-                className="text-sm font-bold mb-2"
+                class="text-sm font-bold mb-2"
                 style={{ color: COLORS.soilDark }}
               >
                 Prestige
               </h4>
-              {prestigeCount > 0 && (
-                <div className="text-xs text-gray-600 mb-2">
-                  <p>Current prestige: {prestigeCount}</p>
+              <Show when={prestigeCount() > 0}>
+                <div class="text-xs text-gray-600 mb-2">
+                  <p>Current prestige: {prestigeCount()}</p>
                   <p>
                     Growth speed:{" "}
                     {Math.round(
-                      (calculatePrestigeBonus(prestigeCount)
+                      (calculatePrestigeBonus(prestigeCount())
                         .growthSpeedMultiplier -
                         1) *
                         100,
@@ -526,19 +545,49 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                     % bonus
                   </p>
                 </div>
-              )}
-              {isPrestigeEligible ? (
-                confirmingPrestige ? (
-                  <div className="space-y-2">
-                    <p className="text-xs text-gray-700">
+              </Show>
+              <Show
+                when={isPrestigeEligible()}
+                fallback={
+                  <p class="text-xs text-gray-500">
+                    Reach Level {PRESTIGE_MIN_LEVEL} to unlock Prestige.
+                    <Show when={level() > 0}>
+                      <span
+                        class="block mt-0.5"
+                        style={{ color: COLORS.earthRed }}
+                      >
+                        Current: Lv.{level()} / {PRESTIGE_MIN_LEVEL}
+                      </span>
+                    </Show>
+                  </p>
+                }
+              >
+                <Show
+                  when={confirmingPrestige()}
+                  fallback={
+                    <Button
+                      size="sm"
+                      class="w-full text-xs"
+                      style={{
+                        background: COLORS.autumnGold,
+                        color: "white",
+                      }}
+                      onClick={handlePrestige}
+                    >
+                      Prestige (Reset for Bonuses)
+                    </Button>
+                  }
+                >
+                  <div class="space-y-2">
+                    <p class="text-xs text-gray-700">
                       Prestige will reset your level, resources, seeds, and
                       grove to start fresh. You keep achievements, lifetime
                       stats, and gain permanent bonuses. Are you sure?
                     </p>
-                    <div className="flex gap-2">
+                    <div class="flex gap-2">
                       <Button
                         size="sm"
-                        className="flex-1 text-xs"
+                        class="flex-1 text-xs"
                         style={{
                           background: COLORS.autumnGold,
                           color: "white",
@@ -550,62 +599,43 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 text-xs"
+                        class="flex-1 text-xs"
                         onClick={handleCancelPrestige}
                       >
                         Cancel
                       </Button>
                     </div>
                   </div>
-                ) : (
-                  <Button
-                    size="sm"
-                    className="w-full text-xs"
-                    style={{
-                      background: COLORS.autumnGold,
-                      color: "white",
-                    }}
-                    onClick={handlePrestige}
-                  >
-                    Prestige (Reset for Bonuses)
-                  </Button>
-                )
-              ) : (
-                <p className="text-xs text-gray-500">
-                  Reach Level {PRESTIGE_MIN_LEVEL} to unlock Prestige.
-                  {level > 0 && (
-                    <span
-                      className="block mt-0.5"
-                      style={{ color: COLORS.earthRed }}
-                    >
-                      Current: Lv.{level} / {PRESTIGE_MIN_LEVEL}
-                    </span>
-                  )}
-                </p>
-              )}
+                </Show>
+              </Show>
             </Card>
           </TabsContent>
 
           {/* ── Settings tab ── */}
-          <TabsContent value="settings" className="space-y-3 mt-2">
+          <TabsContent value="settings" class="space-y-3 mt-2">
             {/* Sound */}
-            <Card className="p-3" style={{ background: "white" }}>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">Sound Effects</span>
+            <Card class="p-3" style={{ background: "white" }}>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-700">Sound Effects</span>
                 <button
-                  className="w-14 h-8 rounded-full relative p-2 min-h-[44px] min-w-[44px] motion-safe:transition-colors"
+                  type="button"
+                  class="w-14 h-8 rounded-full relative p-2 min-h-[44px] min-w-[44px] motion-safe:transition-colors"
                   style={{
-                    background: soundEnabled ? COLORS.forestGreen : "#D1D5DB",
+                    background: soundEnabled()
+                      ? COLORS.forestGreen
+                      : "#D1D5DB",
                   }}
-                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  onClick={() => setSoundEnabled(!soundEnabled())}
                   role="switch"
-                  aria-checked={soundEnabled}
+                  aria-checked={soundEnabled()}
                   aria-label="Toggle sound"
                 >
                   <span
-                    className="absolute top-1 w-6 h-6 bg-white rounded-full shadow motion-safe:transition-transform"
+                    class="absolute top-1 w-6 h-6 bg-white rounded-full shadow motion-safe:transition-transform"
                     style={{
-                      left: soundEnabled ? "calc(100% - 1.75rem)" : "0.25rem",
+                      left: soundEnabled()
+                        ? "calc(100% - 1.75rem)"
+                        : "0.25rem",
                     }}
                   />
                 </button>
@@ -613,21 +643,21 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
             </Card>
 
             {/* Save management */}
-            {isDbInitialized() && (
-              <Card className="p-3" style={{ background: "white" }}>
+            <Show when={isDbInitialized()}>
+              <Card class="p-3" style={{ background: "white" }}>
                 <h4
-                  className="text-sm font-bold mb-2"
+                  class="text-sm font-bold mb-2"
                   style={{ color: COLORS.soilDark }}
                 >
                   Save Management
                 </h4>
-                <div className="flex gap-2">
+                <div class="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 text-xs min-h-[44px]"
+                    class="flex-1 text-xs min-h-[44px]"
                     style={{
-                      borderColor: COLORS.barkBrown,
+                      "border-color": COLORS.barkBrown,
                       color: COLORS.soilDark,
                     }}
                     onClick={() => {
@@ -645,12 +675,12 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 text-xs min-h-[44px]"
+                    class="flex-1 text-xs min-h-[44px]"
                     style={{
-                      borderColor: COLORS.barkBrown,
+                      "border-color": COLORS.barkBrown,
                       color: COLORS.soilDark,
                     }}
-                    onClick={() => importRef.current?.click()}
+                    onClick={() => importRef?.click()}
                   >
                     Import Save
                   </Button>
@@ -658,9 +688,9 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                     ref={importRef}
                     type="file"
                     accept=".sqlite,.db"
-                    className="hidden"
+                    class="hidden"
                     onChange={async (e) => {
-                      const file = e.target.files?.[0];
+                      const file = e.currentTarget.files?.[0];
                       if (!file) return;
                       try {
                         await importSaveFile(file);
@@ -673,14 +703,14 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
                   />
                 </div>
               </Card>
-            )}
+            </Show>
 
             {/* How to Play */}
             <Button
-              className="w-full"
+              class="w-full"
               variant="outline"
               style={{
-                borderColor: COLORS.forestGreen,
+                "border-color": COLORS.forestGreen,
                 color: COLORS.forestGreen,
               }}
               onClick={() => setRulesOpen(true)}
@@ -691,30 +721,33 @@ export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
         </Tabs>
 
         {/* Action buttons (always visible below tabs) */}
-        <div className="flex flex-col gap-2 mt-2">
+        <div class="flex flex-col gap-2 mt-2">
           <Button
-            className="w-full"
+            class="w-full"
             style={{ background: COLORS.forestGreen, color: "white" }}
-            onClick={onClose}
+            onClick={props.onClose}
           >
             Continue Playing
           </Button>
           <Button
             variant="outline"
-            className="w-full"
+            class="w-full"
             style={{
-              borderColor: COLORS.earthRed,
+              "border-color": COLORS.earthRed,
               color: COLORS.earthRed,
             }}
-            onClick={onMainMenu}
+            onClick={props.onMainMenu}
           >
             Return to Menu
           </Button>
         </div>
 
-        <StatsDashboard open={statsOpen} onClose={() => setStatsOpen(false)} />
+        <StatsDashboard
+          open={statsOpen()}
+          onClose={() => setStatsOpen(false)}
+        />
         <RulesModal
-          open={rulesOpen}
+          open={rulesOpen()}
           onClose={() => setRulesOpen(false)}
           onStart={() => setRulesOpen(false)}
         />

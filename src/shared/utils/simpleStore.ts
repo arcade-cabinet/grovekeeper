@@ -1,17 +1,17 @@
 /**
  * Minimal pub/sub store for non-Koota ephemeral UI state (toasts, particles,
  * achievement popups, weather visuals). Replaces the `zustand create()` stores
- * that used to live inside UI component files. React-friendly via
- * `useSyncExternalStore`.
+ * that used to live inside UI component files. Solid-friendly: `.use(selector)`
+ * returns a reactive accessor.
  */
 
-import { useSyncExternalStore } from "react";
+import { createSignal, onCleanup } from "solid-js";
 
 export interface SimpleStore<T> {
   get: () => T;
   set: (next: T | ((prev: T) => T)) => void;
   subscribe: (cb: () => void) => () => void;
-  use: <U = T>(selector?: (state: T) => U) => U;
+  use: <U = T>(selector?: (state: T) => U) => () => U;
 }
 
 export function createSimpleStore<T>(initial: T): SimpleStore<T> {
@@ -35,9 +35,14 @@ export function createSimpleStore<T>(initial: T): SimpleStore<T> {
     };
   };
 
-  function use<U = T>(selector?: (state: T) => U): U {
-    const getSnapshot = selector ? () => selector(state) : () => state as unknown as U;
-    return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  function use<U = T>(selector?: (state: T) => U): () => U {
+    const read = selector
+      ? () => selector(state)
+      : () => state as unknown as U;
+    const [value, setValue] = createSignal<U>(read(), { equals: false });
+    const unsub = subscribe(() => setValue(() => read()));
+    onCleanup(unsub);
+    return value;
   }
 
   return { get, set, subscribe, use };

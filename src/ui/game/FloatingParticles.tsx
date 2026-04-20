@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createSignal, For, onMount, Show } from "solid-js";
 import { createSimpleStore } from "@/shared/utils/simpleStore";
 
 // ---------------------------------------------------------------------------
@@ -10,7 +10,6 @@ export interface FloatingParticle {
   text: string;
   color: string;
   createdAt: number;
-  /** Random horizontal offset in px to prevent overlap */
   offsetX: number;
 }
 
@@ -23,10 +22,6 @@ const ANIMATION_DURATION_MS = 1200;
 const FLOAT_DISTANCE_PX = 40;
 const OFFSET_RANGE_PX = 30;
 
-/**
- * Detect a default color from the particle text content.
- * Falls back to white if no keyword matches.
- */
 const detectColor = (text: string): string => {
   if (text.includes("XP")) return "#FFD700";
   if (text.includes("Timber")) return "#8D6E63";
@@ -36,10 +31,6 @@ const detectColor = (text: string): string => {
   if (text.includes("Stamina")) return "#64B5F6";
   return "#FFFFFF";
 };
-
-// ---------------------------------------------------------------------------
-// CSS Keyframes (injected once)
-// ---------------------------------------------------------------------------
 
 const KEYFRAMES_ID = "grovekeeper-floating-particle-keyframes";
 
@@ -69,10 +60,6 @@ const ensureKeyframes = () => {
 `;
   document.head.appendChild(style);
 };
-
-// ---------------------------------------------------------------------------
-// Store
-// ---------------------------------------------------------------------------
 
 let particleCounter = 0;
 
@@ -110,78 +97,62 @@ function addParticle(text: string, color?: string): void {
   }, ANIMATION_DURATION_MS);
 }
 
-// ---------------------------------------------------------------------------
-// Convenience helper — callable from anywhere without React context
-// ---------------------------------------------------------------------------
-
 export const showParticle = (text: string, color?: string) => {
   addParticle(text, color);
 };
-
-// ---------------------------------------------------------------------------
-// Individual particle element
-// ---------------------------------------------------------------------------
 
 interface ParticleProps {
   particle: FloatingParticle;
 }
 
-const Particle = ({ particle }: ParticleProps) => {
+const Particle = (props: ParticleProps) => {
   return (
     <span
       aria-hidden="true"
       style={{
         position: "absolute",
         left: "50%",
-        top: 0,
-        fontWeight: 700,
-        fontSize: 16,
-        lineHeight: "20px",
-        color: particle.color,
-        textShadow: "0 1px 3px rgba(0,0,0,0.7), 0 0px 6px rgba(0,0,0,0.4)",
-        whiteSpace: "nowrap",
-        userSelect: "none",
-        willChange: "transform, opacity",
-        // CSS custom property drives the horizontal offset inside the keyframe
-        // so each particle drifts to its own random column.
-        ["--gk-particle-ox" as string]: `${particle.offsetX}px`,
-        transform: `translate(${particle.offsetX}px, 0px)`,
-        marginLeft: "-50%",
-        textAlign: "center",
+        top: "0",
+        "font-weight": 700,
+        "font-size": "16px",
+        "line-height": "20px",
+        color: props.particle.color,
+        "text-shadow":
+          "0 1px 3px rgba(0,0,0,0.7), 0 0px 6px rgba(0,0,0,0.4)",
+        "white-space": "nowrap",
+        "user-select": "none",
+        "will-change": "transform, opacity",
+        "--gk-particle-ox": `${props.particle.offsetX}px`,
+        transform: `translate(${props.particle.offsetX}px, 0px)`,
+        "margin-left": "-50%",
+        "text-align": "center",
         animation: `gk-particle-float ${ANIMATION_DURATION_MS}ms ease-out forwards`,
       }}
     >
-      {particle.text}
+      {props.particle.text}
     </span>
   );
 };
 
-// ---------------------------------------------------------------------------
-// Container — mount once near the app root
-// ---------------------------------------------------------------------------
-
 export const FloatingParticlesContainer = () => {
   const particles = particleStore.use((s) => s.particles);
+  const [ready, setReady] = createSignal(false);
 
-  // Inject keyframes stylesheet on first mount
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
+  onMount(() => {
     ensureKeyframes();
     setReady(true);
-  }, []);
-
-  if (!ready || particles.length === 0) return null;
+  });
 
   return (
-    <div
-      className="fixed left-0 right-0 flex justify-center pointer-events-none"
-      style={{ top: 80, zIndex: 9998 }}
-    >
-      <div style={{ position: "relative", width: 0, height: 0 }}>
-        {particles.map((p) => (
-          <Particle key={p.id} particle={p} />
-        ))}
+    <Show when={ready() && particles().length > 0}>
+      <div
+        class="fixed left-0 right-0 flex justify-center pointer-events-none"
+        style={{ top: "80px", "z-index": 9998 }}
+      >
+        <div style={{ position: "relative", width: "0", height: "0" }}>
+          <For each={particles()}>{(p) => <Particle particle={p} />}</For>
+        </div>
       </div>
-    </div>
+    </Show>
   );
 };

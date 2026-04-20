@@ -1,5 +1,4 @@
-import { useTrait } from "koota/react";
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { createEffect, createSignal, lazy, onMount, Show, Suspense } from "solid-js";
 import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { getDifficultyById } from "@/config/difficulty";
@@ -7,6 +6,7 @@ import { getDb, isDbInitialized } from "@/db/client";
 import { initDatabase } from "@/db/init";
 import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { hydrateGameStore, setupNewGame } from "@/db/queries";
+import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
 import { initializePlatform } from "@/systems/platform";
 import { generateDailyQuests } from "@/systems/quests";
@@ -24,7 +24,6 @@ const GameScene = lazy(() =>
   import("@/engine/scenes/GameScene")
     .then((m) => ({ default: m.GameScene }))
     .catch(() => {
-      // Chunk load failed (likely stale SW cache) — purge caches and retry once
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.getRegistrations().then((regs) => {
           for (const r of regs) r.unregister();
@@ -40,33 +39,26 @@ const GameScene = lazy(() =>
 );
 
 export const Game = () => {
-  const screen = useTrait(koota, GameScreen)?.value ?? "menu";
-  const currentSeason = useTrait(koota, CurrentSeason)?.value ?? "spring";
-  const level = useTrait(koota, PlayerProgress)?.level ?? 1;
+  const screen = useTrait(koota, GameScreen);
+  const currentSeason = useTrait(koota, CurrentSeason);
+  const progress = useTrait(koota, PlayerProgress);
   const quests = useTrait(koota, Quests);
-  const completedGoalIds = quests?.completedGoalIds ?? [];
-  const activeQuests = quests?.activeQuests ?? [];
-  const lastQuestRefresh = quests?.lastQuestRefresh ?? 0;
 
-  const [dbLoading, setDbLoading] = useState(true);
-  const [showNewGame, setShowNewGame] = useState(false);
-  const [, setPlatformInitialized] = useState(false);
+  const [dbLoading, setDbLoading] = createSignal(true);
+  const [showNewGame, setShowNewGame] = createSignal(false);
 
-  // Initialize platform on mount
-  useEffect(() => {
-    initializePlatform().then(() => {
-      setPlatformInitialized(true);
-    });
-  }, []);
+  // Initialize platform
+  onMount(() => {
+    initializePlatform();
+  });
 
-  // Initialize database on mount
-  useEffect(() => {
+  // Initialize database
+  onMount(() => {
     let cancelled = false;
     initDatabase()
       .then((result) => {
         if (cancelled) return;
         if (!result.isNewGame) {
-          // Hydrate Koota state from SQLite
           const state = hydrateGameStore();
           gameActions().hydrateFromDb(state);
         }
@@ -79,126 +71,121 @@ export const Game = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  });
 
   // Generate daily quests if needed
-  useEffect(() => {
-    if (dbLoading) return;
+  createEffect(() => {
+    if (dbLoading()) return;
+    const season = currentSeason()?.value ?? "spring";
+    const level = progress()?.level ?? 1;
+    const activeQuests = quests()?.activeQuests ?? [];
+    const completedGoalIds = quests()?.completedGoalIds ?? [];
+    const lastQuestRefresh = quests()?.lastQuestRefresh ?? 0;
     const now = Date.now();
     const oneDayMs = 24 * 60 * 60 * 1000;
 
-    // Refresh quests once per day or if none exist
     if (activeQuests.length === 0 || now - lastQuestRefresh > oneDayMs) {
-      const completedSet = new Set<string>(completedGoalIds);
-      const newQuests = generateDailyQuests(currentSeason, level, completedSet);
+      const completedSet = new Set<string>(completedGoalIds as string[]);
+      const newQuests = generateDailyQuests(season, level, completedSet);
       gameActions().setActiveQuests(newQuests);
       gameActions().setLastQuestRefresh(now);
     }
-  }, [
-    dbLoading,
-    currentSeason,
-    level,
-    completedGoalIds,
-    activeQuests.length,
-    lastQuestRefresh,
-  ]);
+  });
 
-  // Go straight to playing — tutorial happens in-game via Elder Rowan NPC
   const handleStartGame = () => {
     gameActions().setScreen("playing");
   };
 
-  // Handle "New Grove" button — show difficulty selection
   const handleNewGame = () => {
     setShowNewGame(true);
   };
 
-  // Handle difficulty selection → create new game in DB
-  const handleDifficultySelected = useCallback(
-    async (difficulty: string, permadeath: boolean) => {
-      const tier = getDifficultyById(difficulty);
-      if (!tier) return;
+  const handleDifficultySelected = async (
+    difficulty: string,
+    permadeath: boolean,
+  ) => {
+    const tier = getDifficultyById(difficulty);
+    if (!tier) return;
 
-      try {
-        const actions = gameActions();
-        // Reset Koota to initial state first
-        actions.resetGame();
+    try {
+      const actions = gameActions();
+      actions.resetGame();
 
-        // Set up the new game in the database
-        setupNewGame(
-          difficulty,
-          permadeath,
-          tier.startingResources,
-          tier.startingSeeds,
-        );
+      setupNewGame(
+        difficulty,
+        permadeath,
+        tier.startingResources,
+        tier.startingSeeds,
+      );
 
-        // Hydrate the store from the fresh database
-        const state = hydrateGameStore();
-        actions.hydrateFromDb(state);
+      const state = hydrateGameStore();
+      actions.hydrateFromDb(state);
 
-        // Persist to IndexedDB
-        if (isDbInitialized()) {
-          const { sqlDb } = getDb();
-          const data = sqlDb.export();
-          await saveDatabaseToIndexedDB(data);
-        }
-
-        setShowNewGame(false);
-        actions.setScreen("playing");
-      } catch (error) {
-        console.error("Failed to create new game:", error);
-        setShowNewGame(false);
+      if (isDbInitialized()) {
+        const { sqlDb } = getDb();
+        const data = sqlDb.export();
+        await saveDatabaseToIndexedDB(data);
       }
-    },
-    [],
-  );
 
-  // Loading state while database initializes
-  if (dbLoading) {
-    return (
-      <div
-        className="w-full h-full flex flex-col items-center justify-center gap-3"
-        style={{
-          background: `linear-gradient(180deg, ${COLORS.skyMist} 0%, ${COLORS.leafLight}40 100%)`,
-        }}
-      >
-        <div
-          className="w-8 h-8 border-3 border-t-transparent rounded-full motion-safe:animate-spin motion-reduce:animate-pulse"
-          style={{
-            borderColor: `${COLORS.forestGreen} transparent ${COLORS.forestGreen} ${COLORS.forestGreen}`,
-          }}
-        />
-        <p className="text-sm" style={{ color: COLORS.barkBrown }}>
-          Loading grove...
-        </p>
-      </div>
-    );
-  }
+      setShowNewGame(false);
+      actions.setScreen("playing");
+    } catch (error) {
+      console.error("Failed to create new game:", error);
+      setShowNewGame(false);
+    }
+  };
 
   return (
-    <div className="w-full h-full">
-      {screen === "menu" ? (
-        <MainMenu onStartGame={handleStartGame} onNewGame={handleNewGame} />
-      ) : (
-        <GameErrorBoundary onReset={() => gameActions().setScreen("menu")}>
-          <Suspense
-            fallback={
-              <div className="w-full h-full flex items-center justify-center bg-green-900 text-white">
-                Loading grove...
-              </div>
-            }
-          >
-            <GameScene />
-          </Suspense>
-        </GameErrorBoundary>
-      )}
+    <Show
+      when={!dbLoading()}
+      fallback={
+        <div
+          class="w-full h-full flex flex-col items-center justify-center gap-3"
+          style={{
+            background: `linear-gradient(180deg, ${COLORS.skyMist} 0%, ${COLORS.leafLight}40 100%)`,
+          }}
+        >
+          <div
+            class="w-8 h-8 border-3 border-t-transparent rounded-full motion-safe:animate-spin motion-reduce:animate-pulse"
+            style={{
+              "border-color": `${COLORS.forestGreen} transparent ${COLORS.forestGreen} ${COLORS.forestGreen}`,
+            }}
+          />
+          <p class="text-sm" style={{ color: COLORS.barkBrown }}>
+            Loading grove...
+          </p>
+        </div>
+      }
+    >
+      <div class="w-full h-full">
+        <Show
+          when={(screen()?.value ?? "menu") === "playing"}
+          fallback={
+            <MainMenu
+              onStartGame={handleStartGame}
+              onNewGame={handleNewGame}
+            />
+          }
+        >
+          <GameErrorBoundary onReset={() => gameActions().setScreen("menu")}>
+            <Suspense
+              fallback={
+                <div class="w-full h-full flex items-center justify-center bg-green-900 text-white">
+                  Loading grove...
+                </div>
+              }
+            >
+              <GameScene />
+            </Suspense>
+          </GameErrorBoundary>
+        </Show>
 
-      {/* New game difficulty selection */}
-      <NewGameModal
-        open={showNewGame}
-        onClose={() => setShowNewGame(false)}
-        onStart={handleDifficultySelected}
-      />
-    </div>
+        <NewGameModal
+          open={showNewGame()}
+          onClose={() => setShowNewGame(false)}
+          onStart={handleDifficultySelected}
+        />
+      </div>
+    </Show>
   );
 };

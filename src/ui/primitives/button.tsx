@@ -1,6 +1,6 @@
-import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import type * as React from "react";
+import type { JSX } from "solid-js";
+import { splitProps } from "solid-js";
 
 import { cn } from "@/shared/utils";
 
@@ -35,23 +35,29 @@ const buttonVariants = cva(
   },
 );
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
+type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
-  }) {
-  const Comp = asChild ? Slot : "button";
+  };
 
+function Button(props: ButtonProps) {
+  const [local, rest] = splitProps(props, [
+    "class",
+    "variant",
+    "size",
+    "asChild",
+  ]);
   return (
-    <Comp
+    <button
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      class={cn(
+        buttonVariants({
+          variant: local.variant,
+          size: local.size,
+          class: local.class,
+        }),
+      )}
+      {...rest}
     />
   );
 }

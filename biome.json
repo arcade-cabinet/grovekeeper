@@ -43,7 +43,8 @@
             "noRedundantRoles": "off",
             "useSemanticElements": "off",
             "useFocusableInteractive": "off",
-            "useAriaPropsForRole": "off"
+            "useAriaPropsForRole": "off",
+            "noStaticElementInteractions": "off"
           },
           "security": { "noDangerouslySetInnerHtml": "off" }
         }
@@ -57,7 +58,8 @@
             "useButtonType": "off",
             "noSvgWithoutTitle": "off",
             "useKeyWithClickEvents": "off",
-            "useSemanticElements": "off"
+            "useSemanticElements": "off",
+            "noStaticElementInteractions": "off"
           },
           "suspicious": { "noArrayIndexKey": "off" }
         }

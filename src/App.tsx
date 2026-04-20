@@ -5,7 +5,7 @@ import { ToastContainer } from "@/ui/game/Toast";
 
 function App() {
   return (
-    <div className="grove-game-container">
+    <div class="grove-game-container">
       <Game />
       <ToastContainer />
       <FloatingParticlesContainer />

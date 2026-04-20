@@ -1,5 +1,5 @@
-import { useTrait } from "koota/react";
 import { COLORS } from "@/config/config";
+import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
 import { getNpcTemplate } from "@/npcs/NpcManager";
 import { Build, PlayerProgress } from "@/traits";
@@ -13,30 +13,25 @@ interface MobileActionButtonsProps {
   nearbyNpcTemplateId: string | null;
 }
 
-export const MobileActionButtons = ({
-  onAction,
-  onOpenSeeds,
-  onPause,
-  tileState,
-  nearbyNpcTemplateId,
-}: MobileActionButtonsProps) => {
-  const selectedTool = useTrait(koota, PlayerProgress)?.selectedTool ?? "trowel";
-  const buildMode = useTrait(koota, Build)?.mode ?? false;
+export const MobileActionButtons = (props: MobileActionButtonsProps) => {
+  const progress = useTrait(koota, PlayerProgress);
+  const build = useTrait(koota, Build);
+  const selectedTool = () => progress()?.selectedTool ?? "trowel";
+  const buildMode = () => build()?.mode ?? false;
 
-  // Tool-specific action button appearance (shared with BottomControls)
   const getActionButtonStyle = () => {
-    if (nearbyNpcTemplateId) {
-      const npcTemplate = getNpcTemplate(nearbyNpcTemplateId);
+    if (props.nearbyNpcTemplateId) {
+      const npcTemplate = getNpcTemplate(props.nearbyNpcTemplateId);
       return {
         bg: COLORS.autumnGold,
         icon: npcTemplate?.icon ?? "\u{1F4AC}",
         label: "Talk",
       };
     }
-    if (buildMode) {
+    if (buildMode()) {
       return { bg: COLORS.barkBrown, icon: "\u{1F3D7}\uFE0F", label: "Build" };
     }
-    switch (selectedTool) {
+    switch (selectedTool()) {
       case "trowel":
         return { bg: COLORS.leafLight, icon: "\u{1F331}", label: "Plant" };
       case "watering-can":
@@ -66,79 +61,78 @@ export const MobileActionButtons = ({
     }
   };
 
-  const actionStyle = getActionButtonStyle();
-  const actionEnabled =
-    !!nearbyNpcTemplateId ||
-    buildMode ||
-    getActionLabel(selectedTool, tileState).enabled;
+  const actionStyle = () => getActionButtonStyle();
+  const actionEnabled = () =>
+    !!props.nearbyNpcTemplateId ||
+    buildMode() ||
+    getActionLabel(selectedTool(), props.tileState).enabled;
 
   return (
     <div
-      className="md:hidden pointer-events-auto flex flex-col items-center gap-2.5"
+      class="md:hidden pointer-events-auto flex flex-col items-center gap-2.5"
       style={{
         position: "fixed",
         bottom: "calc(24px + env(safe-area-inset-bottom, 0px))",
         right: "calc(12px + env(safe-area-inset-right, 0px))",
-        zIndex: "var(--gk-z-joystick)" as unknown as number,
+        "z-index": "var(--gk-z-joystick)",
       }}
     >
-      {/* Pause button */}
       <button
         type="button"
-        className="flex items-center justify-center rounded-full text-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
+        class="flex items-center justify-center rounded-full text-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
         style={{
-          width: 44,
-          height: 44,
+          width: "44px",
+          height: "44px",
           background: "linear-gradient(135deg, #8B6F47, #6D5535)",
           border: "2px solid #3E2723",
-          boxShadow: "0 2px 8px rgba(26, 58, 42, 0.15)",
+          "box-shadow": "0 2px 8px rgba(26, 58, 42, 0.15)",
         }}
-        onClick={onPause}
+        onClick={props.onPause}
       >
         {"\u23F8\uFE0F"}
       </button>
 
-      {/* Seeds button */}
       <button
         type="button"
-        className="flex items-center justify-center rounded-full text-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
+        class="flex items-center justify-center rounded-full text-lg motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
         style={{
-          width: 44,
-          height: 44,
+          width: "44px",
+          height: "44px",
           background: "linear-gradient(135deg, #4A7C59, #2D6A4F)",
           border: "2px solid #3E2723",
-          boxShadow: "0 2px 8px rgba(26, 58, 42, 0.15)",
+          "box-shadow": "0 2px 8px rgba(26, 58, 42, 0.15)",
         }}
-        onClick={onOpenSeeds}
+        onClick={props.onOpenSeeds}
       >
         {"\u{1F331}"}
       </button>
 
-      {/* Primary action button */}
       <button
         data-tutorial-id="action-button"
-        className="flex flex-col items-center justify-center rounded-full text-2xl motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
+        class="flex flex-col items-center justify-center rounded-full text-2xl motion-safe:active:scale-95 motion-safe:transition-transform touch-manipulation"
         style={{
-          width: 64,
-          height: 64,
-          background: actionEnabled
-            ? `linear-gradient(135deg, ${actionStyle.bg} 0%, ${actionStyle.bg}cc 100%)`
+          width: "64px",
+          height: "64px",
+          background: actionEnabled()
+            ? `linear-gradient(135deg, ${actionStyle().bg} 0%, ${actionStyle().bg}cc 100%)`
             : "linear-gradient(135deg, #9E9E9E 0%, #757575 100%)",
-          border: `3px solid ${actionEnabled ? COLORS.soilDark : "#616161"}`,
-          boxShadow: actionEnabled
-            ? `0 4px 12px ${actionStyle.bg}60, inset 0 2px 4px rgba(255,255,255,0.3)`
+          border: `3px solid ${actionEnabled() ? COLORS.soilDark : "#616161"}`,
+          "box-shadow": actionEnabled()
+            ? `0 4px 12px ${actionStyle().bg}60, inset 0 2px 4px rgba(255,255,255,0.3)`
             : "0 2px 4px rgba(0,0,0,0.15)",
-          opacity: actionEnabled ? 1 : 0.55,
+          opacity: actionEnabled() ? 1 : 0.55,
         }}
-        disabled={!actionEnabled}
-        onClick={actionEnabled ? onAction : undefined}
+        disabled={!actionEnabled()}
+        onClick={actionEnabled() ? props.onAction : undefined}
       >
-        {actionStyle.icon}
+        {actionStyle().icon}
         <span
-          className="text-[10px] font-medium leading-none mt-0.5"
-          style={{ color: actionEnabled ? "white" : "rgba(255,255,255,0.5)" }}
+          class="text-[10px] font-medium leading-none mt-0.5"
+          style={{
+            color: actionEnabled() ? "white" : "rgba(255,255,255,0.5)",
+          }}
         >
-          {actionStyle.label}
+          {actionStyle().label}
         </span>
       </button>
     </div>

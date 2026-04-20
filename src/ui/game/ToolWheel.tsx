@@ -1,3 +1,11 @@
+import type { JSX } from "solid-js";
+import { For, Show } from "solid-js";
+import { actions as gameActions } from "@/actions";
+import { COLORS } from "@/config/config";
+import { TOOLS, type ToolData } from "@/config/tools";
+import { useTrait } from "@/ecs/solid";
+import { koota } from "@/koota";
+import { PlayerProgress } from "@/traits";
 import {
   RiBookOpenLine,
   RiDropLine,
@@ -7,13 +15,7 @@ import {
   RiScissorsLine,
   RiSeedlingLine,
   RiToolsLine,
-} from "@remixicon/react";
-import { useTrait } from "koota/react";
-import { actions as gameActions } from "@/actions";
-import { COLORS } from "@/config/config";
-import { TOOLS, type ToolData } from "@/config/tools";
-import { koota } from "@/koota";
-import { PlayerProgress } from "@/traits";
+} from "@/ui/icons";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -27,98 +29,96 @@ interface ToolWheelProps {
   onClose: () => void;
 }
 
-const toolIcons: Record<string, React.ReactNode> = {
-  trowel: <RiPlantLine className="w-6 h-6" />,
-  "watering-can": <RiDropLine className="w-6 h-6" />,
-  almanac: <RiBookOpenLine className="w-6 h-6" />,
-  "pruning-shears": <RiScissorsLine className="w-6 h-6" />,
-  "seed-pouch": <RiSeedlingLine className="w-6 h-6" />,
-  shovel: <RiToolsLine className="w-6 h-6" />,
-  axe: <RiHammerLine className="w-6 h-6" />,
-  "compost-bin": <RiRecycleLine className="w-6 h-6" />,
+const toolIcons: Record<string, () => JSX.Element> = {
+  trowel: () => <RiPlantLine class="w-6 h-6" />,
+  "watering-can": () => <RiDropLine class="w-6 h-6" />,
+  almanac: () => <RiBookOpenLine class="w-6 h-6" />,
+  "pruning-shears": () => <RiScissorsLine class="w-6 h-6" />,
+  "seed-pouch": () => <RiSeedlingLine class="w-6 h-6" />,
+  shovel: () => <RiToolsLine class="w-6 h-6" />,
+  axe: () => <RiHammerLine class="w-6 h-6" />,
+  "compost-bin": () => <RiRecycleLine class="w-6 h-6" />,
 };
 
-export const ToolWheel = ({ open, onClose }: ToolWheelProps) => {
+export const ToolWheel = (props: ToolWheelProps) => {
   const progress = useTrait(koota, PlayerProgress);
-  const unlockedTools = progress?.unlockedTools ?? ["trowel", "watering-can"];
-  const selectedTool = progress?.selectedTool ?? "trowel";
-  const level = progress?.level ?? 1;
+  const unlockedTools = () =>
+    progress()?.unlockedTools ?? ["trowel", "watering-can"];
+  const selectedTool = () => progress()?.selectedTool ?? "trowel";
+  const level = () => progress()?.level ?? 1;
 
   const handleSelectTool = (tool: ToolData) => {
     const a = gameActions();
-    if (unlockedTools.includes(tool.id)) {
+    if (unlockedTools().includes(tool.id)) {
       a.setSelectedTool(tool.id);
-      onClose();
-    } else if (level >= tool.unlockLevel) {
+      props.onClose();
+    } else if (level() >= tool.unlockLevel) {
       a.unlockTool(tool.id);
       a.setSelectedTool(tool.id);
-      onClose();
+      props.onClose();
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={props.open} onOpenChange={(o) => !o && props.onClose()}>
       <DialogContent
-        className="max-w-xs"
+        class="max-w-xs"
         style={{
           background: COLORS.skyMist,
           border: `3px solid ${COLORS.forestGreen}40`,
-          borderRadius: 16,
-          boxShadow: `0 8px 32px rgba(0,0,0,0.12)`,
+          "border-radius": "16px",
+          "box-shadow": "0 8px 32px rgba(0,0,0,0.12)",
         }}
-        aria-describedby={undefined}
       >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.soilDark }}>Tools</DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-3 gap-3 mt-2">
-          {TOOLS.map((tool) => {
-            const isUnlocked = unlockedTools.includes(tool.id);
-            const isSelected = selectedTool === tool.id;
-            const canUnlock = level >= tool.unlockLevel;
-
-            return (
-              <Button
-                key={tool.id}
-                variant="outline"
-                className={`flex flex-col h-20 p-2 ${isSelected ? "ring-2" : ""}`}
-                style={{
-                  background: isSelected
-                    ? `${COLORS.leafLight}40`
-                    : isUnlocked
-                      ? "white"
-                      : `${COLORS.soilDark}20`,
-                  borderColor: isSelected ? COLORS.forestGreen : "transparent",
-                  opacity: isUnlocked || canUnlock ? 1 : 0.5,
-                }}
-                onClick={() => handleSelectTool(tool)}
-                disabled={!isUnlocked && !canUnlock}
-              >
-                <div
+        <div class="grid grid-cols-3 gap-3 mt-2">
+          <For each={TOOLS}>
+            {(tool) => {
+              const isUnlocked = () => unlockedTools().includes(tool.id);
+              const isSelected = () => selectedTool() === tool.id;
+              const canUnlock = () => level() >= tool.unlockLevel;
+              return (
+                <Button
+                  variant="outline"
+                  class={`flex flex-col h-20 p-2 ${isSelected() ? "ring-2" : ""}`}
                   style={{
-                    color: isUnlocked ? COLORS.forestGreen : COLORS.barkBrown,
+                    background: isSelected()
+                      ? `${COLORS.leafLight}40`
+                      : isUnlocked()
+                        ? "white"
+                        : `${COLORS.soilDark}20`,
+                    "border-color": isSelected()
+                      ? COLORS.forestGreen
+                      : "transparent",
+                    opacity: isUnlocked() || canUnlock() ? 1 : 0.5,
                   }}
+                  onClick={() => handleSelectTool(tool)}
+                  disabled={!isUnlocked() && !canUnlock()}
                 >
-                  {toolIcons[tool.id] || <RiToolsLine className="w-6 h-6" />}
-                </div>
-                <span
-                  className="text-xs mt-1"
-                  style={{ color: COLORS.soilDark }}
-                >
-                  {tool.name}
-                </span>
-                {!isUnlocked && (
-                  <span
-                    className="text-xs"
-                    style={{ color: COLORS.autumnGold }}
+                  <div
+                    style={{
+                      color: isUnlocked()
+                        ? COLORS.forestGreen
+                        : COLORS.barkBrown,
+                    }}
                   >
-                    Lv.{tool.unlockLevel}
+                    {(toolIcons[tool.id] ?? (() => <RiToolsLine class="w-6 h-6" />))()}
+                  </div>
+                  <span class="text-xs mt-1" style={{ color: COLORS.soilDark }}>
+                    {tool.name}
                   </span>
-                )}
-              </Button>
-            );
-          })}
+                  <Show when={!isUnlocked()}>
+                    <span class="text-xs" style={{ color: COLORS.autumnGold }}>
+                      Lv.{tool.unlockLevel}
+                    </span>
+                  </Show>
+                </Button>
+              );
+            }}
+          </For>
         </div>
       </DialogContent>
     </Dialog>

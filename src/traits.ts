@@ -151,7 +151,9 @@ export const Tracking = trait({
   seasonsExperienced: () => [] as string[],
 });
 
-export const Achievements = trait(() => [] as string[]);
+export const Achievements = trait({
+  items: () => [] as string[],
+});
 
 export const Quests = trait({
   activeQuests: () => [] as ActiveQuest[],

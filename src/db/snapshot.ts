@@ -125,7 +125,7 @@ export function buildDbSnapshot(): Record<string, unknown> {
     seasonsExperienced: tracking?.seasonsExperienced ?? [],
 
     // Achievements
-    achievements: achievements ?? [],
+    achievements: achievements?.items ?? [],
 
     // Quests
     activeQuests: quests?.activeQuests ?? [],

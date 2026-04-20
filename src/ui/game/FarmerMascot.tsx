@@ -5,18 +5,19 @@ interface FarmerMascotProps {
   animate?: boolean;
 }
 
-export const FarmerMascot = ({
-  size = 120,
-  animate = true,
-}: FarmerMascotProps) => {
+export const FarmerMascot = (props: FarmerMascotProps) => {
+  const size = () => props.size ?? 120;
+  const animate = () => props.animate ?? true;
   return (
     <svg
-      width={size}
-      height={size}
+      width={size()}
+      height={size()}
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      style={animate ? { animation: "bounce 2s ease-in-out infinite" } : {}}
+      style={
+        animate() ? { animation: "bounce 2s ease-in-out infinite" } : undefined
+      }
     >
       <style>
         {`
@@ -54,8 +55,8 @@ export const FarmerMascot = ({
       <path
         d="M43 42 Q50 48 57 42"
         stroke={COLORS.soilDark}
-        strokeWidth="2"
-        strokeLinecap="round"
+        stroke-width="2"
+        stroke-linecap="round"
         fill="none"
       />
 
@@ -74,7 +75,7 @@ export const FarmerMascot = ({
         x2="60"
         y2="15"
         stroke={COLORS.forestGreen}
-        strokeWidth="2"
+        stroke-width="2"
       />
       <ellipse cx="57" cy="6" rx="4" ry="3" fill={COLORS.leafLight} />
       <ellipse cx="63" cy="6" rx="4" ry="3" fill={COLORS.leafLight} />
