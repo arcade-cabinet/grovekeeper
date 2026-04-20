@@ -20,7 +20,7 @@ import { PauseMenu } from "./PauseMenu";
 import { RadialActionMenu } from "./RadialActionMenu";
 import type { RadialAction } from "./radialActions";
 import { SeedSelect } from "./SeedSelect";
-import { StaminaGauge } from "./StaminaGauge";
+import { LowStaminaOverlay, StaminaGauge } from "./StaminaGauge";
 import { ToolBelt } from "./ToolBelt";
 import { ToolWheel } from "./ToolWheel";
 import { TradeDialog } from "./TradeDialog";
@@ -164,6 +164,9 @@ export const GameUI = (props: GameUIProps) => {
       >
         <StaminaGauge />
       </div>
+
+      {/* Screen-edge vignette when stamina is low */}
+      <LowStaminaOverlay />
 
       {/* Bottom control area — desktop only */}
       <div

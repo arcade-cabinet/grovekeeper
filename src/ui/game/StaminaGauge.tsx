@@ -1,3 +1,4 @@
+import { Show } from "solid-js";
 import { useQueryFirst, useTrait } from "@/ecs/solid";
 import { FarmerState, IsPlayer } from "@/traits";
 
@@ -47,5 +48,37 @@ export const StaminaGauge = () => {
         {Math.round(stamina())}/{maxStamina()}
       </span>
     </div>
+  );
+};
+
+/**
+ * Full-viewport vignette that pulses red-orange when stamina drops below 25%.
+ * Non-interactive (pointer-events: none); suppressed under reduced-motion
+ * via CSS `motion-safe:*` utility (the pulse animation only runs when safe).
+ */
+export const LowStaminaOverlay = () => {
+  const player = useQueryFirst(IsPlayer, FarmerState);
+  const fs = useTrait(player(), FarmerState);
+  const pct = () => {
+    const s = fs();
+    if (!s || s.maxStamina <= 0) return 100;
+    return (s.stamina / s.maxStamina) * 100;
+  };
+  const isLow = () => pct() < 25;
+
+  return (
+    <Show when={isLow()}>
+      <div
+        class="fixed inset-0 motion-safe:animate-pulse"
+        style={{
+          "pointer-events": "none",
+          "z-index": 60,
+          // Radial vignette: transparent center, red-orange ring.
+          background:
+            "radial-gradient(ellipse at center, transparent 55%, rgba(231, 111, 81, 0.35) 100%)",
+        }}
+        aria-hidden="true"
+      />
+    </Show>
   );
 };
