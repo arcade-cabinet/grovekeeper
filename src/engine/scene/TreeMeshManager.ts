@@ -127,10 +127,20 @@ export class TreeMeshManager {
         mesh.scaling.setAll(smoothed);
         mesh.position.y = smoothed * 0.4;
       } else {
-        // Freeze stage 4 trees for performance
+        // Freeze stage 4 trees for performance.
+        // - freezeWorldMatrix: skip per-frame matrix recomputation.
+        // - isPickable=false: remove from raycast scans (old-growth trees
+        //   stop being harvest targets in the cozy game anyway).
+        // - doNotSyncBoundingInfo: bounding info is only needed for
+        //   picking/frustum; frozen trees don't need live bounds.
+        // - freezeNormals on the template's geometry is a no-op for
+        //   instances (they share the template's vertex buffer), but we
+        //   make sure the mesh's own normals aren't recomputed by
+        //   keeping the default frozen-matrix path.
         if (tree.stage === 4 && !this.frozen.has(eid)) {
           mesh.freezeWorldMatrix();
           mesh.isPickable = false;
+          mesh.doNotSyncBoundingInfo = true;
           this.frozen.add(eid);
         }
         if (currentScale !== targetScale) {
