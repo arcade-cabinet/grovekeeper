@@ -33,6 +33,10 @@ const prefersReducedMotion =
 export class CameraManager {
   camera: ArcRotateCamera | null = null;
   private engine: Engine | null = null;
+  /** Remaining shake time in ms (counted down by trackTarget). */
+  private shakeRemainingMs = 0;
+  /** Shake amplitude (world units applied to camera target). */
+  private shakeAmplitude = 0;
 
   init(
     scene: Scene,
@@ -97,13 +101,33 @@ export class CameraManager {
   /** Smoothly track a world position (e.g. the player). */
   trackTarget(worldX: number, worldZ: number, dt: number): void {
     if (!this.camera) return;
-    const target = new Vector3(worldX, TARGET_Y, worldZ);
+    let jitterX = 0;
+    let jitterZ = 0;
+    if (this.shakeRemainingMs > 0 && !prefersReducedMotion) {
+      const decay = this.shakeRemainingMs / 50; // 50 ms canonical duration
+      const a = this.shakeAmplitude * decay;
+      jitterX = (Math.random() - 0.5) * 2 * a;
+      jitterZ = (Math.random() - 0.5) * 2 * a;
+      this.shakeRemainingMs = Math.max(0, this.shakeRemainingMs - dt * 1000);
+    }
+    const target = new Vector3(worldX + jitterX, TARGET_Y, worldZ + jitterZ);
     if (prefersReducedMotion) {
       this.camera.target = target;
     } else {
       const factor = Math.min(1, dt * LERP_SPEED);
       this.camera.target = Vector3.Lerp(this.camera.target, target, factor);
     }
+  }
+
+  /**
+   * Trigger a one-shot camera micro-shake. Decays linearly over durationMs.
+   * Amplitude is world-units offset applied to the camera target.
+   * Suppressed under prefers-reduced-motion.
+   */
+  shake(amplitude = 0.05, durationMs = 150): void {
+    if (prefersReducedMotion) return;
+    this.shakeAmplitude = amplitude;
+    this.shakeRemainingMs = durationMs;
   }
 
   dispose(): void {
