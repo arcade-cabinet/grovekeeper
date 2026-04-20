@@ -14,6 +14,8 @@ import { createPlayerEntity, createTreeEntity } from "@/archetypes";
 import { MAX_STAGE } from "@/config/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "@/config/difficulty";
 import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Difficulty } from "@/traits";
 import { world } from "@/world";
 import {
   canAffordExpansion,
@@ -60,7 +62,7 @@ function measureProgress(
 ) {
   const tree = createTreeEntity(0, 0, "white-oak");
   world.add(tree);
-  useGameStore.setState({ difficulty: difficultyId });
+  koota.set(Difficulty, { id: difficultyId, permadeath: false });
   growthSystem(0.5, season, weatherMult);
   const progress = tree.tree!.progress;
   world.remove(tree);
@@ -116,11 +118,11 @@ describe("Cross-System Integration Tests", () => {
   // ===================================================================
   describe("Difficulty tiers affect harvest yields", () => {
     it("explore difficulty gives higher yields than normal", () => {
-      useGameStore.setState({ difficulty: "explore" });
+      koota.set(Difficulty, { id: "explore", permadeath: false });
       const tree = makeHarvestableTree("white-oak");
       const exploreResult = collectHarvest(tree)!;
 
-      useGameStore.setState({ difficulty: "normal" });
+      koota.set(Difficulty, { id: "normal", permadeath: false });
       initHarvestable(tree);
       tree.harvestable!.ready = true;
       const normalResult = collectHarvest(tree)!;
@@ -131,11 +133,11 @@ describe("Cross-System Integration Tests", () => {
     });
 
     it("ultra-brutal difficulty gives lower yields than normal", () => {
-      useGameStore.setState({ difficulty: "normal" });
+      koota.set(Difficulty, { id: "normal", permadeath: false });
       const tree = makeHarvestableTree("white-oak");
       const normalResult = collectHarvest(tree)!;
 
-      useGameStore.setState({ difficulty: "ultra-brutal" });
+      koota.set(Difficulty, { id: "ultra-brutal", permadeath: false });
       initHarvestable(tree);
       tree.harvestable!.ready = true;
       const brutalResult = collectHarvest(tree)!;
@@ -151,19 +153,19 @@ describe("Cross-System Integration Tests", () => {
   // ===================================================================
   describe("Difficulty tiers affect weather system", () => {
     it("explore difficulty has 0 windstorm damage chance", () => {
-      useGameStore.setState({ difficulty: "explore" });
+      koota.set(Difficulty, { id: "explore", permadeath: false });
       expect(rollWindstormDamage(0)).toBe(false);
       expect(rollWindstormDamage(0.05)).toBe(false);
     });
 
     it("normal difficulty has 10% windstorm damage chance", () => {
-      useGameStore.setState({ difficulty: "normal" });
+      koota.set(Difficulty, { id: "normal", permadeath: false });
       expect(rollWindstormDamage(0.05)).toBe(true);
       expect(rollWindstormDamage(0.1)).toBe(false);
     });
 
     it("ultra-brutal difficulty has 25% windstorm damage chance", () => {
-      useGameStore.setState({ difficulty: "ultra-brutal" });
+      koota.set(Difficulty, { id: "ultra-brutal", permadeath: false });
       expect(rollWindstormDamage(0.2)).toBe(true);
       expect(rollWindstormDamage(0.25)).toBe(false);
     });
@@ -171,7 +173,7 @@ describe("Cross-System Integration Tests", () => {
     it("difficulty affects drought growth penalty", () => {
       const droughtByDifficulty = ["explore", "normal", "ultra-brutal"].map(
         (d) => {
-          useGameStore.setState({ difficulty: d });
+          koota.set(Difficulty, { id: d, permadeath: false });
           return getWeatherGrowthMultiplier("drought");
         },
       );
@@ -201,7 +203,7 @@ describe("Cross-System Integration Tests", () => {
     function measureRegen(difficultyId: string) {
       const player = createPlayerEntity();
       world.add(player);
-      useGameStore.setState({ difficulty: difficultyId });
+      koota.set(Difficulty, { id: difficultyId, permadeath: false });
       player.farmerState!.stamina = 50;
       staminaSystem(1);
       const result = player.farmerState!.stamina;

@@ -2,6 +2,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createTreeEntity } from "@/archetypes";
 import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Difficulty } from "@/traits";
 import { world } from "@/world";
 import { collectHarvest, harvestSystem, initHarvestable } from "./harvest";
 
@@ -260,7 +262,7 @@ describe("Harvest System", () => {
     });
 
     it("stacked multipliers: old growth + pruned + difficulty", () => {
-      useGameStore.setState({ difficulty: "explore" }); // 1.3x yield
+      koota.set(Difficulty, { id: "explore", permadeath: false }); // 1.3x yield
 
       const tree = createTreeEntity(0, 0, "white-oak");
       tree.tree!.stage = 4; // old growth: 1.5x
@@ -272,7 +274,7 @@ describe("Harvest System", () => {
 
       // Base tree at stage 3 no pruning normal difficulty
       for (const e of [...world]) world.remove(e);
-      useGameStore.setState({ difficulty: "normal" });
+      koota.set(Difficulty, { id: "normal", permadeath: false });
       const baseTree = createTreeEntity(0, 0, "white-oak");
       baseTree.tree!.stage = 3;
       world.add(baseTree);
@@ -283,13 +285,13 @@ describe("Harvest System", () => {
       // Boosted: 1.5 * 1.5 * 1.3 = 2.925x
       expect(result[0].amount).toBeGreaterThan(baseResult[0].amount * 2);
 
-      useGameStore.setState({ difficulty: "normal" }); // cleanup
+      koota.set(Difficulty, { id: "normal", permadeath: false }); // cleanup
     });
 
     it("uses Math.ceil for yield rounding with fractional multipliers", () => {
       // Explore difficulty has 1.3x yield mult. White-oak base timber = 2.
       // 2 * 1.3 = 2.6 → Math.ceil = 3
-      useGameStore.setState({ difficulty: "explore" });
+      koota.set(Difficulty, { id: "explore", permadeath: false });
       const tree = createTreeEntity(0, 0, "white-oak");
       tree.tree!.stage = 3;
       world.add(tree);
@@ -301,7 +303,7 @@ describe("Harvest System", () => {
       expect(timber).toBeDefined();
       // Base 2 * 1.3 = 2.6, ceil'd to 3
       expect(timber!.amount).toBe(3);
-      useGameStore.setState({ difficulty: "normal" });
+      koota.set(Difficulty, { id: "normal", permadeath: false });
     });
   });
 });

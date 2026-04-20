@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Difficulty } from "@/traits";
 import {
   DIFFICULTY_TIERS,
   getActiveDifficulty,
@@ -174,19 +176,19 @@ describe("Difficulty System", () => {
     });
 
     it("returns the tier matching store difficulty", () => {
-      useGameStore.setState({ difficulty: "hard" });
+      koota.set(Difficulty, { id: "hard", permadeath: false });
       const active = getActiveDifficulty();
       expect(active.id).toBe("hard");
     });
 
     it("falls back to normal for unrecognized difficulty", () => {
-      useGameStore.setState({ difficulty: "invalid-id" });
+      koota.set(Difficulty, { id: "invalid-id", permadeath: false });
       const active = getActiveDifficulty();
       expect(active.id).toBe("normal");
     });
 
     it("returns explore when difficulty is explore", () => {
-      useGameStore.setState({ difficulty: "explore" });
+      koota.set(Difficulty, { id: "explore", permadeath: false });
       const active = getActiveDifficulty();
       expect(active.id).toBe("explore");
       expect(active.growthSpeedMult).toBe(1.3);

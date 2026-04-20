@@ -3,10 +3,11 @@
  *
  * The 5 difficulty tiers are defined in difficulty.json and accessed
  * via getActiveDifficulty() which reads the current difficulty from
- * the game store.
+ * the Koota world (Difficulty trait).
  */
 
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Difficulty } from "@/traits";
 import difficultyData from "./difficulty.json";
 
 export interface DifficultyTier {
@@ -72,10 +73,11 @@ const NORMAL_TIER =
   DIFFICULTY_TIERS.find((t) => t.id === "normal") ?? DIFFICULTY_TIERS[0];
 
 /**
- * Get the active difficulty tier based on the current game store state.
- * Falls back to "normal" if the stored difficulty is unrecognized.
+ * Get the active difficulty tier from the Koota world.
+ * Falls back to "normal" if the stored difficulty is unrecognized or
+ * the trait isn't yet on the world (e.g. during early boot).
  */
 export function getActiveDifficulty(): DifficultyTier {
-  const difficulty = useGameStore.getState().difficulty;
-  return getDifficultyById(difficulty) ?? NORMAL_TIER;
+  const diff = koota.has(Difficulty) ? koota.get(Difficulty) : undefined;
+  return (diff ? getDifficultyById(diff.id) : undefined) ?? NORMAL_TIER;
 }

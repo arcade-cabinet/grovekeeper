@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Difficulty } from "@/traits";
 import {
   getWeatherGrowthMultiplier,
   getWeatherStaminaMultiplier,
@@ -383,25 +385,25 @@ describe("Weather × Difficulty tier interactions", () => {
 
   describe("windstorm damage chance scales with difficulty", () => {
     it("explore has 0% windstorm damage", () => {
-      useGameStore.setState({ difficulty: "explore" });
+      koota.set(Difficulty, { id: "explore", permadeath: false });
       expect(rollWindstormDamage(0.0)).toBe(false);
       expect(rollWindstormDamage(0.99)).toBe(false);
     });
 
     it("hard has 15% windstorm damage", () => {
-      useGameStore.setState({ difficulty: "hard" });
+      koota.set(Difficulty, { id: "hard", permadeath: false });
       expect(rollWindstormDamage(0.14)).toBe(true);
       expect(rollWindstormDamage(0.15)).toBe(false);
     });
 
     it("brutal has 20% windstorm damage", () => {
-      useGameStore.setState({ difficulty: "brutal" });
+      koota.set(Difficulty, { id: "brutal", permadeath: false });
       expect(rollWindstormDamage(0.19)).toBe(true);
       expect(rollWindstormDamage(0.2)).toBe(false);
     });
 
     it("ultra-brutal has 25% windstorm damage", () => {
-      useGameStore.setState({ difficulty: "ultra-brutal" });
+      koota.set(Difficulty, { id: "ultra-brutal", permadeath: false });
       expect(rollWindstormDamage(0.24)).toBe(true);
       expect(rollWindstormDamage(0.25)).toBe(false);
     });
@@ -424,27 +426,27 @@ describe("Weather × Difficulty tier interactions", () => {
 
   describe("drought penalty varies by difficulty", () => {
     it("explore drought is 0.8 (mild)", () => {
-      useGameStore.setState({ difficulty: "explore" });
+      koota.set(Difficulty, { id: "explore", permadeath: false });
       expect(getWeatherGrowthMultiplier("drought")).toBe(0.8);
     });
 
     it("normal drought is 0.5", () => {
-      useGameStore.setState({ difficulty: "normal" });
+      koota.set(Difficulty, { id: "normal", permadeath: false });
       expect(getWeatherGrowthMultiplier("drought")).toBe(0.5);
     });
 
     it("hard drought is 0.4", () => {
-      useGameStore.setState({ difficulty: "hard" });
+      koota.set(Difficulty, { id: "hard", permadeath: false });
       expect(getWeatherGrowthMultiplier("drought")).toBe(0.4);
     });
 
     it("brutal drought is 0.3", () => {
-      useGameStore.setState({ difficulty: "brutal" });
+      koota.set(Difficulty, { id: "brutal", permadeath: false });
       expect(getWeatherGrowthMultiplier("drought")).toBe(0.3);
     });
 
     it("ultra-brutal drought is 0.2 (harshest)", () => {
-      useGameStore.setState({ difficulty: "ultra-brutal" });
+      koota.set(Difficulty, { id: "ultra-brutal", permadeath: false });
       expect(getWeatherGrowthMultiplier("drought")).toBe(0.2);
     });
   });

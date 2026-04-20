@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createPlayerEntity } from "@/archetypes";
 import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Difficulty } from "@/traits";
 import { type Entity, world } from "@/world";
 import { drainStamina, staminaSystem } from "./stamina";
 
@@ -107,7 +109,7 @@ describe("Stamina System", () => {
 
   describe("difficulty-scaled stamina regen", () => {
     it("explore difficulty (1.5x) regenerates faster", () => {
-      useGameStore.setState({ difficulty: "explore" });
+      koota.set(Difficulty, { id: "explore", permadeath: false });
       const player = createPlayerEntity();
       player.farmerState!.stamina = 50;
       world.add(player);
@@ -115,7 +117,7 @@ describe("Stamina System", () => {
       const exploreStamina = player.farmerState!.stamina;
 
       for (const entity of [...world]) world.remove(entity);
-      useGameStore.setState({ difficulty: "normal" });
+      koota.set(Difficulty, { id: "normal", permadeath: false });
       const player2 = createPlayerEntity();
       player2.farmerState!.stamina = 50;
       world.add(player2);
@@ -126,7 +128,7 @@ describe("Stamina System", () => {
     });
 
     it("ultra-brutal difficulty (0.4x) regenerates slower", () => {
-      useGameStore.setState({ difficulty: "ultra-brutal" });
+      koota.set(Difficulty, { id: "ultra-brutal", permadeath: false });
       const player = createPlayerEntity();
       player.farmerState!.stamina = 50;
       world.add(player);
@@ -134,7 +136,7 @@ describe("Stamina System", () => {
       const brutalStamina = player.farmerState!.stamina;
 
       for (const entity of [...world]) world.remove(entity);
-      useGameStore.setState({ difficulty: "normal" });
+      koota.set(Difficulty, { id: "normal", permadeath: false });
       const player2 = createPlayerEntity();
       player2.farmerState!.stamina = 50;
       world.add(player2);
