@@ -214,6 +214,7 @@ export const GameScene = () => {
     null,
   );
   const lastPlayerGridRef = { current: "" };
+  const lastStaminaToastRef = { current: 0 };
   const nearbyNpcRef: { current: Entity | null } = { current: null };
   // Note: Entity is Koota entity ref
   const [nearbyNpcTemplateId, setNearbyNpcTemplateId] = createSignal<
@@ -1766,7 +1767,17 @@ export const GameScene = () => {
           structStaminaMult *
           difficultyStaminaMult,
       );
-      if (!gameActions().spendStamina(adjustedCost)) return;
+      if (!gameActions().spendStamina(adjustedCost)) {
+        // T55: rate-limited low-stamina hint. One toast per 10s so
+        // repeated thumps don't spam; first-time players learn that
+        // stamina regens on idle rather than getting silent no-ops.
+        const nowMs = performance.now();
+        if (nowMs - lastStaminaToastRef.current > 10_000) {
+          lastStaminaToastRef.current = nowMs;
+          showToast("Too tired — rest to recover stamina.", "info");
+        }
+        return;
+      }
     }
     const action = toolActions[selectedTool()];
     if (action) await action(cell);
