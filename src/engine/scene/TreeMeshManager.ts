@@ -36,6 +36,15 @@ export class TreeMeshManager {
   private templates = new Map<string, Mesh>();
   /** Set of entity IDs whose world matrices are frozen (stage 4). */
   private frozen = new Set<number>();
+  /** Last observed stage per entity — used to detect transitions. */
+  private lastStage = new Map<number, number>();
+  /** Active stage-transition pulses: entity id → remaining ms of the pulse. */
+  private pulses = new Map<number, number>();
+
+  /** Duration of the stage-transition "pop" in milliseconds. */
+  private static readonly PULSE_DURATION_MS = 250;
+  /** Peak scale multiplier at pulse center (1.0 = no extra). */
+  private static readonly PULSE_AMPLITUDE = 0.12;
 
   /** Create or retrieve a cached template, then create an instance. */
   createMesh(
@@ -117,7 +126,28 @@ export class TreeMeshManager {
       mesh.position.x = position.x;
       mesh.position.z = position.z;
 
-      const targetScale = renderable.scale * TREE_VISUAL_SCALE;
+      // Detect stage transitions → start a short scale-overshoot pulse
+      // so the moment a tree grows feels palpable. Suppressed under
+      // prefers-reduced-motion via the pulse multiplier (see below).
+      const prevStage = this.lastStage.get(eid);
+      if (prevStage !== undefined && prevStage !== tree.stage) {
+        this.pulses.set(eid, TreeMeshManager.PULSE_DURATION_MS);
+      }
+      this.lastStage.set(eid, tree.stage);
+
+      // Pulse multiplier: sin curve over the pulse window, peaks at center.
+      let pulseMult = 1;
+      const remaining = this.pulses.get(eid);
+      if (remaining !== undefined && remaining > 0) {
+        const t = 1 - remaining / TreeMeshManager.PULSE_DURATION_MS;
+        pulseMult = 1 + TreeMeshManager.PULSE_AMPLITUDE * Math.sin(t * Math.PI);
+        const next = remaining - dt * 1000;
+        if (next <= 0) this.pulses.delete(eid);
+        else this.pulses.set(eid, next);
+      }
+
+      const baseScale = renderable.scale * TREE_VISUAL_SCALE;
+      const targetScale = baseScale * pulseMult;
       const currentScale = mesh.scaling.x;
       const isScaling = Math.abs(targetScale - currentScale) > 0.001;
 
@@ -164,6 +194,8 @@ export class TreeMeshManager {
       this.meshes.delete(entityId);
     }
     this.frozen.delete(entityId);
+    this.lastStage.delete(entityId);
+    this.pulses.delete(entityId);
   }
 
   /** Rebuild all tree meshes (e.g. on season change). */
@@ -223,5 +255,7 @@ export class TreeMeshManager {
     }
     this.templates.clear();
     this.frozen.clear();
+    this.lastStage.clear();
+    this.pulses.clear();
   }
 }
