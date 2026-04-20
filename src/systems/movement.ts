@@ -1,5 +1,6 @@
 import { PLAYER_SPEED } from "@/config/config";
-import { playerQuery } from "@/world";
+import { koota } from "@/koota";
+import { IsPlayer, Position } from "@/traits";
 
 export interface MovementInput {
   x: number; // -1 to 1
@@ -23,30 +24,23 @@ export const movementSystem = (
   input: MovementInput,
   deltaTime: number,
 ): void => {
-  for (const entity of playerQuery) {
-    if (!entity.position) continue;
-
-    // Apply movement
-    entity.position.x += input.x * PLAYER_SPEED * deltaTime;
-    entity.position.z += input.z * PLAYER_SPEED * deltaTime;
-
-    // Clamp to world bounds
-    entity.position.x = Math.max(
+  for (const entity of koota.query(IsPlayer, Position)) {
+    const pos = entity.get(Position);
+    const nx = Math.max(
       worldBounds.minX,
-      Math.min(worldBounds.maxX, entity.position.x),
+      Math.min(worldBounds.maxX, pos.x + input.x * PLAYER_SPEED * deltaTime),
     );
-    entity.position.z = Math.max(
+    const nz = Math.max(
       worldBounds.minZ,
-      Math.min(worldBounds.maxZ, entity.position.z),
+      Math.min(worldBounds.maxZ, pos.z + input.z * PLAYER_SPEED * deltaTime),
     );
+    entity.set(Position, { ...pos, x: nx, z: nz });
   }
 };
 
 export const getPlayerPosition = (): { x: number; z: number } | null => {
-  for (const entity of playerQuery) {
-    if (entity.position) {
-      return { x: entity.position.x, z: entity.position.z };
-    }
-  }
-  return null;
+  const player = koota.queryFirst(IsPlayer, Position);
+  if (!player) return null;
+  const pos = player.get(Position);
+  return { x: pos.x, z: pos.z };
 };
