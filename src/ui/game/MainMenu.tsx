@@ -6,6 +6,7 @@ import { koota } from "@/koota";
 import { Tracking } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import { Card } from "@/ui/primitives/card";
+import { Credits } from "./Credits";
 import { FarmerMascot } from "./FarmerMascot";
 import { Logo } from "./Logo";
 
@@ -183,9 +184,12 @@ export const MainMenu = (props: MainMenuProps) => {
         </Show>
       </Card>
 
-      <p class="mt-4 text-xs" style={{ color: `${COLORS.forestGreen}80` }}>
-        Grovekeeper v0.1.0
-      </p>
+      <div class="mt-4 flex items-center gap-3">
+        <p class="text-xs" style={{ color: `${COLORS.forestGreen}80` }}>
+          Grovekeeper v1.0.0-alpha.1
+        </p>
+        <Credits />
+      </div>
     </div>
   );
 };
