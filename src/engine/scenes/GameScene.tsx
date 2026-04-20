@@ -30,6 +30,11 @@ import {
 import { koota, spawnPlayer } from "@/koota";
 import { isPlayerAdjacent } from "@/npcs/NpcManager";
 import { getChainDef } from "@/quests/questChainEngine";
+import {
+  frameMark,
+  frameMeasure,
+  frameReport,
+} from "@/shared/utils/devDebug";
 import { createRNG, hashString } from "@/shared/utils/seedRNG";
 import { worldToScreen } from "@/shared/utils/worldToScreen";
 import { spawnTree } from "@/startup";
@@ -967,10 +972,17 @@ export const GameScene = () => {
         playerGovernor.update(dt);
 
         // ECS systems
+        frameMark("sys:start");
         movementSystem(movementRef.current, dt);
+        frameMark("sys:movement:end");
+        frameMeasure("sys:movement", "sys:start", "sys:movement:end");
         growthSystem(dt, currentTime.season, weatherGrowthMult);
+        frameMark("sys:growth:end");
+        frameMeasure("sys:growth", "sys:movement:end", "sys:growth:end");
         staminaSystem(dt);
         harvestSystem(dt);
+        frameMark("sys:end");
+        frameMeasure("sys:rest", "sys:growth:end", "sys:end");
 
         // Update player tile info for action button disabled state
         {
@@ -1190,6 +1202,9 @@ export const GameScene = () => {
 
         // Tree milestone XP and weather damage
         processTreeUpdatesInLoop(weatherType, gameTimeSec);
+
+        // Dev-only frame profiler (activated by ?perf=1)
+        frameReport(dt);
       });
 
       setSceneReady(true);
