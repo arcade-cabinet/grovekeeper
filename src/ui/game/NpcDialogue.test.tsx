@@ -2,14 +2,12 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NpcDialogue } from "./NpcDialogue";
 
-// Mock the gameStore
-vi.mock("../stores/gameStore", () => ({
-  useGameStore: Object.assign(() => ({}), {
-    getState: () => ({
-      addXp: vi.fn(),
-      addResource: vi.fn(),
-      addSeed: vi.fn(),
-    }),
+// Mock the Koota actions bundle
+vi.mock("@/actions", () => ({
+  actions: () => ({
+    addXp: vi.fn(),
+    addResource: vi.fn(),
+    addSeed: vi.fn(),
   }),
 }));
 

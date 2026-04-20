@@ -1,9 +1,9 @@
 // src/game/systems/harvest.test.ts
 import type { Entity } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
+import { actions as gameActions } from "@/actions";
 import { destroyAllEntitiesExceptWorld, koota } from "@/koota";
 import { spawnTree } from "@/startup";
-import { useGameStore } from "@/stores/gameStore";
 import { Difficulty, Harvestable, Tree } from "@/traits";
 import { collectHarvest, harvestSystem, initHarvestable } from "./harvest";
 
@@ -22,7 +22,7 @@ function setReady(entity: Entity, ready: boolean): void {
 describe("Harvest System", () => {
   beforeEach(() => {
     destroyAllEntitiesExceptWorld();
-    useGameStore.getState().resetGame();
+    gameActions().resetGame();
   });
 
   describe("initHarvestable", () => {

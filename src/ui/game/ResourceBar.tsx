@@ -1,7 +1,9 @@
+import { useTrait } from "koota/react";
 import { useEffect, useRef } from "react";
 import { COLORS } from "@/config/config";
 import type { ResourceType } from "@/config/resources";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Resources } from "@/traits";
 
 const RESOURCE_EMOJIS: Record<ResourceType, string> = {
   timber: "\u{1FAB5}",
@@ -64,7 +66,12 @@ const ResourceCell = ({
 };
 
 export const ResourceBar = () => {
-  const resources = useGameStore((s) => s.resources);
+  const resources = useTrait(koota, Resources) ?? {
+    timber: 0,
+    sap: 0,
+    fruit: 0,
+    acorns: 0,
+  };
 
   return (
     <>

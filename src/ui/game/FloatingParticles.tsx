@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { create } from "zustand";
+import { createSimpleStore } from "@/shared/utils/simpleStore";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -12,12 +12,6 @@ export interface FloatingParticle {
   createdAt: number;
   /** Random horizontal offset in px to prevent overlap */
   offsetX: number;
-}
-
-interface ParticleStore {
-  particles: FloatingParticle[];
-  addParticle: (text: string, color?: string) => void;
-  removeParticle: (id: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -82,52 +76,46 @@ const ensureKeyframes = () => {
 
 let particleCounter = 0;
 
-export const particleStore = create<ParticleStore>((set, get) => ({
-  particles: [],
+export const particleStore = createSimpleStore<{
+  particles: FloatingParticle[];
+}>({ particles: [] });
 
-  addParticle: (text: string, color?: string) => {
-    particleCounter += 1;
-    const id = `particle-${Date.now()}-${particleCounter}`;
-    const resolvedColor = color ?? detectColor(text);
-    const offsetX =
-      Math.round(Math.random() * OFFSET_RANGE_PX * 2) - OFFSET_RANGE_PX;
+function addParticle(text: string, color?: string): void {
+  particleCounter += 1;
+  const id = `particle-${Date.now()}-${particleCounter}`;
+  const resolvedColor = color ?? detectColor(text);
+  const offsetX =
+    Math.round(Math.random() * OFFSET_RANGE_PX * 2) - OFFSET_RANGE_PX;
 
-    const item: FloatingParticle = {
-      id,
-      text,
-      color: resolvedColor,
-      createdAt: Date.now(),
-      offsetX,
-    };
+  const item: FloatingParticle = {
+    id,
+    text,
+    color: resolvedColor,
+    createdAt: Date.now(),
+    offsetX,
+  };
 
-    set((state) => {
-      const next = [...state.particles, item];
-      // Trim oldest when exceeding max visible
-      while (next.length > MAX_VISIBLE) {
-        next.shift();
-      }
-      return { particles: next };
-    });
+  particleStore.set((state) => {
+    const next = [...state.particles, item];
+    while (next.length > MAX_VISIBLE) {
+      next.shift();
+    }
+    return { particles: next };
+  });
 
-    // Auto-remove after animation completes
-    setTimeout(() => {
-      get().removeParticle(id);
-    }, ANIMATION_DURATION_MS);
-  },
-
-  removeParticle: (id: string) => {
-    set((state) => ({
+  setTimeout(() => {
+    particleStore.set((state) => ({
       particles: state.particles.filter((p) => p.id !== id),
     }));
-  },
-}));
+  }, ANIMATION_DURATION_MS);
+}
 
 // ---------------------------------------------------------------------------
 // Convenience helper — callable from anywhere without React context
 // ---------------------------------------------------------------------------
 
 export const showParticle = (text: string, color?: string) => {
-  particleStore.getState().addParticle(text, color);
+  addParticle(text, color);
 };
 
 // ---------------------------------------------------------------------------
@@ -173,7 +161,7 @@ const Particle = ({ particle }: ParticleProps) => {
 // ---------------------------------------------------------------------------
 
 export const FloatingParticlesContainer = () => {
-  const particles = particleStore((s) => s.particles);
+  const particles = particleStore.use((s) => s.particles);
 
   // Inject keyframes stylesheet on first mount
   const [ready, setReady] = useState(false);

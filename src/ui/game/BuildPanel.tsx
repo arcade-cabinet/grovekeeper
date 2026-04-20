@@ -5,9 +5,11 @@
  * and effects. Selecting a structure enters placement mode.
  */
 
+import { useTrait } from "koota/react";
 import { COLORS } from "@/config/config";
 import type { ResourceType } from "@/config/resources";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { PlayerProgress, Resources } from "@/traits";
 import { getAvailableTemplates } from "@/structures/StructureManager";
 import type { StructureTemplate } from "@/structures/types";
 import { Button } from "@/ui/primitives/button";
@@ -29,7 +31,13 @@ export const BuildPanel = ({
   onClose,
   onSelectStructure,
 }: BuildPanelProps) => {
-  const { level, resources } = useGameStore();
+  const level = useTrait(koota, PlayerProgress)?.level ?? 1;
+  const resources = useTrait(koota, Resources) ?? {
+    timber: 0,
+    sap: 0,
+    fruit: 0,
+    acorns: 0,
+  };
   const templates = getAvailableTemplates(level);
 
   const canAfford = (template: StructureTemplate): boolean => {

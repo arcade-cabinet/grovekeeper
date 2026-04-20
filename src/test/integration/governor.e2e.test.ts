@@ -12,7 +12,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { actions as gameActions } from "@/actions";
 import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { spawnGridCell, spawnTree } from "@/startup";
-import { useGameStore } from "@/stores/gameStore";
 import {
   FarmerState,
   GridCell,
@@ -32,7 +31,6 @@ import { HeadlessGameLoop } from "./HeadlessGameLoop";
 /** Standard test world: 8x8 soil grid, player, seeds, full stamina. */
 function setupWorld(gridSize = 8) {
   destroyAllEntitiesExceptWorld();
-  useGameStore.getState().resetGame();
   gameActions().resetGame();
 
   const kPlayer = spawnPlayer();
@@ -56,17 +54,6 @@ function setupWorld(gridSize = 8) {
   a.addResource("timber", 30);
   a.addResource("sap", 15);
   a.addResource("fruit", 15);
-
-  // Zustand mirror for systems that still read from the store.
-  const store = useGameStore.getState();
-  store.addSeed("white-oak", 50);
-  store.addSeed("elder-pine", 20);
-  store.addSeed("silver-birch", 15);
-  store.addSeed("golden-apple", 10);
-  store.addSeed("weeping-willow", 10);
-  store.addResource("timber", 30);
-  store.addResource("sap", 15);
-  store.addResource("fruit", 15);
 }
 
 /** Run the governor + headless loop for N ticks. */
@@ -87,7 +74,7 @@ function runPlaythrough(
     loop.tick();
   }
 
-  return { loop, governor, state: useGameStore.getState() };
+  return { loop, governor };
 }
 
 /** Read Koota-tracked stats for assertions. */
@@ -139,7 +126,6 @@ describe("Governor E2E Playthrough", () => {
   });
 
   it("governor plants preferred species", () => {
-    useGameStore.getState().addSeed("elder-pine", 30);
     gameActions().addSeed("elder-pine", 30);
 
     const profile: GovernorProfile = {
@@ -189,7 +175,6 @@ describe("Governor E2E Playthrough", () => {
       }
     }
 
-    useGameStore.setState({ unlockedTools: ["trowel", "watering-can", "axe"] });
     const pp = koota.get(PlayerProgress);
     if (pp)
       koota.set(PlayerProgress, {
@@ -246,7 +231,8 @@ describe("Governor E2E Playthrough", () => {
     for (let i = 0; i < 3000; i++) {
       governor.update();
       loop.tick();
-      const stamina = useGameStore.getState().stamina;
+      const player = koota.queryFirst(IsPlayer, FarmerState);
+      const stamina = player?.get(FarmerState)?.stamina ?? 0;
       expect(stamina).toBeGreaterThanOrEqual(0);
     }
   });
@@ -263,7 +249,6 @@ describe("Governor E2E Playthrough", () => {
   });
 
   it("governor handles empty grid gracefully", () => {
-    useGameStore.setState({ seeds: {} });
     koota.set(Seeds, {});
 
     const { governor } = runPlaythrough(1000);
@@ -315,9 +300,6 @@ describe("Governor E2E Playthrough", () => {
   });
 
   it("governor trades resources to unlock new resource types", () => {
-    useGameStore.setState({
-      resources: { timber: 50, sap: 0, fruit: 0, acorns: 0 },
-    });
     koota.set(Resources, { timber: 50, sap: 0, fruit: 0, acorns: 0 });
 
     const profile: GovernorProfile = {
@@ -339,8 +321,6 @@ describe("Governor E2E Playthrough", () => {
   });
 
   it("governor produces diverse resources with valid species", () => {
-    useGameStore.getState().addSeed("silver-birch", 20);
-    useGameStore.getState().addSeed("golden-apple", 20);
     gameActions().addSeed("silver-birch", 20);
     gameActions().addSeed("golden-apple", 20);
 
@@ -400,9 +380,6 @@ describe("Governor E2E Playthrough", () => {
       }
     }
 
-    useGameStore.setState({
-      unlockedTools: ["trowel", "watering-can", "axe", "pruning-shears"],
-    });
     const pp = koota.get(PlayerProgress);
     if (pp)
       koota.set(PlayerProgress, {

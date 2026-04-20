@@ -1,13 +1,17 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { destroyAllEntitiesExceptWorld, spawnPlayer } from "@/koota";
+import { actions as gameActions } from "@/actions";
+import {
+  destroyAllEntitiesExceptWorld,
+  koota,
+  spawnPlayer,
+} from "@/koota";
 import { spawnGridCell } from "@/startup";
-import { useGameStore } from "@/stores/gameStore";
-import { Position } from "@/traits";
+import { FarmerState, IsPlayer, Position, Seeds } from "@/traits";
 import { PlayerGovernor } from "./PlayerGovernor";
 
 function resetWorld() {
   destroyAllEntitiesExceptWorld();
-  useGameStore.setState(useGameStore.getInitialState());
+  gameActions().resetGame();
 }
 
 function createPlayer(x = 5, z = 5) {
@@ -70,10 +74,9 @@ describe("PlayerGovernor", () => {
   it("tracks stats across multiple updates", () => {
     createPlayer();
     // Give seeds so the governor can try to plant
-    useGameStore.setState({
-      seeds: { "white-oak": 5 },
-      stamina: 100,
-    });
+    koota.set(Seeds, { "white-oak": 5 });
+    const player = koota.queryFirst(IsPlayer, FarmerState);
+    if (player) player.set(FarmerState, { stamina: 100, maxStamina: 100 });
 
     // Add some grid cells so the governor finds plantable tiles
     for (let x = 0; x < 8; x++) {

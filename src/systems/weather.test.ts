@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useGameStore } from "@/stores/gameStore";
+import { actions as gameActions } from "@/actions";
 import { koota } from "@/koota";
 import { Difficulty } from "@/traits";
 import {
@@ -380,7 +380,7 @@ describe("rollWindstormDamage", () => {
 
 describe("Weather × Difficulty tier interactions", () => {
   beforeEach(() => {
-    useGameStore.getState().resetGame();
+    gameActions().resetGame();
   });
 
   describe("windstorm damage chance scales with difficulty", () => {
@@ -418,7 +418,7 @@ describe("Weather × Difficulty tier interactions", () => {
         "brutal",
         "ultra-brutal",
       ]) {
-        useGameStore.setState({ difficulty: diff });
+        koota.set(Difficulty, { id: diff, permadeath: false });
         expect(getWeatherGrowthMultiplier("rain")).toBe(1.3);
       }
     });

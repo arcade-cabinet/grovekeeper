@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { create } from "zustand";
+import { createSimpleStore } from "@/shared/utils/simpleStore";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -12,12 +12,6 @@ export interface ToastItem {
   message: string;
   type: ToastType;
   createdAt: number;
-}
-
-interface ToastStore {
-  toasts: ToastItem[];
-  addToast: (message: string, type?: ToastType) => void;
-  removeToast: (id: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -40,42 +34,41 @@ const TOAST_COLORS: Record<ToastType, { bg: string; text: string }> = {
 
 let toastCounter = 0;
 
-export const toastStore = create<ToastStore>((set, get) => ({
+export const toastStore = createSimpleStore<{ toasts: ToastItem[] }>({
   toasts: [],
+});
 
-  addToast: (message: string, type: ToastType = "info") => {
-    toastCounter += 1;
-    const id = `toast-${Date.now()}-${toastCounter}`;
-    const item: ToastItem = { id, message, type, createdAt: Date.now() };
+function addToast(message: string, type: ToastType = "info"): void {
+  toastCounter += 1;
+  const id = `toast-${Date.now()}-${toastCounter}`;
+  const item: ToastItem = { id, message, type, createdAt: Date.now() };
 
-    set((state) => {
-      const next = [...state.toasts, item];
-      // Trim to max visible — oldest removed first
-      while (next.length > MAX_VISIBLE) {
-        next.shift();
-      }
-      return { toasts: next };
-    });
+  toastStore.set((state) => {
+    const next = [...state.toasts, item];
+    while (next.length > MAX_VISIBLE) {
+      next.shift();
+    }
+    return { toasts: next };
+  });
 
-    // Auto-dismiss
-    setTimeout(() => {
-      get().removeToast(id);
-    }, AUTO_DISMISS_MS);
-  },
+  // Auto-dismiss
+  setTimeout(() => {
+    removeToast(id);
+  }, AUTO_DISMISS_MS);
+}
 
-  removeToast: (id: string) => {
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-    }));
-  },
-}));
+function removeToast(id: string): void {
+  toastStore.set((state) => ({
+    toasts: state.toasts.filter((t) => t.id !== id),
+  }));
+}
 
 // ---------------------------------------------------------------------------
 // Convenience helper
 // ---------------------------------------------------------------------------
 
 export const showToast = (message: string, type?: ToastType) => {
-  toastStore.getState().addToast(message, type);
+  addToast(message, type);
 };
 
 // ---------------------------------------------------------------------------
@@ -184,7 +177,7 @@ const AnimatedToast = ({ item, onDismissed }: AnimatedToastProps) => {
 // ---------------------------------------------------------------------------
 
 export const ToastContainer = () => {
-  const toasts = toastStore((s) => s.toasts);
+  const toasts = toastStore.use((s) => s.toasts);
 
   // Track which toasts have been removed after their exit animation
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());

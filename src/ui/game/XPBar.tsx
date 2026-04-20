@@ -1,9 +1,13 @@
+import { useTrait } from "koota/react";
 import { COLORS } from "@/config/config";
-import { totalXpForLevel, useGameStore, xpToNext } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { totalXpForLevel, xpToNext } from "@/shared/utils/xp";
+import { PlayerProgress } from "@/traits";
 
 export const XPBar = () => {
-  const xp = useGameStore((s) => s.xp);
-  const level = useGameStore((s) => s.level);
+  const progress = useTrait(koota, PlayerProgress);
+  const xp = progress?.xp ?? 0;
+  const level = progress?.level ?? 1;
 
   const xpForCurrentLevel = totalXpForLevel(level);
   const xpNeeded = xpToNext(level);

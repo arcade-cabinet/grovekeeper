@@ -1,6 +1,8 @@
+import { useTrait } from "koota/react";
 import { COLORS } from "@/config/config";
+import { koota } from "@/koota";
 import { getNpcTemplate } from "@/npcs/NpcManager";
-import { useGameStore } from "@/stores/gameStore";
+import { Build, PlayerProgress } from "@/traits";
 import { getActionLabel, type TileState } from "./ActionButton";
 
 interface MobileActionButtonsProps {
@@ -18,7 +20,8 @@ export const MobileActionButtons = ({
   tileState,
   nearbyNpcTemplateId,
 }: MobileActionButtonsProps) => {
-  const { selectedTool, buildMode } = useGameStore();
+  const selectedTool = useTrait(koota, PlayerProgress)?.selectedTool ?? "trowel";
+  const buildMode = useTrait(koota, Build)?.mode ?? false;
 
   // Tool-specific action button appearance (shared with BottomControls)
   const getActionButtonStyle = () => {

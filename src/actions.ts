@@ -1,5 +1,6 @@
 import { createActions } from "koota";
 import { emptyResources, type ResourceType } from "@/config/resources";
+import { setGroveData, type GroveData } from "@/db/snapshot";
 import { getToolById } from "@/config/tools";
 import { getSpeciesById } from "@/config/trees";
 import {
@@ -532,6 +533,14 @@ export const gameActions = createActions((world) => {
         }));
       },
 
+      // ── Grove data (ephemeral save state, module-scoped holder) ──
+      saveGrove: (
+        trees: GroveData["trees"],
+        playerPosition: { x: number; z: number },
+      ) => {
+        setGroveData({ trees, playerPosition });
+      },
+
       removePlacedStructure: (worldX: number, worldZ: number) => {
         world.set(Build, (prev) => ({
           ...prev,
@@ -542,6 +551,8 @@ export const gameActions = createActions((world) => {
       },
 
       resetGame: () => {
+        // Clear ephemeral groveData (used to live on Zustand store)
+        setGroveData(null);
         world.set(PlayerProgress, {
           level: 1,
           xp: 0,
@@ -607,6 +618,17 @@ export const gameActions = createActions((world) => {
         });
         world.set(GameScreen, { value: "menu" });
         world.set(Difficulty, { id: "normal", permadeath: false });
+        // Time: Spring (month 3), Day 1, 8:00 AM — matches legacy
+        // Zustand INITIAL_GAME_TIME. Calculation: 60 days (2 months) + 8h.
+        const initialGameTimeSeconds =
+          (2 * 30 * 24 * 60 + 8 * 60) * 60;
+        world.set(Time, {
+          gameTimeMicroseconds: initialGameTimeSeconds * 1_000_000,
+          last: 0,
+          delta: 0,
+        });
+        world.set(CurrentSeason, { value: "spring" });
+        world.set(CurrentDay, { value: 1 });
         const player = world.queryFirst(IsPlayer, FarmerState);
         if (player) {
           player.set(FarmerState, { stamina: 100, maxStamina: 100 });

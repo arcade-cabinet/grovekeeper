@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useGameStore } from "@/stores/gameStore";
+import { actions as gameActions } from "@/actions";
 import { koota } from "@/koota";
 import { Difficulty } from "@/traits";
 import {
@@ -10,7 +10,7 @@ import {
 
 describe("Difficulty System", () => {
   beforeEach(() => {
-    useGameStore.getState().resetGame();
+    gameActions().resetGame();
   });
 
   describe("DIFFICULTY_TIERS", () => {

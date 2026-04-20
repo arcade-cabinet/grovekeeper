@@ -1,31 +1,22 @@
 import { useEffect, useState } from "react";
-import { create } from "zustand";
+import { createSimpleStore } from "@/shared/utils/simpleStore";
 import type { WeatherType } from "@/systems/weather";
 
 // ---------------------------------------------------------------------------
 // Store — updated from the game loop
 // ---------------------------------------------------------------------------
 
-interface WeatherVisualStore {
+export const weatherVisualStore = createSimpleStore<{
   weather: WeatherType;
-  setWeather: (w: WeatherType) => void;
   showPetals: boolean;
-  setShowPetals: (show: boolean) => void;
-}
-
-export const weatherVisualStore = create<WeatherVisualStore>((set) => ({
-  weather: "clear",
-  setWeather: (weather) => set({ weather }),
-  showPetals: false,
-  setShowPetals: (showPetals) => set({ showPetals }),
-}));
+}>({ weather: "clear", showPetals: false });
 
 export const setWeatherVisual = (w: WeatherType) => {
-  weatherVisualStore.getState().setWeather(w);
+  weatherVisualStore.set((prev) => ({ ...prev, weather: w }));
 };
 
 export const setShowPetals = (show: boolean) => {
-  weatherVisualStore.getState().setShowPetals(show);
+  weatherVisualStore.set((prev) => ({ ...prev, showPetals: show }));
 };
 
 // ---------------------------------------------------------------------------
@@ -193,8 +184,8 @@ const CherryPetalOverlay = () => {
 // ---------------------------------------------------------------------------
 
 export const WeatherOverlay = () => {
-  const weather = weatherVisualStore((s) => s.weather);
-  const showPetals = weatherVisualStore((s) => s.showPetals);
+  const weather = weatherVisualStore.use((s) => s.weather);
+  const showPetals = weatherVisualStore.use((s) => s.showPetals);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {

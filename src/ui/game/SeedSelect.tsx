@@ -1,7 +1,10 @@
 import { RiLock2Line } from "@remixicon/react";
+import { useTrait } from "koota/react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { TREE_SPECIES, type TreeSpeciesData } from "@/config/trees";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { PlayerProgress, Seeds } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import { Card } from "@/ui/primitives/card";
 import {
@@ -43,14 +46,16 @@ function formatSeedCost(cost: Record<string, number>): string | null {
 }
 
 export const SeedSelect = ({ open, onClose, onSelect }: SeedSelectProps) => {
-  const { unlockedSpecies, selectedSpecies, setSelectedSpecies, seeds } =
-    useGameStore();
+  const progress = useTrait(koota, PlayerProgress);
+  const unlockedSpecies = progress?.unlockedSpecies ?? ["white-oak"];
+  const selectedSpecies = progress?.selectedSpecies ?? "white-oak";
+  const seeds = useTrait(koota, Seeds) ?? {};
 
   const handleSelect = (species: TreeSpeciesData) => {
     if (!unlockedSpecies.includes(species.id)) return;
     const seedCount = seeds[species.id] ?? 0;
     if (seedCount <= 0) return;
-    setSelectedSpecies(species.id);
+    gameActions().setSelectedSpecies(species.id);
     onSelect(species.id);
     onClose();
   };

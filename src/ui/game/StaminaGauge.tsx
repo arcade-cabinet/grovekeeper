@@ -1,4 +1,5 @@
-import { useGameStore } from "@/stores/gameStore";
+import { useQueryFirst, useTrait } from "koota/react";
+import { FarmerState, IsPlayer } from "@/traits";
 
 /**
  * Vertical stamina bar positioned on the right side of the screen.
@@ -8,8 +9,10 @@ import { useGameStore } from "@/stores/gameStore";
  * Shows "current/max" text below the bar.
  */
 export const StaminaGauge = () => {
-  const stamina = useGameStore((s) => s.stamina);
-  const maxStamina = useGameStore((s) => s.maxStamina);
+  const player = useQueryFirst(IsPlayer, FarmerState);
+  const fs = useTrait(player, FarmerState);
+  const stamina = fs?.stamina ?? 100;
+  const maxStamina = fs?.maxStamina ?? 100;
 
   const pct = maxStamina > 0 ? Math.round((stamina / maxStamina) * 100) : 0;
 

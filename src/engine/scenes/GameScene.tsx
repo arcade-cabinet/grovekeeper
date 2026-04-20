@@ -7,7 +7,9 @@
  */
 
 import type { Entity } from "koota";
+import { useTrait } from "koota/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { actions as gameActions } from "@/actions";
 import type { NpcBrainContext } from "@/ai/NpcBrain";
 import { NpcBrain } from "@/ai/NpcBrain";
 import { PlayerGovernor } from "@/ai/PlayerGovernor";
@@ -31,8 +33,8 @@ import { getChainDef } from "@/quests/questChainEngine";
 import { createRNG, hashString } from "@/shared/utils/seedRNG";
 import { worldToScreen } from "@/shared/utils/worldToScreen";
 import { spawnTree } from "@/startup";
-import type { SerializedTree } from "@/stores/gameStore";
-import { useGameStore } from "@/stores/gameStore";
+import { buildDbSnapshot, getGroveData } from "@/db/snapshot";
+import type { SerializedTreeDb as SerializedTree } from "@/db/queries";
 import {
   canPlace,
   getStaminaMultiplier as getStructureStaminaMult,
@@ -85,16 +87,29 @@ import { getActionsForTile } from "@/ui/game/radialActions";
 import { showToast } from "@/ui/game/Toast";
 import { setShowPetals, setWeatherVisual } from "@/ui/game/WeatherOverlay";
 import {
+  Achievements,
+  Build,
+  CurrentDay,
+  CurrentSeason,
   GridCell,
   Harvestable,
   IsPlayer,
+  LifetimeResources,
   Npc,
+  PlayerProgress,
   Position,
+  QuestChains,
   RainCatcher,
   Renderable,
+  Resources,
   Scarecrow,
+  Seeds,
+  Settings,
   Structure,
+  Time,
+  Tracking,
   Tree,
+  WorldMeta,
 } from "@/traits";
 import type { WorldDefinition } from "@/world-data";
 
@@ -215,26 +230,41 @@ export const GameScene = () => {
   const lastRadialScreenRef = useRef<{ x: number; y: number } | null>(null);
   const radialTargetRef = useRef<RadialTarget | null>(null);
 
-  const {
-    setScreen,
-    selectedSpecies,
-    selectedTool,
-    addXp,
-    incrementTreesPlanted,
-    incrementTreesHarvested,
-    incrementTreesWatered,
-    hapticsEnabled,
-    addResource,
-  } = useGameStore();
+  const progress = useTrait(koota, PlayerProgress);
+  const settings = useTrait(koota, Settings);
+  const selectedSpecies = progress?.selectedSpecies ?? "white-oak";
+  const selectedTool = progress?.selectedTool ?? "trowel";
+  const hapticsEnabled = settings?.hapticsEnabled ?? true;
+  const soundEnabled = settings?.soundEnabled ?? true;
 
-  // --- Sync audio enabled with gameStore ---
+  const setScreen = useCallback(
+    (s: "menu" | "playing" | "paused" | "seedSelect" | "rules") =>
+      gameActions().setScreen(s),
+    [],
+  );
+  const addXp = useCallback((amount: number) => gameActions().addXp(amount), []);
+  const addResource = useCallback(
+    (type: ResourceType, amount: number) =>
+      gameActions().addResource(type, amount),
+    [],
+  );
+  const incrementTreesPlanted = useCallback(
+    () => gameActions().incrementTreesPlanted(),
+    [],
+  );
+  const incrementTreesHarvested = useCallback(
+    () => gameActions().incrementTreesHarvested(),
+    [],
+  );
+  const incrementTreesWatered = useCallback(
+    () => gameActions().incrementTreesWatered(),
+    [],
+  );
+
+  // --- Sync audio enabled with Settings trait ---
   useEffect(() => {
-    audioManager.setEnabled(useGameStore.getState().soundEnabled);
-    const unsub = useGameStore.subscribe((s) => {
-      audioManager.setEnabled(s.soundEnabled);
-    });
-    return unsub;
-  }, []);
+    audioManager.setEnabled(soundEnabled);
+  }, [soundEnabled]);
 
   // --- InputManager dialog disable sync ---
   useEffect(() => {
@@ -298,7 +328,7 @@ export const GameScene = () => {
     const playerPos = player
       ? { x: player.get(Position).x, z: player.get(Position).z }
       : { x: 6, z: 6 };
-    useGameStore.getState().saveGrove(trees, playerPos);
+    gameActions().saveGrove(trees, playerPos);
   }, []);
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -374,7 +404,7 @@ export const GameScene = () => {
         spawnPlayer();
 
         // Restore player position inline
-        const groveData = useGameStore.getState().groveData;
+        const groveData = getGroveData();
         if (groveData) {
           const player = koota.queryFirst(IsPlayer, Position);
           if (player) {
@@ -397,7 +427,7 @@ export const GameScene = () => {
         spawnPlayer();
       }
     }
-    initializeTime(useGameStore.getState().gameTimeMicroseconds);
+    initializeTime(koota.get(Time)?.gameTimeMicroseconds ?? 0);
   }, []);
 
   // Auto-save on tab hide — persist to SQLite + IndexedDB
@@ -408,10 +438,10 @@ export const GameScene = () => {
         // SQLite persist
         if (isDbInitialized()) {
           try {
-            const state = useGameStore.getState();
-            persistGameStore(state as unknown as Record<string, unknown>);
+            const state = buildDbSnapshot();
+            persistGameStore(state);
             // Save grove trees to DB
-            const groveData = state.groveData;
+            const groveData = getGroveData();
             if (groveData) {
               saveGroveToDb(groveData.trees, groveData.playerPosition);
             }
@@ -492,11 +522,9 @@ export const GameScene = () => {
           onPause: () => setPauseMenuOpen((prev) => !prev),
           onSelectTool: (index: number) => {
             const tool = TOOLS[index];
-            if (
-              tool &&
-              useGameStore.getState().unlockedTools.includes(tool.id)
-            ) {
-              useGameStore.getState().setSelectedTool(tool.id);
+            const unlocked = koota.get(PlayerProgress)?.unlockedTools ?? [];
+            if (tool && unlocked.includes(tool.id)) {
+              gameActions().setSelectedTool(tool.id);
               audioManager.play("toolSelect");
             }
           },
@@ -654,7 +682,7 @@ export const GameScene = () => {
 
           if (tree.stage >= 3 && !entity.has(Harvestable)) {
             initHarvestable(entity);
-            useGameStore.getState().incrementTreesMatured();
+            gameActions().incrementTreesMatured();
           }
 
           // Growth milestone XP
@@ -669,19 +697,16 @@ export const GameScene = () => {
               const key = `${eid}:${stage}`;
               if (!milestoneXpRef.current.has(key)) {
                 milestoneXpRef.current.add(key);
-                useGameStore
-                  .getState()
-                  .trackSpeciesGrowth(tree.speciesId, stage);
+                const a = gameActions();
+                a.trackSpeciesGrowth(tree.speciesId, stage);
                 if (stage === 3) {
-                  useGameStore
-                    .getState()
-                    .advanceQuestObjective("saplings_grown", 1);
+                  a.advanceQuestObjective("saplings_grown", 1);
                 }
                 const xpAmount =
                   stage === 2
                     ? baseXp
                     : baseXp + diffBonus * (stage === 3 ? 10 : 25);
-                useGameStore.getState().addXp(xpAmount);
+                a.addXp(xpAmount);
                 showParticle(`+${xpAmount} XP`);
               }
             }
@@ -717,7 +742,13 @@ export const GameScene = () => {
       }
 
       function checkAndAwardAchievementsInLoop(): void {
-        const store = useGameStore.getState();
+        const tracking = koota.get(Tracking);
+        const progress = koota.get(PlayerProgress);
+        const lifetime = koota.get(LifetimeResources);
+        const achievements = koota.get(Achievements) ?? [];
+        const meta = koota.get(WorldMeta);
+        const build = koota.get(Build);
+        const placed = build?.placedStructures ?? [];
         const currentTreeData = Array.from(koota.query(Tree, Position)).map(
           (e) => {
             const t = e.get(Tree);
@@ -740,32 +771,36 @@ export const GameScene = () => {
         }
 
         const newAchievements = checkAchievements({
-          treesPlanted: store.treesPlanted,
-          lifetimeResources: store.lifetimeResources,
-          speciesPlanted: store.speciesPlanted,
-          seasonsExperienced: store.seasonsExperienced,
+          treesPlanted: tracking?.treesPlanted ?? 0,
+          lifetimeResources: lifetime ?? {
+            timber: 0,
+            sap: 0,
+            fruit: 0,
+            acorns: 0,
+          },
+          speciesPlanted: tracking?.speciesPlanted ?? [],
+          seasonsExperienced: tracking?.seasonsExperienced ?? [],
           currentTreeData,
           gridSize: GRID_SIZE,
           plantableTileCount,
-          unlockedAchievements: store.achievements,
-          hasPrestiged: store.prestigeCount > 0,
-          toolUseCounts: store.toolUseCounts,
-          zonesDiscovered: store.discoveredZones.length,
-          wildTreesHarvested: store.wildTreesHarvested,
-          wildTreesRegrown: store.wildTreesRegrown,
-          visitedZoneTypes: store.visitedZoneTypes,
-          treesPlantedInSpring: store.treesPlantedInSpring,
-          treesHarvestedInAutumn: store.treesHarvestedInAutumn,
-          unlockedToolCount: store.unlockedTools.length,
-          wildSpeciesHarvested: store.wildSpeciesHarvested,
-          structuresBuilt: store.placedStructures.length,
-          distinctStructureTypesBuilt: new Set(
-            store.placedStructures.map((s) => s.templateId),
-          ).size,
+          unlockedAchievements: achievements,
+          hasPrestiged: (progress?.prestigeCount ?? 0) > 0,
+          toolUseCounts: tracking?.toolUseCounts ?? {},
+          zonesDiscovered: (meta?.discoveredZones ?? []).length,
+          wildTreesHarvested: tracking?.wildTreesHarvested ?? 0,
+          wildTreesRegrown: tracking?.wildTreesRegrown ?? 0,
+          visitedZoneTypes: tracking?.visitedZoneTypes ?? [],
+          treesPlantedInSpring: tracking?.treesPlantedInSpring ?? 0,
+          treesHarvestedInAutumn: tracking?.treesHarvestedInAutumn ?? 0,
+          unlockedToolCount: (progress?.unlockedTools ?? []).length,
+          wildSpeciesHarvested: tracking?.wildSpeciesHarvested ?? [],
+          structuresBuilt: placed.length,
+          distinctStructureTypesBuilt: new Set(placed.map((s) => s.templateId))
+            .size,
         });
 
         for (const id of newAchievements) {
-          store.unlockAchievement(id);
+          gameActions().unlockAchievement(id);
           showAchievement(id);
           audioManager.play("achievement");
           const def = ACHIEVEMENT_DEFS.find((a) => a.id === id);
@@ -776,7 +811,7 @@ export const GameScene = () => {
       // --- Game loop ---
       let lastTime = performance.now();
       let lastSeasonUpdate: Season | null = null;
-      let lastDayUpdate = useGameStore.getState().currentDay;
+      let lastDayUpdate = koota.get(CurrentDay)?.value ?? 1;
       let cachedWalkGrid: WalkabilityGrid | null = null;
       let walkGridAge = Infinity; // Force rebuild on first frame
 
@@ -1083,8 +1118,9 @@ export const GameScene = () => {
         if (lastSeasonUpdate !== currentTime.season) {
           lastSeasonUpdate = currentTime.season;
           ground.updateSeason(currentTime.season, currentTime.seasonProgress);
-          useGameStore.getState().setCurrentSeason(currentTime.season);
-          useGameStore.getState().trackSeason(currentTime.season);
+          const sa = gameActions();
+          sa.setCurrentSeason(currentTime.season);
+          sa.trackSeason(currentTime.season);
 
           treeMesh.rebuildAll(scene, currentTime.season, currentIsNight);
           audioManager.play("seasonChange");
@@ -1092,28 +1128,31 @@ export const GameScene = () => {
 
         // Periodic updates (every 5s)
         if (Math.floor(now / 5000) !== Math.floor((now - deltaMs) / 5000)) {
-          useGameStore.getState().setGameTime(currentTime.microseconds);
-          useGameStore.getState().setCurrentDay(currentTime.day);
+          const periodicA = gameActions();
+          periodicA.setGameTime(currentTime.microseconds);
+          periodicA.setCurrentDay(currentTime.day);
 
           // Tick economy + event systems on day change
           if (currentTime.day !== lastDayUpdate) {
             lastDayUpdate = currentTime.day;
-            const store = useGameStore.getState();
-            store.updateEconomy(currentTime.day);
-            store.tickEvents({
+            periodicA.updateEconomy(currentTime.day);
+            periodicA.tickEvents({
               currentDay: currentTime.day,
               season: currentTime.season,
-              playerLevel: store.level,
+              playerLevel: koota.get(PlayerProgress)?.level ?? 1,
               rngSeed: currentTime.day,
             });
-            store.refreshAvailableChains();
+            periodicA.refreshAvailableChains();
           }
 
           checkAndAwardAchievementsInLoop();
 
           // Update NPC quest markers based on quest chain state
-          const qStore = useGameStore.getState();
-          const chainState = qStore.questChainState;
+          const chainState = koota.get(QuestChains) ?? {
+            activeChains: {},
+            completedChainIds: [],
+            availableChainIds: [],
+          };
           const npcQuestStates = new Map<string, NpcQuestMarkerType>();
 
           // Mark NPCs that have active (in-progress) quest chains
@@ -1139,9 +1178,7 @@ export const GameScene = () => {
           // SQLite auto-save
           if (isDbInitialized()) {
             try {
-              persistGameStore(
-                useGameStore.getState() as unknown as Record<string, unknown>,
-              );
+              persistGameStore(buildDbSnapshot());
               const { sqlDb } = getDb();
               saveDatabaseToIndexedDB(sqlDb.export()).catch((err) => {
                 console.warn("Auto-save IndexedDB flush failed:", err);
@@ -1159,7 +1196,7 @@ export const GameScene = () => {
       setSceneReady(true);
 
       // Start tutorial if player hasn't seen rules
-      if (!useGameStore.getState().hasSeenRules) {
+      if (!(koota.get(Settings)?.hasSeenRules ?? false)) {
         let elderRowan: Entity | null = null;
         for (const e of koota.query(Npc, Position, Renderable)) {
           if (e.get(Npc).templateId === "elder-rowan") {
@@ -1180,9 +1217,10 @@ export const GameScene = () => {
             }
             setNpcDialogueOpen(true);
           },
-          getSelectedTool: () => useGameStore.getState().selectedTool,
+          getSelectedTool: () =>
+            koota.get(PlayerProgress)?.selectedTool ?? "trowel",
           setHasSeenRules: (seen: boolean) => {
-            useGameStore.getState().setHasSeenRules(seen);
+            gameActions().setHasSeenRules(seen);
             setTutorialHighlightId(null);
             setTutorialHighlightLabel(null);
           },
@@ -1270,7 +1308,7 @@ export const GameScene = () => {
     tree.set(Tree, { ...t, watered: true });
     addXp(5);
     incrementTreesWatered();
-    useGameStore.getState().advanceQuestObjective("trees_watered", 1);
+    gameActions().advanceQuestObjective("trees_watered", 1);
     tutorialRef.current.onQuestEvent("trees_watered");
     showParticle("+5 XP");
     audioManager.play("water");
@@ -1286,7 +1324,7 @@ export const GameScene = () => {
 
     const harvestResources = collectHarvest(
       tree,
-      useGameStore.getState().currentSeason,
+      koota.get(CurrentSeason)?.value ?? "spring",
     );
     if (harvestResources) {
       for (const r of harvestResources)
@@ -1299,13 +1337,12 @@ export const GameScene = () => {
 
     addXp(50);
     incrementTreesHarvested();
-    useGameStore.getState().advanceQuestObjective("trees_harvested", 1);
-    useGameStore
-      .getState()
-      .trackSpeciesHarvest(
-        t.speciesId,
-        harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0,
-      );
+    const ha = gameActions();
+    ha.advanceQuestObjective("trees_harvested", 1);
+    ha.trackSpeciesHarvest(
+      t.speciesId,
+      harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0,
+    );
     showParticle("+50 XP");
 
     const harvestSpecies = getSpeciesById(t.speciesId);
@@ -1347,7 +1384,7 @@ export const GameScene = () => {
       return;
     }
     // Costs 5 acorns
-    if (!useGameStore.getState().spendResource("acorns" as ResourceType, 5)) {
+    if (!gameActions().spendResource("acorns" as ResourceType, 5)) {
       showToast("Need 5 acorns to fertilize", "warning");
       return;
     }
@@ -1465,7 +1502,7 @@ export const GameScene = () => {
 
   const useFertilizerSpreader = async (_cell: Entity) => {
     // Area fertilize: all trees in 2-tile radius, costs 3 acorns
-    if (!useGameStore.getState().spendResource("acorns" as ResourceType, 3)) {
+    if (!gameActions().spendResource("acorns" as ResourceType, 3)) {
       showToast("Need 3 acorns to spread fertilizer", "warning");
       return;
     }
@@ -1580,16 +1617,23 @@ export const GameScene = () => {
       return;
     }
 
-    const store = useGameStore.getState();
+    const store = gameActions();
+    const buildState = koota.get(Build);
+    const resourcesSnapshot = koota.get(Resources) ?? {
+      timber: 0,
+      sap: 0,
+      fruit: 0,
+      acorns: 0,
+    };
 
     // Build mode — place a structure at player position
-    if (store.buildMode && store.buildTemplateId) {
+    if (buildState?.mode && buildState.templateId) {
       const player = koota.queryFirst(IsPlayer, Position);
       if (!player) return;
       const pp = player.get(Position);
       const worldX = Math.round(pp.x);
       const worldZ = Math.round(pp.z);
-      const template = getTemplate(store.buildTemplateId);
+      const template = getTemplate(buildState.templateId);
       if (!template) {
         store.setBuildMode(false);
         return;
@@ -1607,7 +1651,7 @@ export const GameScene = () => {
 
       // Validate ALL resource costs before spending any (atomicity)
       for (const [resource, amount] of Object.entries(template.cost)) {
-        if ((store.resources[resource as ResourceType] ?? 0) < amount) {
+        if ((resourcesSnapshot[resource as ResourceType] ?? 0) < amount) {
           showToast(`Not enough ${resource}!`, "warning");
           return;
         }
@@ -1686,7 +1730,7 @@ export const GameScene = () => {
           structStaminaMult *
           difficultyStaminaMult,
       );
-      if (!useGameStore.getState().spendStamina(adjustedCost)) return;
+      if (!gameActions().spendStamina(adjustedCost)) return;
     }
     const action = toolActions[selectedTool];
     if (action) await action(cell);
@@ -1700,15 +1744,22 @@ export const GameScene = () => {
     const gridZ = Math.round(pp.z);
 
     const species = getSpeciesById(selectedSpecies);
-    const store = useGameStore.getState();
+    const store = gameActions();
+    const seedsSnapshot = koota.get(Seeds) ?? {};
+    const resourcesSnapshot = koota.get(Resources) ?? {
+      timber: 0,
+      sap: 0,
+      fruit: 0,
+      acorns: 0,
+    };
 
     // Validate ALL costs atomically before spending anything
-    const currentSeeds = store.seeds[selectedSpecies] ?? 0;
+    const currentSeeds = seedsSnapshot[selectedSpecies] ?? 0;
     if (currentSeeds < 1) return;
 
     if (species?.seedCost) {
       for (const [resource, amount] of Object.entries(species.seedCost)) {
-        if ((store.resources[resource as ResourceType] ?? 0) < amount) {
+        if ((resourcesSnapshot[resource as ResourceType] ?? 0) < amount) {
           showToast(`Not enough ${resource}!`, "warning");
           return;
         }
@@ -1728,12 +1779,10 @@ export const GameScene = () => {
       if (gc.gridX === gridX && gc.gridZ === gridZ) {
         if (gc.occupied) {
           // Refund all costs if tile is occupied
-          useGameStore.getState().addSeed(selectedSpecies, 1);
+          store.addSeed(selectedSpecies, 1);
           if (species?.seedCost) {
             for (const [resource, amount] of Object.entries(species.seedCost)) {
-              useGameStore
-                .getState()
-                .addResource(resource as ResourceType, amount);
+              store.addResource(resource as ResourceType, amount);
             }
           }
           return;
@@ -1747,9 +1796,9 @@ export const GameScene = () => {
         });
 
         incrementTreesPlanted();
-        useGameStore.getState().trackSpeciesPlanted(selectedSpecies);
-        useGameStore.getState().trackSpeciesPlanting(selectedSpecies);
-        useGameStore.getState().advanceQuestObjective("trees_planted", 1);
+        store.trackSpeciesPlanted(selectedSpecies);
+        store.trackSpeciesPlanting(selectedSpecies);
+        store.advanceQuestObjective("trees_planted", 1);
         tutorialRef.current.onQuestEvent("trees_planted");
         const plantXp = 10 + (species ? (species.difficulty - 1) * 5 : 0);
         addXp(plantXp);
@@ -1770,11 +1819,12 @@ export const GameScene = () => {
       const h = entity.get(Harvestable);
       if (!h.ready) continue;
       const t = entity.get(Tree);
+      const bh = gameActions();
       // Cost 5 stamina per tree (bulk discount)
-      if (!useGameStore.getState().spendStamina(5)) break;
+      if (!bh.spendStamina(5)) break;
       const harvestResources = collectHarvest(
         entity,
-        useGameStore.getState().currentSeason,
+        koota.get(CurrentSeason)?.value ?? "spring",
       );
       if (harvestResources) {
         for (const r of harvestResources) {
@@ -1791,16 +1841,14 @@ export const GameScene = () => {
         }
       }
       incrementTreesHarvested();
-      useGameStore
-        .getState()
-        .trackSpeciesHarvest(
-          t.speciesId,
-          harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0,
-        );
+      bh.trackSpeciesHarvest(
+        t.speciesId,
+        harvestResources?.reduce((sum, r) => sum + r.amount, 0) ?? 0,
+      );
       count++;
     }
     if (count > 0) {
-      useGameStore.getState().advanceQuestObjective("trees_harvested", count);
+      gameActions().advanceQuestObjective("trees_harvested", count);
       const xp = count * 50;
       addXp(xp);
       showParticle(`+${xp} XP`);

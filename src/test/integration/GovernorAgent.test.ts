@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { actions as gameActions } from "@/actions";
 import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { spawnGridCell, spawnTree } from "@/startup";
-import { useGameStore } from "@/stores/gameStore";
 import {
   FarmerState,
   GridCell,
@@ -28,7 +27,6 @@ import { DEFAULT_PROFILE, GovernorAgent } from "./GovernorAgent";
  */
 function setupWorld() {
   destroyAllEntitiesExceptWorld();
-  useGameStore.getState().resetGame();
   gameActions().resetGame();
 
   const kPlayer = spawnPlayer();
@@ -39,7 +37,6 @@ function setupWorld() {
     }
   }
   gameActions().addSeed("white-oak", 20);
-  useGameStore.getState().addSeed("white-oak", 20);
 }
 
 describe("GovernorAgent", () => {
@@ -145,7 +142,6 @@ describe("GovernorAgent", () => {
         });
     }
 
-    useGameStore.setState({ unlockedTools: ["trowel", "watering-can", "axe"] });
     const pp = koota.get(PlayerProgress);
     if (pp)
       koota.set(PlayerProgress, {
@@ -171,7 +167,6 @@ describe("GovernorAgent", () => {
   });
 
   it("falls back to exploring when no actions are possible", () => {
-    useGameStore.setState({ seeds: {} });
     koota.set(Seeds, {});
 
     const profile: GovernorProfile = {
@@ -193,8 +188,6 @@ describe("GovernorAgent", () => {
   });
 
   it("respects preferred species", () => {
-    useGameStore.getState().addSeed("elder-pine", 10);
-    useGameStore.getState().addResource("timber", 50);
     gameActions().addSeed("elder-pine", 10);
     gameActions().addResource("timber", 50);
 
@@ -221,7 +214,6 @@ describe("GovernorAgent", () => {
   });
 
   it("idles when stamina is too low", () => {
-    useGameStore.setState({ stamina: 0 });
     const player = koota.queryFirst(IsPlayer, FarmerState);
     if (player) player.set(FarmerState, { stamina: 0, maxStamina: 100 });
 
@@ -254,9 +246,6 @@ describe("GovernorAgent", () => {
       }),
     );
 
-    useGameStore.setState({
-      unlockedTools: ["trowel", "watering-can", "pruning-shears"],
-    });
     const pp = koota.get(PlayerProgress);
     if (pp)
       koota.set(PlayerProgress, {
@@ -292,7 +281,6 @@ describe("GovernorAgent", () => {
   });
 
   it("trades resources when target resource is zero", () => {
-    useGameStore.getState().addResource("timber", 20);
     gameActions().addResource("timber", 20);
 
     const profile: GovernorProfile = {
@@ -316,7 +304,6 @@ describe("GovernorAgent", () => {
   });
 
   it("skips invalid species in pickSpecies", () => {
-    useGameStore.setState({ seeds: { "phantom-tree": 10 } });
     koota.set(Seeds, { "phantom-tree": 10 });
 
     const profile: GovernorProfile = {
@@ -337,10 +324,6 @@ describe("GovernorAgent", () => {
   });
 
   it("prefers species that produce needed resources", () => {
-    useGameStore.setState({
-      resources: { timber: 0, sap: 4, fruit: 0, acorns: 0 },
-      seeds: { "white-oak": 10, "silver-birch": 10 },
-    });
     koota.set(Resources, { timber: 0, sap: 4, fruit: 0, acorns: 0 });
     koota.set(Seeds, { "white-oak": 10, "silver-birch": 10 });
 

@@ -7,11 +7,11 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { RESOURCE_TYPES, type ResourceType } from "@/config/resources";
 import { getDialogueNode, getNpcTemplate } from "@/npcs/NpcManager";
 import type { DialogueAction, DialogueNode } from "@/npcs/types";
-import { useGameStore } from "@/stores/gameStore";
 import {
   Dialog,
   DialogContent,
@@ -65,11 +65,11 @@ export const NpcDialogue = ({
       // Notify tutorial controller of any action
       onDialogueAction?.(action.type);
 
-      const store = useGameStore.getState();
+      const a = gameActions();
       switch (action.type) {
         case "xp":
           if (action.amount) {
-            store.addXp(action.amount);
+            a.addXp(action.amount);
             showParticle(`+${action.amount} XP`);
           }
           break;
@@ -87,7 +87,7 @@ export const NpcDialogue = ({
             action.amount &&
             RESOURCE_TYPES.includes(action.resource as ResourceType)
           ) {
-            store.addResource(action.resource as ResourceType, action.amount);
+            a.addResource(action.resource as ResourceType, action.amount);
             showToast(
               `Received ${action.amount} ${action.resource}!`,
               "success",
@@ -96,7 +96,7 @@ export const NpcDialogue = ({
           break;
         case "give_seed":
           if (action.speciesId && action.amount) {
-            store.addSeed(action.speciesId, action.amount);
+            a.addSeed(action.speciesId, action.amount);
             showToast(
               `Received ${action.amount} ${action.speciesId} seed(s)!`,
               "success",

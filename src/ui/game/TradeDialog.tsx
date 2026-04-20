@@ -1,6 +1,9 @@
+import { useTrait } from "koota/react";
 import { useState } from "react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Resources } from "@/traits";
 import type { TradeRate } from "@/systems/trading";
 import { executeTrade, getTradeRates } from "@/systems/trading";
 import { Button } from "@/ui/primitives/button";
@@ -19,21 +22,27 @@ interface TradeDialogProps {
 }
 
 export const TradeDialog = ({ open, onClose }: TradeDialogProps) => {
-  const { resources, addResource, spendResource } = useGameStore();
+  const resources = useTrait(koota, Resources) ?? {
+    timber: 0,
+    sap: 0,
+    fruit: 0,
+    acorns: 0,
+  };
   const [selectedRate, setSelectedRate] = useState<TradeRate | null>(null);
   const [quantity, setQuantity] = useState(1);
   const rates = getTradeRates();
 
   const handleTrade = () => {
     if (!selectedRate) return;
+    const a = gameActions();
     const inputAmount = quantity * selectedRate.fromAmount;
     const result = executeTrade(selectedRate, inputAmount, resources);
     if (!result) {
       showToast("Not enough resources!", "warning");
       return;
     }
-    if (spendResource(result.spend.type, result.spend.amount)) {
-      addResource(result.gain.type, result.gain.amount);
+    if (a.spendResource(result.spend.type, result.spend.amount)) {
+      a.addResource(result.gain.type, result.gain.amount);
       showToast(
         `Traded ${result.spend.amount} ${result.spend.type} for ${result.gain.amount} ${result.gain.type}`,
         "success",

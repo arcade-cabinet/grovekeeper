@@ -5,17 +5,17 @@
  * grows trees, regenerates stamina, and manages harvest cooldowns.
  */
 import { beforeEach, describe, expect, it } from "vitest";
+import { actions as gameActions } from "@/actions";
 import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { spawnGridCell, spawnTree } from "@/startup";
-import { useGameStore } from "@/stores/gameStore";
 import { initHarvestable } from "@/systems/harvest";
-import { FarmerState, Harvestable, IsPlayer, Tree } from "@/traits";
+import { FarmerState, Harvestable, IsPlayer, Time, Tree } from "@/traits";
 import { HeadlessGameLoop } from "./HeadlessGameLoop";
 
 /** Set up a minimal world for simulation. */
 function setupWorld() {
   destroyAllEntitiesExceptWorld();
-  useGameStore.getState().resetGame();
+  gameActions().resetGame();
 
   spawnPlayer();
 
@@ -45,7 +45,7 @@ describe("HeadlessGameLoop", () => {
 
   it("advances game time", () => {
     const loop = new HeadlessGameLoop({ ticksPerSecond: 30 });
-    const timeBefore = useGameStore.getState().gameTimeMicroseconds;
+    const timeBefore = koota.get(Time)?.gameTimeMicroseconds ?? 0;
     loop.run(300);
     expect(loop.gameTime).not.toBeNull();
     expect(loop.gameTime!.microseconds).toBeGreaterThan(timeBefore);

@@ -1,7 +1,10 @@
+import { useTrait } from "koota/react";
 import { useState } from "react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
+import { koota } from "@/koota";
 import { getNpcTemplate } from "@/npcs/NpcManager";
-import { useGameStore } from "@/stores/gameStore";
+import { Build, PlayerProgress } from "@/traits";
 import type { StructureTemplate } from "@/structures/types";
 import { getCosmeticById } from "@/systems/prestige";
 import type { GameTime } from "@/systems/time";
@@ -94,7 +97,8 @@ export const GameUI = ({
   tutorialHighlightId,
   tutorialHighlightLabel,
 }: GameUIProps) => {
-  const { activeBorderCosmetic } = useGameStore();
+  const activeBorderCosmetic =
+    useTrait(koota, PlayerProgress)?.activeBorderCosmetic ?? null;
   const [buildPanelOpen, setBuildPanelOpen] = useState(false);
   const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
 
@@ -162,7 +166,7 @@ export const GameUI = ({
         style={{ bottom: 140, right: 12 }}
       >
         <ToolBelt
-          onSelectTool={(id) => useGameStore.getState().setSelectedTool(id)}
+          onSelectTool={(id) => gameActions().setSelectedTool(id)}
         />
       </div>
 
@@ -249,7 +253,7 @@ export const GameUI = ({
           open={buildPanelOpen}
           onClose={() => setBuildPanelOpen(false)}
           onSelectStructure={(template) => {
-            useGameStore.getState().setBuildMode(true, template.id);
+            gameActions().setBuildMode(true, template.id);
             setBuildPanelOpen(false);
           }}
         />
@@ -294,7 +298,8 @@ const BottomControls = ({
   tileState: TileState | null;
   nearbyNpcTemplateId: string | null;
 }) => {
-  const { selectedTool, buildMode } = useGameStore();
+  const selectedTool = useTrait(koota, PlayerProgress)?.selectedTool ?? "trowel";
+  const buildMode = useTrait(koota, Build)?.mode ?? false;
 
   // Tool-specific action button appearance
   const getActionButtonStyle = () => {

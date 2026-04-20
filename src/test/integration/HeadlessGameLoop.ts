@@ -6,9 +6,9 @@
  * Uses a fixed timestep for deterministic, reproducible results.
  */
 
+import { actions as gameActions } from "@/actions";
 import { koota } from "@/koota";
 import { hashString } from "@/shared/utils/seedRNG";
-import { useGameStore } from "@/stores/gameStore";
 import { growthSystem } from "@/systems/growth";
 import { harvestSystem, initHarvestable } from "@/systems/harvest";
 import { staminaSystem } from "@/systems/stamina";
@@ -25,7 +25,7 @@ import {
   type WeatherState,
   type WeatherType,
 } from "@/systems/weather";
-import { FarmerState, Harvestable, IsPlayer, Tree } from "@/traits";
+import { Harvestable, Time, Tree } from "@/traits";
 
 export interface HeadlessLoopConfig {
   /** Simulation ticks per second (default: 30). */
@@ -59,7 +59,7 @@ export class HeadlessGameLoop {
     this._timeScale = config.timeScale ?? 1;
 
     // Initialize the time system
-    initializeTime(useGameStore.getState().gameTimeMicroseconds);
+    initializeTime(koota.get(Time)?.gameTimeMicroseconds ?? 0);
   }
 
   /** Delta time per tick in seconds. */
@@ -135,12 +135,12 @@ export class HeadlessGameLoop {
       }
     }
 
-    // 5. Sync time to store periodically (every 30 ticks ~ 1s)
+    // 5. Sync time to Koota periodically (every 30 ticks ~ 1s)
     if (this._tickCount % 30 === 0) {
-      const store = useGameStore.getState();
-      store.setGameTime(this._gameTime.microseconds);
-      store.setCurrentSeason(season);
-      store.setCurrentDay(this._gameTime.day);
+      const a = gameActions();
+      a.setGameTime(this._gameTime.microseconds);
+      a.setCurrentSeason(season);
+      a.setCurrentDay(this._gameTime.day);
     }
 
     this._tickCount++;
@@ -156,25 +156,18 @@ export class HeadlessGameLoop {
   }
 
   /**
-   * Sync Zustand store stamina → ECS farmerState.
-   * GameActions deduct from the store; push that to ECS before staminaSystem runs.
+   * No-op — both actions and the stamina system now operate on the same
+   * FarmerState on the player entity. Kept for backwards compatibility
+   * with the original call site; scheduled for removal.
    */
   private syncStaminaToECS(): void {
-    const storeStamina = useGameStore.getState().stamina;
-    for (const entity of koota.query(IsPlayer, FarmerState)) {
-      const fs = entity.get(FarmerState);
-      entity.set(FarmerState, { ...fs, stamina: storeStamina });
-    }
+    /* no-op: Koota stamina lives on player entity already */
   }
 
   /**
-   * Sync ECS farmerState stamina → Zustand store.
-   * staminaSystem regenerates on ECS; push that back to the store.
+   * No-op — see syncStaminaToECS above.
    */
   private syncStaminaToStore(): void {
-    const entity = koota.queryFirst(IsPlayer, FarmerState);
-    if (entity) {
-      useGameStore.setState({ stamina: entity.get(FarmerState).stamina });
-    }
+    /* no-op: Koota stamina lives on player entity already */
   }
 }

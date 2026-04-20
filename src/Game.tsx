@@ -1,13 +1,21 @@
+import { useTrait } from "koota/react";
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { getDifficultyById } from "@/config/difficulty";
 import { getDb, isDbInitialized } from "@/db/client";
 import { initDatabase } from "@/db/init";
 import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { hydrateGameStore, setupNewGame } from "@/db/queries";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
 import { initializePlatform } from "@/systems/platform";
 import { generateDailyQuests } from "@/systems/quests";
+import {
+  CurrentSeason,
+  GameScreen,
+  PlayerProgress,
+  Quests,
+} from "@/traits";
 import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameModal } from "@/ui/game/NewGameModal";
@@ -32,18 +40,13 @@ const GameScene = lazy(() =>
 );
 
 export const Game = () => {
-  const {
-    screen,
-    setScreen,
-    currentSeason,
-    level,
-    completedGoalIds,
-    activeQuests,
-    setActiveQuests,
-    lastQuestRefresh,
-    setLastQuestRefresh,
-    hydrateFromDb,
-  } = useGameStore();
+  const screen = useTrait(koota, GameScreen)?.value ?? "menu";
+  const currentSeason = useTrait(koota, CurrentSeason)?.value ?? "spring";
+  const level = useTrait(koota, PlayerProgress)?.level ?? 1;
+  const quests = useTrait(koota, Quests);
+  const completedGoalIds = quests?.completedGoalIds ?? [];
+  const activeQuests = quests?.activeQuests ?? [];
+  const lastQuestRefresh = quests?.lastQuestRefresh ?? 0;
 
   const [dbLoading, setDbLoading] = useState(true);
   const [showNewGame, setShowNewGame] = useState(false);
@@ -63,9 +66,9 @@ export const Game = () => {
       .then((result) => {
         if (cancelled) return;
         if (!result.isNewGame) {
-          // Hydrate game store from SQLite
+          // Hydrate Koota state from SQLite
           const state = hydrateGameStore();
-          hydrateFromDb(state);
+          gameActions().hydrateFromDb(state);
         }
         setDbLoading(false);
       })
@@ -76,7 +79,7 @@ export const Game = () => {
     return () => {
       cancelled = true;
     };
-  }, [hydrateFromDb]);
+  }, []);
 
   // Generate daily quests if needed
   useEffect(() => {
@@ -88,8 +91,8 @@ export const Game = () => {
     if (activeQuests.length === 0 || now - lastQuestRefresh > oneDayMs) {
       const completedSet = new Set<string>(completedGoalIds);
       const newQuests = generateDailyQuests(currentSeason, level, completedSet);
-      setActiveQuests(newQuests);
-      setLastQuestRefresh(now);
+      gameActions().setActiveQuests(newQuests);
+      gameActions().setLastQuestRefresh(now);
     }
   }, [
     dbLoading,
@@ -98,13 +101,11 @@ export const Game = () => {
     completedGoalIds,
     activeQuests.length,
     lastQuestRefresh,
-    setActiveQuests,
-    setLastQuestRefresh,
   ]);
 
   // Go straight to playing — tutorial happens in-game via Elder Rowan NPC
   const handleStartGame = () => {
-    setScreen("playing");
+    gameActions().setScreen("playing");
   };
 
   // Handle "New Grove" button — show difficulty selection
@@ -119,8 +120,9 @@ export const Game = () => {
       if (!tier) return;
 
       try {
-        // Reset Zustand to initial state first
-        useGameStore.getState().resetGame();
+        const actions = gameActions();
+        // Reset Koota to initial state first
+        actions.resetGame();
 
         // Set up the new game in the database
         setupNewGame(
@@ -132,7 +134,7 @@ export const Game = () => {
 
         // Hydrate the store from the fresh database
         const state = hydrateGameStore();
-        hydrateFromDb(state);
+        actions.hydrateFromDb(state);
 
         // Persist to IndexedDB
         if (isDbInitialized()) {
@@ -142,13 +144,13 @@ export const Game = () => {
         }
 
         setShowNewGame(false);
-        setScreen("playing");
+        actions.setScreen("playing");
       } catch (error) {
         console.error("Failed to create new game:", error);
         setShowNewGame(false);
       }
     },
-    [hydrateFromDb, setScreen],
+    [],
   );
 
   // Loading state while database initializes
@@ -178,7 +180,7 @@ export const Game = () => {
       {screen === "menu" ? (
         <MainMenu onStartGame={handleStartGame} onNewGame={handleNewGame} />
       ) : (
-        <GameErrorBoundary onReset={() => setScreen("menu")}>
+        <GameErrorBoundary onReset={() => gameActions().setScreen("menu")}>
           <Suspense
             fallback={
               <div className="w-full h-full flex items-center justify-center bg-green-900 text-white">

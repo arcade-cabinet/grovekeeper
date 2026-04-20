@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useGameStore } from "@/stores/gameStore";
+import { actions as gameActions } from "@/actions";
+import { koota } from "@/koota";
+import { PlayerProgress, SpeciesProgressTrait } from "@/traits";
 import type { SpeciesProgress } from "./speciesDiscovery";
 import {
   checkDiscoveryProgress,
@@ -309,149 +311,142 @@ describe("speciesDiscovery", () => {
   // =========================================================================
   // gameStore integration
   // =========================================================================
-  describe("gameStore integration", () => {
+  describe("Koota integration", () => {
     beforeEach(() => {
-      useGameStore.getState().resetGame();
+      gameActions().resetGame();
     });
 
+    const getCodex = () => koota.get(SpeciesProgressTrait);
+    const getProgress = (id: string) => getCodex()?.speciesProgress[id];
+
     it("starts with empty speciesProgress", () => {
-      expect(useGameStore.getState().speciesProgress).toEqual({});
+      expect(getCodex()?.speciesProgress).toEqual({});
     });
 
     it("starts with empty pendingCodexUnlocks", () => {
-      expect(useGameStore.getState().pendingCodexUnlocks).toEqual([]);
+      expect(getCodex()?.pendingCodexUnlocks).toEqual([]);
     });
 
     it("trackSpeciesPlanting creates progress and sets tier 1", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
+      gameActions().trackSpeciesPlanting("white-oak");
+      const progress = getProgress("white-oak");
       expect(progress).toBeDefined();
-      expect(progress.timesPlanted).toBe(1);
-      expect(progress.discoveryTier).toBe(1);
+      expect(progress!.timesPlanted).toBe(1);
+      expect(progress!.discoveryTier).toBe(1);
     });
 
     it("trackSpeciesPlanting adds to pendingCodexUnlocks on tier change", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      expect(useGameStore.getState().pendingCodexUnlocks).toContain(
-        "white-oak",
-      );
+      gameActions().trackSpeciesPlanting("white-oak");
+      expect(getCodex()?.pendingCodexUnlocks).toContain("white-oak");
     });
 
     it("trackSpeciesPlanting does not duplicate pending on same-tier re-plant", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      // First plant triggers tier 0->1, second plant stays at tier 1
-      const pending = useGameStore
-        .getState()
-        .pendingCodexUnlocks.filter((id) => id === "white-oak");
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesPlanting("white-oak");
+      const pending = (getCodex()?.pendingCodexUnlocks ?? []).filter(
+        (id) => id === "white-oak",
+      );
       expect(pending.length).toBe(1);
     });
 
     it("trackSpeciesGrowth updates maxStageReached", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesGrowth("white-oak", 2);
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
-      expect(progress.maxStageReached).toBe(2);
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesGrowth("white-oak", 2);
+      expect(getProgress("white-oak")?.maxStageReached).toBe(2);
     });
 
     it("trackSpeciesGrowth does not decrease maxStageReached", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesGrowth("white-oak", 3);
-      useGameStore.getState().trackSpeciesGrowth("white-oak", 1);
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
-      expect(progress.maxStageReached).toBe(3);
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesGrowth("white-oak", 3);
+      gameActions().trackSpeciesGrowth("white-oak", 1);
+      expect(getProgress("white-oak")?.maxStageReached).toBe(3);
     });
 
     it("trackSpeciesGrowth to stage 3 sets tier 2", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesGrowth("white-oak", 3);
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
-      expect(progress.discoveryTier).toBe(2);
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesGrowth("white-oak", 3);
+      expect(getProgress("white-oak")?.discoveryTier).toBe(2);
     });
 
     it("trackSpeciesGrowth to stage 4 sets tier 3", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesGrowth("white-oak", 4);
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
-      expect(progress.discoveryTier).toBe(3);
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesGrowth("white-oak", 4);
+      expect(getProgress("white-oak")?.discoveryTier).toBe(3);
     });
 
     it("trackSpeciesHarvest increments harvest count and totalYield", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesHarvest("white-oak", 5);
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
-      expect(progress.timesHarvested).toBe(1);
-      expect(progress.totalYield).toBe(5);
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesHarvest("white-oak", 5);
+      const progress = getProgress("white-oak");
+      expect(progress?.timesHarvested).toBe(1);
+      expect(progress?.totalYield).toBe(5);
     });
 
     it("trackSpeciesHarvest accumulates yield across calls", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesHarvest("white-oak", 3);
-      useGameStore.getState().trackSpeciesHarvest("white-oak", 7);
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
-      expect(progress.timesHarvested).toBe(2);
-      expect(progress.totalYield).toBe(10);
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesHarvest("white-oak", 3);
+      gameActions().trackSpeciesHarvest("white-oak", 7);
+      const progress = getProgress("white-oak");
+      expect(progress?.timesHarvested).toBe(2);
+      expect(progress?.totalYield).toBe(10);
     });
 
     it("trackSpeciesHarvest 10 times reaches tier 4", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesGrowth("white-oak", 4);
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesGrowth("white-oak", 4);
       for (let i = 0; i < 10; i++) {
-        useGameStore.getState().trackSpeciesHarvest("white-oak", 2);
+        gameActions().trackSpeciesHarvest("white-oak", 2);
       }
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
-      expect(progress.discoveryTier).toBe(4);
+      expect(getProgress("white-oak")?.discoveryTier).toBe(4);
     });
 
     it("consumePendingCodexUnlock returns first unlock and removes it", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesPlanting("elder-pine");
-      const first = useGameStore.getState().consumePendingCodexUnlock();
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesPlanting("elder-pine");
+      const first = gameActions().consumePendingCodexUnlock();
       expect(first).toBe("white-oak");
-      expect(useGameStore.getState().pendingCodexUnlocks).toEqual([
-        "elder-pine",
-      ]);
+      expect(getCodex()?.pendingCodexUnlocks).toEqual(["elder-pine"]);
     });
 
     it("consumePendingCodexUnlock returns null when empty", () => {
-      const result = useGameStore.getState().consumePendingCodexUnlock();
+      const result = gameActions().consumePendingCodexUnlock();
       expect(result).toBeNull();
     });
 
     it("speciesProgress is preserved across prestige", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      useGameStore.getState().trackSpeciesGrowth("white-oak", 4);
-      useGameStore.setState({ level: 25, xp: 99999 });
-      useGameStore.getState().performPrestige();
-      const progress = useGameStore.getState().speciesProgress["white-oak"];
+      gameActions().trackSpeciesPlanting("white-oak");
+      gameActions().trackSpeciesGrowth("white-oak", 4);
+      const pp = koota.get(PlayerProgress);
+      if (pp) koota.set(PlayerProgress, { ...pp, level: 25, xp: 99999 });
+      gameActions().performPrestige();
+      const progress = getProgress("white-oak");
       expect(progress).toBeDefined();
-      expect(progress.discoveryTier).toBe(3);
-      expect(progress.maxStageReached).toBe(4);
+      expect(progress!.discoveryTier).toBe(3);
+      expect(progress!.maxStageReached).toBe(4);
     });
 
     it("pendingCodexUnlocks is cleared on prestige", () => {
-      useGameStore.getState().trackSpeciesPlanting("white-oak");
-      expect(
-        useGameStore.getState().pendingCodexUnlocks.length,
-      ).toBeGreaterThan(0);
-      useGameStore.setState({ level: 25, xp: 99999 });
-      useGameStore.getState().performPrestige();
-      expect(useGameStore.getState().pendingCodexUnlocks).toEqual([]);
+      gameActions().trackSpeciesPlanting("white-oak");
+      expect(getCodex()?.pendingCodexUnlocks.length).toBeGreaterThan(0);
+      const pp = koota.get(PlayerProgress);
+      if (pp) koota.set(PlayerProgress, { ...pp, level: 25, xp: 99999 });
+      gameActions().performPrestige();
+      expect(getCodex()?.pendingCodexUnlocks).toEqual([]);
     });
 
     it("trackSpeciesGrowth creates progress for untracked species", () => {
-      useGameStore.getState().trackSpeciesGrowth("redwood", 2);
-      const progress = useGameStore.getState().speciesProgress.redwood;
+      gameActions().trackSpeciesGrowth("redwood", 2);
+      const progress = getProgress("redwood");
       expect(progress).toBeDefined();
-      expect(progress.maxStageReached).toBe(2);
+      expect(progress!.maxStageReached).toBe(2);
     });
 
     it("trackSpeciesHarvest creates progress for untracked species", () => {
-      useGameStore.getState().trackSpeciesHarvest("redwood", 5);
-      const progress = useGameStore.getState().speciesProgress.redwood;
+      gameActions().trackSpeciesHarvest("redwood", 5);
+      const progress = getProgress("redwood");
       expect(progress).toBeDefined();
-      expect(progress.timesHarvested).toBe(1);
-      expect(progress.totalYield).toBe(5);
+      expect(progress!.timesHarvested).toBe(1);
+      expect(progress!.totalYield).toBe(5);
     });
   });
 });

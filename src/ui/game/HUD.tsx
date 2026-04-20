@@ -1,7 +1,10 @@
 import { RiBuilding2Line, RiMenuLine, RiToolsLine } from "@remixicon/react";
+import { useTrait } from "koota/react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
 import type { GameTime } from "@/systems/time";
+import { PlayerProgress, Quests } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import { QuestPanel } from "./QuestPanel";
 import { ResourceBar } from "./ResourceBar";
@@ -22,31 +25,27 @@ export const HUD = ({
   onOpenBuild,
   gameTime,
 }: HUDProps) => {
-  const {
-    selectedTool,
-    activeQuests,
-    addXp,
-    addResource,
-    addSeed,
-    completeQuest,
-    level,
-  } = useGameStore();
+  const progress = useTrait(koota, PlayerProgress);
+  const selectedTool = progress?.selectedTool ?? "trowel";
+  const level = progress?.level ?? 1;
+  const activeQuests = useTrait(koota, Quests)?.activeQuests ?? [];
 
   const handleClaimReward = (questId: string) => {
     const quest = activeQuests.find((q) => q.id === questId);
     if (quest?.completed) {
-      addXp(quest.rewards.xp);
+      const a = gameActions();
+      a.addXp(quest.rewards.xp);
       if (quest.rewards.resources) {
         for (const r of quest.rewards.resources) {
-          addResource(r.type, r.amount);
+          a.addResource(r.type, r.amount);
         }
       }
       if (quest.rewards.seeds) {
         for (const s of quest.rewards.seeds) {
-          addSeed(s.speciesId, s.amount);
+          a.addSeed(s.speciesId, s.amount);
         }
       }
-      completeQuest(questId);
+      a.completeQuest(questId);
     }
   };
 

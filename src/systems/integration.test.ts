@@ -13,9 +13,9 @@ import type { Entity } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MAX_STAGE } from "@/config/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "@/config/difficulty";
+import { actions as gameActions } from "@/actions";
 import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { spawnTree } from "@/startup";
-import { useGameStore } from "@/stores/gameStore";
 import { Difficulty, FarmerState, Harvestable, Tree } from "@/traits";
 import {
   canAffordExpansion,
@@ -77,7 +77,7 @@ function measureProgress(
 describe("Cross-System Integration Tests", () => {
   beforeEach(() => {
     destroyAllEntitiesExceptWorld();
-    useGameStore.getState().resetGame();
+    gameActions().resetGame();
   });
 
   describe("Difficulty tiers affect growth rates", () => {

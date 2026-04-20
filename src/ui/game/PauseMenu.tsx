@@ -1,11 +1,22 @@
+import { useTrait } from "koota/react";
 import { useRef, useState } from "react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { getDifficultyById } from "@/config/difficulty";
 import { TOOLS } from "@/config/tools";
 import { TREE_SPECIES } from "@/config/trees";
 import { isDbInitialized } from "@/db/client";
 import { exportSaveFile, importSaveFile } from "@/db/export";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import {
+  Achievements,
+  Difficulty,
+  Grid,
+  PlayerProgress,
+  Resources,
+  Settings,
+  Tracking,
+} from "@/traits";
 import { ACHIEVEMENT_DEFS } from "@/systems/achievements";
 import {
   canAffordExpansion,
@@ -53,32 +64,40 @@ function formatCost(cost: Record<string, number>): string {
 }
 
 export const PauseMenu = ({ open, onClose, onMainMenu }: PauseMenuProps) => {
-  const {
-    coins,
-    xp,
-    level,
-    treesPlanted,
-    treesMatured,
-    unlockedSpecies,
-    unlockedTools,
-    gridSize,
-    prestigeCount,
-    resources,
-    achievements,
-    activeBorderCosmetic,
-    difficulty,
-    soundEnabled,
-    expandGrid,
-    performPrestige,
-    setActiveBorderCosmetic,
-    setSoundEnabled,
-  } = useGameStore();
+  const progress = useTrait(koota, PlayerProgress);
+  const resources = useTrait(koota, Resources) ?? {
+    timber: 0,
+    sap: 0,
+    fruit: 0,
+    acorns: 0,
+  };
+  const achievements = useTrait(koota, Achievements) ?? [];
+  const gridSize = useTrait(koota, Grid)?.gridSize ?? 12;
+  const settings = useTrait(koota, Settings);
+  const difficulty = useTrait(koota, Difficulty)?.id ?? "normal";
+  const tracking = useTrait(koota, Tracking);
+  const coins = progress?.coins ?? 0;
+  const xp = progress?.xp ?? 0;
+  const level = progress?.level ?? 1;
+  const unlockedSpecies = progress?.unlockedSpecies ?? ["white-oak"];
+  const unlockedTools = progress?.unlockedTools ?? ["trowel", "watering-can"];
+  const prestigeCount = progress?.prestigeCount ?? 0;
+  const activeBorderCosmetic = progress?.activeBorderCosmetic ?? null;
+  const soundEnabled = settings?.soundEnabled ?? true;
+  const treesPlanted = tracking?.treesPlanted ?? 0;
+  const treesMatured = tracking?.treesMatured ?? 0;
 
   const [confirmingPrestige, setConfirmingPrestige] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
   const diffTier = getDifficultyById(difficulty);
+
+  const expandGrid = () => gameActions().expandGrid();
+  const performPrestige = () => gameActions().performPrestige();
+  const setActiveBorderCosmetic = (id: string | null) =>
+    gameActions().setActiveBorderCosmetic(id);
+  const setSoundEnabled = (v: boolean) => gameActions().setSoundEnabled(v);
 
   // Grid expansion
   const nextTier = getNextExpansionTier(gridSize);

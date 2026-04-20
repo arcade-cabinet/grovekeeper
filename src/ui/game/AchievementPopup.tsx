@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { create } from "zustand";
 import { COLORS } from "@/config/config";
+import { createSimpleStore } from "@/shared/utils/simpleStore";
 import { ACHIEVEMENT_DEFS } from "@/systems/achievements";
 
 // ---------------------------------------------------------------------------
@@ -13,11 +13,6 @@ export interface AchievementPopupItem {
   createdAt: number;
 }
 
-interface AchievementPopupStore {
-  popup: AchievementPopupItem | null;
-  showAchievement: (achievementId: string) => void;
-  clearPopup: () => void;
-}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -62,42 +57,35 @@ const ACHIEVEMENT_EMOJI_MAP: Record<string, string> = {
 
 let popupCounter = 0;
 
-export const achievementPopupStore = create<AchievementPopupStore>(
-  (set, get) => ({
-    popup: null,
+export const achievementPopupStore = createSimpleStore<{
+  popup: AchievementPopupItem | null;
+}>({ popup: null });
 
-    showAchievement: (achievementId: string) => {
-      popupCounter += 1;
-      const id = `achievement-popup-${Date.now()}-${popupCounter}`;
-      const item: AchievementPopupItem = {
-        id,
-        achievementId,
-        createdAt: Date.now(),
-      };
-
-      set({ popup: item });
-
-      // Auto-dismiss
-      setTimeout(() => {
-        const current = get().popup;
-        if (current && current.id === id) {
-          get().clearPopup();
-        }
-      }, AUTO_DISMISS_MS);
-    },
-
-    clearPopup: () => {
-      set({ popup: null });
-    },
-  }),
-);
+function clearPopup(): void {
+  achievementPopupStore.set({ popup: null });
+}
 
 // ---------------------------------------------------------------------------
 // Convenience helper
 // ---------------------------------------------------------------------------
 
 export const showAchievement = (achievementId: string) => {
-  achievementPopupStore.getState().showAchievement(achievementId);
+  popupCounter += 1;
+  const id = `achievement-popup-${Date.now()}-${popupCounter}`;
+  const item: AchievementPopupItem = {
+    id,
+    achievementId,
+    createdAt: Date.now(),
+  };
+
+  achievementPopupStore.set({ popup: item });
+
+  setTimeout(() => {
+    const current = achievementPopupStore.get().popup;
+    if (current && current.id === id) {
+      clearPopup();
+    }
+  }, AUTO_DISMISS_MS);
 };
 
 // ---------------------------------------------------------------------------
@@ -362,12 +350,9 @@ const AnimatedAchievementPopup = ({
 // ---------------------------------------------------------------------------
 
 export const AchievementPopupContainer = () => {
-  const popup = achievementPopupStore((s) => s.popup);
-  const clearPopup = achievementPopupStore((s) => s.clearPopup);
+  const popup = achievementPopupStore.use((s) => s.popup);
 
   if (!popup) return null;
 
-  return (
-    <AnimatedAchievementPopup item={popup} onDismiss={() => clearPopup()} />
-  );
+  return <AnimatedAchievementPopup item={popup} onDismiss={clearPopup} />;
 };

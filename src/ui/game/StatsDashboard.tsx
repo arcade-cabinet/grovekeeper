@@ -1,5 +1,12 @@
+import { useTrait } from "koota/react";
 import { COLORS } from "@/config/config";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import {
+  Achievements,
+  LifetimeResources,
+  PlayerProgress,
+  Tracking,
+} from "@/traits";
 import {
   Dialog,
   DialogContent,
@@ -13,17 +20,22 @@ interface StatsDashboardProps {
 }
 
 export const StatsDashboard = ({ open, onClose }: StatsDashboardProps) => {
-  const {
-    treesPlanted,
-    treesHarvested,
-    treesWatered,
-    treesMatured,
-    lifetimeResources,
-    achievements,
-    prestigeCount,
-    level,
-    speciesPlanted,
-  } = useGameStore();
+  const tracking = useTrait(koota, Tracking);
+  const progress = useTrait(koota, PlayerProgress);
+  const lifetimeResources = useTrait(koota, LifetimeResources) ?? {
+    timber: 0,
+    sap: 0,
+    fruit: 0,
+    acorns: 0,
+  };
+  const achievements = useTrait(koota, Achievements) ?? [];
+  const treesPlanted = tracking?.treesPlanted ?? 0;
+  const treesHarvested = tracking?.treesHarvested ?? 0;
+  const treesWatered = tracking?.treesWatered ?? 0;
+  const treesMatured = tracking?.treesMatured ?? 0;
+  const speciesPlanted = tracking?.speciesPlanted ?? [];
+  const prestigeCount = progress?.prestigeCount ?? 0;
+  const level = progress?.level ?? 1;
 
   const stats = [
     { label: "Trees Planted", value: treesPlanted, icon: "\uD83C\uDF31" },

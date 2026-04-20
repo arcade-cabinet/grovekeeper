@@ -1,5 +1,8 @@
+import { useTrait } from "koota/react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { Tracking } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import { Card } from "@/ui/primitives/card";
 import { FarmerMascot } from "./FarmerMascot";
@@ -11,7 +14,9 @@ interface MainMenuProps {
 }
 
 export const MainMenu = ({ onStartGame, onNewGame }: MainMenuProps) => {
-  const { setScreen, treesPlanted } = useGameStore();
+  const treesPlanted = useTrait(koota, Tracking)?.treesPlanted ?? 0;
+  const setScreen = (s: "menu" | "playing" | "paused" | "seedSelect" | "rules") =>
+    gameActions().setScreen(s);
   const hasSave = treesPlanted > 0;
 
   const handleStart = () => {

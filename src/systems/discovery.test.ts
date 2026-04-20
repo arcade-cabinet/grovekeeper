@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useGameStore } from "@/stores/gameStore";
+import { actions as gameActions } from "@/actions";
+import { koota } from "@/koota";
+import { PlayerProgress, WorldMeta } from "@/traits";
 import { discoverZone, isZoneDiscovered } from "./discovery";
 
 describe("discovery", () => {
@@ -43,31 +45,31 @@ describe("discovery", () => {
     });
   });
 
-  describe("gameStore integration", () => {
+  describe("Koota integration", () => {
     beforeEach(() => {
-      useGameStore.getState().resetGame();
+      gameActions().resetGame();
     });
 
     it("starting grove is always in initial discovered zones", () => {
-      const state = useGameStore.getState();
-      expect(state.discoveredZones).toContain("starting-grove");
+      const zones = koota.get(WorldMeta)?.discoveredZones ?? [];
+      expect(zones).toContain("starting-grove");
     });
 
     it("discoverZone action adds a new zone and returns true", () => {
-      const result = useGameStore.getState().discoverZone("forest-east");
+      const result = gameActions().discoverZone("forest-east");
       expect(result).toBe(true);
-      expect(useGameStore.getState().discoveredZones).toContain("forest-east");
+      expect(koota.get(WorldMeta)?.discoveredZones).toContain("forest-east");
     });
 
     it("discoverZone action returns false for already discovered zone", () => {
-      const result = useGameStore.getState().discoverZone("starting-grove");
+      const result = gameActions().discoverZone("starting-grove");
       expect(result).toBe(false);
     });
 
     it("discoverZone action awards XP", () => {
-      const xpBefore = useGameStore.getState().xp;
-      useGameStore.getState().discoverZone("forest-east");
-      expect(useGameStore.getState().xp).toBe(xpBefore + 50);
+      const xpBefore = koota.get(PlayerProgress)?.xp ?? 0;
+      gameActions().discoverZone("forest-east");
+      expect(koota.get(PlayerProgress)?.xp).toBe(xpBefore + 50);
     });
   });
 });

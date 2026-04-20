@@ -8,9 +8,11 @@ import {
   RiSeedlingLine,
   RiToolsLine,
 } from "@remixicon/react";
+import { useTrait } from "koota/react";
 import { COLORS } from "@/config/config";
 import { TOOLS } from "@/config/tools";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { PlayerProgress, Seeds } from "@/traits";
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {
   trowel: <RiPlantLine className="w-5 h-5" />,
@@ -28,11 +30,12 @@ interface ToolBeltProps {
 }
 
 export const ToolBelt = ({ onSelectTool }: ToolBeltProps) => {
-  const selectedTool = useGameStore((s) => s.selectedTool);
-  const unlockedTools = useGameStore((s) => s.unlockedTools);
-  const level = useGameStore((s) => s.level);
-  const seeds = useGameStore((s) => s.seeds);
-  const selectedSpecies = useGameStore((s) => s.selectedSpecies);
+  const progress = useTrait(koota, PlayerProgress);
+  const selectedTool = progress?.selectedTool ?? "trowel";
+  const unlockedTools = progress?.unlockedTools ?? ["trowel", "watering-can"];
+  const level = progress?.level ?? 1;
+  const selectedSpecies = progress?.selectedSpecies ?? "white-oak";
+  const seeds = useTrait(koota, Seeds) ?? {};
 
   return (
     <div

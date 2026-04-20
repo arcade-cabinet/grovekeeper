@@ -8,9 +8,12 @@ import {
   RiSeedlingLine,
   RiToolsLine,
 } from "@remixicon/react";
+import { useTrait } from "koota/react";
+import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { TOOLS, type ToolData } from "@/config/tools";
-import { useGameStore } from "@/stores/gameStore";
+import { koota } from "@/koota";
+import { PlayerProgress } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -36,16 +39,19 @@ const toolIcons: Record<string, React.ReactNode> = {
 };
 
 export const ToolWheel = ({ open, onClose }: ToolWheelProps) => {
-  const { unlockedTools, selectedTool, setSelectedTool, level, unlockTool } =
-    useGameStore();
+  const progress = useTrait(koota, PlayerProgress);
+  const unlockedTools = progress?.unlockedTools ?? ["trowel", "watering-can"];
+  const selectedTool = progress?.selectedTool ?? "trowel";
+  const level = progress?.level ?? 1;
 
   const handleSelectTool = (tool: ToolData) => {
+    const a = gameActions();
     if (unlockedTools.includes(tool.id)) {
-      setSelectedTool(tool.id);
+      a.setSelectedTool(tool.id);
       onClose();
     } else if (level >= tool.unlockLevel) {
-      unlockTool(tool.id);
-      setSelectedTool(tool.id);
+      a.unlockTool(tool.id);
+      a.setSelectedTool(tool.id);
       onClose();
     }
   };
