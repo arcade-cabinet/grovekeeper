@@ -1,8 +1,9 @@
 ---
 title: Core Game Loop
 updated: 2026-04-19
-status: current
+status: stale
 domain: product
+stale_reason: "References React+Zustand save path + pre-port src/game/scene/ manager layout. Core loop mechanics are still accurate; code references need a pass."
 ---
 
 # Core Game Loop

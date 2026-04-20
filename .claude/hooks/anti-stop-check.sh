@@ -32,7 +32,7 @@ grep -qi "^\\*\\*Status:\\*\\* *ACTIVE" "$DIRECTIVE" || exit 0
 OPEN=$(grep -cE '^- \[ \]' "$DIRECTIVE" || true)
 if [ "$OPEN" -eq 0 ]; then
   # Queue drained. Allow stop. Mark done.
-  sed -i '' 's/^\\*\\*Status:\\*\\* *ACTIVE/**Status:** DRAINED/' "$DIRECTIVE" 2>/dev/null || true
+  sed -i '' 's/^\*\*Status:\*\* *ACTIVE/**Status:** DRAINED/' "$DIRECTIVE" 2>/dev/null || true
   exit 0
 fi
 
@@ -46,7 +46,7 @@ if [ "$CURRENT_SHA" = "$LAST_SHA" ]; then
 ⛔ STOP BLOCKED: continuous directive is ACTIVE and no new commit was made
    since the last stop attempt (HEAD still $CURRENT_SHA).
 
-Queue has $OPEN open items in .claude/state/continuous-directive.md.
+Queue has $OPEN open items in .claude/continuous-directive.md.
 Pick the top one, ship a commit, then you may stop.
 
 If the user has explicitly said "stop", change the directive's

@@ -1,8 +1,9 @@
 ---
 title: Rendering Architecture
 updated: 2026-04-19
-status: current
+status: stale
 domain: technical
+stale_reason: "References pre-port src/game/scene/ layout. Scene managers now live under src/engine/scene/ and are orchestrated by src/engine/scenes/GameScene.tsx."
 ---
 
 # Rendering Architecture

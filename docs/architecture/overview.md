@@ -1,8 +1,9 @@
 ---
 title: Architecture Overview
 updated: 2026-04-19
-status: current
+status: stale
 domain: technical
+stale_reason: "References pre-port src/game/ layout + React architecture. See docs/architecture/state-management.md and ecs-patterns.md for the current Solid+Koota picture."
 ---
 
 # Architecture Overview
