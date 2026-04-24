@@ -37,6 +37,10 @@ export class CameraManager {
   private shakeRemainingMs = 0;
   /** Shake amplitude (world units applied to camera target). */
   private shakeAmplitude = 0;
+  /** Deterministic shake phase — advances per frame, feeds sin/cos for jitter. */
+  private shakePhase = 0;
+  /** Reusable Vector3 buffer — avoids per-frame allocation in trackTarget. */
+  private readonly _targetBuf = new Vector3(0, 0, 0);
 
   init(
     scene: Scene,
@@ -106,16 +110,22 @@ export class CameraManager {
     if (this.shakeRemainingMs > 0 && !prefersReducedMotion) {
       const decay = this.shakeRemainingMs / 50; // 50 ms canonical duration
       const a = this.shakeAmplitude * decay;
-      jitterX = (Math.random() - 0.5) * 2 * a;
-      jitterZ = (Math.random() - 0.5) * 2 * a;
+      this.shakePhase += dt * 47; // irrational-ish tick rate to avoid visible looping
+      jitterX = Math.sin(this.shakePhase * 11.1) * a;
+      jitterZ = Math.cos(this.shakePhase * 13.7) * a;
       this.shakeRemainingMs = Math.max(0, this.shakeRemainingMs - dt * 1000);
     }
-    const target = new Vector3(worldX + jitterX, TARGET_Y, worldZ + jitterZ);
+    this._targetBuf.set(worldX + jitterX, TARGET_Y, worldZ + jitterZ);
     if (prefersReducedMotion) {
-      this.camera.target = target;
+      this.camera.target.copyFrom(this._targetBuf);
     } else {
       const factor = Math.min(1, dt * LERP_SPEED);
-      this.camera.target = Vector3.Lerp(this.camera.target, target, factor);
+      Vector3.LerpToRef(
+        this.camera.target,
+        this._targetBuf,
+        factor,
+        this.camera.target,
+      );
     }
   }
 
