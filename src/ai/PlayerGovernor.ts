@@ -15,6 +15,7 @@
 import type { Entity } from "koota";
 import { GameEntity, GoalEvaluator, Think } from "yuka";
 import { actions as gameActions } from "@/actions";
+import { scopedRNG } from "@/shared/utils/seedRNG";
 import type { ResourceType } from "@/config/resources";
 import { getSpeciesById } from "@/config/trees";
 import {
@@ -213,6 +214,8 @@ export class PlayerGovernor {
   private currentTarget: ActionTarget | null = null;
   private pathState: PathFollowState | null = null;
   private pauseTimer = 0;
+  /** Monotonic counter passed as a key to scopedRNG so consecutive explore rolls diverge. */
+  private rngCounter = 0;
 
   // Evaluators
   private evaluators: Map<ActionType, GoalEvaluator<GovernorEntity>>;
@@ -395,8 +398,12 @@ export class PlayerGovernor {
         if (!bounds) return null;
         const rangeX = bounds.maxX - bounds.minX;
         const rangeZ = bounds.maxZ - bounds.minZ;
-        const tx = bounds.minX + Math.floor(Math.random() * rangeX);
-        const tz = bounds.minZ + Math.floor(Math.random() * rangeZ);
+        // Two separate scopedRNG calls (different counters) so X and Z are
+        // independently sampled and consecutive explores pick different tiles.
+        const rngX = scopedRNG("player-governor-explore", this.rngCounter++);
+        const rngZ = scopedRNG("player-governor-explore", this.rngCounter++);
+        const tx = bounds.minX + Math.floor(rngX() * rangeX);
+        const tz = bounds.minZ + Math.floor(rngZ() * rangeZ);
         return { action: "explore", tileX: tx, tileZ: tz };
       }
     }

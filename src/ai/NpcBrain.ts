@@ -5,6 +5,7 @@ import {
   isNpcMoving,
   startNpcPath,
 } from "@/systems/npcMovement";
+import { scopedRNG } from "@/shared/utils/seedRNG";
 
 // ──────────────────────────────────────────────
 // Types
@@ -143,6 +144,8 @@ export class NpcBrain {
   private currentBehavior: NpcBehavior = "idle";
   private readonly homeX: number;
   private readonly homeZ: number;
+  /** Monotonic counter passed as a key to scopedRNG so consecutive rolls diverge. */
+  private rngCounter = 0;
 
   /** Tutorial override — when set, normal AI is suppressed. */
   private tutorialOverride: {
@@ -164,8 +167,12 @@ export class NpcBrain {
     this.homeZ = homeZ;
 
     this.entity = new NpcEntity();
-    // Stagger initial wander timer so NPCs don't all wander at once
-    this.entity.wanderTimer = Math.random() * WANDER_INTERVAL;
+    // Stagger initial wander timer so NPCs don't all wander at once.
+    // scopedRNG keyed by identity ensures a given NPC always gets the same
+    // initial stagger across saves, while different NPCs get different values.
+    this.entity.wanderTimer =
+      scopedRNG("npc-wander-init", entityId, templateId, homeX, homeZ)() *
+      WANDER_INTERVAL;
 
     const idleEval = new IdleEvaluator(1);
     const wanderEval = new WanderEvaluator(1);
@@ -286,11 +293,23 @@ export class NpcBrain {
   // ──────────────────────────────────────────────
 
   private executeWander(ctx: NpcBrainContext): void {
-    // Pick a random walkable tile within WANDER_RANGE of home
-    const offsetX =
-      Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
-    const offsetZ =
-      Math.floor(Math.random() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
+    // Pick a random walkable tile within WANDER_RANGE of home.
+    // Two separate scopedRNG calls (different counters) so X and Z are
+    // independently sampled and consecutive wanders produce different targets.
+    const rngX = scopedRNG(
+      "npc-wander-target",
+      this.entityId,
+      this.templateId,
+      this.rngCounter++,
+    );
+    const rngZ = scopedRNG(
+      "npc-wander-target",
+      this.entityId,
+      this.templateId,
+      this.rngCounter++,
+    );
+    const offsetX = Math.floor(rngX() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
+    const offsetZ = Math.floor(rngZ() * (WANDER_RANGE * 2 + 1)) - WANDER_RANGE;
     const targetX = this.homeX + offsetX;
     const targetZ = this.homeZ + offsetZ;
 
