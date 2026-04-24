@@ -336,6 +336,12 @@ export const GameScene = () => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(saveCurrentGrove, 1000);
   };
+  onCleanup(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+  });
 
   // --- ECS initialization ---
   onMount(() => {
