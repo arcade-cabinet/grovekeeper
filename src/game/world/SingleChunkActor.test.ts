@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // We can't drive a real `@jolly-pixel/engine` Actor here without a
-// THREE.WebGLRenderer (and thus a real DOM canvas). Mock the two engine
-// imports SingleChunkActor uses so the test stays in node and only
-// exercises our orchestration logic. Mock factories are hoisted by
-// Vitest, so all helpers must be created via `vi.hoisted` to dodge the
-// temporal dead zone.
+// THREE.WebGLRenderer (and thus a real DOM canvas). Mock the two
+// engine imports SingleChunkActor uses so the test stays in node and
+// only exercises our orchestration logic. Mock factories are hoisted
+// by Vitest, so all helpers must be created via `vi.hoisted` to dodge
+// the temporal dead zone.
 
 const mocks = vi.hoisted(() => {
   class FakeActorComponent {
@@ -33,7 +33,9 @@ vi.mock("@jolly-pixel/voxel.renderer", () => ({
   VoxelRenderer: mocks.FakeVoxelRenderer,
 }));
 
-import { MEADOW_CHUNK_TUNING } from "./meadowChunk";
+import { _resetBiomeTilesetCacheFor } from "./BiomeTilesetLoader";
+import { BIOME_IDS, getBiome } from "./biomes";
+import { CHUNK_TUNING } from "./chunkGenerator";
 import { SingleChunkActor } from "./SingleChunkActor";
 
 describe("SingleChunkActor", () => {
@@ -60,34 +62,68 @@ describe("SingleChunkActor", () => {
       load: loadMock,
     };
     addComponentAndGetMock.mockReturnValue(fakeRenderer);
+    // Reset the per-renderer tileset cache so each test re-issues the
+    // load call (otherwise the second test would see 0 calls).
+    _resetBiomeTilesetCacheFor(fakeRenderer);
     return {
       actor: { addComponentAndGet: addComponentAndGetMock },
       renderer: fakeRenderer,
     };
   }
 
-  it("registers all meadow blocks on awake", async () => {
+  it("defaults to meadow when no biome option is passed", async () => {
     const { actor } = makeActor();
     // biome-ignore lint/suspicious/noExplicitAny: opaque Actor type for a stub.
     const sc = new SingleChunkActor(actor as any);
     sc.awake();
     await sc.whenLoaded();
 
-    // 5 meadow blocks: grass-flat, grass-tall, dirt, stone, wildflower.
-    expect(registerMock).toHaveBeenCalledTimes(5);
+    expect(sc.biomeId).toBe("meadow");
+    const meadow = getBiome("meadow");
+    expect(registerMock).toHaveBeenCalledTimes(meadow.blocks.length);
   });
 
-  it("loads the meadow tileset before pushing the chunk JSON", async () => {
+  it("registers all of the chosen biome's blocks on awake", async () => {
+    for (const id of BIOME_IDS) {
+      const localRegister = vi.fn();
+      const localLoadTileset = vi.fn().mockResolvedValue(undefined);
+      const localLoad = vi.fn().mockResolvedValue(undefined);
+      const localRenderer = {
+        blockRegistry: { register: localRegister },
+        loadTileset: localLoadTileset,
+        load: localLoad,
+      };
+      _resetBiomeTilesetCacheFor(localRenderer);
+      const localActor = {
+        addComponentAndGet: vi.fn().mockReturnValue(localRenderer),
+      };
+
+      // biome-ignore lint/suspicious/noExplicitAny: opaque Actor type for a stub.
+      const sc = new SingleChunkActor(localActor as any, { biome: id });
+      sc.awake();
+      await sc.whenLoaded();
+
+      const biome = getBiome(id);
+      expect(localRegister).toHaveBeenCalledTimes(biome.blocks.length);
+      for (const block of biome.blocks) {
+        expect(localRegister).toHaveBeenCalledWith(block);
+      }
+    }
+  });
+
+  it("requests the chosen biome's tileset before pushing the chunk JSON", async () => {
     const { actor } = makeActor();
     // biome-ignore lint/suspicious/noExplicitAny: opaque Actor type for a stub.
-    const sc = new SingleChunkActor(actor as any);
+    const sc = new SingleChunkActor(actor as any, { biome: "forest" });
     sc.awake();
     await sc.whenLoaded();
 
     expect(loadTilesetMock).toHaveBeenCalledTimes(1);
     expect(loadMock).toHaveBeenCalledTimes(1);
-    // Tileset must complete before chunk load — assert ordering by
-    // mock invocation order numbers.
+    const tilesetArg = loadTilesetMock.mock.calls[0]?.[0];
+    expect(tilesetArg?.id).toBe("forest");
+    // Tileset must complete before chunk load — assert ordering by mock
+    // invocation order numbers.
     const tilesetOrder = loadTilesetMock.mock.invocationCallOrder[0];
     const loadOrder = loadMock.mock.invocationCallOrder[0];
     expect(tilesetOrder).toBeLessThan(loadOrder);
@@ -103,15 +139,34 @@ describe("SingleChunkActor", () => {
     const arg = loadMock.mock.calls[0]?.[0];
     expect(arg).toBeDefined();
     expect(arg.version).toBe(1);
-    expect(arg.chunkSize).toBe(MEADOW_CHUNK_TUNING.size);
+    expect(arg.chunkSize).toBe(CHUNK_TUNING.size);
     expect(arg.blocks?.length).toBeGreaterThan(0);
     expect(arg.layers.length).toBe(2);
   });
 
+  it("the chunk JSON's tileset id matches the chosen biome", async () => {
+    for (const id of BIOME_IDS) {
+      const localLoad = vi.fn().mockResolvedValue(undefined);
+      const localRenderer = {
+        blockRegistry: { register: vi.fn() },
+        loadTileset: vi.fn().mockResolvedValue(undefined),
+        load: localLoad,
+      };
+      _resetBiomeTilesetCacheFor(localRenderer);
+      const localActor = {
+        addComponentAndGet: vi.fn().mockReturnValue(localRenderer),
+      };
+      // biome-ignore lint/suspicious/noExplicitAny: opaque Actor type for a stub.
+      const sc = new SingleChunkActor(localActor as any, { biome: id });
+      sc.awake();
+      await sc.whenLoaded();
+      const arg = localLoad.mock.calls[0]?.[0];
+      expect(arg.tilesets?.[0]?.id).toBe(id);
+    }
+  });
+
   it("exposes SURFACE_Y above groundY so the player spawns clear of the hill bump", () => {
-    expect(SingleChunkActor.SURFACE_Y).toBeGreaterThan(
-      MEADOW_CHUNK_TUNING.groundY,
-    );
+    expect(SingleChunkActor.SURFACE_Y).toBeGreaterThan(CHUNK_TUNING.groundY);
   });
 
   it("swallows load errors instead of rejecting", async () => {

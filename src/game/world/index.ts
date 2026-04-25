@@ -1,25 +1,49 @@
 /**
- * World module barrel — re-exports the Wave 7 meadow chunk surface so
- * other modules (`scene/runtime.ts`, future streamer in Wave 9) can
+ * World module barrel — re-exports the Wave 8 biome-aware world surface
+ * so other modules (`scene/runtime.ts`, future streamer in Wave 9) can
  * import from `@/game/world` without reaching into individual files.
  */
 
+// Biome registry (Wave 8).
 export {
-  MEADOW_BLOCK_DEFS,
+  BIOME_IDS,
+  COAST_BIOME,
+  COAST_BLOCK_IDS,
+  DEFAULT_BIOME_ID,
+  FOREST_BIOME,
+  FOREST_BLOCK_IDS,
+  getBiome,
+  GROVE_BIOME,
+  GROVE_BLOCK_IDS,
+  listBiomes,
+  MEADOW_BIOME,
   MEADOW_BLOCK_IDS,
-  MEADOW_TILESET_ID,
-  registerMeadowBlocks,
-} from "./blockRegistry";
-export type { MeadowBlockId } from "./blockRegistry";
+} from "./biomes";
+export type {
+  BiomeDecoration,
+  BiomeDefinition,
+  BiomeId,
+  BiomePalette,
+} from "./biomes";
+
+// Tileset loader.
 export {
-  loadMeadowTileset,
-  meadowTilesetDefinition,
-} from "./MeadowTilesetLoader";
+  biomeTilesetDefinition,
+  loadBiomeTileset,
+} from "./BiomeTilesetLoader";
+
+// Block registration helper.
+export { registerBiomeBlocks } from "./blockRegistry";
+
+// Chunk generator.
 export {
-  buildMeadowChunkJSON,
+  buildChunkJSON,
+  CHUNK_TUNING,
+  countDecorationBlocks,
   countSurfaceBlocksAtY,
-  MEADOW_CHUNK_TUNING,
-} from "./meadowChunk";
-export type { MeadowChunkInput } from "./meadowChunk";
+} from "./chunkGenerator";
+export type { ChunkGeneratorInput } from "./chunkGenerator";
+
+// Actor.
 export { SingleChunkActor } from "./SingleChunkActor";
 export type { SingleChunkActorOptions } from "./SingleChunkActor";

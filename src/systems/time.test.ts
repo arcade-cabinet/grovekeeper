@@ -198,9 +198,13 @@ describe("Time System", () => {
         hours: 23,
         minutes: 0,
       };
-      const morningColors = getSkyColors(morningTime);
-      const nightColors = getSkyColors(nightTime);
-      expect(morningColors.zenith).not.toBe(nightColors.zenith);
+      // getSkyColors returns a shared output buffer (see time.ts:348-349
+      // — "callers must read all fields before the next call"). Snapshot
+      // the first call's zenith before invoking again, otherwise both
+      // refs point to the same object and the assertion is meaningless.
+      const morningZenith = getSkyColors(morningTime).zenith;
+      const nightZenith = getSkyColors(nightTime).zenith;
+      expect(morningZenith).not.toBe(nightZenith);
     });
   });
 
