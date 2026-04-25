@@ -21,9 +21,7 @@ type TraitInstance<T> = T extends Trait<infer S> ? ResolveSchema<S> : never;
  * Solid hook — returns an accessor to the current query result.
  * Call site: `const entities = useQuery(Foo, Bar); ... entities()`.
  */
-export function useQuery(
-  ...traits: AnyTrait[]
-): () => QueryResult<AnyTrait[]> {
+export function useQuery(...traits: AnyTrait[]): () => QueryResult<AnyTrait[]> {
   const [entities, setEntities] = createSignal<QueryResult<AnyTrait[]>>(
     koota.query(...traits),
   );
@@ -42,9 +40,7 @@ export function useQuery(
 /**
  * Solid hook — accessor to the first entity matching the query, or undefined.
  */
-export function useQueryFirst(
-  ...traits: AnyTrait[]
-): () => Entity | undefined {
+export function useQueryFirst(...traits: AnyTrait[]): () => Entity | undefined {
   const [entity, setEntity] = createSignal<Entity | undefined>(
     koota.queryFirst(...traits),
   );

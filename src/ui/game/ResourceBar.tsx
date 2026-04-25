@@ -42,8 +42,14 @@ const ResourceCell = (props: { type: ResourceType; value: number }) => {
       class="flex items-center gap-0.5 sm:gap-1 min-w-0 rounded px-1 motion-safe:transition-colors"
       aria-label={`${RESOURCE_LABELS[props.type]}: ${props.value}`}
     >
-      <span class="shrink-0" aria-hidden="true">{RESOURCE_EMOJIS[props.type]}</span>
-      <span class="truncate tabular-nums" aria-hidden="true" style={{ color: COLORS.soilDark }}>
+      <span class="shrink-0" aria-hidden="true">
+        {RESOURCE_EMOJIS[props.type]}
+      </span>
+      <span
+        class="truncate tabular-nums"
+        aria-hidden="true"
+        style={{ color: COLORS.soilDark }}
+      >
         {props.value}
         <span class="hidden md:inline"> {RESOURCE_LABELS[props.type]}</span>
       </span>

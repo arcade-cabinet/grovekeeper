@@ -71,10 +71,7 @@ export const NpcDialogue = (props: NpcDialogueProps) => {
           RESOURCE_TYPES.includes(action.resource as ResourceType)
         ) {
           a.addResource(action.resource as ResourceType, action.amount);
-          showToast(
-            `Received ${action.amount} ${action.resource}!`,
-            "success",
-          );
+          showToast(`Received ${action.amount} ${action.resource}!`, "success");
         }
         break;
       case "give_seed":

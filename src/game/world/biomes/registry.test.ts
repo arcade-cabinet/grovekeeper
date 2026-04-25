@@ -22,11 +22,7 @@ function readTilesetJson(biome: BiomeDefinition): {
 } {
   // biome.tilesetJsonPath is base-relative ("assets/tilesets/...").
   // Project layout: `public/<that-path>`.
-  const path = resolve(
-    process.cwd(),
-    "public",
-    biome.tilesetJsonPath,
-  );
+  const path = resolve(process.cwd(), "public", biome.tilesetJsonPath);
   return JSON.parse(readFileSync(path, "utf8"));
 }
 

@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  destroyAllEntitiesExceptWorld,
-  koota,
-  spawnPlayer,
-} from "@/koota";
+import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { Difficulty, FarmerState, IsPlayer } from "@/traits";
 import { drainStamina, staminaSystem } from "./stamina";
 

@@ -820,7 +820,11 @@ export const generateQuest = (
     const targetAmount =
       typeof template.targetAmount === "number"
         ? template.targetAmount
-        : randomInRange(template.targetAmount.min, template.targetAmount.max, rng);
+        : randomInRange(
+            template.targetAmount.min,
+            template.targetAmount.max,
+            rng,
+          );
 
     return {
       id: `goal_${Date.now()}_${rng().toString(36).slice(2)}`,
@@ -892,9 +896,7 @@ export const generateQuest = (
   };
 
   const questName =
-    questNames[difficulty][
-      Math.floor(rng() * questNames[difficulty].length)
-    ];
+    questNames[difficulty][Math.floor(rng() * questNames[difficulty].length)];
 
   return {
     id: `quest_${Date.now()}_${rng().toString(36).slice(2)}`,
@@ -974,13 +976,23 @@ export const generateDailyQuests = (
 
   // 1 hard quest if level >= 7
   if (playerLevel >= 7) {
-    const hardQuest = generateQuest("hard", currentSeason, completedGoalIds, rng);
+    const hardQuest = generateQuest(
+      "hard",
+      currentSeason,
+      completedGoalIds,
+      rng,
+    );
     if (hardQuest) quests.push(hardQuest);
   }
 
   // 1 epic quest if level >= 15
   if (playerLevel >= 15) {
-    const epicQuest = generateQuest("epic", currentSeason, completedGoalIds, rng);
+    const epicQuest = generateQuest(
+      "epic",
+      currentSeason,
+      completedGoalIds,
+      rng,
+    );
     if (epicQuest) quests.push(epicQuest);
   }
 

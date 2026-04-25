@@ -980,23 +980,15 @@
           "name": "chunks_world_id_worlds_id_fk",
           "tableFrom": "chunks",
           "tableTo": "worlds",
-          "columnsFrom": [
-            "world_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["world_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "chunks_world_id_chunk_x_chunk_z_pk": {
-          "columns": [
-            "world_id",
-            "chunk_x",
-            "chunk_z"
-          ],
+          "columns": ["world_id", "chunk_x", "chunk_z"],
           "name": "chunks_world_id_chunk_x_chunk_z_pk"
         }
       },
@@ -1041,22 +1033,15 @@
           "name": "dialogue_history_world_id_worlds_id_fk",
           "tableFrom": "dialogue_history",
           "tableTo": "worlds",
-          "columnsFrom": [
-            "world_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["world_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "dialogue_history_world_id_npc_id_pk": {
-          "columns": [
-            "world_id",
-            "npc_id"
-          ],
+          "columns": ["world_id", "npc_id"],
           "name": "dialogue_history_world_id_npc_id_pk"
         }
       },
@@ -1134,19 +1119,12 @@
       "indexes": {
         "groves_world_chunk_uq": {
           "name": "groves_world_chunk_uq",
-          "columns": [
-            "world_id",
-            "chunk_x",
-            "chunk_z"
-          ],
+          "columns": ["world_id", "chunk_x", "chunk_z"],
           "isUnique": true
         },
         "groves_world_state_idx": {
           "name": "groves_world_state_idx",
-          "columns": [
-            "world_id",
-            "state"
-          ],
+          "columns": ["world_id", "state"],
           "isUnique": false
         }
       },
@@ -1155,12 +1133,8 @@
           "name": "groves_world_id_worlds_id_fk",
           "tableFrom": "groves",
           "tableTo": "worlds",
-          "columnsFrom": [
-            "world_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["world_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1201,22 +1175,15 @@
           "name": "inventory_world_id_worlds_id_fk",
           "tableFrom": "inventory",
           "tableTo": "worlds",
-          "columnsFrom": [
-            "world_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["world_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "inventory_world_id_item_id_pk": {
-          "columns": [
-            "world_id",
-            "item_id"
-          ],
+          "columns": ["world_id", "item_id"],
           "name": "inventory_world_id_item_id_pk"
         }
       },
@@ -1254,22 +1221,15 @@
           "name": "known_recipes_world_id_worlds_id_fk",
           "tableFrom": "known_recipes",
           "tableTo": "worlds",
-          "columnsFrom": [
-            "world_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["world_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "known_recipes_world_id_recipe_id_pk": {
-          "columns": [
-            "world_id",
-            "recipe_id"
-          ],
+          "columns": ["world_id", "recipe_id"],
           "name": "known_recipes_world_id_recipe_id_pk"
         }
       },
@@ -1347,16 +1307,12 @@
       "indexes": {
         "placed_structures_world_idx": {
           "name": "placed_structures_world_idx",
-          "columns": [
-            "world_id"
-          ],
+          "columns": ["world_id"],
           "isUnique": false
         },
         "placed_structures_grove_idx": {
           "name": "placed_structures_grove_idx",
-          "columns": [
-            "grove_id"
-          ],
+          "columns": ["grove_id"],
           "isUnique": false
         }
       },
@@ -1365,12 +1321,8 @@
           "name": "placed_structures_world_id_worlds_id_fk",
           "tableFrom": "placed_structures",
           "tableTo": "worlds",
-          "columnsFrom": [
-            "world_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["world_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1378,12 +1330,8 @@
           "name": "placed_structures_grove_id_groves_id_fk",
           "tableFrom": "placed_structures",
           "tableTo": "groves",
-          "columnsFrom": [
-            "grove_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["grove_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

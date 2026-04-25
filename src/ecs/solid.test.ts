@@ -17,8 +17,7 @@ import { destroyAllEntitiesExceptWorld, koota } from "@/koota";
 import { Position, Resources, Tree } from "@/traits";
 import { useHas, useQuery, useQueryFirst, useTrait } from "./solid";
 
-const flush = () =>
-  new Promise<void>((r) => setTimeout(r, 0));
+const flush = () => new Promise<void>((r) => setTimeout(r, 0));
 
 afterEach(() => {
   destroyAllEntitiesExceptWorld();
@@ -62,9 +61,9 @@ describe("useQuery", () => {
   });
 
   it("stops updating after dispose (onCleanup unsubscribes)", async () => {
-    let getEntities: (() => ReturnType<typeof useQuery> extends () => infer R
-      ? R
-      : never) | undefined;
+    let getEntities:
+      | (() => ReturnType<typeof useQuery> extends () => infer R ? R : never)
+      | undefined;
     createRoot((dispose) => {
       getEntities = useQuery(Tree, Position) as typeof getEntities;
       dispose();

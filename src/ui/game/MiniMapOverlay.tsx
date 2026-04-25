@@ -1,4 +1,11 @@
-import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { COLORS } from "@/config/config";
 import { koota } from "@/koota";
 import { GridCell, IsPlayer, Position, Structure, Tree } from "@/traits";

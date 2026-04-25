@@ -16,7 +16,9 @@ import {
 // The generated manifest types each entry as a union literal; widen to
 // string here so we can membership-check arbitrary paths from the
 // audio library without poking at every literal.
-const manifestPaths = new Set<string>(ASSET_MANIFEST.map((entry) => entry.path));
+const manifestPaths = new Set<string>(
+  ASSET_MANIFEST.map((entry) => entry.path),
+);
 
 describe("audioLibrary", () => {
   it("registers every advertised symbolic id", () => {

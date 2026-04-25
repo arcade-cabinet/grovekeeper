@@ -376,9 +376,7 @@ export const gameActions = createActions((world) => {
       // ── Achievements & tracking lists ────────────────────────
       unlockAchievement: (id: string) => {
         world.set(Achievements, (prev) =>
-          prev.items.includes(id)
-            ? prev
-            : { items: [...prev.items, id] },
+          prev.items.includes(id) ? prev : { items: [...prev.items, id] },
         );
       },
 
@@ -628,8 +626,7 @@ export const gameActions = createActions((world) => {
         world.set(Difficulty, { id: "normal", permadeath: false });
         // Time: Spring (month 3), Day 1, 8:00 AM — matches legacy
         // Zustand INITIAL_GAME_TIME. Calculation: 60 days (2 months) + 8h.
-        const initialGameTimeSeconds =
-          (2 * 30 * 24 * 60 + 8 * 60) * 60;
+        const initialGameTimeSeconds = (2 * 30 * 24 * 60 + 8 * 60) * 60;
         world.set(Time, {
           gameTimeMicroseconds: initialGameTimeSeconds * 1_000_000,
           last: 0,

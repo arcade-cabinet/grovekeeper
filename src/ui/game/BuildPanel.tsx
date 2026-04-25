@@ -89,7 +89,10 @@ export const BuildPanel = (props: BuildPanelProps) => {
                   onClick={() => handleSelect(template)}
                   disabled={!affordable()}
                 >
-                  <span class="text-2xl flex-shrink-0 mt-0.5" aria-hidden="true">
+                  <span
+                    class="text-2xl flex-shrink-0 mt-0.5"
+                    aria-hidden="true"
+                  >
                     {template.icon}
                   </span>
                   <div class="text-left flex-1 min-w-0">

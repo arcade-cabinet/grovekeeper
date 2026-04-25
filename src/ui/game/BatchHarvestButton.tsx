@@ -29,7 +29,9 @@ export const BatchHarvestButton = (props: BatchHarvestButtonProps) => {
         }}
         onClick={props.onBatchHarvest}
       >
-        <span class="mr-1" aria-hidden="true">{"\uD83E\uDE93"}</span>
+        <span class="mr-1" aria-hidden="true">
+          {"\uD83E\uDE93"}
+        </span>
         <span>Harvest All ({readyCount()} ready)</span>
         <span
           aria-hidden="true"

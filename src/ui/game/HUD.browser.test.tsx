@@ -11,11 +11,7 @@
 
 import { render } from "@solidjs/testing-library";
 import { beforeEach, describe, expect, it } from "vitest";
-import {
-  destroyAllEntitiesExceptWorld,
-  koota,
-  spawnPlayer,
-} from "@/koota";
+import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { PlayerProgress, Quests } from "@/traits";
 import { HUD } from "./HUD";
 

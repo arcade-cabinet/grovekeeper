@@ -12,7 +12,11 @@
  * the input wave lands.
  */
 
-import { type Actor, ActorComponent, Camera3DControls } from "@jolly-pixel/engine";
+import {
+  type Actor,
+  ActorComponent,
+  Camera3DControls,
+} from "@jolly-pixel/engine";
 import * as THREE from "three";
 import type { PlayerActor } from "./PlayerActor";
 

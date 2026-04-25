@@ -62,7 +62,9 @@ describe("biomeMusic", () => {
 
     await setBiomeMusic("forest");
 
-    expect(audio.setMusicTrack).toHaveBeenCalledWith("music.biome.forest.chill");
+    expect(audio.setMusicTrack).toHaveBeenCalledWith(
+      "music.biome.forest.chill",
+    );
     expect(audio.setAmbientTrack).toHaveBeenCalledWith("ambient.biome.forest");
   });
 

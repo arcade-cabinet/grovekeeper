@@ -270,10 +270,8 @@ const QuestCard = (props: QuestCardProps) => {
 };
 
 export const QuestIndicator = (props: { quests: ActiveQuest[] }) => {
-  const activeCount = () =>
-    props.quests.filter((q) => !q.completed).length;
-  const completedCount = () =>
-    props.quests.filter((q) => q.completed).length;
+  const activeCount = () => props.quests.filter((q) => !q.completed).length;
+  const completedCount = () => props.quests.filter((q) => q.completed).length;
 
   return (
     <Show when={props.quests.length > 0}>

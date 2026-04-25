@@ -121,8 +121,8 @@ describe("Spirits Catalog", () => {
   });
 
   it("runtime validator rejects a top-level non-array", () => {
-    expect(() =>
-      __testing.validateSpiritList("not-an-array"),
-    ).toThrowError(/spirits must be an array/);
+    expect(() => __testing.validateSpiritList("not-an-array")).toThrowError(
+      /spirits must be an array/,
+    );
   });
 });

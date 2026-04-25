@@ -31,11 +31,7 @@ describe("NpcDialogue", () => {
 
   it("renders NPC greeting when opened with valid template", () => {
     render(() => (
-      <NpcDialogue
-        open={true}
-        onClose={onClose}
-        npcTemplateId="elder-rowan"
-      />
+      <NpcDialogue open={true} onClose={onClose} npcTemplateId="elder-rowan" />
     ));
     expect(screen.getByText("Elder Rowan")).toBeTruthy();
     expect(screen.getByText(/young grovekeeper/i)).toBeTruthy();
@@ -43,11 +39,7 @@ describe("NpcDialogue", () => {
 
   it("displays dialogue choices as buttons", () => {
     render(() => (
-      <NpcDialogue
-        open={true}
-        onClose={onClose}
-        npcTemplateId="elder-rowan"
-      />
+      <NpcDialogue open={true} onClose={onClose} npcTemplateId="elder-rowan" />
     ));
     expect(screen.getByText("Tell me about growing trees")).toBeTruthy();
     expect(screen.getByText("Goodbye")).toBeTruthy();
@@ -55,11 +47,7 @@ describe("NpcDialogue", () => {
 
   it("advances to next node when choice has next", () => {
     render(() => (
-      <NpcDialogue
-        open={true}
-        onClose={onClose}
-        npcTemplateId="elder-rowan"
-      />
+      <NpcDialogue open={true} onClose={onClose} npcTemplateId="elder-rowan" />
     ));
     fireEvent.click(screen.getByText("Tell me about growing trees"));
     expect(screen.getByText(/Water your saplings/i)).toBeTruthy();
@@ -67,11 +55,7 @@ describe("NpcDialogue", () => {
 
   it("closes dialogue when choice has next: null and no open action", () => {
     render(() => (
-      <NpcDialogue
-        open={true}
-        onClose={onClose}
-        npcTemplateId="elder-rowan"
-      />
+      <NpcDialogue open={true} onClose={onClose} npcTemplateId="elder-rowan" />
     ));
     fireEvent.click(screen.getByText("Goodbye"));
     expect(onClose).toHaveBeenCalled();

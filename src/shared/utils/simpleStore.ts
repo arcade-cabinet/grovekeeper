@@ -36,9 +36,7 @@ export function createSimpleStore<T>(initial: T): SimpleStore<T> {
   };
 
   function use<U = T>(selector?: (state: T) => U): () => U {
-    const read = selector
-      ? () => selector(state)
-      : () => state as unknown as U;
+    const read = selector ? () => selector(state) : () => state as unknown as U;
     const [value, setValue] = createSignal<U>(read(), { equals: false });
     const unsub = subscribe(() => setValue(() => read()));
     onCleanup(unsub);

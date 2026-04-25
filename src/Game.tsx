@@ -1,4 +1,11 @@
-import { createEffect, createSignal, lazy, onMount, Show, Suspense } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  lazy,
+  onMount,
+  Show,
+  Suspense,
+} from "solid-js";
 import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { getDifficultyById } from "@/config/difficulty";
@@ -10,12 +17,7 @@ import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
 import { initializePlatform } from "@/systems/platform";
 import { generateDailyQuests } from "@/systems/quests";
-import {
-  CurrentSeason,
-  GameScreen,
-  PlayerProgress,
-  Quests,
-} from "@/traits";
+import { CurrentSeason, GameScreen, PlayerProgress, Quests } from "@/traits";
 import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameModal } from "@/ui/game/NewGameModal";
@@ -171,10 +173,7 @@ export const Game = () => {
         <Show
           when={(screen()?.value ?? "menu") === "playing"}
           fallback={
-            <MainMenu
-              onStartGame={handleStartGame}
-              onNewGame={handleNewGame}
-            />
+            <MainMenu onStartGame={handleStartGame} onNewGame={handleNewGame} />
           }
         >
           <GameErrorBoundary onReset={() => gameActions().setScreen("menu")}>

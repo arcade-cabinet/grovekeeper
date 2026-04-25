@@ -94,9 +94,15 @@ describe("QuestPanel (browser mode)", () => {
       now.getFullYear(),
       now.getMonth(),
       now.getDate() + 1,
-      0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0,
     );
-    const totalSec = Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 1000));
+    const totalSec = Math.max(
+      0,
+      Math.floor((midnight.getTime() - now.getTime()) / 1000),
+    );
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;

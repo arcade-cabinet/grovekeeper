@@ -117,8 +117,7 @@ const Particle = (props: ParticleProps) => {
         "font-size": "16px",
         "line-height": "20px",
         color: props.particle.color,
-        "text-shadow":
-          "0 1px 3px rgba(0,0,0,0.7), 0 0px 6px rgba(0,0,0,0.4)",
+        "text-shadow": "0 1px 3px rgba(0,0,0,0.7), 0 0px 6px rgba(0,0,0,0.4)",
         "white-space": "nowrap",
         "user-select": "none",
         "will-change": "transform, opacity",

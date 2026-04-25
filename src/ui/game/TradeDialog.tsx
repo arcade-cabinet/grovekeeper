@@ -125,8 +125,8 @@ export const TradeDialog = (props: TradeDialogProps) => {
                 </span>
               </div>
               <div class="text-xs" style={{ color: COLORS.soilDark }}>
-                Pay: {quantity() * rate().fromAmount} {rate().from}{" "}
-                {"\u2192"} Get: {quantity() * rate().toAmount} {rate().to}
+                Pay: {quantity() * rate().fromAmount} {rate().from} {"\u2192"}{" "}
+                Get: {quantity() * rate().toAmount} {rate().to}
               </div>
               <Button
                 class="w-full"

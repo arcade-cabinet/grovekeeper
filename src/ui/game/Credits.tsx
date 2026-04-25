@@ -31,21 +31,11 @@ const CREDITS: CreditEntry[] = [
   },
   {
     role: "Tooling",
-    names: [
-      "pnpm",
-      "Biome 2.3",
-      "Vitest 4.1",
-      "Playwright",
-      "GitHub Actions",
-    ],
+    names: ["pnpm", "Biome 2.3", "Vitest 4.1", "Playwright", "GitHub Actions"],
   },
   {
     role: "Assist",
-    names: [
-      "Claude (Opus 4.7, 1M context)",
-      "CodeRabbit",
-      "Cronjobs & hooks",
-    ],
+    names: ["Claude (Opus 4.7, 1M context)", "CodeRabbit", "Cronjobs & hooks"],
   },
   { role: "Thanks to", names: ["Every cozy player who waits for trees"] },
 ];

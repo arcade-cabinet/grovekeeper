@@ -12,9 +12,7 @@ describe("biomeTilesetDefinition", () => {
       const def = biomeTilesetDefinition(id);
       expect(def.id).toBe(id);
       expect(def.tileSize).toBe(32);
-      expect(def.src.endsWith(`/assets/tilesets/biomes/${id}.png`)).toBe(
-        true,
-      );
+      expect(def.src.endsWith(`/assets/tilesets/biomes/${id}.png`)).toBe(true);
     }
   });
 

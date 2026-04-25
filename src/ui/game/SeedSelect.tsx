@@ -92,7 +92,9 @@ export const SeedSelect = (props: SeedSelectProps) => {
                   aria-label={`${species.name}${isSelected() ? " (selected)" : ""}${!isUnlocked() ? ` — unlocks at level ${species.unlockLevel}` : !hasSeeds() ? " — no seeds" : ""}`}
                   class={`p-3 cursor-pointer transition-all ${isSelected() ? "ring-2 ring-offset-2" : ""} ${isDisabled() ? "opacity-50" : ""}`}
                   style={{
-                    background: isSelected() ? `${COLORS.leafLight}30` : "white",
+                    background: isSelected()
+                      ? `${COLORS.leafLight}30`
+                      : "white",
                     "border-color": isSelected()
                       ? COLORS.forestGreen
                       : "transparent",
@@ -106,7 +108,12 @@ export const SeedSelect = (props: SeedSelectProps) => {
                   >
                     <Show
                       when={isUnlocked()}
-                      fallback={<RiLock2Line class="w-8 h-8 mb-2 text-gray-400" aria-hidden="true" />}
+                      fallback={
+                        <RiLock2Line
+                          class="w-8 h-8 mb-2 text-gray-400"
+                          aria-hidden="true"
+                        />
+                      }
                     >
                       <svg
                         width="36"
@@ -191,7 +198,10 @@ export const SeedSelect = (props: SeedSelectProps) => {
                   </div>
 
                   <Show when={isUnlocked() && costStr}>
-                    <p class="text-[10px] mt-1" style={{ color: COLORS.earthRed }}>
+                    <p
+                      class="text-[10px] mt-1"
+                      style={{ color: COLORS.earthRed }}
+                    >
                       Cost: {costStr}
                     </p>
                   </Show>

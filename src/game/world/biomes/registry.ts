@@ -40,12 +40,7 @@ export function getBiome(id: BiomeId): BiomeDefinition {
 
 /** All biome definitions in registration order. */
 export function listBiomes(): readonly BiomeDefinition[] {
-  return [
-    BIOMES.meadow,
-    BIOMES.forest,
-    BIOMES.coast,
-    BIOMES.grove,
-  ] as const;
+  return [BIOMES.meadow, BIOMES.forest, BIOMES.coast, BIOMES.grove] as const;
 }
 
 /**

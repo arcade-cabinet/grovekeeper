@@ -31,9 +31,9 @@ describe("buildChunkJSON: core invariants (default = meadow)", () => {
     const json = buildChunkJSON();
     const expected = CHUNK_TUNING.size * CHUNK_TUNING.size;
     for (let y = 0; y < CHUNK_TUNING.stoneFloorThickness; y++) {
-      expect(
-        countSurfaceBlocksAtY(json, MEADOW_BLOCK_IDS.stone, y),
-      ).toBe(expected);
+      expect(countSurfaceBlocksAtY(json, MEADOW_BLOCK_IDS.stone, y)).toBe(
+        expected,
+      );
     }
   });
 
@@ -97,9 +97,7 @@ describe("buildChunkJSON: every biome renders a valid chunk", () => {
 
       const expected = CHUNK_TUNING.size * CHUNK_TUNING.size;
       // bedrock fills the lowest stoneFloorThickness rows
-      expect(
-        countSurfaceBlocksAtY(json, biome.bedrockBlock, 0),
-      ).toBe(expected);
+      expect(countSurfaceBlocksAtY(json, biome.bedrockBlock, 0)).toBe(expected);
       // sub-surface fills above bedrock
       expect(
         countSurfaceBlocksAtY(
@@ -136,9 +134,7 @@ describe("buildChunkJSON: per-biome decoration distributions", () => {
     const json = buildChunkJSON({ biome: "meadow", worldSeed: 9 });
     const meadow = getBiome("meadow");
     const wildflowerId = meadow.decorations.find((d) =>
-      meadow.blocks
-        .find((b) => b.id === d.id)
-        ?.name.endsWith("wildflower"),
+      meadow.blocks.find((b) => b.id === d.id)?.name.endsWith("wildflower"),
     )?.id;
     expect(wildflowerId).toBeDefined();
     if (wildflowerId !== undefined) {

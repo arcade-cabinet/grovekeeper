@@ -154,7 +154,9 @@ export const RulesModal = (props: RulesModalProps) => {
               border: `1px solid ${COLORS.forestGreen}20`,
             }}
           >
-            <span class="text-5xl" aria-hidden="true">{current().icon}</span>
+            <span class="text-5xl" aria-hidden="true">
+              {current().icon}
+            </span>
             <h4 class="font-bold text-lg" style={{ color: COLORS.soilDark }}>
               {current().title}
             </h4>

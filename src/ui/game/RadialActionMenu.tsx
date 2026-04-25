@@ -74,7 +74,9 @@ export const RadialActionMenu = (props: Props) => {
             onClick={() => props.onSelect(p.action.id)}
             aria-label={p.action.label}
           >
-            <span class="text-lg leading-none" aria-hidden="true">{p.action.icon}</span>
+            <span class="text-lg leading-none" aria-hidden="true">
+              {p.action.icon}
+            </span>
           </button>
         )}
       </For>

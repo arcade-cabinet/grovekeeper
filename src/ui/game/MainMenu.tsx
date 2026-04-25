@@ -22,8 +22,9 @@ export const MainMenu = (props: MainMenuProps) => {
   const treesPlanted = () => tracking()?.treesPlanted ?? 0;
   const hasSave = () => treesPlanted() > 0;
 
-  const setScreen = (s: "menu" | "playing" | "paused" | "seedSelect" | "rules") =>
-    gameActions().setScreen(s);
+  const setScreen = (
+    s: "menu" | "playing" | "paused" | "seedSelect" | "rules",
+  ) => gameActions().setScreen(s);
 
   const handleStart = () => {
     if (props.onStartGame) {
@@ -42,11 +43,51 @@ export const MainMenu = (props: MainMenuProps) => {
   };
 
   const leaves = [
-    { x: "15%", y: "20%", dx: "40px", dy: "60vh", rot: "180deg", dur: "8s", delay: "0s" },
-    { x: "45%", y: "10%", dx: "-30px", dy: "70vh", rot: "-120deg", dur: "10s", delay: "2s" },
-    { x: "75%", y: "15%", dx: "20px", dy: "65vh", rot: "200deg", dur: "9s", delay: "4s" },
-    { x: "30%", y: "5%", dx: "-50px", dy: "80vh", rot: "-160deg", dur: "12s", delay: "1s" },
-    { x: "85%", y: "25%", dx: "-25px", dy: "55vh", rot: "140deg", dur: "7s", delay: "6s" },
+    {
+      x: "15%",
+      y: "20%",
+      dx: "40px",
+      dy: "60vh",
+      rot: "180deg",
+      dur: "8s",
+      delay: "0s",
+    },
+    {
+      x: "45%",
+      y: "10%",
+      dx: "-30px",
+      dy: "70vh",
+      rot: "-120deg",
+      dur: "10s",
+      delay: "2s",
+    },
+    {
+      x: "75%",
+      y: "15%",
+      dx: "20px",
+      dy: "65vh",
+      rot: "200deg",
+      dur: "9s",
+      delay: "4s",
+    },
+    {
+      x: "30%",
+      y: "5%",
+      dx: "-50px",
+      dy: "80vh",
+      rot: "-160deg",
+      dur: "12s",
+      delay: "1s",
+    },
+    {
+      x: "85%",
+      y: "25%",
+      dx: "-25px",
+      dy: "55vh",
+      rot: "140deg",
+      dur: "7s",
+      delay: "6s",
+    },
   ];
 
   return (
@@ -77,18 +118,56 @@ export const MainMenu = (props: MainMenuProps) => {
           viewBox="0 0 100 140"
           fill="none"
         >
-          <ellipse cx="50" cy="50" rx="40" ry="45" fill={`${COLORS.forestGreen}30`} />
-          <ellipse cx="35" cy="60" rx="30" ry="35" fill={`${COLORS.forestGreen}20`} />
-          <rect x="45" y="90" width="10" height="50" rx="2" fill={`${COLORS.barkBrown}20`} />
+          <ellipse
+            cx="50"
+            cy="50"
+            rx="40"
+            ry="45"
+            fill={`${COLORS.forestGreen}30`}
+          />
+          <ellipse
+            cx="35"
+            cy="60"
+            rx="30"
+            ry="35"
+            fill={`${COLORS.forestGreen}20`}
+          />
+          <rect
+            x="45"
+            y="90"
+            width="10"
+            height="50"
+            rx="2"
+            fill={`${COLORS.barkBrown}20`}
+          />
         </svg>
         <svg
           class="absolute bottom-0 right-0 w-24 h-36 sm:w-32 sm:h-44"
           viewBox="0 0 100 140"
           fill="none"
         >
-          <ellipse cx="50" cy="55" rx="35" ry="40" fill={`${COLORS.forestGreen}25`} />
-          <ellipse cx="60" cy="45" rx="25" ry="30" fill={`${COLORS.forestGreen}18`} />
-          <rect x="46" y="90" width="8" height="50" rx="2" fill={`${COLORS.barkBrown}18`} />
+          <ellipse
+            cx="50"
+            cy="55"
+            rx="35"
+            ry="40"
+            fill={`${COLORS.forestGreen}25`}
+          />
+          <ellipse
+            cx="60"
+            cy="45"
+            rx="25"
+            ry="30"
+            fill={`${COLORS.forestGreen}18`}
+          />
+          <rect
+            x="46"
+            y="90"
+            width="8"
+            height="50"
+            rx="2"
+            fill={`${COLORS.barkBrown}18`}
+          />
         </svg>
 
         <For each={leaves}>
@@ -181,7 +260,9 @@ export const MainMenu = (props: MainMenuProps) => {
             style={{ color: COLORS.barkBrown }}
           >
             <span class="font-medium">{treesPlanted()}</span>
-            <span>{treesPlanted() === 1 ? "tree" : "trees"} planted so far</span>
+            <span>
+              {treesPlanted() === 1 ? "tree" : "trees"} planted so far
+            </span>
           </div>
         </Show>
       </Card>

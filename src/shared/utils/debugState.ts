@@ -166,9 +166,7 @@ function buildSnapshot(): WorldSnapshot {
 
   // Entity counts
   const harvestableCount = koota.query(Harvestable).length;
-  const gridCellCount = koota
-    .query()
-    .filter((e) => e.id() !== 0).length;
+  const gridCellCount = koota.query().filter((e) => e.id() !== 0).length;
 
   // Player entity
   const playerEntity = koota.queryFirst(IsPlayer, FarmerState);

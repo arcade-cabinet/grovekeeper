@@ -83,9 +83,7 @@ function computeYieldMultiplier(
 
   // Golden Apple: 3x fruit yield in Autumn
   const goldenAppleMult =
-    tree.speciesId === "golden-apple" && currentSeason === "autumn"
-      ? 3.0
-      : 1.0;
+    tree.speciesId === "golden-apple" && currentSeason === "autumn" ? 3.0 : 1.0;
 
   const difficultyYieldMult = getActiveDifficulty().resourceYieldMult;
   return (
