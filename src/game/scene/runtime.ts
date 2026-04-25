@@ -20,16 +20,36 @@ import {
   setChannelVolume,
   setMasterVolume,
 } from "@/audio";
+import { getDbAsync } from "@/db/client";
 import { getPref } from "@/db/preferences";
-import { CHUNK_TUNING, SingleChunkActor } from "@/game/world";
+import { createWorld, getWorld } from "@/db/repos/worldsRepo";
+import {
+  applyGroveEmissivePulse,
+  assignBiome,
+  ChunkActor,
+  ChunkManager,
+  type ChunkManagerHooks,
+  ChunkStreamerBehavior,
+  createGroveDiscoverySystem,
+  createGroveFireflies,
+  disposeGroveGlow,
+  type GroveGlowHandle,
+  GroveTickBehavior,
+  resolveStreamingConfig,
+} from "@/game/world";
 import {
   InputManager,
   mountNipplejsAdapter,
   type NipplejsAdapterHandle,
 } from "@/input";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
-import { PlayerActor, type PlayerBounds } from "./PlayerActor";
+import { PlayerActor } from "./PlayerActor";
 import playerConfig from "./player.config.json";
+
+/** Hardcoded RC world id — Wave 10 single-world. Journey wave wires real selection. */
+const RC_WORLD_ID = "rc-world-default";
+/** Hardcoded RC world seed — Wave 10. Same as ChunkManager. */
+const RC_WORLD_SEED = 0;
 
 export interface SceneHandle {
   runtime: Runtime;
@@ -51,22 +71,6 @@ export interface CreateRuntimeOptions {
   forceJoystick?: boolean;
 }
 
-/**
- * Build a single-chunk player bounds box from `CHUNK_TUNING`. Wave 9
- * swaps this for streamed bounds; here it's just a container the
- * player can't walk out of.
- */
-function singleChunkBounds(): PlayerBounds {
-  const { size, groundY } = CHUNK_TUNING;
-  return {
-    minX: 0,
-    maxX: size - 1,
-    minZ: 0,
-    maxZ: size - 1,
-    groundY: groundY + 1, // top of the surface block
-  };
-}
-
 export async function createRuntime(
   canvas: HTMLCanvasElement,
   options: CreateRuntimeOptions = {},
@@ -86,16 +90,6 @@ export async function createRuntime(
   const dir = new THREE.DirectionalLight(new THREE.Color("#fff7e0"), 1.4);
   dir.position.set(20, 40, 30);
   sceneSource.add(dir);
-
-  // Terrain — single meadow chunk at world origin. Wave 9 swaps this
-  // for a streaming chunk manager; for now one 16x16xN patch is enough
-  // to see the player standing on real ground.
-  const terrainActor = world.createActor("terrain");
-  terrainActor.addComponentAndGet(SingleChunkActor, {
-    chunkX: 0,
-    chunkZ: 0,
-    worldSeed: 0,
-  });
 
   // Input — action-mapped wrapper over the engine's `world.input`.
   // The InputManager is a plain object; the engine doesn't know about
@@ -119,12 +113,123 @@ export async function createRuntime(
   }
 
   // Player Actor. Reads `move` from the InputManager each frame, walks
-  // around the chunk, swaps Idle ↔ Walk on the Gardener GLTF.
+  // freely across an infinite chunk grid (no XZ bounds — Wave 9 removed
+  // the single-chunk clamp). Y is held to the shared surface for now;
+  // proper voxel collision is a future wave.
   const playerActor = world.createActor("player");
   const playerBehavior = playerActor.addComponentAndGet(PlayerActor, {
-    spawn: { x: 8, y: SingleChunkActor.SURFACE_Y + 1, z: 8 },
+    spawn: { x: 8, y: ChunkActor.SURFACE_Y + 1, z: 8 },
     inputManager,
-    bounds: singleChunkBounds(),
+    surfaceY: ChunkActor.SURFACE_Y + 1,
+  });
+
+  // Wave 10 — DB handle + ensure-world. Grove discovery writes go here.
+  // We swallow DB-init failures so a broken IndexedDB layer doesn't
+  // block scene boot; discovery just becomes a no-op in that case.
+  let dbHandle: Awaited<ReturnType<typeof getDbAsync>> | null = null;
+  try {
+    dbHandle = await getDbAsync();
+    if (!getWorld(dbHandle.db, RC_WORLD_ID)) {
+      createWorld(dbHandle.db, {
+        id: RC_WORLD_ID,
+        name: "Grovekeeper",
+        gardenerName: "Gardener",
+        worldSeed: String(RC_WORLD_SEED),
+        difficulty: "sapling",
+      });
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[grovekeeper] DB init failed; grove discovery disabled",
+      error,
+    );
+  }
+
+  // Wave 10 — grove glow registry. Keyed by `chunkX,chunkZ` so the
+  // per-frame updater can iterate a flat list. Populated on
+  // `onChunkSpawned` for grove biome chunks; torn down on
+  // `onChunkDespawned` so off-screen groves don't leak buffers.
+  const groveGlows = new Map<string, GroveGlowHandle>();
+  const groveGlowKey = (cx: number, cz: number) => `${cx},${cz}`;
+
+  const chunkHooks: ChunkManagerHooks = {
+    onChunkSpawned: ({ chunkX, chunkZ, biome, actor }) => {
+      if (biome !== "grove") return;
+      const key = groveGlowKey(chunkX, chunkZ);
+      // Wait for the chunk's mesh to land before traversing it; the
+      // load is async, so a sync traversal here would find an empty
+      // subtree.
+      void actor.whenLoaded().then(() => {
+        const root = actor.object3D;
+        if (!root || groveGlows.has(key)) return;
+        const { materials, originalEmissive } = applyGroveEmissivePulse(root);
+        const fireflies = createGroveFireflies({
+          chunkSize: 16,
+          surfaceY: ChunkActor.SURFACE_Y,
+          worldSeed: RC_WORLD_SEED,
+          chunkX,
+          chunkZ,
+        });
+        root.add(fireflies.points);
+        groveGlows.set(key, {
+          materials,
+          originalEmissive,
+          fireflies: fireflies.points,
+          fireflyBaseY: fireflies.baseY,
+          fireflyPhase: fireflies.phase,
+        });
+      });
+    },
+    onChunkDespawned: ({ chunkX, chunkZ }) => {
+      const key = groveGlowKey(chunkX, chunkZ);
+      const handle = groveGlows.get(key);
+      if (!handle) return;
+      disposeGroveGlow(handle);
+      groveGlows.delete(key);
+    },
+  };
+
+  // Wave 9 — chunk streaming. The manager is a POJO + a behavior shim
+  // that pumps it once per frame. It owns a Map<chunkKey, ChunkActor>
+  // and spawns/despawns chunks as the player walks. Biome per chunk
+  // comes from `assignBiome(seed, x, z)`, deterministic for any seed.
+  // Today the world seed is a hardcoded 0 — Wave 4's preferences slot
+  // will feed in a player-chosen seed once world selection lands.
+  const chunkManager = new ChunkManager({
+    world,
+    playerPosition: playerActor.object3D.position,
+    worldSeed: RC_WORLD_SEED,
+    streaming: resolveStreamingConfig(),
+    hooks: chunkHooks,
+  });
+  const streamerActor = world.createActor("chunk-streamer");
+  streamerActor.addComponentAndGet(ChunkStreamerBehavior, {
+    manager: chunkManager,
+  });
+
+  // Wave 10 — grove discovery system. Rides the per-frame loop via
+  // a thin behavior shim so `update(playerPos)` is called every tick.
+  // When the DB never initialized we skip mounting the system —
+  // discovery becomes a silent no-op rather than crashing the scene.
+  const groveDiscovery = dbHandle
+    ? createGroveDiscoverySystem({
+        db: dbHandle.db,
+        worldId: RC_WORLD_ID,
+        worldSeed: RC_WORLD_SEED,
+        chunkSize: 16,
+        resolveSurroundingBiome: (cx, cz) => assignBiome(RC_WORLD_SEED, cx, cz),
+      })
+    : null;
+
+  // Per-frame tick driver for grove visuals + discovery. Uses a
+  // dedicated ActorComponent so the engine ticks it like any other
+  // behavior in the actor graph.
+  const groveTickActor = world.createActor("grove-tick");
+  groveTickActor.addComponentAndGet(GroveTickBehavior, {
+    groveGlows,
+    discovery: groveDiscovery,
+    playerPosition: playerActor.object3D.position,
   });
 
   // Follow camera. Lerps to the player actor each tick. Offset retuned
@@ -191,6 +296,11 @@ export async function createRuntime(
       disposed = true;
       try {
         joystickHandle?.destroy();
+      } catch {
+        /* idempotent */
+      }
+      try {
+        chunkManager.dispose();
       } catch {
         /* idempotent */
       }
