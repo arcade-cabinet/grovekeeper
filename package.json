@@ -28,8 +28,6 @@
     "size": "size-limit"
   },
   "dependencies": {
-    "@babylonjs/core": "^8.50.0",
-    "@babylonjs/loaders": "^8.50.0",
     "@capacitor/android": "^8.0.2",
     "@capacitor/core": "^8.0.2",
     "@capacitor/device": "^8.0.0",
@@ -43,7 +41,6 @@
     "sql.js": "^1.13.0",
     "tailwind-merge": "^3.2.0",
     "tailwindcss": "^4.1.4",
-    "tone": "^15.1.22",
     "yuka": "^0.7.8"
   },
   "pnpm": {
