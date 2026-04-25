@@ -14,6 +14,7 @@
 
 import { loadRuntime, Runtime } from "@jolly-pixel/runtime";
 import * as THREE from "three";
+import { SingleChunkActor } from "@/game/world";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
 import { PlayerActor } from "./PlayerActor";
 
@@ -52,17 +53,31 @@ export async function createRuntime(
   dir.position.set(20, 40, 30);
   sceneSource.add(dir);
 
-  // Placeholder player Actor. Renders a green cube at world origin.
-  // The Gardener GLB ModelRenderer replaces this in the asset wave.
-  const playerActor = world.createActor("player");
-  const playerBehavior = playerActor.addComponentAndGet(PlayerActor, {
-    spawn: { x: 0, y: 0, z: 0 },
+  // Terrain — single meadow chunk at world origin. Wave 9 swaps this
+  // for a streaming chunk manager; for now one 16x16xN patch is enough
+  // to see the player standing on real ground.
+  const terrainActor = world.createActor("terrain");
+  terrainActor.addComponentAndGet(SingleChunkActor, {
+    chunkX: 0,
+    chunkZ: 0,
+    worldSeed: 0,
   });
 
-  // Follow camera. Lerps to the player actor each tick.
+  // Placeholder player Actor. Renders a green cube at the centre of the
+  // chunk, sitting on top of the grass surface (groundY + hill bump =
+  // SingleChunkActor.SURFACE_Y). The Gardener GLB ModelRenderer
+  // replaces the cube in Wave 11a.
+  const playerActor = world.createActor("player");
+  const playerBehavior = playerActor.addComponentAndGet(PlayerActor, {
+    spawn: { x: 8, y: SingleChunkActor.SURFACE_Y + 1, z: 8 },
+  });
+
+  // Follow camera. Lerps to the player actor each tick. Offset retuned
+  // for the higher spawn so the chunk fills the frame nicely.
   const cameraActor = world.createActor("camera");
   cameraActor.addComponentAndGet(CameraFollowBehavior, {
     player: playerBehavior,
+    offset: new THREE.Vector3(0, 8, 12),
   });
 
   // Hand off to JP's loader. This injects <jolly-loading> and starts
