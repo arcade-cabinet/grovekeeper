@@ -47,6 +47,7 @@
 
 import { type Actor, ActorComponent, ModelRenderer } from "@jolly-pixel/engine";
 import type { InputManager } from "@/input";
+import { eventBus } from "@/runtime/eventBus";
 import playerConfig from "./player.config.json";
 
 export interface PlayerSpawn {
@@ -172,6 +173,17 @@ export class PlayerActor extends ActorComponent {
   update(deltaMs: number): void {
     if (!this.input) return;
     const dt = Math.min(deltaMs, 50) / 1000;
+
+    // Sub-wave D — when the claim ritual cinematic is active, hold
+    // the player in place. We still sample input + endFrame so the
+    // input layer's rising-edge bookkeeping doesn't desync (the
+    // InputManager assumes it's polled every frame).
+    const locked = eventBus.claimCinematicActive();
+    if (locked) {
+      this.requestClip(PLAYER_IDLE_CLIP);
+      this.input.endFrame();
+      return;
+    }
 
     const move = this.input.getActionState("move");
     const speedSq = move.x * move.x + move.z * move.z;

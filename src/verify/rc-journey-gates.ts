@@ -97,7 +97,12 @@ export const RC_JOURNEY_GATES: readonly RcJourneyGate[] = Object.freeze([
 ] as const);
 
 /** The four rubric axes scored 0–3 per surface. Total of 12; ships at ≥ 10. */
-export const RUBRIC_AXES = ["tone", "diegesis", "polish", "performance"] as const;
+export const RUBRIC_AXES = [
+  "tone",
+  "diegesis",
+  "polish",
+  "performance",
+] as const;
 export type RubricAxis = (typeof RUBRIC_AXES)[number];
 
 export const RUBRIC_SHIP_THRESHOLD = 10;

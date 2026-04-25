@@ -12,7 +12,10 @@ const WORLD_SEED = 0;
 
 /** Chunk-center XZ for a given chunk coord. */
 function chunkCenter(cx: number, cz: number): { x: number; z: number } {
-  return { x: cx * CHUNK_SIZE + CHUNK_SIZE / 2, z: cz * CHUNK_SIZE + CHUNK_SIZE / 2 };
+  return {
+    x: cx * CHUNK_SIZE + CHUNK_SIZE / 2,
+    z: cz * CHUNK_SIZE + CHUNK_SIZE / 2,
+  };
 }
 
 describe("thresholdSystem", () => {
@@ -127,11 +130,7 @@ describe("thresholdSystem", () => {
         playChime: () => count++,
         now: () => nowMs,
       });
-      const path = [
-        chunkCenter(3, 0),
-        chunkCenter(4, 0),
-        chunkCenter(7, 2),
-      ];
+      const path = [chunkCenter(3, 0), chunkCenter(4, 0), chunkCenter(7, 2)];
       for (let i = 0; i < path.length; i++) {
         nowMs += 10000;
         sys.update(path[i]);

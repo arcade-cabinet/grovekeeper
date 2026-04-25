@@ -2,12 +2,7 @@
  * Starter grove seeding tests — Sub-wave C.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-  chunksRepo,
-  grovesRepo,
-  recipesRepo,
-  worldsRepo,
-} from "@/db/repos";
+import { chunksRepo, grovesRepo, recipesRepo, worldsRepo } from "@/db/repos";
 import { createTestDb, type TestDbHandle } from "@/db/repos/testDb";
 import { STARTER_GROVE_CHUNK } from "./grovePlacement";
 import {
@@ -99,38 +94,34 @@ describe("seedStarterGrove", () => {
   });
 
   it("learns recipe.hearth", () => {
-    expect(
-      recipesRepo.isKnown(handle.db, WORLD_ID, STARTER_RECIPE_ID),
-    ).toBe(false);
+    expect(recipesRepo.isKnown(handle.db, WORLD_ID, STARTER_RECIPE_ID)).toBe(
+      false,
+    );
     seedStarterGrove(handle.db, WORLD_ID);
-    expect(
-      recipesRepo.isKnown(handle.db, WORLD_ID, STARTER_RECIPE_ID),
-    ).toBe(true);
+    expect(recipesRepo.isKnown(handle.db, WORLD_ID, STARTER_RECIPE_ID)).toBe(
+      true,
+    );
   });
 
   it("is idempotent — second seed produces same mod count and recipe row", () => {
     seedStarterGrove(handle.db, WORLD_ID);
-    const firstMods = chunksRepo
-      .getModifiedBlocks(
-        handle.db,
-        WORLD_ID,
-        STARTER_GROVE_CHUNK.x,
-        STARTER_GROVE_CHUNK.z,
-      )
-      .length;
+    const firstMods = chunksRepo.getModifiedBlocks(
+      handle.db,
+      WORLD_ID,
+      STARTER_GROVE_CHUNK.x,
+      STARTER_GROVE_CHUNK.z,
+    ).length;
     const firstRecipes = recipesRepo.listKnownRecipes(handle.db, WORLD_ID);
 
     seedStarterGrove(handle.db, WORLD_ID);
     seedStarterGrove(handle.db, WORLD_ID);
 
-    const secondMods = chunksRepo
-      .getModifiedBlocks(
-        handle.db,
-        WORLD_ID,
-        STARTER_GROVE_CHUNK.x,
-        STARTER_GROVE_CHUNK.z,
-      )
-      .length;
+    const secondMods = chunksRepo.getModifiedBlocks(
+      handle.db,
+      WORLD_ID,
+      STARTER_GROVE_CHUNK.x,
+      STARTER_GROVE_CHUNK.z,
+    ).length;
     const secondRecipes = recipesRepo.listKnownRecipes(handle.db, WORLD_ID);
     expect(secondMods).toBe(firstMods);
     expect(secondRecipes.length).toBe(firstRecipes.length);

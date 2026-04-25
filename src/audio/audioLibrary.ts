@@ -53,6 +53,9 @@ export type SoundId =
   | "ui.achievement"
   | "ui.inventory.add"
   | "ui.inventory.full"
+  | "ui.threshold.chime"
+  // Hearth — claim ritual ignite (Sub-wave A).
+  | "hearth.ignite"
   // Tools (provisional; @todo per-tool packs).
   | "tool.axe.swing"
   | "tool.axe.break"
@@ -162,6 +165,26 @@ export const AUDIO_LIBRARY: Readonly<Record<SoundId, SoundEntry>> = {
   "ui.inventory.full": {
     path: `${PREFIX}sfx/ui/cancel.wav`,
     volume: 0.65,
+    channel: "sfx",
+  },
+  // Threshold chime — Sub-wave D. Played when the player crosses a
+  // grove ↔ wilderness chunk boundary. Aliased to the confirm cue for
+  // now; a bespoke woodwind chime is a polish-wave goal.
+  // @todo polish-wave: dedicated soft chime SFX.
+  "ui.threshold.chime": {
+    path: `${PREFIX}sfx/ui/confirm.wav`,
+    volume: 0.6,
+    channel: "sfx",
+  },
+
+  // ── Hearth ───────────────────────────────────────────────────────────
+  // Hearth ignite — Sub-wave A claim ritual cinematic. Aliased to the
+  // heaviest impact cue we have (axe break) for a meaty whoomph until
+  // a bespoke ignite SFX is curated.
+  // @todo polish-wave: real fire-ignition SFX (whoosh + crackle).
+  "hearth.ignite": {
+    path: `${PREFIX}sfx/tools/pl_impact_heavy_03.wav`,
+    volume: 1.0,
     channel: "sfx",
   },
 

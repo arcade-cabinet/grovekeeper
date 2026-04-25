@@ -21,6 +21,10 @@ import {
   setChannelVolume,
   setMasterVolume,
 } from "@/audio";
+import {
+  SCRIPTED_LINE_HISTORY_IDS,
+  SCRIPTED_LINE_PHRASE_IDS,
+} from "@/content/dialogue/scripted-spirit-lines";
 import { getDbAsync } from "@/db/client";
 import { getPref } from "@/db/preferences";
 import {
@@ -28,8 +32,11 @@ import {
   dialogueRepo,
   inventoryRepo,
   recipesRepo,
+  structuresRepo,
 } from "@/db/repos";
+import { claimGrove, getGroveById, lightHearth } from "@/db/repos/grovesRepo";
 import { createWorld, getWorld } from "@/db/repos/worldsRepo";
+import { pickScriptedSpiritLine } from "@/game/dialogue/dialogueSystem";
 import { listAllRecipes } from "@/game/crafting";
 import {
   applyInventoryCap,
@@ -62,9 +69,16 @@ import {
 } from "@/input";
 import { eventBus } from "@/runtime/eventBus";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
+import { ClaimRitualSystem } from "./ClaimRitualSystem";
 import { CraftingStationActor } from "./CraftingStationActor";
 import { CraftingStationProximityBehavior } from "./CraftingStationProximityBehavior";
+import {
+  type ClaimedGroveNode,
+  FastTravelController,
+  listClaimedGroves,
+} from "./fastTravel";
 import { type PopulatedGrove, populateGrove } from "./GrovePopulator";
+import { type HearthCandidate, pickHearthPrompt } from "./HearthInteraction";
 import { InteractionSystem } from "./InteractionSystem";
 import { InteractionTickBehavior } from "./InteractionTickBehavior";
 import npcConfig from "./npc.config.json";
@@ -374,6 +388,64 @@ export async function createRuntime(
   // Solid `<NpcSpeechBubble>` to consume. Persistence to
   // `dialogue_history` happens here so the next session's
   // repeat-avoidance filter is primed.
+  /**
+   * Sub-wave D — read scripted-line eligibility flags from the DB so
+   * the Spirit can fire line1/line2/line3 as the journey progresses.
+   * Returns a snapshot suitable for `pickScriptedSpiritLine(...)`.
+   * If the DB isn't up, every flag is false (no-op selector).
+   */
+  function readScriptedLineState() {
+    if (!dbHandle) {
+      return {
+        starterAxeKnown: false,
+        groveClaimed: false,
+        scriptedLineFired: { line1: false, line2: false, line3: false },
+      } as const;
+    }
+    let groveClaimed = false;
+    try {
+      const grove = getGroveById(
+        dbHandle.db,
+        `grove-${STARTER_GROVE_CHUNK.x}-${STARTER_GROVE_CHUNK.z}`,
+      );
+      groveClaimed = grove?.state === "claimed";
+    } catch {
+      /* DB shape skew — treat as unclaimed */
+    }
+    let starterAxeKnown = false;
+    try {
+      starterAxeKnown = recipesRepo.isKnown(
+        dbHandle.db,
+        RC_WORLD_ID,
+        "recipe.starter-axe",
+      );
+    } catch {
+      /* DB shape skew — treat as unlearned */
+    }
+    const fired = {
+      line1: false,
+      line2: false,
+      line3: false,
+    };
+    for (const key of ["line1", "line2", "line3"] as const) {
+      try {
+        fired[key] =
+          dialogueRepo.getLastPhrase(
+            dbHandle.db,
+            RC_WORLD_ID,
+            SCRIPTED_LINE_HISTORY_IDS[key],
+          ) !== null;
+      } catch {
+        /* ignore */
+      }
+    }
+    return {
+      starterAxeKnown,
+      groveClaimed,
+      scriptedLineFired: fired,
+    };
+  }
+
   const interactionSystem = new InteractionSystem({
     player: playerBehavior,
     input: inputManager,
@@ -385,7 +457,46 @@ export async function createRuntime(
         interact: any;
       }> = [];
       for (const grove of populatedGroves.values()) {
-        out.push(grove.spirit);
+        // Wrap the Spirit's interact() so scripted lines (Sub-wave D)
+        // can pre-empt the random pool. Each scripted line fires at
+        // most once per save: the firing is recorded as a synthetic
+        // npcId in `dialogue_history` so a repeat call falls through
+        // to the random pool.
+        const spirit = grove.spirit;
+        const wrapped = {
+          getId: () => spirit.getId(),
+          get position() {
+            return spirit.position;
+          },
+          // biome-ignore lint/suspicious/noExplicitAny: variadic ctx
+          interact: (ctx?: any) => {
+            const state = readScriptedLineState();
+            const scripted = pickScriptedSpiritLine(state);
+            if (scripted) {
+              // Mark this scripted line as fired so the next interact
+              // can advance to the next line.
+              if (dbHandle) {
+                try {
+                  dialogueRepo.recordPhrase(
+                    dbHandle.db,
+                    RC_WORLD_ID,
+                    SCRIPTED_LINE_HISTORY_IDS[scripted.line],
+                    SCRIPTED_LINE_PHRASE_IDS[scripted.line],
+                  );
+                } catch (err) {
+                  // eslint-disable-next-line no-console
+                  console.warn(
+                    "[grovekeeper] scripted-line history record failed",
+                    err,
+                  );
+                }
+              }
+              return scripted.pick;
+            }
+            return spirit.interact(ctx);
+          },
+        };
+        out.push(wrapped);
         for (const v of grove.villagers) out.push(v);
       }
       return out;
@@ -609,6 +720,228 @@ export async function createRuntime(
         z: playerActor.object3D.position.z,
       }),
   });
+
+  // ── Sub-wave D — hearth interaction + claim ritual + fast travel ──
+  //
+  // Per-frame: scan the active starter grove for placed-but-unlit
+  // hearths. If the player is within proximity, emit a hearth prompt
+  // on the bus so `<HearthPrompt>` can render "Press E to light".
+  // When `interact` fires while the prompt is "light" → start the
+  // ClaimRitualSystem cinematic. When the prompt is "fast-travel"
+  // → open `<FastTravelMenu>` via the bus.
+  //
+  // The lookup is gated on `dbHandle`: no DB ⇒ no hearth prompts.
+  // STARTER_GROVE_CHUNK provides the world-space center to compute
+  // the structure's position; placed structures persist (cx, cy, cz)
+  // local-to-grove coordinates which we resolve to world-space here.
+  const STARTER_GROVE_ID = `grove-${STARTER_GROVE_CHUNK.x}-${STARTER_GROVE_CHUNK.z}`;
+  let activeClaimRitual: ClaimRitualSystem | null = null;
+  let claimRitualGroveId: string | null = null;
+
+  function listHearthCandidates(): HearthCandidate[] {
+    if (!dbHandle) return [];
+    try {
+      const rows = structuresRepo.listStructuresInGrove(
+        dbHandle.db,
+        STARTER_GROVE_ID,
+      );
+      const grove = getGroveById(dbHandle.db, STARTER_GROVE_ID);
+      const lit = grove?.hearthLitAt != null;
+      // The schema's structure type is the discriminator; "hearth"
+      // matches the recipe template id.
+      return rows
+        .filter((r) => r.type === "hearth")
+        .map((r) => ({
+          structureId: r.id,
+          groveId: STARTER_GROVE_ID,
+          position: { x: r.x, y: r.y, z: r.z },
+          lit,
+        }));
+    } catch {
+      return [];
+    }
+  }
+
+  function startClaimRitual(_structureId: string, groveId: string): void {
+    if (activeClaimRitual?.isActive) return;
+    claimRitualGroveId = groveId;
+    activeClaimRitual = new ClaimRitualSystem({
+      hooks: {
+        setInputLocked: (locked) => eventBus.emitClaimCinematicActive(locked),
+        playSound: (id) => playSound(id),
+        playStinger: (id) => playSound(id),
+        restoreBiomeMusic: () => {
+          void setBiomeMusic("meadow").catch(() => {
+            /* idempotent */
+          });
+        },
+        setHearthEmissive: (_intensity: number) => {
+          // @todo Wave D2: pulse the actual hearth mesh emissive.
+          // For RC the cinematic's audio + spirit line are the
+          // perceptual anchors; the visual ramp is a polish goal.
+        },
+        setVillagerAlpha: (_alpha: number) => {
+          // @todo Wave D2: villagers fade in over the claim ritual's
+          // settle phase. Currently they pop in at full alpha when
+          // GrovePopulator's claimed-state check flips on next chunk
+          // load.
+        },
+        persistClaim: () => {
+          if (!dbHandle) return;
+          try {
+            claimGrove(dbHandle.db, groveId);
+            lightHearth(dbHandle.db, groveId);
+            // Mark this hearth structure as lit. The structuresRepo
+            // schema doesn't expose a `lit` field at the row level —
+            // the grove's `hearthLitAt` is the source of truth and
+            // `pickHearthPrompt` reads it via `lit` on the candidate.
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn("[grovekeeper] persistClaim failed", err);
+          }
+          eventBus.emitGroveClaimed({ groveId, worldId: RC_WORLD_ID });
+        },
+        spawnVillagers: () => {
+          // Re-populate the starter grove so villagers (1-4) appear
+          // post-claim. Dispose the existing handle and rebuild.
+          const key = groveGlowKey(
+            STARTER_GROVE_CHUNK.x,
+            STARTER_GROVE_CHUNK.z,
+          );
+          const existing = populatedGroves.get(key);
+          existing?.dispose();
+          populatedGroves.delete(key);
+          // The next chunk re-population path runs through
+          // `chunkHooks.onChunkSpawned`, which sees `groveState=claimed`
+          // (read from DB) and spawns villagers. We trigger that by
+          // calling populateGrove directly here against the current
+          // chunk. Idempotent if villagers already there.
+          const handle = populateGrove({
+            worldSeed: RC_WORLD_SEED,
+            chunkX: STARTER_GROVE_CHUNK.x,
+            chunkZ: STARTER_GROVE_CHUNK.z,
+            surfaceY: ChunkActor.SURFACE_Y + 1,
+            factory: {
+              createActor: () =>
+                world.createActor(
+                  `npc-${STARTER_GROVE_CHUNK.x}-${STARTER_GROVE_CHUNK.z}`,
+                ),
+            },
+            history: dbHandle
+              ? {
+                  getLastPhraseId: (npcId) =>
+                    dialogueRepo.getLastPhrase(dbHandle.db, RC_WORLD_ID, npcId)
+                      ?.lastPhraseId ?? null,
+                  hasMet: (npcId) =>
+                    dialogueRepo.getLastPhrase(
+                      dbHandle.db,
+                      RC_WORLD_ID,
+                      npcId,
+                    ) !== null,
+                }
+              : undefined,
+            groveState: "claimed",
+          });
+          populatedGroves.set(key, handle);
+        },
+        emitSpiritLine: (_line: string) => {
+          // The Spirit's line2 surfaces via the Spirit-line scripted
+          // path on the next interact. The cinematic's beat is a
+          // soft cue (the line will play when the player walks back
+          // and hits E), not a barge-in over the cinematic.
+        },
+      },
+    });
+    activeClaimRitual.start(performance.now());
+  }
+
+  // Fast-travel controller — owned by runtime. Teleporter snaps the
+  // player actor's XZ; overlay drives the bus's fade signal so the
+  // Solid `<FastTravelFade>` mounts a black scrim during the swap.
+  const fastTravelController = new FastTravelController({
+    teleporter: {
+      teleport: (worldX, worldZ) => {
+        playerActor.object3D.position.x = worldX;
+        playerActor.object3D.position.z = worldZ;
+      },
+    },
+    overlay: {
+      setFadeOpacity: (opacity) => eventBus.emitFastTravelFadeOpacity(opacity),
+    },
+  });
+
+  // Bridge: when `<FastTravelMenu>` emits a destination, look up the
+  // node's coords and start the controller's transition. Closing the
+  // menu happens on the UI side; we just kick the fade.
+  eventBus.onFastTravelStart((ev) => {
+    if (fastTravelController.isActive) return;
+    if (!dbHandle) return;
+    const claimed = listClaimedGroves(dbHandle.db, RC_WORLD_ID);
+    const node: ClaimedGroveNode | undefined = claimed.find(
+      (n) => n.groveId === ev.groveId,
+    );
+    if (!node) return;
+    fastTravelController.start(node, performance.now());
+  });
+
+  // Sub-wave D — hearth proximity + interact tick. Runs every frame
+  // alongside the threshold + interaction systems. Cheap when there
+  // are no hearths placed (early game) — the structuresRepo lookup
+  // returns an empty list and we early-exit.
+  const hearthTickActor = world.createActor("hearth-tick");
+  hearthTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () => {
+      // Drive any active claim cinematic.
+      if (activeClaimRitual?.isActive) {
+        activeClaimRitual.tick(performance.now());
+      }
+      // Drive any active fast-travel transition.
+      if (fastTravelController.isActive) {
+        fastTravelController.tick(performance.now());
+      }
+
+      const candidates = listHearthCandidates();
+      const px = playerActor.object3D.position.x;
+      const pz = playerActor.object3D.position.z;
+      const pick = pickHearthPrompt({ x: px, z: pz }, candidates);
+      if (pick) {
+        const cam = cameraFollow.getCamera();
+        const screen = projectWorldToScreen(
+          pick.candidate.position,
+          cam,
+          canvas,
+        );
+        eventBus.emitHearthPrompt({
+          structureId: pick.candidate.structureId,
+          groveId: pick.candidate.groveId,
+          screenPosition: screen,
+          variant: pick.variant,
+        });
+      } else {
+        eventBus.emitHearthPrompt(null);
+      }
+
+      // Rising-edge interact press while a prompt is visible.
+      // `getActionState("interact").justPressed` is stable across
+      // multiple calls in the same frame (it's derived from
+      // `buttonsHeldPrev` which only ticks at `endFrame()`), so this
+      // is safe to read alongside InteractionSystem's call.
+      const button = inputManager.getActionState("interact");
+      const justPressed = button.pressed && button.justPressed;
+
+      if (justPressed && pick && !activeClaimRitual?.isActive) {
+        if (pick.variant === "light") {
+          startClaimRitual(pick.candidate.structureId, pick.candidate.groveId);
+          eventBus.emitHearthPrompt(null);
+        } else if (pick.variant === "fast-travel") {
+          eventBus.emitFastTravelOpen(true);
+        }
+      }
+    },
+  });
+  // Suppress "unused" by reading the var.
+  void claimRitualGroveId;
+  void hearthTickActor;
 
   // Audio bootstrap. Registers every symbolic sound id with the engine's
   // AudioLibrary, applies persisted volume preferences, and kicks off

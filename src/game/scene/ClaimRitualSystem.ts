@@ -115,10 +115,7 @@ export class ClaimRitualSystem {
       const claimElapsed = elapsed - this.timing.ignitePhaseMs;
       const fade = Math.min(1, claimElapsed / this.timing.claimPhaseMs);
       this.hooks.setVillagerAlpha(fade);
-      if (
-        elapsed >=
-        this.timing.ignitePhaseMs + this.timing.claimPhaseMs
-      ) {
+      if (elapsed >= this.timing.ignitePhaseMs + this.timing.claimPhaseMs) {
         this.phase = "settle";
       }
     }

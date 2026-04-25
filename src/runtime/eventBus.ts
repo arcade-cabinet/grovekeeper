@@ -92,6 +92,20 @@ const [fastTravelOpen, setFastTravelOpen] = createSignal(false);
 const [fastTravelFadeOpacity, setFastTravelFadeOpacity] = createSignal(0);
 
 /**
+ * Sub-wave D — fast-travel teleport request. Solid → runtime channel:
+ * `<FastTravelMenu>` emits the chosen target; runtime's
+ * `FastTravelController` subscribes via `onFastTravelStart` and kicks
+ * off the fade transition. Cleared back to `null` once the runtime
+ * picks it up.
+ */
+export interface FastTravelStartEvent {
+  worldX: number;
+  worldZ: number;
+  groveId: string;
+}
+const fastTravelStartListeners = new Set<(ev: FastTravelStartEvent) => void>();
+
+/**
  * Sub-wave C — diegetic teaching cue: contextual interact prompt.
  *
  * Emitted by `InteractCueSystem` when the player is within reach of
@@ -192,6 +206,24 @@ export const eventBus = {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("[grovekeeper] grove-claimed listener threw", error);
+      }
+    }
+  },
+
+  // ── Sub-wave D — fast-travel teleport request channel ────────────
+  /** UI subscribes a listener; returns an unsubscribe fn. */
+  onFastTravelStart(listener: (ev: FastTravelStartEvent) => void): () => void {
+    fastTravelStartListeners.add(listener);
+    return () => fastTravelStartListeners.delete(listener);
+  },
+  /** UI fires this when the player picks a destination. */
+  emitFastTravelStart(ev: FastTravelStartEvent): void {
+    for (const fn of fastTravelStartListeners) {
+      try {
+        fn(ev);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("[grovekeeper] fast-travel listener threw", error);
       }
     }
   },

@@ -23,7 +23,9 @@ describe("MainMenu", () => {
   it("renders the wordmark and inscription", () => {
     render(() => <MainMenu worldsProvider={() => []} />);
     expect(screen.getByText("Grovekeeper")).toBeDefined();
-    expect(screen.getByText("Every forest begins with a single seed.")).toBeDefined();
+    expect(
+      screen.getByText("Every forest begins with a single seed."),
+    ).toBeDefined();
   });
 
   it("hides Continue when no worlds are persisted", () => {

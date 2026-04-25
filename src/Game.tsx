@@ -16,8 +16,13 @@ import { eventBus } from "@/runtime/eventBus";
 import { initializePlatform } from "@/systems/platform";
 import { generateDailyQuests } from "@/systems/quests";
 import { CurrentSeason, GameScreen, PlayerProgress, Quests } from "@/traits";
+import { getDb, isDbInitialized } from "@/db/client";
+import { listClaimedGroves } from "@/game/scene/fastTravel";
 import { CraftingPanel } from "@/ui/game/CraftingPanel";
 import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
+import { FastTravelFade } from "@/ui/game/FastTravelFade";
+import { FastTravelMenu } from "@/ui/game/FastTravelMenu";
+import { HearthPrompt } from "@/ui/game/HearthPrompt";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameScreen } from "@/ui/game/NewGameScreen";
 import { NpcSpeechBubble } from "@/ui/game/NpcSpeechBubble";
@@ -174,6 +179,15 @@ export const Game = () => {
               />
             )}
           </Show>
+
+          {/* Sub-wave D — hearth proximity prompt (above canvas, below modals). */}
+          <HearthPrompt />
+
+          {/* Sub-wave D — fast-travel menu, opened by interacting with a lit hearth. */}
+          <FastTravelMenuConnected />
+
+          {/* Sub-wave D — fast-travel black-fade overlay (always mounted). */}
+          <FastTravelFade />
         </Show>
 
         <RetreatOverlay />
@@ -181,3 +195,44 @@ export const Game = () => {
     </Show>
   );
 };
+
+/**
+ * Solid bridge for `<FastTravelMenu>`. Reads the live claimed-grove
+ * list from the DB the moment the menu opens (so the list reflects
+ * any claim that happened mid-session), and emits the chosen target
+ * back to the runtime via `eventBus.emitFastTravelStart(...)`.
+ */
+function FastTravelMenuConnected() {
+  return (
+    <Show when={eventBus.fastTravelOpen()}>
+      <FastTravelMenuLive />
+    </Show>
+  );
+}
+
+function FastTravelMenuLive() {
+  const groves = (() => {
+    if (!isDbInitialized()) return [];
+    try {
+      const handle = getDb();
+      return listClaimedGroves(handle.db, "rc-world-default");
+    } catch {
+      return [];
+    }
+  })();
+  return (
+    <FastTravelMenu
+      open={true}
+      groves={groves}
+      onSelect={(node) => {
+        eventBus.emitFastTravelStart({
+          worldX: node.worldX,
+          worldZ: node.worldZ,
+          groveId: node.groveId,
+        });
+        eventBus.emitFastTravelOpen(false);
+      }}
+      onClose={() => eventBus.emitFastTravelOpen(false)}
+    />
+  );
+}
