@@ -12,7 +12,9 @@
 import { describe, expect, it } from "vitest";
 import {
   GROVE_RANDOM_PROBABILITY,
+  GUARANTEED_GROVE_CHUNKS,
   isGroveChunk,
+  SECOND_GROVE_CHUNK,
   STARTER_GROVE_CHUNK,
 } from "./grovePlacement";
 
@@ -40,16 +42,24 @@ describe("grovePlacement", () => {
     }
   });
 
+  it("always places the second guaranteed grove at (7, 2)", () => {
+    expect(SECOND_GROVE_CHUNK).toEqual({ x: 7, z: 2 });
+    expect(GUARANTEED_GROVE_CHUNKS).toContainEqual(SECOND_GROVE_CHUNK);
+    for (const seed of [0, 1, 42, 9999, -1, 0x7fffffff]) {
+      expect(isGroveChunk(seed, 7, 2)).toBe(true);
+    }
+  });
+
   it("distribution across 1000 outer chunks is roughly 2%", () => {
     const seed = 1234;
     let groveCount = 0;
     let total = 0;
-    // Sample a 50x20 window of chunks. Skip the starter so we measure
-    // the random rule in isolation. 1000 samples is enough to keep
-    // sampling noise tight around 2%.
+    // Sample a 50x20 window of chunks. Skip every guaranteed grove so
+    // we measure the random rule in isolation. 1000 samples is enough
+    // to keep sampling noise tight around 2%.
     for (let x = 50; x < 100; x++) {
       for (let z = 50; z < 70; z++) {
-        if (x === STARTER_GROVE_CHUNK.x && z === STARTER_GROVE_CHUNK.z) {
+        if (GUARANTEED_GROVE_CHUNKS.some((g) => g.x === x && g.z === z)) {
           continue;
         }
         total++;

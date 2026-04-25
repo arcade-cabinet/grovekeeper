@@ -30,6 +30,12 @@ import {
   SPIRIT_PHRASES,
   VILLAGER_PHRASES,
 } from "@/content/dialogue/phrase-pools";
+import {
+  SCRIPTED_LINE_HISTORY_IDS,
+  SCRIPTED_LINE_PHRASE_IDS,
+  SCRIPTED_SPIRIT_LINES,
+  type ScriptedSpiritLineKey,
+} from "@/content/dialogue/scripted-spirit-lines";
 import type { TimeOfDay } from "@/systems/time";
 
 export type Speaker = "spirit" | "villager";
@@ -184,3 +190,59 @@ function pickFromPool(
     tag,
   };
 }
+
+/**
+ * World-state snapshot consumed by `pickScriptedSpiritLine`. Caller
+ * pulls these flags from the DB once and passes them in.
+ */
+export interface ScriptedLineWorldState {
+  /** Has `recipe.starter-axe` been learned? */
+  starterAxeKnown: boolean;
+  /** Has the starter grove been claimed (`state === 'claimed'`)? */
+  groveClaimed: boolean;
+  /** Map of scripted-line id → has it already fired? */
+  scriptedLineFired: Readonly<Record<ScriptedSpiritLineKey, boolean>>;
+}
+
+/**
+ * If a scripted Spirit line should fire on this interaction, returns
+ * it. Otherwise returns `null` and the caller falls through to
+ * `pickPhrase("spirit", ...)`.
+ *
+ * Priority order — most specific first:
+ *
+ *   1. line3 — recipe.starter-axe is known AND line3 hasn't fired.
+ *   2. line2 — grove is claimed AND line2 hasn't fired.
+ *   3. line1 — line1 hasn't fired yet.
+ */
+export function pickScriptedSpiritLine(
+  state: ScriptedLineWorldState,
+): { line: ScriptedSpiritLineKey; pick: PhrasePick } | null {
+  if (state.starterAxeKnown && !state.scriptedLineFired.line3) {
+    return scriptedPick("line3");
+  }
+  if (state.groveClaimed && !state.scriptedLineFired.line2) {
+    return scriptedPick("line2");
+  }
+  if (!state.scriptedLineFired.line1) {
+    return scriptedPick("line1");
+  }
+  return null;
+}
+
+function scriptedPick(line: ScriptedSpiritLineKey): {
+  line: ScriptedSpiritLineKey;
+  pick: PhrasePick;
+} {
+  return {
+    line,
+    pick: {
+      id: SCRIPTED_LINE_PHRASE_IDS[line],
+      text: SCRIPTED_SPIRIT_LINES[line],
+      tag: `scripted-${line}`,
+    },
+  };
+}
+
+/** Re-export for runtime callers. */
+export { SCRIPTED_LINE_HISTORY_IDS };

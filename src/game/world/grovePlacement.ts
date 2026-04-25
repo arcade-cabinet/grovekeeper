@@ -51,8 +51,28 @@ export const STARTER_GROVE_CHUNK: { readonly x: number; readonly z: number } = {
 };
 
 /**
- * Probability of any non-starter chunk rolling into a grove. 1 in 50
- * means the random distribution is ~2% before the starter is added.
+ * Second guaranteed grove (Sub-wave C, journey beat 13 — "Discovery
+ * of second grove"). Always a grove regardless of seed; ~2 minutes'
+ * walk from spawn at the documented player speed.
+ */
+export const SECOND_GROVE_CHUNK: { readonly x: number; readonly z: number } = {
+  x: 7,
+  z: 2,
+};
+
+/**
+ * Chunks that are *unconditionally* groves on every world. Order is
+ * meaningful: starter is the first beat, second grove is the second.
+ */
+export const GUARANTEED_GROVE_CHUNKS: ReadonlyArray<{
+  readonly x: number;
+  readonly z: number;
+}> = [STARTER_GROVE_CHUNK, SECOND_GROVE_CHUNK] as const;
+
+/**
+ * Probability of any non-guaranteed chunk rolling into a grove. 1 in
+ * 50 means the random distribution is ~2% before the guaranteed
+ * groves are added.
  */
 export const GROVE_RANDOM_PROBABILITY = 1 / 50;
 
@@ -70,15 +90,15 @@ export function isGroveChunk(
   chunkX: number,
   chunkZ: number,
 ): boolean {
-  // Rule 1: starter grove is unconditional. Even on the wildly
-  // unlikely seed where the random roll *also* would have landed it
+  // Rule 1+2: guaranteed groves are unconditional. Even on a wildly
+  // unlikely seed where the random roll *also* would have landed
   // here, the function still returns true — there's no "double grove"
   // ambiguity to resolve.
-  if (chunkX === STARTER_GROVE_CHUNK.x && chunkZ === STARTER_GROVE_CHUNK.z) {
-    return true;
+  for (const g of GUARANTEED_GROVE_CHUNKS) {
+    if (chunkX === g.x && chunkZ === g.z) return true;
   }
 
-  // Rule 2: deterministic PRNG roll. The scope `'grove'` namespaces
+  // Rule 3: deterministic PRNG roll. The scope `'grove'` namespaces
   // this draw away from terrain decoration rolls and biome assignment
   // rolls so they can't accidentally collide.
   const rng = scopedRNG("grove", worldSeed, chunkX, chunkZ);

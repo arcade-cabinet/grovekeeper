@@ -21,7 +21,16 @@ import {
   SPIRIT_PHRASES,
   VILLAGER_PHRASES,
 } from "@/content/dialogue/phrase-pools";
-import { pickPhrase, timeOfDayBucket } from "./dialogueSystem";
+import {
+  SCRIPTED_LINE_PHRASE_IDS,
+  SCRIPTED_SPIRIT_LINES,
+} from "@/content/dialogue/scripted-spirit-lines";
+import {
+  pickPhrase,
+  pickScriptedSpiritLine,
+  type ScriptedLineWorldState,
+  timeOfDayBucket,
+} from "./dialogueSystem";
 
 /** Random sequence injector — yields the next number from `xs` each call. */
 function fixedRandom(xs: number[]): () => number {
@@ -197,5 +206,86 @@ describe("dialogueSystem.pickPhrase — determinism", () => {
       fixedRandom([0.5, 0.42]),
     );
     expect(a).toEqual(b);
+  });
+});
+
+describe("dialogueSystem.pickScriptedSpiritLine", () => {
+  function state(
+    overrides: Partial<ScriptedLineWorldState["scriptedLineFired"]> & {
+      starterAxeKnown?: boolean;
+      groveClaimed?: boolean;
+    } = {},
+  ): ScriptedLineWorldState {
+    return {
+      starterAxeKnown: overrides.starterAxeKnown ?? false,
+      groveClaimed: overrides.groveClaimed ?? false,
+      scriptedLineFired: {
+        line1: overrides.line1 ?? false,
+        line2: overrides.line2 ?? false,
+        line3: overrides.line3 ?? false,
+      },
+    };
+  }
+
+  it("picks line1 on first arrival (no claim, no axe, never fired)", () => {
+    const result = pickScriptedSpiritLine(state());
+    expect(result?.line).toBe("line1");
+    expect(result?.pick.text).toBe(SCRIPTED_SPIRIT_LINES.line1);
+    expect(result?.pick.id).toBe(SCRIPTED_LINE_PHRASE_IDS.line1);
+  });
+
+  it("picks line2 after grove is claimed (line1 already fired)", () => {
+    const result = pickScriptedSpiritLine(
+      state({ line1: true, groveClaimed: true }),
+    );
+    expect(result?.line).toBe("line2");
+    expect(result?.pick.text).toBe(SCRIPTED_SPIRIT_LINES.line2);
+  });
+
+  it("picks line3 after starter axe is learned (line1+line2 fired)", () => {
+    const result = pickScriptedSpiritLine(
+      state({
+        line1: true,
+        line2: true,
+        groveClaimed: true,
+        starterAxeKnown: true,
+      }),
+    );
+    expect(result?.line).toBe("line3");
+    expect(result?.pick.text).toBe(SCRIPTED_SPIRIT_LINES.line3);
+  });
+
+  it("picks line3 over line2 if axe is known but line2 hasn't fired (priority)", () => {
+    const result = pickScriptedSpiritLine(
+      state({
+        line1: true,
+        groveClaimed: true,
+        starterAxeKnown: true,
+      }),
+    );
+    expect(result?.line).toBe("line3");
+  });
+
+  it("returns null when all three scripted lines have fired", () => {
+    const result = pickScriptedSpiritLine(
+      state({
+        line1: true,
+        line2: true,
+        line3: true,
+        groveClaimed: true,
+        starterAxeKnown: true,
+      }),
+    );
+    expect(result).toBeNull();
+  });
+
+  it("returns null when the only outstanding line's gating state is false", () => {
+    const result = pickScriptedSpiritLine(state({ line1: true }));
+    expect(result).toBeNull();
+  });
+
+  it("does not re-fire a line that has already fired", () => {
+    const result = pickScriptedSpiritLine(state({ line1: true }));
+    expect(result).toBeNull();
   });
 });
