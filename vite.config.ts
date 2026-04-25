@@ -24,40 +24,27 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: [
+      "three",
+      "@jolly-pixel/engine",
+      "@jolly-pixel/runtime",
+      "@jolly-pixel/voxel.renderer",
+    ],
+    // rapier3d ships its WASM via a static bundler import
+    // (`import * as wasm from "./rapier_wasm3d_bg.wasm"`). Vite serves
+    // the .wasm file directly when the package is excluded from
+    // pre-bundling — that's the rapier-recommended setup. Mirrors
+    // voxel-realms' Vite config.
+    exclude: ["@dimforge/rapier3d"],
+  },
   build: {
     rollupOptions: {
       output: {
         manualChunks(id: string): string | undefined {
-          // @babylonjs/loaders — GLB/glTF parser; lazy-loaded after first model
-          // request, so it does NOT need to be in the initial Babylon chunk.
-          if (id.includes("@babylonjs/loaders")) return "babylon-loaders";
-
-          if (id.includes("@babylonjs/")) {
-            // Exclude shader/heavy modules from the named chunk so Rollup can
-            // place them in auto-generated async chunks (they may or may not be
-            // needed depending on the active material pipeline).
-            if (
-              id.includes("/Shaders/") ||
-              id.includes("/ShadersInclude/") ||
-              id.includes("/ShadersWGSL/") ||
-              id.includes("/FlowGraph/") ||
-              id.includes("/PostProcesses/") ||
-              id.includes("/Audio/") ||
-              id.includes("/OpenPBR/") ||
-              id.includes("/Debug/") ||
-              id.includes("LoadingAdapter")
-            ) {
-              return undefined;
-            }
-
-            // All remaining @babylonjs/* in one named chunk.
-            // Splitting core/Materials further causes Rollup circular-chunk
-            // warnings because Materials and core are tightly coupled.
-            return "babylon-core";
-          }
-
           if (id.includes("node_modules/sql.js")) return "sqljs";
-          if (id.includes("node_modules/tone")) return "tone";
+          if (id.includes("node_modules/three")) return "three";
+          if (id.includes("node_modules/@jolly-pixel/")) return "jolly-pixel";
           return undefined;
         },
       },

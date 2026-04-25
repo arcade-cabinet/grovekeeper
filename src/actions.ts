@@ -23,7 +23,8 @@ import {
   canAffordExpansion,
   getNextExpansionTier,
 } from "@/systems/gridExpansion";
-import { audioManager } from "@/systems/AudioManager";
+// Audio wave (Wave 5) wires Jolly Pixel engine audio. Until then, no-op.
+const audioManager = { play: (_id: string) => {} };
 import { checkNewUnlocks } from "@/systems/levelUnlocks";
 import { hapticHeavy } from "@/systems/platform";
 import {

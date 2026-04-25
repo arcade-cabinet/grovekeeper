@@ -1,5 +1,10 @@
-import type { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+// Engine-agnostic mesh / vector types. The previous BabylonJS types
+// were removed in the RC engine port (commit 8142d0d). The new render
+// path is Three.js via @jolly-pixel/engine; concrete render-side
+// references live in the scene module rather than in trait schemas, so
+// the persistent ECS schema only needs opaque shapes here.
+type Vector3 = { x: number; y: number; z: number };
+type Mesh = unknown;
 import type { Entity } from "koota";
 import { relation, trait } from "koota";
 import type { ResourceType } from "@/config/resources";
@@ -226,3 +231,4 @@ export const OccupiedBy = relation({ exclusive: true });
 
 export type ResourceKey = ResourceType;
 export type { Vector3 };
+export type { Mesh };

@@ -2,12 +2,7 @@
  * Structure System — barrel export.
  */
 
-export {
-  createBlockMesh,
-  createStructureMesh,
-  disposeStructureMaterialCache,
-  disposeStructureMesh,
-} from "./BlockMeshFactory";
+// BlockMeshFactory deleted in BabylonJS purge; voxel.renderer + tilesets replace it.
 export {
   canPlace,
   getAvailableTemplates,

@@ -21,7 +21,7 @@ import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameModal } from "@/ui/game/NewGameModal";
 
 const GameScene = lazy(() =>
-  import("@/engine/scenes/GameScene")
+  import("@/game/scene/GameScene")
     .then((m) => ({ default: m.GameScene }))
     .catch(() => {
       if ("serviceWorker" in navigator) {
@@ -32,7 +32,7 @@ const GameScene = lazy(() =>
           for (const n of names) caches.delete(n);
         });
       }
-      return import("@/engine/scenes/GameScene").then((m) => ({
+      return import("@/game/scene/GameScene").then((m) => ({
         default: m.GameScene,
       }));
     }),
