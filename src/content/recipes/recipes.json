@@ -1,0 +1,95 @@
+[
+  {
+    "id": "recipe.hearth",
+    "name": "Hearth",
+    "station": "primitive-workbench",
+    "inputs": [
+      { "itemId": "material.log", "count": 3 },
+      { "itemId": "material.stone", "count": 2 }
+    ],
+    "output": { "kind": "blueprint", "id": "blueprint.hearth", "count": 1 },
+    "unlock": "always",
+    "description": "A hearth marks a grove as yours. Place it, then light it."
+  },
+  {
+    "id": "recipe.starter-axe",
+    "name": "Starter Axe",
+    "station": "primitive-workbench",
+    "inputs": [
+      { "itemId": "material.log", "count": 1 },
+      { "itemId": "material.stone", "count": 1 }
+    ],
+    "output": { "kind": "item", "id": "item.axe", "count": 1 },
+    "unlock": "always",
+    "description": "Lashed stone on a green-wood haft. Better than nothing."
+  },
+  {
+    "id": "recipe.fence-section",
+    "name": "Fence Section",
+    "station": "primitive-workbench",
+    "inputs": [{ "itemId": "material.log", "count": 2 }],
+    "output": {
+      "kind": "blueprint",
+      "id": "blueprint.fence-section",
+      "count": 1
+    },
+    "unlock": "always",
+    "description": "A short stretch of split-rail fence."
+  },
+  {
+    "id": "recipe.cooking-fire",
+    "name": "Cooking Fire",
+    "station": "primitive-workbench",
+    "inputs": [{ "itemId": "material.stone", "count": 4 }],
+    "output": {
+      "kind": "blueprint",
+      "id": "blueprint.cooking-fire",
+      "count": 1
+    },
+    "unlock": "always",
+    "description": "Ringed stones and a place for embers."
+  },
+  {
+    "id": "recipe.planks",
+    "name": "Planks (×4)",
+    "station": "primitive-workbench",
+    "inputs": [{ "itemId": "material.log", "count": 1 }],
+    "output": { "kind": "item", "id": "material.plank", "count": 4 },
+    "unlock": "always",
+    "description": "Split a log into four planks."
+  },
+  {
+    "id": "recipe.stone-block",
+    "name": "Stone Block",
+    "station": "primitive-workbench",
+    "inputs": [{ "itemId": "material.stone", "count": 2 }],
+    "output": {
+      "kind": "blueprint",
+      "id": "blueprint.stone-block",
+      "count": 1
+    },
+    "unlock": "always",
+    "description": "A trimmed cube of stone, ready to stack."
+  },
+  {
+    "id": "recipe.plank-wall",
+    "name": "Plank Wall",
+    "station": "primitive-workbench",
+    "inputs": [{ "itemId": "material.plank", "count": 4 }],
+    "output": { "kind": "blueprint", "id": "blueprint.plank-wall", "count": 1 },
+    "unlock": "always",
+    "description": "A wall section. Pairs with itself to enclose."
+  },
+  {
+    "id": "recipe.workbench",
+    "name": "Primitive Workbench",
+    "station": "primitive-workbench",
+    "inputs": [
+      { "itemId": "material.log", "count": 4 },
+      { "itemId": "material.stone", "count": 1 }
+    ],
+    "output": { "kind": "blueprint", "id": "blueprint.workbench", "count": 1 },
+    "unlock": "after-claim",
+    "description": "A second workbench for a second grove."
+  }
+]
