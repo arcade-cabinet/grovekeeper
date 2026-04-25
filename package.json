@@ -25,7 +25,12 @@
     "test:e2e": "pnpm build && playwright test",
     "test:e2e:ui": "pnpm build && playwright test --ui",
     "test:playthrough": "playwright test e2e/playthrough.spec.ts",
-    "size": "size-limit"
+    "size": "size-limit",
+    "assets:fetch": "node scripts/fetch-itch.mjs",
+    "assets:import": "node scripts/import-from-voxel-realms.mjs",
+    "assets:curate": "node scripts/curate-assets.mjs",
+    "assets:manifest": "node scripts/build-asset-manifest.mjs",
+    "assets:all": "pnpm assets:import && pnpm assets:curate && pnpm assets:manifest"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.2",

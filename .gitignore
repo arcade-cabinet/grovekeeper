@@ -10,6 +10,12 @@ dist/
 .env.local
 .env.*.local
 
+# Raw assets — large itch.io packs, never committed (re-fetch via scripts/fetch-itch.mjs
+# or scripts/import-from-voxel-realms.mjs). The raw-assets/ directory itself stays
+# tracked via raw-assets/.gitkeep so the pipeline scripts find it.
+raw-assets/archives/
+raw-assets/extracted/
+
 # IDE
 .idea/
 .vscode/
