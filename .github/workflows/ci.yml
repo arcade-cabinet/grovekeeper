@@ -1,9 +1,12 @@
 name: CI
 
+# Mirrors the mean-streets pattern: pull_request only, no push: branches: [main].
+# Push to main is handled by release.yml + cd.yml. Running CI on push to main
+# duplicates work and previously caused phantom 0-second startup_failure runs
+# on non-main branches when GitHub's workflow validator triggered on the push
+# event without a matching branch filter context.
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
 
 concurrency:
@@ -14,6 +17,7 @@ jobs:
   check:
     name: Lint, Type-check & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
@@ -39,8 +43,11 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: check
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          lfs: true
 
       - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
 
@@ -65,8 +72,11 @@ jobs:
     name: Bundle Size
     runs-on: ubuntu-latest
     needs: build
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          lfs: true
 
       - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
 
@@ -87,8 +97,11 @@ jobs:
     name: Deterministic E2E Playthrough
     runs-on: ubuntu-latest
     needs: build
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          lfs: true
 
       - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
 
