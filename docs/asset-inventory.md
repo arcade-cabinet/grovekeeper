@@ -313,3 +313,119 @@ as opposed to the source-side inventory above which catalogues raw `voxel-realms
 
 **Manifest file:** `src/assets/manifest.generated.ts`
 
+## Tileset Atlases
+
+_Last regenerated: 2026-04-24 by `pnpm assets:tilesets`._
+
+Procedurally generated PNG atlases for `@jolly-pixel/voxel.renderer`, produced by
+`scripts/generate-tilesets.mjs` from `scripts/tileset-config.json`. Deterministic
+(seeded RNG, identical bytes on re-run). See `scripts/generate-tilesets.README.md`.
+
+**Tile size:** 32 px. **Atlas dimensions:** 256x256 (8x8 grid). **Total bytes:** ~70 KB.
+
+### Biome atlases
+
+| Biome  | Path                                       | Tiles | Bytes  |
+| ------ | ------------------------------------------ | ----- | ------ |
+| Meadow | `public/assets/tilesets/biomes/meadow.png` | 10    | 11,649 |
+| Forest | `public/assets/tilesets/biomes/forest.png` | 10    | 12,487 |
+| Coast  | `public/assets/tilesets/biomes/coast.png`  | 10    | 11,729 |
+| Grove  | `public/assets/tilesets/biomes/grove.png`  | 10    | 11,620 |
+
+Each biome ships ground variants (grass/dirt/stone/etc.), foliage (leaves), and structural
+tiles (wood/log/fence). Per-biome JSON sidecar (e.g. `meadow.json`) maps tile id -> `{col, row}`.
+
+### Structures atlases
+
+| Group  | Path                                            | Tiles | Bytes  |
+| ------ | ----------------------------------------------- | ----- | ------ |
+| Common | `public/assets/tilesets/structures/common.png`  | 8     | 11,457 |
+| Hearth | `public/assets/tilesets/structures/hearth.png`  | 8     | 11,031 |
+
+`common` covers shared crafted blocks (plank, stone-block, glass, thatch, log, metal,
+stone-rough, plank-vertical). `hearth` covers fire-stained stone, ember-glow coals, ash,
+iron, log, flame, soot, and tile — for the hearth structure that anchors the player's grove.
+
+### Approach decision
+
+**Option 4 (programmatic procedural generator)** from the wave plan. Hand-authored pixel
+art is the eventual target but blocks RC by requiring an artist pass. Voxel-realms'
+existing block textures were not consistently tile-able. Procedural generation gives us
+deterministic, tunable, scriptable atlases now; specific tiles can be replaced with
+hand-authored PNGs in a polish pass post-RC (see `scripts/generate-tilesets.README.md`).
+
+## Animation Verification (Wave 3b)
+
+Wave 3b spot-checked candidate DAE source files for animation cycles before
+committing to convert them, then ran the full DAE→GLB conversion pipeline.
+Pipeline scripts live at `scripts/convert-dae-to-glb.mjs`,
+`scripts/sample-animations.mjs`, `scripts/blender/dae-to-glb.py`,
+`scripts/blender/sample-animations.py`. Curation list at
+`scripts/conversion-config.json`.
+
+### Converter chosen
+
+**Assimp 6.0.4** (Homebrew). Blender 5.1.1 is installed locally but **no longer
+ships the `collada_import` operator** — the Blender 5.x release dropped COLLADA
+support and provides no replacement addon. The converter probes
+`'collada_import' in dir(bpy.ops.wm)` at startup; on Blender 5.x this is empty
+and the script automatically falls back to assimp.
+
+Animation preservation verified by inspecting GLB JSON chunks via
+`scripts/sample-animations.mjs`:
+
+| Source | Source anim nodes | Output animations | Output channels |
+|---|---|---|---|
+| `Beekeeper.dae` | 34 | 1 | 99 |
+| `Wolf Idle.dae` | 48 | 1 | 135 |
+| `Rabbit Run.dae` | 40 | 1 | 111 |
+
+Per-clip DAEs (the Chaos-Slice voxel pack convention — one cycle per file:
+`Wolf Idle.dae`, `Wolf Walk.dae`, etc.) become single-animation GLBs with all
+bone tracks intact. ModelRenderer plays them via per-node TRS animation rather
+than a glTF `skin` block; this works because the bone hierarchy is preserved as
+nodes during the COLLADA → glTF translation.
+
+### Conversion results
+
+37 entries in `conversion-config.json`. After fixing 5 filename mismatches
+(Owl `Idle 1` not `Idle`, Sea Turtle / Dolphin base files have no `Idle` suffix,
+Wild Boar files use `Boar` prefix not `Wild Boar`):
+
+- **37 ok, 0 failed, 0 missing** on the second pass.
+- Total time: ~0.4 s (assimp is dramatically faster than Blender CLI).
+- Outputs land at `raw-assets/converted/{pack-id}/.../{name}.glb`.
+
+### Which character pack wins the gardener slot
+
+All three character pack candidates ship with rigged DAEs (animation node count
+in COLLADA source is the proxy):
+
+| Pack | Per-character cycles | Notes |
+|---|---|---|
+| Beekeeer (`Beekeeper.dae`) | 1 file per character; 34 anim nodes | Single cycle baked into rig — likely an idle pose with finger/limb micro-animation. Cozy aesthetic fits "tend the grove". |
+| Mermaid (`MermaidWarrior01.dae` + `MermaidWarrior01 Eat.dae`) | 2 cycles per warrior; 34 anim nodes each | Better cycle coverage but sea-themed. Reserved for **Grove Spirit** (already wired in `asset-curation.json`). |
+| Neanderthal (`Father.dae` etc.) | 1 file per character | Static or near-static — used for villager NPCs. |
+
+**Wave 3 already wired Beekeeper as gardener** (`asset-curation.json` →
+`gardener.gltf`). The DAE conversion gives an alternate `.glb` with the rig
+animation; if the GLTF source turns out to be T-pose only, swap the curation
+entry's `source` to point at the converted GLB at
+`raw-assets/converted/beekeeer-upload/Beekeeer Upload/Dae Files/Beekeeper.glb`.
+
+### Risks remaining for downstream waves
+
+- **No `skin` block** in converted GLBs. ModelRenderer must drive animation via
+  per-node transforms. Three.js' `AnimationMixer` handles this natively, but
+  any logic that calls `mesh.skeleton` directly will get null — guard with
+  `if (mesh.skeleton)` checks where present.
+- **Single animation per file**, named after the COLLADA root anim id
+  (`Controller-global-anim`, `Orient-global-anim`, etc.) rather than human
+  labels like `idle`/`walk`. The asset manifest builder should map filename
+  stem (e.g. `Wolf Idle`) to a clip name in the manifest, not the raw
+  animation track name.
+- **Texture/material fidelity** untested in this pass. Assimp emits glTF PBR
+  materials but the COLLADA source only provides diffuse + emissive PNGs. The
+  curation step copies these PNGs alongside the GLB; the final visual check
+  belongs to the engine port wave.
+

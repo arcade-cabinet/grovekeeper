@@ -15,6 +15,7 @@ dist/
 # tracked via raw-assets/.gitkeep so the pipeline scripts find it.
 raw-assets/archives/
 raw-assets/extracted/
+raw-assets/converted/
 
 # IDE
 .idea/
@@ -45,6 +46,7 @@ test-results/
 # Screenshots from visual testing
 *.png
 !public/*.png
+!public/**/*.png
 
 # Expo (migration canceled — leftover local-only artifacts)
 .expo/
