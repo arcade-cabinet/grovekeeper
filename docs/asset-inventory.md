@@ -293,3 +293,23 @@ Top gaps, ordered by criticality for hitting RC:
 - `voxel-realms/.itch-cache/audio-packs.json` — cached owned-keys list (audio packs)
 
 End of inventory.
+
+## Curated for RC (generated)
+
+_Last regenerated: 2026-04-25 by `pnpm assets:manifest`._
+
+This section reflects what currently lives under `public/assets/` and ships with the game,
+as opposed to the source-side inventory above which catalogues raw `voxel-realms/raw-assets/extracted/` packs.
+
+**Total assets:** 348
+**Total size:** 760.0 MB
+
+**By category:**
+
+- ambient: 40
+- model: 61
+- music: 10
+- sfx: 237
+
+**Manifest file:** `src/assets/manifest.generated.ts`
+
