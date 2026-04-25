@@ -23,8 +23,10 @@ describe("MainMenu", () => {
   it("renders the wordmark and inscription", () => {
     render(() => <MainMenu worldsProvider={() => []} />);
     expect(screen.getByText("Grovekeeper")).toBeDefined();
+    // Tagline is rendered in quote marks ("Every forest…"), so use a
+    // regex match to ignore surrounding punctuation.
     expect(
-      screen.getByText("Every forest begins with a single seed."),
+      screen.getByText(/Every forest begins with a single seed/i),
     ).toBeDefined();
   });
 
