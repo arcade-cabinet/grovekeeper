@@ -90,6 +90,13 @@ export interface PlayerActorOptions {
 export const PLAYER_IDLE_CLIP = playerConfig.idleClip;
 /** Walk clip used while `move` magnitude > epsilon. */
 export const PLAYER_WALK_CLIP = playerConfig.walkClip;
+/**
+ * Swing clip used by Wave 16's gathering system when the player
+ * presses `swing`. Hardcoded rather than configurable — the gardener
+ * GLTF ships an `Attack 01` clip per the asset's 198-clip catalog
+ * (see file header), so a missing-clip case can't happen at runtime.
+ */
+export const PLAYER_SWING_CLIP = "Attack 01";
 /** Movement speed in world units / second. */
 export const PLAYER_MOVE_SPEED = playerConfig.moveSpeed;
 
@@ -207,6 +214,38 @@ export class PlayerActor extends ActorComponent {
   /** Currently requested animation clip ('Idle 01' or 'Walk 01'). */
   get clip(): string {
     return this.currentClip;
+  }
+
+  /**
+   * Yaw around Y in radians (atan2(x, z) convention — see `lerpFacing`).
+   * Wave 16's gather system reads this to compute the target voxel.
+   * Defaults to 0 if the actor's object3D never received a rotation
+   * (e.g. mocked test envs).
+   */
+  get facingYaw(): number {
+    return this.actor.object3D.rotation?.y ?? 0;
+  }
+
+  /**
+   * Play the swing animation clip once. Wave 16's gather system calls
+   * this on a successful `swing` press. The clip is non-looping (a
+   * single attack arc) — we still flag `loop: false` even though the
+   * `requestClip` helper used by walk/idle assumes looping clips.
+   *
+   * Idempotent if called twice in the same frame: the underlying
+   * `animation.play(...)` will fade in the same clip a second time
+   * which is a no-op visually.
+   */
+  playSwingClip(): void {
+    try {
+      this.renderer.animation.play(PLAYER_SWING_CLIP, {
+        loop: false,
+        fadeInDuration: ANIM_FADE,
+        fadeOutDuration: ANIM_FADE,
+      });
+    } catch {
+      /* mixer not ready; swing is purely cosmetic so silently skip */
+    }
   }
 
   // ---- internals ----

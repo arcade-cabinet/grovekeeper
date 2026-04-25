@@ -15,12 +15,15 @@ import { saveDatabaseToIndexedDB } from "@/db/persist";
 import { hydrateGameStore, setupNewGame } from "@/db/queries";
 import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
+import { eventBus } from "@/runtime/eventBus";
 import { initializePlatform } from "@/systems/platform";
 import { generateDailyQuests } from "@/systems/quests";
 import { CurrentSeason, GameScreen, PlayerProgress, Quests } from "@/traits";
+import { CraftingPanel } from "@/ui/game/CraftingPanel";
 import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameModal } from "@/ui/game/NewGameModal";
+import { NpcSpeechBubble } from "@/ui/game/NpcSpeechBubble";
 
 const GameScene = lazy(() =>
   import("@/game/scene/GameScene")
@@ -187,6 +190,40 @@ export const Game = () => {
               <GameScene />
             </Suspense>
           </GameErrorBoundary>
+
+          {/* UI Glue overlays — driven by the runtime via `eventBus`.
+              Only mounted while the player is on the playing screen so
+              menus/pause don't accidentally consume engine events. */}
+          <Show when={eventBus.npcSpeech()}>
+            {(ev) => (
+              <NpcSpeechBubble
+                phrase={ev().phrase}
+                screenX={ev().screenPosition.x}
+                screenY={ev().screenPosition.y}
+                holdSeconds={ev().ttlMs / 1000}
+                onDismiss={() => eventBus.emitNpcSpeech(null)}
+              />
+            )}
+          </Show>
+          <Show
+            when={
+              eventBus.craftingPanel()?.open ? eventBus.craftingPanel() : null
+            }
+          >
+            {(ev) => (
+              <CraftingPanel
+                open={true}
+                stationId={ev().stationId}
+                worldId="rc-world-default"
+                onClose={() =>
+                  eventBus.emitCraftingPanel({
+                    stationId: ev().stationId,
+                    open: false,
+                  })
+                }
+              />
+            )}
+          </Show>
         </Show>
 
         <NewGameModal

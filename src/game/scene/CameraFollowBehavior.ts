@@ -54,6 +54,14 @@ export class CameraFollowBehavior extends ActorComponent {
     this.controls.camera.lookAt(spawn.x, spawn.y + 1, spawn.z);
   }
 
+  /**
+   * The underlying THREE camera. Exposed so other systems (e.g. UI
+   * world→screen projection for speech bubbles) can read its matrices.
+   */
+  getCamera(): THREE.PerspectiveCamera {
+    return this.controls.camera;
+  }
+
   update(_deltaMs: number): void {
     const player = this.playerRef.position;
     const target = new THREE.Vector3(

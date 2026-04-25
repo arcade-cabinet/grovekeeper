@@ -16,14 +16,26 @@ import { loadRuntime, Runtime } from "@jolly-pixel/runtime";
 import * as THREE from "three";
 import {
   initAudio,
+  playSound,
   setBiomeMusic,
   setChannelVolume,
   setMasterVolume,
 } from "@/audio";
 import { getDbAsync } from "@/db/client";
 import { getPref } from "@/db/preferences";
-import { dialogueRepo } from "@/db/repos";
+import {
+  chunksRepo,
+  dialogueRepo,
+  inventoryRepo,
+  recipesRepo,
+} from "@/db/repos";
 import { createWorld, getWorld } from "@/db/repos/worldsRepo";
+import { listAllRecipes } from "@/game/crafting";
+import {
+  applyInventoryCap,
+  GatherSystem,
+  GatherTickBehavior,
+} from "@/game/gathering";
 import {
   applyGroveEmissivePulse,
   assignBiome,
@@ -36,6 +48,7 @@ import {
   disposeGroveGlow,
   type GroveGlowHandle,
   GroveTickBehavior,
+  getBiome,
   resolveStreamingConfig,
 } from "@/game/world";
 import {
@@ -43,10 +56,14 @@ import {
   mountNipplejsAdapter,
   type NipplejsAdapterHandle,
 } from "@/input";
+import { eventBus } from "@/runtime/eventBus";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
+import { CraftingStationActor } from "./CraftingStationActor";
+import { CraftingStationProximityBehavior } from "./CraftingStationProximityBehavior";
 import { type PopulatedGrove, populateGrove } from "./GrovePopulator";
 import { InteractionSystem } from "./InteractionSystem";
 import { InteractionTickBehavior } from "./InteractionTickBehavior";
+import npcConfig from "./npc.config.json";
 import { PlayerActor } from "./PlayerActor";
 import playerConfig from "./player.config.json";
 
@@ -133,7 +150,8 @@ export async function createRuntime(
   let dbHandle: Awaited<ReturnType<typeof getDbAsync>> | null = null;
   try {
     dbHandle = await getDbAsync();
-    if (!getWorld(dbHandle.db, RC_WORLD_ID)) {
+    const isFreshWorld = !getWorld(dbHandle.db, RC_WORLD_ID);
+    if (isFreshWorld) {
       createWorld(dbHandle.db, {
         id: RC_WORLD_ID,
         name: "Grovekeeper",
@@ -141,6 +159,13 @@ export async function createRuntime(
         worldSeed: String(RC_WORLD_SEED),
         difficulty: "sapling",
       });
+    }
+    // Seed starter inventory + unlock all recipes so a fresh boot can
+    // immediately walk to the workbench and craft. Idempotent under
+    // re-seed but we gate to first-create to avoid topping up logs every
+    // session — a future wave (real persistence flow) will own this.
+    if (isFreshWorld) {
+      seedStarterRunState(dbHandle.db, RC_WORLD_ID);
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -269,13 +294,47 @@ export async function createRuntime(
       })
     : null;
 
+  // Follow camera. Lerps to the player actor each tick. Offset retuned
+  // for the higher spawn so the chunk fills the frame nicely. Mounted
+  // before the InteractionSystem so the speech-bubble world→screen
+  // projection has access to the camera matrices.
+  const cameraActor = world.createActor("camera");
+  const cameraFollow = cameraActor.addComponentAndGet(CameraFollowBehavior, {
+    player: playerBehavior,
+    offset: new THREE.Vector3(0, 8, 12),
+    responsiveness: playerConfig.cameraResponsiveness,
+  });
+
+  // Wave 13 — UI Glue: spawn one CraftingStationActor at world (10, 6, 8)
+  // so the player can find a workbench from spawn. The station is
+  // freestanding (not tied to a chunk) — it uses absolute world
+  // coordinates and does not despawn with chunks. Wave 18 (journey
+  // wave) will move this into the starter grove and persist its
+  // position; for RC we just need *one* visible bench.
+  const workbenchActor = world.createActor("primitive-workbench");
+  const workbench = workbenchActor.addComponentAndGet(CraftingStationActor, {
+    stationId: "primitive-workbench",
+    position: { x: 10, y: ChunkActor.SURFACE_Y + 1, z: 8 },
+  });
+  const craftingStations: CraftingStationActor[] = [workbench];
+  const proximityActor = world.createActor("crafting-proximity");
+  proximityActor.addComponentAndGet(CraftingStationProximityBehavior, {
+    getStations: () => craftingStations,
+    getPlayerPosition: () => ({
+      x: playerBehavior.position.x,
+      z: playerBehavior.position.z,
+    }),
+    input: inputManager,
+  });
+
   // Wave 11b — interaction system. Polls the `interact` action's rising
   // edge each frame; when fired, finds the nearest NPC across all
-  // populated groves and surfaces the next phrase via `onPhrase`. The
-  // active speech bubble lives on a closure-local field (a future UI
-  // wave will replace this with a Solid signal so `<NpcSpeechBubble>`
-  // can subscribe). Persistence to `dialogue_history` happens here so
-  // the next session's repeat-avoidance filter is primed.
+  // populated groves and surfaces the next phrase via `onPhrase`. UI
+  // glue: `onPhrase` projects the NPC's world position through the
+  // camera and emits an `NpcSpeechEvent` on the `eventBus` for the
+  // Solid `<NpcSpeechBubble>` to consume. Persistence to
+  // `dialogue_history` happens here so the next session's
+  // repeat-avoidance filter is primed.
   const interactionSystem = new InteractionSystem({
     player: playerBehavior,
     input: inputManager,
@@ -306,17 +365,177 @@ export async function createRuntime(
           console.warn("[grovekeeper] dialogueRepo.recordPhrase failed", error);
         }
       }
-      // Surface to the console for now — a follow-up wave plumbs the
-      // event into a Solid signal so the SpeechBubble UI can render it.
-      // eslint-disable-next-line no-console
-      console.info(
-        `[grovekeeper] ${event.npcId}: ${event.pick.text} [${event.pick.tag}]`,
-      );
+      // Project the NPC's world position to canvas-relative CSS px so
+      // the Solid `<NpcSpeechBubble>` can anchor at the NPC's head.
+      // Falls back to canvas centre if projection fails (e.g. NPC
+      // behind the camera) — better than dropping the phrase entirely.
+      const cam = cameraFollow.getCamera();
+      const screen = projectWorldToScreen(event.position, cam, canvas);
+      eventBus.emitNpcSpeech({
+        speakerId: event.npcId,
+        phrase: event.pick.text,
+        screenPosition: screen,
+        ttlMs: npcConfig.interaction.bubbleHoldSeconds * 1000,
+      });
     },
   });
   const interactionTickActor = world.createActor("interaction-tick");
   interactionTickActor.addComponentAndGet(InteractionTickBehavior, {
     onTick: () => interactionSystem.tick(),
+  });
+
+  // Wave 16 — gathering. The player presses `swing` (Space / mobile
+  // swing button) facing a voxel; the system increments a hit counter
+  // until the block breaks, then drops materials into `inventoryRepo`
+  // and persists the removal via `chunksRepo.applyBlockMod`. Grove
+  // biome voxels are unbreakable per spec.
+  //
+  // Three closures plumb the system to the world:
+  //   - `blockAt`      — resolves the biome surface block name at a
+  //     world voxel, accounting for any persisted `chunksRepo` mods.
+  //   - `removeBlock`  — writes the "remove" mod through both the live
+  //     `ChunkActor` mesh AND `chunksRepo`, so the change survives
+  //     reload.
+  //   - `addInventory` — applies the cozy-tier carry cap, then
+  //     forwards to `inventoryRepo.addItem`.
+  // Each closure handles a missing DB handle (early-game, before
+  // `getDbAsync` resolved) by falling back to a memory-only path so
+  // the player still sees blocks disappear.
+  const memoryMods = new Map<
+    string, // chunkX,chunkZ
+    Map<string, string> // localX,y,localZ -> blockId or "__air__"
+  >();
+  const memoryKey = (cx: number, cz: number) => `${cx},${cz}`;
+  const voxelKey = (lx: number, y: number, lz: number) => `${lx},${y},${lz}`;
+  const CHUNK_SIZE = 16;
+  const GROUND_Y = ChunkActor.SURFACE_Y - 1;
+
+  function blockAt(x: number, y: number, z: number): string | null {
+    const cx = Math.floor(x / CHUNK_SIZE);
+    const cz = Math.floor(z / CHUNK_SIZE);
+    const lx = x - cx * CHUNK_SIZE;
+    const lz = z - cz * CHUNK_SIZE;
+
+    // 1. In-memory mod overlay (Wave 16 break tracking, plus any
+    //    placement Wave 12 stamped without a DB write).
+    const mem = memoryMods.get(memoryKey(cx, cz));
+    const memHit = mem?.get(voxelKey(lx, y, lz));
+    if (memHit === "__air__") return null;
+    if (memHit) return memHit;
+
+    // 2. Persisted mods (Wave 12 placements, prior Wave 16 breaks).
+    if (dbHandle) {
+      const mods = chunksRepo.getModifiedBlocks(
+        dbHandle.db,
+        RC_WORLD_ID,
+        cx,
+        cz,
+      );
+      for (const m of mods) {
+        if (m.x === lx && m.y === y && m.z === lz) {
+          if (m.op === "remove") return null;
+          return m.blockId ?? null;
+        }
+      }
+    }
+
+    // 3. Procgen surface — only the surface row is gatherable for now;
+    //    deeper digs (sub-surface dirt, bedrock) need vertical
+    //    targeting which is a future wave.
+    if (y !== GROUND_Y) return null;
+    const biomeId = assignBiome(RC_WORLD_SEED, cx, cz);
+    const biome = getBiome(biomeId);
+    return biome.blocks.find((b) => b.id === biome.surfaceBlock)?.name ?? null;
+  }
+
+  function removeBlock(x: number, y: number, z: number): boolean {
+    const cx = Math.floor(x / CHUNK_SIZE);
+    const cz = Math.floor(z / CHUNK_SIZE);
+    const lx = x - cx * CHUNK_SIZE;
+    const lz = z - cz * CHUNK_SIZE;
+
+    // Persist (best-effort).
+    if (dbHandle) {
+      const biomeId = assignBiome(RC_WORLD_SEED, cx, cz);
+      try {
+        chunksRepo.applyBlockMod(dbHandle.db, RC_WORLD_ID, cx, cz, biomeId, {
+          x: lx,
+          y,
+          z: lz,
+          op: "remove",
+        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[grovekeeper] chunksRepo.applyBlockMod(remove) failed",
+          error,
+        );
+      }
+    }
+
+    // In-memory cache so subsequent `blockAt` lookups see the air.
+    let mem = memoryMods.get(memoryKey(cx, cz));
+    if (!mem) {
+      mem = new Map();
+      memoryMods.set(memoryKey(cx, cz), mem);
+    }
+    mem.set(voxelKey(lx, y, lz), "__air__");
+
+    // Live mesh.
+    const chunk = chunkManager.getChunk(cx, cz);
+    if (chunk) {
+      chunk.applyMod({ localX: lx, y, localZ: lz, op: "remove" });
+    }
+    return true;
+  }
+
+  function addInventory(
+    itemId: string,
+    count: number,
+  ): {
+    accepted: number;
+    capped: boolean;
+  } {
+    if (!dbHandle) {
+      // No DB — accept everything, no cap (degraded mode).
+      return { accepted: count, capped: false };
+    }
+    const rows = inventoryRepo.listItems(dbHandle.db, RC_WORLD_ID);
+    const counts: Record<string, number> = {};
+    for (const r of rows) counts[r.itemId] = r.count;
+    const result = applyInventoryCap(itemId, count, { currentCounts: counts });
+    if (result.accepted > 0) {
+      inventoryRepo.addItem(dbHandle.db, RC_WORLD_ID, itemId, result.accepted);
+    }
+    return result;
+  }
+
+  const gatherSystem = new GatherSystem({
+    player: {
+      get position() {
+        return playerActor.object3D.position;
+      },
+      get facingYaw() {
+        return playerActor.object3D.rotation?.y ?? 0;
+      },
+    },
+    input: inputManager,
+    blockAt,
+    removeBlock,
+    addInventory,
+    audio: {
+      swingHit: () => playSound("tool.axe.swing"),
+      break_: () => playSound("tool.axe.break"),
+      inventoryAdd: () => playSound("ui.inventory.add"),
+      inventoryFull: () => playSound("ui.inventory.full"),
+    },
+    animation: {
+      playSwing: () => playerBehavior.playSwingClip(),
+    },
+  });
+  const gatherTickActor = world.createActor("gather-tick");
+  gatherTickActor.addComponentAndGet(GatherTickBehavior, {
+    onTick: () => gatherSystem.tick(),
   });
 
   // Per-frame tick driver for grove visuals + discovery. Uses a
@@ -327,15 +546,6 @@ export async function createRuntime(
     groveGlows,
     discovery: groveDiscovery,
     playerPosition: playerActor.object3D.position,
-  });
-
-  // Follow camera. Lerps to the player actor each tick. Offset retuned
-  // for the higher spawn so the chunk fills the frame nicely.
-  const cameraActor = world.createActor("camera");
-  cameraActor.addComponentAndGet(CameraFollowBehavior, {
-    player: playerBehavior,
-    offset: new THREE.Vector3(0, 8, 12),
-    responsiveness: playerConfig.cameraResponsiveness,
   });
 
   // Audio bootstrap. Registers every symbolic sound id with the engine's
@@ -414,4 +624,54 @@ export async function createRuntime(
       }
     },
   };
+}
+
+/**
+ * Project a THREE world-space point through `camera` and return CSS
+ * pixel coordinates relative to the canvas. The result anchors a DOM
+ * overlay (e.g. `<NpcSpeechBubble>`) to a 3D position.
+ *
+ * If the point is behind the camera the projection clamps to the
+ * canvas centre — the speech bubble is still visible, just not glued
+ * to the speaker. Better than dropping the phrase entirely.
+ */
+function projectWorldToScreen(
+  world: { x: number; y: number; z: number },
+  camera: THREE.PerspectiveCamera,
+  canvas: HTMLCanvasElement,
+): { x: number; y: number } {
+  const v = new THREE.Vector3(world.x, world.y, world.z);
+  v.project(camera);
+  // After project: v.z > 1 means behind near plane; just clamp to centre.
+  if (v.z > 1 || !Number.isFinite(v.x) || !Number.isFinite(v.y)) {
+    return { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+  }
+  return {
+    x: ((v.x + 1) / 2) * canvas.clientWidth,
+    y: ((1 - v.y) / 2) * canvas.clientHeight,
+  };
+}
+
+/**
+ * Idempotently seed starter inventory + unlock all primitive-workbench
+ * recipes. Called once on first world create — the player needs raw
+ * materials and the recipe book to actually craft on a fresh boot.
+ *
+ * Items: 6 logs + 6 stones (covers the hearth, starter axe, and a
+ * fence + a planks craft with margin to spare). Recipes: every recipe
+ * in `listAllRecipes()` is learned. The crafting layer's recipe filter
+ * still gates by station, so this doesn't mean every recipe is visible
+ * at the workbench — it means *no* recipe is locked behind discovery
+ * for RC. A future progression wave will gate this.
+ */
+function seedStarterRunState(
+  // biome-ignore lint/suspicious/noExplicitAny: AppDatabase is internal
+  db: any,
+  worldId: string,
+): void {
+  inventoryRepo.addItem(db, worldId, "material.log", 6);
+  inventoryRepo.addItem(db, worldId, "material.stone", 6);
+  for (const recipe of listAllRecipes()) {
+    recipesRepo.learnRecipe(db, worldId, recipe.id);
+  }
 }

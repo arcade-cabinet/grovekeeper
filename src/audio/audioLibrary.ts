@@ -51,8 +51,11 @@ export type SoundId =
   | "ui.confirm"
   | "ui.coin"
   | "ui.achievement"
+  | "ui.inventory.add"
+  | "ui.inventory.full"
   // Tools (provisional; @todo per-tool packs).
   | "tool.axe.swing"
+  | "tool.axe.break"
   | "tool.hoe.dig"
   | "tool.shovel.dig"
   | "tool.watering.pour"
@@ -147,12 +150,34 @@ export const AUDIO_LIBRARY: Readonly<Record<SoundId, SoundEntry>> = {
     volume: 0.9,
     channel: "sfx",
   },
+  // Inventory pickup chime — Wave 16. Re-uses the coin cue for now;
+  // a bespoke "satchel slot fills" jingle is a polish-wave goal.
+  "ui.inventory.add": {
+    path: `${PREFIX}sfx/ui/coin.wav`,
+    volume: 0.7,
+    channel: "sfx",
+  },
+  // Inventory-full reject — Wave 16. Same cancel cue we use elsewhere
+  // so the player learns "rising chime = good, cancel buzz = bad".
+  "ui.inventory.full": {
+    path: `${PREFIX}sfx/ui/cancel.wav`,
+    volume: 0.65,
+    channel: "sfx",
+  },
 
   // ── Tools ────────────────────────────────────────────────────────────
   // @todo polish-wave: per-tool packs. For now, generic impact pack.
   "tool.axe.swing": {
     path: `${PREFIX}sfx/tools/pl_impact_wood_01.wav`,
     volume: 0.9,
+    channel: "sfx",
+  },
+  // Block-break crack — Wave 16. Heavier impact than the swing so the
+  // player can hear the difference between "another swing landed" and
+  // "the voxel just disappeared".
+  "tool.axe.break": {
+    path: `${PREFIX}sfx/tools/pl_impact_heavy_03.wav`,
+    volume: 0.95,
     channel: "sfx",
   },
   "tool.hoe.dig": {

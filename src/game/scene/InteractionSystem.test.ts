@@ -11,11 +11,8 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import {
-  type InteractableNpc,
-  InteractionSystem,
-} from "./InteractionSystem";
 import type { PhrasePick } from "@/game/dialogue/dialogueSystem";
+import { type InteractableNpc, InteractionSystem } from "./InteractionSystem";
 
 function makeNpc(
   id: string,
@@ -147,5 +144,39 @@ describe("InteractionSystem", () => {
       onPhrase: () => {},
     });
     expect(sys.findNearestInRange()).toBeNull();
+  });
+
+  it("UI Glue: an onPhrase adapter can forward to eventBus.emitNpcSpeech", async () => {
+    // Mirrors the runtime wiring: when InteractionSystem produces an
+    // event, the runtime translates it into an `NpcSpeechEvent` for the
+    // bus. The bus is the live module-singleton — emit + read back.
+    const { eventBus } = await import("@/runtime/eventBus");
+    eventBus.emitNpcSpeech(null);
+
+    const player = { position: { x: 0, y: 0, z: 0 } };
+    const npc = makeNpc("villager-1", 1.0, 0, "good morning, gardener");
+    const sys = new InteractionSystem({
+      player,
+      input: makeInput(true),
+      getNpcs: () => [npc],
+      onPhrase: (event) => {
+        eventBus.emitNpcSpeech({
+          speakerId: event.npcId,
+          phrase: event.pick.text,
+          screenPosition: { x: 100, y: 200 },
+          ttlMs: 4000,
+        });
+      },
+    });
+    sys.tick();
+
+    const ev = eventBus.npcSpeech();
+    expect(ev).not.toBeNull();
+    expect(ev?.speakerId).toBe("villager-1");
+    expect(ev?.phrase).toBe("good morning, gardener");
+    expect(ev?.screenPosition).toEqual({ x: 100, y: 200 });
+    expect(ev?.ttlMs).toBe(4000);
+
+    eventBus.emitNpcSpeech(null);
   });
 });

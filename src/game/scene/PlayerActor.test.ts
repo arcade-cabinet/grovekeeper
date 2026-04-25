@@ -266,6 +266,47 @@ describe("PlayerActor", () => {
       expect(actor.object3D.rotation.y).toBeCloseTo(Math.PI / 2, 2);
     });
 
+    it("playSwingClip plays Attack 01 on the renderer (Wave 16 gathering)", async () => {
+      const { PlayerActor, PLAYER_SWING_CLIP } = await import("./PlayerActor");
+      const actor = createMockActor();
+      let captured: MockRenderer | null = null;
+      actor.addComponentAndGet.mockImplementation(() => {
+        captured = createMockRenderer();
+        return captured;
+      });
+      const player = new PlayerActor(
+        // biome-ignore lint/suspicious/noExplicitAny: cast
+        actor as any,
+        {
+          spawn: { x: 0, y: 0, z: 0 },
+          inputManager: fakeInputManager({ x: 0, z: 0 }),
+        },
+      );
+      player.playSwingClip();
+      expect(PLAYER_SWING_CLIP).toBe("Attack 01");
+      const playMock = (captured as unknown as MockRenderer).animation.play;
+      expect(playMock).toHaveBeenCalledWith(
+        PLAYER_SWING_CLIP,
+        expect.objectContaining({ loop: false }),
+      );
+    });
+
+    it("facingYaw exposes the actor's Y rotation (Wave 16 gathering)", async () => {
+      const { PlayerActor } = await import("./PlayerActor");
+      const actor = createMockActor();
+      const player = new PlayerActor(
+        // biome-ignore lint/suspicious/noExplicitAny: cast
+        actor as any,
+        {
+          spawn: { x: 0, y: 0, z: 0 },
+          inputManager: fakeInputManager({ x: 0, z: 0 }),
+        },
+      );
+      expect(player.facingYaw).toBe(0);
+      actor.object3D.rotation.y = 1.234;
+      expect(player.facingYaw).toBe(1.234);
+    });
+
     it("calls input.endFrame() once per update for rising-edge bookkeeping", async () => {
       const { PlayerActor } = await import("./PlayerActor");
       const actor = createMockActor();
