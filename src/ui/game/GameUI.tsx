@@ -140,9 +140,7 @@ export const GameUI = (props: GameUIProps) => {
         class="absolute pointer-events-auto"
         style={{ bottom: "140px", right: "12px" }}
       >
-        <ToolBelt
-          onSelectTool={(id) => gameActions().setSelectedTool(id)}
-        />
+        <ToolBelt onSelectTool={(id) => gameActions().setSelectedTool(id)} />
       </div>
 
       {/* Batch harvest button - above tool belt, higher z-index */}

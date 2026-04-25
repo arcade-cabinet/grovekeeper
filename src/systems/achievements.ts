@@ -86,7 +86,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "sap-collector",
     name: "Sap Collector",
     description: "Accumulate 500 sap (lifetime).",
-    flavor: "Five hundred drops of sweetness, drawn patiently from living wood.",
+    flavor:
+      "Five hundred drops of sweetness, drawn patiently from living wood.",
   },
   {
     id: "the-giving-tree",
@@ -117,13 +118,15 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "seasonal-veteran",
     name: "Seasonal Veteran",
     description: "Experience all 4 seasons.",
-    flavor: "Spring's hope, summer's warmth, autumn's gold, winter's quiet — you know them all.",
+    flavor:
+      "Spring's hope, summer's warmth, autumn's gold, winter's quiet — you know them all.",
   },
   {
     id: "enchanted-grove",
     name: "Enchanted Grove",
     description: "Have 5 Old Growth trees simultaneously.",
-    flavor: "Five ancient pillars standing tall — the grove hums with deep magic.",
+    flavor:
+      "Five ancient pillars standing tall — the grove hums with deep magic.",
   },
   {
     id: "new-beginnings",
@@ -137,7 +140,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "zone-hopper",
     name: "Zone Hopper",
     description: "Visit all 5 zone types.",
-    flavor: "Five landscapes, five different skies — the valley has no more secrets from you.",
+    flavor:
+      "Five landscapes, five different skies — the valley has no more secrets from you.",
   },
   {
     id: "cartographer",
@@ -155,7 +159,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "forest-keeper",
     name: "Forest Keeper",
     description: "Let 10 wild trees regrow.",
-    flavor: "Giving the forest space to breathe is the quietest kind of kindness.",
+    flavor:
+      "Giving the forest space to breathe is the quietest kind of kindness.",
   },
 
   // --- Tool Mastery (4) ---
@@ -163,13 +168,15 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "hydration-hero",
     name: "Hydration Hero",
     description: "Water 100 trees.",
-    flavor: "A hundred times you carried water to a thirsty root — the grove remembers.",
+    flavor:
+      "A hundred times you carried water to a thirsty root — the grove remembers.",
   },
   {
     id: "master-pruner",
     name: "Master Pruner",
     description: "Prune 50 trees.",
-    flavor: "Clean cuts and careful hands: fifty trees are stronger for your attention.",
+    flavor:
+      "Clean cuts and careful hands: fifty trees are stronger for your attention.",
   },
   {
     id: "rock-breaker",
@@ -181,7 +188,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "tool-collector",
     name: "Tool Collector",
     description: "Unlock all 12 tools.",
-    flavor: "A grovekeeper with every tool is ready for anything the forest asks.",
+    flavor:
+      "A grovekeeper with every tool is ready for anything the forest asks.",
   },
 
   // --- Seasonal (3) ---
@@ -189,7 +197,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "spring-planter",
     name: "Spring Planter",
     description: "Plant 20 trees in spring.",
-    flavor: "Twenty seeds tucked into warm spring soil — by autumn, what a sight.",
+    flavor:
+      "Twenty seeds tucked into warm spring soil — by autumn, what a sight.",
   },
   {
     id: "autumn-harvester",
@@ -201,7 +210,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "winter-survivor",
     name: "Winter Survivor",
     description: "Have 20 trees survive winter.",
-    flavor: "Twenty trees made it through the cold, roots firm and hearts patient.",
+    flavor:
+      "Twenty trees made it through the cold, roots firm and hearts patient.",
   },
 
   // --- Structure (3) ---
@@ -209,19 +219,22 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "first-builder",
     name: "First Builder",
     description: "Build your first structure.",
-    flavor: "The grove now has a home within its home — your first small wonder.",
+    flavor:
+      "The grove now has a home within its home — your first small wonder.",
   },
   {
     id: "architect",
     name: "Architect",
     description: "Build all structure types.",
-    flavor: "Well, greenhouse, shed, and more — every corner of the grove is cared for.",
+    flavor:
+      "Well, greenhouse, shed, and more — every corner of the grove is cared for.",
   },
   {
     id: "master-builder",
     name: "Master Builder",
     description: "Upgrade any structure to tier 3.",
-    flavor: "A tier-3 structure is craftsmanship at its finest — the grove stands proud.",
+    flavor:
+      "A tier-3 structure is craftsmanship at its finest — the grove stands proud.",
   },
 
   // --- Collector (3) ---
@@ -229,19 +242,22 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "lumber-lord",
     name: "Lumber Lord",
     description: "Accumulate 5,000 timber (lifetime).",
-    flavor: "Five thousand timbers stacked — enough to build a whole village, twice over.",
+    flavor:
+      "Five thousand timbers stacked — enough to build a whole village, twice over.",
   },
   {
     id: "resource-mogul",
     name: "Resource Mogul",
     description: "Have 1,000 of each resource (lifetime).",
-    flavor: "Timber, sap, fruit, and acorns in abundance — the grove holds nothing back.",
+    flavor:
+      "Timber, sap, fruit, and acorns in abundance — the grove holds nothing back.",
   },
   {
     id: "seed-hoarder",
     name: "Seed Hoarder",
     description: "Collect 50 seeds of one species.",
-    flavor: "Fifty seeds in your pocket, each one a tree that hasn't happened yet.",
+    flavor:
+      "Fifty seeds in your pocket, each one a tree that hasn't happened yet.",
   },
 
   // --- Wild Forest (3) ---
@@ -249,7 +265,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "forager",
     name: "Forager",
     description: "Harvest 50 wild trees.",
-    flavor: "Fifty wild trees gave their gifts freely — you accepted with grateful hands.",
+    flavor:
+      "Fifty wild trees gave their gifts freely — you accepted with grateful hands.",
   },
   {
     id: "reforestation",
@@ -261,7 +278,8 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     id: "wild-collector",
     name: "Wild Collector",
     description: "Harvest all wild species at least once.",
-    flavor: "Every wild species harvested at least once — the full tapestry, gathered.",
+    flavor:
+      "Every wild species harvested at least once — the full tapestry, gathered.",
   },
 ];
 

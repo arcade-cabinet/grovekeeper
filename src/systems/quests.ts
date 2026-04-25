@@ -6,6 +6,7 @@
  */
 
 import type { ResourceType } from "@/config/resources";
+import { scopedRNG } from "@/shared/utils/seedRNG";
 import type { Season } from "./time";
 
 // ============================================
@@ -709,8 +710,14 @@ export const GOAL_POOLS: Record<GoalCategory, GoalTemplate[]> = {
 // Quest Generation
 // ============================================
 
-const randomInRange = (min: number, max: number): number => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+/** Monotonic counter — ensures each default-rng call gets a unique seed even
+ * when multiple calls land in the same millisecond. */
+let _questGenCounter = 0;
+const nextQuestRng = (): (() => number) =>
+  scopedRNG("quest-gen", Date.now(), ++_questGenCounter);
+
+const randomInRange = (min: number, max: number, rng: () => number): number => {
+  return Math.floor(rng() * (max - min + 1)) + min;
 };
 
 const selectRandomGoals = (
@@ -718,6 +725,7 @@ const selectRandomGoals = (
   categories: GoalCategory[],
   excludeIds: Set<string> = new Set(),
   currentSeason?: Season,
+  rng: () => number = nextQuestRng(),
 ): GoalTemplate[] => {
   const availableGoals: GoalTemplate[] = [];
 
@@ -734,8 +742,12 @@ const selectRandomGoals = (
     }
   }
 
-  // Shuffle and take count
-  const shuffled = [...availableGoals].sort(() => Math.random() - 0.5);
+  // Fisher-Yates shuffle using deterministic rng
+  const shuffled = [...availableGoals];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
   return shuffled.slice(0, count);
 };
 
@@ -743,6 +755,7 @@ export const generateQuest = (
   difficulty: GoalDifficulty,
   currentSeason?: Season,
   completedGoalIds: Set<string> = new Set(),
+  rng: () => number = nextQuestRng(),
 ): ActiveQuest | null => {
   // Determine number of goals based on difficulty
   const goalCounts: Record<GoalDifficulty, number> = {
@@ -795,6 +808,7 @@ export const generateQuest = (
     categories,
     completedGoalIds,
     currentSeason,
+    rng,
   );
 
   if (goalTemplates.length === 0) {
@@ -806,10 +820,14 @@ export const generateQuest = (
     const targetAmount =
       typeof template.targetAmount === "number"
         ? template.targetAmount
-        : randomInRange(template.targetAmount.min, template.targetAmount.max);
+        : randomInRange(
+            template.targetAmount.min,
+            template.targetAmount.max,
+            rng,
+          );
 
     return {
-      id: `goal_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      id: `goal_${Date.now()}_${rng().toString(36).slice(2)}`,
       templateId: template.id,
       name: template.name,
       description: template.description,
@@ -826,7 +844,7 @@ export const generateQuest = (
     return (
       sum +
       (template
-        ? randomInRange(template.rewards.xp.min, template.rewards.xp.max)
+        ? randomInRange(template.rewards.xp.min, template.rewards.xp.max, rng)
         : 0)
     );
   }, 0);
@@ -878,12 +896,10 @@ export const generateQuest = (
   };
 
   const questName =
-    questNames[difficulty][
-      Math.floor(Math.random() * questNames[difficulty].length)
-    ];
+    questNames[difficulty][Math.floor(rng() * questNames[difficulty].length)];
 
   return {
-    id: `quest_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+    id: `quest_${Date.now()}_${rng().toString(36).slice(2)}`,
     name: questName,
     description: `Complete ${goals.length} goal${goals.length > 1 ? "s" : ""} to earn rewards`,
     goals,
@@ -939,11 +955,12 @@ export const generateDailyQuests = (
   currentSeason: Season,
   playerLevel: number,
   completedGoalIds: Set<string>,
+  rng: () => number = nextQuestRng(),
 ): ActiveQuest[] => {
   const quests: ActiveQuest[] = [];
 
   // Always 1 easy quest
-  const easyQuest = generateQuest("easy", currentSeason, completedGoalIds);
+  const easyQuest = generateQuest("easy", currentSeason, completedGoalIds, rng);
   if (easyQuest) quests.push(easyQuest);
 
   // 1 medium quest if level >= 3
@@ -952,19 +969,30 @@ export const generateDailyQuests = (
       "medium",
       currentSeason,
       completedGoalIds,
+      rng,
     );
     if (mediumQuest) quests.push(mediumQuest);
   }
 
   // 1 hard quest if level >= 7
   if (playerLevel >= 7) {
-    const hardQuest = generateQuest("hard", currentSeason, completedGoalIds);
+    const hardQuest = generateQuest(
+      "hard",
+      currentSeason,
+      completedGoalIds,
+      rng,
+    );
     if (hardQuest) quests.push(hardQuest);
   }
 
   // 1 epic quest if level >= 15
   if (playerLevel >= 15) {
-    const epicQuest = generateQuest("epic", currentSeason, completedGoalIds);
+    const epicQuest = generateQuest(
+      "epic",
+      currentSeason,
+      completedGoalIds,
+      rng,
+    );
     if (epicQuest) quests.push(epicQuest);
   }
 

@@ -1,4 +1,11 @@
-import { createEffect, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { COLORS } from "@/config/config";
 import { createSimpleStore } from "@/shared/utils/simpleStore";
 import { ACHIEVEMENT_DEFS } from "@/systems/achievements";

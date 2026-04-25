@@ -83,7 +83,12 @@ export const ToolBelt = (props: ToolBeltProps) => {
                 aria-label={`${tool.name}${!isUnlocked() ? ` (unlocks at level ${tool.unlockLevel})` : isActive() ? " (selected)" : ""}`}
                 aria-pressed={isActive()}
               >
-                <span aria-hidden="true">{(TOOL_ICONS[tool.id] ?? (() => <RiToolsLine class="w-5 h-5" />))()}</span>
+                <span aria-hidden="true">
+                  {(
+                    TOOL_ICONS[tool.id] ??
+                    (() => <RiToolsLine class="w-5 h-5" />)
+                  )()}
+                </span>
                 <span
                   class="hidden md:flex absolute top-0 right-0 items-center justify-center text-[8px] font-bold rounded-full"
                   style={{
@@ -110,8 +115,8 @@ export const ToolBelt = (props: ToolBeltProps) => {
             color: COLORS.soilDark,
           }}
         >
-          <RiSeedlingLine class="w-3 h-3 inline" aria-hidden="true" /> {selectedSpecies()} (
-          {"\u{00D7}"}
+          <RiSeedlingLine class="w-3 h-3 inline" aria-hidden="true" />{" "}
+          {selectedSpecies()} ({"\u{00D7}"}
           {seeds()[selectedSpecies()] ?? 0})
         </div>
       </Show>

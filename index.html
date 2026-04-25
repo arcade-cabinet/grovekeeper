@@ -6,21 +6,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="theme-color" content="#2D5A27" />
+    <meta name="theme-color" content="#07140f" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="manifest.json" />
     <title>Grovekeeper</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #030806;
+        color: #f0eadc;
+        font-family: "Fredoka", "Iowan Old Style", "Palatino", serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        overscroll-behavior: none;
+      }
+      #root, #grove-landing { position: fixed; inset: 0; }
+      #root { z-index: 0; }
+      #grove-landing {
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 1.2rem;
+        background: radial-gradient(ellipse at 50% 65%, #0d2b22 0%, #07140f 70%, #030806 100%);
+        z-index: 1; opacity: 1;
+        transition: opacity 600ms ease-out;
+        pointer-events: none;
+      }
+      body[data-hydrated="true"] #grove-landing { opacity: 0; }
+      #grove-landing svg.tree { width: min(86vmin, 720px); height: auto; display: block; }
+      #grove-landing .wordmark {
+        font-size: clamp(2rem, 6vw, 3.25rem);
+        font-weight: 600; letter-spacing: 0.18em;
+        color: #f5e1a4;
+        text-shadow: 0 0 24px rgba(245, 225, 164, 0.35);
+        margin: 0;
+      }
+      #grove-landing .inscription {
+        font-size: clamp(0.85rem, 2.4vw, 1rem);
+        font-style: italic; letter-spacing: 0.05em;
+        color: rgba(240, 234, 220, 0.65);
+        margin: 0;
+      }
+    </style>
   </head>
   <body>
+    <div id="grove-landing" aria-hidden="true">
+      <svg class="tree" viewBox="0 0 800 700" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="g" cx="50%" cy="55%" r="40%">
+            <stop offset="0%" stop-color="#fff7d6" stop-opacity="0.55" />
+            <stop offset="40%" stop-color="#f5e1a4" stop-opacity="0.18" />
+            <stop offset="100%" stop-color="#f5e1a4" stop-opacity="0" />
+          </radialGradient>
+          <radialGradient id="c" cx="50%" cy="45%" r="55%">
+            <stop offset="0%" stop-color="#f7d4d8" stop-opacity="0.92" />
+            <stop offset="55%" stop-color="#cf6f7f" stop-opacity="0.7" />
+            <stop offset="100%" stop-color="#3a1f29" stop-opacity="0.85" />
+          </radialGradient>
+          <linearGradient id="t" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#3a2818" />
+            <stop offset="100%" stop-color="#1c130b" />
+          </linearGradient>
+        </defs>
+        <ellipse cx="400" cy="380" rx="320" ry="240" fill="url(#g)" />
+        <path d="M388 600 L380 440 Q394 410 408 440 L416 600 Z" fill="url(#t)" />
+        <path d="M390 460 Q360 430 340 395" stroke="#1c130b" stroke-width="6" stroke-linecap="round" fill="none" />
+        <path d="M410 460 Q438 428 462 392" stroke="#1c130b" stroke-width="6" stroke-linecap="round" fill="none" />
+        <ellipse cx="400" cy="340" rx="220" ry="170" fill="url(#c)" />
+        <ellipse cx="320" cy="350" rx="120" ry="100" fill="url(#c)" opacity="0.85" />
+        <ellipse cx="488" cy="350" rx="120" ry="100" fill="url(#c)" opacity="0.85" />
+      </svg>
+      <h1 class="wordmark">Grovekeeper</h1>
+      <p class="inscription">Every forest begins with a single seed.</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function() {
-          // Derive base path from document so it works on both localhost and GitHub Pages
           var base = document.querySelector('base')?.href || document.baseURI;
           var swUrl = new URL('sw.js', base).href;
           navigator.serviceWorker.register(swUrl).catch(function() {});

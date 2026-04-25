@@ -1,0 +1,9 @@
+{
+  "moveSpeed": 3.0,
+  "moveEpsilon": 0.001,
+  "facingLerp": 0.25,
+  "cameraResponsiveness": 0.12,
+  "idleClip": "Idle 01",
+  "walkClip": "Walk 01",
+  "animationFadeDuration": 0.18
+}

@@ -1,0 +1,27 @@
+{
+  "chunkSize": 16,
+  "chunkHeight": 16,
+  "groundY": 5,
+  "stoneFloorThickness": 3,
+  "dirtThickness": 2,
+  "tileSize": 32,
+  "blockIds": {
+    "air": 0,
+    "grass-flat": 1,
+    "grass-tall": 2,
+    "dirt": 3,
+    "stone": 4,
+    "wildflower": 5
+  },
+  "streaming": {
+    "desktop": { "activeRadius": 3, "bufferRadius": 5 },
+    "mobile": { "activeRadius": 2, "bufferRadius": 3 },
+    "spawnsPerFrame": 2,
+    "despawnsPerFrame": 2,
+    "biomeWeights": {
+      "meadow": 50,
+      "forest": 30,
+      "coast": 20
+    }
+  }
+}

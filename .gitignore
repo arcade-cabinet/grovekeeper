@@ -10,6 +10,13 @@ dist/
 .env.local
 .env.*.local
 
+# Raw assets — large itch.io packs, never committed (re-fetch via scripts/fetch-itch.mjs
+# or scripts/import-from-voxel-realms.mjs). The raw-assets/ directory itself stays
+# tracked via raw-assets/.gitkeep so the pipeline scripts find it.
+raw-assets/archives/
+raw-assets/extracted/
+raw-assets/converted/
+
 # IDE
 .idea/
 .vscode/
@@ -35,10 +42,16 @@ vite.config.d.ts
 .playwright-mcp/
 playwright-report/
 test-results/
+.lighthouseci/
 
 # Screenshots from visual testing
 *.png
 !public/*.png
+!public/**/*.png
+# RC verification — these PNGs ARE the contract, must be committed.
+!docs/rc-journey/*.png
+!e2e/rc-journey-baselines/*.png
+!e2e/rc-journey.spec.ts-snapshots/*.png
 
 # Expo (migration canceled — leftover local-only artifacts)
 .expo/

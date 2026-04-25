@@ -1,5 +1,5 @@
-import treesData from "./trees.json";
 import type { ResourceType } from "./resources";
+import treesData from "./trees.json";
 
 export interface TreeSpeciesData {
   id: string;

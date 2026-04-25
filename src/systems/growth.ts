@@ -8,14 +8,7 @@ import {
 import { getActiveDifficulty } from "@/config/difficulty";
 import { getSpeciesById } from "@/config/trees";
 import { koota } from "@/koota";
-import { getGrowthMultiplier as getStructureGrowthMult } from "@/structures/StructureManager";
-import {
-  GridCell,
-  Position,
-  Renderable,
-  Structure,
-  Tree,
-} from "@/traits";
+import { GridCell, Position, Renderable, Structure, Tree } from "@/traits";
 
 /**
  * Calculate the visual scale for a tree at a given stage + progress.
@@ -98,30 +91,74 @@ const packCoord = (x: number, z: number): number =>
 const _waterTiles = new Set<number>();
 const _treeCounts = new Map<number, number>();
 
-interface StructureShape {
+// Reusable structure entry — populated in _buildStructures() and iterated
+// by getGrowthMultiplierDirect(). Avoids allocating a new array + N wrapper
+// objects every frame (prior buildStructuresAdapter() pattern).
+interface StructureEntry {
   templateId: string;
-  effectType?: "growth_boost" | "harvest_boost" | "stamina_regen" | "storage";
-  effectRadius?: number;
-  effectMagnitude?: number;
+  effectType: string | undefined;
+  effectRadius: number | undefined;
+  effectMagnitude: number | undefined;
+  x: number;
+  z: number;
 }
+const _structureEntries: StructureEntry[] = [];
 
-function buildStructuresAdapter(): Iterable<{
-  structure?: StructureShape;
-  position?: { x: number; z: number };
-}> {
-  const result: {
-    structure?: StructureShape;
-    position?: { x: number; z: number };
-  }[] = [];
+/**
+ * Populate _structureEntries from the ECS.
+ * Called once per growthSystem frame before the tree iteration loop.
+ * Reuses the array (grows to high-water mark, never shrinks = zero GC).
+ */
+function _buildStructures(): void {
+  let i = 0;
   for (const e of koota.query(Structure, Position)) {
     const s = e.get(Structure);
     const p = e.get(Position);
-    result.push({
-      structure: s,
-      position: { x: p.x, z: p.z },
-    });
+    if (i < _structureEntries.length) {
+      // Reuse existing slot — no allocation
+      const entry = _structureEntries[i];
+      entry.templateId = s.templateId;
+      entry.effectType = s.effectType;
+      entry.effectRadius = s.effectRadius;
+      entry.effectMagnitude = s.effectMagnitude;
+      entry.x = p.x;
+      entry.z = p.z;
+    } else {
+      // First time seeing this index — allocate once, reuse forever
+      _structureEntries.push({
+        templateId: s.templateId,
+        effectType: s.effectType,
+        effectRadius: s.effectRadius,
+        effectMagnitude: s.effectMagnitude,
+        x: p.x,
+        z: p.z,
+      });
+    }
+    i++;
   }
-  return result;
+  // Record how many are valid this frame (may be fewer than array length)
+  _structureCount = i;
+}
+let _structureCount = 0;
+
+/**
+ * Compute combined growth multiplier at (wx, wz) using the pre-built
+ * _structureEntries buffer. Allocation-free replacement for
+ * getStructureGrowthMult(wx, wz, buildStructuresAdapter()).
+ */
+function _getGrowthMult(wx: number, wz: number): number {
+  let bonus = 0;
+  for (let i = 0; i < _structureCount; i++) {
+    const s = _structureEntries[i];
+    if (s.effectType !== "growth_boost") continue;
+    if (s.effectRadius == null || s.effectMagnitude == null) continue;
+    const dx = wx - s.x;
+    const dz = wz - s.z;
+    if (dx * dx + dz * dz <= s.effectRadius * s.effectRadius) {
+      bonus += s.effectMagnitude;
+    }
+  }
+  return 1 + bonus;
 }
 
 export function growthSystem(
@@ -145,7 +182,8 @@ export function growthSystem(
     _treeCounts.set(key, (_treeCounts.get(key) ?? 0) + 1);
   }
 
-  const structuresAdapter = buildStructuresAdapter();
+  // Populate reusable structure buffer once per frame (no allocation after warm-up)
+  _buildStructures();
 
   for (const entity of koota.query(Tree, Position, Renderable)) {
     const tree = entity.get(Tree);
@@ -184,12 +222,8 @@ export function growthSystem(
       continue;
     }
 
-    // Structure growth boost
-    const structureMult = getStructureGrowthMult(
-      position.x,
-      position.z,
-      structuresAdapter,
-    );
+    // Structure growth boost (allocation-free via pre-built buffer)
+    const structureMult = _getGrowthMult(position.x, position.z);
 
     // Fertilized bonus (2x growth for the current stage cycle)
     const fertilizedMult = tree.fertilized ? 2.0 : 1.0;

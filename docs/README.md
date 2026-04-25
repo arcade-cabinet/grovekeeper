@@ -1,203 +1,72 @@
 ---
 title: Grovekeeper Documentation
-updated: 2026-04-19
+updated: 2026-04-24
 status: current
 domain: context
 ---
 
 # Grovekeeper Documentation
 
-> "Every forest begins with a single seed."
+> *"Every forest begins with a single seed."*
 
-Grovekeeper is a cozy 2.5D isometric tree-planting simulation and idle tending
-game. Mobile-first PWA (portrait), desktop secondary. Target session length:
-3-15 minutes.
+Grovekeeper is a third-person voxel tree-tending and town-building game.
+Mobile-first PWA (portrait), desktop secondary. Target session: 3–15
+minutes. The game is **mid-redesign** — the BabylonJS 2.5D build at
+`https://arcade-cabinet.github.io/grovekeeper/` (1.0.0-alpha.1) is being
+replaced per the RC redesign spec.
 
----
+## Read these first
 
-## Quick Start
+1. **[Spec — RC redesign source of truth](superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md)** — the
+   full design, ordering, and verification protocol.
+2. **[STATE](STATE.md)** — current build state, wave-by-wave.
+3. **[DESIGN](DESIGN.md)** — what the game IS (the loop, NPC model,
+   biomes, claim ritual).
+4. **[ARCHITECTURE](ARCHITECTURE.md)** — how the game is built (Jolly
+   Pixel layering, persistence stack, asset pipeline).
+5. **[TESTING](TESTING.md)** — verification gates, screenshot list,
+   rubric, performance budgets.
+6. **[LORE](LORE.md)** — minimal world tone for content authors.
+7. **[ROADMAP](ROADMAP.md)** — RC scope only.
+8. **[post-rc](post-rc.md)** — explicitly cut, possible follow-on.
+
+## Project root
+
+- [`/CLAUDE.md`](../CLAUDE.md) — agent entry point, commands, project
+  identity.
+- [`/AGENTS.md`](../AGENTS.md) — extended operating protocols.
+- [`/STANDARDS.md`](../STANDARDS.md) — code quality and brand rules.
+
+## Generated
+
+- [`asset-inventory.md`](asset-inventory.md) — emitted by
+  `scripts/build-asset-manifest.mjs` once the asset pipeline wave runs.
+
+## Verification artifacts (RC gates)
+
+- `rc-journey/01-landing.png` … `rc-journey/16-second-grove-discovery.png`
+- `rc-journey/REVIEW.md` — rubric scoring sheet.
+- `rc-journey/perf.md` — runtime FPS measurement per biome.
+
+## Legacy docs
+
+The subdirectories `architecture/`, `game-design/`, `ui-ux/`, `brand/`,
+`guides/`, `plans/`, and `screenshots/` contain documentation from the
+pre-redesign BabylonJS build. They are **superseded** by the top-level
+`DESIGN.md` and `ARCHITECTURE.md`. They will be pruned or rewritten as
+the relevant waves run; trust the top-level docs as the current source of
+truth.
+
+## Development commands
 
 ```bash
-pnpm install
-pnpm dev
+pnpm dev                  # dev server
+pnpm build                # production build
+pnpm test                 # vitest, node project (default)
+pnpm test:browser         # vitest, browser project (Playwright)
+pnpm test:playthrough     # the journey screenshot suite (RC gate)
+pnpm tsc                  # typecheck
+pnpm check                # biome lint + format
 ```
 
-| Command              | Description                    |
-|-----------------------|--------------------------------|
-| `pnpm dev`           | Start development server       |
-| `pnpm build`         | Build for production           |
-| `pnpm preview`       | Preview production build       |
-| `pnpm test`          | Run tests (watch mode)         |
-| `pnpm test:run`      | Run tests once (CI)            |
-| `pnpm test:coverage` | Generate coverage report       |
-| `pnpm lint`          | Lint with Biome                |
-| `pnpm format`        | Format with Biome              |
-| `pnpm check`         | Full check (lint + format)     |
-| `pnpm tsc`           | TypeScript type check          |
-
----
-
-## Documentation Index
-
-### Architecture
-
-- [Overview](architecture/overview.md) -- Tech stack, directory layout, data flow
-- [ECS Patterns](architecture/ecs-patterns.md) -- Miniplex world, components, queries
-- [State Management](architecture/state-management.md) -- Zustand store, persistence
-- [Rendering](architecture/rendering.md) -- BabylonJS scene, meshes, lighting
-- [Performance](architecture/performance.md) -- Budgets, optimizations, code splitting
-
-### Game Design
-
-- [Core Loop](game-design/core-loop.md) -- Session flow, game loop
-- [Grid System](game-design/grid-system.md) -- Tiles, expansion, coordinates
-- [Tree Catalog](game-design/tree-catalog.md) -- 15 species (12 base + 3 prestige), growth stages
-- [Tools](game-design/tools.md) -- 8 tools, stamina costs
-- [Economy](game-design/economy.md) -- Resources, seed costs, harvesting
-- [Progression](game-design/progression.md) -- XP, levels, achievements, prestige
-- [Seasons and Weather](game-design/seasons-weather.md) -- Day/night, seasons, weather events
-
-### Brand
-
-- [Identity](brand/identity.md) -- Pillars, tagline, visual style, mascot
-- [Design Tokens](brand/design-tokens.md) -- CSS custom properties (colors, spacing, shadows, z-index)
-- [Typography](brand/typography.md) -- Fonts, type scale, loading strategy
-
-### UI/UX
-
-- [HUD Layout](ui-ux/hud-layout.md) -- Mobile and desktop panel positions, component map
-- [Controls](ui-ux/controls.md) -- Joystick, keyboard, context actions, canvas config
-
-### Guides
-
-- [Getting Started](guides/getting-started.md) -- Install, dev server, build, test
-- [Coding Standards](guides/coding-standards.md) -- Conventions, patterns, testing
-- [Contributing](guides/contributing.md) -- Agent roles, coordination, memory bank
-
-### Historical
-
-- [Phase A Plan](plans/2025-02-06-phase-a-foundation.md) -- Foundation alignment with canonical spec
-- [Phase B Plan](plans/2025-02-06-phase-b-systems-persistence.md) -- Systems and persistence
-
----
-
-## Project Structure
-
-```text
-grovekeeper/
-  CLAUDE.md                       AI assistant context
-  AGENTS.md                       Multi-agent orchestration guide
-  memory-bank/                    Persistent project context
-  src/
-    main.tsx                      Entry point
-    App.tsx                       Root component
-    index.css                     Tailwind 4 + design tokens
-    game/
-      Game.tsx                    Screen router (menu | playing)
-      scenes/
-        GameScene.tsx             BabylonJS canvas + game loop orchestrator (~400 lines)
-      scene/                      Scene manager modules (decomposed from GameScene)
-        SceneManager.ts           Engine + Scene creation/disposal
-        CameraManager.ts          Orthographic diorama camera
-        GroundBuilder.ts          DynamicTexture biome blending
-        LightingManager.ts        Hemisphere + directional lights
-        SkyManager.ts             HDRI skybox + IBL
-        PlayerMeshManager.ts      Player mesh lifecycle
-        TreeMeshManager.ts        Tree mesh lifecycle + template cache
-        BorderTreeManager.ts      Decorative border trees
-      ecs/
-        world.ts                  Miniplex World + queries
-        react.ts                  miniplex-react hooks API
-        archetypes.ts             Entity factory functions
-      world/                      World data layer
-        WorldManager.ts           Zone loading, world state
-        WorldGenerator.ts         Procedural world generation
-        ZoneLoader.ts             JSON zone hydration
-        types.ts                  World/zone type definitions
-        archetypes.ts             Tile entity factories
-        data/
-          starting-world.json     Level 1-5 zone definitions
-      structures/                 Structure system
-        StructureManager.ts       Structure placement + effects
-        BlockMeshFactory.ts       Daggerfall-style block meshes
-        types.ts                  Structure type definitions
-        data/
-          blocks.json             Block catalog
-          structures.json         Structure recipes
-      systems/
-        growth.ts                 5-stage tree growth
-        movement.ts               Player movement
-        time.ts                   Day/night + season cycle
-        quests.ts                 Quest/goal generation
-        weather.ts                Rain, drought, windstorm events
-        achievements.ts           15 achievements
-        prestige.ts               Level 25+ prestige + 5 cosmetic borders
-        gridExpansion.ts          Grid size upgrades (12 -> 16 -> 20 -> 24 -> 32)
-        offlineGrowth.ts          Offline growth calculation
-        levelUnlocks.ts           Species + tool unlock thresholds
-        platform.ts               Capacitor haptics bridge
-      stores/
-        gameStore.ts              Zustand persistent state (XP, coins, resources, ...)
-      constants/
-        config.ts                 Grid size, colors, growth stages
-        trees.ts                  15 tree species definitions (12 base + 3 prestige)
-        tools.ts                  8 tool definitions
-      utils/
-        spsTreeGenerator.ts       Ported BabylonJS SPS Tree Generator
-        treeMeshBuilder.ts        Species-specific meshes
-      ui/
-        MainMenu.tsx              Start screen
-        HUD.tsx                   Top bar overlay
-        GameUI.tsx                HUD + joystick + dialogs + frames
-        Joystick.tsx              nipplejs wrapper
-        ToolBelt.tsx              2x4 tool grid
-        ToolWheel.tsx             Tool selection dialog
-        ActionButton.tsx          Context-sensitive action button
-        SeedSelect.tsx            Species picker dialog
-        PauseMenu.tsx             Pause overlay (stats, achievements, prestige)
-        ResourceBar.tsx           Timber/Sap/Fruit/Acorns display
-        XPBar.tsx                 Level + XP progress bar
-        StaminaGauge.tsx          Vertical stamina bar
-        TimeDisplay.tsx           Day/night/season indicator
-        QuestPanel.tsx            Active quest tracker
-        WeatherOverlay.tsx        CSS rain/drought/windstorm/petals
-        AchievementPopup.tsx      Gold border + sparkle achievement modal
-        FloatingParticles.tsx     +XP/+Timber floating text
-        Toast.tsx                 Notification system
-        MiniMap.tsx               SVG-based minimap (desktop overlay, mobile fullscreen)
-        Logo.tsx                  SVG logo
-        FarmerMascot.tsx          SVG farmer "Fern"
-        RulesModal.tsx            First-time tutorial
-    components/ui/                shadcn/ui components
-    hooks/                        Responsive/mobile detection hooks
-    lib/utils.ts                  cn() Tailwind merge utility
-  public/
-    textures/                     PBR bark and leaf textures
-    manifest.json                 PWA manifest
-    sw.js                         Service worker
-  docs/                           This documentation
-  capacitor.config.ts             Capacitor native config
-  biome.json                      Linter/formatter config
-  vitest.config.ts                Test runner config
-  vite.config.ts                  Bundler config
-  tsconfig.json                   TypeScript config
-```
-
----
-
-## Tech Stack
-
-| Layer      | Technology              | Version |
-|------------|-------------------------|---------|
-| Runtime    | React                   | 19      |
-| 3D Engine  | BabylonJS               | 8.x     |
-| ECS        | Miniplex                | 2.x     |
-| State      | Zustand                 | 5.x     |
-| Input      | nipplejs                | 0.10.x  |
-| Styling    | Tailwind CSS + shadcn/ui| 4.x     |
-| Bundler    | Vite                    | 6.x     |
-| Language   | TypeScript              | 5.7+    |
-| Lint/Fmt   | Biome                   | 2.3     |
-| Package    | pnpm                    | --      |
-| Testing    | Vitest + Testing Library| 4.x     |
-| Mobile     | Capacitor               | 8.x     |
+See `/CLAUDE.md` for the full command list.

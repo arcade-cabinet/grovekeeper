@@ -1,0 +1,363 @@
+{
+  "_comment": "Curation map: which source files become which public/assets/ destinations. Read by scripts/curate-assets.mjs. JSON-only (no comments) — use _TODO/_NOTE keys for placeholders. See scripts/asset-curation.README.md for conventions. Sources are RELATIVE to grovekeeper/ root; this file does not assume voxel-realms layout (the import step has already copied content into raw-assets/extracted/).",
+
+  "models": [
+    {
+      "_NOTE": "Gardener — main player character. Beekeeper 1 GLTF picked: cozy beekeeper aesthetic fits 'tend the grove'. May be static T-pose; Wave 3b spot-checks animations.",
+      "source": "raw-assets/extracted/beekeeer-upload/Beekeeer Upload/GLTF Files/Beekeeper 1.gltf",
+      "dest": "public/assets/models/characters/gardener/gardener.gltf",
+      "category": "model",
+      "biome": "all"
+    },
+    {
+      "_NOTE": "Grove Spirit base mesh. MermaidWarrior01 chosen as ethereal humanoid — emissive shader applied at runtime per inventory recommendation. Existing GLB picks up cleanly.",
+      "source": "raw-assets/extracted/voxel-mermaid-characters-pack-upload/Glb/MermaidWarrior01.glb",
+      "dest": "public/assets/models/npcs/grove-spirit/grove-spirit.glb",
+      "category": "model",
+      "biome": "grove"
+    },
+
+    {
+      "_NOTE": "Villager #1 — dwarven elder",
+      "source": "raw-assets/extracted/voxel-dwarf-characters-pack/Glb/Dwarf 01.glb",
+      "dest": "public/assets/models/npcs/villagers/villager-elder.glb",
+      "category": "model",
+      "biome": "all"
+    },
+    {
+      "_NOTE": "Villager #2 — dwarven smith",
+      "source": "raw-assets/extracted/voxel-dwarf-characters-pack/Glb/Dwarf 03.glb",
+      "dest": "public/assets/models/npcs/villagers/villager-smith.glb",
+      "category": "model",
+      "biome": "all"
+    },
+    {
+      "_NOTE": "Villager #3 — dwarven cook",
+      "source": "raw-assets/extracted/voxel-dwarf-characters-pack/Glb/Dwarf 05.glb",
+      "dest": "public/assets/models/npcs/villagers/villager-cook.glb",
+      "category": "model",
+      "biome": "all"
+    },
+    {
+      "_NOTE": "Villager #4 — coastal mermaid (NPC for coast biome only)",
+      "source": "raw-assets/extracted/voxel-mermaid-characters-pack-upload/Glb/MermaidFemale01.glb",
+      "dest": "public/assets/models/npcs/villagers/villager-coast.glb",
+      "category": "model",
+      "biome": "coast"
+    },
+
+    {
+      "_TODO": "rabbit GLB — Wave 3b output. Source DAE: voxel-forest-animals-pack/Rabbit/Dae Files/Rabbit Idle.dae",
+      "source": "raw-assets/extracted/voxel-forest-animals-pack/Rabbit/Rabbit.gltf",
+      "dest": "public/assets/models/creatures/peaceful/rabbit.gltf",
+      "category": "model",
+      "biome": "meadow"
+    },
+    {
+      "_NOTE": "Deer — meadow/forest peaceful fauna",
+      "source": "raw-assets/extracted/voxel-forest-animals-pack/Deer/Deer.gltf",
+      "dest": "public/assets/models/creatures/peaceful/deer.gltf",
+      "category": "model",
+      "biome": "forest"
+    },
+    {
+      "_NOTE": "Squirrel — forest peaceful fauna",
+      "source": "raw-assets/extracted/voxel-forest-animals-pack/Squirrel/Squirrel.gltf",
+      "dest": "public/assets/models/creatures/peaceful/squirrel.gltf",
+      "category": "model",
+      "biome": "forest"
+    },
+    {
+      "_NOTE": "Fox — forest peaceful fauna",
+      "source": "raw-assets/extracted/voxel-forest-animals-pack/Fox/Fox.gltf",
+      "dest": "public/assets/models/creatures/peaceful/fox.gltf",
+      "category": "model",
+      "biome": "forest"
+    },
+    {
+      "_NOTE": "Owl — forest peaceful fauna",
+      "source": "raw-assets/extracted/voxel-forest-animals-pack/Owl/Owl.gltf",
+      "dest": "public/assets/models/creatures/peaceful/owl.gltf",
+      "category": "model",
+      "biome": "forest"
+    },
+    {
+      "_NOTE": "Crab — coast peaceful fauna",
+      "source": "raw-assets/extracted/voxel-ocean-animals-pack/Crab/Crab.gltf",
+      "dest": "public/assets/models/creatures/peaceful/coast/crab.gltf",
+      "category": "model",
+      "biome": "coast"
+    },
+    {
+      "_NOTE": "Sea Turtle — coast peaceful fauna",
+      "source": "raw-assets/extracted/voxel-ocean-animals-pack/Sea Turtle/Sea Turtle.gltf",
+      "dest": "public/assets/models/creatures/peaceful/coast/sea-turtle.gltf",
+      "category": "model",
+      "biome": "coast"
+    },
+    {
+      "_NOTE": "Dolphin — coast peaceful fauna",
+      "source": "raw-assets/extracted/voxel-ocean-animals-pack/Dolphin/Dolphin.gltf",
+      "dest": "public/assets/models/creatures/peaceful/coast/dolphin.gltf",
+      "category": "model",
+      "biome": "coast"
+    },
+    {
+      "_NOTE": "Bee — grove peaceful fauna",
+      "source": "raw-assets/extracted/beekeeer-upload/Beekeeer Upload/GLTF Files/Bee.gltf",
+      "dest": "public/assets/models/creatures/peaceful/grove/bee.gltf",
+      "category": "model",
+      "biome": "grove"
+    },
+
+    {
+      "_NOTE": "Wolf — sole hostile creature for RC. Forest pack has full anim cycles.",
+      "source": "raw-assets/extracted/voxel-forest-animals-pack/Wolf/Wolf.gltf",
+      "dest": "public/assets/models/creatures/hostile/wolf.gltf",
+      "category": "model",
+      "biome": "forest"
+    },
+    {
+      "_NOTE": "Wild Boar — secondary hostile",
+      "source": "raw-assets/extracted/voxel-forest-animals-pack/Wild Boar/Wild Boar.gltf",
+      "dest": "public/assets/models/creatures/hostile/boar.gltf",
+      "category": "model",
+      "biome": "forest"
+    },
+
+    {
+      "_NOTE": "Workbench — pick Desk as workbench proxy",
+      "source": "raw-assets/extracted/voxel-props-pack/Desk",
+      "dest": "public/assets/models/props/workbench/",
+      "category": "model_dir",
+      "biome": "all"
+    },
+    {
+      "_NOTE": "Log pile / storage box",
+      "source": "raw-assets/extracted/voxel-props-pack/Box1",
+      "dest": "public/assets/models/props/log-pile/",
+      "category": "model_dir",
+      "biome": "all"
+    },
+    {
+      "_NOTE": "Stone cairn proxy — TreasureChest as placeholder until proper stone cairn asset exists",
+      "source": "raw-assets/extracted/voxel-props-pack/TreasureChest",
+      "dest": "public/assets/models/props/stone-cairn/",
+      "category": "model_dir",
+      "biome": "grove"
+    },
+    {
+      "_NOTE": "Beehive — grove biome prop",
+      "source": "raw-assets/extracted/beekeeer-upload/Beekeeer Upload/GLTF Files/Beehive.gltf",
+      "dest": "public/assets/models/props/beehive.gltf",
+      "category": "model",
+      "biome": "grove"
+    },
+    {
+      "_NOTE": "Honey Jar — gathering prop",
+      "source": "raw-assets/extracted/beekeeer-upload/Beekeeer Upload/GLTF Files/Honey Jar.gltf",
+      "dest": "public/assets/models/props/honey-jar.gltf",
+      "category": "model",
+      "biome": "grove"
+    }
+  ],
+
+  "audio": [
+    {
+      "_NOTE": "Menu music — Idle_Screen loop fits intro screen",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/WAV/Idle_Screen.wav",
+      "dest": "public/assets/audio/music/menu/idle-screen.wav",
+      "category": "audio",
+      "biome": "menu"
+    },
+    {
+      "_NOTE": "Grove ambient music — magical music-box. Forlorn Fairytale fits Grovekeeper Spirit moments.",
+      "source": "raw-assets/extracted/toys-in-the-attic-a-music-box-music-pack/Toys in the Attic | A Music Box Music Pack/LOOPING/OGG/03 Forlorn Fairytale LOOP.ogg",
+      "dest": "public/assets/audio/music/grove/forlorn-fairytale.ogg",
+      "category": "audio",
+      "biome": "grove"
+    },
+    {
+      "_NOTE": "Grove secondary — Grandfather Clock Chronicle for time-passing moments",
+      "source": "raw-assets/extracted/toys-in-the-attic-a-music-box-music-pack/Toys in the Attic | A Music Box Music Pack/LOOPING/OGG/04 Grandfather Clock Chronicle LOOP.ogg",
+      "dest": "public/assets/audio/music/grove/grandfather-clock.ogg",
+      "category": "audio",
+      "biome": "grove"
+    },
+    {
+      "_NOTE": "Meadow music — Calm_Respawn",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/WAV/Calm_Respawn.wav",
+      "dest": "public/assets/audio/music/biomes/meadow/calm-respawn.wav",
+      "category": "audio",
+      "biome": "meadow"
+    },
+    {
+      "_NOTE": "Meadow secondary — Soft_Pixels",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/WAV/Soft_Pixels.wav",
+      "dest": "public/assets/audio/music/biomes/meadow/soft-pixels.wav",
+      "category": "audio",
+      "biome": "meadow"
+    },
+    {
+      "_NOTE": "Forest music — Chill_Checkpoint",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/WAV/Chill_Checkpoint.wav",
+      "dest": "public/assets/audio/music/biomes/forest/chill-checkpoint.wav",
+      "category": "audio",
+      "biome": "forest"
+    },
+    {
+      "_NOTE": "Forest secondary — Late_Compile (deeper / dusk)",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/WAV/Late_Compile.wav",
+      "dest": "public/assets/audio/music/biomes/forest/late-compile.wav",
+      "category": "audio",
+      "biome": "forest"
+    },
+    {
+      "_NOTE": "Coast music — Warm_Console as warm shoreline bed",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/WAV/Warm_Console.wav",
+      "dest": "public/assets/audio/music/biomes/coast/warm-console.wav",
+      "category": "audio",
+      "biome": "coast"
+    },
+    {
+      "_NOTE": "Coast secondary — Neon_Coffee",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/WAV/Neon_Coffee.wav",
+      "dest": "public/assets/audio/music/biomes/coast/neon-coffee.wav",
+      "category": "audio",
+      "biome": "coast"
+    },
+    {
+      "_TODO": "Pick a moment-music cue for Grovekeeper-discovered. Currently using a music-box loop as proxy.",
+      "source": "raw-assets/extracted/toys-in-the-attic-a-music-box-music-pack/Toys in the Attic | A Music Box Music Pack/LOOPING/OGG/05 Shelf Life of an Elf LOOP.ogg",
+      "dest": "public/assets/audio/music/moments/spirit-discovered.ogg",
+      "category": "audio",
+      "biome": "grove"
+    },
+
+    {
+      "_NOTE": "UI click — pl_Click_01",
+      "source": "raw-assets/extracted/pixelloops-ui-sound-effects-pack/WAV/pl_Click_01.wav",
+      "dest": "public/assets/audio/sfx/ui/click.wav",
+      "category": "audio",
+      "biome": "ui"
+    },
+    {
+      "_NOTE": "UI confirm",
+      "source": "raw-assets/extracted/pixelloops-ui-sound-effects-pack/WAV/pl_Click_02.wav",
+      "dest": "public/assets/audio/sfx/ui/confirm.wav",
+      "category": "audio",
+      "biome": "ui"
+    },
+    {
+      "_NOTE": "UI cancel",
+      "source": "raw-assets/extracted/pixelloops-ui-sound-effects-pack/WAV/pl_Cancel_01.wav",
+      "dest": "public/assets/audio/sfx/ui/cancel.wav",
+      "category": "audio",
+      "biome": "ui"
+    },
+    {
+      "_NOTE": "UI achievement",
+      "source": "raw-assets/extracted/pixelloops-ui-sound-effects-pack/WAV/pl_Achievement_01.wav",
+      "dest": "public/assets/audio/sfx/ui/achievement.wav",
+      "category": "audio",
+      "biome": "ui"
+    },
+    {
+      "_NOTE": "UI coin / pickup",
+      "source": "raw-assets/extracted/pixelloops-ui-sound-effects-pack/WAV/pl_Coin_01.wav",
+      "dest": "public/assets/audio/sfx/ui/coin.wav",
+      "category": "audio",
+      "biome": "ui"
+    },
+
+    {
+      "_NOTE": "Grass footsteps — directory: 4-5 walk variants for variation",
+      "source": "raw-assets/extracted/psx-footsteps-sfx-foley-pack/PSX Footsteps SFX Foley Pack/Boots/Bootswalkgrass",
+      "dest": "public/assets/audio/sfx/footsteps/grass/",
+      "category": "audio_dir",
+      "biome": "all"
+    },
+    {
+      "_NOTE": "Stone footsteps — Bootswalksolid as stone proxy",
+      "source": "raw-assets/extracted/psx-footsteps-sfx-foley-pack/PSX Footsteps SFX Foley Pack/Boots/Bootswalksolid",
+      "dest": "public/assets/audio/sfx/footsteps/stone/",
+      "category": "audio_dir",
+      "biome": "all"
+    },
+    {
+      "_TODO": "Wood footsteps. PSX pack has no wood; reusing solid pitched. Wave 5 sound design owns this. Currently aliased to solid.",
+      "source": "raw-assets/extracted/psx-footsteps-sfx-foley-pack/PSX Footsteps SFX Foley Pack/Boots/Bootswalksolid",
+      "dest": "public/assets/audio/sfx/footsteps/wood/",
+      "category": "audio_dir",
+      "biome": "all"
+    },
+    {
+      "_TODO": "Sand footsteps. Pack has no sand; reusing high-grass as approximate sand-shuffle. Wave 5 sound design owns this.",
+      "source": "raw-assets/extracted/psx-footsteps-sfx-foley-pack/PSX Footsteps SFX Foley Pack/Boots/Bootswalkhighgrass",
+      "dest": "public/assets/audio/sfx/footsteps/sand/",
+      "category": "audio_dir",
+      "biome": "coast"
+    },
+
+    {
+      "_TODO": "Tool action SFX — chop/dig/water/plant/prune. Combine impact-hit + cinematic-whoosh per inventory section 10.4. For RC, ship one impact sample per tool slot.",
+      "source": "raw-assets/extracted/impact-hit-sound-effects-pack/Impact_Hit_Sound_Effects_Pack/WAV",
+      "dest": "public/assets/audio/sfx/tools/",
+      "category": "audio_dir",
+      "biome": "all"
+    },
+
+    {
+      "_NOTE": "Crafting SFX — inventory open/close set",
+      "source": "raw-assets/extracted/inventory-and-item-sound-effects-pack/Inventory_And_Item_Sound_Effects_Pack/WAV",
+      "dest": "public/assets/audio/sfx/crafting/",
+      "category": "audio_dir",
+      "biome": "all"
+    },
+
+    {
+      "_TODO": "Creature SFX — no labelled creature audio in source packs. Proxies via magic-spell pack for ambient creature noises. Wave 5 owns sourcing real creature SFX.",
+      "source": "raw-assets/extracted/fantasy-magic-spell-sound-effects-pack/WAV",
+      "dest": "public/assets/audio/sfx/creatures/",
+      "category": "audio_dir",
+      "biome": "all"
+    },
+
+    {
+      "_NOTE": "Hearth / fireplace SFX proxy via cinematic whoosh — sustained airy noise approximates fire crackle for RC",
+      "source": "raw-assets/extracted/cinematic-whoosh-sfx-pack-40-fast-transition-sounds/WAV",
+      "dest": "public/assets/audio/sfx/hearth/",
+      "category": "audio_dir",
+      "biome": "all"
+    },
+
+    {
+      "_NOTE": "Grove ambient — uses dark-ambient ColdLight for mystical underbed",
+      "source": "raw-assets/extracted/gameloops-vol4-darkambient/MP3",
+      "dest": "public/assets/audio/ambient/grove/",
+      "category": "audio_dir",
+      "biome": "grove"
+    },
+    {
+      "_NOTE": "Meadow ambient — soft loop bed",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/LOOPS_30s",
+      "dest": "public/assets/audio/ambient/biomes/meadow/",
+      "category": "audio_dir",
+      "biome": "meadow"
+    },
+    {
+      "_NOTE": "Forest ambient — dark-ambient WAV loops",
+      "source": "raw-assets/extracted/gameloops-vol4-darkambient/LOOPS_30s",
+      "dest": "public/assets/audio/ambient/biomes/forest/",
+      "category": "audio_dir",
+      "biome": "forest"
+    },
+    {
+      "_TODO": "Coast ambient — no surf pack. Wave 5 acquires. Currently empty / aliased to meadow.",
+      "source": "raw-assets/extracted/gameloops-vol1-lofichill-pixelloops/LOOPS_30s",
+      "dest": "public/assets/audio/ambient/biomes/coast/",
+      "category": "audio_dir",
+      "biome": "coast"
+    }
+  ]
+}

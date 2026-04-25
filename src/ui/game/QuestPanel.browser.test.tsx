@@ -8,8 +8,8 @@
 
 import { render } from "@solidjs/testing-library";
 import { describe, expect, it } from "vitest";
-import { QuestPanel } from "./QuestPanel";
 import type { ActiveQuest } from "@/systems/quests";
+import { QuestPanel } from "./QuestPanel";
 
 /** A minimal quest fixture for rendering. */
 function makeQuest(id: string): ActiveQuest {
@@ -94,9 +94,15 @@ describe("QuestPanel (browser mode)", () => {
       now.getFullYear(),
       now.getMonth(),
       now.getDate() + 1,
-      0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0,
     );
-    const totalSec = Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 1000));
+    const totalSec = Math.max(
+      0,
+      Math.floor((midnight.getTime() - now.getTime()) / 1000),
+    );
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;

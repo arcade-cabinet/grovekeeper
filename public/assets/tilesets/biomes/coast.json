@@ -1,0 +1,51 @@
+{
+  "tileSize": 32,
+  "atlas": {
+    "cols": 8,
+    "rows": 8,
+    "width": 256,
+    "height": 256
+  },
+  "tiles": {
+    "sand": {
+      "col": 0,
+      "row": 0
+    },
+    "sand-wet": {
+      "col": 1,
+      "row": 0
+    },
+    "shell": {
+      "col": 2,
+      "row": 0
+    },
+    "rock": {
+      "col": 3,
+      "row": 0
+    },
+    "tide-pool": {
+      "col": 4,
+      "row": 0
+    },
+    "seagrass": {
+      "col": 5,
+      "row": 0
+    },
+    "driftwood": {
+      "col": 6,
+      "row": 0
+    },
+    "dock-plank": {
+      "col": 7,
+      "row": 0
+    },
+    "foam": {
+      "col": 0,
+      "row": 1
+    },
+    "coral": {
+      "col": 1,
+      "row": 1
+    }
+  }
+}

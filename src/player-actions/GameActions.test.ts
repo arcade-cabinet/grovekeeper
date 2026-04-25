@@ -118,7 +118,7 @@ describe("GameActions", () => {
       expect(seeds?.["white-oak"]).toBe(29);
 
       // Plant granted some XP and incremented the tracker.
-      expect((koota.get(PlayerProgress)?.xp ?? 0)).toBeGreaterThan(0);
+      expect(koota.get(PlayerProgress)?.xp ?? 0).toBeGreaterThan(0);
       expect(koota.get(Tracking)?.treesPlanted).toBe(1);
     });
 

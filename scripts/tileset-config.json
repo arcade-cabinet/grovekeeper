@@ -1,0 +1,150 @@
+{
+  "$schema": "./tileset-config.schema.json",
+  "tileSize": 32,
+  "atlasGrid": { "cols": 8, "rows": 8 },
+  "rngSeed": "grovekeeper-rc-tilesets-v1",
+  "biomes": {
+    "meadow": {
+      "palette": {
+        "primary": "#7BB661",
+        "secondary": "#9BCB7E",
+        "accent": "#D4B896",
+        "deep": "#3F6B41",
+        "highlight": "#E8D77A",
+        "shadow": "#2F4F31",
+        "wet": "#4F8FB0",
+        "dry": "#A38555"
+      },
+      "tiles": [
+        { "id": "grass-flat", "kind": "ground", "noise": "soft" },
+        { "id": "grass-tall", "kind": "ground", "noise": "tall-blades" },
+        { "id": "dirt", "kind": "ground", "noise": "speckle" },
+        { "id": "stone", "kind": "ground", "noise": "rough" },
+        { "id": "wildflower", "kind": "ground", "noise": "scatter-yellow" },
+        { "id": "leaves", "kind": "foliage", "noise": "leaves-warm" },
+        { "id": "wood", "kind": "structure", "noise": "bark-light" },
+        { "id": "fence", "kind": "structure", "noise": "plank-vertical" },
+        { "id": "path", "kind": "ground", "noise": "speckle" },
+        { "id": "puddle", "kind": "ground", "noise": "soft" }
+      ]
+    },
+    "forest": {
+      "palette": {
+        "primary": "#3E6B3A",
+        "secondary": "#5C8A4F",
+        "accent": "#6B4423",
+        "deep": "#1F3D1E",
+        "highlight": "#8FB96A",
+        "shadow": "#152917",
+        "wet": "#2E5560",
+        "dry": "#7A5832"
+      },
+      "tiles": [
+        { "id": "grass-mossy", "kind": "ground", "noise": "soft" },
+        { "id": "moss", "kind": "ground", "noise": "scatter-yellow" },
+        { "id": "dirt-dark", "kind": "ground", "noise": "speckle" },
+        { "id": "stone-mossy", "kind": "ground", "noise": "rough" },
+        { "id": "fern", "kind": "ground", "noise": "tall-blades" },
+        { "id": "leaves-deep", "kind": "foliage", "noise": "leaves-warm" },
+        { "id": "log", "kind": "structure", "noise": "bark-dark" },
+        { "id": "bark", "kind": "structure", "noise": "bark-dark" },
+        { "id": "mushroom", "kind": "ground", "noise": "scatter-yellow" },
+        { "id": "root", "kind": "structure", "noise": "bark-dark" }
+      ]
+    },
+    "coast": {
+      "palette": {
+        "primary": "#E6D9A8",
+        "secondary": "#F4ECC8",
+        "accent": "#3F8FB8",
+        "deep": "#2A6B8E",
+        "highlight": "#FFF6E0",
+        "shadow": "#A89A6A",
+        "wet": "#5BB6D0",
+        "dry": "#C9B888"
+      },
+      "tiles": [
+        { "id": "sand", "kind": "ground", "noise": "soft" },
+        { "id": "sand-wet", "kind": "ground", "noise": "speckle" },
+        { "id": "shell", "kind": "ground", "noise": "scatter-yellow" },
+        { "id": "rock", "kind": "ground", "noise": "rough" },
+        { "id": "tide-pool", "kind": "ground", "noise": "soft" },
+        { "id": "seagrass", "kind": "foliage", "noise": "tall-blades" },
+        { "id": "driftwood", "kind": "structure", "noise": "bark-light" },
+        { "id": "dock-plank", "kind": "structure", "noise": "plank-vertical" },
+        { "id": "foam", "kind": "ground", "noise": "soft" },
+        { "id": "coral", "kind": "ground", "noise": "scatter-yellow" }
+      ]
+    },
+    "grove": {
+      "palette": {
+        "primary": "#A8E89C",
+        "secondary": "#D9F5BC",
+        "accent": "#F0E68C",
+        "deep": "#5B9B6F",
+        "highlight": "#FFF8C4",
+        "shadow": "#3E7558",
+        "wet": "#9BD9D0",
+        "dry": "#C8B870"
+      },
+      "tiles": [
+        { "id": "luminous-grass", "kind": "ground", "noise": "soft" },
+        { "id": "spirit-moss", "kind": "ground", "noise": "scatter-yellow" },
+        { "id": "gilded-dirt", "kind": "ground", "noise": "speckle" },
+        { "id": "alabaster-stone", "kind": "ground", "noise": "rough" },
+        { "id": "spirit-bloom", "kind": "ground", "noise": "scatter-yellow" },
+        { "id": "leaves-luminous", "kind": "foliage", "noise": "leaves-warm" },
+        { "id": "heartwood", "kind": "structure", "noise": "bark-light" },
+        { "id": "rune-stone", "kind": "structure", "noise": "stone-cut" },
+        { "id": "mist", "kind": "ground", "noise": "soft" },
+        { "id": "shrine-tile", "kind": "structure", "noise": "stone-cut" }
+      ]
+    }
+  },
+  "structures": {
+    "common": {
+      "palette": {
+        "primary": "#B7884A",
+        "secondary": "#8E5E2F",
+        "accent": "#7E7E7E",
+        "deep": "#4A4A4A",
+        "highlight": "#D9C28A",
+        "shadow": "#2A2A2A",
+        "wet": "#5A8A9A",
+        "dry": "#9A8A6A"
+      },
+      "tiles": [
+        { "id": "plank", "noise": "plank-grain" },
+        { "id": "stone-block", "noise": "stone-cut" },
+        { "id": "glass", "noise": "translucent-grid" },
+        { "id": "thatch", "noise": "thatch-weave" },
+        { "id": "log", "noise": "bark-dark" },
+        { "id": "metal", "noise": "metal-brushed" },
+        { "id": "stone-rough", "noise": "rough" },
+        { "id": "plank-vertical", "noise": "plank-vertical" }
+      ]
+    },
+    "hearth": {
+      "palette": {
+        "primary": "#5A4438",
+        "secondary": "#3A2A22",
+        "accent": "#FF8C42",
+        "deep": "#1A0F08",
+        "highlight": "#FFD96A",
+        "shadow": "#0A0604",
+        "wet": "#6B4838",
+        "dry": "#8A5A3A"
+      },
+      "tiles": [
+        { "id": "hearth-stone", "noise": "stone-fire-stained" },
+        { "id": "hearth-coals", "noise": "ember-glow" },
+        { "id": "hearth-ash", "noise": "speckle" },
+        { "id": "hearth-iron", "noise": "metal-brushed" },
+        { "id": "hearth-log", "noise": "bark-dark" },
+        { "id": "hearth-flame", "noise": "ember-glow" },
+        { "id": "hearth-soot", "noise": "rough" },
+        { "id": "hearth-tile", "noise": "stone-cut" }
+      ]
+    }
+  }
+}

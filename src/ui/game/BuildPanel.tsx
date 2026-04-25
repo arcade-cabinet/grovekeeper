@@ -3,9 +3,9 @@ import { COLORS } from "@/config/config";
 import type { ResourceType } from "@/config/resources";
 import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
-import { PlayerProgress, Resources } from "@/traits";
 import { getAvailableTemplates } from "@/structures/StructureManager";
 import type { StructureTemplate } from "@/structures/types";
+import { PlayerProgress, Resources } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -89,7 +89,10 @@ export const BuildPanel = (props: BuildPanelProps) => {
                   onClick={() => handleSelect(template)}
                   disabled={!affordable()}
                 >
-                  <span class="text-2xl flex-shrink-0 mt-0.5" aria-hidden="true">
+                  <span
+                    class="text-2xl flex-shrink-0 mt-0.5"
+                    aria-hidden="true"
+                  >
                     {template.icon}
                   </span>
                   <div class="text-left flex-1 min-w-0">

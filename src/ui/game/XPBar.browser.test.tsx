@@ -9,11 +9,7 @@
 
 import { render } from "@solidjs/testing-library";
 import { describe, expect, it } from "vitest";
-import {
-  destroyAllEntitiesExceptWorld,
-  koota,
-  spawnPlayer,
-} from "@/koota";
+import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { PlayerProgress } from "@/traits";
 import { XPBar } from "./XPBar";
 
@@ -70,10 +66,15 @@ describe("XPBar (browser mode)", () => {
     // percent span. We locate the percent span specifically by looking for
     // a child element that ends with "%".
     const spans = Array.from(container.querySelectorAll("span"));
-    const percentSpan = spans.find((s) => /^\d+%$/.test(s.textContent?.trim() ?? ""));
+    const percentSpan = spans.find((s) =>
+      /^\d+%$/.test(s.textContent?.trim() ?? ""),
+    );
     expect(percentSpan).not.toBeNull();
 
-    const percent = Number.parseInt(percentSpan!.textContent!.replace("%", ""), 10);
+    const percent = Number.parseInt(
+      percentSpan!.textContent!.replace("%", ""),
+      10,
+    );
     expect(percent).toBeGreaterThanOrEqual(0);
     expect(percent).toBeLessThanOrEqual(100);
   });
@@ -83,7 +84,9 @@ describe("XPBar (browser mode)", () => {
     const { container } = render(() => <XPBar />);
 
     // Give requestAnimationFrame a chance to run one tick
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
 
     // The bar should still be mounted and contain a percent value
     const text = container.textContent ?? "";

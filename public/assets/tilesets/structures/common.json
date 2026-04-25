@@ -1,0 +1,43 @@
+{
+  "tileSize": 32,
+  "atlas": {
+    "cols": 8,
+    "rows": 8,
+    "width": 256,
+    "height": 256
+  },
+  "tiles": {
+    "plank": {
+      "col": 0,
+      "row": 0
+    },
+    "stone-block": {
+      "col": 1,
+      "row": 0
+    },
+    "glass": {
+      "col": 2,
+      "row": 0
+    },
+    "thatch": {
+      "col": 3,
+      "row": 0
+    },
+    "log": {
+      "col": 4,
+      "row": 0
+    },
+    "metal": {
+      "col": 5,
+      "row": 0
+    },
+    "stone-rough": {
+      "col": 6,
+      "row": 0
+    },
+    "plank-vertical": {
+      "col": 7,
+      "row": 0
+    }
+  }
+}

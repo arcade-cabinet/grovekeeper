@@ -1,0 +1,27 @@
+{
+  "_comment": "Packs to copy from voxel-realms/raw-assets/extracted/ into Grovekeeper's raw-assets/extracted/. Used by scripts/import-from-voxel-realms.mjs. Source root defaults to ../voxel-realms/raw-assets/extracted/, override via VOXEL_REALMS_PATH env. Each entry is a directory name that exists under both source and dest.",
+  "packs": [
+    "voxel-forest-animals-pack",
+    "voxel-ocean-animals-pack",
+    "voxel-birds-pack",
+    "voxel-dwarf-characters-pack",
+    "voxel-mermaid-characters-pack-upload",
+    "voxel-neanderthal-characters-pack",
+    "voxel-mythical-creatures-pack",
+    "beekeeer-upload",
+    "farm-animals-pack-upload-v2",
+    "voxel-props-pack",
+    "all-trees-uploads",
+    "new-plants",
+    "voxel-weapons-pack-1",
+    "psx-footsteps-sfx-foley-pack",
+    "pixelloops-ui-sound-effects-pack",
+    "inventory-and-item-sound-effects-pack",
+    "impact-hit-sound-effects-pack",
+    "cinematic-whoosh-sfx-pack-40-fast-transition-sounds",
+    "fantasy-magic-spell-sound-effects-pack",
+    "gameloops-vol1-lofichill-pixelloops",
+    "gameloops-vol4-darkambient",
+    "toys-in-the-attic-a-music-box-music-pack"
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "_comment": "Wave 3b DAE->GLB conversion list. Sources are paths under raw-assets/extracted/, outputs land under raw-assets/converted/ mirroring the source tree (with .glb extension). Curated from the inventory's recommended-for-RC packs and aligned to scripts/asset-curation.json. Sources are RELATIVE to the grovekeeper repo root. The converter is idempotent — files whose source mtime is older than dest mtime are skipped.",
+  "sourceRoot": "raw-assets/extracted",
+  "destRoot": "raw-assets/converted",
+  "entries": [
+    {
+      "_role": "Player candidate (gardener) — Beekeeper character. Only static DAE in pack; cycles unlikely but verify via sample-animations.",
+      "src": "beekeeer-upload/Beekeeer Upload/Dae Files/Beekeeper.dae"
+    },
+    {
+      "_role": "Player candidate alt — Beekeeper 2 colour variant",
+      "src": "beekeeer-upload/Beekeeer Upload/Dae Files/Beekeeper 2.dae"
+    },
+    {
+      "_role": "Player candidate alt — Beekeeper 3 colour variant",
+      "src": "beekeeer-upload/Beekeeer Upload/Dae Files/Beekeeper 3.dae"
+    },
+    {
+      "_role": "Bee creature — pollinator companion / ambient creature",
+      "src": "beekeeer-upload/Beekeeer Upload/Dae Files/Bee.dae"
+    },
+    {
+      "_role": "Prop — Beehive Full (workbench-class structure)",
+      "src": "beekeeer-upload/Beekeeer Upload/Dae Files/Beehive Full.dae"
+    },
+    {
+      "_role": "Prop — Honey Jar (collectible)",
+      "src": "beekeeer-upload/Beekeeer Upload/Dae Files/Honey Jar.dae"
+    },
+    {
+      "_role": "NPC villager — Father (neanderthal pack, single DAE per character likely T-pose)",
+      "src": "voxel-neanderthal-characters-pack/Father/Dae File/Father.dae"
+    },
+    {
+      "_role": "NPC villager — Mother",
+      "src": "voxel-neanderthal-characters-pack/Mother/Dae File/Mother.dae"
+    },
+    {
+      "_role": "NPC villager — Boy",
+      "src": "voxel-neanderthal-characters-pack/Boy/Dae File/Boy.dae"
+    },
+    {
+      "_role": "NPC villager — Girl",
+      "src": "voxel-neanderthal-characters-pack/Girl/Dae File/Girl.dae"
+    },
+    {
+      "_role": "Grove Spirit candidate — Mermaid Warrior 01 idle",
+      "src": "voxel-mermaid-characters-pack-upload/Dae/Mermaid Warrior 01/MermaidWarrior01.dae"
+    },
+    {
+      "_role": "Grove Spirit alt — Mermaid Warrior 01 eat (alt cycle)",
+      "src": "voxel-mermaid-characters-pack-upload/Dae/Mermaid Warrior 01/MermaidWarrior01 Eat.dae"
+    },
+    {
+      "_role": "Coast NPC — Mermaid Female 01 (villager-coast slot)",
+      "src": "voxel-mermaid-characters-pack-upload/Dae/Mermaid Female 01/MermaidFemale01.dae"
+    },
+    {
+      "_role": "Peaceful — Rabbit idle (meadow)",
+      "src": "voxel-forest-animals-pack/Rabbit/Dae Files/Rabbit Idle.dae"
+    },
+    {
+      "_role": "Peaceful — Rabbit walk",
+      "src": "voxel-forest-animals-pack/Rabbit/Dae Files/Rabbit Walk.dae"
+    },
+    {
+      "_role": "Peaceful — Rabbit run",
+      "src": "voxel-forest-animals-pack/Rabbit/Dae Files/Rabbit Run.dae"
+    },
+    {
+      "_role": "Peaceful — Deer idle (forest)",
+      "src": "voxel-forest-animals-pack/Deer/Dae Files/Deer Idle.dae"
+    },
+    {
+      "_role": "Peaceful — Deer walk",
+      "src": "voxel-forest-animals-pack/Deer/Dae Files/Deer Walk.dae"
+    },
+    {
+      "_role": "Peaceful — Deer eat",
+      "src": "voxel-forest-animals-pack/Deer/Dae Files/Deer Eat.dae"
+    },
+    {
+      "_role": "Peaceful — Fox idle (forest)",
+      "src": "voxel-forest-animals-pack/Fox/Dae Files/Fox Idle.dae"
+    },
+    {
+      "_role": "Peaceful — Fox walk",
+      "src": "voxel-forest-animals-pack/Fox/Dae Files/Fox Walk.dae"
+    },
+    {
+      "_role": "Peaceful — Squirrel idle",
+      "src": "voxel-forest-animals-pack/Squirrel/Dae Files/Squirrel Idle.dae"
+    },
+    {
+      "_role": "Peaceful — Squirrel walk",
+      "src": "voxel-forest-animals-pack/Squirrel/Dae Files/Squirrel Walk.dae"
+    },
+    {
+      "_role": "Peaceful — Owl idle 1 (forest, butterfly-substitute aerial creature)",
+      "src": "voxel-forest-animals-pack/Owl/Dae Files/Owl Idle 1.dae"
+    },
+    {
+      "_role": "Peaceful — Owl flying",
+      "src": "voxel-forest-animals-pack/Owl/Dae Files/Owl Flying.dae"
+    },
+    {
+      "_role": "Peaceful — Crab idle (coast)",
+      "src": "voxel-ocean-animals-pack/Crab/Dae Files/Crab.dae"
+    },
+    {
+      "_role": "Peaceful — Crab walk",
+      "src": "voxel-ocean-animals-pack/Crab/Dae Files/Crab Walk.dae"
+    },
+    {
+      "_role": "Peaceful — Sea Turtle base (coast, gull-substitute as ambient)",
+      "src": "voxel-ocean-animals-pack/Sea Turtle/Dae Files/Sea Turtle.dae"
+    },
+    {
+      "_role": "Peaceful — Sea Turtle swim",
+      "src": "voxel-ocean-animals-pack/Sea Turtle/Dae Files/Sea Turtle Swim.dae"
+    },
+    {
+      "_role": "Peaceful — Dolphin base (coast fish-substitute)",
+      "src": "voxel-ocean-animals-pack/Dolphin/Dae Files/Dolphin.dae"
+    },
+    {
+      "_role": "Peaceful — Dolphin swim",
+      "src": "voxel-ocean-animals-pack/Dolphin/Dae Files/Dolphin Swim.dae"
+    },
+    {
+      "_role": "Hostile — Wolf idle (forest)",
+      "src": "voxel-forest-animals-pack/Wolf/Dae Files/Wolf Idle.dae"
+    },
+    {
+      "_role": "Hostile — Wolf walk",
+      "src": "voxel-forest-animals-pack/Wolf/Dae Files/Wolf Walk.dae"
+    },
+    {
+      "_role": "Hostile — Wolf attack",
+      "src": "voxel-forest-animals-pack/Wolf/Dae Files/Wolf Attack.dae"
+    },
+    {
+      "_role": "Hostile — Wolf run",
+      "src": "voxel-forest-animals-pack/Wolf/Dae Files/Wolf Run.dae"
+    },
+    {
+      "_role": "Hostile — Wild Boar idle (filename uses 'Boar' prefix)",
+      "src": "voxel-forest-animals-pack/Wild Boar/Dae Files/Boar Idle.dae"
+    },
+    {
+      "_role": "Hostile — Wild Boar attack",
+      "src": "voxel-forest-animals-pack/Wild Boar/Dae Files/Boar Attack.dae"
+    }
+  ]
+}

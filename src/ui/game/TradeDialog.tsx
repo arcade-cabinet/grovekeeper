@@ -3,9 +3,9 @@ import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
-import { Resources } from "@/traits";
 import type { TradeRate } from "@/systems/trading";
 import { executeTrade, getTradeRates } from "@/systems/trading";
+import { Resources } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,
@@ -125,8 +125,8 @@ export const TradeDialog = (props: TradeDialogProps) => {
                 </span>
               </div>
               <div class="text-xs" style={{ color: COLORS.soilDark }}>
-                Pay: {quantity() * rate().fromAmount} {rate().from}{" "}
-                {"\u2192"} Get: {quantity() * rate().toAmount} {rate().to}
+                Pay: {quantity() * rate().fromAmount} {rate().from} {"\u2192"}{" "}
+                Get: {quantity() * rate().toAmount} {rate().to}
               </div>
               <Button
                 class="w-full"

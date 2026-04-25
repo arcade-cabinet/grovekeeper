@@ -1,5 +1,11 @@
-import type { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import type { Mesh } from "@babylonjs/core/Meshes/mesh";
+// Engine-agnostic mesh / vector types. The previous BabylonJS types
+// were removed in the RC engine port (commit 8142d0d). The new render
+// path is Three.js via @jolly-pixel/engine; concrete render-side
+// references live in the scene module rather than in trait schemas, so
+// the persistent ECS schema only needs opaque shapes here.
+type Vector3 = { x: number; y: number; z: number };
+type Mesh = unknown;
+
 import type { Entity } from "koota";
 import { relation, trait } from "koota";
 import type { ResourceType } from "@/config/resources";
@@ -84,7 +90,12 @@ export const Scarecrow = trait({ radius: 0 });
 
 export const IsPlayer = trait();
 
-export const FarmerState = trait({ stamina: 100, maxStamina: 100 });
+export const FarmerState = trait({
+  stamina: 100,
+  maxStamina: 100,
+  hp: 100,
+  maxHp: 100,
+});
 
 export const Npc = trait({
   templateId: "",
@@ -209,7 +220,13 @@ export const Settings = trait({
 });
 
 export const GameScreen = trait({
-  value: "menu" as "menu" | "playing" | "paused" | "seedSelect" | "rules",
+  value: "menu" as
+    | "menu"
+    | "new-game"
+    | "playing"
+    | "paused"
+    | "seedSelect"
+    | "rules",
 });
 
 export const Difficulty = trait({
@@ -226,3 +243,4 @@ export const OccupiedBy = relation({ exclusive: true });
 
 export type ResourceKey = ResourceType;
 export type { Vector3 };
+export type { Mesh };

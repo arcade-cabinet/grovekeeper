@@ -1,0 +1,47 @@
+{
+  "url": "http://localhost:4173/",
+  "capturedAt": "2026-04-25T18:09:17.766Z",
+  "preset": "desktop",
+  "runs": [
+    {
+      "file": "lhr-1777140513165.json",
+      "fetchTime": "2026-04-25T18:08:24.781Z",
+      "perf": 0.96,
+      "bp": 1,
+      "a11y": 0.92,
+      "seo": 0.82
+    },
+    {
+      "file": "lhr-1777140523718.json",
+      "fetchTime": "2026-04-25T18:08:35.574Z",
+      "perf": 0.97,
+      "bp": 1,
+      "a11y": 0.92,
+      "seo": 0.82
+    },
+    {
+      "file": "lhr-1777140534033.json",
+      "fetchTime": "2026-04-25T18:08:45.896Z",
+      "perf": 0.97,
+      "bp": 1,
+      "a11y": 0.92,
+      "seo": 0.82
+    }
+  ],
+  "averages": {
+    "performance": 0.9666666666666667,
+    "bestPractices": 1,
+    "accessibility": 0.92,
+    "seo": 0.82
+  },
+  "budgets": {
+    "performance": {
+      "min": 0.9,
+      "status": "PASS"
+    },
+    "bestPractices": {
+      "min": 0.95,
+      "status": "PASS"
+    }
+  }
+}

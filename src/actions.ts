@@ -1,8 +1,9 @@
 import { createActions } from "koota";
+import { playSound } from "@/audio";
 import { emptyResources, type ResourceType } from "@/config/resources";
-import { setGroveData, type GroveData } from "@/db/snapshot";
 import { getToolById } from "@/config/tools";
 import { getSpeciesById } from "@/config/trees";
+import { type GroveData, setGroveData } from "@/db/snapshot";
 import {
   advanceFestivalChallenge,
   type EventContext,
@@ -23,13 +24,12 @@ import {
   canAffordExpansion,
   getNextExpansionTier,
 } from "@/systems/gridExpansion";
-import { audioManager } from "@/systems/AudioManager";
 import { checkNewUnlocks } from "@/systems/levelUnlocks";
-import { hapticHeavy } from "@/systems/platform";
 import {
   initializeMarketEventState,
   updateMarketEvents,
 } from "@/systems/marketEvents";
+import { hapticHeavy } from "@/systems/platform";
 import {
   calculatePrestigeBonus,
   canPrestige,
@@ -92,7 +92,13 @@ export { levelFromXp, totalXpForLevel, xpToNext } from "@/shared/utils/xp";
 
 import { levelFromXp } from "@/shared/utils/xp";
 
-type GameScreenValue = "menu" | "playing" | "paused" | "seedSelect" | "rules";
+type GameScreenValue =
+  | "menu"
+  | "new-game"
+  | "playing"
+  | "paused"
+  | "seedSelect"
+  | "rules";
 
 /**
  * Shape of a hydration payload supplied by the SQLite adapter. All fields are
@@ -256,7 +262,7 @@ export const gameActions = createActions((world) => {
 
           queueMicrotask(() => {
             showToast(`Level ${newLevel}!`, "success");
-            audioManager.play("levelUp");
+            playSound("levelUp");
             // Fire-and-forget: haptic is async but we don't want to block
             // the microtask chain on a native bridge roundtrip.
             void hapticHeavy();
@@ -376,9 +382,7 @@ export const gameActions = createActions((world) => {
       // ── Achievements & tracking lists ────────────────────────
       unlockAchievement: (id: string) => {
         world.set(Achievements, (prev) =>
-          prev.items.includes(id)
-            ? prev
-            : { items: [...prev.items, id] },
+          prev.items.includes(id) ? prev : { items: [...prev.items, id] },
         );
       },
 
@@ -628,8 +632,7 @@ export const gameActions = createActions((world) => {
         world.set(Difficulty, { id: "normal", permadeath: false });
         // Time: Spring (month 3), Day 1, 8:00 AM — matches legacy
         // Zustand INITIAL_GAME_TIME. Calculation: 60 days (2 months) + 8h.
-        const initialGameTimeSeconds =
-          (2 * 30 * 24 * 60 + 8 * 60) * 60;
+        const initialGameTimeSeconds = (2 * 30 * 24 * 60 + 8 * 60) * 60;
         world.set(Time, {
           gameTimeMicroseconds: initialGameTimeSeconds * 1_000_000,
           last: 0,
@@ -678,7 +681,7 @@ export const gameActions = createActions((world) => {
         // T33: quest-complete feedback. "success" chord is distinct from
         // "levelUp" fanfare and "achievement" bell; reuses existing sound
         // rather than synthesizing another Tone.js graph.
-        audioManager.play("success");
+        playSound("success");
       },
       setLastQuestRefresh: (time: number) => {
         world.set(Quests, (prev) => ({ ...prev, lastQuestRefresh: time }));

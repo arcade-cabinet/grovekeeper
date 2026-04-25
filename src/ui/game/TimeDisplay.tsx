@@ -35,7 +35,11 @@ export const TimeDisplay = (props: TimeDisplayProps) => {
   };
 
   return (
-    <div class="flex items-center gap-1.5" role="region" aria-label="Time and season">
+    <div
+      class="flex items-center gap-1.5"
+      role="region"
+      aria-label="Time and season"
+    >
       <div
         role="group"
         class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
@@ -60,8 +64,12 @@ export const TimeDisplay = (props: TimeDisplayProps) => {
         }}
       >
         <span aria-hidden="true">{seasonIcons[time().season]}</span>
-        <span aria-hidden="true" class="hidden sm:inline capitalize">{time().season}</span>
-        <span aria-hidden="true" class="hidden xs:inline">D{time().day}</span>
+        <span aria-hidden="true" class="hidden sm:inline capitalize">
+          {time().season}
+        </span>
+        <span aria-hidden="true" class="hidden xs:inline">
+          D{time().day}
+        </span>
       </div>
     </div>
   );
@@ -79,8 +87,12 @@ export const TimeDisplayCompact = (props: TimeDisplayProps) => {
         color: "white",
       }}
     >
-      <span class="text-sm" aria-hidden="true">{getTimeIcon(time().hours)}</span>
-      <span class="text-sm" aria-hidden="true">{seasonIcons[time().season]}</span>
+      <span class="text-sm" aria-hidden="true">
+        {getTimeIcon(time().hours)}
+      </span>
+      <span class="text-sm" aria-hidden="true">
+        {seasonIcons[time().season]}
+      </span>
     </div>
   );
 };

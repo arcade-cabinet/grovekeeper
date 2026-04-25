@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
-import type { Spirit } from "@/config/spirits";
 import { COLORS } from "@/config/config";
+import type { Spirit } from "@/config/spirits";
 import {
   Dialog,
   DialogContent,
@@ -179,7 +179,11 @@ const SpiritOrb = (props: SpiritOrbProps) => {
           <radialGradient id="spirit-orb-grad" cx="38%" cy="32%" r="62%">
             <stop offset="0%" stop-color="white" stop-opacity="0.9" />
             <stop offset="45%" stop-color={props.orbColor} stop-opacity="1" />
-            <stop offset="100%" stop-color={props.haloColor} stop-opacity="0.85" />
+            <stop
+              offset="100%"
+              stop-color={props.haloColor}
+              stop-opacity="0.85"
+            />
           </radialGradient>
           <filter id="spirit-orb-glow">
             <feGaussianBlur stdDeviation="3" result="blur" />

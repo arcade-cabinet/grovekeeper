@@ -106,7 +106,10 @@ export const ToolWheel = (props: ToolWheelProps) => {
                         : COLORS.barkBrown,
                     }}
                   >
-                    {(toolIcons[tool.id] ?? (() => <RiToolsLine class="w-6 h-6" />))()}
+                    {(
+                      toolIcons[tool.id] ??
+                      (() => <RiToolsLine class="w-6 h-6" />)
+                    )()}
                   </div>
                   <span class="text-xs mt-1" style={{ color: COLORS.soilDark }}>
                     {tool.name}

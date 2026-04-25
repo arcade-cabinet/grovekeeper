@@ -32,7 +32,8 @@ type SheetProps = ParentProps<{
 
 function Sheet(props: SheetProps) {
   const isControlled = () => props.open !== undefined;
-  const open = () => (isControlled() ? (props.open as boolean) : !!internalOpen);
+  const open = () =>
+    isControlled() ? (props.open as boolean) : !!internalOpen;
   let internalOpen = !!props.defaultOpen;
   const setOpen = (v: boolean) => {
     if (!isControlled()) internalOpen = v;

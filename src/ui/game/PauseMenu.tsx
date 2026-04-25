@@ -38,8 +38,11 @@ import {
   DialogTitle,
 } from "@/ui/primitives/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/primitives/tabs";
-import { FarmerMascot } from "./FarmerMascot";
 import { RulesModal } from "./RulesModal";
+
+// FarmerMascot deleted; journey wave replaces this UI.
+const FarmerMascot = (_: { size?: number; animate?: boolean }) => null;
+
 import { StatsDashboard } from "./StatsDashboard";
 import { showToast } from "./Toast";
 
@@ -157,7 +160,9 @@ export const PauseMenu = (props: PauseMenuProps) => {
             class="flex items-center gap-3"
             style={{ color: COLORS.soilDark }}
           >
-            <span aria-hidden="true"><FarmerMascot size={40} animate={false} /></span>
+            <span aria-hidden="true">
+              <FarmerMascot size={40} animate={false} />
+            </span>
             Grove Stats
           </DialogTitle>
         </DialogHeader>
@@ -621,9 +626,7 @@ export const PauseMenu = (props: PauseMenuProps) => {
                   type="button"
                   class="w-14 h-8 rounded-full relative p-2 min-h-[44px] min-w-[44px] motion-safe:transition-colors"
                   style={{
-                    background: soundEnabled()
-                      ? COLORS.forestGreen
-                      : "#D1D5DB",
+                    background: soundEnabled() ? COLORS.forestGreen : "#D1D5DB",
                   }}
                   onClick={() => setSoundEnabled(!soundEnabled())}
                   role="switch"
@@ -633,9 +636,7 @@ export const PauseMenu = (props: PauseMenuProps) => {
                   <span
                     class="absolute top-1 w-6 h-6 bg-white rounded-full shadow motion-safe:transition-transform"
                     style={{
-                      left: soundEnabled()
-                        ? "calc(100% - 1.75rem)"
-                        : "0.25rem",
+                      left: soundEnabled() ? "calc(100% - 1.75rem)" : "0.25rem",
                     }}
                   />
                 </button>

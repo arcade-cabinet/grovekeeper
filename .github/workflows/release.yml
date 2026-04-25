@@ -12,8 +12,112 @@ jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+      upload_url: ${{ steps.rp.outputs.upload_url }}
     steps:
       - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
+        id: rp
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # Build and attach production assets to the GitHub Release when
+  # release-please creates one (i.e. when a release PR merges).
+  # This is the canonical build for a release - cd.yml deploys what this produces.
+  build-release:
+    name: Build & Attach Release Assets
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          lfs: true
+
+      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build production bundle
+        run: pnpm build
+        env:
+          NODE_ENV: production
+
+      - name: Package web build as tarball
+        run: tar -czf grovekeeper-web.tar.gz dist/
+
+      - name: Upload web tarball to release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: grovekeeper-web.tar.gz
+
+      # Note: cd.yml builds its own dist/ on push:main with `lfs: true`,
+      # so we don't bridge an artifact across workflows. (An earlier
+      # iteration tried `actions/upload-pages-artifact` here, but that
+      # produces a special Pages-typed artifact only consumable by
+      # `actions/deploy-pages` in the same workflow run, which cd.yml
+      # is not.)
+
+      # T103 follow-up: Android APK release build
+      # Gated on android/ being present (same as ci.yml android-apk job).
+      - name: Check for Android project
+        id: android-check
+        run: |
+          if [ -f android/gradlew ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up JDK 21 (Temurin)
+        if: steps.android-check.outputs.present == 'true'
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        if: steps.android-check.outputs.present == 'true'
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          api-level: 34
+          build-tools-version: '34.0.0'
+
+      - name: Sync Capacitor
+        if: steps.android-check.outputs.present == 'true'
+        run: npx cap sync android
+
+      - name: Build release APK
+        if: steps.android-check.outputs.present == 'true'
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      # Rename the unsigned APK so it's immediately obvious to anyone
+      # downloading the artifact that it cannot be installed on a real
+      # Android device. CI APK signing is a follow-up — until that lands,
+      # this artifact is internal-distribution only.
+      - name: Rename unsigned APK for clarity
+        if: steps.android-check.outputs.present == 'true'
+        run: |
+          src=android/app/build/outputs/apk/release/app-release-unsigned.apk
+          dst=android/app/build/outputs/apk/release/app-release-unsigned-internal.apk
+          if [ -f "$src" ]; then
+            mv "$src" "$dst"
+          fi
+
+      - name: Upload APK to release
+        if: steps.android-check.outputs.present == 'true'
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: android/app/build/outputs/apk/release/app-release-unsigned-internal.apk

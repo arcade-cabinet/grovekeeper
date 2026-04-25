@@ -1,5 +1,12 @@
 import type { JSX, ParentProps } from "solid-js";
-import { createContext, createEffect, onCleanup, Show, splitProps, useContext } from "solid-js";
+import {
+  createContext,
+  createEffect,
+  onCleanup,
+  Show,
+  splitProps,
+  useContext,
+} from "solid-js";
 import { Portal } from "solid-js/web";
 
 import { cn } from "@/shared/utils";
@@ -100,9 +107,7 @@ function DialogOverlay(props: JSX.HTMLAttributes<HTMLDivElement>) {
   );
 }
 
-function DialogContent(
-  props: ParentProps<JSX.HTMLAttributes<HTMLDivElement>>,
-) {
+function DialogContent(props: ParentProps<JSX.HTMLAttributes<HTMLDivElement>>) {
   const ctx = useDialogCtx();
   const [local, rest] = splitProps(props, ["class", "children"]);
 

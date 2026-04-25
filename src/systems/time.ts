@@ -197,16 +197,18 @@ const getSeasonFromMonth = (month: number): Season => {
   return "winter";
 };
 
-const getSeasonProgress = (month: number, day: number): number => {
-  const seasonStartMonths: Record<Season, number> = {
-    spring: 3,
-    summer: 6,
-    autumn: 9,
-    winter: 12,
-  };
+// Module-scope constant — avoids allocating a new Record every frame in
+// getSeasonProgress(), which is called from getGameTime() (hot path).
+const SEASON_START_MONTHS: Record<Season, number> = {
+  spring: 3,
+  summer: 6,
+  autumn: 9,
+  winter: 12,
+};
 
+const getSeasonProgress = (month: number, day: number): number => {
   const season = getSeasonFromMonth(month);
-  const startMonth = seasonStartMonths[season];
+  const startMonth = SEASON_START_MONTHS[season];
 
   // Handle winter wrapping
   if (season === "winter" && month <= 2) {
@@ -281,156 +283,196 @@ export interface SkyColors {
   ambient: string;
 }
 
+// ---------------------------------------------------------------------------
+// Sky color palette — module-scope constants (no allocation per frame).
+// Previously defined inside getSkyColors() causing 8+ object allocations
+// every frame.  See docs/PERF_AUDIT.md.
+// ---------------------------------------------------------------------------
+
+type SkyColorKey = {
+  zenith: string;
+  horizon: string;
+  sun: string;
+  ambient: string;
+};
+
+const SKY_MIDNIGHT: SkyColorKey = {
+  zenith: "#0a1628",
+  horizon: "#1a2a4a",
+  sun: "#2a3a5a",
+  ambient: "#1a2030",
+};
+const SKY_DAWN: SkyColorKey = {
+  zenith: "#2a3a5a",
+  horizon: "#ff9966",
+  sun: "#ffcc88",
+  ambient: "#4a4a60",
+};
+const SKY_MORNING: SkyColorKey = {
+  zenith: "#4a90d9",
+  horizon: "#87ceeb",
+  sun: "#fff5e6",
+  ambient: "#6090b0",
+};
+const SKY_NOON: SkyColorKey = {
+  zenith: "#1e90ff",
+  horizon: "#87ceeb",
+  sun: "#ffffff",
+  ambient: "#80b0d0",
+};
+const SKY_AFTERNOON: SkyColorKey = {
+  zenith: "#4a90d9",
+  horizon: "#87ceeb",
+  sun: "#fff8dc",
+  ambient: "#6090b0",
+};
+const SKY_DUSK: SkyColorKey = {
+  zenith: "#5a4a7a",
+  horizon: "#ff7744",
+  sun: "#ff9900",
+  ambient: "#6a5a70",
+};
+const SKY_EVENING: SkyColorKey = {
+  zenith: "#2a2a4a",
+  horizon: "#4a3a5a",
+  sun: "#ff6644",
+  ambient: "#3a3a50",
+};
+const SKY_NIGHT: SkyColorKey = {
+  zenith: "#0a1628",
+  horizon: "#1a2a4a",
+  sun: "#3a4a6a",
+  ambient: "#1a2030",
+};
+
+// Reusable output buffer for getSkyColors — mutated in place each frame.
+// Callers must read all fields before the next getSkyColors() call.
+const _skyColorsOut: SkyColors = {
+  zenith: "#0a1628",
+  horizon: "#1a2a4a",
+  sun: "#2a3a5a",
+  ambient: "#1a2030",
+};
+
+// ---------------------------------------------------------------------------
+// Allocation-free hex color helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse two-character hex substring at position `start` into an integer.
+ * Zero-allocation replacement for parseInt(result[n], 16) inside hexToRgb.
+ */
+function hexByte(s: string, start: number): number {
+  const hi = s.charCodeAt(start);
+  const lo = s.charCodeAt(start + 1);
+  const hiN =
+    hi >= 48 && hi <= 57 ? hi - 48 : hi >= 65 && hi <= 70 ? hi - 55 : hi - 87;
+  const loN =
+    lo >= 48 && lo <= 57 ? lo - 48 : lo >= 65 && lo <= 70 ? lo - 55 : lo - 87;
+  return (hiN << 4) | loN;
+}
+
+/** Hex digit character for value 0-15 (lowercase). */
+const HEX_CHARS = "0123456789abcdef";
+
+/**
+ * Format an RGB triplet as a #rrggbb string.
+ * Uses character lookup instead of .toString(16) + template literal,
+ * avoiding the intermediate array allocation from the old [r,g,b].map().join() pattern.
+ */
+function rgbToHexStr(r: number, g: number, b: number): string {
+  return (
+    "#" +
+    HEX_CHARS[(r >> 4) & 0xf] +
+    HEX_CHARS[r & 0xf] +
+    HEX_CHARS[(g >> 4) & 0xf] +
+    HEX_CHARS[g & 0xf] +
+    HEX_CHARS[(b >> 4) & 0xf] +
+    HEX_CHARS[b & 0xf]
+  );
+}
+
+/**
+ * Lerp a single hex color channel between two #rrggbb strings.
+ * Uses hexByte() for allocation-free parsing.
+ */
+function lerpColorStr(a: string, b: string, t: number): string {
+  const ao = a.charCodeAt(0) === 0x23 ? 1 : 0;
+  const bo = b.charCodeAt(0) === 0x23 ? 1 : 0;
+  const ar = hexByte(a, ao);
+  const ag = hexByte(a, ao + 2);
+  const ab = hexByte(a, ao + 4);
+  const br = hexByte(b, bo);
+  const bg = hexByte(b, bo + 2);
+  const bb = hexByte(b, bo + 4);
+  return rgbToHexStr(
+    Math.round(ar + (br - ar) * t),
+    Math.round(ag + (bg - ag) * t),
+    Math.round(ab + (bb - ab) * t),
+  );
+}
+
+/**
+ * Write the lerped sky colors between `a` and `b` into `_skyColorsOut`.
+ * Called instead of `lerpColors()` to avoid allocating a new SkyColors object.
+ */
+function lerpColorsInto(a: SkyColorKey, b: SkyColorKey, t: number): void {
+  _skyColorsOut.zenith = lerpColorStr(a.zenith, b.zenith, t);
+  _skyColorsOut.horizon = lerpColorStr(a.horizon, b.horizon, t);
+  _skyColorsOut.sun = lerpColorStr(a.sun, b.sun, t);
+  _skyColorsOut.ambient = lerpColorStr(a.ambient, b.ambient, t);
+}
+
 export const getSkyColors = (time: GameTime): SkyColors => {
   const { hours, minutes } = time;
   const hourFraction = hours + minutes / 60;
 
-  // Base colors for different times
-  const timeColors: Record<
-    string,
-    { zenith: string; horizon: string; sun: string; ambient: string }
-  > = {
-    midnight: {
-      zenith: "#0a1628",
-      horizon: "#1a2a4a",
-      sun: "#2a3a5a",
-      ambient: "#1a2030",
-    },
-    dawn: {
-      zenith: "#2a3a5a",
-      horizon: "#ff9966",
-      sun: "#ffcc88",
-      ambient: "#4a4a60",
-    },
-    morning: {
-      zenith: "#4a90d9",
-      horizon: "#87ceeb",
-      sun: "#fff5e6",
-      ambient: "#6090b0",
-    },
-    noon: {
-      zenith: "#1e90ff",
-      horizon: "#87ceeb",
-      sun: "#ffffff",
-      ambient: "#80b0d0",
-    },
-    afternoon: {
-      zenith: "#4a90d9",
-      horizon: "#87ceeb",
-      sun: "#fff8dc",
-      ambient: "#6090b0",
-    },
-    dusk: {
-      zenith: "#5a4a7a",
-      horizon: "#ff7744",
-      sun: "#ff9900",
-      ambient: "#6a5a70",
-    },
-    evening: {
-      zenith: "#2a2a4a",
-      horizon: "#4a3a5a",
-      sun: "#ff6644",
-      ambient: "#3a3a50",
-    },
-    night: {
-      zenith: "#0a1628",
-      horizon: "#1a2a4a",
-      sun: "#3a4a6a",
-      ambient: "#1a2030",
-    },
-  };
-
-  // Get time-based colors
-  let colors: typeof timeColors.noon;
   if (hourFraction < 5 || hourFraction >= 22) {
-    colors = timeColors.midnight;
+    // No lerp — copy reference fields directly into output buffer
+    _skyColorsOut.zenith = SKY_MIDNIGHT.zenith;
+    _skyColorsOut.horizon = SKY_MIDNIGHT.horizon;
+    _skyColorsOut.sun = SKY_MIDNIGHT.sun;
+    _skyColorsOut.ambient = SKY_MIDNIGHT.ambient;
   } else if (hourFraction < 6) {
-    colors = lerpColors(timeColors.midnight, timeColors.dawn, hourFraction - 5);
+    lerpColorsInto(SKY_MIDNIGHT, SKY_DAWN, hourFraction - 5);
   } else if (hourFraction < 8) {
-    colors = lerpColors(
-      timeColors.dawn,
-      timeColors.morning,
-      (hourFraction - 6) / 2,
-    );
+    lerpColorsInto(SKY_DAWN, SKY_MORNING, (hourFraction - 6) / 2);
   } else if (hourFraction < 11) {
-    colors = lerpColors(
-      timeColors.morning,
-      timeColors.noon,
-      (hourFraction - 8) / 3,
-    );
+    lerpColorsInto(SKY_MORNING, SKY_NOON, (hourFraction - 8) / 3);
   } else if (hourFraction < 14) {
-    colors = timeColors.noon;
+    _skyColorsOut.zenith = SKY_NOON.zenith;
+    _skyColorsOut.horizon = SKY_NOON.horizon;
+    _skyColorsOut.sun = SKY_NOON.sun;
+    _skyColorsOut.ambient = SKY_NOON.ambient;
   } else if (hourFraction < 17) {
-    colors = lerpColors(
-      timeColors.noon,
-      timeColors.afternoon,
-      (hourFraction - 14) / 3,
-    );
+    lerpColorsInto(SKY_NOON, SKY_AFTERNOON, (hourFraction - 14) / 3);
   } else if (hourFraction < 19) {
-    colors = lerpColors(
-      timeColors.afternoon,
-      timeColors.dusk,
-      (hourFraction - 17) / 2,
-    );
+    lerpColorsInto(SKY_AFTERNOON, SKY_DUSK, (hourFraction - 17) / 2);
   } else if (hourFraction < 21) {
-    colors = lerpColors(
-      timeColors.dusk,
-      timeColors.evening,
-      (hourFraction - 19) / 2,
-    );
+    lerpColorsInto(SKY_DUSK, SKY_EVENING, (hourFraction - 19) / 2);
   } else {
-    colors = lerpColors(
-      timeColors.evening,
-      timeColors.night,
-      hourFraction - 21,
-    );
+    lerpColorsInto(SKY_EVENING, SKY_NIGHT, hourFraction - 21);
   }
 
-  return colors;
+  return _skyColorsOut;
 };
 
-// Helper to lerp between color objects
-const lerpColors = (
-  a: { zenith: string; horizon: string; sun: string; ambient: string },
-  b: { zenith: string; horizon: string; sun: string; ambient: string },
-  t: number,
-): { zenith: string; horizon: string; sun: string; ambient: string } => {
+// ---------------------------------------------------------------------------
+// Legacy helpers retained for external callers (getSeasonalColors, etc.)
+// These are not in the per-frame hot path so allocations are acceptable.
+// ---------------------------------------------------------------------------
+
+const _hexToRgb = (hex: string): { r: number; g: number; b: number } => {
+  const start = hex.charCodeAt(0) === 0x23 ? 1 : 0;
   return {
-    zenith: lerpColor(a.zenith, b.zenith, t),
-    horizon: lerpColor(a.horizon, b.horizon, t),
-    sun: lerpColor(a.sun, b.sun, t),
-    ambient: lerpColor(a.ambient, b.ambient, t),
+    r: hexByte(hex, start),
+    g: hexByte(hex, start + 2),
+    b: hexByte(hex, start + 4),
   };
 };
 
-const lerpColor = (a: string, b: string, t: number): string => {
-  const aRgb = hexToRgb(a);
-  const bRgb = hexToRgb(b);
-  const r = Math.round(aRgb.r + (bRgb.r - aRgb.r) * t);
-  const g = Math.round(aRgb.g + (bRgb.g - aRgb.g) * t);
-  const blue = Math.round(aRgb.b + (bRgb.b - aRgb.b) * t);
-  return rgbToHex(r, g, blue);
-};
-
-const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
-    : { r: 0, g: 0, b: 0 };
-};
-
-const rgbToHex = (r: number, g: number, b: number): string => {
-  return `#${[r, g, b]
-    .map((x) => {
-      const hex = x.toString(16);
-      return hex.length === 1 ? `0${hex}` : hex;
-    })
-    .join("")}`;
-};
+const _rgbToHex = (r: number, g: number, b: number): string =>
+  rgbToHexStr(r, g, b);
 
 // Get seasonal colors for trees and ground
 export interface SeasonalColors {

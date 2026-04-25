@@ -43,7 +43,9 @@ export const WeatherForecast = (props: WeatherForecastProps) => {
         color: COLORS.soilDark,
       }}
     >
-      <span class="text-sm" aria-hidden="true">{WEATHER_ICONS[props.currentWeather]}</span>
+      <span class="text-sm" aria-hidden="true">
+        {WEATHER_ICONS[props.currentWeather]}
+      </span>
       <span aria-hidden="true">{WEATHER_LABELS[props.currentWeather]}</span>
       <Show when={props.currentWeather !== "clear"}>
         <span class="opacity-60">~{minutes()}m</span>

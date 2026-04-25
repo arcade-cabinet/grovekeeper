@@ -1,0 +1,29 @@
+{
+  "_comment": "Allow-list of itch.io pack titles to download via scripts/fetch-itch.mjs. Mirrors the relevant subset of voxel-realms/scripts/fetch-itch-audio.mjs ALLOW_LIST plus the Chaos-Slice voxel packs needed for Grovekeeper biomes. Audio packs cover music, UI, footsteps, inventory, impact, whoosh, magic; voxel packs cover characters, peaceful/hostile creatures, props, flora.",
+  "audio": [
+    "Retro PSX Footstep SFX Pack (40 Lo-Fi Foley Sounds)",
+    "UI Sound Effects Pack – 40 Game Interface Sounds (WAV + MP3)",
+    "Inventory & Item Sound Effects Pack",
+    "Impact & Hit Sound Effects Pack",
+    "Cinematic Whoosh SFX Pack – 42 Fast Transition Sounds",
+    "Fantasy Magic Spell Sound Effects Pack",
+    "Lo-Fi Chill Game Music Pack – 10 Relaxed Loops",
+    "Toys in the Attic | A Music Box Music Pack",
+    "Dark Ambient Game Music Pack"
+  ],
+  "voxel_models": [
+    "Voxel Forest Animals Pack",
+    "Voxel Ocean Animals Pack",
+    "Voxel Birds Pack",
+    "Voxel Dwarf Characters Pack",
+    "Voxel Mermaid Characters Pack",
+    "Voxel Neanderthal Characters Pack",
+    "Voxel Mythical Creatures Pack",
+    "Voxel Beekeeper Pack",
+    "Farm Animals Pack",
+    "Voxel Props Pack",
+    "All Trees Pack",
+    "New Plants",
+    "Voxel Weapons Pack"
+  ]
+}

@@ -17,6 +17,10 @@
 import { actions } from "@/actions";
 import { koota } from "@/koota";
 import {
+  buildDebugActions,
+  type GroveDebugActions,
+} from "@/shared/utils/debugActions";
+import {
   Achievements,
   CurrentDay,
   CurrentSeason,
@@ -166,9 +170,7 @@ function buildSnapshot(): WorldSnapshot {
 
   // Entity counts
   const harvestableCount = koota.query(Harvestable).length;
-  const gridCellCount = koota
-    .query()
-    .filter((e) => e.id() !== 0).length;
+  const gridCellCount = koota.query().filter((e) => e.id() !== 0).length;
 
   // Player entity
   const playerEntity = koota.queryFirst(IsPlayer, FarmerState);
@@ -251,7 +253,13 @@ function buildSnapshot(): WorldSnapshot {
 
 export interface GroveDebugGlobals {
   snapshot: () => WorldSnapshot;
-  actions: ReturnType<typeof actions>;
+  /**
+   * Merged action surface: production gameActions + dev-only debug actions
+   * (teleportPlayer, triggerSpiritGreeting, lightHearth, etc.). The debug
+   * additions are gated behind `installDebugGlobals`'s DEV / `?debug`
+   * check, so they never reach a production console.
+   */
+  actions: ReturnType<typeof actions> & GroveDebugActions;
 }
 
 declare global {
@@ -278,7 +286,7 @@ export function installDebugGlobals(): void {
 
   const grove: GroveDebugGlobals = {
     snapshot: buildSnapshot,
-    actions: actions(),
+    actions: { ...actions(), ...buildDebugActions() },
   };
 
   window.__grove = grove;

@@ -11,9 +11,9 @@
  */
 import type { Entity } from "koota";
 import { beforeEach, describe, expect, it } from "vitest";
+import { actions as gameActions } from "@/actions";
 import { MAX_STAGE } from "@/config/config";
 import { DIFFICULTY_TIERS, getDifficultyById } from "@/config/difficulty";
-import { actions as gameActions } from "@/actions";
 import { destroyAllEntitiesExceptWorld, koota, spawnPlayer } from "@/koota";
 import { spawnTree } from "@/startup";
 import { Difficulty, FarmerState, Harvestable, Tree } from "@/traits";

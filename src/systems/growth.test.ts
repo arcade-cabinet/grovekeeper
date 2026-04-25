@@ -5,7 +5,10 @@ import { spawnGridCell, spawnTree } from "@/startup";
 import { Renderable, Tree } from "@/traits";
 import { calcGrowthRate, getStageScale, growthSystem } from "./growth";
 
-function setTree(entity: Entity, patch: Partial<ReturnType<typeof Tree>[1]>): void {
+function setTree(
+  entity: Entity,
+  patch: Partial<ReturnType<typeof Tree>[1]>,
+): void {
   // biome-ignore lint/suspicious/noExplicitAny: schema shape passthrough
   entity.set(Tree, { ...entity.get(Tree), ...(patch as any) });
 }
@@ -416,9 +419,10 @@ describe("Growth System (5-Stage)", () => {
 
       growthSystem(1, "summer");
 
-      expect(
-        fern.get(Tree).progress / loneFern.get(Tree).progress,
-      ).toBeCloseTo(1.3, 1);
+      expect(fern.get(Tree).progress / loneFern.get(Tree).progress).toBeCloseTo(
+        1.3,
+        1,
+      );
     });
 
     it("mystic-fern bonus caps at +60% (4 neighbors)", () => {
@@ -433,9 +437,10 @@ describe("Growth System (5-Stage)", () => {
 
       growthSystem(1, "summer");
 
-      expect(
-        fern.get(Tree).progress / loneFern.get(Tree).progress,
-      ).toBeCloseTo(1.6, 1);
+      expect(fern.get(Tree).progress / loneFern.get(Tree).progress).toBeCloseTo(
+        1.6,
+        1,
+      );
     });
 
     it("non-silver-birch does NOT get water bonus", () => {
@@ -446,10 +451,7 @@ describe("Growth System (5-Stage)", () => {
 
       growthSystem(1, "summer");
 
-      expect(oak.get(Tree).progress).toBeCloseTo(
-        farOak.get(Tree).progress,
-        5,
-      );
+      expect(oak.get(Tree).progress).toBeCloseTo(farOak.get(Tree).progress, 5);
     });
 
     it("non-mystic-fern does NOT get adjacency bonus", () => {
@@ -460,10 +462,7 @@ describe("Growth System (5-Stage)", () => {
 
       growthSystem(1, "summer");
 
-      expect(oak.get(Tree).progress).toBeCloseTo(
-        loneOak.get(Tree).progress,
-        5,
-      );
+      expect(oak.get(Tree).progress).toBeCloseTo(loneOak.get(Tree).progress, 5);
     });
   });
 });

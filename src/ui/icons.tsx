@@ -139,10 +139,7 @@ export const RiBuilding2Line = (p: IconProps) =>
   );
 
 export const RiMenuLine = (p: IconProps) =>
-  base(
-    <path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" />,
-    p.class,
-  );
+  base(<path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z" />, p.class);
 
 export const RiFlagLine = (p: IconProps) =>
   base(

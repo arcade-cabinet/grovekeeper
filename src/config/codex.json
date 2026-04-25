@@ -1,6 +1,10 @@
 {
   "discoveryTiers": {
-    "0": { "tier": 0, "name": "Unknown", "description": "A mysterious species..." },
+    "0": {
+      "tier": 0,
+      "name": "Unknown",
+      "description": "A mysterious species..."
+    },
     "1": {
       "tier": 1,
       "name": "Discovered",
@@ -266,7 +270,12 @@
       "name": "Enchanted",
       "description": "Groves touched by ancient magic. Unusual species grow here that cannot survive elsewhere.",
       "climate": "Mysterious, variable",
-      "nativeSpecies": ["mystic-fern", "crystal-oak", "moonwood-ash", "worldtree"]
+      "nativeSpecies": [
+        "mystic-fern",
+        "crystal-oak",
+        "moonwood-ash",
+        "worldtree"
+      ]
     }
   ]
 }
