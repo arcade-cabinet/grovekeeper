@@ -12,5 +12,16 @@
     "dirt": 3,
     "stone": 4,
     "wildflower": 5
+  },
+  "streaming": {
+    "desktop": { "activeRadius": 3, "bufferRadius": 5 },
+    "mobile": { "activeRadius": 2, "bufferRadius": 3 },
+    "spawnsPerFrame": 2,
+    "despawnsPerFrame": 2,
+    "biomeWeights": {
+      "meadow": 50,
+      "forest": 30,
+      "coast": 20
+    }
   }
 }

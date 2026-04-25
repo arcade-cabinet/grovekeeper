@@ -227,7 +227,7 @@ describe("PlayerActor", () => {
       expect(player.clip).toBe(PLAYER_IDLE_CLIP);
     });
 
-    it("clamps position inside the supplied bounds", async () => {
+    it("snaps Y to the supplied surfaceY while moving (Wave 9 streamed terrain)", async () => {
       const { PlayerActor, PLAYER_MOVE_SPEED } = await import("./PlayerActor");
       const actor = createMockActor();
       const input = fakeInputManager({ x: 1, z: 0 });
@@ -235,14 +235,15 @@ describe("PlayerActor", () => {
         // biome-ignore lint/suspicious/noExplicitAny: cast
         actor as any,
         {
-          spawn: { x: 0, y: 6, z: 0 },
+          spawn: { x: 0, y: 999, z: 0 },
           inputManager: input,
-          bounds: { minX: -1, maxX: 1, minZ: -1, maxZ: 1, groundY: 6 },
+          surfaceY: 6,
         },
       );
       player.awake();
+      // Walk far — XZ is now unbounded, only Y is pinned.
       for (let i = 0; i < 100; i++) player.update(50);
-      expect(actor.object3D.position.x).toBeLessThanOrEqual(1);
+      expect(actor.object3D.position.x).toBeGreaterThan(10);
       expect(actor.object3D.position.y).toBe(6);
       expect(PLAYER_MOVE_SPEED).toBeGreaterThan(0);
     });

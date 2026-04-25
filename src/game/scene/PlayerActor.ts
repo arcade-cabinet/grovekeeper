@@ -16,10 +16,12 @@
  * `src/scene/player-behavior.ts`):
  *   - WASD / virtual joystick → 2D move vector via `InputManager`.
  *   - `position += move * speed * dt` per frame.
- *   - Position is clamped to the chunk's XZ bounds and snapped to the
- *     surface Y. This is a Wave-7 placeholder: proper voxel collision
- *     lands when chunk streaming does (Wave 9). Documented as a known
- *     scaling cap in the spec.
+ *   - XZ are unbounded — Wave 9's chunk streamer guarantees there's
+ *     always a chunk underfoot, so the player walks freely across the
+ *     infinite biome patchwork. Y is snapped to the shared surface
+ *     value. Real per-voxel collision is a future wave; until then,
+ *     all biomes share `world.config.json#groundY` so this single
+ *     `surfaceY` is correct everywhere.
  *   - Model rotates to face the move direction with a per-frame yaw
  *     lerp so the turn isn't instantaneous.
  *
@@ -54,9 +56,13 @@ export interface PlayerSpawn {
 }
 
 /**
- * Axis-aligned box the player is clamped to. Wave 7 just hands in the
- * meadow chunk's bounds; Wave 9 will hand in the streamed neighbourhood
- * once that exists.
+ * Wave 9 removed the XZ axis-aligned-box clamp; the player roams the
+ * streamed grid freely. The bounds interface is kept exported as a
+ * deprecated stub for any out-of-tree caller that still references it,
+ * but `PlayerActor` no longer reads from it.
+ *
+ * @deprecated Removed in Wave 9. Use `PlayerActorOptions.surfaceY`
+ * to pin the Y axis; XZ is unbounded.
  */
 export interface PlayerBounds {
   minX: number;
@@ -71,8 +77,13 @@ export interface PlayerActorOptions {
   spawn: PlayerSpawn;
   /** Optional — falls back to standing still + idle if omitted. */
   inputManager?: InputManager;
-  /** Optional — falls back to no clamping if omitted. */
-  bounds?: PlayerBounds;
+  /**
+   * Y to snap the actor's feet to every frame the player is moving.
+   * Wave 9's biomes all share `world.config.json#groundY` so a single
+   * value is correct everywhere; future waves with elevation variation
+   * will replace this with a chunk-aware lookup.
+   */
+  surfaceY?: number;
 }
 
 /** Default idle clip name in `gardener.gltf`. */
@@ -109,7 +120,7 @@ export class PlayerActor extends ActorComponent {
   private spawn: PlayerSpawn;
   private renderer: ModelRenderer;
   private input: InputManager | null;
-  private bounds: PlayerBounds | null;
+  private surfaceY: number | null;
 
   /**
    * Tracks the currently *requested* clip so we don't spam
@@ -124,7 +135,7 @@ export class PlayerActor extends ActorComponent {
     super({ actor, typeName: "PlayerActor" });
     this.spawn = options.spawn;
     this.input = options.inputManager ?? null;
-    this.bounds = options.bounds ?? null;
+    this.surfaceY = options.surfaceY ?? null;
 
     // Place the actor's root at the spawn point. The model's feet sit
     // at the actor origin (the Gardener GLTF is authored y-up,
@@ -161,11 +172,13 @@ export class PlayerActor extends ActorComponent {
 
     if (moving) {
       // Translate kinematically. Magnitude carried through so analog
-      // joystick deflection translates to slower walk.
+      // joystick deflection translates to slower walk. XZ is
+      // unbounded — Wave 9's chunk streamer keeps the world filled
+      // wherever the player goes.
       const pos = this.actor.object3D.position;
       pos.x += move.x * PLAYER_MOVE_SPEED * dt;
       pos.z += move.z * PLAYER_MOVE_SPEED * dt;
-      this.applyBounds();
+      this.applySurfaceY();
 
       // Lerp yaw toward move direction. atan2(x, z) because our model
       // faces +Z by default and we measure rotation around Y.
@@ -198,15 +211,9 @@ export class PlayerActor extends ActorComponent {
 
   // ---- internals ----
 
-  private applyBounds(): void {
-    const b = this.bounds;
-    if (!b) return;
-    const pos = this.actor.object3D.position;
-    if (pos.x < b.minX) pos.x = b.minX;
-    else if (pos.x > b.maxX) pos.x = b.maxX;
-    if (pos.z < b.minZ) pos.z = b.minZ;
-    else if (pos.z > b.maxZ) pos.z = b.maxZ;
-    pos.y = b.groundY;
+  private applySurfaceY(): void {
+    if (this.surfaceY === null) return;
+    this.actor.object3D.position.y = this.surfaceY;
   }
 
   private lerpFacing(mx: number, mz: number): void {
