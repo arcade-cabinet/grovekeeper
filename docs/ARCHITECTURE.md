@@ -122,7 +122,7 @@ Small key-value settings that don't need a relational store:
 
 Full stack, top to bottom:
 
-```
+```text
 src/persistence/schema.ts        ← drizzle-orm typed schema
         ↓
 drizzle-orm                       ← type-safe query layer
@@ -405,7 +405,7 @@ Both `manifest.generated.ts` and `asset-inventory.md` are committed.
 
 ### Runtime layout
 
-```
+```text
 public/assets/
   tilesets/
     biomes/

@@ -18,10 +18,13 @@ progress.
   pass. TypeScript clean. Lighthouse landing Performance 96.7%, Best
   Practices 100%, Accessibility 92% (SEO 82% — warn-only). Three
   static surfaces (Landing, MainMenu, NewGame) score 12/12 on the
-  rubric. Thirteen in-world surfaces (gates 04–16) and the four
-  per-biome FPS measurements could not be captured in the headless
-  Chromium verification rig — the GameScene mount terminates the page
-  context. Diagnostic and recommendation in `docs/rc-journey/REVIEW.md`.
+  rubric. Software-WebGL flags (`--use-gl=swiftshader
+  --enable-unsafe-swiftshader`) are now wired in
+  `playwright.config.ts`, and the four per-biome FPS captures land in
+  `docs/rc-journey/perf.md` / `docs/rc-journey/perf.json`. The
+  thirteen in-world screenshot gates (04–16) remain to be captured in
+  a follow-up screenshot pass — see `docs/rc-journey/REVIEW.md` for the
+  current capture status.
 - **Currently deployed (1.0.0-alpha.1):** cozy 2.5D BabylonJS tree-tender
   with 9 hardcoded JSON zones at
   `https://arcade-cabinet.github.io/grovekeeper/`.
@@ -77,12 +80,12 @@ progress.
 
 ## Open items (cross-wave)
 
-- **Verification rig WebGL gap** — gates 04–16 and the four perf biomes
-  cannot be captured in headless Chromium because the Three.js scene
-  mount terminates the page context. Action: add software-WebGL flags to
-  `playwright.config.ts` (`--use-gl=swiftshader
-  --enable-unsafe-swiftshader`) on a follow-up so the rest of the rubric
-  can be filled in. This is verification infrastructure, not game polish.
+- **Verification rig WebGL** — software-WebGL flags
+  (`--use-gl=swiftshader --enable-unsafe-swiftshader`) are now wired in
+  `playwright.config.ts`. The four per-biome FPS captures are landing in
+  `docs/rc-journey/perf.md`. The 13 in-world screenshot gates (04–16)
+  remain to be exercised on the new rig — tracked as a follow-up
+  screenshot-capture pass, not a blocker on RC merge.
 - **SEO score (82%)** — Lighthouse warn-only. Likely missing meta-description
   or structured data on landing. Not a blocker; addressed in a later
   doc-polish pass.

@@ -55,7 +55,7 @@ The following systems exist in the current codebase but are made obsolete by thi
 - 9-zone JSON world: `src/world-data/data/starting-world.json` and the zone loader. Replaced by procedural chunk streaming.
 - Tap-to-move A* pathfinding: `pathfinding.ts`, `pathFollowing.ts`. Replaced by direct WASD / virtual-joystick movement against voxel collision.
 - 2.5D orthographic diorama camera. Replaced by third-person follow camera over the voxel world.
-- Tone.js dependency. Replaced by HTML5 Audio + a thin SoundManager loading recorded assets from `public/assets/audio/`.
+- Tone.js dependency. Replaced by Jolly Pixel's `AudioManager` / `AudioLibrary` / `AudioBackground` / `GlobalAudio` stack (Howler-backed) loading curated recorded assets from `public/assets/audio/`. We do not hand-roll a SoundManager — see line 43 above for the canonical audio architecture.
 
 ### What is kept and ported
 
@@ -238,7 +238,7 @@ In Grovekeeper:
 
 ### Runtime layout
 
-```
+```text
 public/assets/
   tilesets/             # PNG atlases for @jolly-pixel/voxel.renderer
     biomes/             # one tileset per biome — block textures
@@ -343,7 +343,7 @@ Vitest + Playwright (existing setup). Cover:
 
 A `docs/rc-journey/` directory is created. Every gate produces a committed PNG:
 
-```
+```text
 docs/rc-journey/
   01-landing.png
   02-mainmenu.png
@@ -363,7 +363,7 @@ docs/rc-journey/
   16-second-grove-discovery.png
 ```
 
-Screenshots are produced by a Playwright suite (`tests/rc-journey.spec.ts`) that walks the deterministic playthrough end-to-end. The suite is part of CI and fails if any screenshot diverges materially from its committed baseline (tolerance configured per shot — landing is strict, in-world shots are lenient).
+Screenshots are produced by a Playwright suite (`e2e/rc-journey.spec.ts`) that walks the deterministic playthrough end-to-end. The suite is part of CI and fails if any screenshot diverges materially from its committed baseline (tolerance configured per shot — landing is strict, in-world shots are lenient).
 
 ### Performance
 

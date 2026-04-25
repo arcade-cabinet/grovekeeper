@@ -274,7 +274,7 @@ world via the building system).
 Building is *placing* what crafting produced. There is no "build menu" that
 is separate from the "craft menu". The cycle is:
 
-```
+```text
 material → recipe → output → (item OR placement) → world state changes
 ```
 

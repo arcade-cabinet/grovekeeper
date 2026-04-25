@@ -28,8 +28,8 @@ agent MUST do the following, in order:
 pnpm test:e2e -- e2e/rc-journey.spec.ts --update-snapshots --grep "rc-journey"
 ```
 
-This regenerates the screenshot baseline and the `docs/rc-journey/<NN>.png`
-review copy. The `--update-snapshots` flag is mandatory only on first
+This regenerates the screenshot baseline and the
+`docs/rc-journey/<NN>-<surface>.png` review copy. The `--update-snapshots` flag is mandatory only on first
 capture or when the surface intentionally changes — re-runs without flag
 must pass on the existing baseline.
 

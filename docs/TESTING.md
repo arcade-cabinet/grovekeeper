@@ -64,7 +64,7 @@ pnpm test:e2e             # build + Playwright e2e
 pnpm test:playthrough     # the journey screenshot suite (RC gate)
 ```
 
-The journey suite (`tests/rc-journey.spec.ts`) walks the deterministic
+The journey suite (`e2e/rc-journey.spec.ts`) walks the deterministic
 playthrough end-to-end and produces the 16 committed PNGs under
 `docs/rc-journey/`. CI fails if any screenshot diverges materially from
 its committed baseline (tolerance per shot — landing strict, in-world
@@ -74,7 +74,7 @@ shots lenient).
 
 `docs/rc-journey/` contains one committed PNG per gate:
 
-```
+```text
 docs/rc-journey/
   01-landing.png
   02-mainmenu.png
@@ -178,12 +178,13 @@ the user has explicitly authorized it for that operation.
 GitHub Actions:
 
 - `ci.yml` (on `pull_request`): lint, typecheck, unit + browser tests,
-  journey screenshot suite (against committed baselines), build,
-  Lighthouse audit on landing, size-limit, Android debug APK build,
-  uploaded as PR artifact.
-- `release.yml` (on release-please tag): versioned builds + publish.
-- `cd.yml` (on `push: main`): deploy what release.yml produced (Pages,
-  APK, etc.).
+  build, size-limit, Android debug APK build uploaded as PR artifact.
+- `rc-verify.yml` (on `pull_request` + `push: main`): journey screenshot
+  suite (against committed baselines) and Lighthouse audit on landing,
+  uploaded as artifacts.
+- `release.yml` (on release-please tag): versioned builds + publish to
+  the GitHub Release.
+- `cd.yml` (on `push: main`): builds and deploys Pages from HEAD.
 
-Order is `ci → release → cd`. `release.yml` produces artifacts;
-`cd.yml` deploys them.
+Order is `ci → rc-verify → release → cd`. `release.yml` produces tagged
+release assets; `cd.yml` deploys Pages on every main push.

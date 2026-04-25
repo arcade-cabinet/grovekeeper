@@ -8,7 +8,7 @@ domain: technical
 # Asset Inventory
 
 Wave 2 of the Grovekeeper RC redesign. A faithful catalog of every asset that already exists in the sibling repo's itch.io asset library
-(`/Users/jbogaty/src/arcade-cabinet/voxel-realms/raw-assets/extracted/`) plus the curated runtime copies under `voxel-realms/public/assets/`.
+(`../voxel-realms/raw-assets/extracted/`) plus the curated runtime copies under `voxel-realms/public/assets/`.
 The purpose of this document is to ground subsequent waves (asset pipeline, world architecture, biome design) in **what we actually have on disk**,
 not in the aspirational biome list from the spec.
 

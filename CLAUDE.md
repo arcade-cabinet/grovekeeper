@@ -109,7 +109,7 @@ pnpm size                 # size-limit budget check
 The current tree still has BabylonJS scaffolding; the structure below is what
 the codebase *converges to* across the implementation waves.
 
-```
+```text
 grovekeeper/
 ├── CLAUDE.md                           # This file
 ├── AGENTS.md                           # Extended operating protocols
