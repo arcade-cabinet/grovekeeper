@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "biome": "meadow",
+    "device": "chromium",
+    "fps": 115.3,
+    "frames": 3460,
+    "elapsedMs": 30006,
+    "timestamp": "2026-04-25T20:39:51.008Z",
+    "exercised": true
+  },
+  {
+    "biome": "forest",
+    "device": "chromium",
+    "fps": 114.8,
+    "frames": 3444,
+    "elapsedMs": 30006,
+    "timestamp": "2026-04-25T20:40:21.705Z",
+    "exercised": true
+  },
+  {
+    "biome": "coast",
+    "device": "chromium",
+    "fps": 114.8,
+    "frames": 3443,
+    "elapsedMs": 30000,
+    "timestamp": "2026-04-25T20:40:52.573Z",
+    "exercised": true
+  },
+  {
+    "biome": "grove",
+    "device": "chromium",
+    "fps": 114.7,
+    "frames": 3442,
+    "elapsedMs": 30008,
+    "timestamp": "2026-04-25T20:41:23.322Z",
+    "exercised": true
+  }
+]
