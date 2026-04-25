@@ -23,8 +23,7 @@ import {
   canAffordExpansion,
   getNextExpansionTier,
 } from "@/systems/gridExpansion";
-// Audio wave (Wave 5) wires Jolly Pixel engine audio. Until then, no-op.
-const audioManager = { play: (_id: string) => {} };
+import { playSound } from "@/audio";
 import { checkNewUnlocks } from "@/systems/levelUnlocks";
 import { hapticHeavy } from "@/systems/platform";
 import {
@@ -257,7 +256,7 @@ export const gameActions = createActions((world) => {
 
           queueMicrotask(() => {
             showToast(`Level ${newLevel}!`, "success");
-            audioManager.play("levelUp");
+            playSound("levelUp");
             // Fire-and-forget: haptic is async but we don't want to block
             // the microtask chain on a native bridge roundtrip.
             void hapticHeavy();
@@ -679,7 +678,7 @@ export const gameActions = createActions((world) => {
         // T33: quest-complete feedback. "success" chord is distinct from
         // "levelUp" fanfare and "achievement" bell; reuses existing sound
         // rather than synthesizing another Tone.js graph.
-        audioManager.play("success");
+        playSound("success");
       },
       setLastQuestRefresh: (time: number) => {
         world.set(Quests, (prev) => ({ ...prev, lastQuestRefresh: time }));

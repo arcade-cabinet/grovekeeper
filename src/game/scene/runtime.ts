@@ -14,6 +14,13 @@
 
 import { loadRuntime, Runtime } from "@jolly-pixel/runtime";
 import * as THREE from "three";
+import {
+  initAudio,
+  setBiomeMusic,
+  setChannelVolume,
+  setMasterVolume,
+} from "@/audio";
+import { getPref } from "@/db/preferences";
 import { SingleChunkActor } from "@/game/world";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
 import { PlayerActor } from "./PlayerActor";
@@ -78,6 +85,35 @@ export async function createRuntime(
   cameraActor.addComponentAndGet(CameraFollowBehavior, {
     player: playerBehavior,
     offset: new THREE.Vector3(0, 8, 12),
+  });
+
+  // Audio bootstrap. Registers every symbolic sound id with the engine's
+  // AudioLibrary, applies persisted volume preferences, and kicks off
+  // the meadow biome music bed as proof-of-life. The first user gesture
+  // is what actually un-suspends THREE's audio context (browser
+  // autoplay policy); until then the music load completes silently and
+  // plays the moment the player taps anywhere.
+  initAudio(world);
+  // Apply persisted volumes first so the first track inherits them.
+  // Promise.all is awaited because Capacitor preferences resolve
+  // asynchronously, but each lookup is fast (in-memory on web).
+  const [masterVol, musicVol, sfxVol, ambientVol] = await Promise.all([
+    getPref("audio.master"),
+    getPref("audio.music"),
+    getPref("audio.sfx"),
+    getPref("audio.ambient"),
+  ]);
+  setMasterVolume(masterVol);
+  setChannelVolume("music", musicVol);
+  setChannelVolume("sfx", sfxVol);
+  setChannelVolume("ambient", ambientVol);
+  // Kick the meadow bed. The placeholder scene drops the player on a
+  // single meadow chunk, so meadow is the truthful biome at boot.
+  // Fire-and-forget — no need to gate scene readiness on the audio
+  // load finishing.
+  void setBiomeMusic("meadow").catch((error) => {
+    // eslint-disable-next-line no-console
+    console.warn("[grovekeeper] setBiomeMusic failed at boot", error);
   });
 
   // Hand off to JP's loader. This injects <jolly-loading> and starts
