@@ -11,11 +11,14 @@
  *   "Lighthouse audit on landing — score budgets: Performance ≥ 90 mobile,
  *    Best Practices ≥ 95."
  *
- * Mobile emulation is enforced by `preset: "mobile"` (Lighthouse defaults
- * to mobile when `preset` is unset, but we make it explicit here so the
- * gate cannot silently regress to desktop). A separate desktop sanity
- * snapshot can be produced ad-hoc with `lhci collect --preset=desktop`,
- * but only the mobile run is enforced as a CI gate.
+ * Mobile emulation is the Lighthouse default — when `preset` is unset
+ * Lighthouse audits with Moto G Power emulation + slow 4G throttling.
+ * Lighthouse's valid presets are `perf`, `experimental`, and `desktop`;
+ * there is no named "mobile" preset (passing one fails with "Invalid
+ * values: preset"). To keep mobile gating, simply omit `preset`. A
+ * separate desktop sanity snapshot can be produced ad-hoc with
+ * `lhci collect --preset=desktop`, but only the implicit-mobile run is
+ * enforced as a CI gate.
  */
 module.exports = {
   ci: {
@@ -29,7 +32,8 @@ module.exports = {
       url: ["http://localhost:4173/"],
       numberOfRuns: 3,
       settings: {
-        preset: "mobile",
+        // No preset → Lighthouse default mobile emulation (Moto G Power,
+        // slow 4G). See doc-comment above for rationale.
         chromeFlags: "--no-sandbox --headless=new",
       },
     },
