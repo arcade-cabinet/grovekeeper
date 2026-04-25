@@ -22,9 +22,7 @@ export function FastTravelFade() {
         "background-color": "#000",
         "pointer-events": "none",
         "z-index": "40",
-        get opacity() {
-          return String(eventBus.fastTravelFadeOpacity());
-        },
+        opacity: String(eventBus.fastTravelFadeOpacity()),
         transition: "opacity 60ms linear",
       }}
     />

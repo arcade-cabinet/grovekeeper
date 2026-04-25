@@ -87,7 +87,10 @@ export const MainMenu = (props: MainMenuProps) => {
           </h1>
           <p
             class="text-sm sm:text-base italic tracking-wide"
-            style={{ color: "rgba(240, 234, 220, 0.65)" }}
+            style={{
+              color: "rgba(240, 234, 220, 0.82)",
+              "text-shadow": "0 1px 6px rgba(0, 0, 0, 0.55)",
+            }}
           >
             Every forest begins with a single seed.
           </p>

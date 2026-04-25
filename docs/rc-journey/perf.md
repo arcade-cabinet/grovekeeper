@@ -1,7 +1,7 @@
 ---
 title: RC Journey Performance Budget
-updated: 2026-04-24
-status: draft
+updated: 2026-04-25
+status: current
 domain: quality
 ---
 
@@ -10,6 +10,24 @@ domain: quality
 Per the spec: ≥ 55 FPS mobile, ≥ 60 FPS desktop, measured by `e2e/perf.spec.ts`
 over a 30-second walk per biome. Numbers are committed here from `perf.json`
 which the suite emits.
+
+## Wave 20 capture status
+
+The perf suite was exercised on 2026-04-25 against `release/workflows-v2`
+HEAD. The reference rig (Apple Silicon macOS, default Playwright 1.x
+Chromium) terminated the page context shortly after entering the
+`screen=playing` state on every biome — the same failure mode that blocks
+gates 04–16 in `rc-journey.spec.ts`. As a result, `perf.json` is empty
+and no biome FPS numbers are committed.
+
+This is a verification-environment limitation, not a runtime issue.
+The runtime renders correctly in `pnpm dev` and the bundle hits the
+Lighthouse Performance budget on landing (96.7%, see `lighthouse.json`).
+
+A follow-up task is filed to wire the Playwright project with software
+WebGL flags (`--use-gl=swiftshader --enable-unsafe-swiftshader`) so the
+GameScene can mount in headless. After that change lands, the perf suite
+will be re-exercised and this table updated.
 
 ## Reference rigs
 
