@@ -102,9 +102,22 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
+      # Rename the unsigned APK so it's immediately obvious to anyone
+      # downloading the artifact that it cannot be installed on a real
+      # Android device. CI APK signing is a follow-up — until that lands,
+      # this artifact is internal-distribution only.
+      - name: Rename unsigned APK for clarity
+        if: steps.android-check.outputs.present == 'true'
+        run: |
+          src=android/app/build/outputs/apk/release/app-release-unsigned.apk
+          dst=android/app/build/outputs/apk/release/app-release-unsigned-internal.apk
+          if [ -f "$src" ]; then
+            mv "$src" "$dst"
+          fi
+
       - name: Upload APK to release
         if: steps.android-check.outputs.present == 'true'
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
-          files: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          files: android/app/build/outputs/apk/release/app-release-unsigned-internal.apk

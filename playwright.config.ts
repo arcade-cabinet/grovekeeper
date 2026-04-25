@@ -29,6 +29,12 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
+  // Co-locate journey baselines in e2e/rc-journey-baselines/ instead of
+  // Playwright's default `<spec>-snapshots/` directory. This matches the
+  // BASELINES_DIR constant in e2e/rc-journey.spec.ts and keeps committed
+  // baselines under one well-known path that's easy to .gitattributes-LFS.
+  snapshotPathTemplate:
+    "{testDir}/rc-journey-baselines/{arg}{-projectName}{ext}",
   use: {
     baseURL: "http://localhost:4173",
     trace: "on-first-retry",
