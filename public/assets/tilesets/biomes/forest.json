@@ -1,0 +1,51 @@
+{
+  "tileSize": 32,
+  "atlas": {
+    "cols": 8,
+    "rows": 8,
+    "width": 256,
+    "height": 256
+  },
+  "tiles": {
+    "grass-mossy": {
+      "col": 0,
+      "row": 0
+    },
+    "moss": {
+      "col": 1,
+      "row": 0
+    },
+    "dirt-dark": {
+      "col": 2,
+      "row": 0
+    },
+    "stone-mossy": {
+      "col": 3,
+      "row": 0
+    },
+    "fern": {
+      "col": 4,
+      "row": 0
+    },
+    "leaves-deep": {
+      "col": 5,
+      "row": 0
+    },
+    "log": {
+      "col": 6,
+      "row": 0
+    },
+    "bark": {
+      "col": 7,
+      "row": 0
+    },
+    "mushroom": {
+      "col": 0,
+      "row": 1
+    },
+    "root": {
+      "col": 1,
+      "row": 1
+    }
+  }
+}

@@ -38,8 +38,10 @@ import {
   DialogTitle,
 } from "@/ui/primitives/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/primitives/tabs";
-import { FarmerMascot } from "./FarmerMascot";
 import { RulesModal } from "./RulesModal";
+
+// FarmerMascot deleted; journey wave replaces this UI.
+const FarmerMascot = (_: { size?: number; animate?: boolean }) => null;
 import { StatsDashboard } from "./StatsDashboard";
 import { showToast } from "./Toast";
 

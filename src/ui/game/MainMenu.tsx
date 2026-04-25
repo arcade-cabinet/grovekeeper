@@ -7,8 +7,10 @@ import { Tracking } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import { Card } from "@/ui/primitives/card";
 import { Credits } from "./Credits";
-import { FarmerMascot } from "./FarmerMascot";
 import { Logo } from "./Logo";
+
+// FarmerMascot deleted; the journey wave (Wave 18) replaces this UI entirely.
+const FarmerMascot = (_: { size?: number; animate?: boolean }) => null;
 
 interface MainMenuProps {
   onStartGame?: () => void;

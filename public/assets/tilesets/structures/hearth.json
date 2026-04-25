@@ -1,0 +1,43 @@
+{
+  "tileSize": 32,
+  "atlas": {
+    "cols": 8,
+    "rows": 8,
+    "width": 256,
+    "height": 256
+  },
+  "tiles": {
+    "hearth-stone": {
+      "col": 0,
+      "row": 0
+    },
+    "hearth-coals": {
+      "col": 1,
+      "row": 0
+    },
+    "hearth-ash": {
+      "col": 2,
+      "row": 0
+    },
+    "hearth-iron": {
+      "col": 3,
+      "row": 0
+    },
+    "hearth-log": {
+      "col": 4,
+      "row": 0
+    },
+    "hearth-flame": {
+      "col": 5,
+      "row": 0
+    },
+    "hearth-soot": {
+      "col": 6,
+      "row": 0
+    },
+    "hearth-tile": {
+      "col": 7,
+      "row": 0
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "tileSize": 32,
+  "atlas": {
+    "cols": 8,
+    "rows": 8,
+    "width": 256,
+    "height": 256
+  },
+  "tiles": {
+    "grass-flat": {
+      "col": 0,
+      "row": 0
+    },
+    "grass-tall": {
+      "col": 1,
+      "row": 0
+    },
+    "dirt": {
+      "col": 2,
+      "row": 0
+    },
+    "stone": {
+      "col": 3,
+      "row": 0
+    },
+    "wildflower": {
+      "col": 4,
+      "row": 0
+    },
+    "leaves": {
+      "col": 5,
+      "row": 0
+    },
+    "wood": {
+      "col": 6,
+      "row": 0
+    },
+    "fence": {
+      "col": 7,
+      "row": 0
+    },
+    "path": {
+      "col": 0,
+      "row": 1
+    },
+    "puddle": {
+      "col": 1,
+      "row": 1
+    }
+  }
+}
