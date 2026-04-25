@@ -19,7 +19,7 @@ This spec is the RC redesign. It covers the engine port, the asset pipeline, the
 
 ## The game, in one paragraph
 
-Grovekeeper is a third-person voxel tree-tending and town-building game. **You are The Gardener** — singular, mythic, the only one. You wander an **infinite procedural outer world** of biome archetypes (meadow / forest / wetland / alpine / coast / scrub), each with its own flora, fauna, voxel palette, weather, and **threats** (hostile creatures, hazards, light combat). Out in the wilderness, somewhere, you find a **Grove**: a special, consistent, glowing meadow biome that is unmistakably different from anywhere else. Groves are PRNG-seeded across the world. Inside a grove there is no danger — only soft light, ambient peaceful creatures, NPCs with random-pool flavor dialogue, and a **Grove Spirit** at the center. To claim the grove, you build a **Hearth** (biome-themed prefab). Lighting the hearth makes the grove yours, unlocks fast travel between all your claimed groves, and opens the grove for free voxel building and tree tending. The reward is what you build, not what NPCs ask of you. The two-mode tonal contrast — dangerous wild, peaceful grove — is the entire design.
+Grovekeeper is a third-person voxel tree-tending and town-building game. **You are The Gardener** — singular, mythic, the only one. You wander an **infinite procedural outer world** of biome archetypes (meadow / forest / coast), each with its own flora, fauna, voxel palette, weather, and **threats** (hostile creatures, hazards, light combat). Out in the wilderness, somewhere, you find a **Grove**: a special, consistent, glowing meadow biome that is unmistakably different from anywhere else. Groves are PRNG-seeded across the world. Inside a grove there is no danger — only soft light, ambient peaceful creatures, NPCs with random-pool flavor dialogue, and a **Grove Spirit** at the center. To claim the grove, you build a **Hearth** (biome-themed prefab). Lighting the hearth makes the grove yours, unlocks fast travel between all your claimed groves, and opens the grove for free voxel building and tree tending. The reward is what you build, not what NPCs ask of you. The two-mode tonal contrast — dangerous wild, peaceful grove — is the entire design.
 
 ---
 
@@ -77,7 +77,7 @@ Game logic that is engine-agnostic stays. These run on Koota state and pure func
 - **GroveRegistry / GroveDB** — persistent state for every grove the player has discovered or claimed. Discovered = marker on map. Claimed = hearth lit, fast-travel enabled, building permitted.
 - **Encounter system** — outer-world only. Probability tables driven by biome + time-of-day + weather. Spawns hostile or neutral fauna near the player.
 - **Combat system (light)** — crafted weapons (axe, staff, spear, etc.). Stamina-gated swings. Damage to player; retreat to a claimed grove restores safety. No death state for RC; out-of-stamina or out-of-HP forces retreat. Player must craft their first weapon *before* the first wilderness leg.
-- **Crafting + Building system (one system, Minecraft-style consumption/production loop)** — voxel materials gathered in the wilderness flow into crafting stations placed in groves. Crafting consumes inputs and produces outputs: tools, weapons, structural prefabs (Hearth, fence, walls), decorative blocks, processed materials. Building is just *placing* what crafting produces. The two are not separate screens — they share one surface, one menu, one mental model. Recipes live in JSON, biome-aware (alpine forge variant, wetland wickerwork bench, etc.), scope-locked to RC's actual asset inventory. Different biomes unlock different production lines, giving each claimed grove economic identity.
+- **Crafting + Building system (one system, Minecraft-style consumption/production loop)** — voxel materials gathered in the wilderness flow into crafting stations placed in groves. Crafting consumes inputs and produces outputs: tools, weapons, structural prefabs (Hearth, fence, walls), decorative blocks, processed materials. Building is just *placing* what crafting produces. The two are not separate screens — they share one surface, one menu, one mental model. Recipes live in JSON, biome-aware (coast salt-press, forest carpenter bench, etc.), scope-locked to RC's actual asset inventory. Different biomes unlock different production lines, giving each claimed grove economic identity.
 - **Asset pipeline** — `.env` (with `ITCH_API_KEY`), `raw-assets/`, `scripts/fetch-itch-audio.mjs`, `scripts/import-from-voxel-realms.mjs`. Imports curate copies into `public/assets/voxels/{biomes,characters,creatures,props,structures,trees}/` and `public/assets/audio/`. Copies, never symlinks. Each Grovekeeper repo deploys self-contained.
 - **Asset manifest** — generated JSON describing every imported asset (path, category, biome, has-animations, animation list, polycount, source). Drives runtime loading and shows up in `docs/asset-inventory.md`.
 
@@ -95,22 +95,19 @@ The grove biome is *the* signature visual moment. Every grove looks like a grove
 
 ### Biome archetypes
 
-Six initial biomes for RC:
+**Three wilderness biomes (Meadow, Forest, Coast) plus the special Grove biome.** Locked at this size by the Wave 2 asset inventory (`docs/asset-inventory.md`): these are the biomes whose flora, fauna, and audio coverage the itch.io library actually supports. Wetland, Alpine, and Scrub were considered but cut from RC and parked in `docs/post-rc.md` pending the assets and shaders they'd each require.
 
 | Biome | Palette | Flora | Fauna | Threats | Architecture |
 |---|---|---|---|---|---|
 | Meadow | warm greens, gold | tall grass, daisies, oak | rabbits, deer, foxes | wolves at dusk, brambles | timber + thatch cottage |
 | Forest | deep greens, moss | pine, fern, mushroom | squirrels, owls | bears, falling logs | log lodge |
-| Wetland | teals, ochres | reeds, lily, willow | frogs, herons, dragonflies | giant insects, sinkholes | stilt hut |
-| Alpine | white, slate, evergreen | spruce, snow flowers | mountain goats, hares | ice wolves, blizzard | stone cabin |
 | Coast | sand, foam, sea-blue | palm, dune grass, kelp | crabs, gulls, turtles | rogue waves, jellyfish | driftwood shack |
-| Scrub | rust, bone, sage | cactus, sage, juniper | lizards, jackrabbits | scorpions, dust storms | adobe |
 
-Plus the seventh, special biome:
+Plus the special Grove biome:
 
 | Grove | luminous green-gold, soft white-gold glow | flowering grasses, blossom trees, single great central tree | rabbits, butterflies, fireflies | none | hearth-and-home (style depends on surrounding biome) |
 
-Each biome's data file lives in `src/world/biomes/{biome}.ts` and references assets by path under `public/assets/voxels/biomes/{biome}/`. The hearth prefab style is chosen based on the *surrounding* biome at the moment of grove discovery, so a meadow-grove gets a timber cottage hearth and an alpine-grove gets a stone cabin hearth — diegetic continuity with the world the player just walked out of.
+Each biome's data file lives in `src/world/biomes/{biome}.ts` and references assets by path under `public/assets/voxels/biomes/{biome}/`. The hearth prefab style is chosen based on the *surrounding* biome at the moment of grove discovery, so a meadow-grove gets a timber cottage hearth and a coast-grove gets a driftwood shack hearth — diegetic continuity with the world the player just walked out of.
 
 ### Chunk streaming
 
@@ -164,7 +161,7 @@ Recipe data lives in `src/content/recipes/*.json`, biome-tagged. A recipe specif
 
 The first weapon (the starter axe or staff — biome-flavored choice based on starter biome) is the second thing the player ever crafts, immediately after lighting the hearth. It is the single recipe pre-unlocked at the primitive workbench in the starter grove. This sequence is the entire pre-wilderness tutorial: gather → craft hearth → place hearth → light hearth → claim → craft weapon → step into the wild armed and homed.
 
-Later crafting stations are themselves crafted and placed. Each grove the player claims can host its own production setup. Biome-specific stations unlock biome-specific recipes — alpine forge unlocks ironwork, wetland wickerwork unlocks woven structures, etc. This is the long-tail reason to claim multiple groves: each one is a different production capability.
+Later crafting stations are themselves crafted and placed. Each grove the player claims can host its own production setup. Biome-specific stations unlock biome-specific recipes — coast salt-press unlocks preserved goods, forest carpenter bench unlocks joined timber structures, etc. This is the long-tail reason to claim multiple groves: each one is a different production capability.
 
 For RC, the crafting recipe set is intentionally small — what is sufficient to teach the loop and support gameplay through the success-criterion playthrough — not a full Minecraft-scale tech tree. The tree expands post-RC as content additions, not as engine work.
 
@@ -186,7 +183,7 @@ Encounters are biome- and time-of-day-driven. `EncounterTable` per biome lists c
 
 ### Weather
 
-Existing weather (rain / drought / windstorm) is preserved and extended per-biome — alpine gets blizzards, coast gets squalls, scrub gets dust storms. Weather is biome-aware and affects encounter tables (some creatures only spawn in rain, etc.).
+Existing weather (rain / drought / windstorm) is preserved and extended per-biome — coast gets squalls, forest weather softens visibility, meadow weather is the baseline. Weather is biome-aware and affects encounter tables (some creatures only spawn in rain, etc.).
 
 ### Resource gathering
 
@@ -207,7 +204,7 @@ This is the surface the user described as "POC and clumsy." The redesign treats 
 7. **Diegetic craft teaching — Hearth recipe.** Approaching the primitive workbench surfaces a crafting interact prompt. Opening the surface shows one recipe pre-unlocked: **Hearth**. Required inputs match what the player just gathered. One press crafts it; the Hearth blueprint enters the place-able list. The crafting surface is the same surface that will later show all recipes — the player learns the production half of the loop with their first interaction.
 8. **Diegetic placement teaching — Hearth placement.** With the Hearth blueprint selected, a ghost preview follows the player. Placing it on the grove ground commits the structure (animation: voxel blocks settle in). The player chose the spot — that's their first act of authorship.
 9. **The claim ritual**. Approaching the placed (unlit) Hearth surfaces a "light" prompt. Pressing it triggers the cinematic: flame ignites, grove glow intensifies, ambient music swells, Grove Spirit acknowledges with their second line, fast-travel UI appears (one node — *yours*), and 1–4 villager NPCs begin to enter the grove from the threshold edge over the next several seconds (the grove is now alive). The save state writes the first claimed grove to SQLite.
-10. **Diegetic craft teaching — first weapon.** A second recipe is now unlocked at the workbench: a starter weapon (axe in meadow/forest starter biomes; staff in wetland; spear in coast; mattock in alpine; sickle in scrub — biome-flavored). The Grove Spirit gestures toward the threshold and speaks a third line: *"Beyond the glow it's wild. Take a tool you can swing."* The player crafts the weapon. Inventory updates; the equipped-tool slot fills.
+10. **Diegetic craft teaching — first weapon.** A second recipe is now unlocked at the workbench: a starter weapon (axe in meadow/forest starter biomes; spear in coast — biome-flavored). The Grove Spirit gestures toward the threshold and speaks a third line: *"Beyond the glow it's wild. Take a tool you can swing."* The player crafts the weapon. Inventory updates; the equipped-tool slot fills.
 11. **The threshold**. Edge of the starter grove visibly transitions to wild biome. Palette, audio bed, and weather change at the boundary. A soft chime sounds at the edge — warning and invitation. The player chooses when to cross.
 12. **First wilderness moment**. Outside the grove for the first time. Some gather-able material is within sight (signal that the production loop continues out here). A peaceful fauna walks past (signal that not everything in the wild is hostile). After a small wander distance, a non-lethal hostile encounter triggers — a wolf pup or equivalent that posts up. Because the player has a weapon, this is the *combat tutorial*: swing teaches the verb. The encounter is balanced so a few hits resolve it. Stamina drains visibly. Resolution: the player either wins (drops a small voxel reward) or retreats (proves retreat works). Either outcome is a successful tutorial.
 13. **Discovery of second grove**. Within walking distance (PRNG biased to place a second grove close to spawn — hand-tuned, deterministic for the starter seed). Player approaches → sees the glow → recognizes it. Grove Spirit greets. Discovery state recorded.
@@ -249,14 +246,8 @@ public/assets/
       meadow.json       # tile-id mapping
       forest.png
       forest.json
-      wetland.png
-      wetland.json
-      alpine.png
-      alpine.json
       coast.png
       coast.json
-      scrub.png
-      scrub.json
       grove.png
       grove.json
     structures/         # block textures for crafted/placed structures
@@ -281,10 +272,7 @@ public/assets/
       biomes/           # one music bed per outer-world biome
         meadow/
         forest/
-        wetland/
-        alpine/
         coast/
-        scrub/
       moments/          # claim cinematic, first weapon, encounter sting
     sfx/
       ui/               # menu, crafting, inventory clicks
@@ -298,11 +286,8 @@ public/assets/
       biomes/           # one ambient bed per outer-world biome
         meadow/
         forest/
-        wetland/
-        alpine/
         coast/
-        scrub/
-      weather/          # rain, wind, blizzard, surf, dust
+      weather/          # rain, wind, surf
 ```
 
 Files are committed. The `manifest.generated.ts` is committed too so the runtime loader has a typed manifest without re-walking the filesystem at runtime.
@@ -383,7 +368,7 @@ Screenshots are produced by a Playwright suite (`tests/rc-journey.spec.ts`) that
 ### Performance
 
 - Lighthouse audit on landing — score budgets: Performance ≥ 90 mobile, Best Practices ≥ 95.
-- Runtime FPS — ≥ 55 mobile, ≥ 60 desktop, measured on a fixed test rig over a 30-second walk in each of the seven biomes. Numbers committed to `docs/rc-journey/perf.md`.
+- Runtime FPS — ≥ 55 mobile, ≥ 60 desktop, measured on a fixed test rig over a 30-second walk in each of the four biomes (Meadow, Forest, Coast, Grove). Numbers committed to `docs/rc-journey/perf.md`.
 - Bundle — gzipped initial under 500 KB. Asset budget under 20 MB total at RC.
 
 ### Rubric
@@ -415,9 +400,9 @@ This spec is large. The implementation plan that comes next from `writing-plans`
 6. **Engine port scaffold wave** — install `@jolly-pixel/engine`, `@jolly-pixel/voxel.renderer`, `@jolly-pixel/runtime`, Rapier. Create new game scene Actor. Wire `loadRuntime` for boot + loading screen. Replace BabylonJS imports. Old systems still in place but not rendered. Build still passes.
 7. **Tileset generation wave** — produce per-biome PNG tilesets + JSON tile-id maps under `public/assets/tilesets/biomes/`. Either curated from source library or generated by `scripts/curate-assets.mjs`'s tileset sub-step. Each biome gets ground, wall, accent, foliage-edge tiles minimum.
 8. **Voxel terrain wave** — register block types with `blockRegistry`, load a tileset, render a single test chunk with biome palette. Player Actor with `ModelRenderer` (Gardener GLB) walks on it. Camera follow behavior tracks player.
-9. **Biome registry wave** — six biomes implemented with tileset + voxel block sets + flora + ambient audio bed + biome music bed. Switching biome triggers tileset swap, music crossfade, ambient swap.
+9. **Biome registry wave** — three wilderness biomes (Meadow, Forest, Coast) implemented with tileset + voxel block sets + flora + ambient audio bed + biome music bed. Switching biome triggers tileset swap, music crossfade, ambient swap. Grove biome registered separately in wave 11.
 10. **Chunk streaming wave** — infinite world wandering works.
-11. **Grove biome wave** — Grove biome implemented as the seventh, special biome. Glow shader. Discovery placement logic. Starter grove pre-set with workbench, log pile, stone cairn, Grove Spirit.
+11. **Grove biome wave** — Grove biome implemented as the special fourth biome. Glow shader. Discovery placement logic. Starter grove pre-set with workbench, log pile, stone cairn, Grove Spirit.
 12. **Grove Spirit + NPC wave** — animated GLB characters via `ModelRenderer`. Spirit's three scripted lines. Villager phrase-pool dialogue. Villager arrival animation on first claim.
 13. **Crafting + Building wave** — recipe data files, crafting station Actor, crafting surface UI (SolidJS overlay), voxel block placement against the chunk renderer, ghost preview, place commit. Hearth and starter weapon recipes pre-unlocked at primitive workbench. Tests for production/consumption math.
 14. **Hearth + claim wave** — claim state machine, claim cinematic, fast-travel node registration, fast-travel UI. Wires to crafting + building wave for the placement step.
@@ -448,7 +433,7 @@ These can come back post-RC if they earn it.
 ## Risks
 
 - **Jolly Pixel maturity**. We're betting RC on an engine that's been used by one sibling project. The survey already identified concrete gaps: no built-in particle system (we need this for grove glow, weather, encounter VFX), no greedy meshing in the voxel renderer (perf risk on dense chunks), no shader plumbing exposed (grove glow needs a custom shader pass), no GLB animation blending in `ModelRenderer` (clip-by-clip switching only — fine for chibi, but no walk→run blends). Mitigation: build minimal Jolly Pixel proof of life through the engine scaffold + voxel terrain waves before deeper feature work; for each gap, pick "build thin layer ourselves" vs "contribute upstream" deliberately and document the call. The grove glow and weather particles get prototyped early — they're the highest-risk DIY layers.
-- **Asset coverage**. The itch.io library may not have voxel assets for every biome (e.g., wetland creatures may be sparse). Mitigation: the asset inventory wave runs *first*, and the biome list shrinks if assets don't exist. Six biomes is a target ceiling; the floor is three.
+- **Asset coverage**. *Partially mitigated.* The Wave 2 asset inventory (`docs/asset-inventory.md`) confirmed the itch.io library does not cover every biome originally proposed: Wetland (no water shader, thin fauna), Alpine (no snow tileset, no snow footsteps; visually collapses into Forest), and Scrub (no scrub flora, africa fauna pack clashes with cozy tone, no dust footsteps) were cut from RC and parked in `docs/post-rc.md`. RC is locked to **three wilderness biomes (Meadow, Forest, Coast) plus the special Grove biome** — the floor and ceiling are now the same number. Residual risk: late asset gaps inside the four locked biomes still surface during build; mitigation is the curated `asset-curation.json` plus inventory re-check on every pipeline run.
 - **Scope**. This is a rewrite framed as a redesign. Mitigation: doc cleanup first means *every* agent in the batch has accurate context. The task batch is allowed to run for as long as it takes, with screenshot + rubric gates preventing regression. The user has stated time is not the constraint; quality is.
 - **Mobile performance** with chunk streaming + voxel rendering + Rapier physics. Mitigation: tunable active/buffer chunk radius in `config/world.json`, perf measurement in the verification wave with explicit budgets.
 
@@ -461,7 +446,7 @@ RC ships when all of the following are true:
 1. Every screenshot gate in `docs/rc-journey/` is committed and matches a Playwright baseline.
 2. Every surface scores ≥ 10/12 on the rubric.
 3. Lighthouse landing performance ≥ 90 mobile.
-4. Runtime FPS budgets hit in all six wilderness biomes + the grove biome.
+4. Runtime FPS budgets hit in all three wilderness biomes + the grove biome.
 5. Bundle and asset budgets met.
 6. Internal docs (`MEMORY.md`, `CLAUDE.md`, `docs/*.md`, `memory-bank/*`) describe the actual game.
 7. A new player who lands cold can play through landing → MainMenu → first spawn → gather → craft hearth → place hearth → light hearth (claim starter grove) → craft first weapon → cross threshold → first encounter → discover second grove, *without ever reading a tutorial popup*, and emerge with the full meta-loop (gather → craft → build → claim → arm → wander → fight → discover) in their head.

@@ -37,7 +37,7 @@ on a loop:
   hostile creatures, hazards, and ambient audio bed. The wild is dangerous
   but not cruel. Light combat. No death state — running out of stamina or
   HP teleports you back to your nearest claimed grove.
-- **Grove.** The seventh, special biome. Always glowing. Always peaceful.
+- **Grove.** The special, fourth biome. Always glowing. Always peaceful.
   Always unmistakable on sight against any wilderness biome it sits inside.
   Soft light, warm gold-green palette, ambient peaceful creatures, NPCs
   with random-pool flavor dialogue, a single Grove Spirit at the center.
@@ -90,33 +90,27 @@ collision; the path is whatever the player walks.
 
 ### Biomes
 
-Six wilderness biomes are the target. **Final list adapts to the asset
-inventory** — the floor is three biomes, the ceiling is six. Currently
-planned (subject to inventory):
+**Three wilderness biomes (Meadow, Forest, Coast) plus the special Grove biome.** Locked at this size by the Wave 2 asset inventory; Wetland, Alpine, and Scrub were cut and parked in `docs/post-rc.md`.
 
 | Biome | Tonal note | What you find |
 |---|---|---|
 | Meadow | warm, open, golden | grass, daisies, oak; rabbits, deer, foxes; wolves at dusk |
 | Forest | green, dappled, breathing | pine, fern, mushroom; squirrels, owls; bears, falling logs |
-| Wetland | teal, ochre, foggy | reeds, lily, willow; frogs, herons, dragonflies; giant insects, sinkholes |
-| Alpine | white-slate, evergreen | spruce, snow flowers; goats, hares; ice wolves, blizzards |
 | Coast | sand, foam, sea-blue | palm, dune grass, kelp; crabs, gulls, turtles; rogue waves, jellyfish |
-| Scrub | rust, bone, sage | cactus, sage, juniper; lizards, jackrabbits; scorpions, dust storms |
 
 Each biome carries:
 
 - A PNG voxel tileset (ground, walls, accents, foliage edges).
 - A flora table (what voxel-vegetation populates the chunk).
 - A fauna table (peaceful + hostile, weighted by time-of-day and weather).
-- A weather variant (e.g. alpine blizzard, coast squall, scrub dust storm)
-  that overlays the global weather system.
+- A weather variant (e.g. coast squall, forest canopy haze) that overlays
+  the global weather system.
 - An ambient audio bed (looped via `AudioBackground`).
 - A music bed (also looped, crossfaded on biome change).
 - A structural style for the **hearth prefab** (timber cottage / log lodge
-  / stilt hut / stone cabin / driftwood shack / adobe). The hearth style
-  the player crafts is determined by the wilderness biome *surrounding*
-  the grove they're claiming — diegetic continuity with where they walked
-  in from.
+  / driftwood shack). The hearth style the player crafts is determined by
+  the wilderness biome *surrounding* the grove they're claiming — diegetic
+  continuity with where they walked in from.
 
 ### Encounters
 
@@ -150,8 +144,8 @@ hearth, structures, tools, weapons.
 
 The existing weather system (rain, drought, windstorm) is preserved and
 extended per-biome. Weather is biome-aware and affects encounter tables —
-some creatures only spawn in rain, dust storms intensify scrub threats,
-blizzards in alpine reduce visibility and warm-tier creatures retreat.
+some creatures only spawn in rain, coastal squalls reduce visibility on
+beaches, forest weather softens sightlines under canopy.
 
 ## The grove
 
@@ -246,10 +240,7 @@ workbench (also pre-unlocked at this point). The weapon is biome-flavored:
 | Starter biome | Starter weapon |
 |---|---|
 | Meadow / Forest | Axe |
-| Wetland | Staff |
 | Coast | Spear |
-| Alpine | Mattock |
-| Scrub | Sickle |
 
 Then the player walks to the grove threshold. The wilderness biome is
 visibly different on the other side. A soft chime sounds at the edge —
@@ -268,8 +259,9 @@ surface, one menu, and one mental model.
 
 A crafting station, when interacted with, opens a single overlay. That
 overlay shows recipes the player has unlocked at *this* station type (a
-primitive workbench shows what a primitive workbench can make; an alpine
-forge shows ironwork; a wetland wickerwork bench shows woven structures).
+primitive workbench shows what a primitive workbench can make; a coast
+salt-press shows preserved goods; a forest carpenter's bench shows joined
+timber structures).
 Each recipe has inputs, station type, output, and unlock condition.
 
 The output of a recipe is either an **item** (tool, weapon, consumable —
@@ -290,9 +282,10 @@ material → recipe → output → (item OR placement) → world state changes
 
 Crafting stations are themselves crafted and placed. Each grove the player
 claims can host its own production setup. Biome-specific stations unlock
-biome-specific recipes — alpine forges unlock ironwork, wetland wickerwork
-unlocks woven structures, and so on. **This is the long-tail reason to
-claim multiple groves: each one is a different production capability.**
+biome-specific recipes — coast salt-presses unlock preserved goods,
+forest carpenter benches unlock joined timber structures, and so on.
+**This is the long-tail reason to claim multiple groves: each one is a
+different production capability.**
 
 Recipes are scope-locked to assets in the RC inventory. No recipes for
 items without voxel models. No phantom tech tree. The full recipe set

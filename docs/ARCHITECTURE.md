@@ -237,9 +237,7 @@ one knows another grove on sight.
 
 ### Biome registry
 
-Six wilderness biomes (final list adapts to asset inventory) plus the
-seventh special grove biome. Each biome's data lives in
-`src/world/biomes/{biome}.ts`:
+**Three wilderness biomes (Meadow, Forest, Coast) plus the special Grove biome.** Locked by the Wave 2 asset inventory (`docs/asset-inventory.md`); Wetland, Alpine, and Scrub are deferred to `docs/post-rc.md`. Each biome's data lives in `src/world/biomes/{biome}.ts`:
 
 ```ts
 export const meadow: BiomeDefinition = {
@@ -487,9 +485,12 @@ renderer but the logic doesn't change:
   no shader plumbing exposed, no GLB animation blending. Mitigation: thin
   layers we own; earliest validation through the engine scaffold + voxel
   terrain waves; grove glow and weather particles prototyped early.
-- **Asset coverage.** Itch library may not cover every biome. Mitigation:
-  `docs/asset-inventory.md` runs first; biome list shrinks to inventory.
-  Floor 3, ceiling 6.
+- **Asset coverage.** *Partially mitigated.* The Wave 2 inventory locked
+  RC to **three wilderness biomes (Meadow, Forest, Coast) plus the special
+  Grove biome.** Wetland, Alpine, and Scrub were cut to `docs/post-rc.md`.
+  Floor and ceiling are now both four. Residual risk: late asset gaps
+  inside the locked biomes — mitigated by `asset-curation.json` plus
+  inventory re-check on every pipeline run.
 - **Mobile performance** under chunk streaming + voxel rendering + Rapier.
   Mitigation: tunable chunk radius in `config/world.json`; per-biome FPS
   measured in the verification wave.

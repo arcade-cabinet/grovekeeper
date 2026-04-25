@@ -165,14 +165,11 @@ grovekeeper/
 │   ├── world/
 │   │   ├── ChunkManager.ts             # Active/buffer radius, load/unload
 │   │   ├── BiomeRegistry.ts
-│   │   ├── biomes/                     # Six target biomes (final list adapts to asset inventory) plus the special grove biome
+│   │   ├── biomes/                     # Three wilderness biomes (Meadow, Forest, Coast) plus the special Grove biome.
 │   │   │   ├── meadow.ts
 │   │   │   ├── forest.ts
-│   │   │   ├── wetland.ts
-│   │   │   ├── alpine.ts
 │   │   │   ├── coast.ts
-│   │   │   ├── scrub.ts
-│   │   │   └── grove.ts                # Special seventh biome
+│   │   │   └── grove.ts                # Special fourth biome
 │   │   ├── GroveRegistry.ts            # In-memory registry of discovered/claimed
 │   │   └── chunkGen.ts                 # scopedRNG-driven generators
 │   ├── systems/                        # Pure-function systems, ticked per frame
