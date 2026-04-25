@@ -10,6 +10,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.0.0-alpha.1...v1.1.0-alpha.1) (2026-04-25)
+
+
+### Features
+
+* port to SolidJS + Koota + Tone.js (1.0.0-alpha.1) ([5e48c00](https://github.com/arcade-cabinet/grovekeeper/commit/5e48c0083bca7ea1096a4052d7403e06edc4cf99))
+* T70+T73 — spirit config + dialogue UI (narrative spine foundation) ([#36](https://github.com/arcade-cabinet/grovekeeper/issues/36)) ([120e7fc](https://github.com/arcade-cabinet/grovekeeper/commit/120e7fc712e2ce1af5a29659fab7588e10966f0f))
+
+
+### Performance
+
+* T23 — consolidate PropFactory StandardMaterial into shared cache ([#34](https://github.com/arcade-cabinet/grovekeeper/issues/34)) ([afdfc36](https://github.com/arcade-cabinet/grovekeeper/commit/afdfc36edac26e262feffbff0be61027b0af0587))
+
 ## [Unreleased]
 
 ### Changed
