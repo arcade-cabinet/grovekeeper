@@ -15,6 +15,10 @@
  */
 
 import { actions } from "@/actions";
+import {
+  buildDebugActions,
+  type GroveDebugActions,
+} from "@/shared/utils/debugActions";
 import { koota } from "@/koota";
 import {
   Achievements,
@@ -249,7 +253,13 @@ function buildSnapshot(): WorldSnapshot {
 
 export interface GroveDebugGlobals {
   snapshot: () => WorldSnapshot;
-  actions: ReturnType<typeof actions>;
+  /**
+   * Merged action surface: production gameActions + dev-only debug actions
+   * (teleportPlayer, triggerSpiritGreeting, lightHearth, etc.). The debug
+   * additions are gated behind `installDebugGlobals`'s DEV / `?debug`
+   * check, so they never reach a production console.
+   */
+  actions: ReturnType<typeof actions> & GroveDebugActions;
 }
 
 declare global {
@@ -276,7 +286,7 @@ export function installDebugGlobals(): void {
 
   const grove: GroveDebugGlobals = {
     snapshot: buildSnapshot,
-    actions: actions(),
+    actions: { ...actions(), ...buildDebugActions() },
   };
 
   window.__grove = grove;

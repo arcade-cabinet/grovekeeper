@@ -164,9 +164,9 @@ describe("journey integration — 14-beat walkthrough", () => {
       true,
     );
     // But not the starter-axe — that gates on claim.
-    expect(
-      recipesRepo.isKnown(handle.db, WORLD_ID, "recipe.starter-axe"),
-    ).toBe(false);
+    expect(recipesRepo.isKnown(handle.db, WORLD_ID, "recipe.starter-axe")).toBe(
+      false,
+    );
 
     // ── Beat 5+6: First Spirit interaction → line1 ───────────────────
     {
@@ -237,7 +237,11 @@ describe("journey integration — 14-beat walkthrough", () => {
           position: { x: r.x, y: r.y, z: r.z },
           lit: false,
         }));
-      const pick = pickHearthPrompt(player, candidates, HEARTH_PROXIMITY_RADIUS);
+      const pick = pickHearthPrompt(
+        player,
+        candidates,
+        HEARTH_PROXIMITY_RADIUS,
+      );
       expect(pick).not.toBeNull();
       expect(pick?.variant).toBe("light");
       expect(pick?.candidate.structureId).toBe(hearthStructureId);
@@ -275,11 +279,7 @@ describe("journey integration — 14-beat walkthrough", () => {
           grovesRepo.claimGrove(handle.db, starterGroveId());
           grovesRepo.lightHearth(handle.db, starterGroveId());
           // Sub-wave C recipe-gate (runtime registers via eventBus).
-          recipesRepo.learnRecipe(
-            handle.db,
-            WORLD_ID,
-            "recipe.starter-axe",
-          );
+          recipesRepo.learnRecipe(handle.db, WORLD_ID, "recipe.starter-axe");
           beats.push("persist");
         },
         spawnVillagers: () => {
@@ -319,9 +319,9 @@ describe("journey integration — 14-beat walkthrough", () => {
       expect(claimed?.hearthLitAt).not.toBeNull();
     }
     // recipe.starter-axe learned post-persist.
-    expect(
-      recipesRepo.isKnown(handle.db, WORLD_ID, "recipe.starter-axe"),
-    ).toBe(true);
+    expect(recipesRepo.isKnown(handle.db, WORLD_ID, "recipe.starter-axe")).toBe(
+      true,
+    );
 
     ritual.tick(
       t0 + CLAIM_RITUAL_TIMING.ignitePhaseMs + CLAIM_RITUAL_TIMING.claimPhaseMs,

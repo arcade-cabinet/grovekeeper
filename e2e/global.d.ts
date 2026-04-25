@@ -34,13 +34,22 @@ declare global {
     closeFastTravel?: () => void;
     /** Re-populate the starter grove with villagers. */
     spawnVillagers?: () => void;
-    /** Teleport the player. */
+    /** Teleport the player Actor directly to world coords (no fade/anim). */
+    teleportPlayer?: (x: number, z: number) => void;
+    /** Teleport the player to the named biome's anchor coord. */
     teleportToBiome?: (biome: string) => void;
     teleportToGroveThreshold?: () => void;
     /** Discover a grove by id (records the node on the world map). */
     discoverGrove?: (groveId: string) => void;
     /** Open the world map UI. */
     openMap?: () => void;
+    /** Spawn a hostile encounter (Wolf). */
+    spawnFirstEncounter?: () => void;
+    spawnTestEncounter?: () => void;
+    /** Switch the in-world season for biome/palette variety. */
+    setSeason?: (season: "spring" | "summer" | "autumn" | "winter") => void;
+    /** Override the active zone id directly. */
+    setZone?: (zoneId: string) => void;
     /** Free-form: any other debug action the runtime exposes. */
     // biome-ignore lint/suspicious/noExplicitAny: open-ended debug surface
     [key: string]: any;
