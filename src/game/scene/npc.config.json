@@ -1,0 +1,29 @@
+{
+  "spirit": {
+    "modelPath": "assets/models/npcs/grove-spirit/grove-spirit.glb",
+    "idleClip": "Idle01",
+    "animationFadeDuration": 0.18,
+    "bobAmplitude": 0.08,
+    "bobPeriodSeconds": 4.0
+  },
+  "villager": {
+    "idleClip": "Idle01",
+    "walkClip": "Walk01",
+    "moveSpeed": 0.6,
+    "wanderRadius": 2.5,
+    "wanderPauseSeconds": 4.0,
+    "moveEpsilon": 0.001,
+    "facingLerp": 0.18,
+    "animationFadeDuration": 0.2,
+    "models": [
+      "assets/models/npcs/villagers/villager-elder.glb",
+      "assets/models/npcs/villagers/villager-cook.glb",
+      "assets/models/npcs/villagers/villager-smith.glb",
+      "assets/models/npcs/villagers/villager-coast.glb"
+    ]
+  },
+  "interaction": {
+    "rangeMeters": 2.0,
+    "bubbleHoldSeconds": 4.0
+  }
+}

@@ -22,6 +22,7 @@ import {
 } from "@/audio";
 import { getDbAsync } from "@/db/client";
 import { getPref } from "@/db/preferences";
+import { dialogueRepo } from "@/db/repos";
 import { createWorld, getWorld } from "@/db/repos/worldsRepo";
 import {
   applyGroveEmissivePulse,
@@ -43,6 +44,9 @@ import {
   type NipplejsAdapterHandle,
 } from "@/input";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
+import { type PopulatedGrove, populateGrove } from "./GrovePopulator";
+import { InteractionSystem } from "./InteractionSystem";
+import { InteractionTickBehavior } from "./InteractionTickBehavior";
 import { PlayerActor } from "./PlayerActor";
 import playerConfig from "./player.config.json";
 
@@ -153,6 +157,12 @@ export async function createRuntime(
   const groveGlows = new Map<string, GroveGlowHandle>();
   const groveGlowKey = (cx: number, cz: number) => `${cx},${cz}`;
 
+  // Wave 11b — populated-grove registry. Mirror of the glow map: each
+  // grove chunk's NPCs (1 Spirit + 1-4 villagers) are spawned on
+  // `onChunkSpawned` and disposed on `onChunkDespawned`. Population is
+  // deterministic in `(worldSeed, chunkX, chunkZ)`.
+  const populatedGroves = new Map<string, PopulatedGrove>();
+
   const chunkHooks: ChunkManagerHooks = {
     onChunkSpawned: ({ chunkX, chunkZ, biome, actor }) => {
       if (biome !== "grove") return;
@@ -180,13 +190,50 @@ export async function createRuntime(
           fireflyPhase: fireflies.phase,
         });
       });
+
+      // Wave 11b — spawn NPCs once the chunk is loaded. Population is
+      // deterministic, so we don't need to wait for the mesh — the
+      // actors live in their own subtree above the voxel chunk.
+      // Wave 13 will gate villager spawn on the grove's `claimed`
+      // state; for RC we always populate (see GrovePopulator notes).
+      if (!populatedGroves.has(key)) {
+        const handle = populateGrove({
+          worldSeed: RC_WORLD_SEED,
+          chunkX,
+          chunkZ,
+          surfaceY: ChunkActor.SURFACE_Y + 1,
+          factory: {
+            createActor: () => world.createActor(`npc-${chunkX}-${chunkZ}`),
+          },
+          history: dbHandle
+            ? {
+                getLastPhraseId: (npcId) =>
+                  dialogueRepo.getLastPhrase(dbHandle.db, RC_WORLD_ID, npcId)
+                    ?.lastPhraseId ?? null,
+                hasMet: (npcId) =>
+                  dialogueRepo.getLastPhrase(
+                    dbHandle.db,
+                    RC_WORLD_ID,
+                    npcId,
+                  ) !== null,
+              }
+            : undefined,
+        });
+        populatedGroves.set(key, handle);
+      }
     },
     onChunkDespawned: ({ chunkX, chunkZ }) => {
       const key = groveGlowKey(chunkX, chunkZ);
       const handle = groveGlows.get(key);
-      if (!handle) return;
-      disposeGroveGlow(handle);
-      groveGlows.delete(key);
+      if (handle) {
+        disposeGroveGlow(handle);
+        groveGlows.delete(key);
+      }
+      const grove = populatedGroves.get(key);
+      if (grove) {
+        grove.dispose();
+        populatedGroves.delete(key);
+      }
     },
   };
 
@@ -221,6 +268,56 @@ export async function createRuntime(
         resolveSurroundingBiome: (cx, cz) => assignBiome(RC_WORLD_SEED, cx, cz),
       })
     : null;
+
+  // Wave 11b — interaction system. Polls the `interact` action's rising
+  // edge each frame; when fired, finds the nearest NPC across all
+  // populated groves and surfaces the next phrase via `onPhrase`. The
+  // active speech bubble lives on a closure-local field (a future UI
+  // wave will replace this with a Solid signal so `<NpcSpeechBubble>`
+  // can subscribe). Persistence to `dialogue_history` happens here so
+  // the next session's repeat-avoidance filter is primed.
+  const interactionSystem = new InteractionSystem({
+    player: playerBehavior,
+    input: inputManager,
+    getNpcs: () => {
+      const out: Array<{
+        getId(): string;
+        position: { x: number; y: number; z: number };
+        // biome-ignore lint/suspicious/noExplicitAny: actor.interact is fully typed at the source
+        interact: any;
+      }> = [];
+      for (const grove of populatedGroves.values()) {
+        out.push(grove.spirit);
+        for (const v of grove.villagers) out.push(v);
+      }
+      return out;
+    },
+    onPhrase: (event) => {
+      if (dbHandle) {
+        try {
+          dialogueRepo.recordPhrase(
+            dbHandle.db,
+            RC_WORLD_ID,
+            event.npcId,
+            event.pick.id,
+          );
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn("[grovekeeper] dialogueRepo.recordPhrase failed", error);
+        }
+      }
+      // Surface to the console for now — a follow-up wave plumbs the
+      // event into a Solid signal so the SpeechBubble UI can render it.
+      // eslint-disable-next-line no-console
+      console.info(
+        `[grovekeeper] ${event.npcId}: ${event.pick.text} [${event.pick.tag}]`,
+      );
+    },
+  });
+  const interactionTickActor = world.createActor("interaction-tick");
+  interactionTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () => interactionSystem.tick(),
+  });
 
   // Per-frame tick driver for grove visuals + discovery. Uses a
   // dedicated ActorComponent so the engine ticks it like any other
