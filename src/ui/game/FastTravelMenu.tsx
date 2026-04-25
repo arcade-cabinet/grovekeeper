@@ -44,23 +44,36 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
         style={{
           position: "fixed",
           inset: "0",
-          "background-color": "rgba(0, 0, 0, 0.55)",
           display: "flex",
           "align-items": "center",
           "justify-content": "center",
           "z-index": "8000",
         }}
-        onClick={(e) => {
-          // Click-outside dismiss — only if the click is on the
-          // backdrop (this exact div) and not a child.
-          if (e.target === e.currentTarget) props.onClose();
-        }}
         onKeyDown={(e) => {
           if (e.key === "Escape") props.onClose();
         }}
       >
+        {/* Backdrop is a real button so accessibility tooling treats it as
+            interactive (keyboard + click both natively supported). */}
+        <button
+          type="button"
+          aria-label="Dismiss fast travel menu backdrop"
+          tabIndex={-1}
+          data-testid="fast-travel-backdrop"
+          onClick={props.onClose}
+          style={{
+            position: "absolute",
+            inset: "0",
+            "background-color": "rgba(0, 0, 0, 0.55)",
+            border: "none",
+            padding: "0",
+            cursor: "default",
+          }}
+        />
         <div
           style={{
+            position: "relative",
+            "z-index": "1",
             "background-color": "#1f2a1f",
             color: "#f3eed1",
             padding: "1.25rem",

@@ -180,21 +180,32 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
           display: "flex",
           "align-items": "center",
           "justify-content": "center",
-          background: "rgba(0,0,0,0.5)",
           "z-index": "100",
-        }}
-        onClick={(event) => {
-          // Click on the backdrop closes; clicks on the panel itself
-          // bubble up to here but `event.target === event.currentTarget`
-          // discriminates the backdrop.
-          if (event.target === event.currentTarget) props.onClose();
         }}
         onKeyDown={(event) => {
           if (event.key === "Escape") props.onClose();
         }}
       >
+        {/* Backdrop is a real button so accessibility tooling treats it as
+            interactive (keyboard + click both natively supported). */}
+        <button
+          type="button"
+          aria-label="Close crafting panel"
+          tabIndex={-1}
+          onClick={props.onClose}
+          style={{
+            position: "absolute",
+            inset: "0",
+            background: "rgba(0,0,0,0.5)",
+            border: "none",
+            padding: "0",
+            cursor: "default",
+          }}
+        />
         <div
           style={{
+            position: "relative",
+            "z-index": "1",
             "min-width": "360px",
             "max-width": "560px",
             width: "90vw",
