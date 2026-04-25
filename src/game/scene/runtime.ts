@@ -845,10 +845,20 @@ export async function createRuntime(
           populatedGroves.set(key, handle);
         },
         emitSpiritLine: (_line: string) => {
-          // The Spirit's line2 surfaces via the Spirit-line scripted
-          // path on the next interact. The cinematic's beat is a
-          // soft cue (the line will play when the player walks back
-          // and hits E), not a barge-in over the cinematic.
+          // The cinematic's `settle` beat speaks line2 itself —
+          // record it as fired so the next interact advances to
+          // line3 (recipe.starter-axe is now known post-claim).
+          if (!dbHandle) return;
+          try {
+            dialogueRepo.recordPhrase(
+              dbHandle.db,
+              RC_WORLD_ID,
+              SCRIPTED_LINE_HISTORY_IDS.line2,
+              SCRIPTED_LINE_PHRASE_IDS.line2,
+            );
+          } catch {
+            /* ignore */
+          }
         },
       },
     });
