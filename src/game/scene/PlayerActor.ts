@@ -125,10 +125,10 @@ const ANIM_FADE = playerConfig.animationFadeDuration;
 const FACING_LERP = playerConfig.facingLerp;
 
 export class PlayerActor extends ActorComponent {
-  private spawn: PlayerSpawn;
-  private renderer: ModelRenderer;
-  private input: InputManager | null;
-  private surfaceY: number | null;
+  private readonly spawn: PlayerSpawn;
+  private readonly renderer: ModelRenderer;
+  private readonly input: InputManager | null;
+  private readonly surfaceY: number | null;
 
   /**
    * Tracks the currently *requested* clip so we don't spam

@@ -207,7 +207,9 @@ export class ChunkActor extends ActorComponent {
    */
   applyMod(mod: ChunkBlockMod): boolean {
     if (!this.renderer) return false;
-    const layerName = mod.op === "set" ? "surface" : "surface";
+    // Surface modifications always target the "surface" layer regardless of
+    // op kind. Future ops on other layers should branch here.
+    const layerName = "surface";
     const position = { x: mod.localX, y: mod.y, z: mod.localZ };
     if (mod.op === "remove") {
       try {

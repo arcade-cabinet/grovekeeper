@@ -36,8 +36,8 @@ import {
 } from "@/db/repos";
 import { claimGrove, getGroveById, lightHearth } from "@/db/repos/grovesRepo";
 import { createWorld, getWorld } from "@/db/repos/worldsRepo";
-import { pickScriptedSpiritLine } from "@/game/dialogue/dialogueSystem";
 import { listAllRecipes } from "@/game/crafting";
+import { pickScriptedSpiritLine } from "@/game/dialogue/dialogueSystem";
 import {
   applyInventoryCap,
   GatherSystem,
@@ -59,8 +59,8 @@ import {
   getBiome,
   isStarterGroveSeeded,
   resolveStreamingConfig,
-  seedStarterGrove,
   STARTER_GROVE_CHUNK,
+  seedStarterGrove,
 } from "@/game/world";
 import {
   InputManager,
@@ -702,15 +702,11 @@ export async function createRuntime(
   // Uses a dedicated ActorComponent so the engine ticks it like any
   // other behavior in the actor graph.
   const groveTickActor = world.createActor("grove-tick");
-  const _baseGroveTickInstance = groveTickActor.addComponentAndGet(
-    GroveTickBehavior,
-    {
-      groveGlows,
-      discovery: groveDiscovery,
-      playerPosition: playerActor.object3D.position,
-    },
-  );
-  void _baseGroveTickInstance;
+  groveTickActor.addComponentAndGet(GroveTickBehavior, {
+    groveGlows,
+    discovery: groveDiscovery,
+    playerPosition: playerActor.object3D.position,
+  });
   // Threshold tick: rides on the same per-frame pump via a thin shim.
   const thresholdTickActor = world.createActor("threshold-tick");
   thresholdTickActor.addComponentAndGet(InteractionTickBehavior, {
@@ -736,7 +732,6 @@ export async function createRuntime(
   // local-to-grove coordinates which we resolve to world-space here.
   const STARTER_GROVE_ID = `grove-${STARTER_GROVE_CHUNK.x}-${STARTER_GROVE_CHUNK.z}`;
   let activeClaimRitual: ClaimRitualSystem | null = null;
-  let claimRitualGroveId: string | null = null;
 
   function listHearthCandidates(): HearthCandidate[] {
     if (!dbHandle) return [];
@@ -764,7 +759,6 @@ export async function createRuntime(
 
   function startClaimRitual(_structureId: string, groveId: string): void {
     if (activeClaimRitual?.isActive) return;
-    claimRitualGroveId = groveId;
     activeClaimRitual = new ClaimRitualSystem({
       hooks: {
         setInputLocked: (locked) => eventBus.emitClaimCinematicActive(locked),
@@ -949,10 +943,6 @@ export async function createRuntime(
       }
     },
   });
-  // Suppress "unused" by reading the var.
-  void claimRitualGroveId;
-  void hearthTickActor;
-
   // Audio bootstrap. Registers every symbolic sound id with the engine's
   // AudioLibrary, applies persisted volume preferences, and kicks off
   // the meadow biome music bed as proof-of-life. The first user gesture

@@ -171,7 +171,9 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
     <Show when={props.open}>
       <div
         role="dialog"
+        aria-modal="true"
         aria-label="Crafting"
+        tabIndex={-1}
         style={{
           position: "fixed",
           inset: "0",
@@ -186,6 +188,9 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
           // bubble up to here but `event.target === event.currentTarget`
           // discriminates the backdrop.
           if (event.target === event.currentTarget) props.onClose();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") props.onClose();
         }}
       >
         <div

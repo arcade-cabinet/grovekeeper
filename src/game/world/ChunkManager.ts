@@ -131,7 +131,7 @@ export class ChunkManager {
   private readonly streaming: ChunkManagerStreamingConfig;
   private readonly hooks: ChunkManagerHooks;
 
-  private chunks = new Map<string, ChunkSlot>();
+  private readonly chunks = new Map<string, ChunkSlot>();
   private disposed = false;
   private readonly modProvider:
     | ((

@@ -32,13 +32,15 @@ export interface FastTravelMenuProps {
   onClose: () => void;
 }
 
-export function FastTravelMenu(props: FastTravelMenuProps) {
+export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
   return (
     <Show when={props.open}>
       <div
         role="dialog"
+        aria-modal="true"
         aria-label="Fast Travel"
         data-testid="fast-travel-menu"
+        tabIndex={-1}
         style={{
           position: "fixed",
           inset: "0",
@@ -52,6 +54,9 @@ export function FastTravelMenu(props: FastTravelMenuProps) {
           // Click-outside dismiss — only if the click is on the
           // backdrop (this exact div) and not a child.
           if (e.target === e.currentTarget) props.onClose();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") props.onClose();
         }}
       >
         <div

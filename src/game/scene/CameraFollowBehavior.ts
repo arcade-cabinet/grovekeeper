@@ -29,11 +29,11 @@ export interface CameraFollowOptions {
 }
 
 export class CameraFollowBehavior extends ActorComponent {
-  private controls: Camera3DControls;
-  private offset: THREE.Vector3;
-  private responsiveness: number;
-  private playerRef: PlayerActor;
-  private lookTarget = new THREE.Vector3();
+  private readonly controls: Camera3DControls;
+  private readonly offset: THREE.Vector3;
+  private readonly responsiveness: number;
+  private readonly playerRef: PlayerActor;
+  private readonly lookTarget = new THREE.Vector3();
 
   constructor(actor: Actor, options: CameraFollowOptions) {
     super({ actor, typeName: "CameraFollowBehavior" });
