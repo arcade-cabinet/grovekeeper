@@ -46,8 +46,13 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          lfs: true
+        # Intentionally NOT pulling LFS. The screenshot suite uses
+        # `window.__grove.actions` warps (not real input) and runs in
+        # headless SwiftShader — the 761 MB of GLB/audio LFS assets are
+        # neither loaded by the suite nor renderable in software-WebGL,
+        # but their presence on disk causes vite build to stall under
+        # disk-IO pressure on ubuntu-latest's 2-vCPU runner. Skipping
+        # LFS keeps the job fast (~5s build vs 95s+ cancel).
 
       - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
 
