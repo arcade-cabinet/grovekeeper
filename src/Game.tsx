@@ -8,11 +8,8 @@ import {
 } from "solid-js";
 import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
-import { getDifficultyById } from "@/config/difficulty";
-import { getDb, isDbInitialized } from "@/db/client";
 import { initDatabase } from "@/db/init";
-import { saveDatabaseToIndexedDB } from "@/db/persist";
-import { hydrateGameStore, setupNewGame } from "@/db/queries";
+import { hydrateGameStore } from "@/db/queries";
 import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
@@ -22,7 +19,7 @@ import { CurrentSeason, GameScreen, PlayerProgress, Quests } from "@/traits";
 import { CraftingPanel } from "@/ui/game/CraftingPanel";
 import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { MainMenu } from "@/ui/game/MainMenu";
-import { NewGameModal } from "@/ui/game/NewGameModal";
+import { NewGameScreen } from "@/ui/game/NewGameScreen";
 import { NpcSpeechBubble } from "@/ui/game/NpcSpeechBubble";
 import { RetreatOverlay } from "@/ui/game/RetreatOverlay";
 
@@ -51,14 +48,11 @@ export const Game = () => {
   const quests = useTrait(koota, Quests);
 
   const [dbLoading, setDbLoading] = createSignal(true);
-  const [showNewGame, setShowNewGame] = createSignal(false);
 
-  // Initialize platform
   onMount(() => {
     initializePlatform();
   });
 
-  // Initialize database
   onMount(() => {
     let cancelled = false;
     initDatabase()
@@ -68,9 +62,6 @@ export const Game = () => {
           const state = hydrateGameStore();
           gameActions().hydrateFromDb(state);
         }
-        // Used by e2e playthrough determinism. Safe to leave in production —
-        // user-invisible. If grove-seed-override is set (by e2e tests or dev
-        // tooling), override the world seed so RNG is reproducible.
         const seedOverride =
           typeof localStorage !== "undefined"
             ? localStorage.getItem("grove-seed-override")
@@ -89,7 +80,6 @@ export const Game = () => {
     };
   });
 
-  // Generate daily quests if needed
   createEffect(() => {
     if (dbLoading()) return;
     const season = currentSeason()?.value ?? "spring";
@@ -108,48 +98,7 @@ export const Game = () => {
     }
   });
 
-  const handleStartGame = () => {
-    gameActions().setScreen("playing");
-  };
-
-  const handleNewGame = () => {
-    setShowNewGame(true);
-  };
-
-  const handleDifficultySelected = async (
-    difficulty: string,
-    permadeath: boolean,
-  ) => {
-    const tier = getDifficultyById(difficulty);
-    if (!tier) return;
-
-    try {
-      const actions = gameActions();
-      actions.resetGame();
-
-      setupNewGame(
-        difficulty,
-        permadeath,
-        tier.startingResources,
-        tier.startingSeeds,
-      );
-
-      const state = hydrateGameStore();
-      actions.hydrateFromDb(state);
-
-      if (isDbInitialized()) {
-        const { sqlDb } = getDb();
-        const data = sqlDb.export();
-        await saveDatabaseToIndexedDB(data);
-      }
-
-      setShowNewGame(false);
-      actions.setScreen("playing");
-    } catch (error) {
-      console.error("Failed to create new game:", error);
-      setShowNewGame(false);
-    }
-  };
+  const currentScreen = () => screen()?.value ?? "menu";
 
   return (
     <Show
@@ -174,12 +123,15 @@ export const Game = () => {
       }
     >
       <div class="w-full h-full">
-        <Show
-          when={(screen()?.value ?? "menu") === "playing"}
-          fallback={
-            <MainMenu onStartGame={handleStartGame} onNewGame={handleNewGame} />
-          }
-        >
+        <Show when={currentScreen() === "menu"}>
+          <MainMenu />
+        </Show>
+
+        <Show when={currentScreen() === "new-game"}>
+          <NewGameScreen />
+        </Show>
+
+        <Show when={currentScreen() === "playing"}>
           <GameErrorBoundary onReset={() => gameActions().setScreen("menu")}>
             <Suspense
               fallback={
@@ -192,9 +144,6 @@ export const Game = () => {
             </Suspense>
           </GameErrorBoundary>
 
-          {/* UI Glue overlays — driven by the runtime via `eventBus`.
-              Only mounted while the player is on the playing screen so
-              menus/pause don't accidentally consume engine events. */}
           <Show when={eventBus.npcSpeech()}>
             {(ev) => (
               <NpcSpeechBubble
@@ -227,16 +176,7 @@ export const Game = () => {
           </Show>
         </Show>
 
-        {/* Wave 14/15: retreat fade overlay — always mounted, opacity 0
-            on idle. Sits above all gameplay UI so the fade-to-black is
-            unbroken by HUD elements. */}
         <RetreatOverlay />
-
-        <NewGameModal
-          open={showNewGame()}
-          onClose={() => setShowNewGame(false)}
-          onStart={handleDifficultySelected}
-        />
       </div>
     </Show>
   );

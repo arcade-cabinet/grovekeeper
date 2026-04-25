@@ -45,11 +45,15 @@ import {
   ChunkStreamerBehavior,
   createGroveDiscoverySystem,
   createGroveFireflies,
+  createThresholdSystem,
   disposeGroveGlow,
   type GroveGlowHandle,
   GroveTickBehavior,
   getBiome,
+  isStarterGroveSeeded,
   resolveStreamingConfig,
+  seedStarterGrove,
+  STARTER_GROVE_CHUNK,
 } from "@/game/world";
 import {
   InputManager,
@@ -137,9 +141,21 @@ export async function createRuntime(
   // freely across an infinite chunk grid (no XZ bounds — Wave 9 removed
   // the single-chunk clamp). Y is held to the shared surface for now;
   // proper voxel collision is a future wave.
+  // Sub-wave C — spawn the player at the centre of the starter grove
+  // chunk (3, 0). Chunk world origin is `(3 * 16, _, 0 * 16)`; centre
+  // is half a chunk inside.
+  const STARTER_CHUNK_SIZE = 16;
+  const playerSpawnX =
+    STARTER_GROVE_CHUNK.x * STARTER_CHUNK_SIZE + STARTER_CHUNK_SIZE / 2;
+  const playerSpawnZ =
+    STARTER_GROVE_CHUNK.z * STARTER_CHUNK_SIZE + STARTER_CHUNK_SIZE / 2;
   const playerActor = world.createActor("player");
   const playerBehavior = playerActor.addComponentAndGet(PlayerActor, {
-    spawn: { x: 8, y: ChunkActor.SURFACE_Y + 1, z: 8 },
+    spawn: {
+      x: playerSpawnX,
+      y: ChunkActor.SURFACE_Y + 1,
+      z: playerSpawnZ,
+    },
     inputManager,
     surfaceY: ChunkActor.SURFACE_Y + 1,
   });
@@ -167,6 +183,29 @@ export async function createRuntime(
     if (isFreshWorld) {
       seedStarterRunState(dbHandle.db, RC_WORLD_ID);
     }
+    // Sub-wave C — starter grove pre-state. Idempotent: re-runs are
+    // free, so we always call it. Existing saves that were created
+    // before this code landed will get the seed on first boot via the
+    // `discoverGrove` short-circuit (which is also idempotent).
+    if (!isStarterGroveSeeded(dbHandle.db, RC_WORLD_ID)) {
+      seedStarterGrove(dbHandle.db, RC_WORLD_ID);
+    }
+    // Sub-wave C — recipe-gating: when sub-wave A's claim system
+    // emits `groveClaimed`, learn `recipe.starter-axe`. We register
+    // here (not inside the claim system) so this hook lives next to
+    // the persistence layer it touches. `learnRecipe` is idempotent.
+    eventBus.onGroveClaimed((ev) => {
+      if (!dbHandle) return;
+      try {
+        recipesRepo.learnRecipe(dbHandle.db, ev.worldId, "recipe.starter-axe");
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[grovekeeper] starter-axe recipe-gate hook failed",
+          error,
+        );
+      }
+    });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.warn(
@@ -538,14 +577,37 @@ export async function createRuntime(
     onTick: () => gatherSystem.tick(),
   });
 
-  // Per-frame tick driver for grove visuals + discovery. Uses a
-  // dedicated ActorComponent so the engine ticks it like any other
-  // behavior in the actor graph.
+  // Sub-wave C — threshold chime system. Plays a soft chime when the
+  // player crosses a grove ↔ non-grove chunk boundary. Aliased to
+  // `ui.click` per spec — when a bespoke chime is curated this swaps
+  // to `ui.threshold.chime`. Debounced 5s per boundary pair.
+  const thresholdSystem = createThresholdSystem({
+    worldSeed: RC_WORLD_SEED,
+    chunkSize: 16,
+    playChime: () => playSound("ui.click"),
+  });
+
+  // Per-frame tick driver for grove visuals + discovery + threshold.
+  // Uses a dedicated ActorComponent so the engine ticks it like any
+  // other behavior in the actor graph.
   const groveTickActor = world.createActor("grove-tick");
-  groveTickActor.addComponentAndGet(GroveTickBehavior, {
-    groveGlows,
-    discovery: groveDiscovery,
-    playerPosition: playerActor.object3D.position,
+  const _baseGroveTickInstance = groveTickActor.addComponentAndGet(
+    GroveTickBehavior,
+    {
+      groveGlows,
+      discovery: groveDiscovery,
+      playerPosition: playerActor.object3D.position,
+    },
+  );
+  void _baseGroveTickInstance;
+  // Threshold tick: rides on the same per-frame pump via a thin shim.
+  const thresholdTickActor = world.createActor("threshold-tick");
+  thresholdTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () =>
+      thresholdSystem.update({
+        x: playerActor.object3D.position.x,
+        z: playerActor.object3D.position.z,
+      }),
   });
 
   // Audio bootstrap. Registers every symbolic sound id with the engine's

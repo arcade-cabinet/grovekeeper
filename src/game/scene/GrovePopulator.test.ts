@@ -94,7 +94,7 @@ describe("GrovePopulator", () => {
     expect(handle.spirit.position.y).toBeCloseTo(6, 5);
   });
 
-  it("spawns 1 to 4 villagers deterministically by chunk seed", async () => {
+  it("spawns 1 to 4 villagers deterministically by chunk seed (when claimed)", async () => {
     const { populateGrove } = await import("./GrovePopulator");
     const factoryA = makeFactory();
     const a = populateGrove({
@@ -104,6 +104,7 @@ describe("GrovePopulator", () => {
       surfaceY: 6,
       // biome-ignore lint/suspicious/noExplicitAny: stub factory
       factory: factoryA as any,
+      groveState: "claimed",
     });
     const factoryB = makeFactory();
     const b = populateGrove({
@@ -113,6 +114,7 @@ describe("GrovePopulator", () => {
       surfaceY: 6,
       // biome-ignore lint/suspicious/noExplicitAny: stub factory
       factory: factoryB as any,
+      groveState: "claimed",
     });
     expect(a.villagers.length).toBe(b.villagers.length);
     expect(a.villagers.length).toBeGreaterThanOrEqual(1);
@@ -140,6 +142,7 @@ describe("GrovePopulator", () => {
       surfaceY: 6,
       // biome-ignore lint/suspicious/noExplicitAny: stub factory
       factory: makeFactory() as any,
+      groveState: "claimed",
     });
     const b = populateGrove({
       worldSeed: 99999,
@@ -148,6 +151,7 @@ describe("GrovePopulator", () => {
       surfaceY: 6,
       // biome-ignore lint/suspicious/noExplicitAny: stub factory
       factory: makeFactory() as any,
+      groveState: "claimed",
     });
     const sameCount = a.villagers.length === b.villagers.length;
     const samePos =
@@ -200,5 +204,67 @@ describe("GrovePopulator", () => {
     });
     expect(handle.spirit.lastPhrase).toBe("spirit:returning-greet:2");
     expect(handle.spirit.firstMeetConsumed).toBe(true);
+  });
+
+  describe("Sub-wave A — claim gate", () => {
+    it("does NOT spawn villagers when groveState is omitted (default discovered)", async () => {
+      const { populateGrove } = await import("./GrovePopulator");
+      const handle = populateGrove({
+        worldSeed: 42,
+        chunkX: 3,
+        chunkZ: 0,
+        surfaceY: 6,
+        // biome-ignore lint/suspicious/noExplicitAny: stub factory
+        factory: makeFactory() as any,
+      });
+      expect(handle.villagers.length).toBe(0);
+      expect(handle.spirit).toBeDefined();
+    });
+
+    it("does NOT spawn villagers when groveState='discovered'", async () => {
+      const { populateGrove } = await import("./GrovePopulator");
+      const handle = populateGrove({
+        worldSeed: 42,
+        chunkX: 3,
+        chunkZ: 0,
+        surfaceY: 6,
+        // biome-ignore lint/suspicious/noExplicitAny: stub factory
+        factory: makeFactory() as any,
+        groveState: "discovered",
+      });
+      expect(handle.villagers.length).toBe(0);
+    });
+
+    it("DOES spawn villagers when groveState='claimed'", async () => {
+      const { populateGrove } = await import("./GrovePopulator");
+      const handle = populateGrove({
+        worldSeed: 42,
+        chunkX: 3,
+        chunkZ: 0,
+        surfaceY: 6,
+        // biome-ignore lint/suspicious/noExplicitAny: stub factory
+        factory: makeFactory() as any,
+        groveState: "claimed",
+      });
+      expect(handle.villagers.length).toBeGreaterThanOrEqual(1);
+      expect(handle.villagers.length).toBeLessThanOrEqual(4);
+    });
+
+    it("dispose() is idempotent on a discovered (no-villager) grove", async () => {
+      const { populateGrove } = await import("./GrovePopulator");
+      const handle = populateGrove({
+        worldSeed: 0,
+        chunkX: 0,
+        chunkZ: 0,
+        surfaceY: 6,
+        // biome-ignore lint/suspicious/noExplicitAny: stub factory
+        factory: makeFactory() as any,
+        groveState: "discovered",
+      });
+      expect(() => {
+        handle.dispose();
+        handle.dispose();
+      }).not.toThrow();
+    });
   });
 });

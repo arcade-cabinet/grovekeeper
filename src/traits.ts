@@ -220,7 +220,13 @@ export const Settings = trait({
 });
 
 export const GameScreen = trait({
-  value: "menu" as "menu" | "playing" | "paused" | "seedSelect" | "rules",
+  value: "menu" as
+    | "menu"
+    | "new-game"
+    | "playing"
+    | "paused"
+    | "seedSelect"
+    | "rules",
 });
 
 export const Difficulty = trait({

@@ -9,3 +9,10 @@ installDebugGlobals();
 
 // biome-ignore lint/style/noNonNullAssertion: root element is guaranteed by index.html
 render(() => <App />, document.getElementById("root")!);
+
+// Signal the static landing vignette in index.html to fade out, revealing
+// the Solid UI underneath. The CSS transition handles the actual fade —
+// JS only flips the flag once Solid has mounted.
+if (typeof document !== "undefined") {
+  document.body.setAttribute("data-hydrated", "true");
+}

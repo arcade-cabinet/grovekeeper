@@ -92,7 +92,13 @@ export { levelFromXp, totalXpForLevel, xpToNext } from "@/shared/utils/xp";
 
 import { levelFromXp } from "@/shared/utils/xp";
 
-type GameScreenValue = "menu" | "playing" | "paused" | "seedSelect" | "rules";
+type GameScreenValue =
+  | "menu"
+  | "new-game"
+  | "playing"
+  | "paused"
+  | "seedSelect"
+  | "rules";
 
 /**
  * Shape of a hydration payload supplied by the SQLite adapter. All fields are

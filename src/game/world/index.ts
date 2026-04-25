@@ -90,9 +90,30 @@ export {
 } from "./groveGlow";
 export {
   GROVE_RANDOM_PROBABILITY,
+  GUARANTEED_GROVE_CHUNKS,
   isGroveChunk,
+  SECOND_GROVE_CHUNK,
   STARTER_GROVE_CHUNK,
 } from "./grovePlacement";
+// Sub-wave C — starter grove pre-state seeding.
+export {
+  isStarterGroveSeeded,
+  LOG_PILE_BLOCK_ID,
+  LOG_PILE_LOCAL_POSITIONS,
+  seedStarterGrove,
+  STARTER_PROP_Y,
+  STARTER_RECIPE_ID,
+  starterGroveId,
+  STONE_CAIRN_BLOCK_ID,
+  STONE_CAIRN_LOCAL_POSITIONS,
+} from "./starterGrove";
+// Sub-wave C — threshold chime system.
+export {
+  createThresholdSystem,
+  THRESHOLD_DEBOUNCE_MS,
+  type ThresholdSystem,
+  type ThresholdSystemDeps,
+} from "./thresholdSystem";
 export type { SingleChunkActorOptions } from "./SingleChunkActor";
 export { SingleChunkActor } from "./SingleChunkActor";
 export {

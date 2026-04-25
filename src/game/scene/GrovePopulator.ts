@@ -76,6 +76,9 @@ const DEFAULT_HISTORY_VIEW: DialogueHistoryView = {
   hasMet: () => false,
 };
 
+/** Grove lifecycle state — mirrors `groves.state` in the schema. */
+export type GroveStateForSpawn = "discovered" | "claimed";
+
 export interface PopulateGroveOptions {
   worldSeed: number;
   chunkX: number;
@@ -85,6 +88,13 @@ export interface PopulateGroveOptions {
   factory: ActorFactory;
   /** Optional dialogue-history view; defaults to "first meeting, no last phrase". */
   history?: DialogueHistoryView;
+  /**
+   * Sub-wave A — claim gate. When `discovered` (default), only the
+   * Grove Spirit spawns. When `claimed`, the full 1-4 villager pool
+   * spawns alongside. The runtime calls `populateGrove` again with
+   * `claimed` after the claim ritual completes.
+   */
+  groveState?: GroveStateForSpawn;
 }
 
 /** Min/max villagers per grove. Locked by spec (1-4, deterministic). */
@@ -140,22 +150,38 @@ export function populateGrove(options: PopulateGroveOptions): PopulatedGrove {
   });
   spirit.awake();
 
+  // Sub-wave A claim gate — only spawn villagers in claimed groves.
+  // The Spirit (above) always spawns so the discovered-but-unclaimed
+  // grove still has its mythic resident; villagers populate after
+  // the hearth ignites.
+  const groveState: GroveStateForSpawn = options.groveState ?? "discovered";
+  const villagers: VillagerActor[] = [];
+  if (groveState !== "claimed") {
+    let disposed = false;
+    return {
+      groveId: id,
+      chunkX,
+      chunkZ,
+      spirit,
+      villagers,
+      dispose() {
+        if (disposed) return;
+        disposed = true;
+      },
+    };
+  }
+
   // Villager count + per-villager rolls all share one populator RNG so
   // the order is deterministic. Wander rolls use a separate RNG per
   // villager so wandering doesn't reshuffle the spawn map.
   const popRng = scopedRNG("grove-villagers", worldSeed, chunkX, chunkZ);
 
-  // TODO(wave-13): claim gate. Wrap the villager block with
-  //   `if (grove.state !== 'claimed') return { ...spirit-only handle };`
-  // once Wave 13 wires the claim mechanic. RC always spawns villagers
-  // so the cozy-grove vibe is on by default.
   const villagerCount =
     VILLAGERS_PER_GROVE_MIN +
     Math.floor(
       popRng() * (VILLAGERS_PER_GROVE_MAX - VILLAGERS_PER_GROVE_MIN + 1),
     );
 
-  const villagers: VillagerActor[] = [];
   for (let i = 0; i < villagerCount; i++) {
     const a = popRng() * 2 * Math.PI;
     // Spawn somewhere on a ring 2-5 voxels from the centre — close
