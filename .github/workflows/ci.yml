@@ -52,8 +52,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          lfs: true
+        # Intentionally NOT pulling LFS. The dist/ this job uploads is
+        # consumed by `bundle-size` (JS-only inspection) and was previously
+        # consumed by `playthrough` (retired in cbdc686). The deployed Pages
+        # build runs in cd.yml on push:main with `lfs: true` separately.
+        # Skipping LFS here keeps the build in the ~5s envelope; pulling
+        # 761 MB causes vite build to stall under 2-vCPU runner disk-IO.
 
       - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
 
