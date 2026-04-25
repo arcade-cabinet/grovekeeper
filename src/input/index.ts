@@ -8,13 +8,6 @@
  * for the on-screen virtual joystick.
  */
 
-export {
-  ACTIONS,
-  BUTTON_ACTIONS,
-  DEFAULT_KEY_BINDINGS,
-  RELEASED_BUTTON,
-  ZERO_MOVE,
-} from "./actions";
 export type {
   Action,
   ActionState,
@@ -23,17 +16,22 @@ export type {
   KeyboardBindings,
   MoveVector,
 } from "./actions";
-
-export { InputManager } from "./inputManager";
+export {
+  ACTIONS,
+  BUTTON_ACTIONS,
+  DEFAULT_KEY_BINDINGS,
+  RELEASED_BUTTON,
+  ZERO_MOVE,
+} from "./actions";
 export type {
   EngineInput,
   InputManagerOptions,
   InputSource,
   JoystickVector,
 } from "./inputManager";
-
-export { isTouchscreen, mountNipplejsAdapter } from "./nipplejsAdapter";
+export { InputManager } from "./inputManager";
 export type {
   NipplejsAdapterHandle,
   NipplejsAdapterOptions,
 } from "./nipplejsAdapter";
+export { isTouchscreen, mountNipplejsAdapter } from "./nipplejsAdapter";

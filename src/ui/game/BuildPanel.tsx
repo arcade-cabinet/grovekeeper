@@ -3,9 +3,9 @@ import { COLORS } from "@/config/config";
 import type { ResourceType } from "@/config/resources";
 import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
-import { PlayerProgress, Resources } from "@/traits";
 import { getAvailableTemplates } from "@/structures/StructureManager";
 import type { StructureTemplate } from "@/structures/types";
+import { PlayerProgress, Resources } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,

@@ -1,10 +1,7 @@
 [
   {
     "name": "Initial first-paint JS (index + babylon-core)",
-    "path": [
-      "dist/assets/index-*.js",
-      "dist/assets/babylon-core-*.js"
-    ],
+    "path": ["dist/assets/index-*.js", "dist/assets/babylon-core-*.js"],
     "limit": "670 KB",
     "gzip": true
   },

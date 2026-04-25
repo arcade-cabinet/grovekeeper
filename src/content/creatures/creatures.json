@@ -1,0 +1,49 @@
+{
+  "rabbit": {
+    "species": "rabbit",
+    "glb": "assets/models/creatures/peaceful/rabbit.gltf",
+    "idleClip": "Idle 01",
+    "walkClip": "Walk 01",
+    "runClip": "Run 01",
+    "hurtClip": "Get Hit 01",
+    "hpMax": 1,
+    "walkSpeed": 0.8,
+    "fleeSpeed": 3.2,
+    "panicRadius": 4.5,
+    "wanderRadius": 3.0,
+    "wanderPauseSeconds": 2.5,
+    "hostility": "peaceful"
+  },
+  "deer": {
+    "species": "deer",
+    "glb": "assets/models/creatures/peaceful/deer.gltf",
+    "idleClip": "Idle 01",
+    "walkClip": "Walk 01",
+    "runClip": "Run 01",
+    "hurtClip": "Get Hit 01",
+    "hpMax": 3,
+    "walkSpeed": 0.5,
+    "fleeSpeed": 2.0,
+    "panicRadius": 3.0,
+    "wanderRadius": 4.0,
+    "wanderPauseSeconds": 4.0,
+    "hostility": "peaceful"
+  },
+  "wolf-pup": {
+    "species": "wolf-pup",
+    "glb": "assets/models/creatures/hostile/wolf.gltf",
+    "idleClip": "Idle 01",
+    "walkClip": "Walk 01",
+    "runClip": "Run 01",
+    "attackClip": "Attack 01",
+    "hurtClip": "Get Hit 01",
+    "hpMax": 3,
+    "walkSpeed": 0.6,
+    "fleeSpeed": 2.6,
+    "aggroRadius": 5.0,
+    "damagePerHit": 5,
+    "wanderRadius": 3.0,
+    "wanderPauseSeconds": 3.0,
+    "hostility": "hostile"
+  }
+}

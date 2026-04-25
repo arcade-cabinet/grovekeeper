@@ -11,8 +11,8 @@
  * doesn't need its own trait.
  */
 
-import { koota } from "@/koota";
 import type { SerializedTreeDb } from "@/db/queries";
+import { koota } from "@/koota";
 import {
   Achievements,
   Build,

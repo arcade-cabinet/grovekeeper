@@ -24,13 +24,13 @@
  *     player with weather flavour.
  */
 
-import type { TimeOfDay } from "@/systems/time";
 import {
   type DialogueTimeBucket,
   phraseId,
   SPIRIT_PHRASES,
   VILLAGER_PHRASES,
 } from "@/content/dialogue/phrase-pools";
+import type { TimeOfDay } from "@/systems/time";
 
 export type Speaker = "spirit" | "villager";
 

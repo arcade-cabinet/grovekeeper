@@ -5,8 +5,8 @@
  * by combining goals from different pools to create varied objectives.
  */
 
-import { scopedRNG } from "@/shared/utils/seedRNG";
 import type { ResourceType } from "@/config/resources";
+import { scopedRNG } from "@/shared/utils/seedRNG";
 import type { Season } from "./time";
 
 // ============================================

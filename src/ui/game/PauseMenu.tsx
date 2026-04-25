@@ -42,6 +42,7 @@ import { RulesModal } from "./RulesModal";
 
 // FarmerMascot deleted; journey wave replaces this UI.
 const FarmerMascot = (_: { size?: number; animate?: boolean }) => null;
+
 import { StatsDashboard } from "./StatsDashboard";
 import { showToast } from "./Toast";
 

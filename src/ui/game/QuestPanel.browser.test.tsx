@@ -8,8 +8,8 @@
 
 import { render } from "@solidjs/testing-library";
 import { describe, expect, it } from "vitest";
-import { QuestPanel } from "./QuestPanel";
 import type { ActiveQuest } from "@/systems/quests";
+import { QuestPanel } from "./QuestPanel";
 
 /** A minimal quest fixture for rendering. */
 function makeQuest(id: string): ActiveQuest {

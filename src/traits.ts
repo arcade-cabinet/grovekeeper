@@ -5,6 +5,7 @@
 // the persistent ECS schema only needs opaque shapes here.
 type Vector3 = { x: number; y: number; z: number };
 type Mesh = unknown;
+
 import type { Entity } from "koota";
 import { relation, trait } from "koota";
 import type { ResourceType } from "@/config/resources";
@@ -89,7 +90,12 @@ export const Scarecrow = trait({ radius: 0 });
 
 export const IsPlayer = trait();
 
-export const FarmerState = trait({ stamina: 100, maxStamina: 100 });
+export const FarmerState = trait({
+  stamina: 100,
+  maxStamina: 100,
+  hp: 100,
+  maxHp: 100,
+});
 
 export const Npc = trait({
   templateId: "",

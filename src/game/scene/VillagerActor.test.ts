@@ -149,8 +149,14 @@ describe("VillagerActor", () => {
     villagerB.awake();
     for (let i = 0; i < 10; i++) villagerB.update(50);
 
-    expect(actorA.object3D.position.x).toBeCloseTo(actorB.object3D.position.x, 6);
-    expect(actorA.object3D.position.z).toBeCloseTo(actorB.object3D.position.z, 6);
+    expect(actorA.object3D.position.x).toBeCloseTo(
+      actorB.object3D.position.x,
+      6,
+    );
+    expect(actorA.object3D.position.z).toBeCloseTo(
+      actorB.object3D.position.z,
+      6,
+    );
   });
 
   it("integrates wander steps into position over time", async () => {

@@ -33,9 +33,9 @@
 
 import {
   AudioBackground,
+  type AudioBackgroundPlaylist,
   AudioLibrary,
   GlobalAudioManager,
-  type AudioBackgroundPlaylist,
   type Systems,
 } from "@jolly-pixel/engine";
 import {

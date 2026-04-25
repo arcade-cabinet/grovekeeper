@@ -24,12 +24,15 @@ import type {
   PhrasePick,
 } from "@/game/dialogue/dialogueSystem";
 import type { GroveSpiritActor } from "./GroveSpiritActor";
-import type { VillagerActor } from "./VillagerActor";
 import npcConfig from "./npc.config.json";
+import type { VillagerActor } from "./VillagerActor";
 
 /** What the system needs to read the player's "interact" rising edge. */
 export interface InteractionInput {
-  getActionState(action: "interact"): { pressed: boolean; justPressed: boolean };
+  getActionState(action: "interact"): {
+    pressed: boolean;
+    justPressed: boolean;
+  };
 }
 
 /** What the system needs from the player to range-test. */

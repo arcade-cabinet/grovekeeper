@@ -33,11 +33,11 @@
  */
 
 import type { Actor } from "@jolly-pixel/engine";
+import worldConfig from "@/game/world/world.config.json";
 import { scopedRNG } from "@/shared/utils/seedRNG";
 import { GroveSpiritActor } from "./GroveSpiritActor";
-import { VillagerActor } from "./VillagerActor";
 import npcConfig from "./npc.config.json";
-import worldConfig from "@/game/world/world.config.json";
+import { VillagerActor } from "./VillagerActor";
 
 /** Public handle returned by `populateGrove`. */
 export interface PopulatedGrove {
@@ -119,9 +119,7 @@ export function groveVillagerId(
  * Spawn one Grove Spirit + 1-4 villagers on the given grove chunk.
  * Returns a handle the caller can later `dispose()`.
  */
-export function populateGrove(
-  options: PopulateGroveOptions,
-): PopulatedGrove {
+export function populateGrove(options: PopulateGroveOptions): PopulatedGrove {
   const { worldSeed, chunkX, chunkZ, surfaceY, factory } = options;
   const history = options.history ?? DEFAULT_HISTORY_VIEW;
 
@@ -154,8 +152,7 @@ export function populateGrove(
   const villagerCount =
     VILLAGERS_PER_GROVE_MIN +
     Math.floor(
-      popRng() *
-        (VILLAGERS_PER_GROVE_MAX - VILLAGERS_PER_GROVE_MIN + 1),
+      popRng() * (VILLAGERS_PER_GROVE_MAX - VILLAGERS_PER_GROVE_MIN + 1),
     );
 
   const villagers: VillagerActor[] = [];

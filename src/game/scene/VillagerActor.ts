@@ -87,7 +87,8 @@ export function villagerModelPath(variant: number): string {
       ? import.meta.env.BASE_URL
       : "/";
   const baseTrimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-  const v = ((variant % VILLAGER_MODELS.length) + VILLAGER_MODELS.length) %
+  const v =
+    ((variant % VILLAGER_MODELS.length) + VILLAGER_MODELS.length) %
     VILLAGER_MODELS.length;
   return `${baseTrimmed}/${VILLAGER_MODELS[v]}`;
 }

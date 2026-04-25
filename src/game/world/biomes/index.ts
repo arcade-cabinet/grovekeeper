@@ -11,10 +11,10 @@ export { FOREST_BIOME, FOREST_BLOCK_IDS } from "./forest";
 export { GROVE_BIOME, GROVE_BLOCK_IDS } from "./grove";
 export { MEADOW_BIOME, MEADOW_BLOCK_IDS } from "./meadow";
 export { DEFAULT_BIOME_ID, getBiome, listBiomes } from "./registry";
-export { BIOME_IDS } from "./types";
 export type {
   BiomeDecoration,
   BiomeDefinition,
   BiomeId,
   BiomePalette,
 } from "./types";
+export { BIOME_IDS } from "./types";

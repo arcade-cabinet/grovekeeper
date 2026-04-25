@@ -119,6 +119,8 @@ describe("getBiomeWeightTable", () => {
       expect(b.cumulative).toBeGreaterThan(prev);
       prev = b.cumulative;
     }
-    expect(table.buckets[table.buckets.length - 1].cumulative).toBe(table.total);
+    expect(table.buckets[table.buckets.length - 1].cumulative).toBe(
+      table.total,
+    );
   });
 });

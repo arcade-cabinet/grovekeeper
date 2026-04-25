@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
-import type { Spirit } from "@/config/spirits";
 import { COLORS } from "@/config/config";
+import type { Spirit } from "@/config/spirits";
 import {
   Dialog,
   DialogContent,

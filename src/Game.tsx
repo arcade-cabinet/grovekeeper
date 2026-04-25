@@ -24,6 +24,7 @@ import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameModal } from "@/ui/game/NewGameModal";
 import { NpcSpeechBubble } from "@/ui/game/NpcSpeechBubble";
+import { RetreatOverlay } from "@/ui/game/RetreatOverlay";
 
 const GameScene = lazy(() =>
   import("@/game/scene/GameScene")
@@ -225,6 +226,11 @@ export const Game = () => {
             )}
           </Show>
         </Show>
+
+        {/* Wave 14/15: retreat fade overlay — always mounted, opacity 0
+            on idle. Sits above all gameplay UI so the fade-to-black is
+            unbroken by HUD elements. */}
+        <RetreatOverlay />
 
         <NewGameModal
           open={showNewGame()}

@@ -17,14 +17,11 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  pickPhrase,
-  timeOfDayBucket,
-} from "./dialogueSystem";
-import {
   phraseId,
   SPIRIT_PHRASES,
   VILLAGER_PHRASES,
 } from "@/content/dialogue/phrase-pools";
+import { pickPhrase, timeOfDayBucket } from "./dialogueSystem";
 
 /** Random sequence injector — yields the next number from `xs` each call. */
 function fixedRandom(xs: number[]): () => number {

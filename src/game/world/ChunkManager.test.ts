@@ -110,12 +110,15 @@ describe("ChunkManager", () => {
     vi.restoreAllMocks();
   });
 
-  function manager(world: FakeWorld, overrides?: Partial<{
-    activeRadius: number;
-    bufferRadius: number;
-    spawnsPerFrame: number;
-    despawnsPerFrame: number;
-  }>): ChunkManager {
+  function manager(
+    world: FakeWorld,
+    overrides?: Partial<{
+      activeRadius: number;
+      bufferRadius: number;
+      spawnsPerFrame: number;
+      despawnsPerFrame: number;
+    }>,
+  ): ChunkManager {
     return new ChunkManager({
       world,
       playerPosition: position,

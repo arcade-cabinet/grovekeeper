@@ -103,8 +103,11 @@ describe("GroveSpiritActor", () => {
   });
 
   it("bobs the Y position around spawn.y over the configured period", async () => {
-    const { GroveSpiritActor, SPIRIT_BOB_AMPLITUDE, SPIRIT_BOB_PERIOD_SECONDS } =
-      await import("./GroveSpiritActor");
+    const {
+      GroveSpiritActor,
+      SPIRIT_BOB_AMPLITUDE,
+      SPIRIT_BOB_PERIOD_SECONDS,
+    } = await import("./GroveSpiritActor");
     const actor = createMockActor();
     const spirit = new GroveSpiritActor(
       // biome-ignore lint/suspicious/noExplicitAny: cast for stub

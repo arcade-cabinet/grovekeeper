@@ -46,7 +46,8 @@ export interface NpcSpeechBubbleProps {
 }
 
 /** Default hold duration before fade-out, from `npc.config.json`. */
-export const DEFAULT_BUBBLE_HOLD_SECONDS = npcConfig.interaction.bubbleHoldSeconds;
+export const DEFAULT_BUBBLE_HOLD_SECONDS =
+  npcConfig.interaction.bubbleHoldSeconds;
 
 export function NpcSpeechBubble(props: NpcSpeechBubbleProps) {
   const [visible, setVisible] = createSignal(false);

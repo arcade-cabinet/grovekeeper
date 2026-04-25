@@ -7,6 +7,7 @@
  */
 
 export {
+  __resetAudioForTests,
   initAudio,
   isAudioInitialized,
   playSound,
@@ -14,7 +15,6 @@ export {
   setChannelVolume,
   setMasterVolume,
   setMusicTrack,
-  __resetAudioForTests,
 } from "./audio";
 
 export {
@@ -26,7 +26,7 @@ export {
 } from "./audioLibrary";
 
 export {
+  type BiomeId,
   getTracksForBiome,
   setBiomeMusic,
-  type BiomeId,
 } from "./biomeMusic";

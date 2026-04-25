@@ -3,9 +3,9 @@ import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
-import { Resources } from "@/traits";
 import type { TradeRate } from "@/systems/trading";
 import { executeTrade, getTradeRates } from "@/systems/trading";
+import { Resources } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import {
   Dialog,

@@ -119,8 +119,14 @@ describe("GrovePopulator", () => {
     expect(a.villagers.length).toBeLessThanOrEqual(4);
     // Same seed → same spawn positions.
     for (let i = 0; i < a.villagers.length; i++) {
-      expect(a.villagers[i].position.x).toBeCloseTo(b.villagers[i].position.x, 5);
-      expect(a.villagers[i].position.z).toBeCloseTo(b.villagers[i].position.z, 5);
+      expect(a.villagers[i].position.x).toBeCloseTo(
+        b.villagers[i].position.x,
+        5,
+      );
+      expect(a.villagers[i].position.z).toBeCloseTo(
+        b.villagers[i].position.z,
+        5,
+      );
     }
   });
 

@@ -12,8 +12,8 @@
  */
 
 import type { TilesetDefinition } from "@jolly-pixel/voxel.renderer";
-import { getBiome } from "./biomes";
 import type { BiomeDefinition, BiomeId } from "./biomes";
+import { getBiome } from "./biomes";
 
 /** Resolves the project base URL with a guaranteed trailing slash. */
 function tilesetBaseUrl(): string {
