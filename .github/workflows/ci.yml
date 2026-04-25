@@ -13,6 +13,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Workflow-level least-privilege. None of the jobs need write access; the
+# release pipeline (release.yml) handles tag/asset writes separately.
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   check:
     name: Lint, Type-check & Test

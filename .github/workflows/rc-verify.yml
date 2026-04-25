@@ -26,10 +26,18 @@ concurrency:
   group: rc-verify-${{ github.ref }}
   cancel-in-progress: true
 
+# Workflow-level least-privilege. Both jobs only need to read repo content
+# and upload action artifacts. No write access required.
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   screenshot-gates:
     name: Screenshot gates (RC journey)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # The screenshot suite is a visualization aid for human review, not a
     # merge gate — render-environment differences between local capture and
     # CI runners produce false-positive diffs. Job-level continue-on-error
@@ -78,6 +86,8 @@ jobs:
   lighthouse:
     name: Lighthouse landing audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
