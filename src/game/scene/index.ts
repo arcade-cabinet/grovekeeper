@@ -7,7 +7,16 @@
 export { CameraFollowBehavior } from "./CameraFollowBehavior";
 export type { CameraFollowOptions } from "./CameraFollowBehavior";
 export { GameScene } from "./GameScene";
-export { PlayerActor } from "./PlayerActor";
-export type { PlayerActorOptions, PlayerSpawn } from "./PlayerActor";
+export {
+  PLAYER_IDLE_CLIP,
+  PLAYER_MOVE_SPEED,
+  PLAYER_WALK_CLIP,
+  PlayerActor,
+} from "./PlayerActor";
+export type {
+  PlayerActorOptions,
+  PlayerBounds,
+  PlayerSpawn,
+} from "./PlayerActor";
 export { createRuntime } from "./runtime";
 export type { CreateRuntimeOptions, SceneHandle } from "./runtime";

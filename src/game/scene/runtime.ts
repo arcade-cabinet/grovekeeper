@@ -21,9 +21,15 @@ import {
   setMasterVolume,
 } from "@/audio";
 import { getPref } from "@/db/preferences";
-import { SingleChunkActor } from "@/game/world";
+import { CHUNK_TUNING, SingleChunkActor } from "@/game/world";
+import {
+  InputManager,
+  mountNipplejsAdapter,
+  type NipplejsAdapterHandle,
+} from "@/input";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
-import { PlayerActor } from "./PlayerActor";
+import { PlayerActor, type PlayerBounds } from "./PlayerActor";
+import playerConfig from "./player.config.json";
 
 export interface SceneHandle {
   runtime: Runtime;
@@ -38,6 +44,27 @@ export interface SceneHandle {
 export interface CreateRuntimeOptions {
   /** Whether to overlay JP's perf stats panel. Defaults to false. */
   includePerformanceStats?: boolean;
+  /**
+   * Force the on-screen virtual joystick on for desktop. Defaults to
+   * false — `mountNipplejsAdapter` only enables itself on touchscreens.
+   */
+  forceJoystick?: boolean;
+}
+
+/**
+ * Build a single-chunk player bounds box from `CHUNK_TUNING`. Wave 9
+ * swaps this for streamed bounds; here it's just a container the
+ * player can't walk out of.
+ */
+function singleChunkBounds(): PlayerBounds {
+  const { size, groundY } = CHUNK_TUNING;
+  return {
+    minX: 0,
+    maxX: size - 1,
+    minZ: 0,
+    maxZ: size - 1,
+    groundY: groundY + 1, // top of the surface block
+  };
 }
 
 export async function createRuntime(
@@ -70,13 +97,34 @@ export async function createRuntime(
     worldSeed: 0,
   });
 
-  // Placeholder player Actor. Renders a green cube at the centre of the
-  // chunk, sitting on top of the grass surface (groundY + hill bump =
-  // SingleChunkActor.SURFACE_Y). The Gardener GLB ModelRenderer
-  // replaces the cube in Wave 11a.
+  // Input — action-mapped wrapper over the engine's `world.input`.
+  // The InputManager is a plain object; the engine doesn't know about
+  // it. PlayerActor reads from it each frame.
+  const inputManager = new InputManager({ input: world.input });
+
+  // Joystick — mounted on the canvas's parent element so it overlays
+  // the scene. nipplejs internally creates its own DOM nodes; on
+  // desktop without forceJoystick this is a no-op.
+  const joystickHost = canvas.parentElement ?? canvas;
+  let joystickHandle: NipplejsAdapterHandle | null = null;
+  try {
+    joystickHandle = mountNipplejsAdapter({
+      zone: joystickHost as HTMLElement,
+      inputManager,
+      forceEnable: options.forceJoystick ?? false,
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("[grovekeeper] joystick mount failed", error);
+  }
+
+  // Player Actor. Reads `move` from the InputManager each frame, walks
+  // around the chunk, swaps Idle ↔ Walk on the Gardener GLTF.
   const playerActor = world.createActor("player");
   const playerBehavior = playerActor.addComponentAndGet(PlayerActor, {
     spawn: { x: 8, y: SingleChunkActor.SURFACE_Y + 1, z: 8 },
+    inputManager,
+    bounds: singleChunkBounds(),
   });
 
   // Follow camera. Lerps to the player actor each tick. Offset retuned
@@ -85,6 +133,7 @@ export async function createRuntime(
   cameraActor.addComponentAndGet(CameraFollowBehavior, {
     player: playerBehavior,
     offset: new THREE.Vector3(0, 8, 12),
+    responsiveness: playerConfig.cameraResponsiveness,
   });
 
   // Audio bootstrap. Registers every symbolic sound id with the engine's
@@ -140,6 +189,11 @@ export async function createRuntime(
     dispose() {
       if (disposed) return;
       disposed = true;
+      try {
+        joystickHandle?.destroy();
+      } catch {
+        /* idempotent */
+      }
       try {
         runtime.stop();
       } catch {
