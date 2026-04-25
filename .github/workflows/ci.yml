@@ -81,8 +81,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          lfs: true
+        # Intentionally NOT pulling LFS. size-limit only inspects the JS
+        # bundle output (dist/assets/*.js); GLB/audio LFS assets aren't part
+        # of the size budget. Pulling 761 MB causes vite build to stall
+        # under disk-IO pressure on ubuntu-latest's 2-vCPU runner (same
+        # pattern that hit screenshot-gates before c3aa00d).
 
       - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
 
@@ -99,47 +102,11 @@ jobs:
       - name: Check bundle size
         run: pnpm size
 
-  playthrough:
-    name: Deterministic E2E Playthrough
-    runs-on: ubuntu-latest
-    needs: build
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          lfs: true
-
-      - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
-
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Install Playwright Chromium
-        run: pnpm playwright install chromium --with-deps
-
-      # Only run chromium project in CI; mobile-chrome viewport has
-      # a known flake on the plant-action waypoint under GitHub's
-      # headless runner. Tracked for follow-up; all chromium tests pass.
-      - name: Run deterministic playthrough (chromium only)
-        run: pnpm playwright test e2e/playthrough.spec.ts --project=chromium
-
-      - name: Upload playthrough snapshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playthrough-snapshots
-          path: e2e/__snapshots__/
-          retention-days: 30
+  # The legacy `playthrough` job (e2e/playthrough.spec.ts) was retired in the
+  # RC redesign — it was authoritative for the pre-redesign 9-zone BabylonJS
+  # game and broke once MainMenu was rewritten and the engine swapped to
+  # Jolly Pixel. The new authoritative end-to-end suite is e2e/rc-journey.spec.ts,
+  # exercised by the rc-verify.yml workflow's `screenshot-gates` job.
 
   # T103: Android APK debug build
   # NOTE: This job requires "npx cap add android" to have been run locally and
