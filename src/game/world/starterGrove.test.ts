@@ -9,12 +9,12 @@ import {
   isStarterGroveSeeded,
   LOG_PILE_BLOCK_ID,
   LOG_PILE_LOCAL_POSITIONS,
-  seedStarterGrove,
-  starterGroveId,
   STARTER_PROP_Y,
   STARTER_RECIPE_ID,
   STONE_CAIRN_BLOCK_ID,
   STONE_CAIRN_LOCAL_POSITIONS,
+  seedStarterGrove,
+  starterGroveId,
 } from "./starterGrove";
 
 const WORLD_ID = "starter-grove-test-world";

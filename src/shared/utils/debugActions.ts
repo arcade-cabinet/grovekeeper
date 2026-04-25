@@ -19,12 +19,12 @@
  *   - Dev console: window.__grove.actions.teleportPlayer(80, 0)
  */
 
-import { koota } from "@/koota";
 import { actions as gameActions } from "@/actions";
+import type { ResourceType } from "@/config/resources";
+import { koota } from "@/koota";
 import { movePlayerTo } from "@/player-actions/GameActions";
 import { eventBus } from "@/runtime/eventBus";
 import { CurrentSeason, IsPlayer, Position, WorldMeta } from "@/traits";
-import type { ResourceType } from "@/config/resources";
 
 /**
  * Map of `resource.kind` strings the e2e suite uses (e.g. "material.log",

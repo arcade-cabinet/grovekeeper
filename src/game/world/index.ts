@@ -95,18 +95,24 @@ export {
   SECOND_GROVE_CHUNK,
   STARTER_GROVE_CHUNK,
 } from "./grovePlacement";
+export type { SingleChunkActorOptions } from "./SingleChunkActor";
+export { SingleChunkActor } from "./SingleChunkActor";
 // Sub-wave C — starter grove pre-state seeding.
 export {
   isStarterGroveSeeded,
   LOG_PILE_BLOCK_ID,
   LOG_PILE_LOCAL_POSITIONS,
-  seedStarterGrove,
   STARTER_PROP_Y,
   STARTER_RECIPE_ID,
-  starterGroveId,
   STONE_CAIRN_BLOCK_ID,
   STONE_CAIRN_LOCAL_POSITIONS,
+  seedStarterGrove,
+  starterGroveId,
 } from "./starterGrove";
+export {
+  isMobileLikeDevice,
+  resolveStreamingConfig,
+} from "./streamingConfig";
 // Sub-wave C — threshold chime system.
 export {
   createThresholdSystem,
@@ -114,9 +120,3 @@ export {
   type ThresholdSystem,
   type ThresholdSystemDeps,
 } from "./thresholdSystem";
-export type { SingleChunkActorOptions } from "./SingleChunkActor";
-export { SingleChunkActor } from "./SingleChunkActor";
-export {
-  isMobileLikeDevice,
-  resolveStreamingConfig,
-} from "./streamingConfig";

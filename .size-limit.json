@@ -1,20 +1,26 @@
 [
   {
-    "name": "Initial first-paint JS (index + babylon-core)",
-    "path": ["dist/assets/index-*.js", "dist/assets/babylon-core-*.js"],
-    "limit": "670 KB",
-    "gzip": true
-  },
-  {
-    "name": "babylon-loaders (lazy)",
-    "path": "dist/assets/babylon-loaders-*.js",
-    "limit": "100 KB",
+    "name": "Initial first-paint JS (index)",
+    "path": ["dist/assets/index-*.js"],
+    "limit": "200 KB",
     "gzip": true
   },
   {
     "name": "GameScene (lazy)",
     "path": "dist/assets/GameScene-*.js",
     "limit": "110 KB",
+    "gzip": true
+  },
+  {
+    "name": "three (modulepreload)",
+    "path": "dist/assets/three-*.js",
+    "limit": "260 KB",
+    "gzip": true
+  },
+  {
+    "name": "jolly-pixel (modulepreload)",
+    "path": "dist/assets/jolly-pixel-*.js",
+    "limit": "100 KB",
     "gzip": true
   },
   {

@@ -10,6 +10,12 @@
  * measured separately by `e2e/perf.spec.ts`. Per the spec:
  *   "Lighthouse audit on landing — score budgets: Performance ≥ 90 mobile,
  *    Best Practices ≥ 95."
+ *
+ * Mobile emulation is enforced by `preset: "mobile"` (Lighthouse defaults
+ * to mobile when `preset` is unset, but we make it explicit here so the
+ * gate cannot silently regress to desktop). A separate desktop sanity
+ * snapshot can be produced ad-hoc with `lhci collect --preset=desktop`,
+ * but only the mobile run is enforced as a CI gate.
  */
 module.exports = {
   ci: {
@@ -23,9 +29,7 @@ module.exports = {
       url: ["http://localhost:4173/"],
       numberOfRuns: 3,
       settings: {
-        preset: "desktop", // baseline desktop run
-        // The mobile run is achieved by the second `assert` group below;
-        // when audit:lighthouse:mobile is invoked, settings are overridden.
+        preset: "mobile",
         chromeFlags: "--no-sandbox --headless=new",
       },
     },

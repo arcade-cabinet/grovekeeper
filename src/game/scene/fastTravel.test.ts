@@ -8,9 +8,9 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  type ClaimedGroveNode,
   FAST_TRAVEL_TIMING,
   FastTravelController,
-  type ClaimedGroveNode,
   listClaimedGroves,
 } from "./fastTravel";
 

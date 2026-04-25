@@ -150,46 +150,67 @@ jobs:
     name: Android Debug APK
     runs-on: ubuntu-latest
     needs: build
-    # Gate on android/ directory presence - job is skipped (not failed) until
-    # the native project is committed.
-    if: hashFiles('android/gradlew') != ''
+    # The job always runs but every build step is gated on the
+    # `android-check.outputs.present` flag set by the first step. We can't
+    # use `hashFiles()` in a job-level `if:` (GitHub Actions does not allow
+    # the function in that context — see actionlint warning), so the
+    # presence probe lives inside the job and produces a step output.
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          lfs: false
+          lfs: true
+
+      - name: Check for Android project
+        id: android-check
+        run: |
+          if [ -f android/gradlew ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::android/ not present yet — APK steps skipped."
+          fi
 
       - uses: pnpm/action-setup@9fd676a19091d4595eefd76e4bd31c97133911f1 # v4
+        if: steps.android-check.outputs.present == 'true'
 
       - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        if: steps.android-check.outputs.present == 'true'
         with:
           node-version: 22
           cache: pnpm
 
       - name: Set up JDK 21 (Temurin)
+        if: steps.android-check.outputs.present == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Set up Android SDK
+        if: steps.android-check.outputs.present == 'true'
         uses: android-actions/setup-android@v3
         with:
           api-level: 34
           build-tools-version: '34.0.0'
 
-      - run: pnpm install --frozen-lockfile
+      - if: steps.android-check.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
 
       - name: Build web assets
+        if: steps.android-check.outputs.present == 'true'
         run: pnpm build
 
       - name: Sync Capacitor
+        if: steps.android-check.outputs.present == 'true'
         run: npx cap sync android
 
       - name: Build debug APK
+        if: steps.android-check.outputs.present == 'true'
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK artifact
+        if: steps.android-check.outputs.present == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: grovekeeper-debug-${{ github.sha }}

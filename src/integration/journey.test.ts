@@ -52,8 +52,8 @@ import {
 import { createTestDb, type TestDbHandle } from "@/db/repos/testDb";
 import { pickScriptedSpiritLine } from "@/game/dialogue/dialogueSystem";
 import {
-  ClaimRitualSystem,
   CLAIM_RITUAL_TIMING,
+  ClaimRitualSystem,
 } from "@/game/scene/ClaimRitualSystem";
 import {
   FastTravelController,
@@ -71,9 +71,9 @@ import {
 import {
   isStarterGroveSeeded,
   LOG_PILE_BLOCK_ID,
+  STONE_CAIRN_BLOCK_ID,
   seedStarterGrove,
   starterGroveId,
-  STONE_CAIRN_BLOCK_ID,
 } from "@/game/world/starterGrove";
 import { createThresholdSystem } from "@/game/world/thresholdSystem";
 
