@@ -61,12 +61,12 @@ jobs:
           tag_name: ${{ needs.release-please.outputs.tag_name }}
           files: grovekeeper-web.tar.gz
 
-      # Also upload dist/ as a workflow artifact so cd.yml can download it
-      # on the same push-to-main event without waiting for the release tag.
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
-        with:
-          path: dist
+      # Note: cd.yml builds its own dist/ on push:main with `lfs: true`,
+      # so we don't bridge an artifact across workflows. (An earlier
+      # iteration tried `actions/upload-pages-artifact` here, but that
+      # produces a special Pages-typed artifact only consumable by
+      # `actions/deploy-pages` in the same workflow run, which cd.yml
+      # is not.)
 
       # T103 follow-up: Android APK release build
       # Gated on android/ being present (same as ci.yml android-apk job).
