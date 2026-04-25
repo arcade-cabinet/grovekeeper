@@ -1,420 +1,314 @@
 ---
-title: Grovekeeper — Claude Entry Point
-updated: 2026-04-19
+title: CLAUDE.md — Grovekeeper
+updated: 2026-04-24
 status: current
+domain: technical
 ---
 
-# CLAUDE.md -- Grovekeeper
+# CLAUDE.md — Grovekeeper
 
-See `docs/` for complete game design, architecture, and brand documentation.
+This file is the agent entry point. The full source-of-truth design is at
+`docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`. Read it
+first if you are starting fresh on this codebase.
 
-## Project Identity
+## Project identity
 
-**Grovekeeper** is a cozy 2.5D isometric tree-planting simulation / idle tending game. Mobile-first PWA (portrait), desktop secondary. Target session: 3-15 minutes (commute-friendly).
+**Grovekeeper** is a third-person voxel tree-tending and town-building game.
+You are **The Gardener** — singular, mythic. You wander an infinite procedural
+voxel outer-world of biome archetypes (each with its own flora, fauna, voxel
+palette, weather, and threats) and discover **Groves** — a special, glowing,
+peaceful biome scattered through the wilderness by PRNG. You **claim** a grove
+by gathering, crafting, placing, and lighting a Hearth. Claimed groves form
+your fast-travel network and become safe spaces for free voxel building, tree
+tending, and ambient NPC life.
+
+The two-mode tonal contrast — dangerous wild, peaceful grove — is the design.
 
 **Tagline:** *"Every forest begins with a single seed."*
 
-## Critical Context
+**Mobile-first PWA** (portrait), desktop secondary. Target session: 3–15
+minutes. Capacitor wraps it for native iOS/Android.
 
-### Mobile-First is Non-Negotiable
+## Status
 
-Every decision -- from UI layout to performance budgets to touch targets -- must prioritize mobile portrait mode. Desktop is a graceful enhancement, never the primary target.
+Mid-redesign. The currently-deployed game (1.0.0-alpha.1 on
+`https://arcade-cabinet.github.io/grovekeeper/`) is a cozy 2.5D BabylonJS
+tree-tender with 9 hardcoded JSON zones. That game is being replaced per the
+RC spec. Active branch: `release/workflows-v2`. See `docs/STATE.md` for the
+current wave.
 
-- All touch targets: minimum 44x44px
-- Unified InputManager: drag-anywhere on canvas (mobile), WASD (desktop), tap/click-to-move with A* pathfinding
+## Critical context
+
+### Mobile-first is non-negotiable
+
+- Touch targets ≥ 44×44px
 - Test at 375px width (iPhone SE) as the minimum viewport
 - Passive event listeners for all pointer handlers
 - `touch-action: none` on the game canvas
+- Mobile virtual joystick via `nipplejs` over engine touch input
 - Haptic feedback via `@capacitor/haptics` on supported devices
+- Chunk active/buffer radius is mobile-tuned (smaller on phone, larger on
+  desktop) and tunable in `config/world.json`
 
-### Current Tech Stack
+### Two-pipeline rendering rule
+
+The world's *terrain and structural voxels* (ground, building blocks, hearth,
+walls) render through `@jolly-pixel/voxel.renderer` using **PNG tilesets per
+biome**. The world's *animated things* (Gardener, NPCs, creatures, Grove
+Spirit, ambient animals) render through `@jolly-pixel/engine`'s `ModelRenderer`
+using **GLB models with animation cycles**. Both live in the same Three.js
+scene. Confusing the two is the failure mode.
+
+### Tech stack
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Runtime | SolidJS 1.9 | Fine-grained reactivity, no VDOM |
-| 3D Engine | BabylonJS 8.x | Scene rendering, procedural meshes, GPU instancing |
-| ECS + State | Koota 0.6 | Single state system: runtime ECS + persistent traits |
-| Audio | Tone.js 15 | All SFX synthesized; no raw Web Audio API |
-| Input | InputManager (custom) | Unified pointer/keyboard/tap-to-move with A* pathfinding |
-| Styling | Tailwind CSS 4.x | Hand-rolled Solid primitives (no shadcn/Radix) |
-| Bundler | Vite 6.x | Fast dev server, HMR, vite-plugin-solid |
-| Language | TypeScript 5.7+ | Strict mode |
-| Lint/Fmt | Biome 2.3 | Single tool for lint + format |
-| Package Mgr | pnpm | Fast, strict |
-| Testing | Vitest 4.x + @solidjs/testing-library | Node (happy-dom) + Browser (playwright) |
-| Mobile Native | Capacitor 8.x | PWA + native bridge |
+| Engine | `@jolly-pixel/engine` v2.5.0 | Three.js-based ECS, `Actor`/`ActorComponent`, `ModelRenderer` for GLBs, `Camera3DControls`, `Input`, `Systems.Assets` |
+| Voxel renderer | `@jolly-pixel/voxel.renderer` v1.4.0 | Chunk renderer, `blockRegistry`, PNG tileset loading, JSON chunk format, 16³ chunks |
+| Runtime | `@jolly-pixel/runtime` v3.3.0 | Boot wrapper, GPU tier detection, `<jolly-loading>` element |
+| Physics | Rapier (transitive via voxel.renderer) | Thin collision wrapper we own |
+| ECS state | Koota | Pure game state (claimed groves, inventory, recipes, dialogue history). Engine `Actor` for scene-bound state |
+| UI | SolidJS 1.9 | Overlay HUD, menus, crafting surface, dialogue, fast-travel map |
+| Audio | Engine `AudioManager` / `AudioLibrary` / `AudioBackground` / `GlobalAudio` (Howler-backed) | Real recorded SFX/music/ambient from itch.io packs. **No Tone.js.** |
+| Input | Engine `Input` + `CombinedInput` desktop, `nipplejs` mobile | Thin action-mapping layer (`move`, `interact`, `swing`, `place`, `open-craft`) |
+| Camera | Extended `Camera3DControls` follow-lerp | Third-person, lerps to player, optional hit shake |
+| Persistence | `drizzle-orm` → `@capacitor-community/sqlite` (sql.js web adapter) | Plus `@capacitor/preferences` for small KV settings |
+| Bundler | Vite 6.x | |
+| Mobile shell | Capacitor 8.x | |
+| Language | TypeScript 5.7+ strict | |
+| Lint/format | Biome 2.3 | |
+| Package manager | pnpm 10 | |
+| Testing | Vitest 4.x (node + browser projects) + Playwright 1.59 | Includes screenshot baselines |
 
-Historical: was React 19 + Miniplex + Zustand + shadcn/Radix pre-1.0.0-alpha.1.
-Migration details in `CHANGELOG.md` and the B1-B24 commit history.
+**No BabylonJS. No Tone.js. No SPS tree generator. No A* tap-to-move. No
+9-zone JSON world.** All deleted in the port.
 
-## Common Commands
+## Common commands
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Development server
-pnpm dev
-
-# Build (development mode)
-pnpm build
-
-# Preview production build
-pnpm preview
-
-# Run tests
-pnpm test
-
-# Run tests once (CI mode)
-pnpm test:run
-
-# Test with coverage
-pnpm test:coverage
-
-# Lint
-pnpm lint
-
-# Format
-pnpm format
-
-# Full check (lint + format)
-pnpm check
-
-# TypeScript type check
-pnpm tsc
+pnpm install              # install deps
+pnpm dev                  # dev server
+pnpm build                # production build
+pnpm preview              # preview built artifact on :8080
+pnpm test                 # vitest, node project (default)
+pnpm test:run             # vitest, node project, single run
+pnpm test:browser         # vitest, browser project (Playwright-driven)
+pnpm test:all             # all vitest projects
+pnpm test:coverage        # node project with coverage
+pnpm test:e2e             # build + Playwright e2e
+pnpm test:playthrough     # the journey screenshot suite (RC gate)
+pnpm tsc                  # typecheck (no emit)
+pnpm lint                 # biome lint
+pnpm format               # biome format --write
+pnpm check                # biome check (lint + format)
+pnpm size                 # size-limit budget check
 ```
 
-## Project Structure
+## Project structure (post-port target)
+
+The current tree still has BabylonJS scaffolding; the structure below is what
+the codebase *converges to* across the implementation waves.
 
 ```
 grovekeeper/
-├── CLAUDE.md                         # This file
-├── AGENTS.md                         # Multi-agent orchestration guide
-├── memory-bank/                      # Persistent project context
-├── docs/                             # Game design, architecture, brand docs
-│   ├── README.md                     # Documentation index
-│   ├── GAME_DESIGN_DOCUMENT.md       # Full game design document
-│   ├── TECHNICAL_ARCHITECTURE.md     # Technical architecture overview
-│   ├── SYSTEMS.md                    # Game systems reference
-│   ├── API_REFERENCE.md              # API and store reference
-│   ├── ROADMAP.md                    # Future roadmap
-│   ├── architecture/                 # Architecture deep dives
-│   │   ├── overview.md
-│   │   ├── ecs-patterns.md
-│   │   └── state-management.md
-│   ├── brand/
-│   │   └── identity.md               # Visual identity, design tokens
-│   ├── game-design/
-│   │   ├── core-loop.md
-│   │   └── grid-system.md
-│   ├── guides/                       # Developer guides
-│   ├── plans/                        # Historical build plans
-│   └── ui-ux/                        # UI/UX documentation
-├── src/
-│   ├── main.tsx                      # Entry point
-│   ├── App.tsx                       # Root component -> Game
-│   ├── game/
-│   │   ├── Game.tsx                  # Screen router (menu | playing)
-│   │   ├── scenes/
-│   │   │   └── GameScene.tsx         # BabylonJS canvas + game loop orchestrator
-│   │   ├── scene/                    # Scene manager modules
-│   │   │   ├── SceneManager.ts       # Coordinates all scene managers
-│   │   │   ├── CameraManager.ts      # Orthographic diorama camera
-│   │   │   ├── GroundBuilder.ts      # DynamicTexture biome blending
-│   │   │   ├── LightingManager.ts    # Hemisphere + directional lights
-│   │   │   ├── SkyManager.ts         # HDRI skybox
-│   │   │   ├── PlayerMeshManager.ts  # Player mesh lifecycle
-│   │   │   ├── TreeMeshManager.ts    # Tree mesh lifecycle + template cache
-│   │   │   └── BorderTreeManager.ts  # Decorative border trees
-│   │   ├── ecs/
-│   │   │   ├── world.ts              # Miniplex World + queries
-│   │   │   ├── world.test.ts
-│   │   │   ├── react.ts              # miniplex-react hooks API
-│   │   │   ├── archetypes.ts         # Entity factory functions
-│   │   │   └── archetypes.test.ts
-│   │   ├── world/                    # World data layer
-│   │   │   ├── WorldManager.ts       # Zone loading, world state
-│   │   │   ├── WorldGenerator.ts     # Procedural world generation
-│   │   │   ├── ZoneLoader.ts         # JSON zone hydration
-│   │   │   ├── types.ts              # World/zone type definitions
-│   │   │   ├── archetypes.ts         # Tile entity factories
-│   │   │   └── data/
-│   │   │       └── starting-world.json  # Level 1-5 zone definitions
-│   │   ├── structures/               # Structure system
-│   │   │   ├── StructureManager.ts   # Structure placement + effects
-│   │   │   ├── BlockMeshFactory.ts   # Daggerfall-style block meshes
-│   │   │   ├── types.ts              # Structure type definitions
-│   │   │   └── data/
-│   │   │       ├── blocks.json       # Block catalog
-│   │   │       └── structures.json   # Structure recipes
-│   │   ├── systems/
-│   │   │   ├── growth.ts             # Tree growth (5-stage, spec formula)
-│   │   │   ├── movement.ts           # Player movement
-│   │   │   ├── time.ts               # Day/night + season cycle
-│   │   │   ├── quests.ts             # Quest/goal generation
-│   │   │   ├── platform.ts           # Capacitor haptics bridge
-│   │   │   ├── weather.ts            # Weather events (rain/drought/wind)
-│   │   │   ├── achievements.ts       # 15 achievements
-│   │   │   ├── prestige.ts           # Level 25+ prestige + cosmetics
-│   │   │   ├── gridExpansion.ts      # Grid expansion (16/20/24/32)
-│   │   │   ├── gridGeneration.ts     # Tile generation (soil/water/rock/path)
-│   │   │   ├── levelUnlocks.ts       # Level-based unlock progression
-│   │   │   ├── offlineGrowth.ts      # Offline growth calculation
-│   │   │   ├── saveLoad.ts           # Save/load serialization
-│   │   │   ├── harvest.ts            # Harvest yield + resource drops (late-binding multipliers)
-│   │   │   ├── stamina.ts            # Stamina drain + regen
-│   │   │   ├── InputManager.ts       # Unified input: pointer, keyboard, tap-to-move A*
-│   │   │   ├── pathfinding.ts        # A* on tile grid + walkability grid builder
-│   │   │   ├── pathFollowing.ts      # Waypoint interpolation for tap-to-move
-│   │   │   ├── discovery.ts          # Species discovery system
-│   │   │   ├── recipes.ts            # Crafting recipe system
-│   │   │   ├── trading.ts            # Resource trading system
-│   │   │   ├── seasonalMarket.ts     # Seasonal market prices
-│   │   │   ├── toolUpgrades.ts       # Tool upgrade progression
-│   │   │   ├── wildTreeRegrowth.ts   # Wild tree respawn system
-│   │   │   ├── zoneBonuses.ts        # Per-zone bonus effects
-│   │   │   └── *.test.ts             # Adjacent test files
-│   │   ├── stores/
-│   │   │   ├── gameStore.ts          # Zustand persistent state
-│   │   │   └── gameStore.test.ts
-│   │   ├── constants/
-│   │   │   ├── config.ts             # Grid size, colors, growth stages
-│   │   │   ├── trees.ts              # Tree species definitions (15 species)
-│   │   │   ├── tools.ts              # Tool definitions + stamina costs
-│   │   │   ├── resources.ts          # Resource type definitions
-│   │   │   └── *.test.ts             # Adjacent test files
-│   │   ├── utils/
-│   │   │   ├── spsTreeGenerator.ts   # Ported BabylonJS SPS tree generator
-│   │   │   ├── treeMeshBuilder.ts    # Species-specific PBR meshes
-│   │   │   ├── gridMath.ts           # Grid coordinate math utilities
-│   │   │   ├── seedRNG.ts            # Seeded RNG for deterministic meshes
-│   │   │   └── *.test.ts             # Adjacent test files
-│   │   ├── ui/
-│   │   │   ├── MainMenu.tsx          # Start screen
-│   │   │   ├── HUD.tsx               # In-game overlay container
-│   │   │   ├── GameUI.tsx            # HUD + joystick + dialogs
-│   │   │   ├── Joystick.tsx          # nipplejs wrapper
-│   │   │   ├── Logo.tsx              # SVG logo
-│   │   │   ├── FarmerMascot.tsx      # SVG farmer "Fern"
-│   │   │   ├── ToolWheel.tsx         # Tool selection dialog
-│   │   │   ├── ToolBelt.tsx          # Tool belt HUD (bottom-right)
-│   │   │   ├── SeedSelect.tsx        # Species picker dialog
-│   │   │   ├── PauseMenu.tsx         # Pause overlay + settings
-│   │   │   ├── TimeDisplay.tsx       # Day/night/season indicator
-│   │   │   ├── QuestPanel.tsx        # Active quest tracker
-│   │   │   ├── RulesModal.tsx        # First-time tutorial
-│   │   │   ├── ResourceBar.tsx       # Timber/Sap/Fruit/Acorn display
-│   │   │   ├── StaminaGauge.tsx      # Stamina bar
-│   │   │   ├── XPBar.tsx             # XP + level display
-│   │   │   ├── ActionButton.tsx      # Context-sensitive action button
-│   │   │   ├── WeatherOverlay.tsx    # CSS weather effects + petals
-│   │   │   ├── AchievementPopup.tsx  # Gold border + sparkle modal
-│   │   │   ├── MiniMap.tsx           # SVG-based minimap (desktop overlay, mobile fullscreen)
-│   │   │   ├── Toast.tsx             # Toast notification system
-│   │   │   ├── FloatingParticles.tsx # +XP / +Timber floating numbers
-│   │   │   └── ErrorBoundary.tsx     # React error boundary
-│   │   └── types.ts                  # Core type definitions
-│   ├── components/
-│   │   └── ui/                       # shadcn/ui components
-│   ├── hooks/
-│   │   ├── use-mobile.ts             # Mobile detection hook
-│   │   └── use-media-query.tsx       # Responsive breakpoint hook
-│   └── lib/
-│       └── utils.ts                  # cn() utility for Tailwind
+├── CLAUDE.md                           # This file
+├── AGENTS.md                           # Extended operating protocols
+├── README.md                           # Human-facing intro
+├── CHANGELOG.md
+├── STANDARDS.md
+├── memory-bank/                        # Persistent project context (autoloop reads on startup)
+│   ├── activeContext.md
+│   ├── progress.md
+│   └── ...
+├── docs/
+│   ├── README.md                       # Index
+│   ├── DESIGN.md                       # Game design (product domain)
+│   ├── ARCHITECTURE.md                 # Technical architecture
+│   ├── STATE.md                        # Current build state, wave-by-wave
+│   ├── TESTING.md                      # Verification protocol, gates, rubric
+│   ├── LORE.md                         # Minimal world tone
+│   ├── ROADMAP.md                      # RC scope only
+│   ├── post-rc.md                      # Anything beyond RC
+│   ├── asset-inventory.md              # Generated by build-asset-manifest.mjs
+│   ├── rc-journey/                     # Screenshot gates + REVIEW.md rubric + perf.md
+│   └── superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md
+├── config/
+│   ├── world.json                      # Chunk radius, streaming tunables
+│   └── ...
 ├── public/
-│   ├── textures/                     # PBR texture assets
-│   ├── manifest.json                 # PWA manifest
-│   └── sw.js                         # Service worker
-├── capacitor.config.ts               # Capacitor native config
-├── biome.json                        # Linter/formatter config
-├── vitest.config.ts                  # Test runner config
-├── vite.config.ts                    # Bundler config
-└── tsconfig.json                     # TypeScript config
+│   └── assets/
+│       ├── tilesets/biomes/{biome}.{png,json}    # Per-biome voxel tilesets
+│       ├── tilesets/structures/                  # Hearth + common building blocks
+│       ├── models/characters/gardener/           # Player GLB + animation cycles
+│       ├── models/npcs/{grove-spirit,villagers}/
+│       ├── models/creatures/{peaceful,hostile}/
+│       ├── models/props/
+│       ├── audio/music/{menu,grove,biomes/{biome},moments}/
+│       ├── audio/sfx/{ui,footsteps,tools,crafting,creatures,hearth}/
+│       └── audio/ambient/{grove,biomes/{biome},weather}/
+├── raw-assets/                         # gitignored — itch.io archives + extracted
+├── scripts/
+│   ├── fetch-itch.mjs                  # Pulls configured packs into raw-assets/
+│   ├── import-from-voxel-realms.mjs    # Lifts curated subset from sibling repo
+│   ├── curate-assets.mjs               # raw-assets/ → public/assets/
+│   ├── build-asset-manifest.mjs        # Walks public/assets, emits manifest + inventory
+│   └── asset-curation.json
+├── src/
+│   ├── main.tsx                        # Boot
+│   ├── App.tsx
+│   ├── game/
+│   │   ├── Game.tsx                    # Screen router (menu | playing)
+│   │   ├── GameScene.ts                # Engine Actor for the scene
+│   │   ├── PlayerActor.ts              # Gardener Actor + ModelRenderer
+│   │   ├── camera/CameraFollow.ts      # Lerp follow behavior on Camera3DControls
+│   │   └── ...
+│   ├── world/
+│   │   ├── ChunkManager.ts             # Active/buffer radius, load/unload
+│   │   ├── BiomeRegistry.ts
+│   │   ├── biomes/                     # Six target biomes (final list adapts to asset inventory) plus the special grove biome
+│   │   │   ├── meadow.ts
+│   │   │   ├── forest.ts
+│   │   │   ├── wetland.ts
+│   │   │   ├── alpine.ts
+│   │   │   ├── coast.ts
+│   │   │   ├── scrub.ts
+│   │   │   └── grove.ts                # Special seventh biome
+│   │   ├── GroveRegistry.ts            # In-memory registry of discovered/claimed
+│   │   └── chunkGen.ts                 # scopedRNG-driven generators
+│   ├── systems/                        # Pure-function systems, ticked per frame
+│   │   ├── growth.ts                   # Tree lifecycle (ported)
+│   │   ├── weather.ts                  # Biome-aware weather (ported, extended)
+│   │   ├── time.ts                     # Day/night
+│   │   ├── stamina.ts
+│   │   ├── harvest.ts
+│   │   ├── encounters.ts               # Biome × time × weather → spawn
+│   │   ├── combat.ts                   # Light, stamina-gated, retreat-on-zero
+│   │   ├── crafting.ts                 # Production half of the loop
+│   │   ├── building.ts                 # Placement of crafted blueprints
+│   │   ├── claim.ts                    # Hearth → claim state machine
+│   │   ├── fastTravel.ts
+│   │   ├── npcDialogue.ts              # Phrase-pool model
+│   │   └── saveLoad.ts                 # drizzle-backed
+│   ├── content/
+│   │   ├── recipes/                    # JSON, biome-tagged
+│   │   └── dialogue/phrase-pools.ts    # Keyed by biome × tag
+│   ├── audio/
+│   │   ├── BiomeMusicCoordinator.ts    # AudioBackground crossfade on biome change
+│   │   └── sfx.ts                      # Thin dispatch over AudioLibrary
+│   ├── persistence/
+│   │   ├── schema.ts                   # drizzle schema (chunks, biomes, groves, claim, inventory, recipes-known, dialogue history)
+│   │   └── db.ts                       # Capacitor SQLite + sql.js init
+│   ├── ui/                             # SolidJS overlays
+│   │   ├── MainMenu.tsx
+│   │   ├── HUD/
+│   │   ├── CraftingSurface.tsx         # Same surface for items + place-able blueprints
+│   │   ├── DialogueBubble.tsx
+│   │   ├── FastTravelMap.tsx
+│   │   ├── PauseMenu.tsx
+│   │   └── ...
+│   ├── input/
+│   │   └── ActionMap.ts                # Thin layer over engine Input
+│   ├── utils/
+│   │   └── seedRNG.ts                  # `scopedRNG(scope, worldSeed, ...extra)` — already a project convention
+│   └── assets/
+│       └── manifest.generated.ts       # Emitted by build-asset-manifest.mjs (committed)
+├── capacitor.config.ts
+├── biome.json
+├── vitest.config.ts
+├── vite.config.ts
+└── tsconfig.json
 ```
 
-## Architecture Patterns
+## Architecture patterns
 
-### ECS (Entity-Component-System)
+### State split
 
-All game entities live in the Miniplex `world`. Query them, don't search:
+- **Koota** — pure game state. Claimed-grove DB, inventory, recipes-known,
+  dialogue history, encounter timers. Persisted.
+- **Engine `Actor` / `ActorComponent`** — scene-bound state. Player Actor,
+  NPC Actors, chunk Actors, crafting-station Actors. Lives with the scene.
+- **`@capacitor/preferences`** — small KV settings (audio volume, graphics
+  tier, last-played timestamp, world seed).
+- **drizzle + Capacitor SQLite (sql.js on web)** — the persistent store
+  underneath save/load.
 
-```typescript
-// Good: use pre-defined queries
-const trees = treesQuery;  // world.with('tree', 'position', 'renderable')
+Rule: if it changes every frame and is scene-bound, it's an Actor. If it's
+pure game data that survives across sessions, it's Koota → drizzle.
 
-// Bad: searching arrays
-const trees = allEntities.filter(e => e.tree);
-```
+### Determinism
 
-Systems are pure functions: `(world, deltaTime, ...context) => void`. They run every frame in the game loop inside `GameScene.tsx`.
+All randomness flows through `scopedRNG(scope, worldSeed, chunkX, chunkZ, ...)`,
+already a project convention. Same seed → same world, always. This is what
+makes chunks regenerable on revisit and screenshot tests stable.
 
-### State Split: ECS vs Zustand
+### Phrase-pool dialogue (no quests)
 
-- **ECS (Miniplex):** Runtime game state -- entity positions, growth progress, tile states. Lives in memory, serialized for saves.
-- **Zustand (gameStore):** Persistent player state -- level, XP, resources, unlocks, settings, quest progress, stamina, prestige. Auto-persisted to localStorage via `persist` middleware.
-- **Rule:** If it changes every frame, it belongs in ECS. If it persists across sessions, it belongs in Zustand.
+NPCs have no quest system. Each villager has a small array of context-tagged
+phrases (biome × tag). Talking pulls a random phrase. The Grove Spirit speaks
+exactly three scripted lines during the first-claim sequence and then idles.
+**No fetch tasks. No goals from NPCs. The reward is what you build.**
 
-### BabylonJS Scene Management
+### Crafting + Building is one loop
 
-The 3D scene is imperative (not declarative React). `GameScene.tsx` (~400 lines) orchestrates scene setup and game loop, delegating subsystem management to specialized scene managers:
+Voxel materials gathered in the wild flow into crafting stations placed in
+groves. Crafting consumes inputs and produces outputs: items (tools, weapons,
+consumables) or place-able blueprints (structural blocks, prefabs, decorative).
+**Building is just placing what crafting produces.** One surface, one menu,
+one mental model. Recipes are JSON, biome-tagged, scope-locked to actual
+asset inventory.
 
-- **SceneManager**: Coordinates all subsystem managers
-- **CameraManager**: Orthographic diorama camera (NOT isometric)
-- **GroundBuilder**: DynamicTexture biome blending, grid overlay
-- **LightingManager**: Hemisphere + directional lights, day/night sync
-- **SkyManager**: HDRI skybox with seasonal rotation
-- **PlayerMeshManager**: Player mesh lifecycle (create, update, dispose)
-- **TreeMeshManager**: Tree mesh lifecycle (template cache, clone, lerp growth, freeze)
-- **BorderTreeManager**: Decorative border trees outside playable grid
-- **StructureManager**: Structure placement and rendering via BlockMeshFactory
+## Key files to read first
 
-All mesh references are stored in React refs, not state. BabylonJS operates outside React's render cycle.
+When starting a session:
 
-### World System
+1. `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md` —
+   the full RC spec, source of truth.
+2. `docs/STATE.md` — current wave, what's done, what's next.
+3. `memory-bank/activeContext.md` — current work focus.
+4. `memory-bank/progress.md` — wave-by-wave progress.
+5. `docs/ARCHITECTURE.md` — Jolly Pixel layering, persistence stack, asset
+   pipeline, registries.
+6. `docs/DESIGN.md` — the loop, NPC model, claim ritual, biome archetypes.
+7. `docs/TESTING.md` — verification gates, screenshot list, rubric.
 
-The world is data-driven, composed of **zones** loaded from JSON:
-
-- **WorldManager**: Zone loading/unloading, world state, zone transitions
-- **WorldGenerator**: Procedural world generation (level-based biomes, prestige resets)
-- **ZoneLoader**: Hydrates JSON zone definitions into ECS entities (tiles, trees, structures)
-- **Data files**: `src/game/world/data/*.json` define zone templates (starting-world.json for levels 1-5)
-
-Each zone is a 16x16 tile grid with trees, water tiles, rock tiles, and structures pre-placed. Players move between zones seamlessly. On prestige, WorldGenerator creates a new procedurally-generated world.
-
-### Component Conventions
-
-- Named exports only (never `export default`)
-- Props typed with `interface Props`
-- shadcn/ui for dialogs, buttons, cards, progress bars
-- Inline styles for game-specific colors (from `COLORS` constants)
-- Tailwind for layout and responsive utilities
-
-## Performance Budgets
-
-| Metric | Target | Actual |
-|--------|--------|--------|
-| FPS (mobile) | >= 55 | Achieved |
-| FPS (desktop) | >= 60 | Achieved |
-| Initial bundle (gz) | < 500 KB | ~107 KB |
-| Total game load (gz) | < 600 KB | ~500 KB |
-| Time to interactive | < 3s | Achieved |
-| Memory (mobile) | < 100 MB | Achieved |
-| Draw calls | < 50 | Achieved |
-
-### Key Optimizations
-
-- Tree-shake BabylonJS: import specific modules, never barrel exports
-- SPS template mesh caching: `Mesh.clone` for same-species same-stage trees
-- Freeze world matrices on stage 4 (Old Growth) static meshes
-- Shadow map: 1024px desktop, 512px mobile
-- Passive event listeners for touch
-- Code splitting via dynamic import: MainMenu vs GameScene (~107 KB initial load)
-- CSS-based weather overlays (avoids BabylonJS ParticleSystem bundle bloat)
-- Lerp-based growth animations: `Math.min(1, dt * speed)` for frame-rate independence
-
-## Testing
-
-755 tests across 37 test files. TypeScript clean (no type errors).
-
-Write tests first for:
-- Pure utility functions (grid math, RNG, growth calculations)
-- ECS systems (mock world, verify state changes)
-- Store actions (verify state transitions)
-- Component rendering (mock data, verify display)
-
-Test files live adjacent to source: `*.test.ts(x)`.
-
-```bash
-# Run specific test
-pnpm test -- growth
-
-# Watch mode (default)
-pnpm test
-
-# Coverage report
-pnpm test:coverage
-```
-
-## Complete Systems
-
-All game systems from the original design are implemented. Phase D (Polish and Ship) is complete.
-
-### Game Systems
-- **Growth:** 5-stage progression (Seed/Sprout/Sapling/Mature/Old Growth) with spec formula accounting for season, water, difficulty, species traits
-- **Weather:** Rain (growth boost), drought (growth penalty), windstorm (damage risk), with CSS overlays
-- **Seasons:** 4-season cycle with visual changes to sky, lighting, and canopy colors
-- **Achievements:** 15 achievements with gold border + sparkle popup
-- **Prestige:** Level 25+ prestige reset with 5 cosmetic border themes (Stone Wall through Ancient Runes)
-- **Grid Expansion:** Progressive grid sizes (12/16/20/24/32) unlocked by level
-- **World:** Multi-zone world with data-driven zones, procedural generation, zone transitions
-- **Structures:** 6 structure types with grid-snap placement, effect radii (growth boost, harvest boost, stamina regen)
-- **World Generator:** Level-based procedural world generation, prestige world resets
-- **Offline Growth:** Background growth calculation on app resume
-- **Save/Load:** Serialization with auto-save on `document.visibilitychange`
-- **Stamina:** Drain on tool actions, time-based regeneration
-- **Harvest:** Species-specific yields (Timber/Sap/Fruit/Acorns) with late-binding multipliers (computed at collect time)
-- **Quests:** Goal pool generation and tracking
-- **Input:** Unified InputManager — drag-to-move (mobile), WASD (desktop), tap/click-to-move with A* pathfinding
-- **Pathfinding:** Grid A* with walkability grid, iterative waypoint following
-- **Discovery:** Species discovery system
-- **Recipes:** Crafting recipe system
-- **Trading:** Resource trading with seasonal market prices
-- **Tool Upgrades:** Progressive tool enhancement
-- **Wild Tree Regrowth:** Wild tree respawn system
-- **Zone Bonuses:** Per-zone bonus effects
-- **Time:** Microsecond-precision day/night cycle with dynamic sky colors
-
-### Visual Features
-- **SPS Trees:** Ported BabylonJS SPS Tree Generator with seeded RNG
-- **PBR Materials:** 5 bark + 2 leaf texture sets
-- **15 Species:** 12 base + 3 prestige (Ghost Birch glow, Crystal Oak prismatic tints, Cherry Blossom petals)
-- **Growth Animations:** Lerp-based smooth scale interpolation between stages
-- **Weather Overlays:** CSS rain, drought haze, windstorm, cherry petal effects
-- **Seasonal Rebuilds:** Tree meshes rebuild on season change for canopy color shifts
-- **Design Tokens:** Full CSS custom property system (spec Section 5)
-- **Typography:** Fredoka headings, Nunito body
-
-### HUD Components
-- Resource bar (Timber/Sap/Fruit/Acorns), stamina gauge, XP bar, tool belt
-- Mini-map (desktop only), achievement popup, toast notifications
-- Weather overlay, floating particles (+XP, +Timber on harvest)
-- Action button (context-sensitive), pause menu with grid expansion and prestige
-- Time display (day/night/season), quest panel
-
-### Infrastructure
-- PWA manifest + service worker for offline play
-- Code splitting: ~107 KB initial, ~500 KB total game load
-- Capacitor bridge for native mobile haptics
-- CI/CD: GitHub Actions (CI + Deploy to GitHub Pages + Release)
-- Live at: https://arcade-cabinet.github.io/grovekeeper/
-
-## Key Files to Read First
-
-When starting any work session, read these files in order:
-
-1. `docs/README.md` -- Documentation index
-2. `memory-bank/activeContext.md` -- Current work focus
-3. `memory-bank/progress.md` -- What's done, what's next
-4. `src/game/Game.tsx` -- Screen routing
-5. `src/game/scenes/GameScene.tsx` -- The game loop + 3D scene orchestrator
-6. `src/game/scene/SceneManager.ts` -- Scene subsystem coordination
-7. `src/game/world/WorldManager.ts` -- World data layer, zone loading
-8. `src/game/world/data/starting-world.json` -- Zone definitions for levels 1-5
-9. `src/game/structures/StructureManager.ts` -- Structure placement + effects
-10. `src/game/stores/gameStore.ts` -- All persistent state
-11. `src/game/utils/treeMeshBuilder.ts` -- Species-specific mesh generation
-12. `src/game/systems/weather.ts` -- Weather event system
-
-## Mobile-First Development Checklist
+## Mobile-first development checklist
 
 Before merging any UI change, verify:
 
 - [ ] Renders correctly at 375px width (iPhone SE portrait)
-- [ ] Touch targets >= 44px
-- [ ] No overlap with bottom action bar
+- [ ] Touch targets ≥ 44px
+- [ ] No overlap with bottom action bar / virtual joystick
 - [ ] No horizontal scroll on mobile
-- [ ] Text readable without zooming (minimum 14px body)
+- [ ] Text readable without zooming (≥ 14px body)
 - [ ] Dialogs don't extend beyond viewport
 - [ ] Canvas has `touch-action: none`
 - [ ] Animations respect `prefers-reduced-motion`
-- [ ] FPS >= 55 on mid-range mobile
+- [ ] FPS ≥ 55 on mid-range mobile
+- [ ] Screenshot gate updated if the surface is in `docs/rc-journey/`
+
+## Performance budgets
+
+| Metric | Target |
+|--------|--------|
+| FPS (mobile) | ≥ 55 |
+| FPS (desktop) | ≥ 60 |
+| Initial bundle (gz) | < 500 KB |
+| Asset budget total | < 20 MB at RC |
+| Lighthouse Performance (landing, mobile) | ≥ 90 |
+| Lighthouse Best Practices (landing) | ≥ 95 |
+| Time to interactive | < 3s |
+| Memory (mobile) | < 100 MB |
+
+Measured per-biome on a fixed test rig over a 30-second walk; numbers
+committed to `docs/rc-journey/perf.md`.
+
+## What is out of scope for RC
+
+- Quests, fetch chains, escort missions
+- Player death, permadeath, difficulty tiers
+- Full 8-spirit collection arc
+- Multiplayer / networked anything
+- Cosmetics, skins, prestige
+- Full Minecraft-scale tech tree (RC ships a small, scope-locked recipe set)
+
+These can return post-RC if they earn it. See `docs/post-rc.md`.
