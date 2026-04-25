@@ -62,10 +62,12 @@ describe("ClaimRitualSystem", () => {
     sys.tick(0);
     expect(hooks.setHearthEmissive).toHaveBeenLastCalledWith(0);
     sys.tick(1000);
-    const half = hooks.setHearthEmissive.mock.calls.at(-1)?.[0] as number;
+    const eCalls1 = hooks.setHearthEmissive.mock.calls;
+    const half = eCalls1[eCalls1.length - 1]?.[0] as number;
     expect(half).toBeCloseTo(0.75, 5);
     sys.tick(2000);
-    const full = hooks.setHearthEmissive.mock.calls.at(-1)?.[0] as number;
+    const eCalls2 = hooks.setHearthEmissive.mock.calls;
+    const full = eCalls2[eCalls2.length - 1]?.[0] as number;
     expect(full).toBeCloseTo(CLAIM_RITUAL_TIMING.emissivePeak, 5);
   });
 
@@ -88,10 +90,12 @@ describe("ClaimRitualSystem", () => {
     sys.start(0);
     sys.tick(2000);
     sys.tick(2500);
-    const half = hooks.setVillagerAlpha.mock.calls.at(-1)?.[0] as number;
+    const vCalls1 = hooks.setVillagerAlpha.mock.calls;
+    const half = vCalls1[vCalls1.length - 1]?.[0] as number;
     expect(half).toBeCloseTo(0.5, 5);
     sys.tick(3000);
-    const full = hooks.setVillagerAlpha.mock.calls.at(-1)?.[0] as number;
+    const vCalls2 = hooks.setVillagerAlpha.mock.calls;
+    const full = vCalls2[vCalls2.length - 1]?.[0] as number;
     expect(full).toBe(1);
   });
 

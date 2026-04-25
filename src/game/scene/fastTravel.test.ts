@@ -86,7 +86,12 @@ describe("FastTravelController", () => {
   beforeEach(() => {
     teleporter = { teleport: vi.fn() };
     overlay = { setFadeOpacity: vi.fn() };
-    ctl = new FastTravelController({ teleporter, overlay });
+    ctl = new FastTravelController({
+      // biome-ignore lint/suspicious/noExplicitAny: vitest mock signature widens away the typed surface
+      teleporter: teleporter as any,
+      // biome-ignore lint/suspicious/noExplicitAny: vitest mock signature widens away the typed surface
+      overlay: overlay as any,
+    });
   });
 
   it("starts idle", () => {
@@ -98,10 +103,12 @@ describe("FastTravelController", () => {
     ctl.start(target, 0);
     expect(ctl.currentPhase).toBe("fade-out");
     ctl.tick(FAST_TRAVEL_TIMING.fadeOutMs / 2);
-    const half = overlay.setFadeOpacity.mock.calls.at(-1)?.[0] as number;
+    const oCalls1 = overlay.setFadeOpacity.mock.calls;
+    const half = oCalls1[oCalls1.length - 1]?.[0] as number;
     expect(half).toBeCloseTo(0.5, 5);
     ctl.tick(FAST_TRAVEL_TIMING.fadeOutMs);
-    const full = overlay.setFadeOpacity.mock.calls.at(-1)?.[0] as number;
+    const oCalls2 = overlay.setFadeOpacity.mock.calls;
+    const full = oCalls2[oCalls2.length - 1]?.[0] as number;
     expect(full).toBe(1);
     expect(ctl.currentPhase).toBe("hold");
   });
@@ -122,7 +129,8 @@ describe("FastTravelController", () => {
     expect(ctl.currentPhase).toBe("idle");
     expect(ctl.isActive).toBe(false);
     // Final opacity should be 0 (fully cleared).
-    const final = overlay.setFadeOpacity.mock.calls.at(-1)?.[0] as number;
+    const oCalls = overlay.setFadeOpacity.mock.calls;
+    const final = oCalls[oCalls.length - 1]?.[0] as number;
     expect(final).toBe(0);
   });
 
