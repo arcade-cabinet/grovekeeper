@@ -10,6 +10,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.2.0-alpha.1...v1.3.0-alpha.1) (2026-04-26)
+
+
+### Features
+
+* **ui:** cozy elevation arc (changelog catch-up for [#49](https://github.com/arcade-cabinet/grovekeeper/issues/49) + [#50](https://github.com/arcade-cabinet/grovekeeper/issues/50)) ([#58](https://github.com/arcade-cabinet/grovekeeper/issues/58)) ([df08375](https://github.com/arcade-cabinet/grovekeeper/commit/df0837562fcaf57723b219e5725a8903e83f21c2))
+
+
+### Bug Fixes
+
+* **deps:** patch dependabot vulnerabilities (postcss, uuid, tmp, cookie) ([#59](https://github.com/arcade-cabinet/grovekeeper/issues/59)) ([0ce645f](https://github.com/arcade-cabinet/grovekeeper/commit/0ce645fa92e842e6f3caea86f8e0601032e796d8))
+
 ## [1.2.0-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.1.0-alpha.1...v1.2.0-alpha.1) (2026-04-26)
 
 
