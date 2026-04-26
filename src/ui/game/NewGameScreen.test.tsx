@@ -25,28 +25,28 @@ describe("NewGameScreen", () => {
     render(() => (
       <NewGameScreen createWorldFn={() => makeWorld()} onCreated={() => {}} />
     ));
-    expect(screen.getByText("A new grove")).toBeDefined();
+    expect(screen.getByText("A New Grove")).toBeDefined();
     expect(screen.getByLabelText("Gardener")).toBeDefined();
-    expect(screen.getByLabelText("World seed")).toBeDefined();
-    expect(screen.getByRole("button", { name: /^begin$/i })).toBeDefined();
+    expect(screen.getByLabelText("World Seed")).toBeDefined();
+    expect(screen.getByRole("button", { name: /plant the seed/i })).toBeDefined();
   });
 
   it("seed defaults to a non-empty randomly-generated string", () => {
     render(() => <NewGameScreen createWorldFn={() => makeWorld()} />);
-    const seedInput = screen.getByLabelText("World seed") as HTMLInputElement;
+    const seedInput = screen.getByLabelText("World Seed") as HTMLInputElement;
     expect(seedInput.value).toBeTruthy();
     expect(seedInput.value.length).toBeGreaterThan(0);
   });
 
   it("Reroll button changes the seed", () => {
     render(() => <NewGameScreen createWorldFn={() => makeWorld()} />);
-    const seedInput = screen.getByLabelText("World seed") as HTMLInputElement;
+    const seedInput = screen.getByLabelText("World Seed") as HTMLInputElement;
     const before = seedInput.value;
     const reroll = screen.getByRole("button", { name: /reroll seed/i });
     let after = before;
     for (let i = 0; i < 5 && after === before; i++) {
       fireEvent.click(reroll);
-      after = (screen.getByLabelText("World seed") as HTMLInputElement).value;
+      after = (screen.getByLabelText("World Seed") as HTMLInputElement).value;
     }
     expect(after).not.toBe(before);
   });
@@ -55,7 +55,7 @@ describe("NewGameScreen", () => {
     render(() => <NewGameScreen createWorldFn={() => makeWorld()} />);
     const nameInput = screen.getByLabelText("Gardener") as HTMLInputElement;
     fireEvent.input(nameInput, { target: { value: "" } });
-    const begin = screen.getByRole("button", { name: /^begin$/i });
+    const begin = screen.getByRole("button", { name: /plant the seed/i });
     expect((begin as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -63,7 +63,7 @@ describe("NewGameScreen", () => {
     render(() => <NewGameScreen createWorldFn={() => makeWorld()} />);
     const nameInput = screen.getByLabelText("Gardener") as HTMLInputElement;
     fireEvent.input(nameInput, { target: { value: "   " } });
-    const begin = screen.getByRole("button", { name: /^begin$/i });
+    const begin = screen.getByRole("button", { name: /plant the seed/i });
     expect((begin as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -79,10 +79,10 @@ describe("NewGameScreen", () => {
     fireEvent.input(screen.getByLabelText("Gardener"), {
       target: { value: "Wren" },
     });
-    fireEvent.input(screen.getByLabelText("World seed"), {
+    fireEvent.input(screen.getByLabelText("World Seed"), {
       target: { value: "MYSEED" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /^begin$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /plant the seed/i }));
 
     expect(createFn).toHaveBeenCalledTimes(1);
     const arg = createFn.mock.calls[0][1];
@@ -101,7 +101,7 @@ describe("NewGameScreen", () => {
     fireEvent.input(screen.getByLabelText("Gardener"), {
       target: { value: "" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /^begin$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /plant the seed/i }));
     expect(createFn).not.toHaveBeenCalled();
   });
 
