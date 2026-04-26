@@ -38,8 +38,8 @@ const SEED_TREE_VARIANTS = [
 /** Deterministic mapping seed-string → tree-variant id. */
 function pickTreeFromSeed(seed: string): string {
   let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
+  for (const ch of seed) {
+    h ^= ch.codePointAt(0) ?? 0;
     h = Math.imul(h, 16777619);
   }
   return SEED_TREE_VARIANTS[Math.abs(h) % SEED_TREE_VARIANTS.length];
