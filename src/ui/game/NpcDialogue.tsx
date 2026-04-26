@@ -154,9 +154,10 @@ export const NpcDialogue = (props: NpcDialogueProps) => {
           <div
             class="rounded-lg p-3 text-sm leading-relaxed"
             style={{
-              background: "rgba(255,255,255,0.7)",
+              background: `${COLORS.parchment}f0`,
               color: COLORS.soilDark,
-              border: `1px solid ${COLORS.barkBrown}33`,
+              border: `1px solid ${COLORS.barkBrown}55`,
+              "box-shadow": `0 2px 8px ${COLORS.soilDark}15`,
             }}
           >
             <span class="font-medium" style={{ color: COLORS.forestGreen }}>
@@ -172,10 +173,11 @@ export const NpcDialogue = (props: NpcDialogueProps) => {
                   type="button"
                   class="w-full p-3 rounded-lg text-sm font-medium text-left transition-colors motion-safe:active:scale-[0.98] motion-safe:transition-transform touch-manipulation"
                   style={{
-                    background: "rgba(255,255,255,0.5)",
-                    border: `1px solid ${COLORS.barkBrown}`,
+                    background: `${COLORS.parchment}d9`,
+                    border: `2px solid ${COLORS.barkBrown}`,
                     color: COLORS.soilDark,
                     "min-height": "44px",
+                    "box-shadow": `0 2px 8px ${COLORS.soilDark}20`,
                   }}
                   onClick={() => handleChoice(i())}
                 >

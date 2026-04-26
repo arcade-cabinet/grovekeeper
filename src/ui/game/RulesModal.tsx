@@ -150,8 +150,9 @@ export const RulesModal = (props: RulesModalProps) => {
           <div
             class="flex flex-col items-center gap-3 p-5 rounded-xl text-center"
             style={{
-              background: "rgba(255,255,255,0.7)",
-              border: `1px solid ${COLORS.forestGreen}20`,
+              background: `${COLORS.parchment}e6`,
+              border: `2px solid ${COLORS.forestGreen}40`,
+              "box-shadow": `0 2px 8px ${COLORS.forestGreen}20`,
             }}
           >
             <span class="text-5xl" aria-hidden="true">
