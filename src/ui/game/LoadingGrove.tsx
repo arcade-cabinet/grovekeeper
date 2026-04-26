@@ -44,10 +44,46 @@ const COZY_STATUSES = [
 ];
 
 const driftingLeaves = [
-  { x: "10%", y: "12%", dx: "30px", dy: "70vh", rot: "180deg", dur: "10s", delay: "0s", size: "0.85rem" },
-  { x: "78%", y: "8%", dx: "-25px", dy: "75vh", rot: "-130deg", dur: "12s", delay: "2.5s", size: "0.95rem" },
-  { x: "44%", y: "18%", dx: "20px", dy: "65vh", rot: "210deg", dur: "11s", delay: "4.5s", size: "0.9rem" },
-  { x: "88%", y: "30%", dx: "-40px", dy: "55vh", rot: "150deg", dur: "9s", delay: "1.5s", size: "0.9rem" },
+  {
+    x: "10%",
+    y: "12%",
+    dx: "30px",
+    dy: "70vh",
+    rot: "180deg",
+    dur: "10s",
+    delay: "0s",
+    size: "0.85rem",
+  },
+  {
+    x: "78%",
+    y: "8%",
+    dx: "-25px",
+    dy: "75vh",
+    rot: "-130deg",
+    dur: "12s",
+    delay: "2.5s",
+    size: "0.95rem",
+  },
+  {
+    x: "44%",
+    y: "18%",
+    dx: "20px",
+    dy: "65vh",
+    rot: "210deg",
+    dur: "11s",
+    delay: "4.5s",
+    size: "0.9rem",
+  },
+  {
+    x: "88%",
+    y: "30%",
+    dx: "-40px",
+    dy: "55vh",
+    rot: "150deg",
+    dur: "9s",
+    delay: "1.5s",
+    size: "0.9rem",
+  },
 ];
 
 export const LoadingGrove = (props: LoadingGroveProps) => {
@@ -125,7 +161,10 @@ export const LoadingGrove = (props: LoadingGroveProps) => {
       />
 
       {/* Drifting leaves */}
-      <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <div
+        class="absolute inset-0 overflow-hidden pointer-events-none"
+        aria-hidden="true"
+      >
         <For each={driftingLeaves}>
           {(l) => (
             <div
@@ -149,7 +188,10 @@ export const LoadingGrove = (props: LoadingGroveProps) => {
       </div>
 
       {/* Center stack */}
-      <main class="relative flex flex-col items-center gap-5 sm:gap-6" style={{ "z-index": 5 }}>
+      <main
+        class="relative flex flex-col items-center gap-5 sm:gap-6"
+        style={{ "z-index": 5 }}
+      >
         <div aria-hidden="true">
           <VoxelTreeCanvas
             treeId={props.treeId ?? "tree-04"}

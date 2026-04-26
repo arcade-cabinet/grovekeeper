@@ -74,7 +74,8 @@ export const VoxelTreeCanvas = (props: VoxelTreeCanvasProps) => {
     scene.add(new THREE.AmbientLight(0x3a5a4a, 0.55));
 
     const root = new THREE.Group();
-    if (typeof props.initialYaw === "number") root.rotation.y = props.initialYaw;
+    if (typeof props.initialYaw === "number")
+      root.rotation.y = props.initialYaw;
     scene.add(root);
 
     // Static-fallback wireframe placeholder while the GLTF streams in,
@@ -95,7 +96,9 @@ export const VoxelTreeCanvas = (props: VoxelTreeCanvasProps) => {
       "/",
     );
     // Fix the leading double-slash from URL+window.location.href on root deploys.
-    const fixedUrl = url.replace("https:/", "https://").replace("http:/", "http://");
+    const fixedUrl = url
+      .replace("https:/", "https://")
+      .replace("http:/", "http://");
 
     const loader = new GLTFLoader();
     loader.load(
@@ -142,7 +145,9 @@ export const VoxelTreeCanvas = (props: VoxelTreeCanvasProps) => {
       cancelAnimationFrame(raf);
       renderer.dispose();
       // Walk the scene and dispose geometries/materials/textures we own.
-      const collectMaterials = (m: THREE.Material | THREE.Material[] | undefined): THREE.Material[] => {
+      const collectMaterials = (
+        m: THREE.Material | THREE.Material[] | undefined,
+      ): THREE.Material[] => {
         if (Array.isArray(m)) return m;
         if (m) return [m];
         return [];
