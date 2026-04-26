@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
 import { For } from "solid-js";
+import { COLORS } from "@/config/config";
 import { hapticLight } from "@/systems/platform";
 
 interface VirtualJoystickProps {
@@ -125,10 +126,9 @@ export const VirtualJoystick = (props: VirtualJoystickProps) => {
           position: "absolute",
           inset: "0",
           "border-radius": "50%",
-          background: "rgba(245, 240, 227, 0.85)",
-          border: "3px solid #5D4037",
-          "box-shadow":
-            "0 4px 12px rgba(26, 58, 42, 0.15), inset 0 0 0 8px rgba(93, 64, 55, 0.06)",
+          background: `${COLORS.parchment}d9`,
+          border: `3px solid ${COLORS.barkBrown}`,
+          "box-shadow": `0 4px 12px rgba(26, 58, 42, 0.15), inset 0 0 0 8px ${COLORS.barkBrown}10`,
         }}
       >
         <For each={dots}>
@@ -139,7 +139,7 @@ export const VirtualJoystick = (props: VirtualJoystickProps) => {
                 width: "4px",
                 height: "4px",
                 "border-radius": "50%",
-                background: "rgba(93, 64, 55, 0.3)",
+                background: `${COLORS.barkBrown}50`,
                 ...pos,
               }}
             />
@@ -157,10 +157,9 @@ export const VirtualJoystick = (props: VirtualJoystickProps) => {
           width: `${KNOB_SIZE}px`,
           height: `${KNOB_SIZE}px`,
           "border-radius": "50%",
-          background: "linear-gradient(135deg, #4A7C59, #2D6A4F)",
-          border: "2px solid #3E2723",
-          "box-shadow":
-            "0 2px 8px rgba(0,0,0,0.2), inset 0 1px 3px rgba(255,255,255,0.25)",
+          background: `linear-gradient(135deg, ${COLORS.leafLight}, ${COLORS.forestGreen})`,
+          border: `2px solid ${COLORS.soilDark}`,
+          "box-shadow": `0 2px 8px ${COLORS.soilDark}40, inset 0 1px 3px rgba(255,255,255,0.25)`,
           "pointer-events": "none",
         }}
       />
