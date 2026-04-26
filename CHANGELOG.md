@@ -10,6 +10,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.3.0-alpha.1...v1.3.1-alpha.1) (2026-04-26)
+
+
+### Bug Fixes
+
+* **ci:** gate on pnpm check (lint + format), fix latent format drift ([#62](https://github.com/arcade-cabinet/grovekeeper/issues/62)) ([3c2567b](https://github.com/arcade-cabinet/grovekeeper/commit/3c2567b17458e5ff343f39ab0aa0184270c85a46))
+
 ## [1.3.0-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.2.0-alpha.1...v1.3.0-alpha.1) (2026-04-26)
 
 
