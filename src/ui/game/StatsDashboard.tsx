@@ -114,7 +114,10 @@ export const StatsDashboard = (props: StatsDashboardProps) => {
                 {(s) => (
                   <div
                     class="flex items-center gap-2 p-2 rounded-lg"
-                    style={{ background: "rgba(255,255,255,0.5)" }}
+                    style={{
+                      background: `${COLORS.parchment}e6`,
+                      border: `1px solid ${COLORS.barkBrown}30`,
+                    }}
                   >
                     <span class="text-lg" aria-hidden="true">
                       {s.icon}
@@ -151,7 +154,10 @@ export const StatsDashboard = (props: StatsDashboardProps) => {
                 {(r) => (
                   <div
                     class="flex items-center gap-2 p-2 rounded-lg"
-                    style={{ background: "rgba(255,255,255,0.5)" }}
+                    style={{
+                      background: `${COLORS.parchment}e6`,
+                      border: `1px solid ${COLORS.barkBrown}30`,
+                    }}
                   >
                     <span class="text-lg" aria-hidden="true">
                       {r.icon}

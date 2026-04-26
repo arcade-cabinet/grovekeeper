@@ -238,7 +238,7 @@ export const MiniMap = () => {
         style={{
           top: "56px",
           right: "12px",
-          background: "rgba(245, 240, 227, 0.92)",
+          background: `${COLORS.parchment}eb`,
           border: `2px solid ${COLORS.barkBrown}`,
           "border-radius": "12px",
           padding: "8px",
@@ -263,7 +263,7 @@ export const MiniMap = () => {
           variant="ghost"
           class="w-11 h-11 rounded-full"
           style={{
-            background: "rgba(245, 240, 227, 0.9)",
+            background: `${COLORS.parchment}eb`,
             border: `2px solid ${COLORS.barkBrown}`,
             color: COLORS.soilDark,
           }}

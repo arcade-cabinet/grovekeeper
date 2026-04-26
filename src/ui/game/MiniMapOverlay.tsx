@@ -284,7 +284,7 @@ export const MiniMapOverlay = (props: MiniMapOverlayProps) => {
       <div
         class="fixed inset-0 z-50 flex flex-col items-center justify-center pointer-events-auto"
         style={{
-          background: "rgba(0, 0, 0, 0.75)",
+          background: `${COLORS.soilDark}cc`,
           "backdrop-filter": "blur(4px)",
         }}
         role="dialog"
@@ -296,8 +296,13 @@ export const MiniMapOverlay = (props: MiniMapOverlayProps) => {
         <div class="absolute top-4 right-4">
           <Button
             size="icon"
-            variant="ghost"
-            class="w-11 h-11 rounded-full text-white hover:bg-white/20"
+            class="w-11 h-11 rounded-full motion-safe:transition-all hover:brightness-110"
+            style={{
+              background: `${COLORS.parchment}e6`,
+              color: COLORS.soilDark,
+              border: `2px solid ${COLORS.barkBrown}`,
+              "box-shadow": "0 4px 12px rgba(26, 58, 42, 0.25)",
+            }}
             onClick={props.onClose}
             aria-label="Close map"
           >
@@ -307,7 +312,7 @@ export const MiniMapOverlay = (props: MiniMapOverlayProps) => {
 
         <div
           class="text-sm font-bold mb-3 tracking-wide uppercase"
-          style={{ color: COLORS.skyMist }}
+          style={{ color: COLORS.parchment }}
         >
           World Map
         </div>
@@ -316,7 +321,7 @@ export const MiniMapOverlay = (props: MiniMapOverlayProps) => {
           class="rounded-xl overflow-hidden"
           style={{
             border: `3px solid ${COLORS.barkBrown}`,
-            "box-shadow": "0 8px 32px rgba(0, 0, 0, 0.5)",
+            "box-shadow": `0 8px 32px ${COLORS.soilDark}90`,
           }}
           onClick={(e) => e.stopPropagation()}
           role="presentation"
@@ -324,32 +329,35 @@ export const MiniMapOverlay = (props: MiniMapOverlayProps) => {
           <MinimapSVGContent snapshot={snapshot()} size={mapSize()} />
         </div>
 
-        <div class="flex items-center gap-4 mt-4 text-[10px] text-white/70">
+        <div
+          class="flex items-center gap-4 mt-4 text-[10px]"
+          style={{ color: `${COLORS.parchment}b0` }}
+        >
           <span class="flex items-center gap-1">
             <span
               class="inline-block w-2 h-2 rounded-full"
-              style={{ background: "#FFC107" }}
+              style={{ background: COLORS.autumnGold }}
             />
             You
           </span>
           <span class="flex items-center gap-1">
             <span
               class="inline-block w-2 h-2 rounded-full"
-              style={{ background: "#43A047" }}
+              style={{ background: COLORS.forestGreen }}
             />
             Trees
           </span>
           <span class="flex items-center gap-1">
             <span
               class="inline-block w-2 h-2 rounded-sm"
-              style={{ background: "#8D6E63" }}
+              style={{ background: COLORS.earthRed }}
             />
             Soil
           </span>
           <span class="flex items-center gap-1">
             <span
               class="inline-block w-2 h-2 rounded-sm"
-              style={{ background: "#64B5F6" }}
+              style={{ background: COLORS.info }}
             />
             Water
           </span>

@@ -19,19 +19,21 @@ const CREDITS: CreditEntry[] = [
   {
     role: "Built on",
     names: [
-      "SolidJS 1.9",
-      "BabylonJS 8",
-      "Koota 0.6",
-      "Tone.js 15",
-      "Vite 6",
-      "Capacitor 8",
-      "Tailwind CSS 4",
-      "TypeScript 5.7",
+      "SolidJS",
+      "@jolly-pixel/engine",
+      "@jolly-pixel/voxel.renderer",
+      "@jolly-pixel/runtime",
+      "Koota",
+      "drizzle-orm",
+      "Capacitor SQLite",
+      "Vite",
+      "Tailwind CSS",
+      "TypeScript",
     ],
   },
   {
     role: "Tooling",
-    names: ["pnpm", "Biome 2.3", "Vitest 4.1", "Playwright", "GitHub Actions"],
+    names: ["pnpm", "Biome", "Vitest", "Playwright", "GitHub Actions"],
   },
   {
     role: "Assist",
@@ -47,16 +49,24 @@ export const Credits = () => {
   return (
     <Dialog open={open()} onOpenChange={setOpen}>
       <DialogTrigger
-        class="h-9 px-3 text-xs rounded-full"
+        class="h-9 px-3 text-xs rounded-full motion-safe:transition-all hover:brightness-110"
         style={{
-          background: "transparent",
-          color: `${COLORS.forestGreen}b0`,
-          border: `1px solid ${COLORS.forestGreen}40`,
+          background: `${COLORS.parchment}cc`,
+          color: COLORS.forestGreen,
+          border: `2px solid ${COLORS.forestGreen}80`,
         }}
       >
         Credits
       </DialogTrigger>
-      <DialogContent class="max-w-md">
+      <DialogContent
+        class="max-w-md"
+        style={{
+          background: COLORS.parchment,
+          border: `3px solid ${COLORS.barkBrown}`,
+          "border-radius": "16px",
+          "box-shadow": "0 8px 32px rgba(26, 58, 42, 0.25)",
+        }}
+      >
         <DialogHeader>
           <DialogTitle style={{ color: COLORS.forestGreen }}>
             Grovekeeper — Credits

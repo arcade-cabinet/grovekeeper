@@ -78,10 +78,11 @@ export const SpiritDialogue = (props: Props) => {
           <div
             class="rounded-xl p-4 text-sm leading-relaxed"
             style={{
-              background: "rgba(255,255,255,0.72)",
+              background: `${COLORS.parchment}f0`,
               color: COLORS.soilDark,
-              border: `1px solid ${props.spirit.appearance.orbColorHex}`,
+              border: `2px solid ${props.spirit.appearance.orbColorHex}`,
               "min-height": "64px",
+              "box-shadow": `inset 0 0 12px ${props.spirit.appearance.orbColorHex}20`,
             }}
           >
             <Show when={!props.hasMet}>
