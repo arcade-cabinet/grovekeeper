@@ -10,6 +10,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.1.0-alpha.1...v1.2.0-alpha.1) (2026-04-26)
+
+
+### Features
+
+* **hud:** elevate HUD chrome with cozy palette continuity ([#51](https://github.com/arcade-cabinet/grovekeeper/issues/51)) ([327ff22](https://github.com/arcade-cabinet/grovekeeper/commit/327ff2279b6e5b69b758bc6dbcd8b6a70f73e338))
+* **ui:** elevate map, dialogue, stats, rules + fix Credits stack ([#54](https://github.com/arcade-cabinet/grovekeeper/issues/54)) ([4795fe1](https://github.com/arcade-cabinet/grovekeeper/commit/4795fe1a17c38207b73faf4ae8ef33e7bc45a737))
+* **ui:** elevate modal + mobile-action chrome with cozy palette continuity ([#52](https://github.com/arcade-cabinet/grovekeeper/issues/52)) ([c4edde4](https://github.com/arcade-cabinet/grovekeeper/commit/c4edde4096a4a09a0d9fa8e055f865f14a316a3e))
+* **ui:** elevate popups, prompts, and fast-travel chrome ([#53](https://github.com/arcade-cabinet/grovekeeper/issues/53)) ([23b38d3](https://github.com/arcade-cabinet/grovekeeper/commit/23b38d309d9b7af3355fc1d18f0946c9beec77f8))
+* **ui:** elevate quests, batch harvest, joystick — close cozy arc ([#55](https://github.com/arcade-cabinet/grovekeeper/issues/55)) ([cf34d42](https://github.com/arcade-cabinet/grovekeeper/commit/cf34d427da974c144fcb62faaec88c5bd6548c8f))
+
 ## [1.1.0-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.0.0-alpha.1...v1.1.0-alpha.1) (2026-04-25)
 
 
