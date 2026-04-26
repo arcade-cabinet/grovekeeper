@@ -71,10 +71,12 @@ export const HUD = (props: HUDProps) => {
         <Show when={level() >= 3 && props.onOpenBuild}>
           <Button
             size="sm"
-            class="h-11 px-2 sm:px-3 rounded-full"
+            class="h-11 px-2 sm:px-3 rounded-full motion-safe:transition-all hover:brightness-110"
             style={{
-              background: COLORS.barkBrown,
-              color: "white",
+              background: `linear-gradient(180deg, ${COLORS.earthRed} 0%, ${COLORS.barkBrown} 100%)`,
+              color: COLORS.parchment,
+              border: `2px solid ${COLORS.soilDark}`,
+              "box-shadow": `0 4px 12px ${COLORS.barkBrown}60`,
             }}
             onClick={() => props.onOpenBuild?.()}
             aria-label="Open build panel"
@@ -86,10 +88,12 @@ export const HUD = (props: HUDProps) => {
 
         <Button
           size="sm"
-          class="h-11 px-2 sm:px-3 rounded-full"
+          class="h-11 px-2 sm:px-3 rounded-full motion-safe:transition-all hover:brightness-110"
           style={{
-            background: COLORS.forestGreen,
-            color: "white",
+            background: `linear-gradient(180deg, ${COLORS.leafLight} 0%, ${COLORS.forestGreen} 100%)`,
+            color: COLORS.parchment,
+            border: `2px solid ${COLORS.soilDark}`,
+            "box-shadow": `0 4px 12px ${COLORS.forestGreen}60`,
           }}
           onClick={props.onOpenTools}
           aria-label={`Open tools — current tool: ${selectedTool()}`}
@@ -100,8 +104,13 @@ export const HUD = (props: HUDProps) => {
 
         <Button
           size="icon"
-          variant="ghost"
-          class="w-11 h-11 text-white hover:bg-white/10"
+          class="w-11 h-11 rounded-full motion-safe:transition-all hover:brightness-110"
+          style={{
+            background: `${COLORS.parchment}e6`,
+            color: COLORS.soilDark,
+            border: `2px solid ${COLORS.barkBrown}`,
+            "box-shadow": "0 4px 12px rgba(26, 58, 42, 0.15)",
+          }}
           onClick={props.onOpenMenu}
           aria-label="Open menu"
         >

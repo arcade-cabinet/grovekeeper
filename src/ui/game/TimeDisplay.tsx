@@ -1,3 +1,4 @@
+import { COLORS } from "@/config/config";
 import type { GameTime, Season } from "@/systems/time";
 
 interface TimeDisplayProps {
@@ -45,8 +46,9 @@ export const TimeDisplay = (props: TimeDisplayProps) => {
         class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
         aria-label={`Time: ${timeString()}`}
         style={{
-          background: "rgba(0,0,0,0.25)",
-          color: "white",
+          background: `${COLORS.parchment}e6`,
+          border: `1px solid ${COLORS.barkBrown}`,
+          color: COLORS.soilDark,
         }}
       >
         <span aria-hidden="true">{getTimeIcon(time().hours)}</span>
@@ -58,9 +60,9 @@ export const TimeDisplay = (props: TimeDisplayProps) => {
         class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
         aria-label={`Season: ${time().season}, day ${time().day}`}
         style={{
-          background: `${seasonColors[time().season]}40`,
-          color: "white",
-          border: `1px solid ${seasonColors[time().season]}60`,
+          background: `${seasonColors[time().season]}66`,
+          color: COLORS.soilDark,
+          border: `1px solid ${COLORS.barkBrown}`,
         }}
       >
         <span aria-hidden="true">{seasonIcons[time().season]}</span>
@@ -83,8 +85,9 @@ export const TimeDisplayCompact = (props: TimeDisplayProps) => {
       class="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs"
       aria-label={`${time().season}, day ${time().day}`}
       style={{
-        background: "rgba(0,0,0,0.25)",
-        color: "white",
+        background: `${COLORS.parchment}e6`,
+        border: `1px solid ${COLORS.barkBrown}`,
+        color: COLORS.soilDark,
       }}
     >
       <span class="text-sm" aria-hidden="true">
