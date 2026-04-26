@@ -68,8 +68,8 @@ importers:
         specifier: ^0.6.6
         version: 0.6.6(@types/react@19.2.13)(react@19.2.4)
       nipplejs:
-        specifier: ^0.10.2
-        version: 0.10.2
+        specifier: ^1.0.1
+        version: 1.0.1
       solid-js:
         specifier: ^1.9.12
         version: 1.9.12
@@ -2486,8 +2486,8 @@ packages:
     resolution: {integrity: sha512-eonl3sLUha+S1GzTPxychyhnUzKyeQkZ7jLjKrBagJgPla13F+uQ71HgpFefyHgqrjEbCPkDArxYsjY8/+gLKA==}
     engines: {node: '>= 0.4.0'}
 
-  nipplejs@0.10.2:
-    resolution: {integrity: sha512-XGxFY8C2DOtobf1fK+MXINTzkkXJLjZDDpfQhOUZf4TSytbc9s4bmA0lB9eKKM8iDivdr9NQkO7DpIQfsST+9g==}
+  nipplejs@1.0.1:
+    resolution: {integrity: sha512-+GhZWy62hfGIo6qE7vkAbbSFPWDIf3KLxOXwOruryKO3e8Tm8bDMz9EyK+CUr6zqWUC2sT7jZjsQIUawndGzQA==}
 
   node-abi@3.89.0:
     resolution: {integrity: sha512-6u9UwL0HlAl21+agMN3YAMXcKByMqwGx+pq+P76vii5f7hTPtKDp08/H9py6DY+cfDw7kQNTGEj/rly3IgbNQA==}
@@ -5653,7 +5653,7 @@ snapshots:
 
   netmask@2.1.1: {}
 
-  nipplejs@0.10.2: {}
+  nipplejs@1.0.1: {}
 
   node-abi@3.89.0:
     dependencies:

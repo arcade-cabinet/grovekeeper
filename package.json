@@ -54,7 +54,7 @@
     "drizzle-orm": "^0.45.2",
     "jeep-sqlite": "^2.8.0",
     "koota": "^0.6.6",
-    "nipplejs": "^0.10.2",
+    "nipplejs": "^1.0.1",
     "solid-js": "^1.9.12",
     "sql.js": "^1.13.0",
     "tailwind-merge": "^3.2.0",
