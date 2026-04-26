@@ -81,8 +81,13 @@ export const BuildPanel = (props: BuildPanelProps) => {
                   type="button"
                   class="w-full flex items-start gap-3 p-3 rounded-xl transition-colors"
                   style={{
-                    background: affordable() ? "white" : "#f0ece4",
-                    border: `2px solid ${affordable() ? COLORS.forestGreen : "#ccc"}`,
+                    background: affordable()
+                      ? COLORS.parchment
+                      : COLORS.parchmentDark,
+                    border: `2px solid ${affordable() ? COLORS.forestGreen : COLORS.silver}`,
+                    "box-shadow": affordable()
+                      ? `0 2px 8px ${COLORS.forestGreen}30`
+                      : "none",
                     opacity: affordable() ? 1 : 0.6,
                     cursor: affordable() ? "pointer" : "not-allowed",
                   }}
@@ -152,11 +157,13 @@ export const BuildPanel = (props: BuildPanelProps) => {
         </div>
 
         <Button
-          class="w-full mt-2"
+          class="w-full mt-2 motion-safe:transition-all hover:brightness-110"
           variant="outline"
           onClick={props.onClose}
           style={{
+            background: `${COLORS.parchment}e6`,
             "border-color": COLORS.barkBrown,
+            "border-width": "2px",
             color: COLORS.barkBrown,
           }}
         >
