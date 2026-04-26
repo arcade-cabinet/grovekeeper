@@ -23,6 +23,7 @@ import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { FastTravelFade } from "@/ui/game/FastTravelFade";
 import { FastTravelMenu } from "@/ui/game/FastTravelMenu";
 import { HearthPrompt } from "@/ui/game/HearthPrompt";
+import { LoadingGrove } from "@/ui/game/LoadingGrove";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameScreen } from "@/ui/game/NewGameScreen";
 import { NpcSpeechBubble } from "@/ui/game/NpcSpeechBubble";
@@ -138,13 +139,7 @@ export const Game = () => {
 
         <Show when={currentScreen() === "playing"}>
           <GameErrorBoundary onReset={() => gameActions().setScreen("menu")}>
-            <Suspense
-              fallback={
-                <div class="w-full h-full flex items-center justify-center bg-green-900 text-white">
-                  Loading grove...
-                </div>
-              }
-            >
+            <Suspense fallback={<LoadingGrove />}>
               <GameScene />
             </Suspense>
           </GameErrorBoundary>
