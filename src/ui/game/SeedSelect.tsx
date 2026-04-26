@@ -227,10 +227,12 @@ export const SeedSelect = (props: SeedSelectProps) => {
 
         <Button
           variant="outline"
-          class="mt-4 w-full"
+          class="mt-4 w-full motion-safe:transition-all hover:brightness-110"
           onClick={props.onClose}
           style={{
+            background: `${COLORS.parchment}e6`,
             "border-color": COLORS.forestGreen,
+            "border-width": "2px",
             color: COLORS.forestGreen,
           }}
         >

@@ -83,9 +83,10 @@ export const MobileActionButtons = (props: MobileActionButtonsProps) => {
         style={{
           width: "44px",
           height: "44px",
-          background: "linear-gradient(135deg, #8B6F47, #6D5535)",
-          border: "2px solid #3E2723",
-          "box-shadow": "0 2px 8px rgba(26, 58, 42, 0.15)",
+          background: `linear-gradient(135deg, ${COLORS.earthRed}, ${COLORS.barkBrown})`,
+          border: `2px solid ${COLORS.soilDark}`,
+          color: COLORS.parchment,
+          "box-shadow": `0 4px 12px ${COLORS.barkBrown}60`,
         }}
         onClick={props.onPause}
         aria-label="Pause"
@@ -99,9 +100,10 @@ export const MobileActionButtons = (props: MobileActionButtonsProps) => {
         style={{
           width: "44px",
           height: "44px",
-          background: "linear-gradient(135deg, #4A7C59, #2D6A4F)",
-          border: "2px solid #3E2723",
-          "box-shadow": "0 2px 8px rgba(26, 58, 42, 0.15)",
+          background: `linear-gradient(135deg, ${COLORS.leafLight}, ${COLORS.forestGreen})`,
+          border: `2px solid ${COLORS.soilDark}`,
+          color: COLORS.parchment,
+          "box-shadow": `0 4px 12px ${COLORS.forestGreen}60`,
         }}
         onClick={props.onOpenSeeds}
         aria-label="Open seed selection"

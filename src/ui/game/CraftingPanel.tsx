@@ -28,6 +28,7 @@
 
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { playSound } from "@/audio";
+import { COLORS } from "@/config/config";
 import { type AppDatabase, getDb } from "@/db/client";
 import { inventoryRepo, recipesRepo } from "@/db/repos";
 import {
@@ -78,10 +79,10 @@ function formatInputs(recipe: Recipe, inv: InventorySnapshot): string {
 }
 
 const STATUS_COLOR: Record<CraftableStatus, string> = {
-  craftable: "#7BB661",
-  "missing-inputs": "#A35A3F",
-  "unknown-recipe": "#888",
-  "wrong-station": "#888",
+  craftable: COLORS.leafLight,
+  "missing-inputs": COLORS.earthRed,
+  "unknown-recipe": COLORS.silver,
+  "wrong-station": COLORS.silver,
 };
 
 export const CraftingPanel = (props: CraftingPanelProps) => {
@@ -196,7 +197,7 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
           style={{
             position: "absolute",
             inset: "0",
-            background: "rgba(0,0,0,0.5)",
+            background: `${COLORS.soilDark}88`,
             border: "none",
             padding: "0",
             cursor: "default",
@@ -211,10 +212,11 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
             width: "90vw",
             "max-height": "80vh",
             overflow: "auto",
-            background: "#F5EBD7",
-            border: "3px solid #5C3A1E",
-            "border-radius": "12px",
+            background: COLORS.parchment,
+            border: `3px solid ${COLORS.barkBrown}`,
+            "border-radius": "16px",
             padding: "16px",
+            "box-shadow": "0 8px 32px rgba(26, 58, 42, 0.25)",
             "font-family": "Nunito, sans-serif",
           }}
         >
@@ -230,7 +232,7 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
               style={{
                 margin: "0",
                 "font-family": "Fredoka, sans-serif",
-                color: "#3F6B3A",
+                color: COLORS.forestGreen,
               }}
             >
               Crafting — {props.stationId}
@@ -243,7 +245,7 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
                 border: "none",
                 "font-size": "24px",
                 cursor: "pointer",
-                color: "#5C3A1E",
+                color: COLORS.barkBrown,
               }}
               aria-label="Close crafting"
             >
@@ -254,7 +256,7 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
           <Show
             when={recipes().length > 0}
             fallback={
-              <p style={{ color: "#5C3A1E" }}>
+              <p style={{ color: COLORS.soilDark }}>
                 No recipes registered for this station.
               </p>
             }
@@ -282,7 +284,7 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
                             "align-items": "center",
                           }}
                         >
-                          <strong style={{ color: "#3F6B3A" }}>
+                          <strong style={{ color: COLORS.forestGreen }}>
                             {recipe.name}
                           </strong>
                           <button
@@ -292,11 +294,14 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
                             style={{
                               background:
                                 recipeStatus() === "craftable"
-                                  ? "#7BB661"
-                                  : "#cccccc",
-                              color: "white",
-                              border: "none",
-                              "border-radius": "6px",
+                                  ? `linear-gradient(180deg, ${COLORS.leafLight} 0%, ${COLORS.forestGreen} 100%)`
+                                  : COLORS.silver,
+                              color: COLORS.parchment,
+                              border:
+                                recipeStatus() === "craftable"
+                                  ? `2px solid ${COLORS.soilDark}`
+                                  : "2px solid transparent",
+                              "border-radius": "8px",
                               padding: "6px 14px",
                               cursor:
                                 recipeStatus() === "craftable"
@@ -305,6 +310,10 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
                               "font-weight": "bold",
                               "min-height": "44px",
                               "min-width": "60px",
+                              "box-shadow":
+                                recipeStatus() === "craftable"
+                                  ? `0 4px 12px ${COLORS.forestGreen}60`
+                                  : "none",
                             }}
                             aria-label={`Craft ${recipe.name}`}
                           >
@@ -315,7 +324,7 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
                           <p
                             style={{
                               margin: "4px 0",
-                              color: "#5C3A1E",
+                              color: COLORS.soilDark,
                               "font-size": "14px",
                             }}
                           >
@@ -326,7 +335,7 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
                           style={{
                             margin: "4px 0 0",
                             "font-size": "12px",
-                            color: "#5C3A1E",
+                            color: COLORS.soilDark,
                           }}
                         >
                           {formatInputs(recipe, inventory())} →{" "}

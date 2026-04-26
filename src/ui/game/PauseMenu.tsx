@@ -724,17 +724,24 @@ export const PauseMenu = (props: PauseMenuProps) => {
         {/* Action buttons (always visible below tabs) */}
         <div class="flex flex-col gap-2 mt-2">
           <Button
-            class="w-full"
-            style={{ background: COLORS.forestGreen, color: "white" }}
+            class="w-full motion-safe:transition-all hover:brightness-110"
+            style={{
+              background: `linear-gradient(180deg, ${COLORS.leafLight} 0%, ${COLORS.forestGreen} 100%)`,
+              color: COLORS.parchment,
+              border: `2px solid ${COLORS.soilDark}`,
+              "box-shadow": `0 4px 12px ${COLORS.forestGreen}60`,
+            }}
             onClick={props.onClose}
           >
             Continue Playing
           </Button>
           <Button
             variant="outline"
-            class="w-full"
+            class="w-full motion-safe:transition-all hover:brightness-110"
             style={{
+              background: `${COLORS.parchment}e6`,
               "border-color": COLORS.earthRed,
+              "border-width": "2px",
               color: COLORS.earthRed,
             }}
             onClick={props.onMainMenu}
