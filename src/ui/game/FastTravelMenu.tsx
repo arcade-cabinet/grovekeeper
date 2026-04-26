@@ -12,6 +12,7 @@
  */
 
 import { For, Show } from "solid-js";
+import { COLORS } from "@/config/config";
 import type { ClaimedGroveNode } from "@/game/scene/fastTravel";
 
 const BIOME_ICON: Record<string, string> = {
@@ -64,7 +65,7 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
           style={{
             position: "absolute",
             inset: "0",
-            "background-color": "rgba(0, 0, 0, 0.55)",
+            background: `${COLORS.soilDark}99`,
             border: "none",
             padding: "0",
             cursor: "default",
@@ -74,16 +75,17 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
           style={{
             position: "relative",
             "z-index": "1",
-            "background-color": "#1f2a1f",
-            color: "#f3eed1",
+            background: COLORS.parchment,
+            color: COLORS.soilDark,
             padding: "1.25rem",
-            "border-radius": "0.75rem",
+            "border-radius": "1rem",
+            border: `3px solid ${COLORS.barkBrown}`,
             "min-width": "20rem",
             "max-width": "32rem",
             "max-height": "70vh",
             overflow: "auto",
-            "box-shadow": "0 8px 32px rgba(0, 0, 0, 0.6)",
-            font: "16px/1.4 system-ui, -apple-system, sans-serif",
+            "box-shadow": `0 8px 32px ${COLORS.soilDark}60`,
+            font: "16px/1.4 Nunito, system-ui, -apple-system, sans-serif",
           }}
         >
           <header
@@ -94,20 +96,30 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
               "margin-bottom": "0.75rem",
             }}
           >
-            <h2 style={{ margin: "0", "font-size": "1.25rem" }}>Fast Travel</h2>
+            <h2
+              style={{
+                margin: "0",
+                "font-size": "1.25rem",
+                "font-family": "Fredoka, var(--font-heading), sans-serif",
+                color: COLORS.forestGreen,
+              }}
+            >
+              Fast Travel
+            </h2>
             <button
               type="button"
               onClick={() => props.onClose()}
               aria-label="Close fast travel menu"
               style={{
                 background: "transparent",
-                color: "#f3eed1",
-                border: "1px solid #f3eed1",
+                color: COLORS.barkBrown,
+                border: `2px solid ${COLORS.barkBrown}`,
                 padding: "0.25rem 0.6rem",
                 "border-radius": "0.4rem",
                 cursor: "pointer",
                 "min-width": "44px",
                 "min-height": "44px",
+                "font-size": "1.25rem",
               }}
             >
               ×
@@ -145,14 +157,15 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
                         gap: "0.75rem",
                         width: "100%",
                         padding: "0.75rem",
-                        "background-color": "#2c3a2c",
-                        color: "#f3eed1",
-                        border: "1px solid #4a5a4a",
+                        background: `${COLORS.parchmentDark}`,
+                        color: COLORS.soilDark,
+                        border: `2px solid ${COLORS.forestGreen}`,
                         "border-radius": "0.5rem",
                         cursor: "pointer",
                         "min-height": "44px",
                         "text-align": "left",
                         font: "inherit",
+                        "box-shadow": `0 2px 8px ${COLORS.forestGreen}30`,
                       }}
                     >
                       <span

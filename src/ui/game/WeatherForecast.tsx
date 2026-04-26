@@ -38,9 +38,10 @@ export const WeatherForecast = (props: WeatherForecastProps) => {
       aria-label={`Weather: ${WEATHER_LABELS[props.currentWeather]}${props.currentWeather !== "clear" ? `, ${Math.ceil(props.weatherTimeRemaining / 60)} minutes remaining` : ""}`}
       class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
       style={{
-        background: "rgba(245, 240, 227, 0.9)",
-        border: `1px solid ${COLORS.barkBrown}`,
+        background: `${COLORS.parchment}e6`,
+        border: `2px solid ${COLORS.barkBrown}`,
         color: COLORS.soilDark,
+        "box-shadow": "0 4px 12px rgba(26, 58, 42, 0.15)",
       }}
     >
       <span class="text-sm" aria-hidden="true">

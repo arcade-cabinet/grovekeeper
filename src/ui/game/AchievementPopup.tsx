@@ -104,7 +104,7 @@ function injectSparkleStyles() {
       position: absolute;
       width: 8px;
       height: 8px;
-      background: #FFD700;
+      background: ${COLORS.gold};
       border-radius: 50%;
       pointer-events: none;
     }
@@ -192,9 +192,10 @@ const AnimatedAchievementPopup = (props: AnimatedAchievementPopupProps) => {
     >
       <button
         type="button"
-        class="absolute inset-0 bg-black pointer-events-auto border-0 cursor-pointer"
+        class="absolute inset-0 pointer-events-auto border-0 cursor-pointer"
         style={{
-          opacity: phase() === "visible" ? 0.6 : 0,
+          background: COLORS.soilDark,
+          opacity: phase() === "visible" ? 0.55 : 0,
           transition: "opacity 300ms ease-out",
         }}
         onClick={props.onDismiss}
@@ -214,11 +215,11 @@ const AnimatedAchievementPopup = (props: AnimatedAchievementPopupProps) => {
           top: "50%",
           width: "calc(100vw - 48px)",
           "max-width": "360px",
-          background: COLORS.skyMist,
-          border: "3px solid #FFD700",
+          background: COLORS.parchment,
+          border: `3px solid ${COLORS.gold}`,
           "border-radius": "16px",
           padding: "24px",
-          "box-shadow": "0 8px 32px rgba(0,0,0,0.4)",
+          "box-shadow": `0 8px 32px ${COLORS.gold}50, 0 4px 16px ${COLORS.soilDark}60`,
           animation: `${animationName()} 300ms ease-out`,
           "animation-fill-mode": "both",
         }}
@@ -260,10 +261,12 @@ const AnimatedAchievementPopup = (props: AnimatedAchievementPopupProps) => {
 
         <button
           type="button"
-          class="w-full py-2 px-4 rounded-lg font-semibold"
+          class="w-full py-2 px-4 rounded-lg font-semibold motion-safe:transition-all hover:brightness-110"
           style={{
-            background: COLORS.autumnGold,
-            color: "white",
+            background: `linear-gradient(180deg, ${COLORS.gold} 0%, ${COLORS.autumnGold} 100%)`,
+            color: COLORS.soilDark,
+            border: `2px solid ${COLORS.soilDark}`,
+            "box-shadow": `0 4px 12px ${COLORS.gold}80`,
             "font-size": "16px",
           }}
           onClick={props.onDismiss}

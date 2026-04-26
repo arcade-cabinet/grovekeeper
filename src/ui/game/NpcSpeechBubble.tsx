@@ -27,6 +27,7 @@
  */
 
 import { createEffect, createSignal, onCleanup, Show } from "solid-js";
+import { COLORS } from "@/config/config";
 import npcConfig from "@/game/scene/npc.config.json";
 
 export interface NpcSpeechBubbleProps {
@@ -116,13 +117,13 @@ export function NpcSpeechBubble(props: NpcSpeechBubbleProps) {
           "max-width": "min(80vw, 320px)",
           padding: "12px 16px",
           "border-radius": "16px",
-          background: "rgba(255, 248, 232, 0.96)",
-          color: "#3A2E22",
+          background: `${COLORS.parchment}f5`,
+          border: `2px solid ${COLORS.barkBrown}`,
+          color: COLORS.soilDark,
           "font-size": "15px",
           "line-height": "1.45",
           "font-family": "Nunito, system-ui, sans-serif",
-          "box-shadow":
-            "0 6px 18px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.6) inset",
+          "box-shadow": `0 6px 18px ${COLORS.soilDark}40, 0 1px 0 rgba(255,255,255,0.6) inset`,
           "pointer-events": "auto",
           opacity: visible() ? 1 : 0,
           transition: `opacity ${FADE_IN_MS}ms ease-out`,
@@ -137,13 +138,26 @@ export function NpcSpeechBubble(props: NpcSpeechBubbleProps) {
           style={{
             position: "absolute",
             left: "50%",
+            bottom: "-9px",
+            transform: "translateX(-50%)",
+            width: 0,
+            height: 0,
+            "border-left": "9px solid transparent",
+            "border-right": "9px solid transparent",
+            "border-top": `9px solid ${COLORS.barkBrown}`,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
             bottom: "-7px",
             transform: "translateX(-50%)",
             width: 0,
             height: 0,
             "border-left": "8px solid transparent",
             "border-right": "8px solid transparent",
-            "border-top": "8px solid rgba(255, 248, 232, 0.96)",
+            "border-top": `8px solid ${COLORS.parchment}f5`,
           }}
         />
       </div>
