@@ -25,10 +25,11 @@
     /* Linting */
     "forceConsistentCasingInFileNames": true,
 
-    /* Path mapping */
-    "baseUrl": ".",
+    /* Path mapping — TS 6+ deprecates baseUrl; with moduleResolution
+       "bundler", `paths` is resolved relative to this tsconfig.json so
+       baseUrl is unnecessary. Kept TS 5.x compatible. */
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"],
