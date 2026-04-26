@@ -36,8 +36,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
+      - name: Lint + Format check
+        # `pnpm check` is biome's combined lint + format gate.
+        # `pnpm lint` alone misses format-only drift, which can land on
+        # main when contributors skip `pnpm format` or pre-commit hooks.
+        run: pnpm check
 
       - name: Type-check
         run: pnpm tsc --noEmit

@@ -49,13 +49,76 @@ const defaultWorldsProvider = (): World[] => {
 };
 
 const driftingLeaves = [
-  { x: "10%", y: "12%", dx: "40px", dy: "60vh", rot: "180deg", dur: "9s", delay: "0s", size: "1rem" },
-  { x: "32%", y: "6%", dx: "-30px", dy: "70vh", rot: "-120deg", dur: "11s", delay: "2s", size: "0.85rem" },
-  { x: "58%", y: "9%", dx: "20px", dy: "65vh", rot: "200deg", dur: "10s", delay: "4s", size: "0.95rem" },
-  { x: "78%", y: "14%", dx: "-50px", dy: "78vh", rot: "-160deg", dur: "12s", delay: "1s", size: "1.05rem" },
-  { x: "88%", y: "5%", dx: "-25px", dy: "60vh", rot: "140deg", dur: "8s", delay: "6s", size: "0.8rem" },
-  { x: "20%", y: "22%", dx: "55px", dy: "55vh", rot: "210deg", dur: "13s", delay: "3.5s", size: "0.9rem" },
-  { x: "45%", y: "16%", dx: "-15px", dy: "62vh", rot: "-110deg", dur: "10.5s", delay: "5s", size: "0.95rem" },
+  {
+    x: "10%",
+    y: "12%",
+    dx: "40px",
+    dy: "60vh",
+    rot: "180deg",
+    dur: "9s",
+    delay: "0s",
+    size: "1rem",
+  },
+  {
+    x: "32%",
+    y: "6%",
+    dx: "-30px",
+    dy: "70vh",
+    rot: "-120deg",
+    dur: "11s",
+    delay: "2s",
+    size: "0.85rem",
+  },
+  {
+    x: "58%",
+    y: "9%",
+    dx: "20px",
+    dy: "65vh",
+    rot: "200deg",
+    dur: "10s",
+    delay: "4s",
+    size: "0.95rem",
+  },
+  {
+    x: "78%",
+    y: "14%",
+    dx: "-50px",
+    dy: "78vh",
+    rot: "-160deg",
+    dur: "12s",
+    delay: "1s",
+    size: "1.05rem",
+  },
+  {
+    x: "88%",
+    y: "5%",
+    dx: "-25px",
+    dy: "60vh",
+    rot: "140deg",
+    dur: "8s",
+    delay: "6s",
+    size: "0.8rem",
+  },
+  {
+    x: "20%",
+    y: "22%",
+    dx: "55px",
+    dy: "55vh",
+    rot: "210deg",
+    dur: "13s",
+    delay: "3.5s",
+    size: "0.9rem",
+  },
+  {
+    x: "45%",
+    y: "16%",
+    dx: "-15px",
+    dy: "62vh",
+    rot: "-110deg",
+    dur: "10.5s",
+    delay: "5s",
+    size: "0.95rem",
+  },
 ];
 
 // Pick four trees for the four positions: two foreground corners + two
@@ -142,7 +205,10 @@ export const MainMenu = (props: MainMenuProps) => {
       />
 
       {/* Drifting leaves */}
-      <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <div
+        class="absolute inset-0 overflow-hidden pointer-events-none"
+        aria-hidden="true"
+      >
         <For each={driftingLeaves}>
           {(l) => (
             <div
@@ -241,7 +307,10 @@ export const MainMenu = (props: MainMenuProps) => {
           "Every forest begins with a single seed."
         </p>
 
-        <nav class="w-full flex flex-col gap-2.5 sm:gap-3" aria-label="Main menu">
+        <nav
+          class="w-full flex flex-col gap-2.5 sm:gap-3"
+          aria-label="Main menu"
+        >
           <button
             type="button"
             onClick={handleBegin}

@@ -28,7 +28,9 @@ describe("NewGameScreen", () => {
     expect(screen.getByText("A New Grove")).toBeDefined();
     expect(screen.getByLabelText("Gardener")).toBeDefined();
     expect(screen.getByLabelText("World Seed")).toBeDefined();
-    expect(screen.getByRole("button", { name: /plant the seed/i })).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: /plant the seed/i }),
+    ).toBeDefined();
   });
 
   it("seed defaults to a non-empty randomly-generated string", () => {

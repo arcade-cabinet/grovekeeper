@@ -68,11 +68,56 @@ function newWorldId(): string {
 }
 
 const driftingLeaves = [
-  { x: "12%", y: "10%", dx: "30px", dy: "70vh", rot: "180deg", dur: "10s", delay: "0s", size: "0.9rem" },
-  { x: "40%", y: "5%", dx: "-25px", dy: "75vh", rot: "-130deg", dur: "12s", delay: "2.5s", size: "0.85rem" },
-  { x: "70%", y: "8%", dx: "20px", dy: "65vh", rot: "210deg", dur: "11s", delay: "4.5s", size: "1rem" },
-  { x: "88%", y: "18%", dx: "-40px", dy: "60vh", rot: "150deg", dur: "9s", delay: "1.5s", size: "0.9rem" },
-  { x: "25%", y: "22%", dx: "45px", dy: "55vh", rot: "200deg", dur: "13s", delay: "5s", size: "0.95rem" },
+  {
+    x: "12%",
+    y: "10%",
+    dx: "30px",
+    dy: "70vh",
+    rot: "180deg",
+    dur: "10s",
+    delay: "0s",
+    size: "0.9rem",
+  },
+  {
+    x: "40%",
+    y: "5%",
+    dx: "-25px",
+    dy: "75vh",
+    rot: "-130deg",
+    dur: "12s",
+    delay: "2.5s",
+    size: "0.85rem",
+  },
+  {
+    x: "70%",
+    y: "8%",
+    dx: "20px",
+    dy: "65vh",
+    rot: "210deg",
+    dur: "11s",
+    delay: "4.5s",
+    size: "1rem",
+  },
+  {
+    x: "88%",
+    y: "18%",
+    dx: "-40px",
+    dy: "60vh",
+    rot: "150deg",
+    dur: "9s",
+    delay: "1.5s",
+    size: "0.9rem",
+  },
+  {
+    x: "25%",
+    y: "22%",
+    dx: "45px",
+    dy: "55vh",
+    rot: "200deg",
+    dur: "13s",
+    delay: "5s",
+    size: "0.95rem",
+  },
 ];
 
 export const NewGameScreen = (props: NewGameScreenProps) => {
@@ -165,7 +210,10 @@ export const NewGameScreen = (props: NewGameScreenProps) => {
       />
 
       {/* Drifting leaves */}
-      <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <div
+        class="absolute inset-0 overflow-hidden pointer-events-none"
+        aria-hidden="true"
+      >
         <For each={driftingLeaves}>
           {(l) => (
             <div
