@@ -67,8 +67,9 @@ export const XPBar = () => {
         style={{
           height: "28px",
           width: "180px",
-          background: "rgba(245, 240, 227, 0.90)",
-          border: "2px solid #5D4037",
+          background: `${COLORS.parchment}e6`,
+          border: `2px solid ${COLORS.barkBrown}`,
+          "box-shadow": "0 4px 12px rgba(26, 58, 42, 0.15)",
         }}
       >
         <div

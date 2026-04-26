@@ -67,11 +67,14 @@ export const ToolBelt = (props: ToolBeltProps) => {
                   height: "44px",
                   "font-size": "1.25rem",
                   background: isActive()
-                    ? "rgba(255, 193, 7, 0.3)"
-                    : "rgba(255, 255, 255, 0.5)",
+                    ? `${COLORS.autumnGold}55`
+                    : `${COLORS.parchment}80`,
                   border: isActive()
-                    ? "2px solid #FFC107"
+                    ? `2px solid ${COLORS.autumnGold}`
                     : "2px solid transparent",
+                  "box-shadow": isActive()
+                    ? `0 0 12px ${COLORS.autumnGold}80`
+                    : "none",
                   opacity: isUnlocked() ? 1 : canUnlock() ? 0.6 : 0.3,
                   transform: isActive() ? "scale(1.08)" : "scale(1)",
                   filter: isUnlocked() ? "none" : "grayscale(100%)",

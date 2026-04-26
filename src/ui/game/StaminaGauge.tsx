@@ -1,4 +1,5 @@
 import { Show } from "solid-js";
+import { COLORS } from "@/config/config";
 import { useQueryFirst, useTrait } from "@/ecs/solid";
 import { FarmerState, IsPlayer } from "@/traits";
 
@@ -28,8 +29,8 @@ export const StaminaGauge = () => {
         class="relative w-full rounded-lg overflow-hidden"
         style={{
           height: "100px",
-          background: "rgba(245, 240, 227, 0.90)",
-          border: "2px solid #5D4037",
+          background: `${COLORS.parchment}e6`,
+          border: `2px solid ${COLORS.barkBrown}`,
           "box-shadow": "0 4px 12px rgba(26, 58, 42, 0.15)",
         }}
       >
@@ -46,8 +47,8 @@ export const StaminaGauge = () => {
       <span
         class="text-xs font-bold whitespace-nowrap"
         style={{
-          color: "rgba(245, 240, 227, 0.9)",
-          "text-shadow": "0 1px 2px rgba(0,0,0,0.5)",
+          color: COLORS.parchment,
+          "text-shadow": `0 1px 2px ${COLORS.soilDark}`,
         }}
       >
         {Math.round(stamina())}/{maxStamina()}
