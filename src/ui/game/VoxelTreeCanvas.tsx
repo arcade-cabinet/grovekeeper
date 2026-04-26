@@ -36,7 +36,7 @@ export const VoxelTreeCanvas = (props: VoxelTreeCanvasProps) => {
   onMount(() => {
     const w = props.width ?? 220;
     const h = props.height ?? 280;
-    const reducedMotion = window.matchMedia(
+    const reducedMotion = globalThis.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const spinSpeed = reducedMotion ? 0 : (props.spinSpeed ?? 0.18);
@@ -62,7 +62,7 @@ export const VoxelTreeCanvas = (props: VoxelTreeCanvasProps) => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(28, w / h, 0.1, 100);
     camera.position.set(0, 1.2, 6.2);
-    camera.lookAt(0, 1.0, 0);
+    camera.lookAt(0, 1, 0);
 
     // Warm dawn-key lighting that matches the menu's gradient sky
     const key = new THREE.DirectionalLight(0xfff1c8, 1.4);
@@ -83,11 +83,13 @@ export const VoxelTreeCanvas = (props: VoxelTreeCanvasProps) => {
       new THREE.ConeGeometry(0.7, 1.6, 6),
       new THREE.MeshBasicMaterial({ color: 0x355a3f, wireframe: true }),
     );
-    placeholder.position.y = 1.0;
+    placeholder.position.y = 1;
     root.add(placeholder);
 
-    const base = new URL(import.meta.env.BASE_URL ?? "/", window.location.href)
-      .href;
+    const base = new URL(
+      import.meta.env.BASE_URL ?? "/",
+      globalThis.location.href,
+    ).href;
     const url = `${base}assets/models/trees/${props.treeId}/tree.gltf`.replace(
       /\/+/g,
       "/",
@@ -140,14 +142,15 @@ export const VoxelTreeCanvas = (props: VoxelTreeCanvasProps) => {
       cancelAnimationFrame(raf);
       renderer.dispose();
       // Walk the scene and dispose geometries/materials/textures we own.
+      const collectMaterials = (m: THREE.Material | THREE.Material[] | undefined): THREE.Material[] => {
+        if (Array.isArray(m)) return m;
+        if (m) return [m];
+        return [];
+      };
       scene.traverse((obj) => {
         const mesh = obj as THREE.Mesh;
         if (mesh.geometry) mesh.geometry.dispose?.();
-        const mats = Array.isArray(mesh.material)
-          ? mesh.material
-          : mesh.material
-            ? [mesh.material]
-            : [];
+        const mats = collectMaterials(mesh.material);
         for (const m of mats) {
           for (const k of Object.keys(m)) {
             const v = (m as unknown as Record<string, unknown>)[k];
