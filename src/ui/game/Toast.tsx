@@ -1,4 +1,5 @@
 import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
+import { COLORS } from "@/config/config";
 import { createSimpleStore } from "@/shared/utils/simpleStore";
 
 // ---------------------------------------------------------------------------
@@ -22,10 +23,22 @@ const MAX_VISIBLE = 3;
 const AUTO_DISMISS_MS = 2500;
 
 const TOAST_COLORS: Record<ToastType, { bg: string; text: string }> = {
-  success: { bg: "#2D5A27", text: "#FFFFFF" },
-  warning: { bg: "#FFB74D", text: "#FFFFFF" },
-  info: { bg: "#64B5F6", text: "#FFFFFF" },
-  achievement: { bg: "#FFD700", text: "#3E2723" },
+  success: {
+    bg: `linear-gradient(180deg, ${COLORS.leafLight} 0%, ${COLORS.forestGreen} 100%)`,
+    text: COLORS.parchment,
+  },
+  warning: {
+    bg: `linear-gradient(180deg, ${COLORS.autumnGold} 0%, ${COLORS.earthRed} 100%)`,
+    text: COLORS.parchment,
+  },
+  info: {
+    bg: `${COLORS.parchment}f2`,
+    text: COLORS.soilDark,
+  },
+  achievement: {
+    bg: `linear-gradient(180deg, ${COLORS.gold} 0%, ${COLORS.autumnGold} 100%)`,
+    text: COLORS.soilDark,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -123,12 +136,13 @@ const AnimatedToast = (props: AnimatedToastProps) => {
       style={{
         background: colors().bg,
         color: colors().text,
+        border: `2px solid ${COLORS.soilDark}`,
         "font-weight": 700,
         "font-size": "14px",
         "line-height": "20px",
         padding: "8px 16px",
         "border-radius": "9999px",
-        "box-shadow": "0 2px 8px rgba(0,0,0,0.25)",
+        "box-shadow": `0 4px 12px ${COLORS.soilDark}40`,
         transform: `translateY(${translateY()})`,
         opacity: opacity(),
         transition: transitionCSS(),
