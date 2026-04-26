@@ -53,10 +53,10 @@ interface QuestPanelProps {
 }
 
 const difficultyColors: Record<GoalDifficulty, string> = {
-  easy: "#4CAF50",
-  medium: "#FF9800",
-  hard: "#F44336",
-  epic: "#9C27B0",
+  easy: COLORS.success,
+  medium: COLORS.warning,
+  hard: COLORS.danger,
+  epic: COLORS.prestigePurple,
 };
 
 const difficultyLabels: Record<GoalDifficulty, string> = {
@@ -74,10 +74,12 @@ export const QuestPanel = (props: QuestPanelProps) => {
   return (
     <Sheet>
       <SheetTrigger
-        class="h-11 px-3 sm:h-11 sm:px-3 rounded-full relative inline-flex items-center justify-center text-sm font-medium"
+        class="h-11 px-3 sm:h-11 sm:px-3 rounded-full relative inline-flex items-center justify-center text-sm font-medium motion-safe:transition-all hover:brightness-110"
         style={{
-          background: COLORS.autumnGold,
+          background: `linear-gradient(180deg, ${COLORS.gold} 0%, ${COLORS.autumnGold} 100%)`,
           color: COLORS.soilDark,
+          border: `2px solid ${COLORS.soilDark}`,
+          "box-shadow": `0 4px 12px ${COLORS.autumnGold}60`,
         }}
         aria-label={`Open quests panel${activeQuests().length > 0 ? ` — ${activeQuests().length} active` : ""}`}
       >
@@ -99,7 +101,8 @@ export const QuestPanel = (props: QuestPanelProps) => {
         side="right"
         class="w-[320px] sm:w-[400px] p-0"
         style={{
-          background: `linear-gradient(180deg, #faf9f6 0%, ${COLORS.skyMist} 100%)`,
+          background: `linear-gradient(180deg, ${COLORS.parchment} 0%, ${COLORS.skyMist} 100%)`,
+          "border-left": `3px solid ${COLORS.barkBrown}`,
         }}
       >
         <SheetHeader class="p-4 pb-2">
@@ -253,10 +256,12 @@ const QuestCard = (props: QuestCardProps) => {
         <Show when={props.quest.completed && props.onClaim}>
           <Button
             size="sm"
-            class="h-11 px-4 text-xs rounded-full"
+            class="h-11 px-4 text-xs rounded-full motion-safe:transition-all hover:brightness-110"
             style={{
-              background: COLORS.forestGreen,
-              color: "white",
+              background: `linear-gradient(180deg, ${COLORS.leafLight} 0%, ${COLORS.forestGreen} 100%)`,
+              color: COLORS.parchment,
+              border: `2px solid ${COLORS.soilDark}`,
+              "box-shadow": `0 4px 12px ${COLORS.forestGreen}60`,
             }}
             onClick={props.onClaim}
             aria-label={`Claim reward for quest: ${props.quest.name}`}
@@ -278,8 +283,9 @@ export const QuestIndicator = (props: { quests: ActiveQuest[] }) => {
       <div
         class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
         style={{
-          background: "rgba(0,0,0,0.25)",
-          color: "white",
+          background: `${COLORS.parchment}e6`,
+          border: `1px solid ${COLORS.barkBrown}`,
+          color: COLORS.soilDark,
         }}
       >
         <RiTrophyLine class="w-3 h-3" />
