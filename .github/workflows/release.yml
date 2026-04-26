@@ -8,6 +8,13 @@ permissions:
   contents: write
   pull-requests: write
 
+# Don't let a follow-up push cancel a release-please run that's already
+# building + attaching tarball/APK assets to the freshly-cut tag.
+# Release artifacts are tag-pinned, so concurrent runs are not a problem.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release-please:
     name: Release Please
