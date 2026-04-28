@@ -33,18 +33,6 @@
         ]
       }
     ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/anti-stop-check.sh",
-            "timeout": 15
-          }
-        ]
-      }
-    ],
     "PreCompact": [
       {
         "matcher": "",
@@ -52,11 +40,6 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/pre-compact.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/task-batch-flush.sh",
             "timeout": 10
           }
         ]
