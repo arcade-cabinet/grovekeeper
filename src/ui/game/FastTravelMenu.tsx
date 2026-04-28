@@ -11,7 +11,7 @@
  *   the player to that grove's centre.
  */
 
-import { For, Show } from "solid-js";
+import { For, onMount, Show } from "solid-js";
 import { COLORS } from "@/config/config";
 import type { ClaimedGroveNode } from "@/game/scene/fastTravel";
 
@@ -37,6 +37,7 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
   return (
     <Show when={props.open}>
       <div
+        ref={(el) => onMount(() => el?.focus())}
         role="dialog"
         aria-modal="true"
         aria-label="Fast Travel"
@@ -182,7 +183,9 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
                         }}
                       >
                         <strong>{grove.name}</strong>
-                        <small style={{ opacity: "0.75" }}>{grove.biome}</small>
+                        <span style={{ opacity: "0.75", "font-size": "14px" }}>
+                          {grove.biome}
+                        </span>
                       </span>
                     </button>
                   </li>

@@ -26,7 +26,7 @@
  * every open.
  */
 
-import { createMemo, createSignal, For, Show } from "solid-js";
+import { createMemo, createSignal, For, onMount, Show } from "solid-js";
 import { playSound } from "@/audio";
 import { COLORS } from "@/config/config";
 import { type AppDatabase, getDb } from "@/db/client";
@@ -171,6 +171,7 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
   return (
     <Show when={props.open}>
       <div
+        ref={(el) => onMount(() => el?.focus())}
         role="dialog"
         aria-modal="true"
         aria-label="Crafting"
