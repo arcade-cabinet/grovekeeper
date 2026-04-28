@@ -28,7 +28,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 | 07 | Craft hearth | PASS | CraftingPanel opens as sidebar/modal (not bottom sheet on desktop). Recipe list visible. Keyboard navigable. |
 | 08 | Place hearth | PASS | Mouse positions blueprint. Left-click confirms. Right-click or Esc cancels. |
 | 09 | Light hearth cinematic | PASS | Cinematic plays. Screen re-enables input after ~2s. |
-| 10 | Fast travel | PASS | FastTravelMenu opens. Click a node to travel. Close button reachable. (Esc requires dialog focus — see QA-6.) |
+| 10 | Fast travel | PASS | FastTravelMenu opens. Click a node to travel. Esc and Close button both work (dialog auto-focuses on open). |
 | 11 | Villagers arrive | PASS | Villager toast fires. NPCs appear near hearth. |
 | 12 | Craft first weapon | PASS | Weapon panel opens. Recipe available. Craft button responds to click and Enter. |
 | 13 | Grove threshold | PASS | Palette shift visible at boundary. |
@@ -56,13 +56,11 @@ tester: agent (automated, pnpm dev on localhost:5173)
 - **Severity:** Accessibility gap; keyboard-only players cannot reach crafting
 - **Fix:** Add `C` (or `E`) binding in `src/input/ActionMap.ts` → `open-craft` action
 
-### P3 — FastTravelMenu does not close on Esc key
+### P3 — FastTravelMenu Esc close ✅ Resolved in v1.3.2-qa-polish
 
 - **Surface:** Gate 10
-- **Steps:** Open FastTravelMenu, press Esc
-- **Expected:** Menu closes
-- **Actual:** No response; must click the Close button
-- **Fix:** Add `onKeyDown` Esc handler to FastTravelMenu component
+- **Status:** Fixed — dialog auto-focuses on mount; `onKeyDown` Esc handler now fires reliably.
+- **Regression watch:** Verify Esc still closes after any future refactor of `FastTravelMenu`.
 
 ### P3 — Pause menu Esc binding conflicts with dialog close
 
@@ -76,7 +74,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 
 ## Overall Assessment
 
-All 16 beats reachable on desktop. Two P2 accessibility gaps (focus trap, keyboard shortcut for crafting). Two P3 UX gaps (Esc for FastTravel/Pause). No P1 blockers.
+All 16 beats reachable on desktop. Two P2 accessibility gaps (focus trap, keyboard shortcut for crafting). One P3 UX gap remains (Pause Esc). FastTravel Esc (QA-6) and label size (QA-5) resolved in this RC. No P1 blockers.
 
 **Rubric scores (spot-check, desktop):**
 
@@ -102,6 +100,6 @@ From both playthroughs combined:
 | QA-2 | P2 | CraftingPanel | Focus trap incomplete — tab escapes dialog |
 | QA-3 | P2 | HUD/ActionMap | No keyboard shortcut to open CraftingPanel |
 | QA-4 | P3 | ResourceBar | Truncation at 375px with all resources populated |
-| QA-5 | P3 | FastTravelMenu node | Label too small (< 14px) at 375px |
-| QA-6 | P3 | FastTravelMenu | Esc does not close |
+| QA-5 | ~~P3~~ | FastTravelMenu node | ~~Label too small (< 14px) at 375px~~ **Resolved in v1.3.2-qa-polish** |
+| QA-6 | ~~P3~~ | FastTravelMenu | ~~Esc does not close~~ **Resolved in v1.3.2-qa-polish** |
 | QA-7 | P3 | PauseMenu | Second Esc press has no effect |
