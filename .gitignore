@@ -62,6 +62,9 @@ expo-env.d.ts
 memory-bank/
 .ralph-tui/
 
+# Agent working memory (migrated from .claude/state/)
+.agent-state/
+
 # Claude Code: share hooks/skills/settings/directives; ignore transient
 # runtime state + per-session markers inside .claude/.
 .claude/state/
