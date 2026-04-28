@@ -21,7 +21,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 |---|---------|--------|-------|
 | 01 | Landing page | PASS | Hero text and CTA visible without scroll at 375px. Touch target on CTA ≥ 44px. |
 | 02 | Main menu | PASS | Three buttons (Continue, New Grove, Credits) stack cleanly. No horizontal overflow. |
-| 03 | New game modal | PASS | Name input + seed field + Begin button fit in viewport. Keyboard does not push CTA out of view (uses `env(keyboard-inset)` or scroll). |
+| 03 | New game modal | PASS | Name input + seed field + Begin button fit in viewport. Chrome DevTools emulation: keyboard does not push CTA out of view. (iOS Safari real device: see P2 QA-1.) |
 | 04 | First spawn — unclaimed grove | PASS | Player spawns in grove biome. Soft glow visible. Resource bar + XP bar in HUD. No UI overlap with bottom action area. |
 | 05 | Spirit greets | PASS | Speech bubble appears at top or bottom of canvas (not cropped). Font ≥ 14px. Dismiss tap target ≥ 44px. |
 | 06 | Gather logs | PASS | Interact cue overlay shows "Chop" prompt. Resource count increments in ResourceBar. No jank during chop animation. |
@@ -41,6 +41,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 ## Bugs / Jank Found
 
 ### P2 — Keyboard pushes "Begin" off-screen on iOS Safari (not reproduced in Chrome DevTools)
+
 - **Surface:** Gate 03 NewGame modal
 - **Steps:** Open NewGame, tap the Gardener Name input, iOS soft keyboard appears
 - **Expected:** Begin button scrolls into view above keyboard
@@ -49,6 +50,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 - **Mitigation:** Already uses SolidJS `onMount` scroll-into-view; verify with real device
 
 ### P3 — ResourceBar text truncates at narrow widths
+
 - **Surface:** Gate 04–16 HUD
 - **Steps:** Simulate 375px with all resource types populated
 - **Observed:** When timber + sap + fruit + acorns all show 3-digit counts, the ResourceBar horizontal overflow clips the rightmost item
@@ -56,6 +58,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 - **Fix:** Add `overflow-x: auto` or reduce font-size below sm breakpoint
 
 ### P3 — FastTravelMenu node label too small at 375px
+
 - **Surface:** Gate 10
 - **Steps:** Open FastTravelMenu with one node
 - **Observed:** Grove name label renders at 11px (below 14px minimum)

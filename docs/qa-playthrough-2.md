@@ -28,7 +28,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 | 07 | Craft hearth | PASS | CraftingPanel opens as sidebar/modal (not bottom sheet on desktop). Recipe list visible. Keyboard navigable. |
 | 08 | Place hearth | PASS | Mouse positions blueprint. Left-click confirms. Right-click or Esc cancels. |
 | 09 | Light hearth cinematic | PASS | Cinematic plays. Screen re-enables input after ~2s. |
-| 10 | Fast travel | PASS | FastTravelMenu opens. Click a node to travel. Esc closes. |
+| 10 | Fast travel | PASS | FastTravelMenu opens. Click a node to travel. Close button reachable. (Esc requires dialog focus — see QA-6.) |
 | 11 | Villagers arrive | PASS | Villager toast fires. NPCs appear near hearth. |
 | 12 | Craft first weapon | PASS | Weapon panel opens. Recipe available. Craft button responds to click and Enter. |
 | 13 | Grove threshold | PASS | Palette shift visible at boundary. |
@@ -41,6 +41,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 ## Bugs / Jank Found
 
 ### P2 — CraftingPanel keyboard focus trap incomplete
+
 - **Surface:** Gates 07 and 12
 - **Steps:** Open CraftingPanel, tab through recipe list, reach last item, continue tabbing
 - **Expected:** Focus cycles within the panel or reaches Close button
@@ -48,6 +49,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 - **Fix:** Add `aria-modal="true"` and a focus trap on the CraftingPanel `role="dialog"` root. The `@headlessui` pattern or a lightweight `focus-trap` call in `onMount`.
 
 ### P2 — No keyboard shortcut to open CraftingPanel
+
 - **Surface:** Gates 07 and 12
 - **Steps:** In-game, try to open crafting via keyboard (e.g. C, E, Tab, Ctrl+C)
 - **Actual:** No key binding opens the panel — mouse click on a workbench is the only path
@@ -55,6 +57,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 - **Fix:** Add `C` (or `E`) binding in `src/input/ActionMap.ts` → `open-craft` action
 
 ### P3 — FastTravelMenu does not close on Esc key
+
 - **Surface:** Gate 10
 - **Steps:** Open FastTravelMenu, press Esc
 - **Expected:** Menu closes
@@ -62,6 +65,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 - **Fix:** Add `onKeyDown` Esc handler to FastTravelMenu component
 
 ### P3 — Pause menu Esc binding conflicts with dialog close
+
 - **Surface:** PauseMenu
 - **Steps:** Open Pause menu (P or Esc), then press Esc again
 - **Expected:** Esc closes the pause menu

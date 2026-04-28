@@ -270,8 +270,7 @@ test.describe("RC journey — 16 screenshot gates", () => {
       // openCraftingPanel fires a reactive state write; the SolidJS render
       // cycle + any CSS transition needs to complete first.
       await page
-        .getByRole("dialog")
-        .first()
+        .getByRole("dialog", { name: "Crafting" })
         .waitFor({ state: "visible", timeout: 3_000 })
         .catch(() => {});
       await page.waitForTimeout(300);
@@ -314,8 +313,7 @@ test.describe("RC journey — 16 screenshot gates", () => {
       await call(page, "openCraftingPanel", "weapon");
       // Same as gate 07: wait for the panel's role="dialog" before capture.
       await page
-        .getByRole("dialog")
-        .first()
+        .getByRole("dialog", { name: "Crafting" })
         .waitFor({ state: "visible", timeout: 3_000 })
         .catch(() => {});
       await page.waitForTimeout(300);
