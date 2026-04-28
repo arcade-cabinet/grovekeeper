@@ -20,7 +20,10 @@ import * as schema from "./schema";
  */
 function getWasmUrl(): string {
   const base = import.meta.env.BASE_URL ?? "/";
-  return `${base}sql-wasm/sql-wasm.wasm`;
+  // viteStaticCopy (dest:"sql-wasm") preserves the src's relative path,
+  // so the file lands at dist/sql-wasm/node_modules/sql.js/dist/sql-wasm.wasm
+  // and is served at <base>sql-wasm/node_modules/sql.js/dist/sql-wasm.wasm.
+  return `${base}sql-wasm/node_modules/sql.js/dist/sql-wasm.wasm`;
 }
 
 /**

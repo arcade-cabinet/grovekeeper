@@ -214,6 +214,10 @@ test.describe("RC journey — 16 screenshot gates", () => {
         .first()
         .waitFor({ state: "visible", timeout: 5_000 })
         .catch(() => {});
+      // CSS transitions are not stopped by toHaveScreenshot's animations:"disabled"
+      // (which only covers CSS animation + Web Animations API). Wait for any entry
+      // transition on the modal to fully complete before capture.
+      await page.waitForTimeout(400);
     });
 
     // Skip the SQL-backed Begin click; setScreen("playing") drives the
@@ -262,6 +266,14 @@ test.describe("RC journey — 16 screenshot gates", () => {
     // ─── Gate 07: Craft hearth ─────────────────────────────────
     await beat(GATES[6], async () => {
       await call(page, "openCraftingPanel", "primitive-workbench");
+      // Wait for the panel's role="dialog" to be visible before capture.
+      // openCraftingPanel fires a reactive state write; the SolidJS render
+      // cycle + any CSS transition needs to complete first.
+      await page
+        .getByRole("dialog")
+        .first()
+        .waitFor({ state: "visible", timeout: 3_000 })
+        .catch(() => {});
       await page.waitForTimeout(300);
     });
 
@@ -300,6 +312,12 @@ test.describe("RC journey — 16 screenshot gates", () => {
       await call(page, "addResource", "material.log", 1);
       await call(page, "addResource", "material.stone", 1);
       await call(page, "openCraftingPanel", "weapon");
+      // Same as gate 07: wait for the panel's role="dialog" before capture.
+      await page
+        .getByRole("dialog")
+        .first()
+        .waitFor({ state: "visible", timeout: 3_000 })
+        .catch(() => {});
       await page.waitForTimeout(300);
     });
 

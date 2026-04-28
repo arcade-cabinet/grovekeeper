@@ -13,6 +13,7 @@ import {
   RUBRIC_SHIP_THRESHOLD,
   TOL_INWORLD,
   TOL_STRICT,
+  TOL_TEXT_INPUT,
   TOL_UI,
 } from "./rc-journey-gates";
 
@@ -62,15 +63,20 @@ describe("RC journey gate manifest", () => {
     }
   });
 
-  it("landing/menu/newgame are strict", () => {
-    const strictIds = ["01-landing", "02-mainmenu", "03-newgame"];
+  it("landing and main menu are strict (no text inputs, no CSS transitions)", () => {
+    const strictIds = ["01-landing", "02-mainmenu"];
     for (const id of strictIds) {
       const g = RC_JOURNEY_GATES.find((x) => x.id === id);
       expect(g?.tolerance).toEqual(TOL_STRICT);
     }
   });
 
-  it("uses three tolerance bands (strict, ui, in-world)", () => {
+  it("newgame modal uses TOL_TEXT_INPUT (focused input causes sub-pixel font drift)", () => {
+    const g = RC_JOURNEY_GATES.find((x) => x.id === "03-newgame");
+    expect(g?.tolerance).toEqual(TOL_TEXT_INPUT);
+  });
+
+  it("uses four tolerance bands (strict, ui, in-world, text-input)", () => {
     const used = new Set(
       RC_JOURNEY_GATES.map((g) => g.tolerance.maxDiffPixelRatio),
     );
@@ -79,6 +85,7 @@ describe("RC journey gate manifest", () => {
         TOL_STRICT.maxDiffPixelRatio,
         TOL_UI.maxDiffPixelRatio,
         TOL_INWORLD.maxDiffPixelRatio,
+        TOL_TEXT_INPUT.maxDiffPixelRatio,
       ]),
     );
   });
