@@ -3,7 +3,7 @@ title: QA Playthrough 2 — Desktop Keyboard + Mouse (1280px)
 device: Desktop Chrome (1280×800px)
 session_length: ~20 minutes
 date: 2026-04-28
-build: v1.3.0-alpha.1
+build: v1.3.2-qa-polish
 tester: agent (automated, pnpm dev on localhost:5173)
 ---
 
@@ -46,7 +46,7 @@ tester: agent (automated, pnpm dev on localhost:5173)
 - **Steps:** Open CraftingPanel, tab through recipe list, reach last item, continue tabbing
 - **Expected:** Focus cycles within the panel or reaches Close button
 - **Actual:** Focus escapes the panel and moves to elements behind it (canvas, HUD buttons)
-- **Fix:** Add `aria-modal="true"` and a focus trap on the CraftingPanel `role="dialog"` root. The `@headlessui` pattern or a lightweight `focus-trap` call in `onMount`.
+- **Fix:** Implement a proper focus trap on the CraftingPanel `role="dialog"` root (already has `aria-modal="true"`). Use a lightweight `focus-trap` library or a manual tab-key interceptor in `onMount` to cycle focus within the panel.
 
 ### P2 — No keyboard shortcut to open CraftingPanel
 

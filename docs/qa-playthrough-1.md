@@ -3,7 +3,7 @@ title: QA Playthrough 1 — Mobile Portrait (375px)
 device: iPhone SE (375×667px portrait)
 session_length: ~20 minutes
 date: 2026-04-28
-build: v1.3.0-alpha.1
+build: v1.3.2-qa-polish
 tester: agent (automated, pnpm dev on localhost:5173)
 ---
 
