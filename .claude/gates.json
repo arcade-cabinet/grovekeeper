@@ -1,0 +1,41 @@
+{
+  "ban_patterns": [
+    {
+      "pattern": "Math\\.random\\(\\)",
+      "message": "Use scopedRNG() from @/shared/utils/seedRNG instead of Math.random() in engine/systems code — determinism matters.",
+      "globs": [
+        "src/engine/**",
+        "src/systems/**",
+        "src/world-data/**",
+        "src/npcs/**",
+        "src/ai/**"
+      ]
+    },
+    {
+      "pattern": "\\.(glb|gltf)",
+      "message": "No GLB imports in hot game code — geometry is procedural. NPC model loading goes through src/engine/scene/ModelLoader.ts only.",
+      "globs": [
+        "src/systems/**",
+        "src/world-data/**",
+        "src/engine/scene/BorderTreeManager.ts",
+        "src/engine/scene/TreeMeshManager.ts"
+      ]
+    }
+  ],
+  "coverage_rules": {
+    "require_run": [
+      {
+        "command": "pnpm lint",
+        "evidence": "lint-pass"
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "evidence": "typecheck-pass"
+      },
+      {
+        "command": "pnpm test",
+        "evidence": "test-pass"
+      }
+    ]
+  }
+}
