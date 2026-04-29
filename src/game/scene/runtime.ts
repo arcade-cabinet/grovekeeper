@@ -418,12 +418,8 @@ export async function createRuntime(
     responsiveness: playerConfig.cameraResponsiveness,
   });
 
-  // Wave 13 — UI Glue: spawn one CraftingStationActor at world (10, 6, 8)
-  // so the player can find a workbench from spawn. The station is
-  // freestanding (not tied to a chunk) — it uses absolute world
-  // coordinates and does not despawn with chunks. Wave 18 (journey
-  // wave) will move this into the starter grove and persist its
-  // position; for RC we just need *one* visible bench.
+  // Freestanding workbench at world (10, 6, 8) — visible from spawn.
+  // Not tied to a chunk; uses absolute coordinates and doesn't despawn.
   const workbenchActor = world.createActor("primitive-workbench");
   const workbench = workbenchActor.addComponentAndGet(CraftingStationActor, {
     stationId: "primitive-workbench",

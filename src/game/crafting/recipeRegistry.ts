@@ -13,7 +13,7 @@
 import { RECIPES_JSON } from "@/content/recipes";
 import type { Recipe } from "./types";
 
-/** Stations the RC scope acknowledges. Wave 18 may add forest/coast variants. */
+/** RC scope: one station. Forest/coast variants are post-RC. */
 export const KNOWN_STATIONS = ["primitive-workbench"] as const;
 export type KnownStation = (typeof KNOWN_STATIONS)[number];
 
