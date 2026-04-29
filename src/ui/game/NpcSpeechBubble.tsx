@@ -1,5 +1,5 @@
 /**
- * NpcSpeechBubble — Wave 11b.
+ * NpcSpeechBubble.
  *
  * Solid-JS overlay component that renders a phrase-pool dialogue line
  * above an NPC's screen position. Lifecycle:

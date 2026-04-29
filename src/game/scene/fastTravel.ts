@@ -1,5 +1,5 @@
 /**
- * fastTravel — Sub-wave A.
+ * fastTravel.
  *
  * Lists claimed groves and teleports the player to a chosen grove's
  * centre. The teleport is wrapped in a black-fade transition borrowed

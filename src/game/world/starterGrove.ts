@@ -1,5 +1,5 @@
 /**
- * Starter grove pre-state — Sub-wave C of the Journey wave.
+ * Starter grove pre-state.
  *
  * On a fresh world the player should not have to *do* anything to make
  * the opening teaching beat work. Walking into chunk (3, 0) — the

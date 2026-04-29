@@ -1,5 +1,5 @@
 /**
- * CreatureActor — Wave 14/15.
+ * CreatureActor.
  *
  * Animated outer-world fauna. Mirrors `VillagerActor`'s
  * `ActorComponent + ModelRenderer + state-machine` shape but with a

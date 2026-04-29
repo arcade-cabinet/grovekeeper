@@ -1,23 +1,17 @@
 /**
- * blockDrops — Wave 16.
+ * blockDrops — pure data table mapping a biome-prefixed block id (e.g.
+ * `meadow.stone`, `forest.log`) to what the block drops when broken and
+ * how many hits it takes to break.
  *
- * Pure data table mapping a biome-prefixed block id (e.g. `meadow.stone`,
- * `forest.log`) to what the block drops when broken and how many hits
- * it takes to break.
- *
- * Per the RC redesign spec ("The outer world: Voxel blocks are mined /
- * chopped / dug from the outer world. Each biome has its signature
- * material set. Carry inventory is capped — cozy-tier limits, not
- * survival-tier punishment."), this is the consumption side of the
- * production loop: Wave 12 already defined the recipes that consume
- * `material.log` and `material.stone`; gatherSystem in Wave 16 reads
- * this table to know what to drop into `inventoryRepo` when the player
+ * This is the consumption side of the production loop: recipes consume
+ * `material.log` and `material.stone`; the gather system reads this
+ * table to know what to drop into `inventoryRepo` when the player
  * breaks a voxel.
  *
  * Spec invariant: **Grove biome voxels are unbreakable.** The grove is
- * sacred. The player can ADD voxels to a claimed grove (Wave 12
- * placement), but cannot remove the grove's own native voxels — they
- * are returned as `{ unbreakable: true }` from `getBlockDrop` and the
+ * sacred. The player can ADD voxels to a claimed grove (building mode),
+ * but cannot remove the grove's own native voxels — they are returned
+ * as `{ unbreakable: true }` from `getBlockDrop` and the
  * gather system early-outs on them.
  *
  * Hit counts are cozy-tier — small numbers so a swing is satisfying.
@@ -109,7 +103,7 @@ export const BLOCK_DROPS: Readonly<Record<string, BlockDropEntry>> = {
   // ── grove (30..35) — UNBREAKABLE ─────────────────────────────────
   // Spec: "Grove biome voxels are unbreakable. This is a spec invariant
   // — the grove is sacred. The player can ADD voxels to a claimed grove
-  // (Wave 12 placement), but never remove the grove's own native voxels."
+  // (building mode), but never remove the grove's own native voxels."
   "grove.luminous-grass": { unbreakable: true },
   "grove.spirit-moss": { unbreakable: true },
   "grove.gilded-dirt": { unbreakable: true },

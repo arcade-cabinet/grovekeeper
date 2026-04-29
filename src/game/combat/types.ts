@@ -1,5 +1,5 @@
 /**
- * Combat types — Wave 14/15.
+ * Combat types.
  *
  * Pure data shapes shared by the combat reducer and combat system.
  * No engine imports here — this module is engine-agnostic so the

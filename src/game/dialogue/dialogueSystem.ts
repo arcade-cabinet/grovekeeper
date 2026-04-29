@@ -1,5 +1,5 @@
 /**
- * dialogueSystem — Wave 11b.
+ * dialogueSystem.
  *
  * Pure phrase selector for grove NPCs. Given a speaker, a small
  * context bag, and the last-said phrase id (from `dialogueRepo`),

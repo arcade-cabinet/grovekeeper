@@ -1,9 +1,6 @@
 /**
  * Action map — declarative names the gameplay layer reads, decoupled
- * from the underlying device (keyboard / touch / gamepad). The Wave 7
- * plus Wave 11a slices only need `move`, but we declare the full set
- * the spec calls out so later combat / build / craft waves don't have
- * to touch the input layer schema again.
+ * from the underlying device (keyboard / touch / gamepad).
  *
  * Spec ref: `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`
  *   "Action-mapping is DIY thin layer over engine input — we name

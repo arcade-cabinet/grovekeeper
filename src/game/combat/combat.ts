@@ -1,5 +1,5 @@
 /**
- * Combat reducer — Wave 14/15.
+ * Combat reducer.
  *
  * Pure functions: `applyHit` produces a new `Combatant` with HP
  * decreased; `isDead` checks the death predicate. No mutation of

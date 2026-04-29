@@ -24,8 +24,7 @@ export interface TileCoord {
  *   - `topped`    : cube with a distinct top face. Bottom + sides use
  *                   the secondary texture (think grass-on-dirt).
  *   - `decoration`: non-collidable cube — wildflower, mushroom, shell.
- *                   Same texture on every face for now (see Wave 7
- *                   note re: billboard shape).
+ *                   Same texture on every face (billboard shape is post-RC).
  */
 export type BlockKind = "solid" | "topped" | "decoration";
 

@@ -1,7 +1,7 @@
 /**
  * biomeAssigner — pure function mapping `(worldSeed, chunkX, chunkZ)`
- * to a `BiomeId`. Wave 9 uses this to give every chunk in the streamed
- * 2D grid a deterministic biome.
+ * to a `BiomeId`. Gives every chunk in the streamed 2D grid a
+ * deterministic biome.
  *
  * Distribution comes from `world.config.json#streaming.biomeWeights`:
  * meadow ~50%, forest ~30%, coast ~20%. **Grove is intentionally
@@ -22,7 +22,7 @@ import worldConfig from "./world.config.json";
 /**
  * Biome ids eligible for random chunk spawn. Order is significant —
  * iteration walks this list and the first cumulative bucket the roll
- * lands in wins. Grove is omitted on purpose (Wave 10 special case).
+ * lands in wins. Grove is omitted — it's placed via a separate PRNG roll.
  */
 export const ASSIGNABLE_BIOME_IDS = ["meadow", "forest", "coast"] as const;
 
@@ -77,11 +77,10 @@ export function assignBiome(
   chunkX: number,
   chunkZ: number,
 ): BiomeId {
-  // Wave 10: grove placement runs FIRST and overrides whatever the
-  // weighted distribution would have rolled. The grove placement
-  // function is independent of the biome PRNG (different scope) so
-  // the wilderness distribution stays statistically stable for any
-  // chunk that *isn't* upgraded to a grove.
+  // Grove placement runs FIRST and overrides whatever the weighted
+  // distribution would have rolled. Uses a different scope than the
+  // biome PRNG so the wilderness distribution stays stable for any
+  // chunk that isn't a grove.
   if (isGroveChunk(worldSeed, chunkX, chunkZ)) return "grove";
 
   const rng = scopedRNG("biome", worldSeed, chunkX, chunkZ);

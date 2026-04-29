@@ -1,28 +1,33 @@
 ---
 title: CLAUDE.md — Grovekeeper
-updated: 2026-04-24
+updated: 2026-04-29
 status: current
 domain: technical
 ---
 
 # CLAUDE.md — Grovekeeper
 
-This file is the agent entry point. The full source-of-truth design is at
-`docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`. Read it
-first if you are starting fresh on this codebase.
+## Specs (read in this order)
+
+1. `docs/superpowers/specs/2026-04-29-grovekeeper-voxel-pivot-design.md`
+   — **active development spec** (supersedes relevant RC sections)
+2. `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`
+   — RC build (shipped; reference for what exists in code today)
+3. `docs/STATE.md` — current status and PRQ queue
+4. `docs/ARCHITECTURE.md` — technical architecture
+5. `docs/DESIGN.md` — gameplay design
 
 ## Project identity
 
-**Grovekeeper** is a third-person voxel tree-tending and town-building game.
-You are **The Gardener** — singular, mythic. You wander an infinite procedural
-voxel outer-world of biome archetypes (each with its own flora, fauna, voxel
-palette, weather, and threats) and discover **Groves** — a special, glowing,
-peaceful biome scattered through the wilderness by PRNG. You **claim** a grove
-by gathering, crafting, placing, and lighting a Hearth. Claimed groves form
-your fast-travel network and become safe spaces for free voxel building, tree
-tending, and ambient NPC life.
+**Grovekeeper** is a **first-person voxel exploration and town-building game.**
+You are **The Gardener** — singular, mythic. You see the world through your
+own eyes. There is no visible player character.
 
-The two-mode tonal contrast — dangerous wild, peaceful grove — is the design.
+You wander an infinite procedural voxel world of biome archetypes and
+discover **Groves** — special glowing peaceful biomes scattered by PRNG.
+You **claim** a grove by gathering materials, discovering compound recipes,
+crafting a Hearth, placing it, and lighting it. Claimed groves form your
+fast-travel network and become spaces for free voxel building.
 
 **Tagline:** *"Every forest begins with a single seed."*
 
@@ -31,10 +36,10 @@ minutes. Capacitor wraps it for native iOS/Android.
 
 ## Status
 
-RC complete. Deployed as v1.5.0-alpha.1 on
-`https://arcade-cabinet.github.io/grovekeeper/`. All 20 implementation waves
-done. All 16 screenshot gates pass in CI. All 7 spec success criteria met.
-See `docs/STATE.md` for current build state.
+RC complete. Voxel pivot in progress.
+- Shipped: v1.5.0-alpha.1 at `https://arcade-cabinet.github.io/grovekeeper/`
+- Active PRQ queue: PRQ-01 → PRQ-02 → PRQ-03
+- See `docs/STATE.md` for details.
 
 ## Critical context
 
@@ -44,43 +49,85 @@ See `docs/STATE.md` for current build state.
 - Test at 375px width (iPhone SE) as the minimum viewport
 - Passive event listeners for all pointer handlers
 - `touch-action: none` on the game canvas
-- Mobile virtual joystick via `nipplejs` over engine touch input
+- Mobile virtual joystick via `nipplejs`
 - Haptic feedback via `@capacitor/haptics` on supported devices
-- Chunk active/buffer radius is mobile-tuned (smaller on phone, larger on
-  desktop) and tunable in `config/world.json`
+- Chunk radius is mobile-tuned; tunable in `config/world.json`
 
-### Two-pipeline rendering rule
+### Single-pipeline rendering (voxel pivot)
 
-The world's *terrain and structural voxels* (ground, building blocks, hearth,
-walls) render through `@jolly-pixel/voxel.renderer` using **PNG tilesets per
-biome**. The world's *animated things* (Gardener, NPCs, creatures, Grove
-Spirit, ambient animals) render through `@jolly-pixel/engine`'s `ModelRenderer`
-using **GLB models with animation cycles**. Both live in the same Three.js
-scene. Confusing the two is the failure mode.
+**Everything renders through `@jolly-pixel/voxel.renderer`.** There is no
+GLB ModelRenderer pipeline in production code after the voxel pivot.
+
+- Terrain: standard chunk layers per biome
+- Structures: placed blocks in chunk data
+- Creatures: multi-layer voxel assemblies; limbs translated per frame
+- Grove Spirit: voxel assembly of impossible grove-only materials
+- Villagers: 4-block voxel assemblies
+
+`VoxelWorld.translateLayer(name, delta)` is the animation primitive.
+Per-creature VoxelWorld instances prevent dirty-mark propagation.
+
+> The RC used two pipelines (voxel terrain + GLB characters). PRQ-01
+> removes the GLB pipeline. During PRQ-01 work: do NOT add new GLB usage;
+> remove existing GLB usage.
+
+### Audio
+
+**JollyPixel engine audio stack** (`GlobalAudio`, `GlobalAudioManager`,
+`AudioBackground`) — backed by `THREE.Audio` / Web Audio API.
+**NOT Howler.** Any reference to "Howler" in this codebase is wrong.
+
+- `GlobalAudio` — master volume, shared `THREE.AudioListener`
+- `GlobalAudioManager` — load/create/destroy `THREE.Audio` instances
+- `AudioBackground` — playlist-based looped music with crossfade
+
+### Crafting model (voxel pivot)
+
+The old "unlock-gated recipe list" is replaced by a **compound trait
+discovery system**. Materials carry trait bitmasks. Combining materials
+unions traits. When combined traits satisfy a `CompoundRule`, the result
+is named. First discovery writes to `known_compounds` + fires Tracery
+narrator. Re-craft by name thereafter.
+
+**Do NOT add to `known_recipes` for new gameplay features.** The
+`known_recipes` table is legacy; kept for save compat.
+
+### Encounter gate
+
+Encounters require: non-grove biome + time-of-day weight + 
+`hasCraftedNamedWeapon === true`. Until the player has crafted a named
+weapon compound, no hostile spawns.
+
+### Spawn model
+
+Player spawns OUTSIDE the first grove, ~30 voxels from its edge. First
+grove is within 32 voxels of spawn (always in +X direction for starter
+seed). Encounters off until first weapon.
 
 ### Tech stack
 
 | Layer | Technology | Notes |
 |-------|-----------|-------|
-| Engine | `@jolly-pixel/engine` v2.5.0 | Three.js-based ECS, `Actor`/`ActorComponent`, `ModelRenderer` for GLBs, `Camera3DControls`, `Input`, `Systems.Assets` |
-| Voxel renderer | `@jolly-pixel/voxel.renderer` v1.4.0 | Chunk renderer, `blockRegistry`, PNG tileset loading, JSON chunk format, 16³ chunks |
+| Engine | `@jolly-pixel/engine` v2.5.0 | ECS, `Actor`/`ActorComponent`, `Camera3DControls` (first-person), `Input`, `Systems.Assets` |
+| Voxel renderer | `@jolly-pixel/voxel.renderer` v1.4.0 | **Single rendering pipeline.** Chunk renderer, blockRegistry, tileset loading, VoxelWorld/VoxelLayer, translateLayer |
 | Runtime | `@jolly-pixel/runtime` v3.3.0 | Boot wrapper, GPU tier detection, `<jolly-loading>` element |
-| Physics | Rapier (transitive via voxel.renderer) | Thin collision wrapper we own |
-| ECS state | Koota | Pure game state (claimed groves, inventory, recipes, dialogue history). Engine `Actor` for scene-bound state |
-| UI | SolidJS 1.9 | Overlay HUD, menus, crafting surface, dialogue, fast-travel map |
-| Audio | Engine `AudioManager` / `AudioLibrary` / `AudioBackground` / `GlobalAudio` (Howler-backed) | Real recorded SFX/music/ambient from itch.io packs. **No Tone.js.** |
-| Input | Engine `Input` + `CombinedInput` desktop, `nipplejs` mobile | Thin action-mapping layer (`move`, `interact`, `swing`, `place`, `open-craft`) |
-| Camera | Extended `Camera3DControls` follow-lerp | Third-person, lerps to player, optional hit shake |
-| Persistence | `drizzle-orm` → `@capacitor-community/sqlite` (sql.js web adapter) | Plus `@capacitor/preferences` for small KV settings |
+| Physics | Rapier (via voxel.renderer) | Pass at VoxelRenderer construction; colliders built automatically |
+| ECS state | Koota | Pure game state. Known compounds, inventory, journal, encounter timers |
+| UI | SolidJS 1.9 | Overlay HUD, crafting surface, journal, fast-travel map |
+| Audio | JP engine `GlobalAudio` / `GlobalAudioManager` / `AudioBackground` | THREE.Audio / Web Audio API. **Not Howler. Not bare THREE.Audio.** |
+| Narrator | Tracery grammar (`src/content/narrator-grammar.json`) | First-person discovery text, journal entries |
+| Input | Engine `Input` + `CombinedInput` desktop, `nipplejs` mobile | Actions: `move`, `interact`, `swing`, `combine`, `place`, `open-craft` |
+| Camera | `Camera3DControls` native first-person | Eye height 1.6 units. No follow extension. |
+| Persistence | `drizzle-orm` → `@capacitor-community/sqlite` (sql.js web adapter) | Plus `@capacitor/preferences` for small KV |
 | Bundler | Vite 6.x | |
 | Mobile shell | Capacitor 8.x | |
 | Language | TypeScript 5.7+ strict | |
 | Lint/format | Biome 2.3 | |
 | Package manager | pnpm 10 | |
-| Testing | Vitest 4.x (node + browser projects) + Playwright 1.59 | Includes screenshot baselines |
+| Testing | Vitest 4.x (node + browser) + Playwright 1.59 | |
 
-**No BabylonJS. No Tone.js. No SPS tree generator. No A* tap-to-move. No
-9-zone JSON world.** All deleted in the port.
+**No BabylonJS. No Tone.js. No Howler. No SPS tree generator. No A* tap-to-move. No
+9-zone JSON world. No GLB ModelRenderer in production code (post-PRQ-01).**
 
 ## Common commands
 
@@ -94,7 +141,7 @@ pnpm test:run             # vitest, node project, single run
 pnpm test:browser         # vitest, browser project (Playwright-driven)
 pnpm test:all             # all vitest projects
 pnpm test:coverage        # node project with coverage
-pnpm test:e2e             # build + Playwright e2e
+pnpm test:e2e             # build + Playwright e2e (golden-path)
 pnpm test:rc-journey      # RC journey screenshot suite (16 gates)
 pnpm test:rc-perf         # perf FPS measurement per biome
 pnpm tsc                  # typecheck (no emit)
@@ -104,181 +151,100 @@ pnpm check                # biome check (lint + format)
 pnpm size                 # size-limit budget check
 ```
 
-## Project structure
+## Project structure (post-pivot target)
 
 ```text
 grovekeeper/
-├── CLAUDE.md                           # This file
-├── AGENTS.md                           # Extended operating protocols
-├── README.md                           # Human-facing intro
-├── CHANGELOG.md
-├── STANDARDS.md
-├── memory-bank/                        # Persistent project context (autoloop reads on startup)
-│   ├── activeContext.md
-│   ├── progress.md
-│   └── ...
+├── CLAUDE.md
+├── AGENTS.md
 ├── docs/
-│   ├── README.md                       # Index
-│   ├── DESIGN.md                       # Game design (product domain)
-│   ├── ARCHITECTURE.md                 # Technical architecture
-│   ├── STATE.md                        # Current build state, wave-by-wave
-│   ├── TESTING.md                      # Verification protocol, gates, rubric
-│   ├── LORE.md                         # Minimal world tone
-│   ├── ROADMAP.md                      # RC scope only
-│   ├── post-rc.md                      # Anything beyond RC
-│   ├── asset-inventory.md              # Generated by build-asset-manifest.mjs
-│   ├── rc-journey/                     # Screenshot gates + REVIEW.md rubric + perf.md
-│   └── superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md
-├── config/
-│   ├── world.json                      # Chunk radius, streaming tunables
-│   └── ...
-├── public/
-│   └── assets/
-│       ├── tilesets/biomes/{biome}.{png,json}    # Per-biome voxel tilesets
-│       ├── tilesets/structures/                  # Hearth + common building blocks
-│       ├── models/characters/gardener/           # Player GLB + animation cycles
-│       ├── models/npcs/{grove-spirit,villagers}/
-│       ├── models/creatures/{peaceful,hostile}/
-│       ├── models/props/
-│       ├── audio/music/{menu,grove,biomes/{biome},moments}/
-│       ├── audio/sfx/{ui,footsteps,tools,crafting,creatures,hearth}/
-│       └── audio/ambient/{grove,biomes/{biome},weather}/
-├── raw-assets/                         # gitignored — itch.io archives + extracted
-├── scripts/
-│   ├── fetch-itch.mjs                  # Pulls configured packs into raw-assets/
-│   ├── import-from-voxel-realms.mjs    # Lifts curated subset from sibling repo
-│   ├── curate-assets.mjs               # raw-assets/ → public/assets/
-│   ├── build-asset-manifest.mjs        # Walks public/assets, emits manifest + inventory
-│   └── asset-curation.json
+│   ├── DESIGN.md
+│   ├── ARCHITECTURE.md
+│   ├── STATE.md
+│   ├── ROADMAP.md
+│   ├── TESTING.md
+│   ├── post-rc.md
+│   ├── plans/
+│   │   ├── prq-01-voxel-creatures-first-person.md
+│   │   ├── prq-02-compound-traits-tracery.md
+│   │   └── prq-03-spawn-model-e2e-tests.md
+│   └── superpowers/specs/
+│       ├── 2026-04-24-grovekeeper-rc-redesign-design.md  # RC ref
+│       └── 2026-04-29-grovekeeper-voxel-pivot-design.md  # ACTIVE
 ├── src/
-│   ├── main.tsx                        # Boot
-│   ├── App.tsx
-│   ├── game/
-│   │   ├── Game.tsx                    # Screen router (menu | playing)
-│   │   ├── GameScene.ts                # Engine Actor for the scene
-│   │   ├── PlayerActor.ts              # Gardener Actor + ModelRenderer
-│   │   ├── camera/CameraFollow.ts      # Lerp follow behavior on Camera3DControls
-│   │   └── ...
-│   ├── world/
-│   │   ├── ChunkManager.ts             # Active/buffer radius, load/unload
-│   │   ├── BiomeRegistry.ts
-│   │   ├── biomes/                     # Three wilderness biomes (Meadow, Forest, Coast) plus the special Grove biome.
-│   │   │   ├── meadow.ts
-│   │   │   ├── forest.ts
-│   │   │   ├── coast.ts
-│   │   │   └── grove.ts                # Special fourth biome
-│   │   ├── GroveRegistry.ts            # In-memory registry of discovered/claimed
-│   │   └── chunkGen.ts                 # scopedRNG-driven generators
-│   ├── systems/                        # Pure-function systems, ticked per frame
-│   │   ├── growth.ts                   # Tree lifecycle (ported)
-│   │   ├── weather.ts                  # Biome-aware weather (ported, extended)
-│   │   ├── time.ts                     # Day/night
-│   │   ├── stamina.ts
-│   │   ├── harvest.ts
-│   │   ├── encounters.ts               # Biome × time × weather → spawn
-│   │   ├── combat.ts                   # Light, stamina-gated, retreat-on-zero
-│   │   ├── crafting.ts                 # Production half of the loop
-│   │   ├── building.ts                 # Placement of crafted blueprints
-│   │   ├── claim.ts                    # Hearth → claim state machine
-│   │   ├── fastTravel.ts
-│   │   ├── npcDialogue.ts              # Phrase-pool model
-│   │   └── saveLoad.ts                 # drizzle-backed
+│   ├── game/scene/
+│   │   ├── VoxelCreatureActor.ts       # base; limb layer animation
+│   │   ├── GroveSpiritVoxelActor.ts    # voxel Spirit (no dialogue)
+│   │   ├── CraftingStationActor.ts
+│   │   ├── GameScene.ts
+│   │   └── runtime.ts
+│   ├── systems/
+│   │   ├── traits.ts                   # Trait enum + bitmask
+│   │   ├── compounds.ts                # CompoundRule table + resolver
+│   │   ├── narrator.ts                 # Tracery grammar driver
+│   │   ├── journal.ts                  # Journal append/read
+│   │   ├── hints.ts                    # Partial-discovery hints
+│   │   ├── encounters.ts               # Gate: biome + time + weapon
+│   │   ├── crafting.ts
+│   │   ├── building.ts
+│   │   ├── claim.ts
+│   │   └── fastTravel.ts
 │   ├── content/
-│   │   ├── recipes/                    # JSON, biome-tagged
-│   │   └── dialogue/phrase-pools.ts    # Keyed by biome × tag
-│   ├── audio/
-│   │   ├── BiomeMusicCoordinator.ts    # AudioBackground crossfade on biome change
-│   │   └── sfx.ts                      # Thin dispatch over AudioLibrary
-│   ├── persistence/
-│   │   ├── schema.ts                   # drizzle schema (chunks, biomes, groves, claim, inventory, recipes-known, dialogue history)
-│   │   └── db.ts                       # Capacitor SQLite + sql.js init
-│   ├── ui/                             # SolidJS overlays
-│   │   ├── MainMenu.tsx
-│   │   ├── HUD/
-│   │   ├── CraftingSurface.tsx         # Same surface for items + place-able blueprints
-│   │   ├── DialogueBubble.tsx
-│   │   ├── FastTravelMap.tsx
-│   │   ├── PauseMenu.tsx
-│   │   └── ...
-│   ├── input/
-│   │   └── ActionMap.ts                # Thin layer over engine Input
-│   ├── utils/
-│   │   └── seedRNG.ts                  # `scopedRNG(scope, worldSeed, ...extra)` — already a project convention
-│   └── assets/
-│       └── manifest.generated.ts       # Emitted by build-asset-manifest.mjs (committed)
-├── capacitor.config.ts
-├── biome.json
-├── vitest.config.ts
-├── vite.config.ts
-└── tsconfig.json
+│   │   ├── compounds/                  # CompoundRule JSON
+│   │   └── narrator-grammar.json       # Tracery grammar
+│   ├── world/
+│   │   ├── ChunkManager.ts
+│   │   ├── BiomeRegistry.ts
+│   │   └── biomes/{meadow,forest,coast,grove}.ts
+│   ├── db/schema/rc.ts                 # drizzle schema
+│   ├── input/ActionMap.ts
+│   └── ui/
+│       ├── HUD/
+│       ├── CraftingSurface.tsx
+│       ├── FastTravelMap.tsx
+│       └── PauseMenu.tsx               # includes Journal tab
+└── e2e/
+    └── golden-path.spec.ts             # real keyboard input E2E
 ```
 
 ## Architecture patterns
 
 ### State split
 
-- **Koota** — pure game state. Claimed-grove DB, inventory, recipes-known,
-  dialogue history, encounter timers. Persisted.
-- **Engine `Actor` / `ActorComponent`** — scene-bound state. Player Actor,
-  NPC Actors, chunk Actors, crafting-station Actors. Lives with the scene.
-- **`@capacitor/preferences`** — small KV settings (audio volume, graphics
-  tier, last-played timestamp, world seed).
-- **drizzle + Capacitor SQLite (sql.js on web)** — the persistent store
-  underneath save/load.
+- **Koota** — known compounds, inventory, journal entries, encounter
+  timers, `HasCraftedNamedWeapon` trait.
+- **Engine Actor** — creature Actors (own VoxelRenderer + VoxelWorld),
+  chunk Actors, crafting-station Actors.
+- **`@capacitor/preferences`** — audio volume, graphics tier, world seed.
+- **drizzle + Capacitor SQLite** — persistent store.
 
-Rule: if it changes every frame and is scene-bound, it's an Actor. If it's
-pure game data that survives across sessions, it's Koota → drizzle.
+Rule: frame-rate scene-bound state → Actor. Persistent game data → Koota + drizzle.
 
 ### Determinism
 
-All randomness flows through `scopedRNG(scope, worldSeed, chunkX, chunkZ, ...)`,
-already a project convention. Same seed → same world, always. This is what
-makes chunks regenerable on revisit and screenshot tests stable.
+All randomness via `scopedRNG(scope, worldSeed, chunkX, chunkZ, ...)`.
+Same seed → same world. Screenshot tests depend on this.
 
-### Phrase-pool dialogue (no quests)
+### Crafting is discovery
 
-NPCs have no quest system. Each villager has a small array of context-tagged
-phrases (biome × tag). Talking pulls a random phrase. The Grove Spirit speaks
-exactly three scripted lines during the first-claim sequence and then idles.
-**No fetch tasks. No goals from NPCs. The reward is what you build.**
+Materials have traits. Combining unions traits. `resolveCompound` checks
+against `COMPOUNDS` table. First match → narrator fires → `known_compounds`
+written. No pre-gated unlock list. The table IS the tech tree.
 
-### Crafting + Building is one loop
+### No NPCs with goals
 
-Voxel materials gathered in the wild flow into crafting stations placed in
-groves. Crafting consumes inputs and produces outputs: items (tools, weapons,
-consumables) or place-able blueprints (structural blocks, prefabs, decorative).
-**Building is just placing what crafting produces.** One surface, one menu,
-one mental model. Recipes are JSON, biome-tagged, scope-locked to actual
-asset inventory.
-
-## Key files to read first
-
-When starting a session:
-
-1. `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md` —
-   the full RC spec, source of truth.
-2. `docs/STATE.md` — current wave, what's done, what's next.
-3. `memory-bank/activeContext.md` — current work focus.
-4. `memory-bank/progress.md` — wave-by-wave progress.
-5. `docs/ARCHITECTURE.md` — Jolly Pixel layering, persistence stack, asset
-   pipeline, registries.
-6. `docs/DESIGN.md` — the loop, NPC model, claim ritual, biome archetypes.
-7. `docs/TESTING.md` — verification gates, screenshot list, rubric.
+Villagers wander. They do not speak. They are a presence. The Grove Spirit
+is a voxel presence — no scripted lines, no dialogue system.
 
 ## Mobile-first development checklist
 
-Before merging any UI change, verify:
+Before merging any UI change:
 
 - [ ] Renders correctly at 375px width (iPhone SE portrait)
 - [ ] Touch targets ≥ 44px
 - [ ] No overlap with bottom action bar / virtual joystick
-- [ ] No horizontal scroll on mobile
-- [ ] Text readable without zooming (≥ 14px body)
-- [ ] Dialogs don't extend beyond viewport
 - [ ] Canvas has `touch-action: none`
-- [ ] Animations respect `prefers-reduced-motion`
 - [ ] FPS ≥ 55 on mid-range mobile
-- [ ] Screenshot gate updated if the surface is in `docs/rc-journey/`
 
 ## Performance budgets
 
@@ -287,22 +253,15 @@ Before merging any UI change, verify:
 | FPS (mobile) | ≥ 55 |
 | FPS (desktop) | ≥ 60 |
 | Initial bundle (gz) | < 500 KB |
-| Asset budget total | < 20 MB at RC |
 | Lighthouse Performance (landing, mobile) | ≥ 90 |
-| Lighthouse Best Practices (landing) | ≥ 95 |
-| Time to interactive | < 3s |
 | Memory (mobile) | < 100 MB |
 
-Measured per-biome on a fixed test rig over a 30-second walk; numbers
-committed to `docs/rc-journey/perf.md`.
-
-## What is out of scope for RC
+## Out of scope (permanent)
 
 - Quests, fetch chains, escort missions
 - Player death, permadeath, difficulty tiers
-- Full 8-spirit collection arc
-- Multiplayer / networked anything
+- 8-spirit collection meta arc (permanently cut; contradicts design)
+- Multiplayer
 - Cosmetics, skins, prestige
-- Full Minecraft-scale tech tree (RC ships a small, scope-locked recipe set)
-
-These can return post-RC if they earn it. See `docs/post-rc.md`.
+- Third-person camera (first-person only)
+- Howler audio library

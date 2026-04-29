@@ -3,11 +3,10 @@
  * single biome chunk on `awake`, positioned at world-space
  * `(chunkX * size, 0, chunkZ * size)`.
  *
- * Wave 9 generalises Wave 7's `SingleChunkActor` so the streaming
- * `ChunkManager` can spawn many of these — one per live chunk — and
- * each lands in the right place in the contiguous 2D grid. The chunk
- * generator (Wave 8) is still authoritative for content; this actor
- * just orchestrates the load and places the resulting mesh.
+ * Generalises `SingleChunkActor` so the streaming `ChunkManager` can
+ * spawn many of these — one per live chunk — and each lands in the right
+ * place in the contiguous 2D grid. The chunk generator is authoritative
+ * for content; this actor orchestrates the load and places the mesh.
  *
  * Mirrors voxel-realms' `TerrainBehavior` (see
  * `voxel-realms/src/scene/terrain-behavior.ts`):
@@ -44,9 +43,9 @@ import { buildChunkJSON, CHUNK_TUNING } from "./chunkGenerator";
  * A single player modification — either set a named block or remove it.
  * Local coordinates (0..chunkSize-1 on x/z, surface-relative on y).
  *
- * Wave 12 introduces this to layer player-placed blocks on top of
- * deterministic procgen. The chunks repo speaks the same shape; the
- * `modProvider` callback below adapts repo rows to this shape.
+ * Layers player-placed blocks on top of deterministic procgen. The
+ * chunks repo speaks the same shape; the `modProvider` callback adapts
+ * repo rows to this shape.
  */
 export interface ChunkBlockMod {
   /** Local X (0..chunkSize-1). */
@@ -74,8 +73,8 @@ export interface ChunkActorOptions {
    * procgen output. Called once on chunk load. The default returns an
    * empty list — the chunk renders pure procgen.
    *
-   * Wave 12 (crafting + building) plugs `chunksRepo.getModifiedBlocks`
-   * in here so reloads restore player builds.
+   * Wire `chunksRepo.getModifiedBlocks` here so reloads restore player
+   * builds.
    */
   modProvider?: (chunkX: number, chunkZ: number) => readonly ChunkBlockMod[];
 }
@@ -142,11 +141,10 @@ export class ChunkActor extends ActorComponent {
   }
 
   /**
-   * The Three.js root for this chunk's voxel mesh. Used by Wave 10's
-   * grove glow layer to walk the subtree and patch emissive
-   * properties, and to attach the firefly Points cloud as a child.
-   * Returns `null` when the underlying actor stub omits `object3D`
-   * (test fixtures only).
+   * The Three.js root for this chunk's voxel mesh. Used by the grove
+   * glow layer to walk the subtree and patch emissive properties, and to
+   * attach the firefly Points cloud as a child. Returns `null` when the
+   * underlying actor stub omits `object3D` (test fixtures only).
    */
   get object3D(): Object3D | null {
     return actorObject3D(this.actor) ?? null;
@@ -181,9 +179,9 @@ export class ChunkActor extends ActorComponent {
     });
     await this.renderer.load(chunkJson);
     // Layer in any player modifications recorded for this chunk.
-    // Wave 12 plumbs `chunksRepo.getModifiedBlocks(...)` in via the
-    // provider; out-of-tree callers (and tests) get an empty list by
-    // default so the procgen output renders unmodified.
+    // `chunksRepo.getModifiedBlocks(...)` is plumbed in via the provider;
+    // out-of-tree callers (and tests) get an empty list by default so
+    // the procgen output renders unmodified.
     const mods = this.opts.modProvider(this.opts.chunkX, this.opts.chunkZ);
     for (const mod of mods) {
       this.applyMod(mod);
@@ -191,10 +189,9 @@ export class ChunkActor extends ActorComponent {
   }
 
   /**
-   * Apply a single block modification (set or remove) to the live
-   * mesh. No persistence — the caller (Wave 12 placement layer) is
-   * responsible for writing the matching `chunksRepo` row before
-   * calling this.
+   * Apply a single block modification (set or remove) to the live mesh.
+   * No persistence — the caller is responsible for writing the matching
+   * `chunksRepo` row before calling this.
    *
    * Returns true if the modification was applied, false if the
    * renderer or biome lookup couldn't satisfy it (unknown block id,
@@ -231,9 +228,8 @@ export class ChunkActor extends ActorComponent {
   }
 
   /**
-   * Set a block at a chunk-local position. Convenience wrapper used by
-   * the Wave 12 placement runtime so callers don't have to construct
-   * `ChunkBlockMod` records by hand.
+   * Set a block at a chunk-local position. Convenience wrapper so
+   * callers don't have to construct `ChunkBlockMod` records by hand.
    */
   setBlockLocal(
     localX: number,

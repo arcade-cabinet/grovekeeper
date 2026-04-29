@@ -2,7 +2,7 @@
  * Drizzle ORM Schema — All tables for the Grovekeeper save database.
  *
  * Legacy tables (player/resources/seeds/etc.) cover the pre-RC fixed-grid
- * save model. RC redesign (Wave 4) tables live in ./rc.ts and are re-exported
+ * save model. RC redesign tables live in ./rc.ts and are re-exported
  * at the top of this file so callers can `import * as schema from "@/db/schema"`
  * and get every table at once.
  */

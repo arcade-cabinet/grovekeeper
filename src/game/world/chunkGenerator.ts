@@ -3,10 +3,10 @@
  * `(biome, chunkX, chunkZ, worldSeed)` tuple into a `VoxelWorldJSON`
  * payload describing one chunk.
  *
- * Wave 8 generalises Wave 7's `meadowChunk` — same column shape (stone
- * bedrock, sub-surface dirt, surface grass, optional decoration above),
- * but parameterized by `BiomeDefinition`. The biome supplies the block
- * ids for each column layer plus an optional decoration list.
+ * Uses the same column shape (stone bedrock, sub-surface dirt, surface
+ * grass, optional decoration above), parameterized by `BiomeDefinition`.
+ * The biome supplies the block ids for each column layer plus an optional
+ * decoration list.
  *
  * Layer plan (per-biome, all configured via `world.config.json`):
  *   - y=0..stoneFloorThickness-1   : bedrock
@@ -75,8 +75,7 @@ function setVoxel(
  * the "no decoration" gap above the cumulative weight ceiling.
  *
  * The total weight is treated as the denominator out of 100 — so a
- * weight of 4 means 4% chance, weight of 6 means 6%, etc. This matches
- * Wave 7's hard-coded thresholds (4% wildflower, 8% tall grass).
+ * weight of 4 means 4% chance, weight of 6 means 6%, etc.
  */
 function pickDecoration(
   decorations: readonly { id: number; weight: number }[],
@@ -128,11 +127,7 @@ export function buildChunkJSON(
   // how many decoration cells we expect; the remainder is the surface
   // block ratio. A primary "alt surface" decoration (eg meadow's
   // grass-tall) replaces the surface in place rather than stacking.
-  // For Wave 8 we treat every decoration entry as "stack one voxel
-  // above the surface" — this matches Wave 7's wildflower behaviour for
-  // every biome. Meadow's grass-tall in-place swap is a Wave 9 polish
-  // item (it costs us nothing to skip here and the biome JSON shape
-  // doesn't change).
+  // Every decoration entry stacks one voxel above the surface.
   const decorations = biome.decorations;
 
   for (let lx = 0; lx < size; lx++) {

@@ -1,11 +1,11 @@
 /**
- * GatherTickBehavior — Wave 16.
+ * GatherTickBehavior.
  *
  * Trivial JP `ActorComponent` shim that drives `GatherSystem.tick()`
  * from the engine's per-frame loop. Same pattern as
- * `InteractionTickBehavior` (Wave 11b) and `GroveTickBehavior` (Wave
- * 10) — small adapter classes so the runtime stays composable and
- * the system itself never imports the engine.
+ * `InteractionTickBehavior` and `GroveTickBehavior` — small adapter
+ * classes so the runtime stays composable and the system itself never
+ * imports the engine.
  */
 
 import { type Actor, ActorComponent } from "@jolly-pixel/engine";

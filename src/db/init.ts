@@ -179,7 +179,7 @@ const CREATE_TABLES_SQL = `
     tier INTEGER NOT NULL DEFAULT 0
   );
 
-  -- ─── RC redesign (Wave 4) ─────────────────────────────────────
+  -- ─── RC redesign ────────────────────────────────────────────────
   CREATE TABLE IF NOT EXISTS worlds (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL DEFAULT 'Grovekeeper',

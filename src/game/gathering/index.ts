@@ -1,5 +1,5 @@
 /**
- * Gathering barrel — Wave 16.
+ * Gathering barrel.
  *
  * Public surface for the resource-gathering system. Importing from
  * `@/game/gathering` keeps callers (`scene/runtime.ts`, future HUD

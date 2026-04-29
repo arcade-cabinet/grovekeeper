@@ -1,5 +1,5 @@
 /**
- * FastTravelFade — Sub-wave D.
+ * FastTravelFade.
  *
  * Black-fade overlay driven by `eventBus.fastTravelFadeOpacity()`.
  * The runtime's `FastTravelController` ticks the signal between 0 and

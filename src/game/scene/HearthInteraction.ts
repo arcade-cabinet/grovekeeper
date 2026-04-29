@@ -1,5 +1,5 @@
 /**
- * HearthInteraction — Sub-wave A.
+ * HearthInteraction.
  *
  * Pure logic for "is the player in range of a hearth, and what should
  * the prompt say?". Decoupled from any runtime/Actor wiring so it can

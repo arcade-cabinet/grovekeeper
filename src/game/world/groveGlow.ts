@@ -1,5 +1,5 @@
 /**
- * Grove glow — Wave 10 visual layer.
+ * Grove glow — visual layer that announces a grove chunk diegetically.
  *
  * Two visual effects that together announce a grove chunk diegetically:
  *

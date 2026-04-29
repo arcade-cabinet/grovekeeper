@@ -15,7 +15,7 @@
  *   - `footstep.*` per-surface footstep one-shots
  *   - `levelUp` / `success` are legacy short ids retained for compatibility.
  *
- * @todo Wave 3 audio TODOs that need real packs in a future polish wave —
+ * @todo Audio TODOs that need real packs in a future polish pass —
  *   each is a string-only alias; symbolic API is final, asset is provisional.
  *
  *   - `footstep.wood.*` — currently the `sfx/footsteps/wood/` pack is just
@@ -54,7 +54,7 @@ export type SoundId =
   | "ui.inventory.add"
   | "ui.inventory.full"
   | "ui.threshold.chime"
-  // Hearth — claim ritual ignite (Sub-wave A).
+  // Hearth — claim ritual ignite.
   | "hearth.ignite"
   // Tools (provisional; @todo per-tool packs).
   | "tool.axe.swing"
@@ -153,21 +153,21 @@ export const AUDIO_LIBRARY: Readonly<Record<SoundId, SoundEntry>> = {
     volume: 0.9,
     channel: "sfx",
   },
-  // Inventory pickup chime — Wave 16. Re-uses the coin cue for now;
+  // Inventory pickup chime — re-uses the coin cue for now;
   // a bespoke "satchel slot fills" jingle is a polish-wave goal.
   "ui.inventory.add": {
     path: `${PREFIX}sfx/ui/coin.wav`,
     volume: 0.7,
     channel: "sfx",
   },
-  // Inventory-full reject — Wave 16. Same cancel cue we use elsewhere
+  // Inventory-full reject — same cancel cue we use elsewhere
   // so the player learns "rising chime = good, cancel buzz = bad".
   "ui.inventory.full": {
     path: `${PREFIX}sfx/ui/cancel.wav`,
     volume: 0.65,
     channel: "sfx",
   },
-  // Threshold chime — Sub-wave D. Played when the player crosses a
+  // Threshold chime — played when the player crosses a
   // grove ↔ wilderness chunk boundary. Aliased to the confirm cue for
   // now; a bespoke woodwind chime is a polish-wave goal.
   // @todo polish-wave: dedicated soft chime SFX.
@@ -178,7 +178,7 @@ export const AUDIO_LIBRARY: Readonly<Record<SoundId, SoundEntry>> = {
   },
 
   // ── Hearth ───────────────────────────────────────────────────────────
-  // Hearth ignite — Sub-wave A claim ritual cinematic. Aliased to the
+  // Hearth ignite — claim ritual cinematic. Aliased to the
   // heaviest impact cue we have (axe break) for a meaty whoomph until
   // a bespoke ignite SFX is curated.
   // @todo polish-wave: real fire-ignition SFX (whoosh + crackle).
@@ -195,7 +195,7 @@ export const AUDIO_LIBRARY: Readonly<Record<SoundId, SoundEntry>> = {
     volume: 0.9,
     channel: "sfx",
   },
-  // Block-break crack — Wave 16. Heavier impact than the swing so the
+  // Block-break crack — heavier impact than the swing so the
   // player can hear the difference between "another swing landed" and
   // "the voxel just disappeared".
   "tool.axe.break": {

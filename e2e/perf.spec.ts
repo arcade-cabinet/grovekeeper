@@ -227,7 +227,7 @@ test.describe("RC journey perf — FPS per biome", () => {
 
       const teleported = await teleportTo(page, biome);
       if (!teleported) {
-        // Wave 18 isn't wired yet for this biome. Record an unexercised entry.
+        // teleportToBiome not exposed on this build — record unexercised entry.
         await appendPerfRecord({
           biome,
           device: testInfo.project.name || browserName,
@@ -237,10 +237,7 @@ test.describe("RC journey perf — FPS per biome", () => {
           timestamp: new Date().toISOString(),
           exercised: false,
         });
-        test.skip(
-          true,
-          `Wave 18 teleportToBiome(${biome}) not wired yet — recorded skip.`,
-        );
+        test.skip(true, `teleportToBiome(${biome}) not available in this build.`);
         return;
       }
 

@@ -1,5 +1,5 @@
 /**
- * Gathering types — Wave 16.
+ * Gathering types.
  *
  * Pure shapes for the resource-gathering loop. The system itself
  * lives in `gatherSystem.ts`; these types are exported so tests + the

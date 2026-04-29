@@ -1,5 +1,5 @@
 /**
- * Threshold chime system — Sub-wave C of the Journey wave.
+ * Threshold chime system.
  *
  * Plays a soft chime when the player crosses the boundary between a
  * grove chunk and a non-grove chunk (in either direction). The chime

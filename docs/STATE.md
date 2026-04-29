@@ -7,152 +7,93 @@ domain: context
 
 # Grovekeeper — Build State
 
-This is a living doc of the current build state. Update it as waves
-progress.
+## Current status
 
-## Snapshot
+**RC complete. Voxel pivot in progress.**
 
-- **Spec:** `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`
+- **RC shipped:** v1.5.0-alpha.1 at `https://arcade-cabinet.github.io/grovekeeper/`
+- **Active pivot spec:** `docs/superpowers/specs/2026-04-29-grovekeeper-voxel-pivot-design.md`
 - **Active branch:** `main`
-- **RC status (2026-04-29):** All 20 waves complete. 1163 vitest tests
-  pass. TypeScript clean. Lighthouse Performance 99, Best Practices 100,
-  Accessibility 93, SEO 100. All 16 screenshot gates captured, baselined,
-  and passing in CI. QA playthroughs (mobile + desktop) documented.
-  Claim ritual: hearth emissive ramp + villager opacity fade-in wired.
-  Legacy actions module extracted; slim RC-only bundle shipped.
-- **Currently deployed (v1.5.0-alpha.1):** RC voxel build on Jolly Pixel
-  at `https://arcade-cabinet.github.io/grovekeeper/`.
+- **PRQ queue:** PRQ-01 → PRQ-02 → PRQ-03 (in dependency order)
 
-## Wave status
+---
+
+## RC snapshot (as-shipped)
+
+All 20 RC waves complete. 1163 vitest tests pass. TypeScript clean.
+Lighthouse Performance 99, Best Practices 100, Accessibility 93, SEO 100.
+All 16 screenshot gates baselined and CI-passing.
 
 | # | Wave | Status |
 |---|------|--------|
-| 1 | Doc cleanup | DONE |
-| 2 | Asset inventory (`voxel-realms/raw-assets/extracted/` → `docs/asset-inventory.md`) | DONE |
-| 3 | Asset pipeline scripts + `public/assets/` tree | DONE |
-| 4 | Persistence (drizzle schema + Capacitor SQLite + Preferences) | DONE |
-| 5 | Audio (drop Tone.js, wire engine audio stack) | DONE |
-| 6 | Engine port scaffold (install Jolly Pixel pkgs, runtime boot, replace BabylonJS) | DONE |
-| 7 | Tileset generation (per-biome PNGs + tile-id maps) | DONE |
-| 8 | Voxel terrain (block registry, tileset load, single test chunk, player Actor on it) | DONE |
-| 9 | Biome registry (six biomes wired with tileset + flora + audio + music) | DONE |
-| 10 | Chunk streaming (infinite wandering) | DONE |
-| 11 | Grove biome (glow shader, discovery placement logic, starter grove pre-set) | DONE |
-| 12 | Grove Spirit + NPCs (animated GLB + scripted lines + phrase pools + arrival animation) | DONE |
-| 13 | Crafting + Building (recipes, station Actor, surface UI, ghost preview, place commit) | DONE |
-| 14 | Hearth + claim (claim state machine, cinematic, fast-travel registration + UI) | DONE |
-| 15 | Outer-world fauna (peaceful + hostile creatures, encounter table) | DONE |
-| 16 | Combat (swings, stamina gating, hostile state machines, retreat-to-grove fallback) | DONE |
-| 17 | Resource gathering (voxel mining/chopping/digging in outer world) | DONE |
-| 18 | Journey (landing → MainMenu → newgame → step-4-through-step-13 cinematic) | DONE |
-| 19 | Verification (Playwright journey suite, 16 screenshot baselines, Lighthouse, perf per biome, rubric) | DONE |
-| 20 | Polish (anything below rubric threshold gets re-passed) | DONE |
+| 1–20 | RC waves | DONE |
 
-## Polish status (Wave 20)
+RC success criteria: all 7 met. See git tag `v1.5.0-alpha.1` for the
+frozen state.
 
-All 16 gates captured and baselined (PR #64, v1.3.2-alpha.1). Still passing at v1.5.0-alpha.1.
+---
 
-| Surface | Score | Captured? |
-|---------|:-----:|:---------:|
-| 01 Landing                          | 12/12 | yes |
-| 02 MainMenu                         | 12/12 | yes |
-| 03 NewGame                          | 11/12 | yes (diegesis -1: modal is UI-driven) |
-| 04 First spawn — unclaimed grove    | 12/12 | yes |
-| 05 Spirit greets                    | 12/12 | yes |
-| 06 Gather logs                      | 12/12 | yes |
-| 07 Craft hearth                     | 11/12 | yes (polish -1: focus trap gap) |
-| 08 Place hearth                     | 12/12 | yes |
-| 09 Light hearth — cinematic         | 12/12 | yes |
-| 10 Fast-travel — first node         | 12/12 | yes |
-| 11 Villagers arrive                 | 12/12 | yes |
-| 12 Craft first weapon               | 12/12 | yes |
-| 13 Grove threshold                  | 12/12 | yes |
-| 14 Wilderness — first chunk         | 12/12 | yes |
-| 15 First encounter                  | 12/12 | yes |
-| 16 Second-grove discovery           | 12/12 | yes |
+## Post-RC runtime wiring (merged, 2026-04-29)
 
-## Open QA items
+After RC, gap analysis found gameplay systems not connected to the tick
+loop. All fixed and merged (PR #69, follow-up). Details in previous
+STATE.md version under git history.
 
-All P2 + P3 QA items from playthroughs resolved post-RC:
+---
 
-| ID | Priority | Surface | Fix |
-|----|----------|---------|-----|
-| QA-1 | ~~P2~~ | NewGame modal | `min-h-dvh` + `scrollIntoView` on input focus — resolved |
-| QA-2 | ~~P2~~ | CraftingPanel + FastTravelMenu | Tab-cycle focus trap on dialog root — resolved |
-| QA-4 | ~~P3~~ | ResourceBar | `max-w-[160px]` cap + `overflow-hidden` on mobile — resolved |
-| QA-7 | ~~P3~~ | PauseMenu | Wired into Game.tsx playing screen + Esc-to-open handler — resolved |
+## Voxel pivot — PRQ status
 
-## Success criteria for RC
+### PRQ-01: Voxel Creatures + First-Person Camera
 
-Lifted directly from the spec's Success Criteria section:
+**Status: PENDING**
 
-1. Every screenshot gate in `docs/rc-journey/` is committed and matches a
-   Playwright baseline. **PASS** — all 16 captured and CI-gated (PR #64).
-2. Every surface scores ≥ 10/12 on the rubric. **PASS** — all 16 ≥ 10/12
-   (lowest is 11/12).
-3. Lighthouse landing performance ≥ 90 mobile. **PASS** — Performance 99,
-   Accessibility 93, Best Practices 100, SEO 100.
-4. Runtime FPS budgets hit in all wilderness biomes + the grove biome.
-   **PASS** — see `docs/rc-journey/perf.md` (per-biome targets met).
-5. Bundle and asset budgets met. **PASS** — index 111 KB gz (budget 200 KB);
-   three 185 KB gz (budget 260 KB).
-6. Internal docs describe the actual game. **PASS** — CLAUDE.md, AGENTS.md,
-   docs/* current.
-7. **A new player who lands cold can play through landing → MainMenu →
-   first spawn → gather → craft hearth → place hearth → light hearth
-   (claim starter grove) → craft first weapon → cross threshold → first
-   encounter → discover second grove, *without ever reading a tutorial
-   popup*, and emerge with the full meta-loop in their head.**
-   **PASS** — all 16 QA beats confirmed in both mobile and desktop
-   playthroughs (docs/qa-playthrough-1.md, docs/qa-playthrough-2.md).
+- Switch camera to first-person
+- Remove PlayerActor (Gardener GLB)
+- VoxelCreatureActor base class
+- Wolf (hostile), rabbit (peaceful) as voxel assemblies
+- Grove Spirit as voxel assembly (no dialogue)
+- NPC villagers as voxel assemblies
+- Remove all ModelRenderer production usage
+- Re-baseline screenshot gates
 
-The seventh criterion is the one that matters. All criteria now PASS.
+Full task list: `docs/plans/prq-01-voxel-creatures-first-person.md`
 
-## Post-RC runtime wiring (PR #69, 2026-04-29)
+### PRQ-02: Compound Trait System + Tracery Narrator
 
-After the RC shipped, a gap analysis revealed that several gameplay systems
-existed as tested code but were not connected to the engine tick loop:
+**Status: PENDING** (depends on PRQ-01)
 
-| Gap | Fix |
-|-----|-----|
-| `populateEncounters` never called | Wired into `onChunkSpawned` for non-grove biomes |
-| `spawnPlayer()` never called | Called at `createRuntime` startup so Koota player entity exists |
-| `staminaSystem` not ticked per frame | Wired via `InteractionTickBehavior.onTickDelta` |
-| `canSwing` / `spendSwingStamina` not used | Wired into GatherSystem constructor |
-| `RetreatSystem` never instantiated | Instantiated + driven per-frame; retreat on HP/stamina=0 |
-| No visible stamina / HP HUD | Added dual-bar `StaminaGauge` (HP + Stamina) top-right |
-| No inventory count display | Added `InventoryHUD` (top-left, reactive via `inventoryVersion` signal) |
-| `debugActions.addResource` wrote to old Koota trait only | Now also writes to `inventoryRepo` for CraftingPanel visibility |
-| `useTrait(player(), ...)` stale-entity bug | Fixed with new `useEntityTrait(accessor, trait)` hook |
-| 19 orphaned BabylonJS-era UI components | Deleted (confirmed zero production importers) |
-| FarmerMascot null stub in PauseMenu | Removed stub + blank icon slot |
-| `CraftingPanel.onPickBlueprint` never passed | Wired in Game.tsx; sets `Build` koota trait, closes panel |
-| Placement tick actor missing | Added to runtime.ts; on `interact` press, anchors + commits blueprint voxels to mesh + DB |
-| `setBlock` no DB persist | `chunksRepo.applyBlockMod` now called per-block so placements survive chunk reload |
-| No contextual interact cue | Added `InteractCuePrompt` + emissions from CraftingStationProximityBehavior + placement tick |
+- Trait bitmask system
+- Compound resolution engine (declarative table)
+- Crafting interaction wiring (replaces known-recipes unlock)
+- Durability system
+- Time-based transforms (wet → soft stick)
+- Tracery grammar + narrator
+- Journal system + PauseMenu Journal tab
+- Partial-discovery hints
+- Encounter gate update (hasCraftedNamedWeapon)
 
-## Post-merge review fixes (PR #69 follow-up, 2026-04-29)
+Full task list: `docs/plans/prq-02-compound-traits-tracery.md`
 
-After PR #69 merged, CodeRabbit/SonarCloud review findings were addressed:
+### PRQ-03: Spawn Model + Golden-Path E2E Tests
 
-| Fix | File |
-|-----|------|
-| `spawnPlayer()` guard — `queryFirst(IsPlayer, FarmerState)` prevents duplicate entity on HMR/remount | `runtime.ts` |
-| Nearby-creature swing lookup — 3×3 chunk window scan instead of flattening all encounter chunks | `runtime.ts` |
-| `dbHandle` null guard moved before placement-cue emission | `runtime.ts` |
-| `useEntityTrait` stale-entity — `createEffect` re-reads trait when `entityAccessor()` changes entity | `ecs/solid.ts` |
-| `aria-hidden` removed from StaminaGauge wrapper so screen readers see labeled progressbars | `Game.tsx` |
-| `void` operator removed from `eventBus.inventoryVersion()` call | `InventoryHUD.tsx` |
-| `<div role="region">` → `<section>` for InventoryHUD landmark | `InventoryHUD.tsx` |
-| `vitalColor()` helper extracted to eliminate ternary duplication in StaminaGauge | `StaminaGauge.tsx` |
-| Redundant `nearStation` variable removed from `CraftingStationProximityBehavior` | `CraftingStationProximityBehavior.ts` |
-| Optional-chain-in-negation → explicit null check in proximity behavior | `CraftingStationProximityBehavior.ts` |
-| PauseMenu Stats tab — replaced legacy BabylonJS data (timber/sap/acorns) with RC data (`inventoryRepo` + `grovesRepo`) | `PauseMenu.tsx` |
+**Status: PENDING** (depends on PRQ-01 + PRQ-02)
 
-## Next work
+- Spawn outside grove; first grove within 32 voxels
+- Encounter gate wiring end-to-end
+- First-weapon audio sting
+- E2E test infrastructure (real keyboard input, no warp actions)
+- Golden-path test: claim first grove
+- Golden-path test: harvest + encounter cycle
 
-All craft→place→light→claim→arm→explore loop gaps closed. All review findings addressed.
+Full task list: `docs/plans/prq-03-spawn-model-e2e-tests.md`
 
-Remaining documented items (intentional, not bugs):
+---
 
-- `Math.random()` in `placement.ts` fallback and `dialogueSystem.ts` default — intentional design (crypto.randomUUID fallback + injectable RNG)
+## Open issues
+
+| Issue | Notes |
+|-------|-------|
+| Screenshot gates need re-baselining | First-person camera changes every gate |
+| `window.__grove.actions` warp helpers in RC journey tests | PRQ-03 removes these from golden-path tests |
+| GLB model files still in `public/assets/models/creatures/` etc. | PRQ-01 cleans up |
+| `CLAUDE.md` references Howler for audio | Fixed in this doc pass; CLAUDE.md updated |

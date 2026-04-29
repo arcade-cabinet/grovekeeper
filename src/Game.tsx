@@ -180,16 +180,16 @@ export const Game = () => {
             )}
           </Show>
 
-          {/* Sub-wave D — hearth proximity prompt (above canvas, below modals). */}
+          {/* Hearth proximity prompt (above canvas, below modals). */}
           <HearthPrompt />
 
           {/* Contextual interact cue — "Press E to craft / place / gather". */}
           <InteractCuePrompt />
 
-          {/* Sub-wave D — fast-travel menu, opened by interacting with a lit hearth. */}
+          {/* Fast-travel menu, opened by interacting with a lit hearth. */}
           <FastTravelMenuConnected />
 
-          {/* Sub-wave D — fast-travel black-fade overlay (always mounted). */}
+          {/* Fast-travel black-fade overlay (always mounted). */}
           <FastTravelFade />
 
           {/* Inventory counts (top-left corner). Hidden when empty. */}
@@ -200,7 +200,7 @@ export const Game = () => {
             <InventoryHUD />
           </div>
 
-          {/* Wave 14/15 — stamina gauge (top-right corner) + low-stamina vignette. */}
+          {/* Stamina gauge (top-right corner) + low-stamina vignette. */}
           <div
             class="fixed top-4 right-4 pointer-events-none"
             style={{ "z-index": 50 }}

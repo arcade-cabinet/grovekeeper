@@ -1,5 +1,5 @@
 /**
- * InteractionSystem — Wave 11b.
+ * InteractionSystem.
  *
  * Listens for the `interact` action's rising edge each frame, finds
  * the nearest NPC inside `interactionRangeMeters` of the player, asks

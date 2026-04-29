@@ -1,15 +1,14 @@
 /**
- * InteractionTickBehavior — Wave 11b.
+ * InteractionTickBehavior.
  *
  * Trivial JP `ActorComponent` shim that calls a host-supplied
  * callback every frame. Used to drive the `InteractionSystem` off the
  * engine's actor graph without dragging the system into the engine's
  * lifecycle types directly.
  *
- * The same pattern is used by `GroveTickBehavior` (Wave 10) — small
- * adapter classes are cheaper than weaving every system into the
- * runtime tick directly, and they keep the runtime constructor easy
- * to skim.
+ * The same pattern is used by `GroveTickBehavior` — small adapter
+ * classes are cheaper than weaving every system into the runtime tick
+ * directly, and they keep the runtime constructor easy to skim.
  */
 
 import { type Actor, ActorComponent } from "@jolly-pixel/engine";

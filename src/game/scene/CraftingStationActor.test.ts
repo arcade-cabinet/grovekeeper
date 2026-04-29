@@ -21,6 +21,7 @@ interface MockActor {
     add: ReturnType<typeof vi.fn>;
     remove: ReturnType<typeof vi.fn>;
   };
+  addComponentAndGet: ReturnType<typeof vi.fn>;
 }
 
 vi.mock("@jolly-pixel/engine", () => ({
@@ -32,6 +33,9 @@ vi.mock("@jolly-pixel/engine", () => ({
       this.actor = opts.actor;
       this.typeName = opts.typeName;
     }
+  },
+  ModelRenderer: class {
+    animation = { play: vi.fn() };
   },
 }));
 
@@ -52,6 +56,9 @@ function createMockActor(): MockActor {
       add: vi.fn(),
       remove: vi.fn(),
     },
+    addComponentAndGet: vi
+      .fn()
+      .mockReturnValue({ animation: { play: vi.fn() } }),
   };
 }
 
