@@ -10,7 +10,15 @@ import type { Entity } from "koota";
 import { relation, trait } from "koota";
 import type { ResourceType } from "@/config/resources";
 import type { EventState } from "@/events/types";
-import type { NpcFunction } from "@/npcs/types";
+
+type NpcFunction =
+  | "trading"
+  | "quests"
+  | "tips"
+  | "seeds"
+  | "crafting"
+  | "merchant";
+
 import type { QuestChainState } from "@/quests/types";
 import type { MarketEventState } from "@/systems/marketEvents";
 import type { ActiveQuest } from "@/systems/quests";
