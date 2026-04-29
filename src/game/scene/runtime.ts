@@ -800,7 +800,7 @@ export async function createRuntime(
         if (!fs) return null;
         return {
           hp: fs.hp,
-          hpMax: fs.maxStamina,
+          hpMax: fs.maxHp,
           stamina: fs.stamina,
           staminaMax: fs.maxStamina,
         };
@@ -812,7 +812,7 @@ export async function createRuntime(
         if (!fs) return;
         player.set(FarmerState, {
           ...fs,
-          hp: Math.round(fs.maxStamina * fraction),
+          hp: Math.round(fs.maxHp * fraction),
           stamina: Math.round(fs.maxStamina * fraction),
         });
       },
