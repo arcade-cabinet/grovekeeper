@@ -260,4 +260,21 @@ export class VillagerActor extends ActorComponent {
   get modelRenderer(): ModelRenderer {
     return this.renderer;
   }
+
+  setOpacity(alpha: number): void {
+    const a = Number.isFinite(alpha) ? Math.min(1, Math.max(0, alpha)) : 1;
+    this.renderer.group.traverse((obj) => {
+      const mesh = obj as { isMesh?: boolean; material?: unknown };
+      if (!mesh.isMesh) return;
+      const mats = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      for (const mat of mats) {
+        const m = mat as { transparent?: boolean; opacity?: number } | null;
+        if (!m) continue;
+        m.transparent = a < 1;
+        m.opacity = a;
+      }
+    });
+  }
 }

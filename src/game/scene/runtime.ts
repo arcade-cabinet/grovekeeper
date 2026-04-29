@@ -320,6 +320,7 @@ export async function createRuntime(
           fireflies: fireflies.points,
           fireflyBaseY: fireflies.baseY,
           fireflyPhase: fireflies.phase,
+          emissiveBoost: 0,
         });
       });
 
@@ -1016,7 +1017,17 @@ export async function createRuntime(
     if (activeClaimRitual?.isActive) return;
     activeClaimRitual = new ClaimRitualSystem({
       hooks: {
-        setInputLocked: (locked) => eventBus.emitClaimCinematicActive(locked),
+        setInputLocked: (locked) => {
+          eventBus.emitClaimCinematicActive(locked);
+          if (!locked) {
+            const key = groveGlowKey(
+              STARTER_GROVE_CHUNK.x,
+              STARTER_GROVE_CHUNK.z,
+            );
+            const handle = groveGlows.get(key);
+            if (handle) handle.emissiveBoost = 0;
+          }
+        },
         playSound: (id) => playSound(id),
         playStinger: (id) => playSound(id),
         restoreBiomeMusic: () => {
@@ -1024,16 +1035,25 @@ export async function createRuntime(
             /* idempotent */
           });
         },
-        setHearthEmissive: (_intensity: number) => {
-          // @todo Wave D2: pulse the actual hearth mesh emissive.
-          // For RC the cinematic's audio + spirit line are the
-          // perceptual anchors; the visual ramp is a polish goal.
+        setHearthEmissive: (intensity: number) => {
+          const key = groveGlowKey(
+            STARTER_GROVE_CHUNK.x,
+            STARTER_GROVE_CHUNK.z,
+          );
+          const handle = groveGlows.get(key);
+          if (!handle) return;
+          handle.emissiveBoost = intensity;
         },
-        setVillagerAlpha: (_alpha: number) => {
-          // @todo Wave D2: villagers fade in over the claim ritual's
-          // settle phase. Currently they pop in at full alpha when
-          // GrovePopulator's claimed-state check flips on next chunk
-          // load.
+        setVillagerAlpha: (alpha: number) => {
+          const key = groveGlowKey(
+            STARTER_GROVE_CHUNK.x,
+            STARTER_GROVE_CHUNK.z,
+          );
+          const grove = populatedGroves.get(key);
+          if (!grove) return;
+          for (const villager of grove.villagers) {
+            villager.setOpacity(alpha);
+          }
         },
         persistClaim: () => {
           if (!dbHandle) return;

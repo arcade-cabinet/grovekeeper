@@ -42,9 +42,23 @@ vi.mock("@jolly-pixel/engine", () => ({
   ModelRenderer: ModelRendererMock,
 }));
 
+interface MockMaterial {
+  transparent: boolean;
+  opacity: number;
+}
+
+interface MockMesh {
+  isMesh: true;
+  material: MockMaterial | MockMaterial[];
+}
+
 interface MockRenderer {
   mock: true;
   animation: { play: ReturnType<typeof vi.fn> };
+  group: {
+    traverse: (cb: (obj: unknown) => void) => void;
+    _meshes: MockMesh[];
+  };
 }
 
 function createMockActor(): MockActor {
@@ -64,8 +78,22 @@ function createMockActor(): MockActor {
   };
 }
 
+function createMockMesh(): MockMesh {
+  return { isMesh: true, material: { transparent: false, opacity: 1 } };
+}
+
 function createMockRenderer(): MockRenderer {
-  return { mock: true, animation: { play: vi.fn() } };
+  const meshes: MockMesh[] = [createMockMesh()];
+  return {
+    mock: true,
+    animation: { play: vi.fn() },
+    group: {
+      _meshes: meshes,
+      traverse(cb: (obj: unknown) => void) {
+        for (const m of meshes) cb(m);
+      },
+    },
+  };
 }
 
 /** Random source that yields a fixed sequence; used for AI determinism tests. */
@@ -221,5 +249,98 @@ describe("VillagerActor", () => {
       expect(pick.id).not.toBe(prev);
       prev = pick.id;
     }
+  });
+
+  it("setOpacity sets transparent+opacity on all mesh materials", async () => {
+    const { VillagerActor } = await import("./VillagerActor");
+    const actor = createMockActor();
+    const renderer = createMockRenderer();
+    actor.addComponentAndGet.mockReturnValue(renderer);
+    const villager = new VillagerActor(
+      // biome-ignore lint/suspicious/noExplicitAny: cast for stub
+      actor as any,
+      {
+        spawn: { x: 0, y: 0, z: 0 },
+        villagerId: "v-A",
+        modelVariant: 0,
+        random: fixedRandom([0]),
+      },
+    );
+
+    villager.setOpacity(0.5);
+    const mat = renderer.group._meshes[0].material as {
+      transparent: boolean;
+      opacity: number;
+    };
+    expect(mat.opacity).toBe(0.5);
+    expect(mat.transparent).toBe(true);
+
+    villager.setOpacity(1);
+    expect(mat.opacity).toBe(1);
+    expect(mat.transparent).toBe(false);
+  });
+
+  it("setOpacity handles array materials on a single mesh", async () => {
+    const { VillagerActor } = await import("./VillagerActor");
+    const actor = createMockActor();
+    const matA: MockMaterial = { transparent: false, opacity: 1 };
+    const matB: MockMaterial = { transparent: false, opacity: 1 };
+    const multiMesh: MockMesh = { isMesh: true, material: [matA, matB] };
+    const renderer = createMockRenderer();
+    renderer.group._meshes.push(multiMesh);
+    // Override traverse to iterate all meshes including the new one.
+    renderer.group.traverse = (cb: (obj: unknown) => void) => {
+      for (const m of renderer.group._meshes) cb(m);
+    };
+    actor.addComponentAndGet.mockReturnValue(renderer);
+    const villager = new VillagerActor(
+      // biome-ignore lint/suspicious/noExplicitAny: cast for stub
+      actor as any,
+      {
+        spawn: { x: 0, y: 0, z: 0 },
+        villagerId: "v-B",
+        modelVariant: 0,
+        random: fixedRandom([0]),
+      },
+    );
+
+    villager.setOpacity(0.5);
+    expect(matA.opacity).toBe(0.5);
+    expect(matA.transparent).toBe(true);
+    expect(matB.opacity).toBe(0.5);
+    expect(matB.transparent).toBe(true);
+
+    villager.setOpacity(1);
+    expect(matA.opacity).toBe(1);
+    expect(matA.transparent).toBe(false);
+    expect(matB.opacity).toBe(1);
+    expect(matB.transparent).toBe(false);
+  });
+
+  it("setOpacity clamps out-of-range and non-finite values", async () => {
+    const { VillagerActor } = await import("./VillagerActor");
+    const actor = createMockActor();
+    const renderer = createMockRenderer();
+    actor.addComponentAndGet.mockReturnValue(renderer);
+    const villager = new VillagerActor(
+      // biome-ignore lint/suspicious/noExplicitAny: cast for stub
+      actor as any,
+      {
+        spawn: { x: 0, y: 0, z: 0 },
+        villagerId: "v-C",
+        modelVariant: 0,
+        random: fixedRandom([0]),
+      },
+    );
+    const mat = renderer.group._meshes[0].material as MockMaterial;
+
+    villager.setOpacity(2);
+    expect(mat.opacity).toBe(1);
+
+    villager.setOpacity(-1);
+    expect(mat.opacity).toBe(0);
+
+    villager.setOpacity(Number.NaN);
+    expect(mat.opacity).toBe(1);
   });
 });

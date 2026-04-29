@@ -93,6 +93,12 @@ export interface GroveGlowHandle {
   readonly fireflyPhase: ReadonlyArray<number>;
   /** Captured original emissive colors so we can restore on dispose. */
   readonly originalEmissive: ReadonlyArray<THREE.Color>;
+  /**
+   * Additive emissive boost applied on top of the normal sine-wave pulse.
+   * Used by the claim ritual to ramp the grove's glow during the ignite
+   * cinematic. Set to 0 outside of an active ritual.
+   */
+  emissiveBoost: number;
 }
 
 /**
@@ -140,10 +146,13 @@ export function applyGroveEmissivePulse(root: THREE.Object3D): {
 export function updateGroveEmissivePulse(
   materials: ReadonlyArray<EmissiveCapableMaterial>,
   tSeconds: number,
+  emissiveBoost = 0,
 ): void {
   const omega = (2 * Math.PI) / GROVE_EMISSIVE_PERIOD_SECONDS;
   const intensity =
-    GROVE_EMISSIVE_BASE + GROVE_EMISSIVE_AMPLITUDE * Math.sin(tSeconds * omega);
+    GROVE_EMISSIVE_BASE +
+    GROVE_EMISSIVE_AMPLITUDE * Math.sin(tSeconds * omega) +
+    emissiveBoost;
   for (const mat of materials) {
     mat.emissiveIntensity = intensity;
   }
