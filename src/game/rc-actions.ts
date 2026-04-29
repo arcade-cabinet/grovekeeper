@@ -1,4 +1,5 @@
 import { createActions } from "koota";
+import { getDifficultyById } from "@/config/difficulty";
 import type { ResourceType } from "@/config/resources";
 import { koota } from "@/koota";
 import {
@@ -114,8 +115,12 @@ function hydrateDifficulty(
 ): void {
   if (difficulty === undefined && permadeath === undefined) return;
   const cur = world.get(Difficulty);
+  const validatedId =
+    difficulty !== undefined && getDifficultyById(difficulty) !== undefined
+      ? difficulty
+      : (cur?.id ?? "normal");
   world.set(Difficulty, {
-    id: difficulty ?? cur?.id ?? "normal",
+    id: validatedId,
     permadeath: permadeath ?? cur?.permadeath ?? false,
   });
 }

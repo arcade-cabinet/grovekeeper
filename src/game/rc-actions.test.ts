@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { koota } from "@/koota";
 import {
   Build,
+  CurrentSeason,
+  Difficulty,
   FarmerState,
   GameScreen,
   IsPlayer,
@@ -15,6 +17,8 @@ import { actions } from "./rc-actions";
 
 describe("rc-actions", () => {
   beforeEach(() => {
+    koota.set(Difficulty, { id: "normal", permadeath: false });
+    koota.set(CurrentSeason, { value: "spring" });
     koota.set(GameScreen, { value: "menu" });
     koota.set(Resources, { timber: 0, sap: 0, fruit: 0, acorns: 0 });
     koota.set(LifetimeResources, { timber: 0, sap: 0, fruit: 0, acorns: 0 });
@@ -207,6 +211,26 @@ describe("rc-actions", () => {
       actions().hydrateFromDb({ stamina: 75 });
       expect(player.get(FarmerState)?.stamina).toBe(75);
       player.destroy();
+    });
+
+    it("hydrates valid difficulty id", () => {
+      actions().hydrateFromDb({ difficulty: "hard" });
+      expect(koota.get(Difficulty)?.id).toBe("hard");
+    });
+
+    it("ignores invalid difficulty id, keeps current", () => {
+      actions().hydrateFromDb({ difficulty: "invalid-tier" });
+      expect(koota.get(Difficulty)?.id).toBe("normal");
+    });
+
+    it("hydrates valid currentSeason", () => {
+      actions().hydrateFromDb({ currentSeason: "winter" });
+      expect(koota.get(CurrentSeason)?.value).toBe("winter");
+    });
+
+    it("ignores invalid currentSeason, keeps current", () => {
+      actions().hydrateFromDb({ currentSeason: "monsoon" as "spring" });
+      expect(koota.get(CurrentSeason)?.value).toBe("spring");
     });
   });
 });
