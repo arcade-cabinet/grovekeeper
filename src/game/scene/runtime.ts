@@ -36,6 +36,7 @@ import {
 } from "@/db/repos";
 import { claimGrove, getGroveById, lightHearth } from "@/db/repos/grovesRepo";
 import { createWorld, getWorld } from "@/db/repos/worldsRepo";
+import { dispatchPlayerHit, swingHit } from "@/game/combat/combatSystem";
 import { listAllRecipes } from "@/game/crafting";
 import { pickScriptedSpiritLine } from "@/game/dialogue/dialogueSystem";
 import {
@@ -67,11 +68,16 @@ import {
   mountNipplejsAdapter,
   type NipplejsAdapterHandle,
 } from "@/input";
+import { koota } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
 import { ClaimRitualSystem } from "./ClaimRitualSystem";
 import { CraftingStationActor } from "./CraftingStationActor";
 import { CraftingStationProximityBehavior } from "./CraftingStationProximityBehavior";
+import {
+  type PopulatedEncounters,
+  populateEncounters,
+} from "./EncounterPopulator";
 import {
   type ClaimedGroveNode,
   FastTravelController,
@@ -241,10 +247,34 @@ export async function createRuntime(
   // deterministic in `(worldSeed, chunkX, chunkZ)`.
   const populatedGroves = new Map<string, PopulatedGrove>();
 
+  // Wave 14/15 — encounter registry. Non-grove chunks get creature
+  // encounters populated here and torn down on despawn.
+  const populatedEncountersMap = new Map<string, PopulatedEncounters>();
+
   const chunkHooks: ChunkManagerHooks = {
     onChunkSpawned: ({ chunkX, chunkZ, biome, actor }) => {
-      if (biome !== "grove") return;
       const key = groveGlowKey(chunkX, chunkZ);
+
+      // Non-grove chunks: populate creature encounters.
+      if (biome !== "grove") {
+        if (!populatedEncountersMap.has(key)) {
+          const handle = populateEncounters({
+            worldSeed: RC_WORLD_SEED,
+            chunkX,
+            chunkZ,
+            biome,
+            surfaceY: ChunkActor.SURFACE_Y + 1,
+            factory: {
+              createActor: () =>
+                world.createActor(`creature-${chunkX}-${chunkZ}`),
+            },
+            onPlayerHit: (damage) => dispatchPlayerHit(koota, damage),
+          });
+          populatedEncountersMap.set(key, handle);
+        }
+        return;
+      }
+
       // Wait for the chunk's mesh to land before traversing it; the
       // load is async, so a sync traversal here would find an empty
       // subtree.
@@ -311,6 +341,11 @@ export async function createRuntime(
       if (grove) {
         grove.dispose();
         populatedGroves.delete(key);
+      }
+      const encounters = populatedEncountersMap.get(key);
+      if (encounters) {
+        encounters.dispose();
+        populatedEncountersMap.delete(key);
       }
     },
   };
@@ -681,6 +716,18 @@ export async function createRuntime(
     },
     animation: {
       playSwing: () => playerBehavior.playSwingClip(),
+    },
+    onSwing: () => {
+      const allCreatures = [...populatedEncountersMap.values()].flatMap(
+        (h) => h.creatures as import("./CreatureActor").CreatureActor[],
+      );
+      swingHit(
+        {
+          x: playerActor.object3D.position.x,
+          z: playerActor.object3D.position.z,
+        },
+        allCreatures,
+      );
     },
   });
   const gatherTickActor = world.createActor("gather-tick");
