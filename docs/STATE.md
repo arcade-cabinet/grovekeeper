@@ -73,14 +73,14 @@ All 16 gates captured and baselined (PR #64, v1.3.2-alpha.1).
 
 ## Open QA items
 
-From `docs/qa-playthrough-1.md` and `docs/qa-playthrough-2.md`:
+All P2 + P3 QA items from playthroughs resolved post-RC:
 
-| ID | Priority | Surface | Issue |
-|----|----------|---------|-------|
-| QA-1 | P2 | NewGame modal | iOS keyboard pushes Begin off-screen (Safari real device only) |
-| QA-2 | P2 | CraftingPanel | Full focus trap (tab-cycle within panel) — auto-focus done, cycle trap pending |
-| QA-4 | P3 | ResourceBar | Truncation at 375px with all resources populated |
-| QA-7 | P3 | PauseMenu | Second Esc press has no effect |
+| ID | Priority | Surface | Fix |
+|----|----------|---------|-----|
+| QA-1 | ~~P2~~ | NewGame modal | `min-h-dvh` + `scrollIntoView` on input focus — resolved |
+| QA-2 | ~~P2~~ | CraftingPanel + FastTravelMenu | Tab-cycle focus trap on dialog root — resolved |
+| QA-4 | ~~P3~~ | ResourceBar | `max-w-[160px]` cap + `overflow-hidden` on mobile — resolved |
+| QA-7 | ~~P3~~ | PauseMenu | Wired into Game.tsx playing screen + Esc-to-open handler — resolved |
 
 ## Success criteria for RC
 
@@ -110,12 +110,7 @@ The seventh criterion is the one that matters. All criteria now PASS.
 
 ## Next work
 
-The RC gate has been cleared. Remaining work is polish-wave post-RC:
+All post-RC QA items resolved. Remaining lower-priority items:
 
-- **P2 (QA-1):** iOS Safari keyboard viewport fix — needs `dvh` + scroll-into-view on NewGameScreen
-- **P2 (QA-2):** CraftingPanel full focus trap (tab-cycle) — add `focus-trap` or manual tab interceptor
-- **P3 (QA-4):** ResourceBar overflow at 375px with all resources
-- **P3 (QA-7):** PauseMenu double-Esc — second Esc should close
-- **P2:** `Math.random()` in simulation code (placement.ts, dialogueSystem.ts) → `scopedRNG`
-- **P3:** Coast biome encounter table is empty — add fauna
-- **P3:** FarmerMascot is a stub — needs real Gardener mascot SVG
+- **P3:** FarmerMascot is a stub — needs real Gardener mascot SVG (cosmetic only; PauseMenu shows null at runtime)
+- `Math.random()` in `placement.ts` fallback and `dialogueSystem.ts` default — intentional design (crypto.randomUUID fallback + injectable RNG); not bugs
