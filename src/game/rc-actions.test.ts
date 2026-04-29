@@ -250,9 +250,9 @@ describe("rc-actions", () => {
         },
       });
       const codex = koota.get(SpeciesProgressTrait);
-      expect(codex?.speciesProgress["oak"]).toBeDefined();
-      expect(codex?.speciesProgress["oak"]?.timesPlanted).toBe(2);
-      expect(codex?.speciesProgress["oak"]?.discoveryTier).toBeGreaterThan(0);
+      expect(codex?.speciesProgress.oak).toBeDefined();
+      expect(codex?.speciesProgress.oak?.timesPlanted).toBe(2);
+      expect(codex?.speciesProgress.oak?.discoveryTier).toBeGreaterThan(0);
     });
 
     it("hydrates pendingCodexUnlocks into SpeciesProgressTrait", () => {
@@ -267,7 +267,7 @@ describe("rc-actions", () => {
       actions().hydrateFromDb({
         speciesProgress: { oak: {} },
       });
-      const progress = koota.get(SpeciesProgressTrait)?.speciesProgress["oak"];
+      const progress = koota.get(SpeciesProgressTrait)?.speciesProgress.oak;
       expect(progress?.timesPlanted).toBe(0);
       expect(progress?.totalYield).toBe(0);
       expect(progress?.discoveryTier).toBe(0);
