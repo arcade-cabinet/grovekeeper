@@ -21,15 +21,13 @@
  *     worldSeed, chunkX, chunkZ, villagerIndex)` so each villager
  *     wanders independently of the spawn-roll.
  *
- * Wave 13 gate (NOT YET IMPLEMENTED): villager spawn should be gated
- * on `grove.state === 'claimed'`. RC always spawns villagers. The
- * gate-check call site is marked with `// TODO(wave-13): claim gate`
- * so Wave 13 can drop in `if (grove.state !== 'claimed') return null`
- * around the villager block without restructuring the function.
+ * Claim gate: villager spawn is gated on `options.groveState === 'claimed'`.
+ * The Grove Spirit always spawns (so an undiscovered grove has its mythic
+ * resident); villagers populate only after the hearth ignites.
  *
  * Spec ref: `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`
  *   §"NPCs in groves" — 1 Spirit + 1-4 villagers per claimed grove.
- *   §"Hearth and claim ritual" (deferred to Wave 13) for the gate.
+ *   §"Hearth and claim ritual" — groveState drives the gate.
  */
 
 import type { Actor } from "@jolly-pixel/engine";
