@@ -39,14 +39,14 @@ const ResourceCell = (props: { type: ResourceType; value: number }) => {
     <div
       ref={cellRef}
       role="group"
-      class="flex items-center gap-0.5 sm:gap-1 min-w-0 rounded px-1 motion-safe:transition-colors"
+      class="flex items-center gap-0.5 min-w-0 rounded px-0.5 motion-safe:transition-colors overflow-hidden"
       aria-label={`${RESOURCE_LABELS[props.type]}: ${props.value}`}
     >
-      <span class="shrink-0" aria-hidden="true">
+      <span class="shrink-0 text-[0.85rem]" aria-hidden="true">
         {RESOURCE_EMOJIS[props.type]}
       </span>
       <span
-        class="truncate tabular-nums"
+        class="truncate tabular-nums min-w-0"
         aria-hidden="true"
         style={{ color: COLORS.soilDark }}
       >
@@ -77,7 +77,7 @@ export const ResourceBar = () => {
       <div
         role="region"
         aria-label="Resources"
-        class="grid grid-cols-2 gap-x-2 gap-y-0.5 px-1.5 sm:px-2 py-1 rounded-xl text-xs sm:text-sm font-bold min-w-0 shrink"
+        class="grid grid-cols-2 gap-x-1.5 gap-y-0.5 px-1.5 sm:px-2 py-1 rounded-xl text-xs font-bold min-w-0 shrink max-w-[160px] sm:max-w-none"
         style={{
           background: `${COLORS.parchment}e6`,
           border: `2px solid ${COLORS.barkBrown}`,
