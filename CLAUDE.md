@@ -96,7 +96,8 @@ pnpm test:browser         # vitest, browser project (Playwright-driven)
 pnpm test:all             # all vitest projects
 pnpm test:coverage        # node project with coverage
 pnpm test:e2e             # build + Playwright e2e
-pnpm test:playthrough     # the journey screenshot suite (RC gate)
+pnpm test:rc-journey      # RC journey screenshot suite (16 gates)
+pnpm test:rc-perf         # perf FPS measurement per biome
 pnpm tsc                  # typecheck (no emit)
 pnpm lint                 # biome lint
 pnpm format               # biome format --write

@@ -6,7 +6,7 @@
  * installation outside dev/debug contexts.
  *
  * Used by:
- *  - e2e/playthrough.spec.ts (Playwright)
+ *  - e2e/rc-journey.spec.ts (Playwright)
  *  - Dev console: window.__grove.snapshot()
  *
  * All snapshot fields return plain JSON-serialisable objects so that

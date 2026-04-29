@@ -64,7 +64,7 @@ pnpm dev                  # dev server
 pnpm build                # production build
 pnpm test                 # vitest, node project (default)
 pnpm test:browser         # vitest, browser project (Playwright)
-pnpm test:playthrough     # the journey screenshot suite (RC gate)
+pnpm test:rc-journey      # RC journey screenshot suite (16 gates)
 pnpm tsc                  # typecheck
 pnpm check                # biome lint + format
 ```
