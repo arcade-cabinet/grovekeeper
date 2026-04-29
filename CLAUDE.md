@@ -31,11 +31,10 @@ minutes. Capacitor wraps it for native iOS/Android.
 
 ## Status
 
-Mid-redesign. The currently-deployed game (1.0.0-alpha.1 on
-`https://arcade-cabinet.github.io/grovekeeper/`) is a cozy 2.5D BabylonJS
-tree-tender with 9 hardcoded JSON zones. That game is being replaced per the
-RC spec. Active branch: `release/workflows-v2`. See `docs/STATE.md` for the
-current wave.
+RC complete. Deployed as v1.5.0-alpha.1 on
+`https://arcade-cabinet.github.io/grovekeeper/`. All 20 implementation waves
+done. All 16 screenshot gates pass in CI. All 7 spec success criteria met.
+See `docs/STATE.md` for current build state.
 
 ## Critical context
 
@@ -105,10 +104,7 @@ pnpm check                # biome check (lint + format)
 pnpm size                 # size-limit budget check
 ```
 
-## Project structure (post-port target)
-
-The current tree still has BabylonJS scaffolding; the structure below is what
-the codebase *converges to* across the implementation waves.
+## Project structure
 
 ```text
 grovekeeper/
