@@ -34,9 +34,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # Intentionally NOT pulling LFS here. The JS bundle transform phase
+      # (rollup + esbuild, ~60s) runs without needing audio/GLB assets.
+      # LFS assets are fetched AFTER the build to avoid disk-IO saturation
+      # that caused the build step to be runner-evicted on westcentralus
+      # spot instances (builds with lfs:true were killed mid-transform
+      # across all 5 consecutive attempts after the chore(rc) merge).
+      # This mirrors the pattern ci.yml already uses for bundle-size checks.
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          lfs: true
 
       - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v4
 
@@ -47,11 +52,23 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Build
+      - name: Build (JS bundle — no LFS assets needed)
         run: pnpm build
         env:
           NODE_ENV: production
           NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: Restore LFS assets into dist
+        # Vite already copied public/ to dist/ with LFS pointer stubs for
+        # audio/ and models/ (the only two LFS-tracked subdirs in public/).
+        # Resolve LFS and overwrite the stubs without touching vite-generated
+        # JS bundles in dist/assets/*.js.
+        run: |
+          git lfs fetch --all
+          git lfs checkout
+          rm -rf dist/assets/audio dist/assets/models
+          cp -r public/assets/audio dist/assets/audio
+          cp -r public/assets/models dist/assets/models
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
