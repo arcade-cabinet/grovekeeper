@@ -71,6 +71,7 @@ import {
 } from "@/input";
 import { koota, spawnPlayer } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
+import { staminaSystem } from "@/systems/stamina";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
 import { ClaimRitualSystem } from "./ClaimRitualSystem";
 import { CraftingStationActor } from "./CraftingStationActor";
@@ -765,6 +766,15 @@ export async function createRuntime(
     discovery: groveDiscovery,
     playerPosition: playerActor.object3D.position,
   });
+  // Stamina regen — 2/sec scaled by difficulty. Must run every frame
+  // so the regen is smooth; `onTickDelta` receives milliseconds which
+  // we convert to seconds before passing to `staminaSystem`.
+  const staminaTickActor = world.createActor("stamina-tick");
+  staminaTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () => {},
+    onTickDelta: (deltaMs) => staminaSystem(deltaMs / 1000),
+  });
+
   // Threshold tick: rides on the same per-frame pump via a thin shim.
   const thresholdTickActor = world.createActor("threshold-tick");
   thresholdTickActor.addComponentAndGet(InteractionTickBehavior, {
