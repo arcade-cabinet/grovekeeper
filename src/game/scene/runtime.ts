@@ -103,9 +103,9 @@ import { PlayerActor } from "./PlayerActor";
 import playerConfig from "./player.config.json";
 import { RetreatSystem } from "./RetreatSystem";
 
-/** Hardcoded RC world id — Wave 10 single-world. Journey wave wires real selection. */
+/** Hardcoded RC world id. Single world per RC scope. */
 const RC_WORLD_ID = "rc-world-default";
-/** Hardcoded RC world seed — Wave 10. Same as ChunkManager. */
+/** Hardcoded RC world seed — same as ChunkManager. */
 const RC_WORLD_SEED = 0;
 
 export interface SceneHandle {
@@ -179,9 +179,8 @@ export async function createRuntime(
   // Player Actor. Reads `move` from the InputManager each frame, walks
   // freely across an infinite chunk grid (no XZ bounds). Y snapped
   // to shared surface; per-voxel collision is post-RC.
-  // Sub-wave C — spawn the player at the centre of the starter grove
-  // chunk (3, 0). Chunk world origin is `(3 * 16, _, 0 * 16)`; centre
-  // is half a chunk inside.
+  // Spawn the player at the centre of the starter grove chunk (3, 0).
+  // Chunk world origin is `(3 * 16, _, 0 * 16)`; centre is half a chunk in.
   const STARTER_CHUNK_SIZE = 16;
   const playerSpawnX =
     STARTER_GROVE_CHUNK.x * STARTER_CHUNK_SIZE + STARTER_CHUNK_SIZE / 2;
@@ -198,7 +197,7 @@ export async function createRuntime(
     surfaceY: ChunkActor.SURFACE_Y + 1,
   });
 
-  // Wave 10 — DB handle + ensure-world. Grove discovery writes go here.
+  // DB handle + ensure-world. Grove discovery writes go here.
   // We swallow DB-init failures so a broken IndexedDB layer doesn't
   // block scene boot; discovery just becomes a no-op in that case.
   let dbHandle: Awaited<ReturnType<typeof getDbAsync>> | null = null;
@@ -223,17 +222,15 @@ export async function createRuntime(
     if (isFreshWorld) {
       seedStarterRunState(dbHandle.db, RC_WORLD_ID);
     }
-    // Sub-wave C — starter grove pre-state. Idempotent: re-runs are
-    // free, so we always call it. Existing saves that were created
-    // before this code landed will get the seed on first boot via the
-    // `discoverGrove` short-circuit (which is also idempotent).
+    // Starter grove pre-state. Idempotent: re-runs are free, so we always
+    // call it. Existing saves get the seed on first boot via the
+    // `discoverGrove` short-circuit (also idempotent).
     if (!isStarterGroveSeeded(dbHandle.db, RC_WORLD_ID)) {
       seedStarterGrove(dbHandle.db, RC_WORLD_ID);
     }
-    // Sub-wave C — recipe-gating: when sub-wave A's claim system
-    // emits `groveClaimed`, learn `recipe.starter-axe`. We register
-    // here (not inside the claim system) so this hook lives next to
-    // the persistence layer it touches. `learnRecipe` is idempotent.
+    // Recipe-gating: when `groveClaimed` fires, learn `recipe.starter-axe`.
+    // Registered here (not inside the claim system) so this hook lives
+    // next to the persistence layer it touches. `learnRecipe` is idempotent.
     unsubGroveClaimed = eventBus.onGroveClaimed((ev) => {
       if (!dbHandle) return;
       try {
@@ -254,21 +251,21 @@ export async function createRuntime(
     );
   }
 
-  // Wave 10 — grove glow registry. Keyed by `chunkX,chunkZ` so the
-  // per-frame updater can iterate a flat list. Populated on
-  // `onChunkSpawned` for grove biome chunks; torn down on
-  // `onChunkDespawned` so off-screen groves don't leak buffers.
+  // Grove glow registry. Keyed by `chunkX,chunkZ` so the per-frame
+  // updater can iterate a flat list. Populated on `onChunkSpawned` for
+  // grove biome chunks; torn down on `onChunkDespawned` so off-screen
+  // groves don't leak buffers.
   const groveGlows = new Map<string, GroveGlowHandle>();
   const groveGlowKey = (cx: number, cz: number) => `${cx},${cz}`;
 
-  // Wave 11b — populated-grove registry. Mirror of the glow map: each
-  // grove chunk's NPCs (1 Spirit + 1-4 villagers) are spawned on
-  // `onChunkSpawned` and disposed on `onChunkDespawned`. Population is
-  // deterministic in `(worldSeed, chunkX, chunkZ)`.
+  // Populated-grove registry. Mirror of the glow map: each grove chunk's
+  // NPCs (1 Spirit + 1-4 villagers) are spawned on `onChunkSpawned` and
+  // disposed on `onChunkDespawned`. Population is deterministic in
+  // `(worldSeed, chunkX, chunkZ)`.
   const populatedGroves = new Map<string, PopulatedGrove>();
 
-  // Wave 14/15 — encounter registry. Non-grove chunks get creature
-  // encounters populated here and torn down on despawn.
+  // Encounter registry. Non-grove chunks get creature encounters populated
+  // here and torn down on despawn.
   const populatedEncountersMap = new Map<string, PopulatedEncounters>();
 
   const chunkHooks: ChunkManagerHooks = {
@@ -372,12 +369,9 @@ export async function createRuntime(
     },
   };
 
-  // Wave 9 — chunk streaming. The manager is a POJO + a behavior shim
-  // that pumps it once per frame. It owns a Map<chunkKey, ChunkActor>
-  // and spawns/despawns chunks as the player walks. Biome per chunk
-  // comes from `assignBiome(seed, x, z)`, deterministic for any seed.
-  // Today the world seed is a hardcoded 0 — Wave 4's preferences slot
-  // will feed in a player-chosen seed once world selection lands.
+  // Chunk streaming. The manager owns a Map<chunkKey, ChunkActor> and
+  // spawns/despawns chunks as the player walks. Biome per chunk comes
+  // from `assignBiome(seed, x, z)`, deterministic for any seed.
   const chunkManager = new ChunkManager({
     world,
     playerPosition: playerActor.object3D.position,
@@ -390,10 +384,9 @@ export async function createRuntime(
     manager: chunkManager,
   });
 
-  // Wave 10 — grove discovery system. Rides the per-frame loop via
-  // a thin behavior shim so `update(playerPos)` is called every tick.
-  // When the DB never initialized we skip mounting the system —
-  // discovery becomes a silent no-op rather than crashing the scene.
+  // Grove discovery system. Rides the per-frame loop via a thin behavior
+  // shim so `update(playerPos)` is called every tick. When the DB never
+  // initialized we skip mounting — discovery is a silent no-op.
   const groveDiscovery = dbHandle
     ? createGroveDiscoverySystem({
         db: dbHandle.db,
@@ -434,19 +427,18 @@ export async function createRuntime(
     isPlacementActive: () => koota.get(Build)?.mode ?? false,
   });
 
-  // Wave 11b — interaction system. Polls the `interact` action's rising
-  // edge each frame; when fired, finds the nearest NPC across all
-  // populated groves and surfaces the next phrase via `onPhrase`. UI
-  // glue: `onPhrase` projects the NPC's world position through the
-  // camera and emits an `NpcSpeechEvent` on the `eventBus` for the
-  // Solid `<NpcSpeechBubble>` to consume. Persistence to
-  // `dialogue_history` happens here so the next session's
-  // repeat-avoidance filter is primed.
+  // Interaction system. Polls the `interact` action's rising edge each
+  // frame; when fired, finds the nearest NPC across all populated groves
+  // and surfaces the next phrase via `onPhrase`. UI glue: `onPhrase`
+  // projects the NPC's world position through the camera and emits an
+  // `NpcSpeechEvent` on the `eventBus` for `<NpcSpeechBubble>`. Persists
+  // to `dialogue_history` so the next session's repeat-avoidance filter
+  // is primed.
   /**
-   * Sub-wave D — read scripted-line eligibility flags from the DB so
-   * the Spirit can fire line1/line2/line3 as the journey progresses.
-   * Returns a snapshot suitable for `pickScriptedSpiritLine(...)`.
-   * If the DB isn't up, every flag is false (no-op selector).
+   * Read scripted-line eligibility flags from the DB so the Spirit can
+   * fire line1/line2/line3 as the journey progresses. Returns a snapshot
+   * for `pickScriptedSpiritLine(...)`. If the DB isn't up, all flags are
+   * false (no-op selector).
    */
   function readScriptedLineState() {
     if (!dbHandle) {
@@ -511,11 +503,10 @@ export async function createRuntime(
         interact: any;
       }> = [];
       for (const grove of populatedGroves.values()) {
-        // Wrap the Spirit's interact() so scripted lines (Sub-wave D)
-        // can pre-empt the random pool. Each scripted line fires at
-        // most once per save: the firing is recorded as a synthetic
-        // npcId in `dialogue_history` so a repeat call falls through
-        // to the random pool.
+        // Wrap the Spirit's interact() so scripted lines can pre-empt
+        // the random pool. Each scripted line fires at most once per save:
+        // the firing is recorded as a synthetic npcId in `dialogue_history`
+        // so a repeat call falls through to the random pool.
         const spirit = grove.spirit;
         const wrapped = {
           getId: () => spirit.getId(),
@@ -588,11 +579,11 @@ export async function createRuntime(
     onTick: () => interactionSystem.tick(),
   });
 
-  // Wave 16 — gathering. The player presses `swing` (Space / mobile
-  // swing button) facing a voxel; the system increments a hit counter
-  // until the block breaks, then drops materials into `inventoryRepo`
-  // and persists the removal via `chunksRepo.applyBlockMod`. Grove
-  // biome voxels are unbreakable per spec.
+  // Gathering. The player presses `swing` (Space / mobile swing button)
+  // facing a voxel; the system increments a hit counter until the block
+  // breaks, then drops materials into `inventoryRepo` and persists the
+  // removal via `chunksRepo.applyBlockMod`. Grove biome voxels are
+  // unbreakable per spec.
   //
   // Three closures plumb the system to the world:
   //   - `blockAt`      — resolves the biome surface block name at a
@@ -620,14 +611,13 @@ export async function createRuntime(
     const lx = x - cx * CHUNK_SIZE;
     const lz = z - cz * CHUNK_SIZE;
 
-    // 1. In-memory mod overlay (Wave 16 break tracking, plus any
-    //    placement Wave 12 stamped without a DB write).
+    // 1. In-memory mod overlay (break tracking + placements not yet flushed to DB).
     const mem = memoryMods.get(memoryKey(cx, cz));
     const memHit = mem?.get(voxelKey(lx, y, lz));
     if (memHit === "__air__") return null;
     if (memHit) return memHit;
 
-    // 2. Persisted mods (Wave 12 placements, prior Wave 16 breaks).
+    // 2. Persisted mods (prior placements and block breaks).
     if (dbHandle) {
       const mods = chunksRepo.getModifiedBlocks(
         dbHandle.db,
@@ -763,10 +753,9 @@ export async function createRuntime(
     onTick: () => gatherSystem.tick(),
   });
 
-  // Sub-wave C — threshold chime system. Plays a soft chime when the
-  // player crosses a grove ↔ non-grove chunk boundary. Aliased to
-  // `ui.click` per spec — when a bespoke chime is curated this swaps
-  // to `ui.threshold.chime`. Debounced 5s per boundary pair.
+  // Threshold chime system. Plays a soft chime when the player crosses a
+  // grove ↔ non-grove chunk boundary. Aliased to `ui.click` until a
+  // bespoke chime is curated. Debounced 5s per boundary pair.
   const thresholdSystem = createThresholdSystem({
     worldSeed: RC_WORLD_SEED,
     chunkSize: 16,
@@ -791,13 +780,11 @@ export async function createRuntime(
     onTickDelta: (deltaMs) => staminaSystem(deltaMs / 1000),
   });
 
-  // Wave 13 — placement tick. Watches the `Build` koota world trait:
-  // when `mode === true`, the player is holding a blueprint. On a
-  // rising-edge `interact` press we anchor the blueprint one voxel in
-  // front of the player, commit it to the chunk mesh + DB, consume the
-  // inventory item, and clear build mode. Cancels on Escape (handled
-  // by the hearthTick / interactionTick Escape → pause path; here we
-  // just guard the interact path and let the player walk away).
+  // Placement tick. Watches the `Build` koota world trait: when
+  // `mode === true`, the player is holding a blueprint. On a rising-edge
+  // `interact` press we anchor the blueprint one voxel in front of the
+  // player, commit it to the chunk mesh + DB, consume the inventory item,
+  // and clear build mode. Player can also walk away to cancel.
   let placeModeState: PlaceModeState = IDLE_STATE;
   const placementTickActor = world.createActor("placement-tick");
   placementTickActor.addComponentAndGet(InteractionTickBehavior, {
@@ -899,10 +886,10 @@ export async function createRuntime(
       }),
   });
 
-  // Wave 14/15 — retreat system. Watches HP + stamina; on zero, fades
-  // to black, teleports the player to the nearest claimed grove (or the
-  // starter grove if none claimed), restores vitals to 50%, then fades
-  // back. The `emitRetreatOpacity` bus signal drives <RetreatOverlay>.
+  // Retreat system. Watches HP + stamina; on zero, fades to black,
+  // teleports the player to the nearest claimed grove (or the starter
+  // grove if none claimed), restores vitals to 50%, then fades back.
+  // The `emitRetreatOpacity` bus signal drives <RetreatOverlay>.
   const retreatSystem = new RetreatSystem({
     vitals: {
       get() {
@@ -965,7 +952,7 @@ export async function createRuntime(
     },
   });
 
-  // ── Sub-wave D — hearth interaction + claim ritual + fast travel ──
+  // ── Hearth interaction + claim ritual + fast travel ──
   //
   // Per-frame: scan the active starter grove for placed-but-unlit
   // hearths. If the player is within proximity, emit a hearth prompt
@@ -1155,10 +1142,10 @@ export async function createRuntime(
     fastTravelController.start(node, performance.now());
   });
 
-  // Sub-wave D — hearth proximity + interact tick. Runs every frame
-  // alongside the threshold + interaction systems. Cheap when there
-  // are no hearths placed (early game) — the structuresRepo lookup
-  // returns an empty list and we early-exit.
+  // Hearth proximity + interact tick. Runs every frame alongside the
+  // threshold + interaction systems. Cheap when there are no hearths
+  // placed (early game) — the structuresRepo lookup returns an empty list
+  // and we early-exit.
   const hearthTickActor = world.createActor("hearth-tick");
   hearthTickActor.addComponentAndGet(InteractionTickBehavior, {
     onTick: () => {
