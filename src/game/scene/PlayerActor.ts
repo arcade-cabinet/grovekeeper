@@ -19,9 +19,9 @@
  *   - XZ are unbounded — Wave 9's chunk streamer guarantees there's
  *     always a chunk underfoot, so the player walks freely across the
  *     infinite biome patchwork. Y is snapped to the shared surface
- *     value. Real per-voxel collision is a future wave; until then,
- *     all biomes share `world.config.json#groundY` so this single
- *     `surfaceY` is correct everywhere.
+ *     value. Per-voxel collision is post-RC; all RC biomes share
+ *     `world.config.json#groundY` so this single `surfaceY` is
+ *     correct everywhere.
  *   - Model rotates to face the move direction with a per-frame yaw
  *     lerp so the turn isn't instantaneous.
  *
@@ -80,9 +80,8 @@ export interface PlayerActorOptions {
   inputManager?: InputManager;
   /**
    * Y to snap the actor's feet to every frame the player is moving.
-   * Wave 9's biomes all share `world.config.json#groundY` so a single
-   * value is correct everywhere; future waves with elevation variation
-   * will replace this with a chunk-aware lookup.
+   * All RC biomes share `world.config.json#groundY` so a single value
+   * is correct everywhere. Per-chunk elevation is post-RC.
    */
   surfaceY?: number;
 }

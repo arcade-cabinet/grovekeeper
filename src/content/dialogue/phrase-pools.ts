@@ -102,9 +102,7 @@ export const SPIRIT_PHRASES: Readonly<Record<string, readonly string[]>> = {
  * lines are smaller, more domestic, more about *living* in the grove
  * than about the player.
  *
- * Wave 13 will gate spawning these on `grove.state === 'claimed'`;
- * for RC they spawn on every grove. (See `dialogueSystem.ts` and
- * `GrovePopulator.ts` for the gate marker.)
+ * Villagers only spawn in claimed groves (see `GrovePopulator.ts`).
  */
 export const VILLAGER_PHRASES: Readonly<Record<string, readonly string[]>> = {
   // The default pool. Sampled on every interact unless a more specific

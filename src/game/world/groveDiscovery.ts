@@ -14,10 +14,7 @@
  *        wilderness biome's music. (Discovery state is permanent.)
  *
  * The "surrounding biome" question is delegated to a caller-supplied
- * resolver — Wave 9 will provide one based on its `biomeAssigner`.
- * Keeping it as a parameter avoids making this module depend on
- * Wave 9's symbols, which lets Wave 10 land before or in parallel
- * with Wave 9.
+ * resolver (see `biomeAssigner.ts`) to keep this module decoupled.
  *
  * Discovery is *idempotent at the system level*: walking out of a
  * grove and back in does NOT re-trigger the discovery beat. The

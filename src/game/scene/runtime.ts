@@ -177,9 +177,8 @@ export async function createRuntime(
   }
 
   // Player Actor. Reads `move` from the InputManager each frame, walks
-  // freely across an infinite chunk grid (no XZ bounds — Wave 9 removed
-  // the single-chunk clamp). Y is held to the shared surface for now;
-  // proper voxel collision is a future wave.
+  // freely across an infinite chunk grid (no XZ bounds). Y snapped
+  // to shared surface; per-voxel collision is post-RC.
   // Sub-wave C — spawn the player at the centre of the starter grove
   // chunk (3, 0). Chunk world origin is `(3 * 16, _, 0 * 16)`; centre
   // is half a chunk inside.
@@ -220,7 +219,7 @@ export async function createRuntime(
     // Seed starter inventory + unlock all recipes so a fresh boot can
     // immediately walk to the workbench and craft. Idempotent under
     // re-seed but we gate to first-create to avoid topping up logs every
-    // session — a future wave (real persistence flow) will own this.
+    // session. The persistence flow is responsible for replay on reload.
     if (isFreshWorld) {
       seedStarterRunState(dbHandle.db, RC_WORLD_ID);
     }
@@ -324,11 +323,9 @@ export async function createRuntime(
         });
       });
 
-      // Wave 11b — spawn NPCs once the chunk is loaded. Population is
-      // deterministic, so we don't need to wait for the mesh — the
-      // actors live in their own subtree above the voxel chunk.
-      // Wave 13 will gate villager spawn on the grove's `claimed`
-      // state; for RC we always populate (see GrovePopulator notes).
+      // Spawn NPCs once the chunk is loaded. Population is deterministic
+      // so actors live in their own subtree above the voxel chunk.
+      // Villager spawn is gated on claimed state inside GrovePopulator.
       if (!populatedGroves.has(key)) {
         const handle = populateGrove({
           worldSeed: RC_WORLD_SEED,
@@ -646,9 +643,8 @@ export async function createRuntime(
       }
     }
 
-    // 3. Procgen surface — only the surface row is gatherable for now;
-    //    deeper digs (sub-surface dirt, bedrock) need vertical
-    //    targeting which is a future wave.
+    // 3. Procgen surface — only the surface row is gatherable (RC scope).
+    //    Sub-surface mining is post-RC.
     if (y !== GROUND_Y) return null;
     const biomeId = assignBiome(RC_WORLD_SEED, cx, cz);
     const biome = getBiome(biomeId);

@@ -66,9 +66,8 @@ export interface PlayerPositionRef {
 
 /**
  * Lifecycle callbacks fired by the streamer as it spawns / despawns
- * chunks. Wave 10 uses `onChunkSpawned` to drape the grove glow over
- * grove biome chunks; future waves can hook the same edge for NPC
- * spawns, lighting tweaks, etc.
+ * chunks. `onChunkSpawned` drapes grove glow over grove biome chunks
+ * and handles NPC spawns.
  */
 export interface ChunkManagerHooks {
   /**

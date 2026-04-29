@@ -5,9 +5,9 @@
  *
  * Distribution comes from `world.config.json#streaming.biomeWeights`:
  * meadow ~50%, forest ~30%, coast ~20%. **Grove is intentionally
- * excluded** from the random distribution — Wave 10 will place groves
- * via a separate PRNG roll on outer-world chunks (rare, narrative
- * spine), not by random spawn.
+ * excluded** from the random distribution — groves are placed via a
+ * separate PRNG roll on outer-world chunks (rare, narrative spine),
+ * not by the biome weight table.
  *
  * All randomness flows through `scopedRNG('biome', worldSeed, chunkX,
  * chunkZ)` so identical inputs produce the same biome — the project's

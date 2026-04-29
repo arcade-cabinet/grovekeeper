@@ -8,8 +8,7 @@
  * `Camera3DControls` remain attached but are harmless because we
  * overwrite position every tick.
  *
- * A future wave can replace this with a touch-drag orbit camera once
- * the input wave lands.
+ * Post-RC: can extend to a touch-drag orbit camera.
  */
 
 import {
