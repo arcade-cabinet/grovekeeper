@@ -76,7 +76,7 @@ koota.set(Resources, { timber: 50, sap: 10, fruit: 5, acorns: 3 });
 koota.set(Resources, (prev) => ({ ...prev, timber: prev.timber + 10 }));
 
 // Per-entity update
-tree.set(Tree, { stage: "mature", water: 100, species: "white-oak" });
+tree.set(Tree, { stage: 3, watered: false, speciesId: "white-oak" });
 
 // Add/remove a trait
 tree.add(Harvestable());
@@ -129,7 +129,7 @@ document.addEventListener("visibilitychange", () => {
 });
 ```
 
-`hydrateFromDb` validates all incoming values before writing (type guards for season, difficulty ID, screen) and silently discards invalid or missing fields.
+`hydrateFromDb` validates select fields before writing — `screen` is checked against the allowed screen union, `difficulty` is validated via `getDifficultyById`, and `currentSeason` is validated via an `isValidSeason` type guard. Other fields are merged directly from DB state.
 
 ## Species Codex Pattern
 

@@ -289,18 +289,29 @@ function hydrateSettings(world: World, dbState: HydratedGameState): void {
   world.set(Settings, next);
 }
 
+function safeNonNegativeInt(value: unknown, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? Math.trunc(n) : fallback;
+}
+
 function normalizeSpeciesProgress(
   raw: Record<string, unknown>,
 ): Record<string, SpeciesProgress> {
   const result: Record<string, SpeciesProgress> = {};
   for (const [id, entry] of Object.entries(raw)) {
     const base = createEmptyProgress();
-    const src = entry as Partial<SpeciesProgress>;
+    const src = (entry ?? {}) as Record<string, unknown>;
     const merged: Omit<SpeciesProgress, "discoveryTier"> = {
-      timesPlanted: src.timesPlanted ?? base.timesPlanted,
-      maxStageReached: src.maxStageReached ?? base.maxStageReached,
-      timesHarvested: src.timesHarvested ?? base.timesHarvested,
-      totalYield: src.totalYield ?? base.totalYield,
+      timesPlanted: safeNonNegativeInt(src.timesPlanted, base.timesPlanted),
+      maxStageReached: safeNonNegativeInt(
+        src.maxStageReached,
+        base.maxStageReached,
+      ),
+      timesHarvested: safeNonNegativeInt(
+        src.timesHarvested,
+        base.timesHarvested,
+      ),
+      totalYield: safeNonNegativeInt(src.totalYield, base.totalYield),
     };
     result[id] = { ...merged, discoveryTier: computeDiscoveryTier(merged) };
   }

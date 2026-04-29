@@ -59,7 +59,7 @@ pnpm tsc
 
 ## Project Structure
 
-```
+```text
 grovekeeper/
 ├── src/
 │   ├── game/               # Game scenes, actors, world systems
@@ -92,7 +92,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 - **Mobile-first:** All UI optimized for 375px portrait (iPhone SE). Touch targets ≥ 44px.
 - **Performance:** Target ≥ 55 FPS on mid-range mobile, ≥ 60 FPS on desktop.
-- **Tests:** 1156 tests across 81 test files. Run `pnpm test` for watch mode.
+- **Tests:** 1159 tests across 81 test files. Run `pnpm test` for watch mode.
 - **Type safety:** TypeScript strict mode. Run `pnpm tsc` to verify.
 - **Code quality:** Biome lint + format enforced. Run `pnpm check` to check.
 
