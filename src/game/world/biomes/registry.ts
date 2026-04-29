@@ -43,8 +43,5 @@ export function listBiomes(): readonly BiomeDefinition[] {
   return [BIOMES.meadow, BIOMES.forest, BIOMES.coast, BIOMES.grove] as const;
 }
 
-/**
- * Default biome for Wave 8 — runtime stays on meadow until Wave 9
- * (chunk streaming) wires biome selection per chunk position.
- */
+/** Fallback biome when chunk-based selection is unavailable. */
 export const DEFAULT_BIOME_ID: BiomeId = "meadow";
