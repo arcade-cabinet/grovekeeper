@@ -1,9 +1,9 @@
 /**
  * CraftingStationActor — a placeable workbench Actor.
  *
- * Renders a small voxel-style workbench (placeholder cube; a GLB asset
- * swap is a post-RC goal). Carries a stable `stationId` (e.g.
- * `"primitive-workbench"`) the crafting layer reads to filter recipes.
+ * Renders the workbench GLTF (`assets/models/props/workbench/Desk_glt.gltf`).
+ * Carries a stable `stationId` (e.g. `"primitive-workbench"`) the crafting
+ * layer reads to filter recipes.
  *
  * Player proximity: `isPlayerNear(...)` returns true when the player
  * is inside `proximityRadius` voxels (default 2). The runtime polls
@@ -11,8 +11,7 @@
  * near a station, opens the crafting panel for that station's id.
  */
 
-import { type Actor, ActorComponent } from "@jolly-pixel/engine";
-import * as THREE from "three";
+import { type Actor, ActorComponent, ModelRenderer } from "@jolly-pixel/engine";
 import { actorObject3D } from "@/shared/utils/actorUtils";
 
 export interface CraftingStationActorOptions {
@@ -32,17 +31,18 @@ export interface CraftingStationActorOptions {
 
 const DEFAULT_PROXIMITY_RADIUS = 2;
 
-/** Wood-tone block placeholder until the GLB asset is wired. */
-function buildPlaceholderMesh(): THREE.Mesh {
-  const geom = new THREE.BoxGeometry(1, 1, 1);
-  const mat = new THREE.MeshLambertMaterial({ color: 0xa0703a });
-  return new THREE.Mesh(geom, mat);
+function workbenchModelPath(): string {
+  const base =
+    typeof import.meta !== "undefined" && import.meta.env?.BASE_URL
+      ? import.meta.env.BASE_URL
+      : "/";
+  const baseTrimmed = base.endsWith("/") ? base.slice(0, -1) : base;
+  return `${baseTrimmed}/assets/models/props/workbench/Desk_glt.gltf`;
 }
 
 export class CraftingStationActor extends ActorComponent {
   readonly stationId: string;
   private readonly proximityRadius: number;
-  private mesh: THREE.Mesh | null = null;
 
   constructor(actor: Actor, options: CraftingStationActorOptions) {
     super({ actor, typeName: "CraftingStationActor" });
@@ -55,14 +55,14 @@ export class CraftingStationActor extends ActorComponent {
       options.position.y,
       options.position.z,
     );
+
+    this.actor.addComponent(ModelRenderer, {
+      path: workbenchModelPath(),
+    });
   }
 
   awake(): void {
     this.needUpdate = false;
-    const obj3D = actorObject3D(this.actor);
-    if (!obj3D) return;
-    this.mesh = buildPlaceholderMesh();
-    obj3D.add(this.mesh);
   }
 
   /**
@@ -76,17 +76,5 @@ export class CraftingStationActor extends ActorComponent {
     const dx = obj3D.position.x - player.x;
     const dz = obj3D.position.z - player.z;
     return Math.hypot(dx, dz) <= this.proximityRadius;
-  }
-
-  dispose(): void {
-    if (this.mesh) {
-      const obj3D = actorObject3D(this.actor);
-      obj3D?.remove(this.mesh);
-      this.mesh.geometry.dispose();
-      const mat = this.mesh.material as THREE.Material | THREE.Material[];
-      if (Array.isArray(mat)) for (const m of mat) m.dispose();
-      else mat.dispose();
-      this.mesh = null;
-    }
   }
 }
