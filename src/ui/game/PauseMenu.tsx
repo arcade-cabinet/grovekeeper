@@ -40,9 +40,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/primitives/tabs";
 import { RulesModal } from "./RulesModal";
 
-// FarmerMascot deleted; journey wave replaces this UI.
-const FarmerMascot = (_: { size?: number; animate?: boolean }) => null;
-
 import { StatsDashboard } from "./StatsDashboard";
 import { showToast } from "./Toast";
 
@@ -160,9 +157,6 @@ export const PauseMenu = (props: PauseMenuProps) => {
             class="flex items-center gap-3"
             style={{ color: COLORS.soilDark }}
           >
-            <span aria-hidden="true">
-              <FarmerMascot size={40} animate={false} />
-            </span>
             Grove Stats
           </DialogTitle>
         </DialogHeader>
