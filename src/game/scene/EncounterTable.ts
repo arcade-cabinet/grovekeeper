@@ -8,7 +8,7 @@
  * Tables are intentionally cozy-floor:
  *   - Meadow daytime: 2-3 rabbits, 0-1 deer, rare 0-1 wolf-pup.
  *   - Forest daytime: 1-2 rabbits, 1-2 deer, occasional 1 wolf-pup.
- *   - Coast daytime: empty for RC. Documented TODO for a later wave.
+ *   - Coast daytime: 1-2 rabbits, rare 0-1 deer, rare wolf-pup.
  *   - Grove biome: ALWAYS empty. Sacred. Spec invariant.
  *
  * Hostile rolls use independent thresholds so a hostile encounter
@@ -50,10 +50,6 @@ export function rollEncounters(ctx: EncounterRollContext): EncounterSpawn[] {
   // Grove is the most important rule — sanctuary. No rolls, no override.
   if (ctx.biome === "grove") return [];
 
-  // Coast TODO: no fauna in RC; coast biome is currently empty.
-  // (See spec §"Combat and encounters" — coast deferred.)
-  if (ctx.biome === "coast") return [];
-
   const rng = scopedRNG(
     "encounter",
     ctx.worldSeed,
@@ -88,6 +84,14 @@ export function rollEncounters(ctx: EncounterRollContext): EncounterSpawn[] {
     for (let i = 0; i < deer; i++) placeAt("deer");
     // Occasional wolf-pup (~20% chance — denser forest, more wolves).
     if (rng() < 0.2) placeAt("wolf-pup");
+  } else if (ctx.biome === "coast") {
+    // 1-2 rabbits foraging at the shoreline.
+    const rabbits = 1 + Math.floor(rng() * 2);
+    for (let i = 0; i < rabbits; i++) placeAt("rabbit");
+    // Rare deer (~30% chance — visits coast occasionally).
+    if (rng() < 0.3) placeAt("deer");
+    // Rare wolf-pup (~8% chance — thinner than forest).
+    if (rng() < 0.08) placeAt("wolf-pup");
   }
   // Night-time variant could shift toward more hostile spawns; deferred.
 
