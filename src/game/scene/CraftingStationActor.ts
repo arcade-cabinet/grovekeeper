@@ -20,6 +20,10 @@
 import { type Actor, ActorComponent } from "@jolly-pixel/engine";
 import * as THREE from "three";
 
+function actorObject3D(actor: Actor): THREE.Object3D | undefined {
+  return (actor as unknown as { object3D?: THREE.Object3D }).object3D;
+}
+
 export interface CraftingStationActorOptions {
   /**
    * Station id this actor represents. Must match the `station` field
@@ -62,11 +66,7 @@ export class CraftingStationActor extends ActorComponent {
     this.stationId = options.stationId;
     this.proximityRadius = options.proximityRadius ?? DEFAULT_PROXIMITY_RADIUS;
 
-    const obj3D = (
-      this.actor as unknown as {
-        object3D?: { position: { set(x: number, y: number, z: number): void } };
-      }
-    ).object3D;
+    const obj3D = actorObject3D(this.actor);
     obj3D?.position.set(
       options.position.x,
       options.position.y,
@@ -76,11 +76,7 @@ export class CraftingStationActor extends ActorComponent {
 
   awake(): void {
     this.needUpdate = false;
-    const obj3D = (
-      this.actor as unknown as {
-        object3D?: THREE.Object3D;
-      }
-    ).object3D;
+    const obj3D = actorObject3D(this.actor);
     if (!obj3D) return;
     this.mesh = buildPlaceholderMesh();
     obj3D.add(this.mesh);
@@ -92,11 +88,7 @@ export class CraftingStationActor extends ActorComponent {
    * the player walks on top of it.
    */
   isPlayerNear(player: { x: number; z: number }): boolean {
-    const obj3D = (
-      this.actor as unknown as {
-        object3D?: { position: { x: number; z: number } };
-      }
-    ).object3D;
+    const obj3D = actorObject3D(this.actor);
     if (!obj3D) return false;
     const dx = obj3D.position.x - player.x;
     const dz = obj3D.position.z - player.z;
@@ -105,8 +97,7 @@ export class CraftingStationActor extends ActorComponent {
 
   dispose(): void {
     if (this.mesh) {
-      const obj3D = (this.actor as unknown as { object3D?: THREE.Object3D })
-        .object3D;
+      const obj3D = actorObject3D(this.actor);
       obj3D?.remove(this.mesh);
       this.mesh.geometry.dispose();
       const mat = this.mesh.material as THREE.Material | THREE.Material[];
