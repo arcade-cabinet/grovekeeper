@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { koota } from "@/koota";
 import {
   Build,
+  FarmerState,
   GameScreen,
   IsPlayer,
   LifetimeResources,
@@ -202,9 +203,10 @@ describe("rc-actions", () => {
     });
 
     it("hydrates FarmerState stamina on existing player entity", () => {
-      const player = koota.queryFirst(IsPlayer);
-      if (!player) return;
+      const player = koota.spawn(IsPlayer(), FarmerState());
       actions().hydrateFromDb({ stamina: 75 });
+      expect(player.get(FarmerState)?.stamina).toBe(75);
+      player.destroy();
     });
   });
 });

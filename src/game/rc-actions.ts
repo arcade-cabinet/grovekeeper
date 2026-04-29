@@ -78,16 +78,11 @@ export interface HydratedGameState {
   buildMode?: boolean;
   buildTemplateId?: string | null;
   placedStructures?: { templateId: string; worldX: number; worldZ: number }[];
-  toolUpgrades?: Record<string, number>;
   hasSeenRules?: boolean;
   hapticsEnabled?: boolean;
   soundEnabled?: boolean;
   speciesProgress?: Record<string, unknown>;
   pendingCodexUnlocks?: string[];
-  marketState?: unknown;
-  merchantState?: unknown;
-  marketEventState?: unknown;
-  eventState?: unknown;
 }
 
 const gameActions = createActions((world) => ({
@@ -153,15 +148,20 @@ const gameActions = createActions((world) => ({
   },
 
   hydrateFromDb: (dbState: HydratedGameState) => {
-    if (dbState.screen !== undefined) {
-      const s = dbState.screen as
-        | "menu"
-        | "new-game"
-        | "playing"
-        | "paused"
-        | "seedSelect"
-        | "rules";
-      world.set(GameScreen, { value: s });
+    const VALID_SCREENS = [
+      "menu",
+      "new-game",
+      "playing",
+      "paused",
+      "seedSelect",
+      "rules",
+    ] as const;
+    type ScreenValue = (typeof VALID_SCREENS)[number];
+    if (
+      dbState.screen !== undefined &&
+      (VALID_SCREENS as readonly string[]).includes(dbState.screen)
+    ) {
+      world.set(GameScreen, { value: dbState.screen as ScreenValue });
     }
     if (dbState.difficulty !== undefined || dbState.permadeath !== undefined) {
       const cur = world.get(Difficulty);
