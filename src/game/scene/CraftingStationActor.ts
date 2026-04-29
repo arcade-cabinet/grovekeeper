@@ -1,20 +1,14 @@
 /**
  * CraftingStationActor — a placeable workbench Actor.
  *
- * Renders a small voxel-style workbench (placeholder cube for RC; the
- * voxel-realms `Desk_glt.gltf` Wave-3b conversion is not yet wired —
- * see TODO at the asset path). Carries a stable `stationId` (e.g.
+ * Renders a small voxel-style workbench (placeholder cube; a GLB asset
+ * swap is a post-RC goal). Carries a stable `stationId` (e.g.
  * `"primitive-workbench"`) the crafting layer reads to filter recipes.
  *
  * Player proximity: `isPlayerNear(...)` returns true when the player
  * is inside `proximityRadius` voxels (default 2). The runtime polls
  * this each frame and, when the player presses `open-craft` while
  * near a station, opens the crafting panel for that station's id.
- *
- * For RC scope this is the *first* (and currently only) crafting
- * station type. Wave 18 (journey wave) will wire one of these into
- * the starter grove on world-create. Manual placement for testing is
- * supported via the spawn helper at the bottom of this file.
  */
 
 import { type Actor, ActorComponent } from "@jolly-pixel/engine";
@@ -38,15 +32,7 @@ export interface CraftingStationActorOptions {
 
 const DEFAULT_PROXIMITY_RADIUS = 2;
 
-/**
- * Tiny helper: a wood-tone block geometry standing in for the real
- * workbench mesh. The voxel-realms desk GLB conversion (Wave 3b) lives
- * at `public/assets/models/props/workbench/Desk_glt.gltf`, but wiring
- * the engine's `ModelRenderer` here for one stationary prop costs more
- * than the visual gain at RC scope. We document the swap path in the
- * file header and leave the placeholder visible enough to find on the
- * grass.
- */
+/** Wood-tone block placeholder until the GLB asset is wired. */
 function buildPlaceholderMesh(): THREE.Mesh {
   const geom = new THREE.BoxGeometry(1, 1, 1);
   const mat = new THREE.MeshLambertMaterial({ color: 0xa0703a });
