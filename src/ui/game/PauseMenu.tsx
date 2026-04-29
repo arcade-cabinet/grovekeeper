@@ -37,7 +37,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/primitives/tabs";
 import { RulesModal } from "./RulesModal";
 
-import { StatsDashboard } from "./StatsDashboard";
 import { showToast } from "./Toast";
 
 interface PauseMenuProps {
@@ -102,7 +101,6 @@ export const PauseMenu = (props: PauseMenuProps) => {
   const soundEnabled = () => settings()?.soundEnabled ?? true;
 
   const [confirmingPrestige, setConfirmingPrestige] = createSignal(false);
-  const [statsOpen, setStatsOpen] = createSignal(false);
   const [rulesOpen, setRulesOpen] = createSignal(false);
   let importRef: HTMLInputElement | undefined;
 
@@ -716,10 +714,6 @@ export const PauseMenu = (props: PauseMenuProps) => {
           </Button>
         </div>
 
-        <StatsDashboard
-          open={statsOpen()}
-          onClose={() => setStatsOpen(false)}
-        />
         <RulesModal
           open={rulesOpen()}
           onClose={() => setRulesOpen(false)}
