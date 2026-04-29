@@ -64,8 +64,8 @@ jobs:
         # Resolve LFS and overwrite the stubs without touching vite-generated
         # JS bundles in dist/assets/*.js.
         run: |
-          git lfs fetch --all
-          git lfs checkout
+          git lfs fetch --include="public/assets/audio/,public/assets/models/"
+          git lfs checkout public/assets/audio public/assets/models
           rm -rf dist/assets/audio dist/assets/models
           cp -r public/assets/audio dist/assets/audio
           cp -r public/assets/models dist/assets/models
