@@ -27,6 +27,7 @@ import { LoadingGrove } from "@/ui/game/LoadingGrove";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameScreen } from "@/ui/game/NewGameScreen";
 import { NpcSpeechBubble } from "@/ui/game/NpcSpeechBubble";
+import { PauseMenu } from "@/ui/game/PauseMenu";
 import { RetreatOverlay } from "@/ui/game/RetreatOverlay";
 
 const GameScene = lazy(() =>
@@ -54,6 +55,7 @@ export const Game = () => {
   const quests = useTrait(koota, Quests);
 
   const [dbLoading, setDbLoading] = createSignal(true);
+  const [pauseMenuOpen, setPauseMenuOpen] = createSignal(false);
 
   onMount(() => {
     initializePlatform();
@@ -105,6 +107,21 @@ export const Game = () => {
   });
 
   const currentScreen = () => screen()?.value ?? "menu";
+
+  // Esc while playing and no other overlay is open → open pause menu.
+  createEffect(() => {
+    if (currentScreen() !== "playing") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (pauseMenuOpen()) return; // Dialog handles close itself
+      if (eventBus.craftingPanel()?.open) return;
+      if (eventBus.fastTravelOpen()) return;
+      if (eventBus.retreatOpacity() > 0) return;
+      setPauseMenuOpen(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   return (
     <Show
@@ -183,6 +200,15 @@ export const Game = () => {
 
           {/* Sub-wave D — fast-travel black-fade overlay (always mounted). */}
           <FastTravelFade />
+
+          <PauseMenu
+            open={pauseMenuOpen()}
+            onClose={() => setPauseMenuOpen(false)}
+            onMainMenu={() => {
+              setPauseMenuOpen(false);
+              gameActions().setScreen("menu");
+            }}
+          />
         </Show>
 
         <RetreatOverlay />

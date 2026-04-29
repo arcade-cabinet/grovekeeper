@@ -3,8 +3,7 @@
  *
  * Verifies:
  *   - grove biome ALWAYS returns empty (sacred invariant),
- *   - meadow / forest produce non-empty lists with curated mixes,
- *   - coast returns empty (RC TODO; will be filled in a later wave),
+ *   - meadow / forest / coast produce non-empty lists with curated mixes,
  *   - same inputs → same outputs (determinism),
  *   - different chunk coords produce different rolls.
  */
@@ -33,9 +32,16 @@ describe("EncounterTable", () => {
     expect(roll("grove", -7, 42)).toEqual([]);
   });
 
-  it("coast biome returns empty for RC", () => {
-    expect(roll("coast", 0, 0)).toEqual([]);
-    expect(roll("coast", 5, 5)).toEqual([]);
+  it("coast biome produces rabbits (1-2 per chunk)", () => {
+    let totalRabbits = 0;
+    for (let x = 0; x < 10; x++) {
+      const list = roll("coast", x, 0);
+      const rabbits = list.filter((s) => s.species === "rabbit").length;
+      expect(rabbits).toBeGreaterThanOrEqual(1);
+      expect(rabbits).toBeLessThanOrEqual(2);
+      totalRabbits += rabbits;
+    }
+    expect(totalRabbits).toBeGreaterThanOrEqual(10);
   });
 
   it("meadow biome produces at least 2 rabbits across all chunks", () => {

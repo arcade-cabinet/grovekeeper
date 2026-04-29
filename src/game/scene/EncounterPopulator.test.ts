@@ -104,7 +104,7 @@ describe("EncounterPopulator", () => {
     expect(any).toBe(true);
   });
 
-  it("coast chunks spawn ZERO creatures in RC", async () => {
+  it("coast chunks spawn at least one creature", async () => {
     const { populateEncounters } = await import("./EncounterPopulator");
     const handle = populateEncounters({
       worldSeed: 99,
@@ -115,7 +115,7 @@ describe("EncounterPopulator", () => {
       // biome-ignore lint/suspicious/noExplicitAny: stub factory
       factory: makeFactory() as any,
     });
-    expect(handle.creatures.length).toBe(0);
+    expect(handle.creatures.length).toBeGreaterThanOrEqual(1);
   });
 
   it("creatures positions land inside the chunk's world-space box", async () => {

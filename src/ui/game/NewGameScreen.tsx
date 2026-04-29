@@ -124,6 +124,15 @@ export const NewGameScreen = (props: NewGameScreenProps) => {
   const [seed, setSeed] = createSignal<string>(rollSeed());
   const [name, setName] = createSignal<string>("Gardener");
   const [error, setError] = createSignal<string | null>(null);
+  let submitRef: HTMLButtonElement | undefined;
+
+  // On iOS Safari the virtual keyboard shrinks the visual viewport,
+  // pushing tall forms off-screen. Scrolling the submit button into view
+  // whenever an input gains focus keeps it reachable without the user
+  // having to manually scroll.
+  const scrollSubmitIntoView = () => {
+    requestAnimationFrame(() => submitRef?.scrollIntoView({ block: "end" }));
+  };
 
   const trimmedName = () => name().trim();
   const canSubmit = () => trimmedName().length > 0 && seed().trim().length > 0;
@@ -166,7 +175,7 @@ export const NewGameScreen = (props: NewGameScreenProps) => {
 
   return (
     <div
-      class="relative min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden"
+      class="relative min-h-dvh w-full flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto overflow-x-hidden"
       style={{
         background: `linear-gradient(180deg, ${COLORS.skyMist} 0%, ${COLORS.leafLight}40 45%, ${COLORS.forestGreen}40 100%)`,
       }}
@@ -327,6 +336,7 @@ export const NewGameScreen = (props: NewGameScreenProps) => {
               type="text"
               value={name()}
               onInput={(e) => setName(e.currentTarget.value)}
+              onFocus={scrollSubmitIntoView}
               class="min-h-[44px] sm:min-h-[48px] rounded-lg px-4 py-2.5 text-base focus:outline-none focus:ring-2"
               style={{
                 background: "rgba(255, 255, 255, 0.85)",
@@ -353,6 +363,7 @@ export const NewGameScreen = (props: NewGameScreenProps) => {
                 type="text"
                 value={seed()}
                 onInput={(e) => setSeed(e.currentTarget.value)}
+                onFocus={scrollSubmitIntoView}
                 class="flex-1 min-h-[44px] sm:min-h-[48px] rounded-lg px-4 py-2.5 text-base font-mono tracking-widest focus:outline-none focus:ring-2"
                 style={{
                   background: "rgba(255, 255, 255, 0.85)",
@@ -394,6 +405,7 @@ export const NewGameScreen = (props: NewGameScreenProps) => {
 
         <div class="flex flex-col gap-2.5 mt-1">
           <button
+            ref={submitRef}
             type="submit"
             disabled={!canSubmit()}
             class="w-full min-h-[48px] sm:min-h-[52px] rounded-xl text-base sm:text-lg font-bold tracking-wide transition-all hover:brightness-110 hover:translate-y-[-1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none disabled:translate-y-0"
