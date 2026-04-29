@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { actions as gameActions } from "@/actions";
 import { koota } from "@/koota";
 import { Difficulty } from "@/traits";
 import {
@@ -10,7 +9,7 @@ import {
 
 describe("Difficulty System", () => {
   beforeEach(() => {
-    gameActions().resetGame();
+    koota.set(Difficulty, { id: "normal", permadeath: false });
   });
 
   describe("DIFFICULTY_TIERS", () => {
