@@ -60,10 +60,8 @@ export class CraftingStationProximityBehavior extends ActorComponent {
 
   update(_deltaMs: number): void {
     const player = this.getPlayerPosition();
-    let nearStation = false;
     for (const station of this.getStations()) {
       if (station.isPlayerNear(player)) {
-        nearStation = true;
         const panelOpen = eventBus.craftingPanel()?.open === true;
         if (!panelOpen) {
           eventBus.emitInteractCue({
@@ -83,7 +81,8 @@ export class CraftingStationProximityBehavior extends ActorComponent {
         return;
       }
     }
-    if (!nearStation && !this.isPlacementActive()) {
+    // No station nearby — clear cue unless placement mode is showing its own cue.
+    if (!this.isPlacementActive()) {
       eventBus.emitInteractCue(null);
     }
   }
