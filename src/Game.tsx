@@ -23,6 +23,7 @@ import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { FastTravelFade } from "@/ui/game/FastTravelFade";
 import { FastTravelMenu } from "@/ui/game/FastTravelMenu";
 import { HearthPrompt } from "@/ui/game/HearthPrompt";
+import { InteractCuePrompt } from "@/ui/game/InteractCuePrompt";
 import { InventoryHUD } from "@/ui/game/InventoryHUD";
 import { LoadingGrove } from "@/ui/game/LoadingGrove";
 import { MainMenu } from "@/ui/game/MainMenu";
@@ -203,6 +204,9 @@ export const Game = () => {
 
           {/* Sub-wave D — hearth proximity prompt (above canvas, below modals). */}
           <HearthPrompt />
+
+          {/* Contextual interact cue — "Press E to craft / place / gather". */}
+          <InteractCuePrompt />
 
           {/* Sub-wave D — fast-travel menu, opened by interacting with a lit hearth. */}
           <FastTravelMenuConnected />

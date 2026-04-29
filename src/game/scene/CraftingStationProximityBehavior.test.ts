@@ -22,12 +22,15 @@ vi.mock("@jolly-pixel/engine", () => ({
 }));
 
 const mockEmitCraftingPanel = vi.fn();
+const mockEmitInteractCue = vi.fn();
 vi.mock("@/runtime/eventBus", () => ({
   eventBus: {
     emitCraftingPanel: (...args: unknown[]) => mockEmitCraftingPanel(...args),
+    emitInteractCue: (...args: unknown[]) => mockEmitInteractCue(...args),
     emitNpcSpeech: vi.fn(),
     npcSpeech: () => null,
     craftingPanel: () => null,
+    interactCue: () => null,
   },
 }));
 

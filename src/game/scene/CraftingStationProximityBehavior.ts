@@ -50,17 +50,27 @@ export class CraftingStationProximityBehavior extends ActorComponent {
   }
 
   update(_deltaMs: number): void {
-    const button = this.input.getActionState("open-craft");
-    if (!button.justPressed) return;
     const player = this.getPlayerPosition();
+    let nearStation = false;
     for (const station of this.getStations()) {
       if (station.isPlayerNear(player)) {
-        eventBus.emitCraftingPanel({
-          stationId: station.stationId,
-          open: true,
+        nearStation = true;
+        eventBus.emitInteractCue({
+          variant: "craft",
+          label: "Press E to craft",
         });
-        return; // first match wins; one panel at a time.
+        const button = this.input.getActionState("open-craft");
+        if (button.justPressed) {
+          eventBus.emitCraftingPanel({
+            stationId: station.stationId,
+            open: true,
+          });
+        }
+        return;
       }
+    }
+    if (!nearStation) {
+      eventBus.emitInteractCue(null);
     }
   }
 }

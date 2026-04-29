@@ -819,6 +819,9 @@ export async function createRuntime(
       // Keep local state in sync with the current anchor + blueprint.
       placeModeState = enterPlacing(placeModeState, blueprintId, anchor);
 
+      // Teach the player what to press.
+      eventBus.emitInteractCue({ variant: "place", label: "Press E to place" });
+
       const button = inputManager.getActionState("interact");
       if (!button.pressed || !button.justPressed) return;
 
@@ -871,8 +874,9 @@ export async function createRuntime(
         } catch {
           // Silent — the block was placed regardless.
         }
-        // Clear build mode on the koota world trait.
+        // Clear build mode on the koota world trait and interact cue.
         koota.set(Build, { mode: false, templateId: null });
+        eventBus.emitInteractCue(null);
         playSound("ui.click");
       }
     },
