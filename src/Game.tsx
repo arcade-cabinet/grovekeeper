@@ -226,7 +226,6 @@ export const Game = () => {
           <div
             class="fixed top-4 right-4 pointer-events-none"
             style={{ "z-index": 50 }}
-            aria-hidden="true"
           >
             <StaminaGauge />
           </div>

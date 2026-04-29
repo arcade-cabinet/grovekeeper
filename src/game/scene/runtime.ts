@@ -149,9 +149,11 @@ export async function createRuntime(
   sceneSource.add(dir);
 
   // Koota player entity — must exist before any system that reads
-  // IsPlayer + FarmerState (combat, stamina). Idempotent within a
-  // session since createRuntime is only called once.
-  spawnPlayer();
+  // IsPlayer + FarmerState (combat, stamina). Guard against duplicate
+  // spawns if GameScene remounts (HMR, route change, React StrictMode).
+  if (!koota.queryFirst(IsPlayer, FarmerState)) {
+    spawnPlayer();
+  }
 
   // Input — action-mapped wrapper over the engine's `world.input`.
   // The InputManager is a plain object; the engine doesn't know about
@@ -744,16 +746,23 @@ export async function createRuntime(
       playSwing: () => playerBehavior.playSwingClip(),
     },
     onSwing: () => {
-      const allCreatures = [...populatedEncountersMap.values()].flatMap(
-        (h) => h.creatures as import("./CreatureActor").CreatureActor[],
-      );
-      swingHit(
-        {
-          x: playerActor.object3D.position.x,
-          z: playerActor.object3D.position.z,
-        },
-        allCreatures,
-      );
+      const px = playerActor.object3D.position.x;
+      const pz = playerActor.object3D.position.z;
+      const pcx = Math.floor(px / CHUNK_SIZE);
+      const pcz = Math.floor(pz / CHUNK_SIZE);
+      const nearbyCreatures: import("./CreatureActor").CreatureActor[] = [];
+      for (let dz = -1; dz <= 1; dz++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const handle = populatedEncountersMap.get(
+            groveGlowKey(pcx + dx, pcz + dz),
+          );
+          if (handle)
+            nearbyCreatures.push(
+              ...(handle.creatures as import("./CreatureActor").CreatureActor[]),
+            );
+        }
+      }
+      swingHit({ x: px, z: pz }, nearbyCreatures);
     },
   });
   const gatherTickActor = world.createActor("gather-tick");

@@ -24,7 +24,7 @@ const WORLD_ID = "rc-world-default";
 export const InventoryHUD = () => {
   // Track inventoryVersion as a reactive dependency so we re-query on change.
   const items = createMemo(() => {
-    void eventBus.inventoryVersion();
+    eventBus.inventoryVersion();
     if (!isDbInitialized()) return [];
     try {
       const rows = inventoryRepo.listItems(getDb().db, WORLD_ID);
@@ -38,8 +38,7 @@ export const InventoryHUD = () => {
 
   return (
     <Show when={items().length > 0}>
-      <div
-        role="region"
+      <section
         aria-label="Inventory"
         class="flex flex-wrap gap-1 pointer-events-none"
         style={{
@@ -69,7 +68,7 @@ export const InventoryHUD = () => {
             );
           }}
         </For>
-      </div>
+      </section>
     </Show>
   );
 };
