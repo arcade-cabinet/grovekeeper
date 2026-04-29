@@ -262,6 +262,7 @@ export class VillagerActor extends ActorComponent {
   }
 
   setOpacity(alpha: number): void {
+    const a = Number.isFinite(alpha) ? Math.min(1, Math.max(0, alpha)) : 1;
     this.renderer.group.traverse((obj) => {
       const mesh = obj as { isMesh?: boolean; material?: unknown };
       if (!mesh.isMesh) return;
@@ -271,8 +272,8 @@ export class VillagerActor extends ActorComponent {
       for (const mat of mats) {
         const m = mat as { transparent?: boolean; opacity?: number } | null;
         if (!m) continue;
-        m.transparent = alpha < 1;
-        m.opacity = alpha;
+        m.transparent = a < 1;
+        m.opacity = a;
       }
     });
   }
