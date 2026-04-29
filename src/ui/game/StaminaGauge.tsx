@@ -57,7 +57,9 @@ export const StaminaGauge = () => {
     maxStamina() > 0 ? Math.round((stamina() / maxStamina()) * 100) : 0;
   const staminaColor = () => {
     const p = staminaPct();
-    return p < 25 ? "#E76F51" : p < 50 ? "#F4A261" : "#52B788";
+    if (p < 25) return "#E76F51";
+    if (p < 50) return "#F4A261";
+    return "#52B788";
   };
 
   const hp = () => fs()?.hp ?? 100;
@@ -65,7 +67,9 @@ export const StaminaGauge = () => {
   const hpPct = () => (maxHp() > 0 ? Math.round((hp() / maxHp()) * 100) : 0);
   const hpColor = () => {
     const p = hpPct();
-    return p < 25 ? "#C62828" : p < 50 ? "#E53935" : "#EF9A9A";
+    if (p < 25) return "#C62828";
+    if (p < 50) return "#E53935";
+    return "#EF9A9A";
   };
 
   return (
