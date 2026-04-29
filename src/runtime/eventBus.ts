@@ -132,6 +132,14 @@ const [interactCue, setInteractCue] = createSignal<InteractCueEvent | null>(
 );
 
 /**
+ * Inventory-changed bump counter. Incremented by the runtime every time
+ * `addInventory` writes to the DB. SolidJS components track this signal
+ * as a reactive dependency and re-query `inventoryRepo` when it ticks.
+ * Never read the value — only use it as a dependency trigger.
+ */
+const [inventoryVersion, setInventoryVersion] = createSignal(0);
+
+/**
  * Sub-wave C — emitted when grove claim succeeds. Sub-wave A's
  * `ClaimRitualSystem` should call this so listeners (e.g. the
  * recipe-gating hook for the starter axe) can react without taking
@@ -191,6 +199,11 @@ export const eventBus = {
   firstMoveDone: firstMoveDone as Accessor<boolean>,
   /** Reactive accessor — current interact cue (or null). */
   interactCue: interactCue as Accessor<InteractCueEvent | null>,
+
+  /** Notify the UI that the player's inventory changed (DB already written). */
+  emitInventoryChanged: () => setInventoryVersion((v) => v + 1),
+  /** Reactive bump counter — subscribe to know when inventory changed. */
+  inventoryVersion: inventoryVersion as Accessor<number>,
 
   // ── Sub-wave C — grove claim event hook ──────────────────────────
   /** Subscribe to grove-claimed events. Returns an unsubscribe fn. */

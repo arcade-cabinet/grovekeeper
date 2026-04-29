@@ -1,13 +1,12 @@
-import { createSignal, For, Show } from "solid-js";
+import { createMemo, createSignal, For, Show } from "solid-js";
 import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
-import { getDifficultyById } from "@/config/difficulty";
-import { TOOLS } from "@/config/tools";
-import { TREE_SPECIES } from "@/config/trees";
-import { isDbInitialized } from "@/db/client";
+import { getDb, isDbInitialized } from "@/db/client";
 import { exportSaveFile, importSaveFile } from "@/db/export";
+import { grovesRepo, inventoryRepo } from "@/db/repos";
 import { useTrait } from "@/ecs/solid";
 import { koota } from "@/koota";
+import { eventBus } from "@/runtime/eventBus";
 import { ACHIEVEMENT_DEFS } from "@/systems/achievements";
 import {
   canAffordExpansion,
@@ -22,12 +21,10 @@ import {
 } from "@/systems/prestige";
 import {
   Achievements,
-  Difficulty,
   Grid,
   PlayerProgress,
   Resources,
   Settings,
-  Tracking,
 } from "@/traits";
 import { Button } from "@/ui/primitives/button";
 import { Card } from "@/ui/primitives/card";
@@ -39,9 +36,6 @@ import {
 } from "@/ui/primitives/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/primitives/tabs";
 import { RulesModal } from "./RulesModal";
-
-// FarmerMascot deleted; journey wave replaces this UI.
-const FarmerMascot = (_: { size?: number; animate?: boolean }) => null;
 
 import { StatsDashboard } from "./StatsDashboard";
 import { showToast } from "./Toast";
@@ -72,32 +66,45 @@ export const PauseMenu = (props: PauseMenuProps) => {
   const achievementsTrait = useTrait(koota, Achievements);
   const gridTrait = useTrait(koota, Grid);
   const settings = useTrait(koota, Settings);
-  const difficultyTrait = useTrait(koota, Difficulty);
-  const tracking = useTrait(koota, Tracking);
-
   const resources = () =>
     resourcesTrait() ?? { timber: 0, sap: 0, fruit: 0, acorns: 0 };
   const achievements = (): string[] => achievementsTrait()?.items ?? [];
+
+  const RC_WORLD_ID = "rc-world-default";
+  const rcInventory = createMemo(() => {
+    eventBus.inventoryVersion();
+    if (!isDbInitialized()) return [];
+    try {
+      return inventoryRepo
+        .listItems(getDb().db, RC_WORLD_ID)
+        .filter((r) => r.count > 0);
+    } catch {
+      return [];
+    }
+  });
+  const rcGroves = createMemo(() => {
+    eventBus.inventoryVersion();
+    if (!isDbInitialized()) return { discovered: 0, claimed: 0 };
+    try {
+      const all = grovesRepo.listGrovesByWorld(getDb().db, RC_WORLD_ID);
+      return {
+        discovered: all.length,
+        claimed: all.filter((g) => g.state === "claimed").length,
+      };
+    } catch {
+      return { discovered: 0, claimed: 0 };
+    }
+  });
   const gridSize = () => gridTrait()?.gridSize ?? 12;
-  const difficulty = () => difficultyTrait()?.id ?? "normal";
-  const coins = () => progress()?.coins ?? 0;
-  const xp = () => progress()?.xp ?? 0;
   const level = () => progress()?.level ?? 1;
-  const unlockedSpecies = () => progress()?.unlockedSpecies ?? ["white-oak"];
-  const unlockedTools = () =>
-    progress()?.unlockedTools ?? ["trowel", "watering-can"];
   const prestigeCount = () => progress()?.prestigeCount ?? 0;
   const activeBorderCosmetic = () => progress()?.activeBorderCosmetic ?? null;
   const soundEnabled = () => settings()?.soundEnabled ?? true;
-  const treesPlanted = () => tracking()?.treesPlanted ?? 0;
-  const treesMatured = () => tracking()?.treesMatured ?? 0;
 
   const [confirmingPrestige, setConfirmingPrestige] = createSignal(false);
   const [statsOpen, setStatsOpen] = createSignal(false);
   const [rulesOpen, setRulesOpen] = createSignal(false);
   let importRef: HTMLInputElement | undefined;
-
-  const diffTier = () => getDifficultyById(difficulty());
 
   const expandGrid = () => gameActions().expandGrid();
   const performPrestige = () => gameActions().performPrestige();
@@ -160,9 +167,6 @@ export const PauseMenu = (props: PauseMenuProps) => {
             class="flex items-center gap-3"
             style={{ color: COLORS.soilDark }}
           >
-            <span aria-hidden="true">
-              <FarmerMascot size={40} animate={false} />
-            </span>
             Grove Stats
           </DialogTitle>
         </DialogHeader>
@@ -188,107 +192,69 @@ export const PauseMenu = (props: PauseMenuProps) => {
 
           {/* ── Stats tab ── */}
           <TabsContent value="stats" class="space-y-3 mt-2">
+            {/* Grove progress */}
             <Card class="p-4" style={{ background: "white" }}>
+              <h4
+                class="text-sm font-bold mb-3"
+                style={{ color: COLORS.soilDark }}
+              >
+                Groves
+              </h4>
               <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p class="text-gray-500">Level</p>
+                  <p class="text-gray-500">Discovered</p>
                   <p
                     class="text-xl font-bold"
                     style={{ color: COLORS.forestGreen }}
                   >
-                    {level()}
+                    {rcGroves().discovered}
                   </p>
                 </div>
                 <div>
-                  <p class="text-gray-500">XP</p>
-                  <p
-                    class="text-xl font-bold"
-                    style={{ color: COLORS.forestGreen }}
-                  >
-                    {xp()}
-                  </p>
-                </div>
-                <div>
-                  <p class="text-gray-500">Coins</p>
-                  <p
-                    class="text-xl font-bold"
-                    style={{ color: COLORS.autumnGold }}
-                  >
-                    {coins()}
-                  </p>
-                </div>
-                <div>
-                  <p class="text-gray-500">Trees Planted</p>
+                  <p class="text-gray-500">Claimed</p>
                   <p
                     class="text-xl font-bold"
                     style={{ color: COLORS.leafLight }}
                   >
-                    {treesPlanted()}
-                  </p>
-                </div>
-                <div>
-                  <p class="text-gray-500">Trees Matured</p>
-                  <p
-                    class="text-xl font-bold"
-                    style={{ color: COLORS.leafLight }}
-                  >
-                    {treesMatured()}
-                  </p>
-                </div>
-                <div>
-                  <p class="text-gray-500">Grid Size</p>
-                  <p
-                    class="text-xl font-bold"
-                    style={{ color: COLORS.forestGreen }}
-                  >
-                    {gridSize()}x{gridSize()}
+                    {rcGroves().claimed}
                   </p>
                 </div>
               </div>
             </Card>
 
-            <div class="text-sm text-gray-600">
-              <p>
-                Species unlocked: {unlockedSpecies().length}/
-                {TREE_SPECIES.length}
-              </p>
-              <p>
-                Tools unlocked: {unlockedTools().length}/{TOOLS.length}
-              </p>
-              <Show when={prestigeCount() > 0}>
-                <p style={{ color: COLORS.autumnGold }}>
-                  Prestige: {prestigeCount()}
-                </p>
-              </Show>
-              <Show when={diffTier()}>
-                {(tier) => (
-                  <p class="flex items-center gap-1.5 mt-1">
-                    <span
-                      class="inline-block px-2 py-0.5 rounded-full text-xs font-bold text-white"
-                      style={{ background: tier().color }}
-                    >
-                      {tier().name}
-                    </span>
-                    <span class="text-xs text-gray-400">
-                      difficulty (locked)
-                    </span>
+            {/* Inventory */}
+            <Card class="p-4" style={{ background: "white" }}>
+              <h4
+                class="text-sm font-bold mb-3"
+                style={{ color: COLORS.soilDark }}
+              >
+                Inventory
+              </h4>
+              <Show
+                when={rcInventory().length > 0}
+                fallback={
+                  <p class="text-xs text-gray-400 italic">
+                    Nothing gathered yet.
                   </p>
-                )}
+                }
+              >
+                <div class="space-y-1">
+                  <For each={rcInventory()}>
+                    {(row) => (
+                      <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">{row.itemId}</span>
+                        <span
+                          class="font-bold tabular-nums"
+                          style={{ color: COLORS.soilDark }}
+                        >
+                          {row.count}
+                        </span>
+                      </div>
+                    )}
+                  </For>
+                </div>
               </Show>
-            </div>
-
-            <Button
-              class="w-full"
-              variant="outline"
-              size="sm"
-              style={{
-                "border-color": COLORS.barkBrown,
-                color: COLORS.soilDark,
-              }}
-              onClick={() => setStatsOpen(true)}
-            >
-              Full Stats Dashboard
-            </Button>
+            </Card>
           </TabsContent>
 
           {/* ── Progress tab (Achievements, Grid, Prestige) ── */}

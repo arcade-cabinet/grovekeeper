@@ -21,10 +21,14 @@
 
 import { actions as gameActions } from "@/actions";
 import type { ResourceType } from "@/config/resources";
+import { getDb, isDbInitialized } from "@/db/client";
+import { inventoryRepo } from "@/db/repos";
 import { koota } from "@/koota";
 import { movePlayerTo } from "@/player-actions/GameActions";
 import { eventBus } from "@/runtime/eventBus";
 import { CurrentSeason, IsPlayer, Position, WorldMeta } from "@/traits";
+
+const RC_WORLD_ID = "rc-world-default";
 
 /**
  * Map of `resource.kind` strings the e2e suite uses (e.g. "material.log",
@@ -125,8 +129,17 @@ export function buildDebugActions() {
      */
     addResource(kind: string, count: number): void {
       const resolved = resolveResource(kind);
-      if (resolved === null) return;
-      a.addResource(resolved, count);
+      if (resolved !== null) a.addResource(resolved, count);
+      // Also write to inventoryRepo (RC drizzle path) so CraftingPanel sees
+      // the materials. The item id is the raw kind string (e.g. "material.log").
+      if (isDbInitialized()) {
+        try {
+          inventoryRepo.addItem(getDb().db, RC_WORLD_ID, kind, count);
+          eventBus.emitInventoryChanged();
+        } catch {
+          // Silent — debug surface, degraded mode is fine.
+        }
+      }
     },
 
     // ── Chop / interaction stubs ────────────────────────────────────

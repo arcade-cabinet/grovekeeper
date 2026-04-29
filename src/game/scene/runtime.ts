@@ -36,6 +36,16 @@ import {
 } from "@/db/repos";
 import { claimGrove, getGroveById, lightHearth } from "@/db/repos/grovesRepo";
 import { createWorld, getWorld } from "@/db/repos/worldsRepo";
+import {
+  anchorInFrontOfPlayer,
+  commitPlacing,
+  enterPlacing,
+  IDLE_STATE,
+} from "@/game/building/placeMode";
+import { commitBlueprintPlacement } from "@/game/building/placement";
+import type { PlaceModeState } from "@/game/building/types";
+import { dispatchPlayerHit, swingHit } from "@/game/combat/combatSystem";
+import { canSwing, spendSwingStamina } from "@/game/combat/swingStamina";
 import { listAllRecipes } from "@/game/crafting";
 import { pickScriptedSpiritLine } from "@/game/dialogue/dialogueSystem";
 import {
@@ -67,11 +77,18 @@ import {
   mountNipplejsAdapter,
   type NipplejsAdapterHandle,
 } from "@/input";
+import { koota, spawnPlayer } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
+import { staminaSystem } from "@/systems/stamina";
+import { Build, FarmerState, IsPlayer } from "@/traits";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
 import { ClaimRitualSystem } from "./ClaimRitualSystem";
 import { CraftingStationActor } from "./CraftingStationActor";
 import { CraftingStationProximityBehavior } from "./CraftingStationProximityBehavior";
+import {
+  type PopulatedEncounters,
+  populateEncounters,
+} from "./EncounterPopulator";
 import {
   type ClaimedGroveNode,
   FastTravelController,
@@ -84,6 +101,7 @@ import { InteractionTickBehavior } from "./InteractionTickBehavior";
 import npcConfig from "./npc.config.json";
 import { PlayerActor } from "./PlayerActor";
 import playerConfig from "./player.config.json";
+import { RetreatSystem } from "./RetreatSystem";
 
 /** Hardcoded RC world id — Wave 10 single-world. Journey wave wires real selection. */
 const RC_WORLD_ID = "rc-world-default";
@@ -129,6 +147,13 @@ export async function createRuntime(
   const dir = new THREE.DirectionalLight(new THREE.Color("#fff7e0"), 1.4);
   dir.position.set(20, 40, 30);
   sceneSource.add(dir);
+
+  // Koota player entity — must exist before any system that reads
+  // IsPlayer + FarmerState (combat, stamina). Guard against duplicate
+  // spawns if GameScene remounts (HMR, route change, React StrictMode).
+  if (!koota.queryFirst(IsPlayer, FarmerState)) {
+    spawnPlayer();
+  }
 
   // Input — action-mapped wrapper over the engine's `world.input`.
   // The InputManager is a plain object; the engine doesn't know about
@@ -178,6 +203,8 @@ export async function createRuntime(
   // We swallow DB-init failures so a broken IndexedDB layer doesn't
   // block scene boot; discovery just becomes a no-op in that case.
   let dbHandle: Awaited<ReturnType<typeof getDbAsync>> | null = null;
+  let unsubGroveClaimed: (() => void) | null = null;
+  let unsubFastTravelStart: (() => void) | null = null;
   try {
     dbHandle = await getDbAsync();
     const isFreshWorld = !getWorld(dbHandle.db, RC_WORLD_ID);
@@ -208,7 +235,7 @@ export async function createRuntime(
     // emits `groveClaimed`, learn `recipe.starter-axe`. We register
     // here (not inside the claim system) so this hook lives next to
     // the persistence layer it touches. `learnRecipe` is idempotent.
-    eventBus.onGroveClaimed((ev) => {
+    unsubGroveClaimed = eventBus.onGroveClaimed((ev) => {
       if (!dbHandle) return;
       try {
         recipesRepo.learnRecipe(dbHandle.db, ev.worldId, "recipe.starter-axe");
@@ -241,10 +268,37 @@ export async function createRuntime(
   // deterministic in `(worldSeed, chunkX, chunkZ)`.
   const populatedGroves = new Map<string, PopulatedGrove>();
 
+  // Wave 14/15 — encounter registry. Non-grove chunks get creature
+  // encounters populated here and torn down on despawn.
+  const populatedEncountersMap = new Map<string, PopulatedEncounters>();
+
   const chunkHooks: ChunkManagerHooks = {
     onChunkSpawned: ({ chunkX, chunkZ, biome, actor }) => {
-      if (biome !== "grove") return;
       const key = groveGlowKey(chunkX, chunkZ);
+
+      // Non-grove chunks: populate creature encounters.
+      if (biome !== "grove") {
+        if (!populatedEncountersMap.has(key)) {
+          let creatureIdx = 0;
+          const handle = populateEncounters({
+            worldSeed: RC_WORLD_SEED,
+            chunkX,
+            chunkZ,
+            biome,
+            surfaceY: ChunkActor.SURFACE_Y + 1,
+            factory: {
+              createActor: () =>
+                world.createActor(
+                  `creature-${chunkX}-${chunkZ}-${creatureIdx++}`,
+                ),
+            },
+            onPlayerHit: (damage) => dispatchPlayerHit(koota, damage),
+          });
+          populatedEncountersMap.set(key, handle);
+        }
+        return;
+      }
+
       // Wait for the chunk's mesh to land before traversing it; the
       // load is async, so a sync traversal here would find an empty
       // subtree.
@@ -312,6 +366,11 @@ export async function createRuntime(
         grove.dispose();
         populatedGroves.delete(key);
       }
+      const encounters = populatedEncountersMap.get(key);
+      if (encounters) {
+        encounters.dispose();
+        populatedEncountersMap.delete(key);
+      }
     },
   };
 
@@ -378,6 +437,7 @@ export async function createRuntime(
       z: playerBehavior.position.z,
     }),
     input: inputManager,
+    isPlacementActive: () => koota.get(Build)?.mode ?? false,
   });
 
   // Wave 11b — interaction system. Polls the `interact` action's rising
@@ -656,6 +716,7 @@ export async function createRuntime(
     const result = applyInventoryCap(itemId, count, { currentCounts: counts });
     if (result.accepted > 0) {
       inventoryRepo.addItem(dbHandle.db, RC_WORLD_ID, itemId, result.accepted);
+      eventBus.emitInventoryChanged();
     }
     return result;
   }
@@ -679,8 +740,29 @@ export async function createRuntime(
       inventoryAdd: () => playSound("ui.inventory.add"),
       inventoryFull: () => playSound("ui.inventory.full"),
     },
+    canSwing: () => canSwing(koota),
+    consumeSwingStamina: () => spendSwingStamina(koota),
     animation: {
       playSwing: () => playerBehavior.playSwingClip(),
+    },
+    onSwing: () => {
+      const px = playerActor.object3D.position.x;
+      const pz = playerActor.object3D.position.z;
+      const pcx = Math.floor(px / CHUNK_SIZE);
+      const pcz = Math.floor(pz / CHUNK_SIZE);
+      const nearbyCreatures: import("./CreatureActor").CreatureActor[] = [];
+      for (let dz = -1; dz <= 1; dz++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const handle = populatedEncountersMap.get(
+            groveGlowKey(pcx + dx, pcz + dz),
+          );
+          if (handle)
+            nearbyCreatures.push(
+              ...(handle.creatures as import("./CreatureActor").CreatureActor[]),
+            );
+        }
+      }
+      swingHit({ x: px, z: pz }, nearbyCreatures);
     },
   });
   const gatherTickActor = world.createActor("gather-tick");
@@ -707,6 +789,125 @@ export async function createRuntime(
     discovery: groveDiscovery,
     playerPosition: playerActor.object3D.position,
   });
+  // Stamina regen — 2/sec scaled by difficulty. Must run every frame
+  // so the regen is smooth; `onTickDelta` receives milliseconds which
+  // we convert to seconds before passing to `staminaSystem`.
+  const staminaTickActor = world.createActor("stamina-tick");
+  staminaTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () => {},
+    onTickDelta: (deltaMs) => staminaSystem(deltaMs / 1000),
+  });
+
+  // Wave 13 — placement tick. Watches the `Build` koota world trait:
+  // when `mode === true`, the player is holding a blueprint. On a
+  // rising-edge `interact` press we anchor the blueprint one voxel in
+  // front of the player, commit it to the chunk mesh + DB, consume the
+  // inventory item, and clear build mode. Cancels on Escape (handled
+  // by the hearthTick / interactionTick Escape → pause path; here we
+  // just guard the interact path and let the player walk away).
+  let placeModeState: PlaceModeState = IDLE_STATE;
+  const placementTickActor = world.createActor("placement-tick");
+  placementTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () => {
+      const build = koota.get(Build);
+      if (!build?.mode || !build.templateId) {
+        // Sync local state machine with the koota trait.
+        if (placeModeState.kind !== "idle") {
+          placeModeState = IDLE_STATE;
+          eventBus.emitInteractCue(null);
+        }
+        return;
+      }
+
+      const blueprintId = build.templateId;
+      const px = playerActor.object3D.position.x;
+      const pz = playerActor.object3D.position.z;
+      const yaw = playerActor.object3D.rotation?.y ?? 0;
+      const anchor = anchorInFrontOfPlayer(
+        { x: px, z: pz, yaw },
+        ChunkActor.SURFACE_Y,
+        1.5,
+      );
+
+      if (!dbHandle) return;
+
+      // Keep local state in sync with the current anchor + blueprint.
+      placeModeState = enterPlacing(placeModeState, blueprintId, anchor);
+      eventBus.emitInteractCue({ variant: "place", label: "Press E to place" });
+
+      const button = inputManager.getActionState("interact");
+      if (!button.pressed || !button.justPressed) return;
+
+      // Commit the blueprint to the live mesh + DB.
+      const cx = Math.floor(anchor.x / CHUNK_SIZE);
+      const cz = Math.floor(anchor.z / CHUNK_SIZE);
+      const biomeId = assignBiome(RC_WORLD_SEED, cx, cz);
+
+      const setBlock = (
+        pos: import("@/game/building/types").VoxelCoord,
+        blockId: string,
+      ): boolean => {
+        const bcx = Math.floor(pos.x / CHUNK_SIZE);
+        const bcz = Math.floor(pos.z / CHUNK_SIZE);
+        const lx = pos.x - bcx * CHUNK_SIZE;
+        const lz = pos.z - bcz * CHUNK_SIZE;
+        // Write to in-memory mod overlay so blockAt sees it immediately.
+        let mem = memoryMods.get(memoryKey(bcx, bcz));
+        if (!mem) {
+          mem = new Map();
+          memoryMods.set(memoryKey(bcx, bcz), mem);
+        }
+        mem.set(voxelKey(lx, pos.y, lz), blockId);
+        // Persist via chunksRepo so the block survives chunk reload.
+        const chunkBiome = assignBiome(RC_WORLD_SEED, bcx, bcz);
+        try {
+          chunksRepo.applyBlockMod(
+            dbHandle.db,
+            RC_WORLD_ID,
+            bcx,
+            bcz,
+            chunkBiome,
+            { x: lx, y: pos.y, z: lz, op: "set", blockId },
+          );
+        } catch {
+          // In-memory overlay still valid; placement visible this session.
+        }
+        // Write to live chunk mesh.
+        const chunk = chunkManager.getChunk(bcx, bcz);
+        if (chunk) {
+          chunk.setBlockLocal(lx, pos.y, lz, blockId);
+        }
+        return true;
+      };
+
+      const result = commitBlueprintPlacement({
+        db: dbHandle.db,
+        worldId: RC_WORLD_ID,
+        groveId: `grove-${cx}-${cz}`,
+        blueprintId,
+        anchor,
+        chunkSize: CHUNK_SIZE,
+        biome: biomeId,
+        setBlock,
+      });
+
+      if (result.success) {
+        placeModeState = commitPlacing(placeModeState);
+        // Consume the blueprint from inventory.
+        try {
+          inventoryRepo.addItem(dbHandle.db, RC_WORLD_ID, blueprintId, -1);
+          eventBus.emitInventoryChanged();
+        } catch {
+          // Silent — the block was placed regardless.
+        }
+        // Clear build mode on the koota world trait and interact cue.
+        koota.set(Build, { mode: false, templateId: null });
+        eventBus.emitInteractCue(null);
+        playSound("ui.click");
+      }
+    },
+  });
+
   // Threshold tick: rides on the same per-frame pump via a thin shim.
   const thresholdTickActor = world.createActor("threshold-tick");
   thresholdTickActor.addComponentAndGet(InteractionTickBehavior, {
@@ -715,6 +916,72 @@ export async function createRuntime(
         x: playerActor.object3D.position.x,
         z: playerActor.object3D.position.z,
       }),
+  });
+
+  // Wave 14/15 — retreat system. Watches HP + stamina; on zero, fades
+  // to black, teleports the player to the nearest claimed grove (or the
+  // starter grove if none claimed), restores vitals to 50%, then fades
+  // back. The `emitRetreatOpacity` bus signal drives <RetreatOverlay>.
+  const retreatSystem = new RetreatSystem({
+    vitals: {
+      get() {
+        const player = koota.queryFirst(IsPlayer, FarmerState);
+        if (!player) return null;
+        const fs = player.get(FarmerState);
+        if (!fs) return null;
+        return {
+          hp: fs.hp,
+          hpMax: fs.maxHp,
+          stamina: fs.stamina,
+          staminaMax: fs.maxStamina,
+        };
+      },
+      restore(fraction) {
+        const player = koota.queryFirst(IsPlayer, FarmerState);
+        if (!player) return;
+        const fs = player.get(FarmerState);
+        if (!fs) return;
+        player.set(FarmerState, {
+          ...fs,
+          hp: Math.round(fs.maxHp * fraction),
+          stamina: Math.round(fs.maxStamina * fraction),
+        });
+      },
+    },
+    teleporter: {
+      teleport(worldX, worldZ) {
+        playerActor.object3D.position.set(
+          worldX,
+          ChunkActor.SURFACE_Y + 1,
+          worldZ,
+        );
+      },
+    },
+    groves: {
+      list() {
+        if (!dbHandle) return [];
+        try {
+          return listClaimedGroves(dbHandle.db, RC_WORLD_ID).map((g) => ({
+            groveId: g.groveId,
+            worldX: g.worldX,
+            worldZ: g.worldZ,
+          }));
+        } catch {
+          return [];
+        }
+      },
+    },
+  });
+  const retreatTickActor = world.createActor("retreat-tick");
+  retreatTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () => {},
+    onTickDelta: (deltaMs) => {
+      const state = retreatSystem.update(deltaMs, {
+        x: playerActor.object3D.position.x,
+        z: playerActor.object3D.position.z,
+      });
+      eventBus.emitRetreatOpacity(state.overlayOpacity);
+    },
   });
 
   // ── Sub-wave D — hearth interaction + claim ritual + fast travel ──
@@ -877,7 +1144,7 @@ export async function createRuntime(
   // Bridge: when `<FastTravelMenu>` emits a destination, look up the
   // node's coords and start the controller's transition. Closing the
   // menu happens on the UI side; we just kick the fade.
-  eventBus.onFastTravelStart((ev) => {
+  unsubFastTravelStart = eventBus.onFastTravelStart((ev) => {
     if (fastTravelController.isActive) return;
     if (!dbHandle) return;
     const claimed = listClaimedGroves(dbHandle.db, RC_WORLD_ID);
@@ -996,6 +1263,8 @@ export async function createRuntime(
     dispose() {
       if (disposed) return;
       disposed = true;
+      unsubGroveClaimed?.();
+      unsubFastTravelStart?.();
       try {
         joystickHandle?.destroy();
       } catch {

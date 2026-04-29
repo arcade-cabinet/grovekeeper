@@ -23,12 +23,15 @@ import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { FastTravelFade } from "@/ui/game/FastTravelFade";
 import { FastTravelMenu } from "@/ui/game/FastTravelMenu";
 import { HearthPrompt } from "@/ui/game/HearthPrompt";
+import { InteractCuePrompt } from "@/ui/game/InteractCuePrompt";
+import { InventoryHUD } from "@/ui/game/InventoryHUD";
 import { LoadingGrove } from "@/ui/game/LoadingGrove";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameScreen } from "@/ui/game/NewGameScreen";
 import { NpcSpeechBubble } from "@/ui/game/NpcSpeechBubble";
 import { PauseMenu } from "@/ui/game/PauseMenu";
 import { RetreatOverlay } from "@/ui/game/RetreatOverlay";
+import { LowStaminaOverlay, StaminaGauge } from "@/ui/game/StaminaGauge";
 
 const GameScene = lazy(() =>
   import("@/game/scene/GameScene")
@@ -188,6 +191,13 @@ export const Game = () => {
                     open: false,
                   })
                 }
+                onPickBlueprint={(blueprintId) => {
+                  gameActions().setBuildMode(true, blueprintId);
+                  eventBus.emitCraftingPanel({
+                    stationId: ev().stationId,
+                    open: false,
+                  });
+                }}
               />
             )}
           </Show>
@@ -195,11 +205,31 @@ export const Game = () => {
           {/* Sub-wave D — hearth proximity prompt (above canvas, below modals). */}
           <HearthPrompt />
 
+          {/* Contextual interact cue — "Press E to craft / place / gather". */}
+          <InteractCuePrompt />
+
           {/* Sub-wave D — fast-travel menu, opened by interacting with a lit hearth. */}
           <FastTravelMenuConnected />
 
           {/* Sub-wave D — fast-travel black-fade overlay (always mounted). */}
           <FastTravelFade />
+
+          {/* Inventory counts (top-left corner). Hidden when empty. */}
+          <div
+            class="fixed top-4 left-4 pointer-events-none"
+            style={{ "z-index": 50 }}
+          >
+            <InventoryHUD />
+          </div>
+
+          {/* Wave 14/15 — stamina gauge (top-right corner) + low-stamina vignette. */}
+          <div
+            class="fixed top-4 right-4 pointer-events-none"
+            style={{ "z-index": 50 }}
+          >
+            <StaminaGauge />
+          </div>
+          <LowStaminaOverlay />
 
           <PauseMenu
             open={pauseMenuOpen()}

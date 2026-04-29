@@ -31,18 +31,27 @@ export interface CraftingStationProximityBehaviorOptions {
       justPressed: boolean;
     };
   };
+  /**
+   * Optional guard: when this returns true, the behavior suppresses the
+   * `interactCue(null)` clear so the placement tick's "Press E to place"
+   * cue isn't overwritten when the player drifts away from the workbench
+   * while holding a blueprint.
+   */
+  isPlacementActive?: () => boolean;
 }
 
 export class CraftingStationProximityBehavior extends ActorComponent {
   private readonly getStations: () => readonly CraftingStationActor[];
   private readonly getPlayerPosition: () => { x: number; z: number };
   private readonly input: CraftingStationProximityBehaviorOptions["input"];
+  private readonly isPlacementActive: () => boolean;
 
   constructor(actor: Actor, options: CraftingStationProximityBehaviorOptions) {
     super({ actor, typeName: "CraftingStationProximityBehavior" });
     this.getStations = options.getStations;
     this.getPlayerPosition = options.getPlayerPosition;
     this.input = options.input;
+    this.isPlacementActive = options.isPlacementActive ?? (() => false);
   }
 
   awake(): void {
@@ -50,17 +59,31 @@ export class CraftingStationProximityBehavior extends ActorComponent {
   }
 
   update(_deltaMs: number): void {
-    const button = this.input.getActionState("open-craft");
-    if (!button.justPressed) return;
     const player = this.getPlayerPosition();
     for (const station of this.getStations()) {
       if (station.isPlayerNear(player)) {
-        eventBus.emitCraftingPanel({
-          stationId: station.stationId,
-          open: true,
-        });
-        return; // first match wins; one panel at a time.
+        const craftingState = eventBus.craftingPanel();
+        if (craftingState === null || !craftingState.open) {
+          eventBus.emitInteractCue({
+            variant: "craft",
+            label: "Press E to craft",
+          });
+        } else {
+          eventBus.emitInteractCue(null);
+        }
+        const button = this.input.getActionState("open-craft");
+        if (button.justPressed) {
+          eventBus.emitCraftingPanel({
+            stationId: station.stationId,
+            open: true,
+          });
+        }
+        return;
       }
+    }
+    // No station nearby — clear cue unless placement mode is showing its own cue.
+    if (!this.isPlacementActive()) {
+      eventBus.emitInteractCue(null);
     }
   }
 }
