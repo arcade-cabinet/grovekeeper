@@ -126,10 +126,14 @@ existed as tested code but were not connected to the engine tick loop:
 | `useTrait(player(), ...)` stale-entity bug | Fixed with new `useEntityTrait(accessor, trait)` hook |
 | 19 orphaned BabylonJS-era UI components | Deleted (confirmed zero production importers) |
 | FarmerMascot null stub in PauseMenu | Removed stub + blank icon slot |
+| `CraftingPanel.onPickBlueprint` never passed | Wired in Game.tsx; sets `Build` koota trait, closes panel |
+| Placement tick actor missing | Added to runtime.ts; on `interact` press, anchors + commits blueprint voxels to mesh + DB |
+| `setBlock` no DB persist | `chunksRepo.applyBlockMod` now called per-block so placements survive chunk reload |
+| No contextual interact cue | Added `InteractCuePrompt` + emissions from CraftingStationProximityBehavior + placement tick |
 
 ## Next work
 
-All post-RC wiring and cleanup complete. Remaining lower-priority items:
+All craft→place→light→claim→arm→explore loop gaps closed. Remaining lower-priority items:
 
 - `Math.random()` in `placement.ts` fallback and `dialogueSystem.ts` default — intentional design (crypto.randomUUID fallback + injectable RNG); not bugs
 - PauseMenu Stats tab shows legacy BabylonJS resource types (timber/sap/acorns) instead of RC inventory materials — cosmetic; Stats tab is informational only

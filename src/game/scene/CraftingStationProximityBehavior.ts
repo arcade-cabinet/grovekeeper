@@ -31,18 +31,27 @@ export interface CraftingStationProximityBehaviorOptions {
       justPressed: boolean;
     };
   };
+  /**
+   * Optional guard: when this returns true, the behavior suppresses the
+   * `interactCue(null)` clear so the placement tick's "Press E to place"
+   * cue isn't overwritten when the player drifts away from the workbench
+   * while holding a blueprint.
+   */
+  isPlacementActive?: () => boolean;
 }
 
 export class CraftingStationProximityBehavior extends ActorComponent {
   private readonly getStations: () => readonly CraftingStationActor[];
   private readonly getPlayerPosition: () => { x: number; z: number };
   private readonly input: CraftingStationProximityBehaviorOptions["input"];
+  private readonly isPlacementActive: () => boolean;
 
   constructor(actor: Actor, options: CraftingStationProximityBehaviorOptions) {
     super({ actor, typeName: "CraftingStationProximityBehavior" });
     this.getStations = options.getStations;
     this.getPlayerPosition = options.getPlayerPosition;
     this.input = options.input;
+    this.isPlacementActive = options.isPlacementActive ?? (() => false);
   }
 
   awake(): void {
@@ -74,7 +83,7 @@ export class CraftingStationProximityBehavior extends ActorComponent {
         return;
       }
     }
-    if (!nearStation) {
+    if (!nearStation && !this.isPlacementActive()) {
       eventBus.emitInteractCue(null);
     }
   }

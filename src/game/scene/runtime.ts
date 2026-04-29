@@ -201,6 +201,8 @@ export async function createRuntime(
   // We swallow DB-init failures so a broken IndexedDB layer doesn't
   // block scene boot; discovery just becomes a no-op in that case.
   let dbHandle: Awaited<ReturnType<typeof getDbAsync>> | null = null;
+  let unsubGroveClaimed: (() => void) | null = null;
+  let unsubFastTravelStart: (() => void) | null = null;
   try {
     dbHandle = await getDbAsync();
     const isFreshWorld = !getWorld(dbHandle.db, RC_WORLD_ID);
@@ -231,7 +233,7 @@ export async function createRuntime(
     // emits `groveClaimed`, learn `recipe.starter-axe`. We register
     // here (not inside the claim system) so this hook lives next to
     // the persistence layer it touches. `learnRecipe` is idempotent.
-    eventBus.onGroveClaimed((ev) => {
+    unsubGroveClaimed = eventBus.onGroveClaimed((ev) => {
       if (!dbHandle) return;
       try {
         recipesRepo.learnRecipe(dbHandle.db, ev.worldId, "recipe.starter-axe");
@@ -433,6 +435,7 @@ export async function createRuntime(
       z: playerBehavior.position.z,
     }),
     input: inputManager,
+    isPlacementActive: () => koota.get(Build)?.mode ?? false,
   });
 
   // Wave 11b — interaction system. Polls the `interact` action's rising
@@ -1133,7 +1136,7 @@ export async function createRuntime(
   // Bridge: when `<FastTravelMenu>` emits a destination, look up the
   // node's coords and start the controller's transition. Closing the
   // menu happens on the UI side; we just kick the fade.
-  eventBus.onFastTravelStart((ev) => {
+  unsubFastTravelStart = eventBus.onFastTravelStart((ev) => {
     if (fastTravelController.isActive) return;
     if (!dbHandle) return;
     const claimed = listClaimedGroves(dbHandle.db, RC_WORLD_ID);
@@ -1252,6 +1255,8 @@ export async function createRuntime(
     dispose() {
       if (disposed) return;
       disposed = true;
+      unsubGroveClaimed?.();
+      unsubFastTravelStart?.();
       try {
         joystickHandle?.destroy();
       } catch {
