@@ -29,6 +29,7 @@ import { NewGameScreen } from "@/ui/game/NewGameScreen";
 import { NpcSpeechBubble } from "@/ui/game/NpcSpeechBubble";
 import { PauseMenu } from "@/ui/game/PauseMenu";
 import { RetreatOverlay } from "@/ui/game/RetreatOverlay";
+import { LowStaminaOverlay, StaminaGauge } from "@/ui/game/StaminaGauge";
 
 const GameScene = lazy(() =>
   import("@/game/scene/GameScene")
@@ -200,6 +201,16 @@ export const Game = () => {
 
           {/* Sub-wave D — fast-travel black-fade overlay (always mounted). */}
           <FastTravelFade />
+
+          {/* Wave 14/15 — stamina gauge (top-right corner) + low-stamina vignette. */}
+          <div
+            class="fixed top-4 right-4 pointer-events-none"
+            style={{ "z-index": 50 }}
+            aria-hidden="true"
+          >
+            <StaminaGauge />
+          </div>
+          <LowStaminaOverlay />
 
           <PauseMenu
             open={pauseMenuOpen()}
