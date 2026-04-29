@@ -10,6 +10,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.3.1-alpha.1...v1.4.0-alpha.1) (2026-04-29)
+
+
+### Features
+
+* **encounters:** wire creature spawn, combat, and stamina gate into runtime ([#69](https://github.com/arcade-cabinet/grovekeeper/issues/69)) ([1902b29](https://github.com/arcade-cabinet/grovekeeper/commit/1902b296d9f69f41b8e82de7f6273c8d80d70a34))
+
+
+### Bug Fixes
+
+* post-RC QA polish — QA-1/2/4/7, coast fauna, accessibility ([#67](https://github.com/arcade-cabinet/grovekeeper/issues/67)) ([ac365cb](https://github.com/arcade-cabinet/grovekeeper/commit/ac365cb72df14abc1fa8883b031186e8a48a9bfd))
+
 ## [1.3.1-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.3.0-alpha.1...v1.3.1-alpha.1) (2026-04-26)
 
 
