@@ -1,10 +1,10 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import type { AppDatabase } from "@/db/client";
 import { getDb, isDbInitialized } from "@/db/client";
 import { createWorld } from "@/db/repos/worldsRepo";
 import type { NewWorld, World } from "@/db/schema/rc";
+import { actions as gameActions } from "@/game/rc-actions";
 import { VoxelTreeCanvas } from "./VoxelTreeCanvas";
 
 /**

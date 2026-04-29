@@ -14,7 +14,7 @@
  * serialisation boundary without issue.
  */
 
-import { actions } from "@/actions";
+import { actions } from "@/game/rc-actions";
 import { koota } from "@/koota";
 import {
   buildDebugActions,

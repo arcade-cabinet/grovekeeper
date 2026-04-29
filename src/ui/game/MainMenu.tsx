@@ -1,9 +1,9 @@
 import { createSignal, For, onMount, Show } from "solid-js";
-import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { getDb, isDbInitialized } from "@/db/client";
 import { listWorlds } from "@/db/repos/worldsRepo";
 import type { World } from "@/db/schema/rc";
+import { actions as gameActions } from "@/game/rc-actions";
 import { Credits } from "./Credits";
 import { Logo } from "./Logo";
 import { VoxelTreeCanvas } from "./VoxelTreeCanvas";
