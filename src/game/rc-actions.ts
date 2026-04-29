@@ -179,6 +179,10 @@ function hydrateTracking(world: World, dbState: HydratedGameState): void {
 const VALID_SEASONS = ["spring", "summer", "autumn", "winter"] as const;
 type SeasonValue = (typeof VALID_SEASONS)[number];
 
+function isValidSeason(s: string): s is SeasonValue {
+  return (VALID_SEASONS as readonly string[]).includes(s);
+}
+
 function hydrateTimeAndSeason(world: World, dbState: HydratedGameState): void {
   if (dbState.gameTimeMicroseconds !== undefined) {
     const us = dbState.gameTimeMicroseconds;
@@ -186,9 +190,9 @@ function hydrateTimeAndSeason(world: World, dbState: HydratedGameState): void {
   }
   if (
     dbState.currentSeason !== undefined &&
-    (VALID_SEASONS as readonly string[]).includes(dbState.currentSeason)
+    isValidSeason(dbState.currentSeason)
   ) {
-    world.set(CurrentSeason, { value: dbState.currentSeason as SeasonValue });
+    world.set(CurrentSeason, { value: dbState.currentSeason });
   }
   if (dbState.currentDay !== undefined) {
     world.set(CurrentDay, { value: dbState.currentDay });
