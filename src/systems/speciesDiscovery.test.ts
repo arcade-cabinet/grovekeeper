@@ -357,6 +357,17 @@ describe("speciesDiscovery", () => {
       expect(pending.length).toBe(1);
     });
 
+    it("pending unlock deduplicates across successive tier changes before consume", () => {
+      trackSpeciesPlanting(koota, "white-oak");
+      consumePendingCodexUnlock(koota);
+      trackSpeciesGrowth(koota, "white-oak", 3);
+      trackSpeciesGrowth(koota, "white-oak", 4);
+      const pending = (getCodex()?.pendingCodexUnlocks ?? []).filter(
+        (id) => id === "white-oak",
+      );
+      expect(pending.length).toBe(1);
+    });
+
     it("trackSpeciesGrowth updates maxStageReached", () => {
       trackSpeciesPlanting(koota, "white-oak");
       trackSpeciesGrowth(koota, "white-oak", 2);

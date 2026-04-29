@@ -17,6 +17,10 @@ import {
 
 type World = typeof koota;
 
+function enqueuePendingUnlock(pending: string[], speciesId: string): string[] {
+  return pending.includes(speciesId) ? pending : [...pending, speciesId];
+}
+
 export function trackSpeciesPlanting(world: World, speciesId: string): void {
   const codex = world.get(SpeciesProgressTrait);
   if (!codex) return;
@@ -29,7 +33,7 @@ export function trackSpeciesPlanting(world: World, speciesId: string): void {
 
   const tierChanged = updated.discoveryTier > existing.discoveryTier;
   const newPending = tierChanged
-    ? [...codex.pendingCodexUnlocks, speciesId]
+    ? enqueuePendingUnlock(codex.pendingCodexUnlocks, speciesId)
     : codex.pendingCodexUnlocks;
 
   if (tierChanged) {
@@ -66,7 +70,7 @@ export function trackSpeciesGrowth(
 
   const tierChanged = updated.discoveryTier > existing.discoveryTier;
   const newPending = tierChanged
-    ? [...codex.pendingCodexUnlocks, speciesId]
+    ? enqueuePendingUnlock(codex.pendingCodexUnlocks, speciesId)
     : codex.pendingCodexUnlocks;
 
   if (tierChanged) {
@@ -103,7 +107,7 @@ export function trackSpeciesHarvest(
 
   const tierChanged = updated.discoveryTier > existing.discoveryTier;
   const newPending = tierChanged
-    ? [...codex.pendingCodexUnlocks, speciesId]
+    ? enqueuePendingUnlock(codex.pendingCodexUnlocks, speciesId)
     : codex.pendingCodexUnlocks;
 
   if (tierChanged) {
