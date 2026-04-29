@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 import { COLORS } from "@/config/config";
-import { useQueryFirst, useTrait } from "@/ecs/solid";
+import { useEntityTrait, useQueryFirst } from "@/ecs/solid";
 import { FarmerState, IsPlayer } from "@/traits";
 
 const VitalBar = (props: {
@@ -49,7 +49,7 @@ const VitalBar = (props: {
 
 export const StaminaGauge = () => {
   const player = useQueryFirst(IsPlayer, FarmerState);
-  const fs = useTrait(player(), FarmerState);
+  const fs = useEntityTrait(player, FarmerState);
 
   const stamina = () => fs()?.stamina ?? 100;
   const maxStamina = () => fs()?.maxStamina ?? 100;
@@ -97,7 +97,7 @@ export const StaminaGauge = () => {
  */
 export const LowStaminaOverlay = () => {
   const player = useQueryFirst(IsPlayer, FarmerState);
-  const fs = useTrait(player(), FarmerState);
+  const fs = useEntityTrait(player, FarmerState);
   const pct = () => {
     const s = fs();
     if (!s || s.maxStamina <= 0) return 100;

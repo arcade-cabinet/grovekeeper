@@ -1,5 +1,5 @@
 import type { Entity, QueryResult, Trait, World } from "koota";
-import { createSignal, onCleanup } from "solid-js";
+import { type Accessor, createSignal, onCleanup } from "solid-js";
 import { koota } from "@/koota";
 
 // biome-ignore lint/suspicious/noExplicitAny: Koota trait variance
@@ -136,6 +136,75 @@ export function useHas(
     unsubAdd();
     unsubRemove();
   });
+  return value;
+}
+
+/**
+ * Solid hook — returns a reactive accessor for a trait on a dynamically-
+ * changing entity (e.g. the result of `useQueryFirst`).
+ *
+ * Unlike `useTrait(entity, trait)` which captures the entity at call time,
+ * this hook re-subscribes whenever `entityAccessor` returns a new entity
+ * AND re-fires whenever the trait value changes on the current entity.
+ *
+ * Usage:
+ *   const player = useQueryFirst(IsPlayer, FarmerState);
+ *   const fs = useEntityTrait(player, FarmerState);
+ *   const stamina = () => fs()?.stamina ?? 100;
+ */
+export function useEntityTrait<T extends AnyTrait>(
+  entityAccessor: Accessor<Entity | undefined>,
+  trait: T,
+): () => TraitInstance<T> | undefined {
+  const read = (entity: Entity | undefined) => {
+    if (!entity) return undefined;
+    return entity.has(trait)
+      ? (entity.get(trait) as TraitInstance<T>)
+      : undefined;
+  };
+
+  const [value, setValue] = createSignal<TraitInstance<T> | undefined>(
+    read(entityAccessor()),
+    { equals: false },
+  );
+
+  // Re-read when trait changes on any entity; filter to current entity.
+  const refreshOnChange = (changedEntity: Entity) => {
+    const current = entityAccessor();
+    if (current && changedEntity === current) {
+      queueMicrotask(() => setValue(() => read(entityAccessor())));
+    }
+  };
+
+  const unsubChange = koota.onChange(trait, refreshOnChange);
+  const unsubAdd = koota.onAdd(trait, (e) => {
+    const current = entityAccessor();
+    if (current && e === current) {
+      queueMicrotask(() => setValue(() => read(entityAccessor())));
+    }
+  });
+  const unsubRemove = koota.onRemove(trait, (e) => {
+    const current = entityAccessor();
+    if (current && e === current) {
+      queueMicrotask(() => setValue(() => read(entityAccessor())));
+    }
+  });
+  // Also re-read when the entity itself changes (new query result).
+  const unsubQueryAdd = koota.onQueryAdd([trait], () =>
+    queueMicrotask(() => setValue(() => read(entityAccessor()))),
+  );
+  const unsubQueryRemove = koota.onQueryRemove([trait], () =>
+    queueMicrotask(() => setValue(() => read(entityAccessor()))),
+  );
+
+  onCleanup(() => {
+    unsubChange();
+    unsubAdd();
+    unsubRemove();
+    unsubQueryAdd();
+    unsubQueryRemove();
+  });
+
   return value;
 }
 
