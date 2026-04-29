@@ -703,6 +703,7 @@ export async function createRuntime(
     const result = applyInventoryCap(itemId, count, { currentCounts: counts });
     if (result.accepted > 0) {
       inventoryRepo.addItem(dbHandle.db, RC_WORLD_ID, itemId, result.accepted);
+      eventBus.emitInventoryChanged();
     }
     return result;
   }

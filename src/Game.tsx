@@ -23,6 +23,7 @@ import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { FastTravelFade } from "@/ui/game/FastTravelFade";
 import { FastTravelMenu } from "@/ui/game/FastTravelMenu";
 import { HearthPrompt } from "@/ui/game/HearthPrompt";
+import { InventoryHUD } from "@/ui/game/InventoryHUD";
 import { LoadingGrove } from "@/ui/game/LoadingGrove";
 import { MainMenu } from "@/ui/game/MainMenu";
 import { NewGameScreen } from "@/ui/game/NewGameScreen";
@@ -201,6 +202,14 @@ export const Game = () => {
 
           {/* Sub-wave D — fast-travel black-fade overlay (always mounted). */}
           <FastTravelFade />
+
+          {/* Inventory counts (top-left corner). Hidden when empty. */}
+          <div
+            class="fixed top-4 left-4 pointer-events-none"
+            style={{ "z-index": 50 }}
+          >
+            <InventoryHUD />
+          </div>
 
           {/* Wave 14/15 — stamina gauge (top-right corner) + low-stamina vignette. */}
           <div
