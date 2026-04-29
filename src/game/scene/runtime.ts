@@ -37,6 +37,7 @@ import {
 import { claimGrove, getGroveById, lightHearth } from "@/db/repos/grovesRepo";
 import { createWorld, getWorld } from "@/db/repos/worldsRepo";
 import { dispatchPlayerHit, swingHit } from "@/game/combat/combatSystem";
+import { canSwing, spendSwingStamina } from "@/game/combat/swingStamina";
 import { listAllRecipes } from "@/game/crafting";
 import { pickScriptedSpiritLine } from "@/game/dialogue/dialogueSystem";
 import {
@@ -68,7 +69,7 @@ import {
   mountNipplejsAdapter,
   type NipplejsAdapterHandle,
 } from "@/input";
-import { koota } from "@/koota";
+import { koota, spawnPlayer } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
 import { ClaimRitualSystem } from "./ClaimRitualSystem";
@@ -135,6 +136,11 @@ export async function createRuntime(
   const dir = new THREE.DirectionalLight(new THREE.Color("#fff7e0"), 1.4);
   dir.position.set(20, 40, 30);
   sceneSource.add(dir);
+
+  // Koota player entity — must exist before any system that reads
+  // IsPlayer + FarmerState (combat, stamina). Idempotent within a
+  // session since createRuntime is only called once.
+  spawnPlayer();
 
   // Input — action-mapped wrapper over the engine's `world.input`.
   // The InputManager is a plain object; the engine doesn't know about
@@ -258,6 +264,7 @@ export async function createRuntime(
       // Non-grove chunks: populate creature encounters.
       if (biome !== "grove") {
         if (!populatedEncountersMap.has(key)) {
+          let creatureIdx = 0;
           const handle = populateEncounters({
             worldSeed: RC_WORLD_SEED,
             chunkX,
@@ -266,7 +273,9 @@ export async function createRuntime(
             surfaceY: ChunkActor.SURFACE_Y + 1,
             factory: {
               createActor: () =>
-                world.createActor(`creature-${chunkX}-${chunkZ}`),
+                world.createActor(
+                  `creature-${chunkX}-${chunkZ}-${creatureIdx++}`,
+                ),
             },
             onPlayerHit: (damage) => dispatchPlayerHit(koota, damage),
           });
@@ -714,6 +723,8 @@ export async function createRuntime(
       inventoryAdd: () => playSound("ui.inventory.add"),
       inventoryFull: () => playSound("ui.inventory.full"),
     },
+    canSwing: () => canSwing(koota),
+    consumeSwingStamina: () => spendSwingStamina(koota),
     animation: {
       playSwing: () => playerBehavior.playSwingClip(),
     },
