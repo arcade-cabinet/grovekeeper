@@ -1025,15 +1025,20 @@ export async function createRuntime(
           });
         },
         setHearthEmissive: (_intensity: number) => {
-          // @todo Wave D2: pulse the actual hearth mesh emissive.
-          // For RC the cinematic's audio + spirit line are the
-          // perceptual anchors; the visual ramp is a polish goal.
+          // Hearth mesh emissive ramp requires direct access to the voxel
+          // renderer's block material for the hearth tile — deferred until
+          // the chunk system exposes a block-material handle.
         },
-        setVillagerAlpha: (_alpha: number) => {
-          // @todo Wave D2: villagers fade in over the claim ritual's
-          // settle phase. Currently they pop in at full alpha when
-          // GrovePopulator's claimed-state check flips on next chunk
-          // load.
+        setVillagerAlpha: (alpha: number) => {
+          const key = groveGlowKey(
+            STARTER_GROVE_CHUNK.x,
+            STARTER_GROVE_CHUNK.z,
+          );
+          const grove = populatedGroves.get(key);
+          if (!grove) return;
+          for (const villager of grove.villagers) {
+            villager.setOpacity(alpha);
+          }
         },
         persistClaim: () => {
           if (!dbHandle) return;
