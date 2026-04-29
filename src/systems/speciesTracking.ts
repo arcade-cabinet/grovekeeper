@@ -1,14 +1,15 @@
 /**
  * Species tracking — koota-coupled mutations for codex progress.
  *
- * Extracted from the legacy actions.ts facade so these functions can be
- * imported directly by callers without pulling in the full legacy bundle.
+ * Each function returns a `CodexEvent` when a discovery tier increases, or
+ * `null` otherwise. Callers are responsible for dispatching UI notifications
+ * (e.g. showToast) from the returned event so that tracking remains free of
+ * direct UI dependencies.
  */
 
 import { getSpeciesById } from "@/config/trees";
 import type { koota } from "@/koota";
 import { SpeciesProgressTrait } from "@/traits";
-import { showToast } from "@/ui/game/Toast";
 import {
   computeDiscoveryTier,
   createEmptyProgress,
@@ -17,13 +18,42 @@ import {
 
 type World = typeof koota;
 
+const TIER_NAMES = [
+  "",
+  "Discovered",
+  "Studied",
+  "Mastered",
+  "Legendary",
+] as const;
+
+/** Emitted when a species advances to a new discovery tier. */
+export interface CodexEvent {
+  speciesId: string;
+  speciesName: string;
+  tier: number;
+  tierName: string;
+}
+
 function enqueuePendingUnlock(pending: string[], speciesId: string): string[] {
   return pending.includes(speciesId) ? pending : [...pending, speciesId];
 }
 
-export function trackSpeciesPlanting(world: World, speciesId: string): void {
+function buildCodexEvent(speciesId: string, tier: number): CodexEvent {
+  const sp = getSpeciesById(speciesId);
+  return {
+    speciesId,
+    speciesName: sp?.name ?? speciesId,
+    tier,
+    tierName: TIER_NAMES[tier] ?? "",
+  };
+}
+
+export function trackSpeciesPlanting(
+  world: World,
+  speciesId: string,
+): CodexEvent | null {
   const codex = world.get(SpeciesProgressTrait);
-  if (!codex) return;
+  if (!codex) return null;
   const existing = codex.speciesProgress[speciesId] ?? createEmptyProgress();
   const updated: SpeciesProgress = {
     ...existing,
@@ -36,31 +66,23 @@ export function trackSpeciesPlanting(world: World, speciesId: string): void {
     ? enqueuePendingUnlock(codex.pendingCodexUnlocks, speciesId)
     : codex.pendingCodexUnlocks;
 
-  if (tierChanged) {
-    const sp = getSpeciesById(speciesId);
-    queueMicrotask(() => {
-      showToast(
-        `Codex: ${sp?.name ?? speciesId} -- Discovered!`,
-        "achievement",
-      );
-    });
-  }
-
   world.set(SpeciesProgressTrait, {
     speciesProgress: { ...codex.speciesProgress, [speciesId]: updated },
     pendingCodexUnlocks: newPending,
   });
+
+  return tierChanged ? buildCodexEvent(speciesId, updated.discoveryTier) : null;
 }
 
 export function trackSpeciesGrowth(
   world: World,
   speciesId: string,
   newStage: number,
-): void {
+): CodexEvent | null {
   const codex = world.get(SpeciesProgressTrait);
-  if (!codex) return;
+  if (!codex) return null;
   const existing = codex.speciesProgress[speciesId] ?? createEmptyProgress();
-  if (newStage <= existing.maxStageReached) return;
+  if (newStage <= existing.maxStageReached) return null;
 
   const updated: SpeciesProgress = {
     ...existing,
@@ -73,30 +95,21 @@ export function trackSpeciesGrowth(
     ? enqueuePendingUnlock(codex.pendingCodexUnlocks, speciesId)
     : codex.pendingCodexUnlocks;
 
-  if (tierChanged) {
-    const sp = getSpeciesById(speciesId);
-    const tierNames = ["", "Discovered", "Studied", "Mastered", "Legendary"];
-    queueMicrotask(() => {
-      showToast(
-        `Codex: ${sp?.name ?? speciesId} -- ${tierNames[updated.discoveryTier]}!`,
-        "achievement",
-      );
-    });
-  }
-
   world.set(SpeciesProgressTrait, {
     speciesProgress: { ...codex.speciesProgress, [speciesId]: updated },
     pendingCodexUnlocks: newPending,
   });
+
+  return tierChanged ? buildCodexEvent(speciesId, updated.discoveryTier) : null;
 }
 
 export function trackSpeciesHarvest(
   world: World,
   speciesId: string,
   yieldAmount: number,
-): void {
+): CodexEvent | null {
   const codex = world.get(SpeciesProgressTrait);
-  if (!codex) return;
+  if (!codex) return null;
   const existing = codex.speciesProgress[speciesId] ?? createEmptyProgress();
   const updated: SpeciesProgress = {
     ...existing,
@@ -110,17 +123,12 @@ export function trackSpeciesHarvest(
     ? enqueuePendingUnlock(codex.pendingCodexUnlocks, speciesId)
     : codex.pendingCodexUnlocks;
 
-  if (tierChanged) {
-    const sp = getSpeciesById(speciesId);
-    queueMicrotask(() => {
-      showToast(`Codex: ${sp?.name ?? speciesId} -- Legendary!`, "achievement");
-    });
-  }
-
   world.set(SpeciesProgressTrait, {
     speciesProgress: { ...codex.speciesProgress, [speciesId]: updated },
     pendingCodexUnlocks: newPending,
   });
+
+  return tierChanged ? buildCodexEvent(speciesId, updated.discoveryTier) : null;
 }
 
 export function consumePendingCodexUnlock(world: World): string | null {

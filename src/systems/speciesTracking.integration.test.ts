@@ -138,4 +138,36 @@ describe("speciesTracking — Koota integration", () => {
     expect(progress!.timesHarvested).toBe(1);
     expect(progress!.totalYield).toBe(5);
   });
+
+  it("trackSpeciesPlanting returns CodexEvent on tier change", () => {
+    const event = trackSpeciesPlanting(koota, "white-oak");
+    expect(event).not.toBeNull();
+    expect(event!.speciesId).toBe("white-oak");
+    expect(event!.tier).toBe(1);
+    expect(event!.tierName).toBe("Discovered");
+  });
+
+  it("trackSpeciesPlanting returns null when no tier change", () => {
+    trackSpeciesPlanting(koota, "white-oak");
+    const event = trackSpeciesPlanting(koota, "white-oak");
+    expect(event).toBeNull();
+  });
+
+  it("trackSpeciesGrowth returns CodexEvent on tier change", () => {
+    trackSpeciesPlanting(koota, "white-oak");
+    const event = trackSpeciesGrowth(koota, "white-oak", 3);
+    expect(event).not.toBeNull();
+    expect(event!.tier).toBe(2);
+    expect(event!.tierName).toBe("Studied");
+  });
+
+  it("trackSpeciesHarvest returns CodexEvent when reaching tier 4", () => {
+    trackSpeciesPlanting(koota, "white-oak");
+    trackSpeciesGrowth(koota, "white-oak", 4);
+    for (let i = 0; i < 9; i++) trackSpeciesHarvest(koota, "white-oak", 1);
+    const event = trackSpeciesHarvest(koota, "white-oak", 1);
+    expect(event).not.toBeNull();
+    expect(event!.tier).toBe(4);
+    expect(event!.tierName).toBe("Legendary");
+  });
 });
