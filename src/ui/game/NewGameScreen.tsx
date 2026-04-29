@@ -131,9 +131,7 @@ export const NewGameScreen = (props: NewGameScreenProps) => {
   // whenever an input gains focus keeps it reachable without the user
   // having to manually scroll.
   const scrollSubmitIntoView = () => {
-    requestAnimationFrame(() =>
-      submitRef?.scrollIntoView({ block: "nearest" }),
-    );
+    requestAnimationFrame(() => submitRef?.scrollIntoView({ block: "end" }));
   };
 
   const trimmedName = () => name().trim();

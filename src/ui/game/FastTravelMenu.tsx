@@ -65,7 +65,10 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
             if (focusable.length === 0) return;
             const first = focusable[0];
             const last = focusable[focusable.length - 1];
-            if (e.shiftKey && document.activeElement === first) {
+            const atFirst =
+              document.activeElement === first ||
+              document.activeElement === e.currentTarget;
+            if (e.shiftKey && atFirst) {
               e.preventDefault();
               last.focus();
             } else if (!e.shiftKey && document.activeElement === last) {

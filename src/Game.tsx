@@ -116,6 +116,7 @@ export const Game = () => {
       if (pauseMenuOpen()) return; // Dialog handles close itself
       if (eventBus.craftingPanel()?.open) return;
       if (eventBus.fastTravelOpen()) return;
+      if (eventBus.retreatOpacity() > 0) return;
       setPauseMenuOpen(true);
     };
     window.addEventListener("keydown", onKey);

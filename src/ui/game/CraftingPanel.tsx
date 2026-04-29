@@ -198,7 +198,10 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
             if (focusable.length === 0) return;
             const first = focusable[0];
             const last = focusable[focusable.length - 1];
-            if (event.shiftKey && document.activeElement === first) {
+            const atFirst =
+              document.activeElement === first ||
+              document.activeElement === event.currentTarget;
+            if (event.shiftKey && atFirst) {
               event.preventDefault();
               last.focus();
             } else if (!event.shiftKey && document.activeElement === last) {
