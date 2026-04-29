@@ -10,6 +10,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.4.1-alpha.1...v1.5.0-alpha.1) (2026-04-29)
+
+
+### Features
+
+* **claim-ritual:** implement villager opacity fade-in during cinematic ([#76](https://github.com/arcade-cabinet/grovekeeper/issues/76)) ([aef936d](https://github.com/arcade-cabinet/grovekeeper/commit/aef936df467972acf0ff929ebc1c2e7d7b515db5))
+
 ## [1.4.1-alpha.1](https://github.com/arcade-cabinet/grovekeeper/compare/v1.4.0-alpha.1...v1.4.1-alpha.1) (2026-04-29)
 
 
