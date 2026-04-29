@@ -31,10 +31,7 @@ export interface CraftingStationActorOptions {
 const DEFAULT_PROXIMITY_RADIUS = 2;
 
 function workbenchModelPath(): string {
-  const base =
-    typeof import.meta !== "undefined" && import.meta.env?.BASE_URL
-      ? import.meta.env.BASE_URL
-      : "/";
+  const base = import.meta.env?.BASE_URL ?? "/";
   const baseTrimmed = base.endsWith("/") ? base.slice(0, -1) : base;
   return `${baseTrimmed}/assets/models/props/workbench/Desk_glt.gltf`;
 }
@@ -42,7 +39,6 @@ function workbenchModelPath(): string {
 export class CraftingStationActor extends ActorComponent {
   readonly stationId: string;
   private readonly proximityRadius: number;
-  private readonly renderer: ModelRenderer;
 
   constructor(actor: Actor, options: CraftingStationActorOptions) {
     super({ actor, typeName: "CraftingStationActor" });
@@ -55,7 +51,7 @@ export class CraftingStationActor extends ActorComponent {
       options.position.z,
     );
 
-    this.renderer = this.actor.addComponentAndGet(ModelRenderer, {
+    this.actor.addComponentAndGet(ModelRenderer, {
       path: workbenchModelPath(),
     });
   }
