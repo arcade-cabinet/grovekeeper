@@ -829,10 +829,10 @@ export async function createRuntime(
         1.5,
       );
 
+      if (!dbHandle) return;
+
       // Keep local state in sync with the current anchor + blueprint.
       placeModeState = enterPlacing(placeModeState, blueprintId, anchor);
-
-      // Teach the player what to press.
       eventBus.emitInteractCue({ variant: "place", label: "Press E to place" });
 
       const button = inputManager.getActionState("interact");
@@ -842,7 +842,6 @@ export async function createRuntime(
       const cx = Math.floor(anchor.x / CHUNK_SIZE);
       const cz = Math.floor(anchor.z / CHUNK_SIZE);
       const biomeId = assignBiome(RC_WORLD_SEED, cx, cz);
-      if (!dbHandle) return;
 
       const setBlock = (
         pos: import("@/game/building/types").VoxelCoord,

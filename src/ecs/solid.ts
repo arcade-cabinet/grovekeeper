@@ -1,5 +1,5 @@
 import type { Entity, QueryResult, Trait, World } from "koota";
-import { type Accessor, createSignal, onCleanup } from "solid-js";
+import { type Accessor, createEffect, createSignal, onCleanup } from "solid-js";
 import { koota } from "@/koota";
 
 // biome-ignore lint/suspicious/noExplicitAny: Koota trait variance
@@ -168,7 +168,13 @@ export function useEntityTrait<T extends AnyTrait>(
     { equals: false },
   );
 
-  // Re-read when trait changes on any entity; filter to current entity.
+  // Re-read whenever the accessor itself changes to a different entity,
+  // e.g. when useQueryFirst returns a new entity reference.
+  createEffect(() => {
+    setValue(() => read(entityAccessor()));
+  });
+
+  // Re-read when the trait is mutated, added, or removed on the current entity.
   const refreshOnChange = (changedEntity: Entity) => {
     const current = entityAccessor();
     if (current && changedEntity === current) {
@@ -189,7 +195,6 @@ export function useEntityTrait<T extends AnyTrait>(
       queueMicrotask(() => setValue(() => read(entityAccessor())));
     }
   });
-  // Also re-read when the entity itself changes (new query result).
   const unsubQueryAdd = koota.onQueryAdd([trait], () =>
     queueMicrotask(() => setValue(() => read(entityAccessor()))),
   );

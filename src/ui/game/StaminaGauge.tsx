@@ -47,6 +47,17 @@ const VitalBar = (props: {
   </div>
 );
 
+function vitalColor(
+  pct: number,
+  low: string,
+  mid: string,
+  high: string,
+): string {
+  if (pct < 25) return low;
+  if (pct < 50) return mid;
+  return high;
+}
+
 export const StaminaGauge = () => {
   const player = useQueryFirst(IsPlayer, FarmerState);
   const fs = useEntityTrait(player, FarmerState);
@@ -55,22 +66,13 @@ export const StaminaGauge = () => {
   const maxStamina = () => fs()?.maxStamina ?? 100;
   const staminaPct = () =>
     maxStamina() > 0 ? Math.round((stamina() / maxStamina()) * 100) : 0;
-  const staminaColor = () => {
-    const p = staminaPct();
-    if (p < 25) return "#E76F51";
-    if (p < 50) return "#F4A261";
-    return "#52B788";
-  };
+  const staminaColor = () =>
+    vitalColor(staminaPct(), "#E76F51", "#F4A261", "#52B788");
 
   const hp = () => fs()?.hp ?? 100;
   const maxHp = () => fs()?.maxHp ?? 100;
   const hpPct = () => (maxHp() > 0 ? Math.round((hp() / maxHp()) * 100) : 0);
-  const hpColor = () => {
-    const p = hpPct();
-    if (p < 25) return "#C62828";
-    if (p < 50) return "#E53935";
-    return "#EF9A9A";
-  };
+  const hpColor = () => vitalColor(hpPct(), "#C62828", "#E53935", "#EF9A9A");
 
   return (
     <div class="flex items-end gap-1.5">
