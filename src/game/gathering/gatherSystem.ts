@@ -287,8 +287,8 @@ export class GatherSystem {
    * This is intentionally cheap — no raycast against the voxel mesh.
    * For RC the player walks on a flat shared surface, so "the cell
    * directly in front of you" is indistinguishable from a real
-   * raycast result. A future wave with vertical terrain will swap this
-   * for `VoxelWorld.getVoxelNeighbour(...)` against a proper ray.
+   * raycast result. Post-RC vertical terrain would swap this for a
+   * proper voxel raycast against `VoxelWorld.getVoxelNeighbour(...)`.
    */
   private computeTarget(): GatheringTarget | null {
     const reach = this.opts.reachVoxels ?? DEFAULT_REACH;

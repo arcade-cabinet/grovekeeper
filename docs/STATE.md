@@ -13,14 +13,14 @@ progress.
 ## Snapshot
 
 - **Spec:** `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`
-- **Active branch:** `main` (release/v1.3.2-qa-polish squash-merged as PR #64)
-- **RC status (2026-04-29):** All 20 waves complete. 1699 vitest tests
+- **Active branch:** `main`
+- **RC status (2026-04-29):** All 20 waves complete. 1163 vitest tests
   pass. TypeScript clean. Lighthouse Performance 99, Best Practices 100,
   Accessibility 93, SEO 100. All 16 screenshot gates captured, baselined,
   and passing in CI. QA playthroughs (mobile + desktop) documented.
-  Focus-trap auto-focus on CraftingPanel and FastTravelMenu. FastTravel
-  biome label ≥ 14px. meta-description + robots.txt present.
-- **Currently deployed (v1.3.2-alpha.1):** RC voxel build on Jolly Pixel
+  Claim ritual: hearth emissive ramp + villager opacity fade-in wired.
+  Legacy actions module extracted; slim RC-only bundle shipped.
+- **Currently deployed (v1.5.0-alpha.1):** RC voxel build on Jolly Pixel
   at `https://arcade-cabinet.github.io/grovekeeper/`.
 
 ## Wave status
@@ -50,7 +50,7 @@ progress.
 
 ## Polish status (Wave 20)
 
-All 16 gates captured and baselined (PR #64, v1.3.2-alpha.1).
+All 16 gates captured and baselined (PR #64, v1.3.2-alpha.1). Still passing at v1.5.0-alpha.1.
 
 | Surface | Score | Captured? |
 |---------|:-----:|:---------:|

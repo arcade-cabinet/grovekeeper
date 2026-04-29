@@ -7,8 +7,8 @@
  *   grass-flat, grass-tall, dirt, stone, wildflower, leaves, wood,
  *   fence, path, puddle.
  *
- * We only consume the first five tiles in Wave 8 — the rest stay
- * available for later structure / decoration work.
+ * Five tiles are used for RC; additional tiles reserved for post-RC
+ * structure and decoration.
  */
 
 import worldConfig from "../world.config.json";

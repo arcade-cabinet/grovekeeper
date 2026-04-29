@@ -286,7 +286,7 @@ export interface SkyColors {
 // ---------------------------------------------------------------------------
 // Sky color palette — module-scope constants (no allocation per frame).
 // Previously defined inside getSkyColors() causing 8+ object allocations
-// every frame.  See docs/PERF_AUDIT.md.
+// every frame.
 // ---------------------------------------------------------------------------
 
 type SkyColorKey = {
@@ -456,23 +456,6 @@ export const getSkyColors = (time: GameTime): SkyColors => {
 
   return _skyColorsOut;
 };
-
-// ---------------------------------------------------------------------------
-// Legacy helpers retained for external callers (getSeasonalColors, etc.)
-// These are not in the per-frame hot path so allocations are acceptable.
-// ---------------------------------------------------------------------------
-
-const _hexToRgb = (hex: string): { r: number; g: number; b: number } => {
-  const start = hex.charCodeAt(0) === 0x23 ? 1 : 0;
-  return {
-    r: hexByte(hex, start),
-    g: hexByte(hex, start + 2),
-    b: hexByte(hex, start + 4),
-  };
-};
-
-const _rgbToHex = (r: number, g: number, b: number): string =>
-  rgbToHexStr(r, g, b);
 
 // Get seasonal colors for trees and ground
 export interface SeasonalColors {

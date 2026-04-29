@@ -61,7 +61,7 @@ Cover at least:
 
 ```bash
 pnpm test:e2e             # build + Playwright e2e
-pnpm test:playthrough     # the journey screenshot suite (RC gate)
+pnpm test:rc-journey      # RC journey screenshot suite (16 gates)
 ```
 
 The journey suite (`e2e/rc-journey.spec.ts`) walks the deterministic
