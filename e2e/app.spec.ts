@@ -1,21 +1,22 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("App Launch", () => {
-  test("loads the main menu with start button", async ({ page }) => {
+  test("loads the main menu with Begin button", async ({ page }) => {
     await page.goto("/");
-    // First-time user sees "Start Growing", returning user sees "Continue Grove"
-    const startBtn = page.getByRole("button", { name: /start growing|continue grove/i });
-    await expect(startBtn).toBeVisible({ timeout: 10000 });
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/");
+    const beginBtn = page.getByRole("button", { name: /^begin$/i });
+    await expect(beginBtn).toBeVisible({ timeout: 10000 });
   });
 
   test("shows version text", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("text=Grove Keeper v")).toBeVisible({ timeout: 10000 });
+    await expect(page.locator("text=Grovekeeper v")).toBeVisible({ timeout: 10000 });
   });
 
   test("does not have horizontal scroll", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /start growing|continue grove/i }).waitFor({ timeout: 10000 });
+    await page.getByRole("button", { name: /^begin$/i }).waitFor({ timeout: 10000 });
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
@@ -23,23 +24,22 @@ test.describe("App Launch", () => {
 
   test("shows tagline", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator("text=Tend. Grow. Thrive.")).toBeVisible({ timeout: 10000 });
+    await expect(page.locator("text=Every forest begins with a single seed.")).toBeVisible({ timeout: 10000 });
   });
 });
 
 test.describe("New Game Flow", () => {
-  test("clicking start transitions away from menu", async ({ page }) => {
+  test("clicking Begin transitions away from menu", async ({ page }) => {
     await page.goto("/");
     await page.evaluate(() => localStorage.clear());
     await page.goto("/");
 
-    const startBtn = page.getByRole("button", { name: /start growing/i });
-    await expect(startBtn).toBeVisible({ timeout: 10000 });
-    await startBtn.click();
+    const beginBtn = page.getByRole("button", { name: /^begin$/i });
+    await expect(beginBtn).toBeVisible({ timeout: 10000 });
+    await beginBtn.click();
 
-    // After clicking, the start button should no longer be visible
-    // (either game loaded or a modal appeared)
-    await expect(startBtn).not.toBeVisible({ timeout: 10000 });
+    // After clicking, Begin should no longer be visible (game loaded or modal appeared)
+    await expect(beginBtn).not.toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -48,10 +48,12 @@ test.describe("Mobile Viewport", () => {
 
   test("renders correctly at iPhone SE width", async ({ page }) => {
     await page.goto("/");
-    const startBtn = page.getByRole("button", { name: /start growing|continue grove/i });
-    await expect(startBtn).toBeVisible({ timeout: 10000 });
+    await page.evaluate(() => localStorage.clear());
+    await page.goto("/");
+    const beginBtn = page.getByRole("button", { name: /^begin$/i });
+    await expect(beginBtn).toBeVisible({ timeout: 10000 });
     // Button should be fully visible (not clipped)
-    const box = await startBtn.boundingBox();
+    const box = await beginBtn.boundingBox();
     expect(box).not.toBeNull();
     if (box) {
       expect(box.x).toBeGreaterThanOrEqual(0);
@@ -61,7 +63,7 @@ test.describe("Mobile Viewport", () => {
 
   test("no horizontal scroll on mobile", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /start growing|continue grove/i }).waitFor({ timeout: 10000 });
+    await page.getByRole("button", { name: /^begin$/i }).waitFor({ timeout: 10000 });
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollWidth).toBeLessThanOrEqual(375 + 1);
   });
