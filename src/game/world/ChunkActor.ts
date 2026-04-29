@@ -29,6 +29,7 @@
 import { type Actor, ActorComponent } from "@jolly-pixel/engine";
 import { VoxelRenderer } from "@jolly-pixel/voxel.renderer";
 import type { Object3D } from "three";
+import { actorObject3D } from "@/shared/utils/actorUtils";
 import { loadBiomeTileset } from "./BiomeTilesetLoader";
 import {
   type BiomeDefinition,
@@ -38,10 +39,6 @@ import {
 } from "./biomes";
 import { registerBiomeBlocks } from "./blockRegistry";
 import { buildChunkJSON, CHUNK_TUNING } from "./chunkGenerator";
-
-function actorObject3D(actor: Actor): Object3D | undefined {
-  return (actor as unknown as { object3D?: Object3D }).object3D;
-}
 
 /**
  * A single player modification — either set a named block or remove it.

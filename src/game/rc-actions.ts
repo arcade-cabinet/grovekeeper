@@ -3,6 +3,11 @@ import { getDifficultyById } from "@/config/difficulty";
 import type { ResourceType } from "@/config/resources";
 import { koota } from "@/koota";
 import {
+  computeDiscoveryTier,
+  createEmptyProgress,
+  type SpeciesProgress,
+} from "@/systems/speciesDiscovery";
+import {
   Achievements,
   Build,
   CurrentDay,
@@ -284,6 +289,24 @@ function hydrateSettings(world: World, dbState: HydratedGameState): void {
   world.set(Settings, next);
 }
 
+function normalizeSpeciesProgress(
+  raw: Record<string, unknown>,
+): Record<string, SpeciesProgress> {
+  const result: Record<string, SpeciesProgress> = {};
+  for (const [id, entry] of Object.entries(raw)) {
+    const base = createEmptyProgress();
+    const src = entry as Partial<SpeciesProgress>;
+    const merged: Omit<SpeciesProgress, "discoveryTier"> = {
+      timesPlanted: src.timesPlanted ?? base.timesPlanted,
+      maxStageReached: src.maxStageReached ?? base.maxStageReached,
+      timesHarvested: src.timesHarvested ?? base.timesHarvested,
+      totalYield: src.totalYield ?? base.totalYield,
+    };
+    result[id] = { ...merged, discoveryTier: computeDiscoveryTier(merged) };
+  }
+  return result;
+}
+
 function hydrateCodex(world: World, dbState: HydratedGameState): void {
   const codex = world.get(SpeciesProgressTrait);
   if (
@@ -294,8 +317,7 @@ function hydrateCodex(world: World, dbState: HydratedGameState): void {
     return;
   const next = { ...codex };
   if (dbState.speciesProgress !== undefined)
-    next.speciesProgress =
-      dbState.speciesProgress as typeof codex.speciesProgress;
+    next.speciesProgress = normalizeSpeciesProgress(dbState.speciesProgress);
   if (dbState.pendingCodexUnlocks !== undefined)
     next.pendingCodexUnlocks = dbState.pendingCodexUnlocks;
   world.set(SpeciesProgressTrait, next);
@@ -375,10 +397,14 @@ const gameActions = createActions((world) => ({
     hydrateTimeAndSeason(world, dbState);
     hydrateQuests(world, dbState);
     if (dbState.resources !== undefined)
-      world.set(Resources, dbState.resources);
+      world.set(Resources, (prev) => ({ ...prev, ...dbState.resources }));
     if (dbState.lifetimeResources !== undefined)
-      world.set(LifetimeResources, dbState.lifetimeResources);
-    if (dbState.seeds !== undefined) world.set(Seeds, dbState.seeds);
+      world.set(LifetimeResources, (prev) => ({
+        ...prev,
+        ...dbState.lifetimeResources,
+      }));
+    if (dbState.seeds !== undefined)
+      world.set(Seeds, (prev) => ({ ...prev, ...dbState.seeds }));
     if (dbState.achievements !== undefined)
       world.set(Achievements, { items: dbState.achievements });
     hydrateFarmerStamina(world, dbState);

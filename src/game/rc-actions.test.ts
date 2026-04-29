@@ -10,6 +10,7 @@ import {
   LifetimeResources,
   Resources,
   Settings,
+  SpeciesProgressTrait,
   Tracking,
   WorldMeta,
 } from "@/traits";
@@ -47,6 +48,10 @@ describe("rc-actions", () => {
       wildSpeciesHarvested: [],
       speciesPlanted: [],
       seasonsExperienced: [],
+    });
+    koota.set(SpeciesProgressTrait, {
+      speciesProgress: {},
+      pendingCodexUnlocks: [],
     });
   });
 
@@ -231,6 +236,41 @@ describe("rc-actions", () => {
     it("ignores invalid currentSeason, keeps current", () => {
       actions().hydrateFromDb({ currentSeason: "monsoon" as "spring" });
       expect(koota.get(CurrentSeason)?.value).toBe("spring");
+    });
+
+    it("hydrates speciesProgress into SpeciesProgressTrait", () => {
+      actions().hydrateFromDb({
+        speciesProgress: {
+          oak: {
+            timesPlanted: 2,
+            maxStageReached: 3,
+            timesHarvested: 1,
+            totalYield: 5,
+          },
+        },
+      });
+      const codex = koota.get(SpeciesProgressTrait);
+      expect(codex?.speciesProgress["oak"]).toBeDefined();
+      expect(codex?.speciesProgress["oak"]?.timesPlanted).toBe(2);
+      expect(codex?.speciesProgress["oak"]?.discoveryTier).toBeGreaterThan(0);
+    });
+
+    it("hydrates pendingCodexUnlocks into SpeciesProgressTrait", () => {
+      actions().hydrateFromDb({ pendingCodexUnlocks: ["oak", "pine"] });
+      expect(koota.get(SpeciesProgressTrait)?.pendingCodexUnlocks).toEqual([
+        "oak",
+        "pine",
+      ]);
+    });
+
+    it("normalizes speciesProgress — fills missing fields with defaults", () => {
+      actions().hydrateFromDb({
+        speciesProgress: { oak: {} },
+      });
+      const progress = koota.get(SpeciesProgressTrait)?.speciesProgress["oak"];
+      expect(progress?.timesPlanted).toBe(0);
+      expect(progress?.totalYield).toBe(0);
+      expect(progress?.discoveryTier).toBe(0);
     });
   });
 });

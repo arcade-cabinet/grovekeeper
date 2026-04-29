@@ -19,10 +19,7 @@
 
 import { type Actor, ActorComponent } from "@jolly-pixel/engine";
 import * as THREE from "three";
-
-function actorObject3D(actor: Actor): THREE.Object3D | undefined {
-  return (actor as unknown as { object3D?: THREE.Object3D }).object3D;
-}
+import { actorObject3D } from "@/shared/utils/actorUtils";
 
 export interface CraftingStationActorOptions {
   /**
