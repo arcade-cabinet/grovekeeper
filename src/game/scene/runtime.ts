@@ -858,20 +858,8 @@ export async function createRuntime(
           memoryMods.set(memoryKey(bcx, bcz), mem);
         }
         mem.set(voxelKey(lx, pos.y, lz), blockId);
-        // Persist via chunksRepo so the block survives chunk reload.
-        const chunkBiome = assignBiome(RC_WORLD_SEED, bcx, bcz);
-        try {
-          chunksRepo.applyBlockMod(
-            dbHandle.db,
-            RC_WORLD_ID,
-            bcx,
-            bcz,
-            chunkBiome,
-            { x: lx, y: pos.y, z: lz, op: "set", blockId },
-          );
-        } catch {
-          // In-memory overlay still valid; placement visible this session.
-        }
+        // DB persistence is handled by commitBlueprintPlacement — don't
+        // duplicate the applyBlockMod call here.
         // Write to live chunk mesh.
         const chunk = chunkManager.getChunk(bcx, bcz);
         if (chunk) {
