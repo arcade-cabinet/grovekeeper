@@ -190,6 +190,13 @@ export const Game = () => {
                     open: false,
                   })
                 }
+                onPickBlueprint={(blueprintId) => {
+                  gameActions().setBuildMode(true, blueprintId);
+                  eventBus.emitCraftingPanel({
+                    stationId: ev().stationId,
+                    open: false,
+                  });
+                }}
               />
             )}
           </Show>

@@ -36,6 +36,14 @@ import {
 } from "@/db/repos";
 import { claimGrove, getGroveById, lightHearth } from "@/db/repos/grovesRepo";
 import { createWorld, getWorld } from "@/db/repos/worldsRepo";
+import {
+  anchorInFrontOfPlayer,
+  commitPlacing,
+  enterPlacing,
+  IDLE_STATE,
+} from "@/game/building/placeMode";
+import { commitBlueprintPlacement } from "@/game/building/placement";
+import type { PlaceModeState } from "@/game/building/types";
 import { dispatchPlayerHit, swingHit } from "@/game/combat/combatSystem";
 import { canSwing, spendSwingStamina } from "@/game/combat/swingStamina";
 import { listAllRecipes } from "@/game/crafting";
@@ -72,7 +80,7 @@ import {
 import { koota, spawnPlayer } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
 import { staminaSystem } from "@/systems/stamina";
-import { FarmerState, IsPlayer } from "@/traits";
+import { Build, FarmerState, IsPlayer } from "@/traits";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
 import { ClaimRitualSystem } from "./ClaimRitualSystem";
 import { CraftingStationActor } from "./CraftingStationActor";
@@ -776,6 +784,98 @@ export async function createRuntime(
   staminaTickActor.addComponentAndGet(InteractionTickBehavior, {
     onTick: () => {},
     onTickDelta: (deltaMs) => staminaSystem(deltaMs / 1000),
+  });
+
+  // Wave 13 — placement tick. Watches the `Build` koota world trait:
+  // when `mode === true`, the player is holding a blueprint. On a
+  // rising-edge `interact` press we anchor the blueprint one voxel in
+  // front of the player, commit it to the chunk mesh + DB, consume the
+  // inventory item, and clear build mode. Cancels on Escape (handled
+  // by the hearthTick / interactionTick Escape → pause path; here we
+  // just guard the interact path and let the player walk away).
+  let placeModeState: PlaceModeState = IDLE_STATE;
+  const placementTickActor = world.createActor("placement-tick");
+  placementTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () => {
+      const build = koota.get(Build);
+      if (!build?.mode || !build.templateId) {
+        // Sync local state machine with the koota trait.
+        if (placeModeState.kind !== "idle") {
+          placeModeState = IDLE_STATE;
+        }
+        return;
+      }
+
+      const blueprintId = build.templateId;
+      const px = playerActor.object3D.position.x;
+      const pz = playerActor.object3D.position.z;
+      const yaw = playerActor.object3D.rotation?.y ?? 0;
+      const anchor = anchorInFrontOfPlayer(
+        { x: px, z: pz, yaw },
+        ChunkActor.SURFACE_Y,
+        1.5,
+      );
+
+      // Keep local state in sync with the current anchor + blueprint.
+      placeModeState = enterPlacing(placeModeState, blueprintId, anchor);
+
+      const button = inputManager.getActionState("interact");
+      if (!button.pressed || !button.justPressed) return;
+
+      // Commit the blueprint to the live mesh + DB.
+      const cx = Math.floor(anchor.x / CHUNK_SIZE);
+      const cz = Math.floor(anchor.z / CHUNK_SIZE);
+      const biomeId = assignBiome(RC_WORLD_SEED, cx, cz);
+      const setBlock = (
+        pos: import("@/game/building/types").VoxelCoord,
+        blockId: string,
+      ): boolean => {
+        const bcx = Math.floor(pos.x / CHUNK_SIZE);
+        const bcz = Math.floor(pos.z / CHUNK_SIZE);
+        const lx = pos.x - bcx * CHUNK_SIZE;
+        const lz = pos.z - bcz * CHUNK_SIZE;
+        // Write to in-memory mod overlay so blockAt sees it immediately.
+        let mem = memoryMods.get(memoryKey(bcx, bcz));
+        if (!mem) {
+          mem = new Map();
+          memoryMods.set(memoryKey(bcx, bcz), mem);
+        }
+        mem.set(voxelKey(lx, pos.y, lz), blockId);
+        // Write to live chunk mesh.
+        const chunk = chunkManager.getChunk(bcx, bcz);
+        if (chunk) {
+          chunk.setBlockLocal(lx, pos.y, lz, blockId);
+        }
+        return true;
+      };
+
+      if (!dbHandle) return;
+
+      const result = commitBlueprintPlacement({
+        db: dbHandle.db,
+        worldId: RC_WORLD_ID,
+        groveId: `grove-${cx}-${cz}`,
+        blueprintId,
+        anchor,
+        chunkSize: CHUNK_SIZE,
+        biome: biomeId,
+        setBlock,
+      });
+
+      if (result.success) {
+        placeModeState = commitPlacing(placeModeState);
+        // Consume the blueprint from inventory.
+        try {
+          inventoryRepo.addItem(dbHandle.db, RC_WORLD_ID, blueprintId, -1);
+          eventBus.emitInventoryChanged();
+        } catch {
+          // Silent — the block was placed regardless.
+        }
+        // Clear build mode on the koota world trait.
+        koota.set(Build, { mode: false, templateId: null });
+        playSound("ui.click");
+      }
+    },
   });
 
   // Threshold tick: rides on the same per-frame pump via a thin shim.
