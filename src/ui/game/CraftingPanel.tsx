@@ -163,8 +163,8 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
     setRefresh((n) => n + 1);
 
     if (result.produced.kind === "blueprint" && props.onPickBlueprint) {
+      // onPickBlueprint closes the panel itself; don't double-close.
       props.onPickBlueprint(result.produced.id);
-      props.onClose();
     }
   };
 

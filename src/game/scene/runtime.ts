@@ -802,6 +802,7 @@ export async function createRuntime(
         // Sync local state machine with the koota trait.
         if (placeModeState.kind !== "idle") {
           placeModeState = IDLE_STATE;
+          eventBus.emitInteractCue(null);
         }
         return;
       }
@@ -829,6 +830,8 @@ export async function createRuntime(
       const cx = Math.floor(anchor.x / CHUNK_SIZE);
       const cz = Math.floor(anchor.z / CHUNK_SIZE);
       const biomeId = assignBiome(RC_WORLD_SEED, cx, cz);
+      if (!dbHandle) return;
+
       const setBlock = (
         pos: import("@/game/building/types").VoxelCoord,
         blockId: string,
@@ -844,6 +847,20 @@ export async function createRuntime(
           memoryMods.set(memoryKey(bcx, bcz), mem);
         }
         mem.set(voxelKey(lx, pos.y, lz), blockId);
+        // Persist via chunksRepo so the block survives chunk reload.
+        const chunkBiome = assignBiome(RC_WORLD_SEED, bcx, bcz);
+        try {
+          chunksRepo.applyBlockMod(
+            dbHandle.db,
+            RC_WORLD_ID,
+            bcx,
+            bcz,
+            chunkBiome,
+            { x: lx, y: pos.y, z: lz, op: "set", blockId },
+          );
+        } catch {
+          // In-memory overlay still valid; placement visible this session.
+        }
         // Write to live chunk mesh.
         const chunk = chunkManager.getChunk(bcx, bcz);
         if (chunk) {
@@ -851,8 +868,6 @@ export async function createRuntime(
         }
         return true;
       };
-
-      if (!dbHandle) return;
 
       const result = commitBlueprintPlacement({
         db: dbHandle.db,

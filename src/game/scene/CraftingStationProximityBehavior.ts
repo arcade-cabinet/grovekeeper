@@ -55,10 +55,15 @@ export class CraftingStationProximityBehavior extends ActorComponent {
     for (const station of this.getStations()) {
       if (station.isPlayerNear(player)) {
         nearStation = true;
-        eventBus.emitInteractCue({
-          variant: "craft",
-          label: "Press E to craft",
-        });
+        // Only show the cue when the panel is not already open.
+        if (!eventBus.craftingPanel()?.open) {
+          eventBus.emitInteractCue({
+            variant: "craft",
+            label: "Press E to craft",
+          });
+        } else {
+          eventBus.emitInteractCue(null);
+        }
         const button = this.input.getActionState("open-craft");
         if (button.justPressed) {
           eventBus.emitCraftingPanel({
