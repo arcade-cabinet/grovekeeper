@@ -131,9 +131,28 @@ existed as tested code but were not connected to the engine tick loop:
 | `setBlock` no DB persist | `chunksRepo.applyBlockMod` now called per-block so placements survive chunk reload |
 | No contextual interact cue | Added `InteractCuePrompt` + emissions from CraftingStationProximityBehavior + placement tick |
 
+## Post-merge review fixes (PR #69 follow-up, 2026-04-29)
+
+After PR #69 merged, CodeRabbit/SonarCloud review findings were addressed:
+
+| Fix | File |
+|-----|------|
+| `spawnPlayer()` guard — `queryFirst(IsPlayer, FarmerState)` prevents duplicate entity on HMR/remount | `runtime.ts` |
+| Nearby-creature swing lookup — 3×3 chunk window scan instead of flattening all encounter chunks | `runtime.ts` |
+| `dbHandle` null guard moved before placement-cue emission | `runtime.ts` |
+| `useEntityTrait` stale-entity — `createEffect` re-reads trait when `entityAccessor()` changes entity | `ecs/solid.ts` |
+| `aria-hidden` removed from StaminaGauge wrapper so screen readers see labeled progressbars | `Game.tsx` |
+| `void` operator removed from `eventBus.inventoryVersion()` call | `InventoryHUD.tsx` |
+| `<div role="region">` → `<section>` for InventoryHUD landmark | `InventoryHUD.tsx` |
+| `vitalColor()` helper extracted to eliminate ternary duplication in StaminaGauge | `StaminaGauge.tsx` |
+| Redundant `nearStation` variable removed from `CraftingStationProximityBehavior` | `CraftingStationProximityBehavior.ts` |
+| Optional-chain-in-negation → explicit null check in proximity behavior | `CraftingStationProximityBehavior.ts` |
+| PauseMenu Stats tab — replaced legacy BabylonJS data (timber/sap/acorns) with RC data (`inventoryRepo` + `grovesRepo`) | `PauseMenu.tsx` |
+
 ## Next work
 
-All craft→place→light→claim→arm→explore loop gaps closed. Remaining lower-priority items:
+All craft→place→light→claim→arm→explore loop gaps closed. All review findings addressed.
 
-- `Math.random()` in `placement.ts` fallback and `dialogueSystem.ts` default — intentional design (crypto.randomUUID fallback + injectable RNG); not bugs
-- PauseMenu Stats tab shows legacy BabylonJS resource types (timber/sap/acorns) instead of RC inventory materials — cosmetic; Stats tab is informational only
+Remaining documented items (intentional, not bugs):
+
+- `Math.random()` in `placement.ts` fallback and `dialogueSystem.ts` default — intentional design (crypto.randomUUID fallback + injectable RNG)
