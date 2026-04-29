@@ -32,7 +32,7 @@ pnpm test
 pnpm test:browser
 
 # Lint and format check
-pnpm lint
+pnpm check
 
 # TypeScript type check
 pnpm tsc

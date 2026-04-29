@@ -224,8 +224,9 @@ describe("rc-actions", () => {
     });
 
     it("ignores invalid difficulty id, keeps current", () => {
+      koota.set(Difficulty, { id: "hard", permadeath: false });
       actions().hydrateFromDb({ difficulty: "invalid-tier" });
-      expect(koota.get(Difficulty)?.id).toBe("normal");
+      expect(koota.get(Difficulty)?.id).toBe("hard");
     });
 
     it("hydrates valid currentSeason", () => {
@@ -234,8 +235,9 @@ describe("rc-actions", () => {
     });
 
     it("ignores invalid currentSeason, keeps current", () => {
+      koota.set(CurrentSeason, { value: "autumn" });
       actions().hydrateFromDb({ currentSeason: "monsoon" as "spring" });
-      expect(koota.get(CurrentSeason)?.value).toBe("spring");
+      expect(koota.get(CurrentSeason)?.value).toBe("autumn");
     });
 
     it("hydrates speciesProgress into SpeciesProgressTrait", () => {

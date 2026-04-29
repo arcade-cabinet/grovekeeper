@@ -161,5 +161,5 @@ if (event) showToast(`${event.speciesName}: ${event.tierName}`, "success");
 | `SpeciesProgressTrait` | World | `speciesProgress`, `pendingCodexUnlocks` |
 | `FarmerState` | Entity | `stamina`, `maxStamina`, `hp`, `maxHp` |
 | `Position` | Entity | `x`, `y`, `z` |
-| `Tree` | Entity | `species`, `stage`, `water` |
+| `Tree` | Entity | `speciesId`, `stage`, `progress`, `watered` |
 | `Npc` | Entity | `dialogueState` |

@@ -42,7 +42,7 @@ const PREFIX = "assets/audio/";
  * `playSound("typo")` is a type error, not a silent miss.
  */
 export type SoundId =
-  // Legacy short ids (referenced from src/actions.ts).
+  // Legacy short ids retained for compatibility.
   | "levelUp"
   | "success"
   // UI.
