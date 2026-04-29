@@ -56,23 +56,6 @@ export interface PlayerSpawn {
   z: number;
 }
 
-/**
- * Wave 9 removed the XZ axis-aligned-box clamp; the player roams the
- * streamed grid freely. The bounds interface is kept exported as a
- * deprecated stub for any out-of-tree caller that still references it,
- * but `PlayerActor` no longer reads from it.
- *
- * @deprecated Removed in Wave 9. Use `PlayerActorOptions.surfaceY`
- * to pin the Y axis; XZ is unbounded.
- */
-export interface PlayerBounds {
-  minX: number;
-  maxX: number;
-  minZ: number;
-  maxZ: number;
-  /** Y to snap the actor to (top-of-grass surface). */
-  groundY: number;
-}
 
 export interface PlayerActorOptions {
   spawn: PlayerSpawn;

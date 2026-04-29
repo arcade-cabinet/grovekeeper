@@ -7,11 +7,7 @@
 export type { CameraFollowOptions } from "./CameraFollowBehavior";
 export { CameraFollowBehavior } from "./CameraFollowBehavior";
 export { GameScene } from "./GameScene";
-export type {
-  PlayerActorOptions,
-  PlayerBounds,
-  PlayerSpawn,
-} from "./PlayerActor";
+export type { PlayerActorOptions, PlayerSpawn } from "./PlayerActor";
 export {
   PLAYER_IDLE_CLIP,
   PLAYER_MOVE_SPEED,
