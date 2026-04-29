@@ -185,7 +185,27 @@ export const CraftingPanel = (props: CraftingPanelProps) => {
           "z-index": "100",
         }}
         onKeyDown={(event) => {
-          if (event.key === "Escape") props.onClose();
+          if (event.key === "Escape") {
+            props.onClose();
+            return;
+          }
+          if (event.key === "Tab") {
+            const focusable = Array.from(
+              event.currentTarget.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+              ),
+            ).filter((el) => el.tabIndex >= 0);
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+              event.preventDefault();
+              last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault();
+              first.focus();
+            }
+          }
         }}
       >
         {/* Backdrop is a real button so accessibility tooling treats it as

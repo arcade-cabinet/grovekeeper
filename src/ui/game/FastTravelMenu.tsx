@@ -52,7 +52,27 @@ export function FastTravelMenu(props: Readonly<FastTravelMenuProps>) {
           "z-index": "8000",
         }}
         onKeyDown={(e) => {
-          if (e.key === "Escape") props.onClose();
+          if (e.key === "Escape") {
+            props.onClose();
+            return;
+          }
+          if (e.key === "Tab") {
+            const focusable = Array.from(
+              e.currentTarget.querySelectorAll<HTMLElement>(
+                'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+              ),
+            ).filter((el) => el.tabIndex >= 0);
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
         }}
       >
         {/* Backdrop is a real button so accessibility tooling treats it as

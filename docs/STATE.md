@@ -1,6 +1,6 @@
 ---
 title: Grovekeeper — Build State
-updated: 2026-04-25
+updated: 2026-04-29
 status: current
 domain: context
 ---
@@ -13,24 +13,15 @@ progress.
 ## Snapshot
 
 - **Spec:** `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`
-- **Active branch:** `release/workflows-v2`
-- **RC status (2026-04-25):** All 20 waves complete. 1698 vitest tests
-  pass. TypeScript clean. Lighthouse landing Performance 96.7%, Best
-  Practices 100%, Accessibility 92% (SEO 82% — warn-only). Three
-  static surfaces (Landing, MainMenu, NewGame) score 12/12 on the
-  rubric. Software-WebGL flags (`--use-gl=swiftshader
-  --enable-unsafe-swiftshader`) are now wired in
-  `playwright.config.ts`, and the four per-biome FPS captures land in
-  `docs/rc-journey/perf.md` / `docs/rc-journey/perf.json`. The
-  thirteen in-world screenshot gates (04–16) remain to be captured in
-  a follow-up screenshot pass — see `docs/rc-journey/REVIEW.md` for the
-  current capture status.
-- **Currently deployed (1.0.0-alpha.1):** cozy 2.5D BabylonJS tree-tender
-  with 9 hardcoded JSON zones at
-  `https://arcade-cabinet.github.io/grovekeeper/`.
-- **RC target:** voxel third-person on Jolly Pixel
-  (`@jolly-pixel/engine` + `voxel.renderer` + `runtime`) with biome-typed
-  infinite outer-world chunks and the special Grove biome.
+- **Active branch:** `main` (release/v1.3.2-qa-polish squash-merged as PR #64)
+- **RC status (2026-04-29):** All 20 waves complete. 1699 vitest tests
+  pass. TypeScript clean. Lighthouse Performance 99, Best Practices 100,
+  Accessibility 93, SEO 100. All 16 screenshot gates captured, baselined,
+  and passing in CI. QA playthroughs (mobile + desktop) documented.
+  Focus-trap auto-focus on CraftingPanel and FastTravelMenu. FastTravel
+  biome label ≥ 14px. meta-description + robots.txt present.
+- **Currently deployed (v1.3.2-alpha.1):** RC voxel build on Jolly Pixel
+  at `https://arcade-cabinet.github.io/grovekeeper/`.
 
 ## Wave status
 
@@ -54,67 +45,77 @@ progress.
 | 16 | Combat (swings, stamina gating, hostile state machines, retreat-to-grove fallback) | DONE |
 | 17 | Resource gathering (voxel mining/chopping/digging in outer world) | DONE |
 | 18 | Journey (landing → MainMenu → newgame → step-4-through-step-13 cinematic) | DONE |
-| 19 | Verification (Playwright journey suite, 16 screenshot baselines, Lighthouse, perf per biome, rubric) | DONE — scaffold |
-| 20 | Polish (anything below rubric threshold gets re-passed) | DONE — caveats below |
+| 19 | Verification (Playwright journey suite, 16 screenshot baselines, Lighthouse, perf per biome, rubric) | DONE |
+| 20 | Polish (anything below rubric threshold gets re-passed) | DONE |
 
 ## Polish status (Wave 20)
+
+All 16 gates captured and baselined (PR #64, v1.3.2-alpha.1).
 
 | Surface | Score | Captured? |
 |---------|:-----:|:---------:|
 | 01 Landing                          | 12/12 | yes |
-| 02 MainMenu                         | 12/12 | yes (polished — tagline contrast +17%) |
-| 03 NewGame                          | 12/12 | yes |
-| 04 First spawn — unclaimed grove    | N/A   | no — see REVIEW.md |
-| 05 Spirit greets                    | N/A   | no — same |
-| 06 Gather logs                      | N/A   | no — same |
-| 07 Craft hearth                     | N/A   | no — same |
-| 08 Place hearth                     | N/A   | no — same |
-| 09 Light hearth — cinematic         | N/A   | no — same |
-| 10 Fast-travel — first node         | N/A   | no — same |
-| 11 Villagers arrive                 | N/A   | no — same |
-| 12 Craft first weapon               | N/A   | no — same |
-| 13 Grove threshold                  | N/A   | no — same |
-| 14 Wilderness — first chunk         | N/A   | no — same |
-| 15 First encounter                  | N/A   | no — same |
-| 16 Second-grove discovery           | N/A   | no — same |
+| 02 MainMenu                         | 12/12 | yes |
+| 03 NewGame                          | 11/12 | yes (diegesis -1: modal is UI-driven) |
+| 04 First spawn — unclaimed grove    | 12/12 | yes |
+| 05 Spirit greets                    | 12/12 | yes |
+| 06 Gather logs                      | 12/12 | yes |
+| 07 Craft hearth                     | 11/12 | yes (polish -1: focus trap gap) |
+| 08 Place hearth                     | 12/12 | yes |
+| 09 Light hearth — cinematic         | 12/12 | yes |
+| 10 Fast-travel — first node         | 12/12 | yes |
+| 11 Villagers arrive                 | 12/12 | yes |
+| 12 Craft first weapon               | 12/12 | yes |
+| 13 Grove threshold                  | 12/12 | yes |
+| 14 Wilderness — first chunk         | 12/12 | yes |
+| 15 First encounter                  | 12/12 | yes |
+| 16 Second-grove discovery           | 12/12 | yes |
 
-## Open items (cross-wave)
+## Open QA items
 
-- **Verification rig WebGL** — software-WebGL flags
-  (`--use-gl=swiftshader --enable-unsafe-swiftshader`) are now wired in
-  `playwright.config.ts`. The four per-biome FPS captures are landing in
-  `docs/rc-journey/perf.md`. The 13 in-world screenshot gates (04–16)
-  remain to be exercised on the new rig — tracked as a follow-up
-  screenshot-capture pass, not a blocker on RC merge.
-- **SEO score (82%)** — Lighthouse warn-only. Likely missing meta-description
-  or structured data on landing. Not a blocker; addressed in a later
-  doc-polish pass.
+From `docs/qa-playthrough-1.md` and `docs/qa-playthrough-2.md`:
+
+| ID | Priority | Surface | Issue |
+|----|----------|---------|-------|
+| QA-1 | P2 | NewGame modal | iOS keyboard pushes Begin off-screen (Safari real device only) |
+| QA-2 | P2 | CraftingPanel | Full focus trap (tab-cycle within panel) — auto-focus done, cycle trap pending |
+| QA-4 | P3 | ResourceBar | Truncation at 375px with all resources populated |
+| QA-7 | P3 | PauseMenu | Second Esc press has no effect |
 
 ## Success criteria for RC
 
 Lifted directly from the spec's Success Criteria section:
 
 1. Every screenshot gate in `docs/rc-journey/` is committed and matches a
-   Playwright baseline. **PARTIAL** — 3 of 16 captured; remainder blocked
-   by verification-rig WebGL issue (see Open items).
-2. Every surface scores ≥ 10/12 on the rubric. **PASS** for the 3
-   captured surfaces (12/12 each); remainder pending.
-3. Lighthouse landing performance ≥ 90 mobile. **PASS** — desktop 96.7%
-   averaged across 3 runs.
+   Playwright baseline. **PASS** — all 16 captured and CI-gated (PR #64).
+2. Every surface scores ≥ 10/12 on the rubric. **PASS** — all 16 ≥ 10/12
+   (lowest is 11/12).
+3. Lighthouse landing performance ≥ 90 mobile. **PASS** — Performance 99,
+   Accessibility 93, Best Practices 100, SEO 100.
 4. Runtime FPS budgets hit in all wilderness biomes + the grove biome.
-   **PENDING** — same verification-rig issue.
-5. Bundle and asset budgets met. **PASS** — initial bundle 101 KB
-   gzipped (budget < 500 KB); Three.js chunk 184 KB gzipped.
-6. Internal docs describe the actual game. **PASS** — CLAUDE.md,
-   AGENTS.md, docs/* current.
+   **PASS** — see `docs/rc-journey/perf.md` (per-biome targets met).
+5. Bundle and asset budgets met. **PASS** — index 111 KB gz (budget 200 KB);
+   three 185 KB gz (budget 260 KB).
+6. Internal docs describe the actual game. **PASS** — CLAUDE.md, AGENTS.md,
+   docs/* current.
 7. **A new player who lands cold can play through landing → MainMenu →
    first spawn → gather → craft hearth → place hearth → light hearth
    (claim starter grove) → craft first weapon → cross threshold → first
    encounter → discover second grove, *without ever reading a tutorial
    popup*, and emerge with the full meta-loop in their head.**
-   **PASS in dev** — Wave 18 D report confirms all 14 beats reachable
-   via the deterministic state machine; needs WebGL-rigged Playwright
-   to verify in CI.
+   **PASS** — all 16 QA beats confirmed in both mobile and desktop
+   playthroughs (docs/qa-playthrough-1.md, docs/qa-playthrough-2.md).
 
-The seventh criterion is the one that matters. The screenshots, the
-rubric, and the budgets all exist to serve it.
+The seventh criterion is the one that matters. All criteria now PASS.
+
+## Next work
+
+The RC gate has been cleared. Remaining work is polish-wave post-RC:
+
+- **P2 (QA-1):** iOS Safari keyboard viewport fix — needs `dvh` + scroll-into-view on NewGameScreen
+- **P2 (QA-2):** CraftingPanel full focus trap (tab-cycle) — add `focus-trap` or manual tab interceptor
+- **P3 (QA-4):** ResourceBar overflow at 375px with all resources
+- **P3 (QA-7):** PauseMenu double-Esc — second Esc should close
+- **P2:** `Math.random()` in simulation code (placement.ts, dialogueSystem.ts) → `scopedRNG`
+- **P3:** Coast biome encounter table is empty — add fauna
+- **P3:** FarmerMascot is a stub — needs real Gardener mascot SVG
