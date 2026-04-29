@@ -24,9 +24,14 @@ import type { ResourceType } from "@/config/resources";
 import { getDb, isDbInitialized } from "@/db/client";
 import { inventoryRepo } from "@/db/repos";
 import { koota } from "@/koota";
-import { movePlayerTo } from "@/player-actions/GameActions";
 import { eventBus } from "@/runtime/eventBus";
 import { CurrentSeason, IsPlayer, Position, WorldMeta } from "@/traits";
+
+function movePlayerTo(x: number, z: number): void {
+  const player = koota.queryFirst(IsPlayer, Position);
+  if (!player) return;
+  player.set(Position, (prev) => ({ ...prev, x, z }));
+}
 
 const RC_WORLD_ID = "rc-world-default";
 

@@ -16,8 +16,7 @@ import { listClaimedGroves } from "@/game/scene/fastTravel";
 import { koota } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
 import { initializePlatform } from "@/systems/platform";
-import { generateDailyQuests } from "@/systems/quests";
-import { CurrentSeason, GameScreen, PlayerProgress, Quests } from "@/traits";
+import { GameScreen } from "@/traits";
 import { CraftingPanel } from "@/ui/game/CraftingPanel";
 import { GameErrorBoundary } from "@/ui/game/ErrorBoundary";
 import { FastTravelFade } from "@/ui/game/FastTravelFade";
@@ -53,9 +52,6 @@ const GameScene = lazy(() =>
 
 export const Game = () => {
   const screen = useTrait(koota, GameScreen);
-  const currentSeason = useTrait(koota, CurrentSeason);
-  const progress = useTrait(koota, PlayerProgress);
-  const quests = useTrait(koota, Quests);
 
   const [dbLoading, setDbLoading] = createSignal(true);
   const [pauseMenuOpen, setPauseMenuOpen] = createSignal(false);
@@ -89,24 +85,6 @@ export const Game = () => {
     return () => {
       cancelled = true;
     };
-  });
-
-  createEffect(() => {
-    if (dbLoading()) return;
-    const season = currentSeason()?.value ?? "spring";
-    const level = progress()?.level ?? 1;
-    const activeQuests = quests()?.activeQuests ?? [];
-    const completedGoalIds = quests()?.completedGoalIds ?? [];
-    const lastQuestRefresh = quests()?.lastQuestRefresh ?? 0;
-    const now = Date.now();
-    const oneDayMs = 24 * 60 * 60 * 1000;
-
-    if (activeQuests.length === 0 || now - lastQuestRefresh > oneDayMs) {
-      const completedSet = new Set<string>(completedGoalIds as string[]);
-      const newQuests = generateDailyQuests(season, level, completedSet);
-      gameActions().setActiveQuests(newQuests);
-      gameActions().setLastQuestRefresh(now);
-    }
   });
 
   const currentScreen = () => screen()?.value ?? "menu";
