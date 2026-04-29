@@ -108,9 +108,28 @@ Lifted directly from the spec's Success Criteria section:
 
 The seventh criterion is the one that matters. All criteria now PASS.
 
+## Post-RC runtime wiring (PR #69, 2026-04-29)
+
+After the RC shipped, a gap analysis revealed that several gameplay systems
+existed as tested code but were not connected to the engine tick loop:
+
+| Gap | Fix |
+|-----|-----|
+| `populateEncounters` never called | Wired into `onChunkSpawned` for non-grove biomes |
+| `spawnPlayer()` never called | Called at `createRuntime` startup so Koota player entity exists |
+| `staminaSystem` not ticked per frame | Wired via `InteractionTickBehavior.onTickDelta` |
+| `canSwing` / `spendSwingStamina` not used | Wired into GatherSystem constructor |
+| `RetreatSystem` never instantiated | Instantiated + driven per-frame; retreat on HP/stamina=0 |
+| No visible stamina / HP HUD | Added dual-bar `StaminaGauge` (HP + Stamina) top-right |
+| No inventory count display | Added `InventoryHUD` (top-left, reactive via `inventoryVersion` signal) |
+| `debugActions.addResource` wrote to old Koota trait only | Now also writes to `inventoryRepo` for CraftingPanel visibility |
+| `useTrait(player(), ...)` stale-entity bug | Fixed with new `useEntityTrait(accessor, trait)` hook |
+| 19 orphaned BabylonJS-era UI components | Deleted (confirmed zero production importers) |
+| FarmerMascot null stub in PauseMenu | Removed stub + blank icon slot |
+
 ## Next work
 
-All post-RC QA items resolved. Remaining lower-priority items:
+All post-RC wiring and cleanup complete. Remaining lower-priority items:
 
-- **P3:** FarmerMascot is a stub — needs real Gardener mascot SVG (cosmetic only; PauseMenu shows null at runtime)
 - `Math.random()` in `placement.ts` fallback and `dialogueSystem.ts` default — intentional design (crypto.randomUUID fallback + injectable RNG); not bugs
+- PauseMenu Stats tab shows legacy BabylonJS resource types (timber/sap/acorns) instead of RC inventory materials — cosmetic; Stats tab is informational only
