@@ -1,7 +1,8 @@
 ---
 title: Performance
-updated: 2026-04-19
-status: current
+updated: 2026-04-28
+status: stale
+stale_reason: "All content below describes the pre-port BabylonJS/Zustand/SPS stack. Current performance budgets are in STANDARDS.md. RC measured targets are in docs/rc-journey/perf.md."
 domain: technical
 ---
 
