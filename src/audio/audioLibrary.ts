@@ -13,7 +13,7 @@
  *   - `tool.*`     tool impact one-shots
  *   - `creature.*` creature vocal one-shots
  *   - `footstep.*` per-surface footstep one-shots
- *   - `levelUp` / `success` are legacy short ids called from src/actions.ts.
+ *   - `levelUp` / `success` are legacy short ids retained for compatibility.
  *
  * @todo Wave 3 audio TODOs that need real packs in a future polish wave —
  *   each is a string-only alias; symbolic API is final, asset is provisional.
@@ -42,7 +42,7 @@ const PREFIX = "assets/audio/";
  * `playSound("typo")` is a type error, not a silent miss.
  */
 export type SoundId =
-  // Legacy short ids (referenced from src/actions.ts).
+  // Legacy short ids retained for compatibility.
   | "levelUp"
   | "success"
   // UI.
@@ -111,7 +111,7 @@ export interface SoundEntry {
  * for grepability.
  */
 export const AUDIO_LIBRARY: Readonly<Record<SoundId, SoundEntry>> = {
-  // ── Legacy ids called from src/actions.ts ────────────────────────────
+  // ── Legacy sound ids retained for compatibility ──────────────────────
   // Re-use the achievement bell for level-up — it's the closest fanfare in
   // the curated pack. A bespoke level-up jingle is a polish-wave goal.
   levelUp: {

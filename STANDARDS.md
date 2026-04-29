@@ -72,24 +72,23 @@ Before making changes, read (in order):
 1. `CLAUDE.md` — project identity and tech stack
 2. `AGENTS.md` — multi-agent protocols and memory bank
 3. `docs/README.md` — documentation index
-4. `src/main.tsx` — entry point and WorldProvider mount
+4. `src/main.tsx` — entry point and runtime boot
 5. `src/App.tsx` — root component
 6. `src/Game.tsx` — screen router (menu | playing)
-7. `src/engine/scenes/GameScene.tsx` — BabylonJS canvas + game loop orchestrator
-8. `src/engine/scene/SceneManager.ts` — scene subsystems coordination
-9. `src/koota.ts` — Koota world + spawn helpers
-10. `src/traits.ts` — central trait catalog
-11. `src/actions.ts` — action bundle
-12. `src/ecs/solid.ts` — Solid↔Koota reactive hooks
-13. `src/systems/growth.ts` — core game system (example)
-14. `src/world-data/WorldManager.ts` — world data layer
+7. `src/game/GameScene.ts` — Jolly Pixel engine scene + game loop
+8. `src/koota.ts` — Koota world + spawn helpers
+9. `src/traits.ts` — central trait catalog
+10. `src/game/rc-actions.ts` — RC action bundle (setScreen, addResource, hydrateFromDb, ...)
+11. `src/ecs/solid.ts` — Solid↔Koota reactive hooks
+12. `src/systems/growth.ts` — tree lifecycle system (example)
+13. `src/game/world/ChunkManager.ts` — chunk streaming manager
 
 ## Type Safety & Linting
 
 ```bash
 pnpm tsc       # TypeScript type check
 pnpm lint      # Biome lint + format check
-npx biome check . --write  # Auto-fix issues
+pnpm check     # Biome lint + format (preferred; use --write to auto-fix)
 ```
 
 All code must pass type checking and Biome linting before commit.

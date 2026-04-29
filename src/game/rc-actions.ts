@@ -1,0 +1,431 @@
+import { createActions } from "koota";
+import { getDifficultyById } from "@/config/difficulty";
+import type { ResourceType } from "@/config/resources";
+import { koota } from "@/koota";
+import {
+  computeDiscoveryTier,
+  createEmptyProgress,
+  type SpeciesProgress,
+} from "@/systems/speciesDiscovery";
+import {
+  Achievements,
+  Build,
+  CurrentDay,
+  CurrentSeason,
+  Difficulty,
+  FarmerState,
+  GameScreen,
+  Grid,
+  IsPlayer,
+  LifetimeResources,
+  PlayerProgress,
+  QuestChains,
+  Quests,
+  Resources,
+  Seeds,
+  Settings,
+  SpeciesProgressTrait,
+  Time,
+  Tracking,
+  WorldMeta,
+} from "@/traits";
+import { showToast } from "@/ui/game/Toast";
+
+export interface HydratedGameState {
+  screen?: string;
+  difficulty?: string;
+  permadeath?: boolean;
+  selectedTool?: string;
+  selectedSpecies?: string;
+  currentTool?: string;
+  coins?: number;
+  xp?: number;
+  level?: number;
+  unlockedTools?: string[];
+  unlockedSpecies?: string[];
+  activeBorderCosmetic?: string | null;
+  prestigeCount?: number;
+  treesPlanted?: number;
+  treesMatured?: number;
+  treesHarvested?: number;
+  treesWatered?: number;
+  wildTreesHarvested?: number;
+  wildTreesRegrown?: number;
+  treesPlantedInSpring?: number;
+  treesHarvestedInAutumn?: number;
+  toolUseCounts?: Record<string, number>;
+  visitedZoneTypes?: string[];
+  wildSpeciesHarvested?: string[];
+  speciesPlanted?: string[];
+  seasonsExperienced?: string[];
+  gameTimeMicroseconds?: number;
+  currentSeason?: "spring" | "summer" | "autumn" | "winter";
+  currentDay?: number;
+  activeQuests?: unknown[];
+  completedQuestIds?: string[];
+  completedGoalIds?: string[];
+  lastQuestRefresh?: number;
+  questChainState?: unknown;
+  resources?: { timber: number; sap: number; fruit: number; acorns: number };
+  lifetimeResources?: {
+    timber: number;
+    sap: number;
+    fruit: number;
+    acorns: number;
+  };
+  seeds?: Record<string, number>;
+  achievements?: string[];
+  stamina?: number;
+  maxStamina?: number;
+  gridSize?: number;
+  currentZoneId?: string;
+  worldSeed?: string;
+  discoveredZones?: string[];
+  buildMode?: boolean;
+  buildTemplateId?: string | null;
+  placedStructures?: { templateId: string; worldX: number; worldZ: number }[];
+  hasSeenRules?: boolean;
+  hapticsEnabled?: boolean;
+  soundEnabled?: boolean;
+  speciesProgress?: Record<string, unknown>;
+  pendingCodexUnlocks?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// hydrateFromDb helpers — each hydrates one trait group from dbState
+// ---------------------------------------------------------------------------
+
+type World = typeof koota;
+
+const VALID_SCREENS = [
+  "menu",
+  "new-game",
+  "playing",
+  "paused",
+  "seedSelect",
+  "rules",
+] as const;
+type ScreenValue = (typeof VALID_SCREENS)[number];
+
+function hydrateScreen(world: World, s: string | undefined): void {
+  if (s !== undefined && (VALID_SCREENS as readonly string[]).includes(s)) {
+    world.set(GameScreen, { value: s as ScreenValue });
+  }
+}
+
+function hydrateDifficulty(
+  world: World,
+  difficulty: string | undefined,
+  permadeath: boolean | undefined,
+): void {
+  if (difficulty === undefined && permadeath === undefined) return;
+  const cur = world.get(Difficulty);
+  const validatedId =
+    difficulty !== undefined && getDifficultyById(difficulty) !== undefined
+      ? difficulty
+      : (cur?.id ?? "normal");
+  world.set(Difficulty, {
+    id: validatedId,
+    permadeath: permadeath ?? cur?.permadeath ?? false,
+  });
+}
+
+function hydratePlayerProgress(world: World, dbState: HydratedGameState): void {
+  const pp = world.get(PlayerProgress);
+  if (!pp) return;
+  const next = { ...pp };
+  if (dbState.selectedTool !== undefined)
+    next.selectedTool = dbState.selectedTool;
+  if (dbState.selectedSpecies !== undefined)
+    next.selectedSpecies = dbState.selectedSpecies;
+  if (dbState.currentTool !== undefined) next.currentTool = dbState.currentTool;
+  if (dbState.coins !== undefined) next.coins = dbState.coins;
+  if (dbState.xp !== undefined) next.xp = dbState.xp;
+  if (dbState.level !== undefined) next.level = dbState.level;
+  if (dbState.unlockedTools !== undefined)
+    next.unlockedTools = dbState.unlockedTools;
+  if (dbState.unlockedSpecies !== undefined)
+    next.unlockedSpecies = dbState.unlockedSpecies;
+  if (dbState.activeBorderCosmetic !== undefined)
+    next.activeBorderCosmetic = dbState.activeBorderCosmetic;
+  if (dbState.prestigeCount !== undefined)
+    next.prestigeCount = dbState.prestigeCount;
+  world.set(PlayerProgress, next);
+}
+
+function hydrateTracking(world: World, dbState: HydratedGameState): void {
+  const tr = world.get(Tracking);
+  if (!tr) return;
+  const next = { ...tr };
+  if (dbState.treesPlanted !== undefined)
+    next.treesPlanted = dbState.treesPlanted;
+  if (dbState.treesMatured !== undefined)
+    next.treesMatured = dbState.treesMatured;
+  if (dbState.treesHarvested !== undefined)
+    next.treesHarvested = dbState.treesHarvested;
+  if (dbState.treesWatered !== undefined)
+    next.treesWatered = dbState.treesWatered;
+  if (dbState.wildTreesHarvested !== undefined)
+    next.wildTreesHarvested = dbState.wildTreesHarvested;
+  if (dbState.wildTreesRegrown !== undefined)
+    next.wildTreesRegrown = dbState.wildTreesRegrown;
+  if (dbState.treesPlantedInSpring !== undefined)
+    next.treesPlantedInSpring = dbState.treesPlantedInSpring;
+  if (dbState.treesHarvestedInAutumn !== undefined)
+    next.treesHarvestedInAutumn = dbState.treesHarvestedInAutumn;
+  if (dbState.toolUseCounts !== undefined)
+    next.toolUseCounts = dbState.toolUseCounts;
+  if (dbState.visitedZoneTypes !== undefined)
+    next.visitedZoneTypes = dbState.visitedZoneTypes;
+  if (dbState.wildSpeciesHarvested !== undefined)
+    next.wildSpeciesHarvested = dbState.wildSpeciesHarvested;
+  if (dbState.speciesPlanted !== undefined)
+    next.speciesPlanted = dbState.speciesPlanted;
+  if (dbState.seasonsExperienced !== undefined)
+    next.seasonsExperienced = dbState.seasonsExperienced;
+  world.set(Tracking, next);
+}
+
+const VALID_SEASONS = ["spring", "summer", "autumn", "winter"] as const;
+type SeasonValue = (typeof VALID_SEASONS)[number];
+
+function isValidSeason(s: string): s is SeasonValue {
+  return (VALID_SEASONS as readonly string[]).includes(s);
+}
+
+function hydrateTimeAndSeason(world: World, dbState: HydratedGameState): void {
+  if (dbState.gameTimeMicroseconds !== undefined) {
+    const us = dbState.gameTimeMicroseconds;
+    world.set(Time, (prev) => ({ ...prev, gameTimeMicroseconds: us }));
+  }
+  if (
+    dbState.currentSeason !== undefined &&
+    isValidSeason(dbState.currentSeason)
+  ) {
+    world.set(CurrentSeason, { value: dbState.currentSeason });
+  }
+  if (dbState.currentDay !== undefined) {
+    world.set(CurrentDay, { value: dbState.currentDay });
+  }
+}
+
+function hydrateQuests(world: World, dbState: HydratedGameState): void {
+  const quests = world.get(Quests);
+  if (
+    !quests ||
+    (dbState.activeQuests === undefined &&
+      dbState.completedQuestIds === undefined &&
+      dbState.completedGoalIds === undefined &&
+      dbState.lastQuestRefresh === undefined)
+  )
+    return;
+  const next = { ...quests };
+  if (dbState.activeQuests !== undefined)
+    next.activeQuests = dbState.activeQuests as typeof quests.activeQuests;
+  if (dbState.completedQuestIds !== undefined)
+    next.completedQuestIds = dbState.completedQuestIds;
+  if (dbState.completedGoalIds !== undefined)
+    next.completedGoalIds = dbState.completedGoalIds;
+  if (dbState.lastQuestRefresh !== undefined)
+    next.lastQuestRefresh = dbState.lastQuestRefresh;
+  world.set(Quests, next);
+  if (dbState.questChainState !== undefined) {
+    world.set(
+      QuestChains,
+      dbState.questChainState as Parameters<
+        typeof world.set<typeof QuestChains>
+      >[1],
+    );
+  }
+}
+
+function hydrateFarmerStamina(world: World, dbState: HydratedGameState): void {
+  if (dbState.stamina === undefined && dbState.maxStamina === undefined) return;
+  const player = world.queryFirst(IsPlayer, FarmerState);
+  if (!player) return;
+  const cur = player.get(FarmerState);
+  player.set(FarmerState, {
+    stamina: dbState.stamina ?? cur?.stamina ?? 100,
+    maxStamina: dbState.maxStamina ?? cur?.maxStamina ?? 100,
+    hp: cur?.hp ?? 100,
+    maxHp: cur?.maxHp ?? 100,
+  });
+}
+
+function hydrateWorldMeta(world: World, dbState: HydratedGameState): void {
+  const meta = world.get(WorldMeta);
+  if (!meta) return;
+  const next = { ...meta };
+  if (dbState.currentZoneId !== undefined)
+    next.currentZoneId = dbState.currentZoneId;
+  if (dbState.worldSeed !== undefined) next.worldSeed = dbState.worldSeed;
+  if (dbState.discoveredZones !== undefined)
+    next.discoveredZones = dbState.discoveredZones;
+  world.set(WorldMeta, next);
+}
+
+function hydrateBuild(world: World, dbState: HydratedGameState): void {
+  const build = world.get(Build);
+  if (!build) return;
+  const next = { ...build };
+  if (dbState.buildMode !== undefined) next.mode = dbState.buildMode;
+  if (dbState.buildTemplateId !== undefined)
+    next.templateId = dbState.buildTemplateId;
+  if (dbState.placedStructures !== undefined)
+    next.placedStructures = dbState.placedStructures;
+  world.set(Build, next);
+}
+
+function hydrateSettings(world: World, dbState: HydratedGameState): void {
+  const settings = world.get(Settings);
+  if (!settings) return;
+  const next = { ...settings };
+  if (dbState.hasSeenRules !== undefined)
+    next.hasSeenRules = dbState.hasSeenRules;
+  if (dbState.hapticsEnabled !== undefined)
+    next.hapticsEnabled = dbState.hapticsEnabled;
+  if (dbState.soundEnabled !== undefined)
+    next.soundEnabled = dbState.soundEnabled;
+  world.set(Settings, next);
+}
+
+function safeNonNegativeInt(value: unknown, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? Math.trunc(n) : fallback;
+}
+
+function normalizeSpeciesProgress(
+  raw: Record<string, unknown>,
+): Record<string, SpeciesProgress> {
+  const result: Record<string, SpeciesProgress> = {};
+  for (const [id, entry] of Object.entries(raw)) {
+    const base = createEmptyProgress();
+    const src = (entry ?? {}) as Record<string, unknown>;
+    const merged: Omit<SpeciesProgress, "discoveryTier"> = {
+      timesPlanted: safeNonNegativeInt(src.timesPlanted, base.timesPlanted),
+      maxStageReached: safeNonNegativeInt(
+        src.maxStageReached,
+        base.maxStageReached,
+      ),
+      timesHarvested: safeNonNegativeInt(
+        src.timesHarvested,
+        base.timesHarvested,
+      ),
+      totalYield: safeNonNegativeInt(src.totalYield, base.totalYield),
+    };
+    result[id] = { ...merged, discoveryTier: computeDiscoveryTier(merged) };
+  }
+  return result;
+}
+
+function hydrateCodex(world: World, dbState: HydratedGameState): void {
+  const codex = world.get(SpeciesProgressTrait);
+  if (
+    !codex ||
+    (dbState.speciesProgress === undefined &&
+      dbState.pendingCodexUnlocks === undefined)
+  )
+    return;
+  const next = { ...codex };
+  if (dbState.speciesProgress !== undefined)
+    next.speciesProgress = normalizeSpeciesProgress(dbState.speciesProgress);
+  if (dbState.pendingCodexUnlocks !== undefined)
+    next.pendingCodexUnlocks = dbState.pendingCodexUnlocks;
+  world.set(SpeciesProgressTrait, next);
+}
+
+// ---------------------------------------------------------------------------
+// Actions
+// ---------------------------------------------------------------------------
+
+const gameActions = createActions((world) => ({
+  setScreen: (
+    screen: "menu" | "new-game" | "playing" | "paused" | "seedSelect" | "rules",
+  ) => {
+    world.set(GameScreen, { value: screen });
+  },
+
+  setBuildMode: (enabled: boolean, templateId?: string) => {
+    world.set(Build, (prev) => ({
+      ...prev,
+      mode: enabled,
+      templateId: enabled ? (templateId ?? null) : null,
+    }));
+  },
+
+  addPlacedStructure: (templateId: string, worldX: number, worldZ: number) => {
+    world.set(Build, (prev) => ({
+      ...prev,
+      placedStructures: [
+        ...prev.placedStructures,
+        { templateId, worldX, worldZ },
+      ],
+    }));
+  },
+
+  addResource: (type: ResourceType, amount: number) => {
+    world.set(Resources, (prev) => ({ ...prev, [type]: prev[type] + amount }));
+    world.set(LifetimeResources, (prev) => ({
+      ...prev,
+      [type]: prev[type] + amount,
+    }));
+  },
+
+  incrementTreesHarvested: () => {
+    world.set(Tracking, (prev) => ({
+      ...prev,
+      treesHarvested: prev.treesHarvested + 1,
+    }));
+  },
+
+  discoverZone: (zoneId: string): boolean => {
+    const meta = world.get(WorldMeta);
+    if (!meta) return false;
+    if (meta.discoveredZones.includes(zoneId)) return false;
+    world.set(WorldMeta, {
+      ...meta,
+      discoveredZones: [...meta.discoveredZones, zoneId],
+    });
+    queueMicrotask(() => {
+      showToast("Discovered new area!", "success");
+    });
+    return true;
+  },
+
+  setWorldSeed: (seed: string) => {
+    world.set(WorldMeta, (prev) => ({ ...prev, worldSeed: seed }));
+  },
+
+  setSoundEnabled: (enabled: boolean) => {
+    world.set(Settings, (prev) => ({ ...prev, soundEnabled: enabled }));
+  },
+
+  hydrateFromDb: (dbState: HydratedGameState) => {
+    hydrateScreen(world, dbState.screen);
+    hydrateDifficulty(world, dbState.difficulty, dbState.permadeath);
+    hydratePlayerProgress(world, dbState);
+    hydrateTracking(world, dbState);
+    hydrateTimeAndSeason(world, dbState);
+    hydrateQuests(world, dbState);
+    if (dbState.resources !== undefined)
+      world.set(Resources, (prev) => ({ ...prev, ...dbState.resources }));
+    if (dbState.lifetimeResources !== undefined)
+      world.set(LifetimeResources, (prev) => ({
+        ...prev,
+        ...dbState.lifetimeResources,
+      }));
+    if (dbState.seeds !== undefined)
+      world.set(Seeds, (prev) => ({ ...prev, ...dbState.seeds }));
+    if (dbState.achievements !== undefined)
+      world.set(Achievements, { items: dbState.achievements });
+    hydrateFarmerStamina(world, dbState);
+    if (dbState.gridSize !== undefined)
+      world.set(Grid, { gridSize: dbState.gridSize });
+    hydrateWorldMeta(world, dbState);
+    hydrateBuild(world, dbState);
+    hydrateSettings(world, dbState);
+    hydrateCodex(world, dbState);
+  },
+}));
+
+export const actions = () => gameActions(koota);

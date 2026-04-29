@@ -298,6 +298,6 @@ Prior to Koota, Grovekeeper used Miniplex 2.x. Miniplex was a query-only ECS; st
 - [`src/koota.ts`](../../../src/koota.ts) — World instantiation and spawn helpers
 - [`src/traits.ts`](../../../src/traits.ts) — Trait definitions
 - [`src/ecs/solid.ts`](../../../src/ecs/solid.ts) — Solid.js integration hooks
-- [`src/actions.ts`](../../../src/actions.ts) — ~63 action mutators
+- [`src/game/rc-actions.ts`](../../../src/game/rc-actions.ts) — RC action bundle (setScreen, addResource, hydrateFromDb, …)
 - [`src/systems/`](../../../src/systems/) — System implementations
 - [state-management.md](./state-management.md) — Persistence and player progression

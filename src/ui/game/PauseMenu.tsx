@@ -1,10 +1,10 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
-import { actions as gameActions } from "@/actions";
 import { COLORS } from "@/config/config";
 import { getDb, isDbInitialized } from "@/db/client";
 import { exportSaveFile, importSaveFile } from "@/db/export";
 import { grovesRepo, inventoryRepo } from "@/db/repos";
 import { useTrait } from "@/ecs/solid";
+import { actions as gameActions } from "@/game/rc-actions";
 import { koota } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
 import { ACHIEVEMENT_DEFS } from "@/systems/achievements";

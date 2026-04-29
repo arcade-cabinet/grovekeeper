@@ -1,38 +1,45 @@
 ---
 title: State Management
-updated: 2026-04-20
+updated: 2026-04-28
 status: current
 domain: technical
 ---
 
 # State Management
 
-Grovekeeper uses **Koota** as its single unified state management system. Koota is both the ECS (Entity-Component-System) and the persistent state store. All game state — runtime entity data and player progress — lives in Koota traits.
-
-## Historical Context
-
-Pre-1.0, state was split: Zustand handled persistent player data (XP, level, resources), and Miniplex ECS managed runtime entities (trees, NPCs, effects). This required synchronization between systems. Post-1.0-alpha.1, Koota unifies both: world-level singleton traits replace Zustand, per-entity traits replace Miniplex, and persistence via sql.js replaces localStorage.
+Grovekeeper uses **Koota** as its unified state management system. Koota provides both ECS (Entity-Component-System) runtime data and persistent game state via traits.
 
 ## Architecture
 
-**Koota** stores state as traits — each trait is a type signature with methods. Two trait categories:
+State is split into two categories:
 
 1. **World-level singleton traits** — Game-wide state (one instance per world)
-   - `PlayerProgress` — XP, level, prestige count
-   - `Resources` — Timber, Sap, Fruit, Acorns balances
-   - `Quests` — Active quests, completed quest IDs
-   - `Settings` — Tutorial flag, haptics, sound toggles
+   - `PlayerProgress` — coins, XP, level, unlocked tools/species
+   - `Resources` / `LifetimeResources` — Timber, Sap, Fruit, Acorns balances
+   - `Seeds` — Seed inventory (species → count)
+   - `Tracking` — Telemetry counters (treesPlanted, treesHarvested, etc.)
+   - `Quests` / `QuestChains` — Active/completed quests and chain state
+   - `Settings` — `hasSeenRules`, `hapticsEnabled`, `soundEnabled`
    - `Achievements` — Unlocked achievement IDs
-   - `Difficulty` — Game difficulty level
-   - `Tutorial` — Tutorial step + completion state
+   - `Difficulty` — Difficulty tier ID and permadeath flag
+   - `CurrentSeason` / `CurrentDay` / `Time` — Temporal state
+   - `GameScreen` — Active UI screen (`"menu"`, `"playing"`, `"paused"`, ...)
+   - `WorldMeta` — World seed, current zone, discovered zones
+   - `Build` — Build mode, active template, placed structures
+   - `SpeciesProgressTrait` — Species codex progress and pending unlocks
+   - `Grid` — Grid size config
 
 2. **Per-entity traits** — Runtime game objects
    - `Position` — (x, y, z) coordinates
    - `Tree` — Species, growth stage, water level
-   - `Npc` — Dialogue state, inventory
+   - `FarmerState` — Player stamina, HP
+   - `Npc` — Dialogue state
    - `Renderable` — Mesh reference + visibility
    - `Harvestable` — Harvestable type + yield
    - `IsPlayer` — Marks the player entity
+   - `Structure` — Placed structure data
+   - `Zone` / `InZone` — Zone membership
+   - `GridCell` — Grid position
 
 ## Reading State in Components
 
@@ -46,122 +53,113 @@ const resources = useTrait(koota, Resources);
 // Returns: () => Resources (Solid signal accessor)
 // Use: <div>{resources().timber}</div>
 
-// Query all trees with position and renderable
-const allTrees = useQuery(Tree, Position, Renderable);
+// Query all trees
+const allTrees = useQuery(Tree, Position);
 // Returns: () => Entity[] (Solid signal)
-// Use: {allTrees().map(tree => ...)}
 
-// Get first NPC (or undefined)
-const firstNpc = useQueryFirst(Npc, Position);
-// Returns: () => Entity | undefined
+// Get player entity
+const player = useQueryFirst(IsPlayer, FarmerState);
 
 // Check if entity has a trait
 const isHarvestable = useHas(tree, Harvestable);
-// Returns: boolean
 ```
 
-All hooks return **Solid signals** (functions) that reactively track changes. Components re-run when signals change.
+All hooks return **Solid signals** (functions) that reactively track changes.
 
 ## Trait Update Patterns
 
-All state mutations go through Koota's `set()` and `add()`/`remove()` APIs:
-
 ```typescript
 // Full overwrite (world-level trait)
-koota.set(PlayerProgress, { xp: 500, level: 5, prestigeCount: 0 });
+koota.set(Resources, { timber: 50, sap: 10, fruit: 5, acorns: 3 });
 
 // Functional update
-koota.set(Resources, (prev) => ({
-  ...prev,
-  timber: prev.timber + 10,
-}));
+koota.set(Resources, (prev) => ({ ...prev, timber: prev.timber + 10 }));
 
 // Per-entity update
-const tree = world.getBy(Position, { x: 0, y: 0, z: 0 });
-tree.set(Tree, { stage: "mature", water: 100 });
+tree.set(Tree, { stage: 3, watered: false, speciesId: "white-oak" });
 
-// Add a trait to an entity
-tree.add(Harvestable("apple"));
-
-// Remove a trait
+// Add/remove a trait
+tree.add(Harvestable());
 tree.remove(Harvestable);
 ```
 
 ## Action Bundle Pattern
 
-All state mutations are encapsulated in `src/actions.ts`, which exports ~63 named actions. This provides a single API surface and closure-captured world context:
+All state mutations that cross multiple traits or require validation are encapsulated in `src/game/rc-actions.ts`, which uses Koota's `createActions` pattern:
 
 ```typescript
-// src/actions.ts
-export function createActions(world: Koota) {
-  return {
-    addXp: (amount: number) => {
-      const current = world.get(PlayerProgress);
-      const newLevel = calculateLevel(current.xp + amount);
-      world.set(PlayerProgress, {
-        ...current,
-        xp: current.xp + amount,
-        level: newLevel,
-      });
-      if (newLevel > current.level) {
-        queueMicrotask(() => showToast(`Level ${newLevel}!`));
-      }
-    },
-    
-    harvestTree: (tree: Entity) => {
-      const treeData = tree.get(Tree);
-      const yields = calculateYield(treeData);
-      const resources = world.get(Resources);
-      world.set(Resources, { ...resources, ...yields });
-      tree.remove(Harvestable);
-    },
-  };
-}
+// src/game/rc-actions.ts
+import { createActions } from "koota";
+
+const gameActions = createActions((world) => ({
+  addResource: (type: ResourceType, amount: number) => {
+    world.set(Resources, (prev) => ({ ...prev, [type]: prev[type] + amount }));
+    world.set(LifetimeResources, (prev) => ({ ...prev, [type]: prev[type] + amount }));
+  },
+
+  discoverZone: (zoneId: string): boolean => {
+    const meta = world.get(WorldMeta);
+    if (!meta || meta.discoveredZones.includes(zoneId)) return false;
+    world.set(WorldMeta, { ...meta, discoveredZones: [...meta.discoveredZones, zoneId] });
+    return true;
+  },
+
+  hydrateFromDb: (dbState: HydratedGameState) => {
+    // Delegates to focused helper functions (hydrateScreen, hydrateDifficulty, ...)
+  },
+}));
+
+export const actions = () => gameActions(koota);
 ```
 
-UI and systems import and call actions: `actions.addXp(50)`.
+Callers import `actions()` and call methods directly: `actions().addResource("timber", 5)`.
 
 ## Persistence
 
-State persists to SQL via `src/db.ts`:
+State persists via `drizzle-orm` + `@capacitor-community/sqlite` (sql.js on web):
 
 ```typescript
-// On app boot
-const saved = await hydrateFromDb();
-world.set(PlayerProgress, saved.playerProgress);
-world.set(Resources, saved.resources);
-// ... all singleton traits
+// On app boot — hydrate Koota from DB
+const saved = await loadGameState(db);
+actions().hydrateFromDb(saved);
 
 // Auto-save on visibility change
-document.addEventListener("visibilitychange", async () => {
-  if (document.hidden) {
-    await persistToDb(world);
-  }
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) persistGameState(db, koota);
 });
 ```
 
-Serialization uses sql.js (in-memory SQLite). All traits are tagged with `@persistent` to mark what to serialize.
+`hydrateFromDb` validates select fields before writing — `screen` is checked against the allowed screen union, `difficulty` is validated via `getDifficultyById`, and `currentSeason` is validated via an `isValidSeason` type guard. Other fields are merged directly from DB state.
 
-## Timing: Subscriptions and Reactivity
+## Species Codex Pattern
 
-Koota fires `removeSubscriptions` **before** clearing the trait mask. The Solid adapter defers all signal refreshes to the next microtask, ensuring subscribers observe post-mutation state:
+Species tracking uses a domain-event pattern: functions return `CodexEvent | null` instead of triggering UI directly:
 
 ```typescript
-// Safe pattern (inside an action)
-koota.set(Resources, newResources); // subscribers notified
-// Solid components re-evaluate with updated value in next microtask
+// src/systems/speciesTracking.ts
+export function trackSpeciesPlanting(world: World, speciesId: string): CodexEvent | null {
+  // mutates SpeciesProgressTrait
+  // returns CodexEvent if tier advanced, null otherwise
+}
+
+// Caller is responsible for UI notification
+const event = trackSpeciesPlanting(koota, "white-oak");
+if (event) showToast(`${event.speciesName}: ${event.tierName}`, "success");
 ```
 
-## Common Traits
+## Common Traits Reference
 
-| Trait | Scope | Fields |
-|-------|-------|--------|
-| `PlayerProgress` | World | `xp`, `level`, `prestigeCount` |
+| Trait | Scope | Key Fields |
+|-------|-------|------------|
+| `PlayerProgress` | World | `coins`, `xp`, `level`, `unlockedTools`, `unlockedSpecies` |
 | `Resources` | World | `timber`, `sap`, `fruit`, `acorns` |
-| `Quests` | World | `active: Quest[]`, `completed: string[]` |
-| `Settings` | World | `soundEnabled`, `hapticsEnabled` |
-| `Achievements` | World | `unlockedIds: string[]` |
+| `Tracking` | World | `treesPlanted`, `treesHarvested`, `treesWatered`, ... |
+| `Settings` | World | `soundEnabled`, `hapticsEnabled`, `hasSeenRules` |
+| `WorldMeta` | World | `worldSeed`, `currentZoneId`, `discoveredZones` |
+| `Difficulty` | World | `id`, `permadeath` |
+| `CurrentSeason` | World | `value: "spring" \| "summer" \| "autumn" \| "winter"` |
+| `SpeciesProgressTrait` | World | `speciesProgress`, `pendingCodexUnlocks` |
+| `FarmerState` | Entity | `stamina`, `maxStamina`, `hp`, `maxHp` |
 | `Position` | Entity | `x`, `y`, `z` |
-| `Tree` | Entity | `species`, `stage`, `water` |
-| `Npc` | Entity | `dialogueState`, `inventory` |
-| `Renderable` | Entity | `meshRef?: Mesh`, `visible: boolean` |
+| `Tree` | Entity | `speciesId`, `stage`, `progress`, `watered` |
+| `Npc` | Entity | `dialogueState` |

@@ -28,6 +28,8 @@
 
 import { type Actor, ActorComponent } from "@jolly-pixel/engine";
 import { VoxelRenderer } from "@jolly-pixel/voxel.renderer";
+import type { Object3D } from "three";
+import { actorObject3D } from "@/shared/utils/actorUtils";
 import { loadBiomeTileset } from "./BiomeTilesetLoader";
 import {
   type BiomeDefinition,
@@ -120,11 +122,7 @@ export class ChunkActor extends ActorComponent {
     // Guarded for the test environment where the actor stub may omit
     // `object3D` — production engine actors always have it.
     const size = CHUNK_TUNING.size;
-    const obj3D = (
-      this.actor as unknown as {
-        object3D?: { position: { set(x: number, y: number, z: number): void } };
-      }
-    ).object3D;
+    const obj3D = actorObject3D(this.actor);
     obj3D?.position.set(this.opts.chunkX * size, 0, this.opts.chunkZ * size);
   }
 
@@ -150,11 +148,8 @@ export class ChunkActor extends ActorComponent {
    * Returns `null` when the underlying actor stub omits `object3D`
    * (test fixtures only).
    */
-  get object3D(): import("three").Object3D | null {
-    const obj3D = (
-      this.actor as unknown as { object3D?: import("three").Object3D }
-    ).object3D;
-    return obj3D ?? null;
+  get object3D(): Object3D | null {
+    return actorObject3D(this.actor) ?? null;
   }
 
   awake(): void {

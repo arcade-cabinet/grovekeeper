@@ -19,10 +19,10 @@
  *   - Dev console: window.__grove.actions.teleportPlayer(80, 0)
  */
 
-import { actions as gameActions } from "@/actions";
 import type { ResourceType } from "@/config/resources";
 import { getDb, isDbInitialized } from "@/db/client";
 import { inventoryRepo } from "@/db/repos";
+import { actions as gameActions } from "@/game/rc-actions";
 import { koota } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
 import { CurrentSeason, IsPlayer, Position, WorldMeta } from "@/traits";
