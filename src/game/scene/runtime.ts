@@ -320,6 +320,7 @@ export async function createRuntime(
           fireflies: fireflies.points,
           fireflyBaseY: fireflies.baseY,
           fireflyPhase: fireflies.phase,
+          emissiveBoost: 0,
         });
       });
 
@@ -1016,7 +1017,17 @@ export async function createRuntime(
     if (activeClaimRitual?.isActive) return;
     activeClaimRitual = new ClaimRitualSystem({
       hooks: {
-        setInputLocked: (locked) => eventBus.emitClaimCinematicActive(locked),
+        setInputLocked: (locked) => {
+          eventBus.emitClaimCinematicActive(locked);
+          if (!locked) {
+            const key = groveGlowKey(
+              STARTER_GROVE_CHUNK.x,
+              STARTER_GROVE_CHUNK.z,
+            );
+            const handle = groveGlows.get(key);
+            if (handle) handle.emissiveBoost = 0;
+          }
+        },
         playSound: (id) => playSound(id),
         playStinger: (id) => playSound(id),
         restoreBiomeMusic: () => {
@@ -1024,10 +1035,14 @@ export async function createRuntime(
             /* idempotent */
           });
         },
-        setHearthEmissive: (_intensity: number) => {
-          // Hearth mesh emissive ramp requires direct access to the voxel
-          // renderer's block material for the hearth tile — deferred until
-          // the chunk system exposes a block-material handle.
+        setHearthEmissive: (intensity: number) => {
+          const key = groveGlowKey(
+            STARTER_GROVE_CHUNK.x,
+            STARTER_GROVE_CHUNK.z,
+          );
+          const handle = groveGlows.get(key);
+          if (!handle) return;
+          handle.emissiveBoost = intensity;
         },
         setVillagerAlpha: (alpha: number) => {
           const key = groveGlowKey(

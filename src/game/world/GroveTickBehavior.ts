@@ -54,7 +54,7 @@ export class GroveTickBehavior extends ActorComponent {
   update(_deltaMs: number): void {
     const t = this.clock.getElapsedTime();
     for (const handle of this.groveGlows.values()) {
-      updateGroveEmissivePulse(handle.materials, t);
+      updateGroveEmissivePulse(handle.materials, t, handle.emissiveBoost);
       if (handle.fireflies) {
         updateGroveFireflies(
           handle.fireflies,

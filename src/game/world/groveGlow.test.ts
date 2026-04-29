@@ -65,6 +65,16 @@ describe("groveGlow: emissive pulse", () => {
     }
   });
 
+  it("emissiveBoost adds to pulse intensity", () => {
+    const mat = new THREE.MeshLambertMaterial();
+    const root = new THREE.Group();
+    root.add(new THREE.Mesh(new THREE.BoxGeometry(), mat));
+    const { materials } = applyGroveEmissivePulse(root);
+
+    updateGroveEmissivePulse(materials, 0, 1.0);
+    expect(mat.emissiveIntensity).toBeCloseTo(GROVE_EMISSIVE_BASE + 1.0, 5);
+  });
+
   it("dedupes shared materials so we don't reset the same one twice", () => {
     const shared = new THREE.MeshLambertMaterial();
     const root = new THREE.Group();
@@ -179,6 +189,7 @@ describe("groveGlow: dispose", () => {
       fireflies: fireflies.points,
       fireflyBaseY: fireflies.baseY,
       fireflyPhase: fireflies.phase,
+      emissiveBoost: 0,
     });
 
     expect(mat.emissive.equals(originalCopy)).toBe(true);
