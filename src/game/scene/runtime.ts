@@ -72,6 +72,7 @@ import {
 import { koota, spawnPlayer } from "@/koota";
 import { eventBus } from "@/runtime/eventBus";
 import { staminaSystem } from "@/systems/stamina";
+import { FarmerState, IsPlayer } from "@/traits";
 import { CameraFollowBehavior } from "./CameraFollowBehavior";
 import { ClaimRitualSystem } from "./ClaimRitualSystem";
 import { CraftingStationActor } from "./CraftingStationActor";
@@ -92,6 +93,7 @@ import { InteractionTickBehavior } from "./InteractionTickBehavior";
 import npcConfig from "./npc.config.json";
 import { PlayerActor } from "./PlayerActor";
 import playerConfig from "./player.config.json";
+import { RetreatSystem } from "./RetreatSystem";
 
 /** Hardcoded RC world id — Wave 10 single-world. Journey wave wires real selection. */
 const RC_WORLD_ID = "rc-world-default";
@@ -783,6 +785,72 @@ export async function createRuntime(
         x: playerActor.object3D.position.x,
         z: playerActor.object3D.position.z,
       }),
+  });
+
+  // Wave 14/15 — retreat system. Watches HP + stamina; on zero, fades
+  // to black, teleports the player to the nearest claimed grove (or the
+  // starter grove if none claimed), restores vitals to 50%, then fades
+  // back. The `emitRetreatOpacity` bus signal drives <RetreatOverlay>.
+  const retreatSystem = new RetreatSystem({
+    vitals: {
+      get() {
+        const player = koota.queryFirst(IsPlayer, FarmerState);
+        if (!player) return null;
+        const fs = player.get(FarmerState);
+        if (!fs) return null;
+        return {
+          hp: fs.hp,
+          hpMax: fs.maxStamina,
+          stamina: fs.stamina,
+          staminaMax: fs.maxStamina,
+        };
+      },
+      restore(fraction) {
+        const player = koota.queryFirst(IsPlayer, FarmerState);
+        if (!player) return;
+        const fs = player.get(FarmerState);
+        if (!fs) return;
+        player.set(FarmerState, {
+          ...fs,
+          hp: Math.round(fs.maxStamina * fraction),
+          stamina: Math.round(fs.maxStamina * fraction),
+        });
+      },
+    },
+    teleporter: {
+      teleport(worldX, worldZ) {
+        playerActor.object3D.position.set(
+          worldX,
+          ChunkActor.SURFACE_Y + 1,
+          worldZ,
+        );
+      },
+    },
+    groves: {
+      list() {
+        if (!dbHandle) return [];
+        try {
+          return listClaimedGroves(dbHandle.db, RC_WORLD_ID).map((g) => ({
+            groveId: g.groveId,
+            worldX: g.worldX,
+            worldZ: g.worldZ,
+          }));
+        } catch {
+          return [];
+        }
+      },
+    },
+  });
+  const retreatTickActor = world.createActor("retreat-tick");
+  retreatTickActor.addComponentAndGet(InteractionTickBehavior, {
+    onTick: () => {},
+    onTickDelta: (deltaMs) => {
+      const state = retreatSystem.update(deltaMs, {
+        x: playerActor.object3D.position.x,
+        z: playerActor.object3D.position.z,
+      });
+      eventBus.emitRetreatOpacity(state.overlayOpacity);
+    },
   });
 
   // ── Sub-wave D — hearth interaction + claim ritual + fast travel ──
