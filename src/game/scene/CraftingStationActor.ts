@@ -12,7 +12,6 @@
  */
 
 import { type Actor, ActorComponent, ModelRenderer } from "@jolly-pixel/engine";
-import { actorObject3D } from "@/shared/utils/actorUtils";
 
 export interface CraftingStationActorOptions {
   /**
@@ -43,20 +42,20 @@ function workbenchModelPath(): string {
 export class CraftingStationActor extends ActorComponent {
   readonly stationId: string;
   private readonly proximityRadius: number;
+  private readonly renderer: ModelRenderer;
 
   constructor(actor: Actor, options: CraftingStationActorOptions) {
     super({ actor, typeName: "CraftingStationActor" });
     this.stationId = options.stationId;
     this.proximityRadius = options.proximityRadius ?? DEFAULT_PROXIMITY_RADIUS;
 
-    const obj3D = actorObject3D(this.actor);
-    obj3D?.position.set(
+    this.actor.object3D.position.set(
       options.position.x,
       options.position.y,
       options.position.z,
     );
 
-    this.actor.addComponent(ModelRenderer, {
+    this.renderer = this.actor.addComponentAndGet(ModelRenderer, {
       path: workbenchModelPath(),
     });
   }
@@ -71,10 +70,9 @@ export class CraftingStationActor extends ActorComponent {
    * the player walks on top of it.
    */
   isPlayerNear(player: { x: number; z: number }): boolean {
-    const obj3D = actorObject3D(this.actor);
-    if (!obj3D) return false;
-    const dx = obj3D.position.x - player.x;
-    const dz = obj3D.position.z - player.z;
+    const pos = this.actor.object3D.position;
+    const dx = pos.x - player.x;
+    const dz = pos.z - player.z;
     return Math.hypot(dx, dz) <= this.proximityRadius;
   }
 }
