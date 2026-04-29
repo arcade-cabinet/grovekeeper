@@ -1,5 +1,5 @@
 /**
- * RetreatSystem — Wave 14/15.
+ * RetreatSystem.
  *
  * Watches the player's HP and stamina each frame. When either hits
  * zero, triggers a faded-screen retreat:
@@ -14,9 +14,8 @@
  *
  * Retreat target selection:
  *   - Pick the nearest claimed grove (`getClaimedGroveCentres`).
- *   - If no claims exist (the case until Wave 13), fall back to the
- *     starter grove at chunk (3, 0)'s centre — guaranteed to exist
- *     because Wave 10 placed it there deterministically.
+ *   - If no claims exist, fall back to the starter grove at chunk (3,
+ *     0)'s centre — placed deterministically by world generation.
  *
  * The system exposes a small reactive "phase" signal (`subscribe`)
  * the UI overlay reads to drive its CSS opacity / pointer-events.
@@ -28,7 +27,7 @@
 
 import worldConfig from "@/game/world/world.config.json";
 
-/** Default starter-grove chunk coords (matches Wave 10). */
+/** Default starter-grove chunk coords. */
 export const STARTER_GROVE_CHUNK = { x: 3, z: 0 } as const;
 
 /** Phases the fade overlay can be in. */

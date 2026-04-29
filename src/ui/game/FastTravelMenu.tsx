@@ -1,5 +1,5 @@
 /**
- * FastTravelMenu — Sub-wave A.
+ * FastTravelMenu.
  *
  * Solid overlay that lists every claimed grove as a clickable card.
  * Selecting a card asks the host to teleport. The list is supplied

@@ -1,5 +1,5 @@
 /**
- * Creature definitions — Wave 14/15 (outer-world fauna + light combat).
+ * Creature definitions — outer-world fauna + light combat.
  *
  * `CreatureDef` is the runtime shape of an entry in `creatures.json`.
  * Defs split cleanly into peaceful (rabbit, deer) and hostile (wolf-pup);

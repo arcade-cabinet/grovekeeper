@@ -1,5 +1,5 @@
 /**
- * EncounterPopulator — Wave 14/15.
+ * EncounterPopulator.
  *
  * When `ChunkManager` activates a non-grove chunk, the populator asks
  * `rollEncounters` what to spawn and instantiates `CreatureActor`s

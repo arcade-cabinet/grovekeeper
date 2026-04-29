@@ -1,5 +1,5 @@
 /**
- * Combat system — Wave 14/15.
+ * Combat system.
  *
  * Side-effecting glue between the player swing event and live
  * `CreatureActor`s. Pure helper functions are in `combat.ts`; this

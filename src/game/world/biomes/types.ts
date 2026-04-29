@@ -1,19 +1,15 @@
 /**
- * Biome registry types — Wave 8.
+ * Biome registry types.
  *
- * The four RC biomes (locked by spec commit `18220e89`) are Meadow,
- * Forest, Coast, Grove. Each `BiomeDefinition` is a fully self-
- * describing record: tileset paths, block list, which block ids form
- * the surface / sub-surface / bedrock layers, optional surface
- * decorations, and a small palette hint for future ambient lighting
- * tints.
+ * The four RC biomes are Meadow, Forest, Coast, Grove. Each
+ * `BiomeDefinition` is a fully self-describing record: tileset paths,
+ * block list, which block ids form the surface / sub-surface / bedrock
+ * layers, optional surface decorations, and a palette hint for ambient
+ * lighting tints.
  *
- * Block ids are biome-prefixed (`meadow.grass-flat`,
- * `forest.pine-floor`) so neighbouring chunks of different biomes can
- * coexist in the same renderer registry without colliding on numeric
- * id or name. Wave 9 (chunk streaming) is the consumer that benefits
- * most from this — Wave 8 only registers one biome at a time, but the
- * naming convention is forward-compatible.
+ * Block ids are biome-prefixed (`meadow.grass-flat`, `forest.pine-floor`)
+ * so neighbouring chunks of different biomes can coexist in the same
+ * renderer registry without colliding on numeric id or name.
  */
 
 import type { BlockDefinition } from "@jolly-pixel/voxel.renderer";

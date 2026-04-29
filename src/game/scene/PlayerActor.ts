@@ -16,7 +16,7 @@
  * `src/scene/player-behavior.ts`):
  *   - WASD / virtual joystick → 2D move vector via `InputManager`.
  *   - `position += move * speed * dt` per frame.
- *   - XZ are unbounded — Wave 9's chunk streamer guarantees there's
+ *   - XZ are unbounded — the chunk streamer guarantees there's always
  *     always a chunk underfoot, so the player walks freely across the
  *     infinite biome patchwork. Y is snapped to the shared surface
  *     value. Per-voxel collision is post-RC; all RC biomes share
@@ -56,7 +56,6 @@ export interface PlayerSpawn {
   z: number;
 }
 
-
 export interface PlayerActorOptions {
   spawn: PlayerSpawn;
   /** Optional — falls back to standing still + idle if omitted. */
@@ -74,7 +73,7 @@ export const PLAYER_IDLE_CLIP = playerConfig.idleClip;
 /** Walk clip used while `move` magnitude > epsilon. */
 export const PLAYER_WALK_CLIP = playerConfig.walkClip;
 /**
- * Swing clip used by Wave 16's gathering system when the player
+ * Swing clip used by the gathering system when the player
  * presses `swing`. Hardcoded rather than configurable — the gardener
  * GLTF ships an `Attack 01` clip per the asset's 198-clip catalog
  * (see file header), so a missing-clip case can't happen at runtime.
@@ -156,10 +155,10 @@ export class PlayerActor extends ActorComponent {
     if (!this.input) return;
     const dt = Math.min(deltaMs, 50) / 1000;
 
-    // Sub-wave D — when the claim ritual cinematic is active, hold
-    // the player in place. We still sample input + endFrame so the
-    // input layer's rising-edge bookkeeping doesn't desync (the
-    // InputManager assumes it's polled every frame).
+    // When the claim ritual cinematic is active, hold the player in
+    // place. We still sample input + endFrame so the input layer's
+    // rising-edge bookkeeping doesn't desync (the InputManager assumes
+    // it's polled every frame).
     const locked = eventBus.claimCinematicActive();
     if (locked) {
       this.requestClip(PLAYER_IDLE_CLIP);
@@ -174,8 +173,8 @@ export class PlayerActor extends ActorComponent {
     if (moving) {
       // Translate kinematically. Magnitude carried through so analog
       // joystick deflection translates to slower walk. XZ is
-      // unbounded — Wave 9's chunk streamer keeps the world filled
-      // wherever the player goes.
+      // unbounded — the chunk streamer keeps the world filled wherever
+      // the player goes.
       const pos = this.actor.object3D.position;
       pos.x += move.x * PLAYER_MOVE_SPEED * dt;
       pos.z += move.z * PLAYER_MOVE_SPEED * dt;
@@ -212,17 +211,17 @@ export class PlayerActor extends ActorComponent {
 
   /**
    * Yaw around Y in radians (atan2(x, z) convention — see `lerpFacing`).
-   * Wave 16's gather system reads this to compute the target voxel.
-   * Defaults to 0 if the actor's object3D never received a rotation
-   * (e.g. mocked test envs).
+   * The gather system reads this to compute the target voxel. Defaults
+   * to 0 if the actor's object3D never received a rotation (e.g. mocked
+   * test envs).
    */
   get facingYaw(): number {
     return this.actor.object3D.rotation?.y ?? 0;
   }
 
   /**
-   * Play the swing animation clip once. Wave 16's gather system calls
-   * this on a successful `swing` press. The clip is non-looping (a
+   * Play the swing animation clip once. Called by the gather system on
+   * a successful `swing` press. The clip is non-looping (a
    * single attack arc) — we still flag `loop: false` even though the
    * `requestClip` helper used by walk/idle assumes looping clips.
    *

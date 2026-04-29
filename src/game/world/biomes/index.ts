@@ -1,5 +1,5 @@
 /**
- * Biomes barrel — Wave 8.
+ * Biomes barrel.
  *
  * Public surface for the biome registry. Per-biome internals (block id
  * maps, tile coord maps) are intentionally re-exported so the chunk

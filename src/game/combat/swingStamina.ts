@@ -1,5 +1,5 @@
 /**
- * Swing stamina — Wave 14/15.
+ * Swing stamina.
  *
  * Glue that wires the gather-system swing gate to the player's
  * `FarmerState` trait. Each successful swing costs `SWING_STAMINA_COST`

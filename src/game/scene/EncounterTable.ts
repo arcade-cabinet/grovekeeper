@@ -1,5 +1,5 @@
 /**
- * EncounterTable — Wave 14/15.
+ * EncounterTable.
  *
  * Pure deterministic mapping from `(biome, chunkX, chunkZ, worldSeed)`
  * → list of creature spawns. The populator (separate file) takes that

@@ -1,5 +1,5 @@
 /**
- * RetreatOverlay — Wave 14/15.
+ * RetreatOverlay.
  *
  * Full-viewport black fade panel driven by the retreat phase signal
  * on `eventBus`. Mounted unconditionally; opacity goes 0 → 1 → 0

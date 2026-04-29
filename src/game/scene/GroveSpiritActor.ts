@@ -1,15 +1,14 @@
 /**
- * GroveSpiritActor — Wave 11b.
+ * GroveSpiritActor.
  *
  * Renders the singular Grove Spirit at the centre of a grove chunk.
  * The Spirit is **mythic** — there is exactly one per grove, it never
  * walks, and it speaks at most a handful of words in welcome before
  * subsiding into a slow, floating idle.
  *
- * GLB asset (Wave 3b conversion): `grove-spirit.glb` — a Mermaid
- * Warrior 01 base, reserved per the Wave 3b report for "otherworldly
- * look + animation cycles". Animation library is the same massive
- * 199-clip Synty pack the Gardener uses; we only consume `Idle01`.
+ * GLB asset: `grove-spirit.glb` — a Mermaid Warrior 01 base chosen for
+ * its otherworldly look + animation cycles. Animation library is the
+ * same 199-clip Synty pack the Gardener uses; we only consume `Idle01`.
  *
  * --- Available animation clips (grove-spirit.glb, 199 total) ---
  *   - Idle:     "Idle01" (default), "Idle02", "IdleCombat01"
@@ -32,9 +31,9 @@
  *      to display and updates an internal "first-meet" flag; the
  *      caller is responsible for actually rendering the bubble and
  *      persisting the phrase id via `dialogueRepo`. Keeping the
- *      I/O outside the Actor preserves the Wave 11a pattern where
- *      Actor classes own scene-bound state only — the database is
- *      explicitly *not* reachable from here.
+ *      I/O outside the Actor keeps Actor classes responsible for
+ *      scene-bound state only — the database is explicitly *not*
+ *      reachable from here.
  *
  * Spec ref: `docs/superpowers/specs/2026-04-24-grovekeeper-rc-redesign-design.md`
  *   §"Grove Spirit" — mythic, central, one per grove, idle animation

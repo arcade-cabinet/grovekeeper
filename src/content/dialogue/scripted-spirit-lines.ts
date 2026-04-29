@@ -1,11 +1,11 @@
 /**
- * Scripted Spirit lines — Sub-wave C of the Journey wave.
+ * Scripted Spirit lines.
  *
  * The Grove Spirit speaks **three** scripted lines across the player's
  * first ~10 minutes — once on first arrival in the starter grove, once
  * after the hearth claim ritual, once after the first weapon (the
  * starter axe) is crafted. Outside these three triggers the Spirit
- * falls back to the Wave 11b phrase pools.
+ * falls back to the random phrase pools.
  *
  * Each line fires at most once per save. The "did this line fire" bit
  * lives in `dialogue_history` keyed by the synthetic ids in

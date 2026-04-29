@@ -1,5 +1,5 @@
 /**
- * Phrase pools — Wave 11b.
+ * Phrase pools.
  *
  * Declarative tag-keyed flavor lines for the Grove Spirit and the
  * Neanderthal villagers that populate claimed groves.

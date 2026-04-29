@@ -1,5 +1,5 @@
 /**
- * HearthPrompt — Sub-wave D.
+ * HearthPrompt.
  *
  * Tiny diegetic overlay that surfaces "Press E to light" / "Press E for
  * fast travel" when the player walks within range of a placed hearth.

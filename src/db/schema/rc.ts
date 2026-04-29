@@ -1,5 +1,5 @@
 /**
- * RC redesign schema (Wave 4).
+ * RC redesign schema.
  *
  * Tables for the Wind-Waker-style infinite procedural world that replaces the
  * fixed grid grove of pre-RC Grovekeeper:

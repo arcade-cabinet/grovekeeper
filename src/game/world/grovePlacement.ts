@@ -1,7 +1,5 @@
 /**
- * Grove placement — Wave 10.
- *
- * A pure, deterministic decision function: given a chunk coordinate
+ * Grove placement — a pure, deterministic decision function: given a chunk coordinate
  * and a world seed, decide whether the chunk should be *upgraded* from
  * its surrounding wilderness biome to a Grove. Groves are the special,
  * consistent, glowing meadow biome that anchor the game's tonal
@@ -31,11 +29,10 @@
  * same inputs → same output, always. Unit tests assert this and the
  * starter grove placement.
  *
- * Wave 9's `biomeAssigner` is told to EXCLUDE Grove from its random
- * outer-world distribution — Grove placement is the responsibility
- * of THIS module. The integration is one line in the assigner:
- * "if isGroveChunk(...) return 'grove'; else delegate to the
- * meadow/forest/coast picker".
+ * The `biomeAssigner` excludes Grove from its random distribution —
+ * grove placement is the responsibility of this module. The integration
+ * is one line in the assigner: "if isGroveChunk(...) return 'grove';
+ * else delegate to the meadow/forest/coast picker".
  */
 
 import { scopedRNG } from "@/shared/utils/seedRNG";
@@ -51,9 +48,9 @@ export const STARTER_GROVE_CHUNK: { readonly x: number; readonly z: number } = {
 };
 
 /**
- * Second guaranteed grove (Sub-wave C, journey beat 13 — "Discovery
- * of second grove"). Always a grove regardless of seed; ~2 minutes'
- * walk from spawn at the documented player speed.
+ * Second guaranteed grove (journey beat 13 — "Discovery of second
+ * grove"). Always a grove regardless of seed; ~2 minutes' walk from
+ * spawn at the documented player speed.
  */
 export const SECOND_GROVE_CHUNK: { readonly x: number; readonly z: number } = {
   x: 7,

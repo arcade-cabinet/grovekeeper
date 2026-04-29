@@ -1,12 +1,10 @@
 /**
- * Grovekeeper block registry — generalized in Wave 8.
+ * Grovekeeper block registry.
  *
- * Wave 7 hardcoded the meadow biome. Wave 8 makes registration biome-
- * driven: callers pass a `BiomeDefinition` and we register each of its
- * blocks on the renderer's `BlockRegistry`. The biome-prefixed naming
- * convention (`meadow.grass-flat`, `forest.pine-floor`) means multiple
- * biomes can share a single registry without colliding — important for
- * Wave 9's chunk streamer where neighbouring chunks may differ.
+ * Callers pass a `BiomeDefinition` and we register each of its blocks on
+ * the renderer's `BlockRegistry`. The biome-prefixed naming convention
+ * (`meadow.grass-flat`, `forest.pine-floor`) means multiple biomes can
+ * share a single registry without colliding.
  *
  * Block ID `0` is reserved for air by `@jolly-pixel/voxel.renderer` and
  * is intentionally never registered.

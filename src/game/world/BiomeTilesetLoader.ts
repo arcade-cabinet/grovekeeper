@@ -1,9 +1,8 @@
 /**
- * BiomeTilesetLoader — generalized in Wave 8 (was `MeadowTilesetLoader`
- * in Wave 7). Resolves a biome's PNG path against `import.meta.env
- * .BASE_URL` so the same code works under `vite dev`, GitHub Pages,
- * and Capacitor `file://`. Mirrors voxel-realms' `tilesetBaseUrl()`
- * helper in `terrain-behavior.ts`.
+ * BiomeTilesetLoader — resolves a biome's PNG path against
+ * `import.meta.env.BASE_URL` so the same code works under `vite dev`,
+ * GitHub Pages, and Capacitor `file://`. Mirrors voxel-realms'
+ * `tilesetBaseUrl()` helper in `terrain-behavior.ts`.
  *
  * Caches loaded biome ids per renderer instance so calling
  * `loadBiomeTileset` twice for the same biome on the same renderer is

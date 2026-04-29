@@ -1,9 +1,8 @@
 /**
- * VillagerActor — Wave 11b.
+ * VillagerActor.
  *
  * Renders one Neanderthal-styled villager that wanders inside its
- * grove. Per Wave 3b's report, the Neanderthal pack was reserved as
- * the villager candidates and curated to four variants:
+ * grove. The Neanderthal asset pack was curated to four variants:
  *   - villager-elder.glb
  *   - villager-cook.glb
  *   - villager-smith.glb

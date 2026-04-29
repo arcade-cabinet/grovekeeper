@@ -1,11 +1,9 @@
 /**
- * GrovePopulator — Wave 11b.
+ * GrovePopulator.
  *
  * Spawns and disposes the grove-resident NPCs (one Grove Spirit + 1-4
- * villagers) when a grove chunk activates / deactivates. Designed to
- * be called by Wave 9's `ChunkManager` once that lands; for now Wave
- * 11b's `GameScene` calls it directly when the starter grove (chunk
- * (3, 0)) becomes the player's active chunk.
+ * villagers) when a grove chunk activates / deactivates. Called by
+ * `ChunkManager` when a grove chunk activates.
  *
  * The populator is **stateless across calls** — every call returns a
  * `PopulatedGrove` handle holding the actor refs and a `dispose()`.
@@ -87,7 +85,7 @@ export interface PopulateGroveOptions {
   /** Optional dialogue-history view; defaults to "first meeting, no last phrase". */
   history?: DialogueHistoryView;
   /**
-   * Sub-wave A — claim gate. When `discovered` (default), only the
+   * Claim gate. When `discovered` (default), only the
    * Grove Spirit spawns. When `claimed`, the full 1-4 villager pool
    * spawns alongside. The runtime calls `populateGrove` again with
    * `claimed` after the claim ritual completes.
@@ -104,8 +102,8 @@ const VILLAGER_VARIANT_COUNT = npcConfig.villager.models.length;
 /**
  * Build the canonical id for a grove given its chunk coordinates.
  * Matches `groveDiscovery.ts:defaultGroveId` so dialogue history rows
- * line up with the grove rows persisted by Wave 10's discovery pass.
- * Stable across sessions, save-breaking if changed.
+ * line up with the grove rows. Stable across sessions, save-breaking
+ * if changed.
  */
 export function groveId(chunkX: number, chunkZ: number): string {
   return `grove-${chunkX}-${chunkZ}`;
@@ -148,7 +146,7 @@ export function populateGrove(options: PopulateGroveOptions): PopulatedGrove {
   });
   spirit.awake();
 
-  // Sub-wave A claim gate — only spawn villagers in claimed groves.
+  // Claim gate — only spawn villagers in claimed groves.
   // The Spirit (above) always spawns so the discovered-but-unclaimed
   // grove still has its mythic resident; villagers populate after
   // the hearth ignites.
@@ -216,8 +214,8 @@ export function populateGrove(options: PopulateGroveOptions): PopulatedGrove {
       if (disposed) return;
       disposed = true;
       // Production: each ActorComponent's host actor needs to be torn
-      // down so the engine drops the GLB + mixer. Wave 11b leaves the
-      // actual `actor.destroy()` call to the engine wiring layer (the
+      // down so the engine drops the GLB + mixer. The actual
+      // `actor.destroy()` call is left to the engine wiring layer (the
       // factory may, e.g., return engine actors that auto-dispose
       // when their parent chunk does). The handle is opt-in for
       // explicit teardown.

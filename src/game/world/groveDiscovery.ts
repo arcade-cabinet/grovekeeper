@@ -1,13 +1,13 @@
 /**
- * Grove discovery — Wave 10.
+ * Grove discovery.
  *
  * Tracks which chunk the player Actor is currently inside. On every
  * chunk transition, asks two questions:
  *
  *   1. Did the player just *enter* a grove chunk?
- *      → Persist `discoverGrove(...)` (idempotent — Wave 4's repo
- *        no-ops on already-discovered groves) and crossfade the audio
- *        coordinator to the grove music bed.
+ *      → Persist `discoverGrove(...)` (idempotent — the repo no-ops on
+ *        already-discovered groves) and crossfade the audio coordinator
+ *        to the grove music bed.
  *
  *   2. Did the player just *leave* a grove chunk?
  *      → Crossfade the audio coordinator back to the surrounding
@@ -41,12 +41,12 @@ export interface GroveDiscoverySystemDeps {
   /**
    * Resolves the surrounding wilderness biome for a chunk coordinate.
    * Called when the player *leaves* a grove so we know which biome
-   * music bed to crossfade back to. Wave 9's biomeAssigner is the
-   * production source; tests can pass a stub.
+   * music bed to crossfade back to. `biomeAssigner` is the production
+   * source; tests can pass a stub.
    *
-   * The function MUST NOT return `"grove"` — the assigner excludes
-   * grove from its random distribution per the Wave 10 contract. If
-   * it ever does, we fall through to `"meadow"` defensively.
+   * The function MUST NOT return `"grove"` — the assigner excludes grove
+   * from its random distribution. If it ever does, we fall through to
+   * `"meadow"` defensively.
    */
   resolveSurroundingBiome: (chunkX: number, chunkZ: number) => BiomeId;
   /**

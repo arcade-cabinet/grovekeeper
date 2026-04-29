@@ -1,9 +1,8 @@
 /**
  * ChunkManager — owns the streamed 2D grid of `ChunkActor`s around the
- * player. Wave 9 turns Wave 7's single fixed chunk into an infinite
- * patchwork: chunks within `activeRadius` of the player are live; chunks
- * outside `bufferRadius` are unloaded; the band between the two is
- * "hot" — for RC we treat it as fully active too (no LOD swap yet).
+ * player. Chunks within `activeRadius` are live; outside `bufferRadius`
+ * they are unloaded; the band between is treated as fully active (no
+ * LOD swap).
  *
  * Streaming algorithm (called every frame from the runtime tick):
  *   1. Compute the player's current chunk: `floor(pos / chunkSize)`.
@@ -84,8 +83,8 @@ export interface ChunkManagerHooks {
   }) => void;
   /**
    * Fired immediately *before* a chunk's actor is disposed, so the
-   * caller can release any side-channel resources (Wave 10: grove
-   * glow handles, firefly buffers).
+   * caller can release any side-channel resources (grove glow handles,
+   * firefly buffers).
    */
   onChunkDespawned?: (info: { chunkX: number; chunkZ: number }) => void;
 }
@@ -99,12 +98,11 @@ export interface ChunkManagerOptions {
   worldSeed: number;
   /** Streaming radii + per-frame caps. */
   streaming: ChunkManagerStreamingConfig;
-  /** Optional spawn/despawn hooks (Wave 10). */
+  /** Optional spawn/despawn hooks. */
   hooks?: ChunkManagerHooks;
   /**
    * Optional source of player block modifications per chunk. Forwarded
-   * to each `ChunkActor` so reloads restore player builds. Wave 12
-   * plumbs `chunksRepo.getModifiedBlocks` in here.
+   * to each `ChunkActor` so reloads restore player builds.
    */
   modProvider?: (
     chunkX: number,

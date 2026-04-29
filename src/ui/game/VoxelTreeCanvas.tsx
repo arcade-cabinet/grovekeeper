@@ -9,7 +9,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
  * so the menu has gentle life without being busy.
  *
  * Source models live at `public/assets/models/trees/<id>/tree.gltf`,
- * curated from the all-trees-uploads itch.io pack (Wave 3 inventory).
+ * curated from the all-trees-uploads itch.io pack.
  *
  * Disables itself on prefers-reduced-motion (still renders, just no spin).
  */

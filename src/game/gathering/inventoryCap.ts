@@ -1,5 +1,5 @@
 /**
- * inventoryCap — Wave 16.
+ * inventoryCap.
  *
  * Cozy-tier carry-cap helper. The spec says the inventory should feel
  * "cap'd" not "punishing" — the player can carry plenty of every

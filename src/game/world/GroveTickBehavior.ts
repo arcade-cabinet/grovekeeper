@@ -1,5 +1,5 @@
 /**
- * GroveTickBehavior — Wave 10.
+ * GroveTickBehavior.
  *
  * Engine-level glue that drives the grove visual + discovery layers
  * every frame. Sits alongside `ChunkStreamerBehavior` in the runtime

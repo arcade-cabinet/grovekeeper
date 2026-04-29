@@ -7,7 +7,7 @@
  * this file only chooses ids.
  *
  * The default biome → track table is intentionally hand-picked from the
- * Wave 3 audio library curation — `music.biome.<biome>.calm` for the
+ * audio library curation — `music.biome.<biome>.calm` for the
  * meadow, the `chill` cut for forest, the `warm` cut for coast, and the
  * Grove gets its own `forlorn` bed because it's a special biome (per
  * spec §"Grove chunk: special, consistent, glowing meadow biome").

@@ -1,5 +1,5 @@
 /**
- * ClaimRitualSystem — Sub-wave A.
+ * ClaimRitualSystem.
  *
  * Orchestrates the 4-second hearth-ignition cinematic that flips a
  * grove from `discovered` to `claimed`. The state machine is driven

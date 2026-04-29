@@ -1,7 +1,6 @@
 /**
- * Meadow biome — bright greens, flat grass, scattered wildflowers. The
- * Wave 7 default. Ids are kept stable (1..5) so saves from Wave 7
- * round-trip without remapping.
+ * Meadow biome — bright greens, flat grass, scattered wildflowers.
+ * Block ids are stable (1..5) for save compatibility.
  *
  * Tile vocabulary (from `public/assets/tilesets/biomes/meadow.json`):
  *   grass-flat, grass-tall, dirt, stone, wildflower, leaves, wood,
@@ -76,7 +75,7 @@ export const MEADOW_BIOME: BiomeDefinition = {
   subSurfaceBlock: MEADOW_BLOCK_IDS.dirt,
   bedrockBlock: MEADOW_BLOCK_IDS.stone,
   decorations: [
-    // 4% wildflower scatter, 8% tall grass — matches Wave 7 thresholds.
+    // 4% wildflower scatter, 8% tall grass.
     { id: MEADOW_BLOCK_IDS.wildflower, weight: 4 },
     { id: MEADOW_BLOCK_IDS.grassTall, weight: 8 },
   ],

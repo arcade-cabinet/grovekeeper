@@ -21,9 +21,8 @@ import type { Blueprint } from "./types";
  * meadow's `meadow.stone` for the base and `meadow.dirt` for the coals
  * placeholder — RC's biome atlases don't yet expose a `hearth-coals`
  * tile, and the spec's "scope-locked to RC's actual asset inventory"
- * rule explicitly forbids inventing tiles we can't render. Wave 13
- * (claim ritual) swaps the placeholder for a fire shader / lit-coals
- * material.
+ * rule explicitly forbids inventing tiles we can't render. The claim
+ * ritual swaps the placeholder for a fire shader / lit-coals material.
  */
 const HEARTH: Blueprint = {
   id: "blueprint.hearth",

@@ -1,5 +1,5 @@
 /**
- * gatherSystem — Wave 16.
+ * gatherSystem.
  *
  * Per-frame system that turns `swing` action presses into voxel breaks.
  *
@@ -115,17 +115,17 @@ export interface GatherSystemOptions {
   /** Optional callback for tests / UI — fires once per tick with the outcome. */
   onEvent?: (event: GatherTickEvent) => void;
   /**
-   * Stamina gate — Wave 14/15. Returns true if the player has the
+   * Stamina gate. Returns true if the player has the
    * stamina cost available (default: always true).
    */
   canSwing?: () => boolean;
   /**
-   * Stamina deduction — Wave 14/15. Called once per swing that fires
+   * Stamina deduction. Called once per swing that fires
    * (after `canSwing` allowed it). Default: no-op.
    */
   consumeSwingStamina?: () => void;
   /**
-   * Combat hook — Wave 14/15. Fired AFTER the swing animation/SFX
+   * Combat hook. Fired AFTER the swing animation/SFX
    * play so the runtime can apply damage to nearby hostiles. Default:
    * no-op (gathering-only build path keeps unit tests pure).
    */
@@ -159,18 +159,18 @@ export class GatherSystem {
       return;
     }
 
-    // Wave 14/15: stamina gate. If the player is too tired, the swing
+    // Stamina gate. If the player is too tired, the swing
     // is suppressed entirely — no animation, no SFX, no progress tick.
     if (this.opts.canSwing && !this.opts.canSwing()) {
       onEvent?.({ kind: "none" });
       return;
     }
 
-    // Wave 14/15: combat broadcast — runtime hooks this to apply
+    // Combat broadcast — runtime hooks this to apply
     // damage to nearby hostiles. Even if the gather target resolves
     // to nothing, swinging at a wolf still hits the wolf.
     this.opts.onSwing?.();
-    // Wave 14/15: deduct stamina now that the swing is committed.
+    // Deduct stamina now that the swing is committed.
     this.opts.consumeSwingStamina?.();
 
     const target = this.computeTarget();
